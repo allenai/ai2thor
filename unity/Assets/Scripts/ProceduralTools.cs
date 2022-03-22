@@ -938,6 +938,8 @@ namespace Thor.Procedural {
                     colliderObj.transform.parent = holeColliders.transform;
                     colliderObj.transform.localPosition = Vector3.zero;
                     colliderObj.transform.localRotation = Quaternion.identity;
+                    colliderObj.tag = "SimObjPhysics";
+                    colliderObj.layer = 8;
                     var boxCollider = colliderObj.AddComponent<BoxCollider>();
                     boxCollider.center = boundingBox.center();
                     boxCollider.size = boundingBox.size() + Vector3.forward * colliderThickness;
@@ -1978,7 +1980,8 @@ namespace Thor.Procedural {
                     positionBoundingBoxCenter: true,
                     unlit: ho.unlit,
                     materialProperties: ho.materialProperties,
-                    openness: ho.openness
+                    openness: ho.openness,
+                    isOn: ho.isOn
                 );
             } else {
 
@@ -2015,7 +2018,8 @@ namespace Thor.Procedural {
             bool positionBoundingBoxCenter = false,
             bool unlit = false,
             MaterialProperties materialProperties = null,
-            float? openness = null
+            float? openness = null,
+            bool? isOn = null
         ) {
             var go = prefab;
 
@@ -2052,6 +2056,15 @@ namespace Thor.Procedural {
                 var canOpen = spawned.GetComponentInChildren<CanOpen_Object>();
                 if (canOpen != null) {
                     canOpen.SetOpennessImmediate(openness.Value);
+                }
+            }
+
+            if (isOn.HasValue) {
+                var canToggle = spawned.GetComponentInChildren<CanToggleOnOff>();
+                if (canToggle != null) {
+                    if (isOn.Value != canToggle.isOn) {
+                        canToggle.Toggle();
+                    }
                 }
             }
 
