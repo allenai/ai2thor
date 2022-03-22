@@ -1006,7 +1006,9 @@ namespace Thor.Procedural {
             var dimensions = new Vector2(p0p1.magnitude, toCreate.height);
             var prev_p0p1 = previous.p1 - previous.p0;
 
-            var offsetX = (prev_p0p1.magnitude / previous.materialTilingXDivisor) - Mathf.Floor(prev_p0p1.magnitude / previous.materialTilingXDivisor);
+            var prevOffset = getWallMaterialOffset(previous.id).GetValueOrDefault(Vector2.zero);
+
+            var offsetX = (prev_p0p1.magnitude / previous.materialTilingXDivisor) - Mathf.Floor(prev_p0p1.magnitude / previous.materialTilingXDivisor) + prevOffset.x;
             // TODO Offset Y would require to get joining walls from above and below 
             meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(toCreate.materialId), toCreate.color, dimensions, toCreate.materialTilingXDivisor, toCreate.materialTilingYDivisor, offsetX, 0.0f, toCreate.unlit, 
                         squareTiling: squareTiling, materialProperties: toCreate.materialProperties);
@@ -1373,6 +1375,18 @@ namespace Thor.Procedural {
                 return new Vector2(width, depth);
             }
             return Vector2.zero;
+        }
+
+        private static Vector2? getWallMaterialOffset(string wallId) {
+            var wallGO = GameObject.Find(wallId);
+            if (wallGO == null) {
+                return null;
+            }
+                var renderer = wallGO.GetComponent<MeshRenderer>();
+                if (renderer == null) {
+                    return null;
+                }
+            return renderer.material.mainTextureOffset;
         }
 
         private static Material generatePolygonMaterial(Material sharedMaterial, SerializableColor color, Vector2 dimensions, float? tilingDivisorX = null, float? tilingDivisorY = null, float offsetX = 0.0f, float offsetY = 0.0f, bool useUnlitShader = false, bool squareTiling = false, MaterialProperties materialProperties = null) {
