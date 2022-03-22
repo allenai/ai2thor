@@ -201,7 +201,7 @@ public class JenkinsBuild
             var prodBucket = "https://ai2thor-mcs-addressables.s3.amazonaws.com";
             var devBucket = "https://ai2thor-mcs-addressables-dev.s3.amazonaws.com";
 
-            var targetDir = AddressablesEditor.GetBuildAssetsDirectories(target, pathToBuiltProject);
+            var (_, targetDir) = AddressablesEditor.GetBuildAssetsDirectories(target, pathToBuiltProject);
             if (targetDir == null) throw new NullReferenceException("The target path for the streaming asset settings was not found.");
             var configFileText = File.ReadAllText(targetDir + "/settings.json");
             var selectedBucket = devBucket;
