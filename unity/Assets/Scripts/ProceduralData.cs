@@ -130,7 +130,7 @@ namespace Thor.Procedural.Data {
 
         public bool unlitCeiling { get; set; }
 
-        public bool squareTiling = true;
+        public bool squareTiling = false;
     }
 
     [Serializable]
