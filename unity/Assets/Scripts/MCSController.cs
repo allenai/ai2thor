@@ -331,6 +331,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         objectMetadata.shape = simObj.shape;
         objectMetadata.associatedWithAgent = simObj.associatedWithAgent;
 
+        MCSSimulationAgent simulationAgent = simObj.GetComponent<MCSSimulationAgent>();
+        objectMetadata.simulationAgentHeldObject = simulationAgent == null ? null : simulationAgent.heldObject == null ? null : simulationAgent.heldObject.objectID;
+        objectMetadata.simulationAgentIsHoldingHeldObject = simulationAgent == null ? false : simulationAgent.isHoldingHeldObject;
+
         return objectMetadata;
     }
 
@@ -1052,18 +1056,21 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         MCSSimulationAgent simulationAgent = GameObject.Find(action.objectId).GetComponent<MCSSimulationAgent>();
         MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
         int type = simulationAgent.type == AgentType.ToonPeopleFemale ? (int) AgentType.ToonPeopleFemale : (int) AgentType.ToonPeopleMale;
-        if(simulationAgent.isHoldingHeldObject && !simulationAgent.reachingIntoBackpack) {
+        if(simulationAgent.isHoldingHeldObject && !simulationAgent.holdingOutHeldObjectForPickup && !simulationAgent.gettingHeldObject) {
             simulationAgent.PlayGetObjectOutOfBackpackAnimation();
-            simulationAgent.currentAnimationFrame = MCSSimulationAgent.AGENT_INTERACTION_ACTION_STARTING_ANIMATION_FRAME;
         }
-        else if(simulationAgent.reachingIntoBackpack) {
+        else if(simulationAgent.gettingHeldObject) {
             string outputMessage = "Simulation Agent is currently giving held object.";
             Debug.Log(outputMessage);
         }
+        else if(simulationAgent.holdingOutHeldObjectForPickup) {
+            string outputMessage = "Simulation Agent is holding out held object for pickup.";
+            Debug.Log(outputMessage);
+        }
         else {
-            int totalFrames = Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * simulationAgent.clipNamesAndDurations[MCSSimulationAgent.AGENT_INTERACTION_ALREADY_DROPPED_OBJECT_ANIMATION]);
-            simulationAgent.AssignClip(MCSSimulationAgent.AGENT_INTERACTION_ALREADY_DROPPED_OBJECT_ANIMATION);
-            simulationAgent.currentAnimationFrame = totalFrames - 5;
+            int totalFrames = Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * simulationAgent.clipNamesAndDurations[MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION]);
+            simulationAgent.AssignClip(MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION);
+            simulationAgent.currentAnimationFrame = totalFrames - MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION_LENGTH;
             simulationAgent.AnimationPlaysOnce(isLoopAnimation: false);
         }
         actionFinished(true);

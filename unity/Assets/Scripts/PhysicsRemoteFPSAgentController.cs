@@ -4562,8 +4562,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (tryPickupTarget(target, action, action.manualInteract))
             {
                 //we have succesfully picked up something! 
-                target.GetComponent<SimObjPhysics>().isInAgentHand = true;
-                target.transform.localEulerAngles = Vector3.zero;
+                SimObjPhysics sop = target.GetComponent<SimObjPhysics>();
+                sop.isInAgentHand = true;
+                sop.transform.localEulerAngles = Vector3.zero;
+                sop.GetComponent<Rigidbody>().isKinematic = false;
+                MCSMain mcsMain = FindObjectOfType<MCSMain>();
+                if(mcsMain.GetSimulationAgents().Count > 0) {
+                    if(sop.associatedWithAgent != "" && mcsMain.GetAgentObjectAssociations().ContainsKey(sop.associatedWithAgent)) {
+                        foreach(MCSSimulationAgent agent in mcsMain.GetSimulationAgents()) {
+                            if(sop.associatedWithAgent == agent.name) {
+                                agent.SetDefaultAnimation();
+                                agent.holdingOutHeldObjectForPickup = false;
+                                agent.isHoldingHeldObject = false;
+                            }
+                        }
+                    }
+                }
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 actionFinished(true, target.ObjectID);
                 return;

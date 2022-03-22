@@ -2147,6 +2147,10 @@ public class MCSMain : MonoBehaviour {
         return this.simulationAgents;
     }
 
+    public Dictionary<string, SimObjPhysics> GetAgentObjectAssociations() {
+        return this.agentObjectAssociations;
+    }
+
     public static int GetFloorDepth() {
         return MCSMain.FLOOR_DEPTH;
     }

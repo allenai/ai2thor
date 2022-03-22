@@ -48,21 +48,21 @@ public class MCSSimulationAgent : MonoBehaviour {
     
     
     //local position adjustments of the held object throughout the animation sequence, calculated by hand in the editor
-    private static Vector3 REACH_INTO_BACKPACK_POSITION = new Vector3(-0.115f, 0.015f, 0.118f);
-    private static Vector3 IN_FRONT_OF_FACE_POSITION = new Vector3(-0.093f, 0.116f, 0.018f);
-    private Vector3[] AGENT_INTERACTION_ACTION_OBJECT_POSITIONS = {Vector3.zero, REACH_INTO_BACKPACK_POSITION, IN_FRONT_OF_FACE_POSITION};
-    private static string[] AGENT_INTERACTION_ACTION_ANIMATIONS = {"TPF_phone1", "TPF_phone2", "TPM_land"};
-    public static string AGENT_INTERACTION_ALREADY_DROPPED_OBJECT_ANIMATION = "TPM_wave";
+    private static Vector3 REACH_INTO_BACK_POSITION_1 = new Vector3(-0.116f, 0.219f, 0.211f);
+    private static Vector3 REACH_INTO_BACK_POSITION_2 = new Vector3(-0.18f, 0.044f, -0.01f);
+    private static Vector3 REACH_INTO_BACK_POSITION_3 = new Vector3(-0.104f, 0.074f, -0.074f);
+    private static Vector3 HOLDING_POSITION = new Vector3(-0.102f, 0.114f, 0);
+    private static Vector3[] AGENT_INTERACTION_ACTION_OBJECT_POSITIONS = {Vector3.zero, REACH_INTO_BACK_POSITION_1, REACH_INTO_BACK_POSITION_2, REACH_INTO_BACK_POSITION_3};
+    private static string[] AGENT_INTERACTION_ACTION_ANIMATIONS = {"TPF_phone1", "TPM_phone1", "TPM_phone1", "TPM_phone2"};
+    public static string NOT_HOLDING_OBJECT_ANIMATION = "TPM_idle5";
+    public static int NOT_HOLDING_OBJECT_ANIMATION_LENGTH = 5;
     private static string HAND_NAME = "TP R Hand";
     private Transform hand;
     public SimObjPhysics heldObject;
-    [SerializeField] public bool isHoldingHeldObject;
-    [SerializeField] public bool reachingIntoBackpack;
-    private int currentGetItemInBackbackAnimationFrame = 0;
-    private Transform backpack;
-    private static Vector3 BACKPACK_POSITION = new Vector3(0.343f, -0.17f, 0.022f); //derived from moving it in the inspector
-    private static float DROP_HELD_OBJECT_DISTANCE = 0.275f;
-    private static int FRAME_SKIP_FOR_DROP_ANIMATION = 5;
+    public bool isHoldingHeldObject;
+    public bool gettingHeldObject;
+    public bool holdingOutHeldObjectForPickup;
+    private int currentGetHeldObjectAnimation = 0;
 
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
@@ -93,23 +93,22 @@ public class MCSSimulationAgent : MonoBehaviour {
         
         Transform[] children = GetComponentsInChildren<Transform>();
         foreach(Transform child in children) {
-            if(child.name == HAND_NAME)
+            if(child.name == HAND_NAME) {
                hand = child;
-            if(child.name == "Backpack") {
-                backpack = child;
-                backpack.transform.localPosition = BACKPACK_POSITION;
-                backpack.transform.localEulerAngles = new Vector3(0,0,90);
+               break;
             }
         }
+        currentGetHeldObjectAnimation = 0;
+        isHoldingHeldObject = false;
+        holdingOutHeldObjectForPickup = false;
+        gettingHeldObject = false;
     }
     
     void Start() {
         if(heldObject != null) {
             isHoldingHeldObject = true;
-            reachingIntoBackpack = false;
             foreach(Collider c in heldObject.MyColliders)
                 c.enabled = false;
-            
             heldObject.transform.parent = hand;
             heldObject.transform.localPosition = Vector3.zero;
             heldObject.GetComponent<Rigidbody>().isKinematic = true;
@@ -129,12 +128,24 @@ public class MCSSimulationAgent : MonoBehaviour {
 
     }
 
-    public void PlayGetObjectOutOfBackpackAnimation(int currentAnimationInSequence = 0) {
+    public void PlayGetObjectOutOfBackpackAnimation() {
+        gettingHeldObject = true;
         heldObject.gameObject.SetActive(true);
-        reachingIntoBackpack = true;
-        this.currentGetItemInBackbackAnimationFrame = currentAnimationInSequence;
-        heldObject.transform.localPosition = AGENT_INTERACTION_ACTION_OBJECT_POSITIONS[this.currentGetItemInBackbackAnimationFrame];
-        AssignClip(AGENT_INTERACTION_ACTION_ANIMATIONS[this.currentGetItemInBackbackAnimationFrame]);
+        heldObject.transform.localPosition = AGENT_INTERACTION_ACTION_OBJECT_POSITIONS[currentGetHeldObjectAnimation];
+        AssignClip(AGENT_INTERACTION_ACTION_ANIMATIONS[currentGetHeldObjectAnimation]);
+        if(currentGetHeldObjectAnimation == 2) {
+            currentAnimationFrame = 34;
+        }
+    }
+
+    public void HoldHeldObjectOutForPickup() {
+        gettingHeldObject = false;
+        holdingOutHeldObjectForPickup = true;
+        heldObject.transform.localPosition = HOLDING_POSITION;
+        foreach(Collider c in heldObject.MyColliders)
+            c.enabled = true;
+        AssignClip(AGENT_INTERACTION_ACTION_ANIMATIONS[AGENT_INTERACTION_ACTION_ANIMATIONS.Length-1]);
+        AnimationPlaysOnce(isLoopAnimation: true);
     }
 
 
@@ -156,30 +167,15 @@ public class MCSSimulationAgent : MonoBehaviour {
         float percentOfAnimation = currentAnimationFrame / (float)(totalFrames);
         animator.Play(currentClip, 0, percentOfAnimation);
 
-        if(currentGetItemInBackbackAnimationFrame == 0 && reachingIntoBackpack) {
-            PlayGetObjectOutOfBackpackAnimation(1);
+        if(gettingHeldObject) {
+            currentGetHeldObjectAnimation++;
+            if(currentGetHeldObjectAnimation >= AGENT_INTERACTION_ACTION_ANIMATIONS.Length - 1) {
+                HoldHeldObjectOutForPickup();
+            }
+            else {
+                PlayGetObjectOutOfBackpackAnimation();
+            }
         }
-
-        else if(currentGetItemInBackbackAnimationFrame == 1 && reachingIntoBackpack) {
-            PlayGetObjectOutOfBackpackAnimation(2);
-            AnimationPlaysOnce(isLoopAnimation: false);
-            currentAnimationFrame = FRAME_SKIP_FOR_DROP_ANIMATION; //skip ahead in the animation for the drop
-        }
-
-        else if(currentGetItemInBackbackAnimationFrame == 2 && reachingIntoBackpack) {
-            DropHeldObject();
-        }
-    }
-
-    void DropHeldObject() {
-        reachingIntoBackpack = false;
-        isHoldingHeldObject = false;
-        currentGetItemInBackbackAnimationFrame = 3;
-        foreach(Collider c in heldObject.MyColliders)
-            c.enabled = true;
-        heldObject.transform.parent = GameObject.Find("Objects").transform;
-        heldObject.transform.position = new Vector3(transform.position.x, transform.position.y + 0.13f, transform.position.z) + transform.forward.normalized * DROP_HELD_OBJECT_DISTANCE;
-        heldObject.GetComponent<Rigidbody>().isKinematic = true;
     }
 
     public void AnimationPlaysOnce(bool isLoopAnimation) {
