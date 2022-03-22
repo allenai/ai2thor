@@ -1,3 +1,7 @@
+#if PLATFORM_CLOUD_RENDERING
+#undef ENABLE_IL2CPP
+#endif
+// CloudRendering does not set ENABLE_IL2CPP correctly when using Mono
 using System.Linq;
 using System;
 using System.Collections.Generic;
@@ -30,6 +34,23 @@ namespace MessagePack.Resolvers {
         }
 
     }
+    public class Vector4Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.Vector4> {
+        public void Serialize(ref MessagePackWriter writer, global::UnityEngine.Vector4 value, global::MessagePack.MessagePackSerializerOptions options) {
+            writer.WriteMapHeader(4);
+            writer.Write("x");
+            writer.Write(value.x);
+            writer.Write("y");
+            writer.Write(value.y);
+            writer.Write("z");
+            writer.Write(value.z);
+            writer.Write("w");
+            writer.Write(value.w);
+        }
+        public global::UnityEngine.Vector4 Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options) {
+            throw new System.NotImplementedException();
+        }
+
+    }
     public class Vector3Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.Vector3> {
         public void Serialize(ref MessagePackWriter writer, global::UnityEngine.Vector3 value, global::MessagePack.MessagePackSerializerOptions options) {
             writer.WriteMapHeader(3);
@@ -53,9 +74,6 @@ namespace MessagePack.Resolvers {
         private static readonly IFormatterResolver[] Resolvers = new IFormatterResolver[]{
             ThorUnityResolver.Instance,
             BuiltinResolver.Instance, // Try Builtin
-            #if ENABLE_IL2CPP && !UNITY_WEBGL 
-            MessagePack.Resolvers.ThorIL2CPPGeneratedResolver.Instance,
-            #endif 
             #if !ENABLE_IL2CPP 
             DynamicEnumResolver.Instance, // Try Enum
             DynamicGenericResolver.Instance, // Try Array, Tuple, Collection, Enum(Generic Fallback)
@@ -118,6 +136,7 @@ public class ThorUnityResolver : IFormatterResolver {
         {
                 // standard
                 { typeof(Vector3), new Vector3Formatter() },
+                { typeof(Vector4), new Vector4Formatter() },
                 { typeof(NavMeshPath), new NavMeshPathFormatter() }
 
             };
