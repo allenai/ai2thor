@@ -15,10 +15,8 @@ using UnityEngine;
 /// </summary>
 public class AddressablesEditor
 {
-    private static string LINUX_CACHED_DIR = "CachedAddressableLink/Linux/aa";
     private static string LINUX_STREAMING_DIR = "StreamingAssets/aa";
 
-    private static string OSX_CACHED_DIR = "CachedAddressableLink/OSX/aa";
     private static string OSX_STREAMING_DIR = "Contents/Resources/Data/StreamingAssets/aa";
 
     /// <summary>
@@ -102,7 +100,7 @@ public class AddressablesEditor
     [PostProcessBuild]
     public static void OnPostprocessBuild(BuildTarget target, string pathToBuiltProject)
     {
-        var (sourceDir, targetDir) = GetBuildAssetsDirectories(target, pathToBuiltProject);
+        var targetDir = GetBuildAssetsDirectories(target, pathToBuiltProject);
 
         #if UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
             // If no addressable catalog is found, bring it from cache. Otherwise bring it from S3
@@ -117,21 +115,19 @@ public class AddressablesEditor
         #endif
     }
 
-    public static (string sourceDir, string targetDir) GetBuildAssetsDirectories(BuildTarget target, string pathToBuiltProject) {
+    public static string GetBuildAssetsDirectories(BuildTarget target, string pathToBuiltProject) {
         string sourceDir = null;
         string targetDir = null;
 
         if (target == BuildTarget.StandaloneLinux64) {
-            sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), LINUX_CACHED_DIR);
             string dataDir = Path.ChangeExtension(pathToBuiltProject, null) + "_Data/";
             targetDir = Path.Combine(dataDir, LINUX_STREAMING_DIR);
         }
         else if (target == BuildTarget.StandaloneOSX) {
-            sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), OSX_CACHED_DIR);
             targetDir = Path.Combine(pathToBuiltProject, OSX_STREAMING_DIR);
         }
         
-        return (sourceDir, targetDir);
+        return targetDir;
     }
 
     private static void CopyFilesRecursively(string sourceDir, string targetDir)
