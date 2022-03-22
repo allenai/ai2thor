@@ -97,8 +97,7 @@ public class AddressablesEditor
         return string.Empty;
     }
 
-    public static (string sourceDir, string targetDir) GetBuildAssetsDirectories(BuildTarget target, string pathToBuiltProject) {
-        string sourceDir = null;
+    public static string GetBuildAssetsDirectories(BuildTarget target, string pathToBuiltProject) {
         string targetDir = null;
 
         if (target == BuildTarget.StandaloneLinux64) {
@@ -109,7 +108,7 @@ public class AddressablesEditor
             targetDir = Path.Combine(pathToBuiltProject, OSX_STREAMING_DIR);
         }
         
-        return (sourceDir, targetDir);
+        return targetDir;
     }
 
 }
