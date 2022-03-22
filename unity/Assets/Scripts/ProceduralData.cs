@@ -321,6 +321,7 @@ namespace Thor.Procedural.Data {
         public string navmeshArea { get; set; }
 
         public float? openness { get; set; } = null;
+        public bool? isOn { get; set; } = null;
         
         public bool unlit;
         public SerializableColor color { get; set; } = null;
