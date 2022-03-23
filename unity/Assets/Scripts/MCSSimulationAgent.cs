@@ -134,7 +134,8 @@ public class MCSSimulationAgent : MonoBehaviour {
         heldObject.transform.localPosition = AGENT_INTERACTION_ACTION_OBJECT_POSITIONS[currentGetHeldObjectAnimation];
         AssignClip(AGENT_INTERACTION_ACTION_ANIMATIONS[currentGetHeldObjectAnimation]);
         if(currentGetHeldObjectAnimation == 2) {
-            currentAnimationFrame = 34;
+            int animationFrameToEnhanceInteractionAction = 34;
+            currentAnimationFrame = animationFrameToEnhanceInteractionAction;
         }
     }
 

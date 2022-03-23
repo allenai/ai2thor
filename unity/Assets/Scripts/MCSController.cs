@@ -180,12 +180,22 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
     }
 
+///////////////////////////////
     public override ObjectMetadata[] generateObjectMetadata() {
         // TODO MCS-77 The held objects will always be active, so we won't need to reactivate this object again.
         bool deactivate = false;
         if (this.ItemInHand != null && !this.ItemInHand.activeSelf) {
             deactivate = true;
             this.ItemInHand.SetActive(true);
+        }
+
+        MCSMain mcsMain = FindObjectOfType<MCSMain>();
+        List<GameObject> heldAgentObjects = new List<GameObject>();
+        foreach(MCSSimulationAgent agent in mcsMain.GetSimulationAgents()) {
+            if(agent.isHoldingHeldObject && !agent.holdingOutHeldObjectForPickup && !agent.gettingHeldObject) {
+                agent.heldObject.gameObject.SetActive(true);
+                heldAgentObjects.Add(agent.heldObject.gameObject);
+            }
         }
 
         List<string> visibleObjectIds = this.GetAllVisibleSimObjPhysics(this.m_Camera,
@@ -204,6 +214,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         // TODO MCS-77 The held objects will always be active, so we shouldn't deactivate this object again.
         if (deactivate) {
             this.ItemInHand.SetActive(false);
+        }
+        
+        foreach(GameObject g in heldAgentObjects) {
+            g.SetActive(false);
         }
 
         return objectMetadata;
