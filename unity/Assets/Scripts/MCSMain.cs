@@ -1348,9 +1348,8 @@ public class MCSMain : MonoBehaviour {
 
         // If no salient materials were assigned, set a default or else the script will emit errors.
         if (ai2thorPhysicsScript.salientMaterials == null || ai2thorPhysicsScript.salientMaterials.Length == 0) {
-            // TODO What should we set as the default material? Does it even matter?
             ai2thorPhysicsScript.salientMaterials = new ObjectMetadata.ObjectSalientMaterial[] {
-                ObjectMetadata.ObjectSalientMaterial.Wood
+                ObjectMetadata.ObjectSalientMaterial.Undefined
             };
         }
 
@@ -1571,6 +1570,38 @@ public class MCSMain : MonoBehaviour {
 
         gameObject = AssignProperties(gameObject, objectConfig, objectDefinition);
 
+        // If this object is a simulation-controlled agent...
+        if (objectDefinition.agent) {
+            // Ensure the agent property in the object config is true for other parts of our code.
+            objectConfig.agent = true;
+            // Assume all our agent prefabs have this script.
+            MCSSimulationAgent agentScript = gameObject.GetComponent<MCSSimulationAgent>();
+            // Set all of the agent's body and clothing options, including materials.
+            agentScript.SetChest(objectConfig.agentSettings?.chest, objectConfig.agentSettings?.chestMaterial);
+            agentScript.SetEyes(objectConfig.agentSettings?.eyes);
+            agentScript.SetFeet(objectConfig.agentSettings?.feet, objectConfig.agentSettings?.feetMaterial);
+            agentScript.SetLegs(objectConfig.agentSettings?.legs, objectConfig.agentSettings?.legsMaterial);
+            agentScript.SetSkin(objectConfig.agentSettings?.skin);
+            if ((bool)objectConfig.agentSettings?.showBeard) {
+                // Use the same material as the hair for the beard by default.
+                agentScript.SetBeard(objectConfig.agentSettings?.hair);
+            }
+            if ((bool)objectConfig.agentSettings?.showGlasses) {
+                agentScript.SetGlasses(objectConfig.agentSettings?.glasses);
+            }
+            if (!(bool)objectConfig.agentSettings?.hideHair) {
+                agentScript.SetHair(objectConfig.agentSettings?.hair, objectConfig.agentSettings?.hairMaterial,
+                        objectConfig.agentSettings?.hatMaterial);
+            }
+            if ((bool)objectConfig.agentSettings?.showJacket) {
+                agentScript.SetJacket(objectConfig.agentSettings?.jacket, objectConfig.agentSettings?.jacketMaterial);
+            }
+            if ((bool)objectConfig.agentSettings?.showTie) {
+                agentScript.SetTie(objectConfig.agentSettings?.tie, objectConfig.agentSettings?.tieMaterial);
+            }
+            agentScript.SetElder((bool)objectConfig.agentSettings?.isElder);
+        }
+
         // Set animations.
         if (objectDefinition.animations.Any((animationDefinition) => animationDefinition.animationFile != null &&
             !animationDefinition.animationFile.Equals(""))) {
@@ -1712,7 +1743,7 @@ public class MCSMain : MonoBehaviour {
     }
 
     private void InitializeGameObject(MCSConfigGameObject objectConfig) {
-        //try {
+        try {
             GameObject gameObject = CreateGameObject(objectConfig);
             objectConfig.SetGameObject(gameObject);
             if (gameObject != null) {
@@ -1720,10 +1751,10 @@ public class MCSMain : MonoBehaviour {
                 // Hide the object until the frame defined in MachineCommonSenseConfigGameObject.shows
                 (parentObject ?? gameObject).SetActive(false);
             }
-        //} catch (Exception e) {
-        //    Debug.LogError("MCS: " + e);
-        //    Debug.LogError(objectConfig.id);
-        //}
+        } catch (Exception e) {
+            Debug.LogError("MCS: " + e);
+            Debug.LogError(objectConfig.id);
+        }
     }
 
     private List<MCSConfigObjectDefinition> LoadObjectRegistryFromAddressables(String filePath) {
@@ -1827,9 +1858,9 @@ public class MCSMain : MonoBehaviour {
                 case "wax":
                     return ObjectMetadata.ObjectSalientMaterial.Wax;
                 case "wood":
-                // TODO What should the default case be? Does it even matter?
-                default:
                     return ObjectMetadata.ObjectSalientMaterial.Wood;
+                default:
+                    return ObjectMetadata.ObjectSalientMaterial.Undefined;
             }
         }).ToArray();
     }
@@ -2000,16 +2031,28 @@ public class MCSMain : MonoBehaviour {
             gameOrParentObject.GetComponentInChildren<Renderer>().enabled = true;
         }
 
+        bool actionPlayed = false;
         objectConfig.actions.Where(action => action.stepBegin == step).ToList().ForEach((action) => {
-            // Play the animation on the game object, not on the parent object.
-            Animator animator = objectConfig.GetGameObject().GetComponent<Animator>();
-            if (animator != null) {
-                animator.Play(action.id);
-            } else {
-                // If the animator does not exist on this game object, then it must use legacy animations.
-                objectConfig.GetGameObject().GetComponent<Animation>().Play(action.id);
+            if (objectConfig.agent) {
+                objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>().SetAnimation(action.id);
             }
+            else {
+                // Play the animation on the game object, not on the parent object.
+                Animator animator = objectConfig.GetGameObject().GetComponent<Animator>();
+                if (animator != null) {
+                    animator.Play(action.id);
+                } else {
+                    // If the animator does not exist on this game object, then it must use legacy animations.
+                    objectConfig.GetGameObject().GetComponent<Animation>().Play(action.id);
+                }
+            }
+            actionPlayed = true;
         });
+
+        // If an agent wasn't assigned an animation on its initialization, ensure it's assigned a default animation.
+        if (step == 0 && !actionPlayed && objectConfig.agent) {
+            objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>().SetAnimation();
+        }
 
         objectConfig.changeMaterials.Where(change => change.stepBegin == step).ToList().ForEach((change) => {
             this.AssignMaterialsFromConfig(gameOrParentObject, change.materials.ToArray(), new string[] { }, new string[] { });
@@ -2081,6 +2124,7 @@ public class MCSMain : MonoBehaviour {
 [Serializable]
 public class MCSConfigAbstractObject {
     public string id;
+    public bool agent;
     public bool kinematic;
     public float mass;
     public float maxAngularVelocity;
@@ -2101,6 +2145,32 @@ public class MCSConfigAbstractObject {
 [Serializable]
 public class MCSConfigAction : MCSConfigStepBegin {
     public string id;
+}
+
+[Serializable]
+public class MCSConfigAgentSettings {
+    public int chest;
+    public int chestMaterial;
+    public int eyes;
+    public int feet;
+    public int feetMaterial;
+    public int glasses;
+    public int hair;
+    public int hairMaterial;
+    public int hatMaterial;
+    public bool hideHair;
+    public bool isElder;
+    public int jacket;
+    public int jacketMaterial;
+    public int legs;
+    public int legsMaterial;
+    public bool showBeard;
+    public bool showGlasses;
+    public bool showJacket;
+    public bool showTie;
+    public int skin;
+    public int tie;
+    public int tieMaterial;
 }
 
 [Serializable]
@@ -2130,6 +2200,7 @@ public class MCSConfigCollider : MCSConfigTransform {
 
 [Serializable]
 public class MCSConfigGameObject : MCSConfigAbstractObject {
+    public MCSConfigAgentSettings agentSettings = null;
     public string controller;
     public string locationParent;
     public string materialFile; // deprecated; please use materials
