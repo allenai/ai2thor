@@ -132,7 +132,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_WEBGL
                 Debug.Log("Player Control Set To:Webgl");
                 setControlMode(ControlMode.FPS);
-                CurrentActiveController().GetComponent<JavaScriptInterface>().enabled = true;
 #endif
 #if CROWDSOURCE_TASK
                 Debug.Log("CROWDSOURCE_TASK");
