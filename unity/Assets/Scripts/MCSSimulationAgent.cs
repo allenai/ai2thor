@@ -142,6 +142,8 @@ public class MCSSimulationAgent : MonoBehaviour {
     }
 
     public void SetJacket(int? jacketIndex = -1, int? jacketMaterialIndex = -1) {
+        // TODO Fix issue with jackets clipping into other clothes.
+        /*
         if (jacketIndex == null || jacketIndex >= this.jacketOptions.Length || jacketIndex < 0) {
             jacketIndex = ChooseDefaultIndex(this.jacketOptions.Length);
         }
@@ -149,6 +151,7 @@ public class MCSSimulationAgent : MonoBehaviour {
         this.jacket = this.jacketOptions[(int)jacketIndex];
         this.jacket.gameObject.SetActive(true);
         this.SetMaterial(this.jacket, jacketMaterialIndex);
+        */
     }
 
     public void SetLegs(int? legsIndex = -1, int? legsMaterialIndex = -1) {
