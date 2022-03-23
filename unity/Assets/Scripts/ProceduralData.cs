@@ -322,6 +322,7 @@ namespace Thor.Procedural.Data {
 
         public float? openness { get; set; } = null;
         public bool? isOn { get; set; } = null;
+        public bool? isDirty { get; set; } = null;
         
         public bool unlit;
         public SerializableColor color { get; set; } = null;

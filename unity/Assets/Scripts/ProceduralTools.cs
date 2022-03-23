@@ -1981,7 +1981,8 @@ namespace Thor.Procedural {
                     unlit: ho.unlit,
                     materialProperties: ho.materialProperties,
                     openness: ho.openness,
-                    isOn: ho.isOn
+                    isOn: ho.isOn,
+                    isDirty: ho.isDirty
                 );
             } else {
 
@@ -2019,7 +2020,8 @@ namespace Thor.Procedural {
             bool unlit = false,
             MaterialProperties materialProperties = null,
             float? openness = null,
-            bool? isOn = null
+            bool? isOn = null,
+            bool? isDirty = null
         ) {
             var go = prefab;
 
@@ -2064,6 +2066,15 @@ namespace Thor.Procedural {
                 if (canToggle != null) {
                     if (isOn.Value != canToggle.isOn) {
                         canToggle.Toggle();
+                    }
+                }
+            }
+
+            if (isDirty.HasValue) {
+                var dirt = spawned.GetComponentInChildren<Dirty>();
+                if (dirt != null) {
+                    if (isDirty.Value != dirt.IsDirty()) {
+                        dirt.ToggleCleanOrDirty();
                     }
                 }
             }
