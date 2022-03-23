@@ -116,7 +116,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     public bool IsSeesaw;
 	public bool canChangeTempToHot;
 	public bool canChangeTempToCold;
-	public string associatedWithAgent = null;
     private Vector3 boundingBoxCachePosition;
     private Quaternion boundingBoxCacheRotation;
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
@@ -124,7 +123,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	private static float MOVEMENT_AMOUNT = 0.1f;
 	private static float APPLY_FORCE_MULTIPLIER = 5f;
 	private static float APPLY_TORQUE_MULTIPLIER = 20f;
-	public string assoicatedWithAgent = "";
+	public string associatedWithAgent = "";
 
 
 	public float GetTimerResetValue()

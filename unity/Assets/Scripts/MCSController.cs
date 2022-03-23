@@ -329,10 +329,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         objectMetadata.colorsFromMaterials = colors.ToArray();
 
         objectMetadata.shape = simObj.shape;
-        objectMetadata.associatedWithAgent = simObj.associatedWithAgent;
+        objectMetadata.associatedWithAgent = simObj.associatedWithAgent == null ? "" : simObj.associatedWithAgent;
 
         MCSSimulationAgent simulationAgent = simObj.GetComponent<MCSSimulationAgent>();
-        objectMetadata.simulationAgentHeldObject = simulationAgent == null ? null : simulationAgent.heldObject == null ? null : simulationAgent.heldObject.objectID;
+        objectMetadata.simulationAgentHeldObject = simulationAgent == null ? "" : simulationAgent.heldObject == null ? "" : simulationAgent.heldObject.objectID;
         objectMetadata.simulationAgentIsHoldingHeldObject = simulationAgent == null ? false : simulationAgent.isHoldingHeldObject;
 
         return objectMetadata;
