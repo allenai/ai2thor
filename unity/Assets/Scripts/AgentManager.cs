@@ -828,7 +828,9 @@ public class AgentManager : MonoBehaviour {
 
     public void ChangeResolution(int x, int y) {
         Screen.SetResolution(width: x, height: y, false);
+#if UNITY_EDITOR
         Debug.Log("current screen resolution pre change: " + Screen.width + " height" + Screen.height);
+#endif
 #if PLATFORM_CLOUD_RENDERING
         foreach (var agent in this.agents) {
             var rt = agent.m_Camera.targetTexture;
@@ -844,7 +846,12 @@ public class AgentManager : MonoBehaviour {
            camera.targetTexture = createRenderTexture(x, y); 
         }
 #endif
-        StartCoroutine(WaitOnResolutionChange(width: x, height: y));
+        if (Application.isBatchMode) {
+            this.primaryAgent.m_Camera.aspect = (1.0f * x) / y;
+            this.primaryAgent.actionFinished(true);
+        } else {
+            StartCoroutine(WaitOnResolutionChange(width: x, height: y));
+        }
     }
 
     private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
