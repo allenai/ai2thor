@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [System.Serializable]
@@ -35,6 +36,14 @@ public class MCSSimulationAgent : MonoBehaviour {
     private ObjectMaterialOption tie = null;
     private Animator animator;
 
+    private int currentAnimationFrame = 0;
+    private static int ANIMATION_FRAME_RATE = 25;
+    [SerializeField] private string currentClip;
+    private Dictionary<string, float> clipNamesAndDurations = new Dictionary<string,float>();
+    private bool resetAnimationToIdleAfterPlayingOnce = false;
+    private int stepToEndAnimation = -1;
+    private MCSController mcsController;
+
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
         this.SetChest(0, 0);
@@ -52,15 +61,53 @@ public class MCSSimulationAgent : MonoBehaviour {
             this.beard.gameObject.SetActive(false);
         }
         this.animator = this.gameObject.GetComponent<Animator>();
+        animator.speed = 0;
+        foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips) {
+            clipNamesAndDurations.Add(clip.name, clip.length);
+        }
+        mcsController = FindObjectOfType<MCSController>();
+        mcsController.simulationAgents.Add(this);
+        SetDefaultAnimation();
+        IncrementAnimationFrame();
     }
 
-    public void SetAnimation(string name = null) {
+    public void SetDefaultAnimation(string name = null) {
         if (this.type == AgentType.ToonPeopleFemale) {
-            this.animator.Play(name != null ? (string)name : "TPF_idle1");
+            this.currentClip = name != null ? name : "TPF_idle1";
         }
         if (this.type == AgentType.ToonPeopleMale) {
-            this.animator.Play(name != null ? (string)name : "TPM_idle1");
+            this.currentClip = name != null ? name : "TPM_idle1";
         }
+        resetAnimationToIdleAfterPlayingOnce = false;
+        currentAnimationFrame = 0;
+
+    }
+
+    public void AssignClip(string clipId) {
+        currentAnimationFrame = 0;
+        currentClip = clipId;
+    }
+
+    public void IncrementAnimationFrame() {
+        currentAnimationFrame++;
+        int totalFrames = Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * clipNamesAndDurations[this.currentClip]);
+        if (resetAnimationToIdleAfterPlayingOnce && currentAnimationFrame > totalFrames)
+            SetDefaultAnimation();
+        if(mcsController.step == stepToEndAnimation) {
+            SetDefaultAnimation();
+            stepToEndAnimation = -1;
+        }
+        currentAnimationFrame = currentAnimationFrame > totalFrames ? 0 : currentAnimationFrame;
+        float percentOfAnimation = currentAnimationFrame / (float)(totalFrames);
+        animator.Play(currentClip, 0, percentOfAnimation);
+    }
+
+    public void AnimationPlaysOnce(bool isLoopAnimation) {
+        resetAnimationToIdleAfterPlayingOnce = !isLoopAnimation;
+    }
+
+    public void SetStepToEndAnimation(int step) {
+        this.stepToEndAnimation = step;
     }
 
     public void SetBeard(int? beardIndex = -1) {

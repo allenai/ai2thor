@@ -70,6 +70,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     [SerializeField] private string resolvedObject;
     [SerializeField] private string resolvedReceptacle;
+    public List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
+    public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 1;
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachScreenPointToId(action);
@@ -599,6 +601,14 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             hapticFeedback[hf] = false;
         }
         CheckIfInLava();
+
+        //Simulation Agent Animations
+        List<MCSSimulationAgent> simulationAgents =  this.simulationAgents;
+        foreach(MCSSimulationAgent simAgent in simulationAgents) {
+            for(int i = 0; i<MCSController.SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS; i++) {
+                simAgent.IncrementAnimationFrame();
+            }
+        }
 
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
