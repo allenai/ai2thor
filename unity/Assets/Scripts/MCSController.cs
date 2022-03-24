@@ -216,8 +216,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             this.ItemInHand.SetActive(false);
         }
         
-        foreach(GameObject g in heldAgentObjects) {
-            g.SetActive(false);
+        foreach(GameObject heldAgentObject in heldAgentObjects) {
+            heldAgentObject.SetActive(false);
         }
 
         return objectMetadata;
@@ -1071,7 +1071,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
         int type = simulationAgent.type == AgentType.ToonPeopleFemale ? (int) AgentType.ToonPeopleFemale : (int) AgentType.ToonPeopleMale;
         if(simulationAgent.isHoldingHeldObject && !simulationAgent.holdingOutHeldObjectForPickup && !simulationAgent.gettingHeldObject) {
-            simulationAgent.PlayGetObjectOutOfBackpackAnimation();
+            simulationAgent.PlayGetHeldObjectAnimation();
         }
         else if(simulationAgent.gettingHeldObject) {
             string outputMessage = "Simulation Agent is currently giving held object.";

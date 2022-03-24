@@ -48,16 +48,15 @@ public class MCSSimulationAgent : MonoBehaviour {
     
     
     //local position adjustments of the held object throughout the animation sequence, calculated by hand in the editor
-    private static Vector3 REACH_INTO_BACK_POSITION_1 = new Vector3(-0.116f, 0.219f, 0.211f);
-    private static Vector3 REACH_INTO_BACK_POSITION_2 = new Vector3(-0.18f, 0.044f, -0.01f);
-    private static Vector3 REACH_INTO_BACK_POSITION_3 = new Vector3(-0.104f, 0.074f, -0.074f);
-    private static Vector3 HOLDING_POSITION = new Vector3(-0.102f, 0.114f, 0);
+    private static Vector3 REACH_INTO_BACK_POSITION_1 = new Vector3(0.0057f, 1.41f, -0.156f);
+    private static Vector3 REACH_INTO_BACK_POSITION_2 = new Vector3(0.1296f, 1.4736f, 0.1247f);
+    private static Vector3 REACH_INTO_BACK_POSITION_3 = new Vector3(0.032f, 1.417f, 0.191f);
+    private static Vector3 HOLDING_POSITION = new Vector3(0.002f, 1.119f, 0.1907f);
     private static Vector3[] AGENT_INTERACTION_ACTION_OBJECT_POSITIONS = {Vector3.zero, REACH_INTO_BACK_POSITION_1, REACH_INTO_BACK_POSITION_2, REACH_INTO_BACK_POSITION_3};
     private static string[] AGENT_INTERACTION_ACTION_ANIMATIONS = {"TPF_phone1", "TPM_phone1", "TPM_phone1", "TPM_phone2"};
     public static string NOT_HOLDING_OBJECT_ANIMATION = "TPM_idle5";
     public static int NOT_HOLDING_OBJECT_ANIMATION_LENGTH = 5;
     private static string HAND_NAME = "TP R Hand";
-    private Transform hand;
     public SimObjPhysics heldObject;
     public bool isHoldingHeldObject;
     public bool gettingHeldObject;
@@ -91,13 +90,6 @@ public class MCSSimulationAgent : MonoBehaviour {
         SetDefaultAnimation();
         IncrementAnimationFrame();
         
-        Transform[] children = GetComponentsInChildren<Transform>();
-        foreach(Transform child in children) {
-            if(child.name == HAND_NAME) {
-               hand = child;
-               break;
-            }
-        }
         currentGetHeldObjectAnimation = 0;
         isHoldingHeldObject = false;
         holdingOutHeldObjectForPickup = false;
@@ -109,7 +101,7 @@ public class MCSSimulationAgent : MonoBehaviour {
             isHoldingHeldObject = true;
             foreach(Collider c in heldObject.MyColliders)
                 c.enabled = false;
-            heldObject.transform.parent = hand;
+            heldObject.transform.parent = this.transform;
             heldObject.transform.localPosition = Vector3.zero;
             heldObject.GetComponent<Rigidbody>().isKinematic = true;
             heldObject.gameObject.SetActive(false);
@@ -128,7 +120,7 @@ public class MCSSimulationAgent : MonoBehaviour {
 
     }
 
-    public void PlayGetObjectOutOfBackpackAnimation() {
+    public void PlayGetHeldObjectAnimation() {
         gettingHeldObject = true;
         heldObject.gameObject.SetActive(true);
         heldObject.transform.localPosition = AGENT_INTERACTION_ACTION_OBJECT_POSITIONS[currentGetHeldObjectAnimation];
@@ -170,11 +162,11 @@ public class MCSSimulationAgent : MonoBehaviour {
 
         if(gettingHeldObject) {
             currentGetHeldObjectAnimation++;
-            if(currentGetHeldObjectAnimation >= AGENT_INTERACTION_ACTION_ANIMATIONS.Length - 1) {
+            if(currentGetHeldObjectAnimation >= AGENT_INTERACTION_ACTION_ANIMATIONS.Length) {
                 HoldHeldObjectOutForPickup();
             }
             else {
-                PlayGetObjectOutOfBackpackAnimation();
+                PlayGetHeldObjectAnimation();
             }
         }
     }
