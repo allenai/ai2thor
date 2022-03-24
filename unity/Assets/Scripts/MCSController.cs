@@ -70,6 +70,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     [SerializeField] private string resolvedObject;
     [SerializeField] private string resolvedReceptacle;
+    public List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
+    public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 1;
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachScreenPointToId(action);
@@ -601,9 +603,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         CheckIfInLava();
 
         //Simulation Agent Animations
-        List<MCSSimulationAgent> simulationAgents =  GameObject.Find("MCS").GetComponent<MCSMain>().GetSimulationAgents();
+        List<MCSSimulationAgent> simulationAgents =  this.simulationAgents;
         foreach(MCSSimulationAgent simAgent in simulationAgents) {
-            for(int i = 0; i<MCSMain.SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS; i++) {
+            for(int i = 0; i<MCSController.SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS; i++) {
                 simAgent.IncrementAnimationFrame();
             }
         }

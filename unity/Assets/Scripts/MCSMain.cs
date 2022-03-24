@@ -121,8 +121,6 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallFront;
     private GameObject wallBack;
     private List<Light> sceneLights = new List<Light>();
-    private List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
-    public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 1;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
         TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressableAsset<TextAsset>(MCSMain.ADDRESSABLE_PATH_PREFIX + "Scenes/" + filePath + ".json");
@@ -262,7 +260,7 @@ public class MCSMain : MonoBehaviour {
             return;
         }
 
-        simulationAgents.Clear();
+        this.agentController.simulationAgents.Clear();
         if (this.currentScene != null && this.currentScene.objects != null) {
             this.currentScene.objects.ForEach(objectConfig => {
                 GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
@@ -2124,10 +2122,6 @@ public class MCSMain : MonoBehaviour {
 
     public static int GetFloorDepth() {
         return MCSMain.FLOOR_DEPTH;
-    }
-
-    public List<MCSSimulationAgent> GetSimulationAgents() {
-        return this.simulationAgents;
     }
 }
 
