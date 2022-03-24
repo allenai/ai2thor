@@ -70,6 +70,7 @@ public class MCSSimulationAgent : MonoBehaviour {
     public Vector3 targetRotation;
     private static string TURN_LEFT = "TPM_turnL45";
     private static string TURN_RIGHT = "TPM_turnR45";
+    private static float MIMIMUM_ROTATION_ANGLE_FOR_ANIMATION = 15f;
 
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
@@ -159,9 +160,43 @@ public class MCSSimulationAgent : MonoBehaviour {
         originalRotation = new Vector3(0, transform.eulerAngles.y, 0);
         transform.LookAt(mcsController.transform);
         targetRotation = new Vector3(0, transform.eulerAngles.y, 0);
-        transform.eulerAngles = originalRotation;
-        AnimationPlaysOnce(isLoopAnimation: false);
-        AssignClip(targetRotation.y - originalRotation.y > 0 ? TURN_RIGHT : TURN_LEFT);
+        bool doRotationAnimation = false;
+        float degreeChange = CalculateRotation(ref doRotationAnimation);
+        if(doRotationAnimation) {
+            transform.eulerAngles = targetRotation;
+            if(isHoldingHeldObject && !gettingHeldObject && !holdingOutHeldObjectForPickup) { 
+                rotating = false;
+                PlayGetHeldObjectAnimation();
+            }
+            else {
+                AssignClip(MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION);
+            }
+        }
+        else {
+            transform.eulerAngles = originalRotation;
+            AnimationPlaysOnce(isLoopAnimation: false);
+            AssignClip(degreeChange > 0 ? TURN_RIGHT : TURN_LEFT);
+        }
+    }
+
+    float CalculateRotation (ref bool doAnimation) {
+        float target = targetRotation.y;
+        float original = originalRotation.y;
+        float degreeChange = 0;
+        
+        if(target > original + 180) {
+            target -= 360;
+            degreeChange = original - target;
+        }
+        if(target < original - 179) {
+            target += 360;
+            degreeChange = target - original;
+        }
+        else {
+            degreeChange = target - original;
+        }
+        doAnimation = Mathf.Abs(degreeChange) < MIMIMUM_ROTATION_ANGLE_FOR_ANIMATION;
+        return degreeChange;
     }
 
     public void IncrementAnimationFrame() {
@@ -198,7 +233,8 @@ public class MCSSimulationAgent : MonoBehaviour {
         }
 
         if(rotating) {
-            float speedMultiplier = Mathf.Clamp(500 / Mathf.Abs(targetRotation.y - originalRotation.y), 5, 10);
+            float speedRatio = 500f; //this is so shorter rotations are quicker and longer rotations are slower to sync with the animation
+            float speedMultiplier = Mathf.Clamp(speedRatio / Mathf.Abs(targetRotation.y - originalRotation.y), 5, 10);
             rotationPercent = ((float) currentAnimationFrame / (float) MCSSimulationAgent.ANIMATION_FRAME_RATE) * speedMultiplier;
             transform.rotation = Quaternion.Slerp(Quaternion.Euler(originalRotation), Quaternion.Euler(targetRotation), rotationPercent);
             if(rotationPercent >= 0.75) {
