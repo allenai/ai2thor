@@ -70,6 +70,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     [SerializeField] private string resolvedObject;
     [SerializeField] private string resolvedReceptacle;
+    public List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
+    public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 1;
+    public Dictionary<string, SimObjPhysics> agentObjectAssociations = new Dictionary<string, SimObjPhysics>();
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachScreenPointToId(action);
@@ -191,7 +194,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         MCSMain mcsMain = FindObjectOfType<MCSMain>();
         List<GameObject> heldAgentObjects = new List<GameObject>();
-        foreach(MCSSimulationAgent agent in mcsMain.GetSimulationAgents()) {
+        foreach(MCSSimulationAgent agent in this.simulationAgents) {
             if(agent.isHoldingHeldObject && !agent.holdingOutHeldObjectForPickup && !agent.gettingHeldObject) {
                 agent.heldObject.gameObject.SetActive(true);
                 heldAgentObjects.Add(agent.heldObject.gameObject);
@@ -620,9 +623,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         CheckIfInLava();
 
         //Simulation Agent Animations
-        List<MCSSimulationAgent> simulationAgents =  GameObject.Find("MCS").GetComponent<MCSMain>().GetSimulationAgents();
+        List<MCSSimulationAgent> simulationAgents =  this.simulationAgents;
         foreach(MCSSimulationAgent simAgent in simulationAgents) {
-            for(int i = 0; i<MCSMain.SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS; i++) {
+            for(int i = 0; i<MCSController.SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS; i++) {
                 simAgent.IncrementAnimationFrame();
             }
         }

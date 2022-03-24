@@ -4566,10 +4566,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 sop.isInAgentHand = true;
                 sop.transform.localEulerAngles = Vector3.zero;
                 sop.GetComponent<Rigidbody>().isKinematic = false;
-                MCSMain mcsMain = FindObjectOfType<MCSMain>();
-                if(mcsMain.GetSimulationAgents().Count > 0) {
-                    if(sop.associatedWithAgent != "" && mcsMain.GetAgentObjectAssociations().ContainsKey(sop.associatedWithAgent)) {
-                        foreach(MCSSimulationAgent agent in mcsMain.GetSimulationAgents()) {
+                MCSController mcsController = FindObjectOfType<MCSController>();
+                if(mcsController.simulationAgents.Count > 0) {
+                    if(sop.associatedWithAgent != "" && mcsController.agentObjectAssociations.ContainsKey(sop.associatedWithAgent)) {
+                        foreach(MCSSimulationAgent agent in mcsController.simulationAgents) {
                             if(sop.associatedWithAgent == agent.name) {
                                 agent.SetDefaultAnimation();
                                 agent.holdingOutHeldObjectForPickup = false;

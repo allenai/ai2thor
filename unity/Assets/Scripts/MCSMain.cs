@@ -121,9 +121,6 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallFront;
     private GameObject wallBack;
     private List<Light> sceneLights = new List<Light>();
-    private List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
-    private Dictionary<string, SimObjPhysics> agentObjectAssociations = new Dictionary<string, SimObjPhysics>();
-    public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 1;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
         TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressableAsset<TextAsset>(MCSMain.ADDRESSABLE_PATH_PREFIX + "Scenes/" + filePath + ".json");
@@ -263,8 +260,8 @@ public class MCSMain : MonoBehaviour {
             return;
         }
 
-        simulationAgents.Clear();
-        agentObjectAssociations.Clear();
+        this.agentController.simulationAgents.Clear();
+        this.agentController.agentObjectAssociations.Clear();
         if (this.currentScene != null && this.currentScene.objects != null) {
             this.currentScene.objects.ForEach(objectConfig => {
                 GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
@@ -327,13 +324,13 @@ public class MCSMain : MonoBehaviour {
                 0, 0, 0);
         }
 
-        foreach(string simulationAgentId in agentObjectAssociations.Keys) {
+        foreach(string simulationAgentId in this.agentController.agentObjectAssociations.Keys) {
             MCSSimulationAgent simulationAgent = null;
-            foreach (MCSSimulationAgent simAgent in this.simulationAgents) {
+            foreach (MCSSimulationAgent simAgent in this.agentController.simulationAgents) {
                 if(simAgent.name == simulationAgentId)
                     simulationAgent = simAgent.GetComponent<MCSSimulationAgent>();
             }
-            SimObjPhysics heldSimObj = agentObjectAssociations[simulationAgentId];
+            SimObjPhysics heldSimObj = this.agentController.agentObjectAssociations[simulationAgentId];
             simulationAgent.heldObject = heldSimObj;
         }
 
@@ -1449,7 +1446,7 @@ public class MCSMain : MonoBehaviour {
 
         if(objectConfig.associatedWithAgent != null && objectConfig.associatedWithAgent.Length > 0) {
             ai2thorPhysicsScript.associatedWithAgent = objectConfig.associatedWithAgent;
-            agentObjectAssociations.Add(ai2thorPhysicsScript.associatedWithAgent, ai2thorPhysicsScript);
+            this.agentController.agentObjectAssociations.Add(ai2thorPhysicsScript.associatedWithAgent, ai2thorPhysicsScript);
         }
 
         // Call Start to initialize the script since it did not exist on game start.
@@ -2141,14 +2138,6 @@ public class MCSMain : MonoBehaviour {
 
     public int GetStepNumber() {
         return this.lastStep;
-    }
-
-    public List<MCSSimulationAgent> GetSimulationAgents() {
-        return this.simulationAgents;
-    }
-
-    public Dictionary<string, SimObjPhysics> GetAgentObjectAssociations() {
-        return this.agentObjectAssociations;
     }
 
     public static int GetFloorDepth() {

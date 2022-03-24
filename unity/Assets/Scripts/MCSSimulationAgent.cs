@@ -62,6 +62,7 @@ public class MCSSimulationAgent : MonoBehaviour {
     public bool gettingHeldObject;
     public bool holdingOutHeldObjectForPickup;
     private int currentGetHeldObjectAnimation = 0;
+    private MCSController mcsController;
 
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
@@ -84,9 +85,8 @@ public class MCSSimulationAgent : MonoBehaviour {
         foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips) {
             clipNamesAndDurations.Add(clip.name, clip.length);
         }
-
-        mcsMain = FindObjectOfType<MCSMain>();
-        mcsMain.GetSimulationAgents().Add(this);
+        mcsController = FindObjectOfType<MCSController>();
+        mcsController.simulationAgents.Add(this);
         SetDefaultAnimation();
         IncrementAnimationFrame();
         
@@ -152,7 +152,7 @@ public class MCSSimulationAgent : MonoBehaviour {
         int totalFrames = Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * clipNamesAndDurations[this.currentClip]);
         if (resetAnimationToIdleAfterPlayingOnce && currentAnimationFrame > totalFrames)
             SetDefaultAnimation();
-        if(mcsMain.GetStepNumber() == stepToEndAnimation) {
+        if(mcsController.step == stepToEndAnimation) {
             SetDefaultAnimation();
             stepToEndAnimation = -1;
         }
