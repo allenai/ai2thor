@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [System.Serializable]
@@ -63,6 +64,12 @@ public class MCSSimulationAgent : MonoBehaviour {
     public bool holdingOutHeldObjectForPickup;
     private int currentGetHeldObjectAnimation = 0;
     private MCSController mcsController;
+    public bool rotating = false;
+    public float rotationPercent = 0;
+    public Vector3 originalRotation;
+    public Vector3 targetRotation;
+    private static string TURN_LEFT = "TPM_turnL45";
+    private static string TURN_RIGHT = "TPM_turnR45";
 
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
@@ -147,6 +154,16 @@ public class MCSSimulationAgent : MonoBehaviour {
         currentClip = clipId;
     }
 
+    public void RotateAgentToLookAtPerformer() {
+        rotating = true;
+        originalRotation = new Vector3(0, transform.eulerAngles.y, 0);
+        transform.LookAt(mcsController.transform);
+        targetRotation = new Vector3(0, transform.eulerAngles.y, 0);
+        transform.eulerAngles = originalRotation;
+        AnimationPlaysOnce(isLoopAnimation: false);
+        AssignClip(targetRotation.y - originalRotation.y > 0 ? TURN_RIGHT : TURN_LEFT);
+    }
+
     public void IncrementAnimationFrame() {
         currentAnimationFrame++;
         int totalFrames = Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * clipNamesAndDurations[this.currentClip]);
@@ -160,6 +177,16 @@ public class MCSSimulationAgent : MonoBehaviour {
         float percentOfAnimation = currentAnimationFrame / (float)(totalFrames);
         animator.Play(currentClip, 0, percentOfAnimation);
 
+        if(currentClip == NOT_HOLDING_OBJECT_ANIMATION) {
+            transform.LookAt(mcsController.transform);
+            transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0);
+        }
+
+        if(holdingOutHeldObjectForPickup || gettingHeldObject) {
+            transform.LookAt(mcsController.transform);
+            transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0);
+        }
+        
         if(gettingHeldObject) {
             currentGetHeldObjectAnimation++;
             if(currentGetHeldObjectAnimation >= AGENT_INTERACTION_ACTION_ANIMATIONS.Length) {
@@ -169,6 +196,25 @@ public class MCSSimulationAgent : MonoBehaviour {
                 PlayGetHeldObjectAnimation();
             }
         }
+
+        if(rotating) {
+            float speedMultiplier = Mathf.Clamp(500 / Mathf.Abs(targetRotation.y - originalRotation.y), 5, 10);
+            rotationPercent = ((float) currentAnimationFrame / (float) MCSSimulationAgent.ANIMATION_FRAME_RATE) * speedMultiplier;
+            transform.rotation = Quaternion.Slerp(Quaternion.Euler(originalRotation), Quaternion.Euler(targetRotation), rotationPercent);
+            if(rotationPercent >= 0.75) {
+                rotating = false;
+                if(this.isHoldingHeldObject) {
+                    PlayGetHeldObjectAnimation();
+                }
+                else {
+                    int totalNotHoldingObjectFrames = Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * clipNamesAndDurations[MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION]);
+                    AssignClip(MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION);
+                    currentAnimationFrame = totalNotHoldingObjectFrames- MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION_LENGTH;
+                    AnimationPlaysOnce(isLoopAnimation: false);
+                }
+            }
+        }
+
     }
 
     public void AnimationPlaysOnce(bool isLoopAnimation) {

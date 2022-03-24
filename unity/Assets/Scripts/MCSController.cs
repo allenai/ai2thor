@@ -1073,10 +1073,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         MCSSimulationAgent simulationAgent = GameObject.Find(action.objectId).GetComponent<MCSSimulationAgent>();
         MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
         int type = simulationAgent.type == AgentType.ToonPeopleFemale ? (int) AgentType.ToonPeopleFemale : (int) AgentType.ToonPeopleMale;
-        if(simulationAgent.isHoldingHeldObject && !simulationAgent.holdingOutHeldObjectForPickup && !simulationAgent.gettingHeldObject) {
-            simulationAgent.PlayGetHeldObjectAnimation();
+        if(simulationAgent.isHoldingHeldObject && !simulationAgent.holdingOutHeldObjectForPickup && !simulationAgent.gettingHeldObject && !simulationAgent.rotating) {
+            simulationAgent.RotateAgentToLookAtPerformer();
         }
-        else if(simulationAgent.gettingHeldObject) {
+        else if(simulationAgent.gettingHeldObject || simulationAgent.rotating) {
             string outputMessage = "Simulation Agent is currently giving held object.";
             Debug.Log(outputMessage);
         }
@@ -1085,10 +1085,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.Log(outputMessage);
         }
         else {
-            int totalFrames = Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * simulationAgent.clipNamesAndDurations[MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION]);
-            simulationAgent.AssignClip(MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION);
-            simulationAgent.currentAnimationFrame = totalFrames - MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION_LENGTH;
-            simulationAgent.AnimationPlaysOnce(isLoopAnimation: false);
+            simulationAgent.RotateAgentToLookAtPerformer();
         }
         actionFinished(true);
     }
