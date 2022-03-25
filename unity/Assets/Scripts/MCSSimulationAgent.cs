@@ -186,15 +186,11 @@ public class MCSSimulationAgent : MonoBehaviour {
         
         if(target > original + 180) {
             target -= 360;
-            degreeChange = original - target;
         }
-        if(target < original - 179) {
+        else if(target < original - 179) {
             target += 360;
-            degreeChange = target - original;
         }
-        else {
-            degreeChange = target - original;
-        }
+        degreeChange = target - original;
         doAnimation = Mathf.Abs(degreeChange) < MIMIMUM_ROTATION_ANGLE_FOR_ANIMATION;
         return degreeChange;
     }
