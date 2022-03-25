@@ -401,8 +401,9 @@ namespace Thor.Procedural {
             Vector3 right,
             Vector3 top,
             float pointInterval = 1 / 3.0f,
+            Transform transform = null,
             WallRectangularHole hole = null,
-            string postfixName = "VisibilityPoints"
+            string postfixName = ""
         ) {
             var visibilityPoints = new GameObject($"VisibilityPoints{postfixName}");
             var width = right.magnitude;
@@ -418,10 +419,63 @@ namespace Thor.Procedural {
 
             Bounds bounds = new Bounds();
 
-            if (hole != null) {
-                var dims = hole.boundingBox.max - hole.boundingBox.min + Vector3.forward * 2.0f;
-                var center = hole.boundingBox.min + dims / 2.0f + (-Vector3.forward) * 0.5f;
-                bounds = new Bounds(center + start, dims);
+            var rightNorm = right.normalized;
+            var topNorm = top.normalized;
+
+            if (hole != null && transform != null) {
+                // var wallTransform = new Matrix4x4(rightNorm, topNorm, Vector3.Cross(rightNorm, topNorm), start);
+                // var holeMaxWorld = wallTransform.MultiplyPoint(hole.boundingBox.max);
+                // var holeMinWorld = wallTransform.MultiplyPoint(hole.boundingBox.min);
+
+                var holeMaxWorld = transform.TransformPoint(hole.boundingBox.max) - (right + top) / 2.0f;// - transform.TransformPoint((right + top) / 2.0f);
+                var holeMinWorld = transform.TransformPoint(hole.boundingBox.min - Vector3.forward * 0.1f) - (right + top) / 2.0f;// - transform.TransformPoint((right + top) / 2.0f);
+
+                var dims = holeMaxWorld - holeMinWorld + transform.TransformVector(Vector3.forward) * 0.2f;
+                var originalDims = dims;
+                var center = holeMinWorld + (dims/ 2.0f);// transform.TransformVector((hole.boundingBox.max + Vector3.forward * 0.2f) - (hole.boundingBox.min - Vector3.forward * 0.1f));
+
+                // Bounds.Contains does not work properly with negative sizes
+                dims.z = Math.Sign(dims.z) == 1 ? dims.z : -dims.z;
+                dims.x = Math.Sign(dims.x) == 1 ? dims.x : -dims.x;
+               
+                bounds = new Bounds(center, dims);
+
+                // Debug Visualize
+                /*
+                var corners = new List<List<Vector3>> {
+                    new List<Vector3>(){ 
+                        Vector3.zero,
+                        new Vector3(dims.x, 0, 0)
+                    },
+                    new List<Vector3>(){ 
+                        Vector3.zero,
+                        new Vector3(0, dims.y, 0)
+                    },
+                    new List<Vector3>(){ 
+                        Vector3.zero,
+                        new Vector3(0, 0, dims.z)
+                    }
+                }.CartesianProduct().Select(x => x.Aggregate(center-(dims/2.0f), (acc, v) => acc + v)).ToList();
+
+                var tmp = corners[3];
+                corners[3] = corners[2];
+                corners[2] = tmp;
+
+                tmp = corners[7];
+                corners[7] = corners[6];
+                corners[6] = tmp;
+
+                var sides = new List<List<Vector3>>() { corners.Take(4).ToList(), corners.Skip(4).ToList() };
+                if (transform.gameObject.name == "wall|6|4.8|3.2|4.8|4.8") {
+                    Debug.Log("Hole min world " + holeMinWorld.ToString("F8") + "Hole max world " + holeMaxWorld.ToString("F8") + " dims " + dims.ToString("F8") + " center " + center.ToString("F8") + " hole dims " + (hole.boundingBox.max - hole.boundingBox.min).ToString("F8"));
+                    foreach (var q in sides) {
+
+                        foreach (var (first, second) in q.Zip(q.Skip(3).Concat(q.Take(3)), (first, second) => (first, second)).Concat(sides[0].Zip(sides[1], (first, second)=> (first, second)))) {
+                            Debug.DrawLine(first, second, Color.magenta, 1000);
+                        }
+                    }
+                }
+                */ 
             }
 
             for (Vector3 rightDelta = Vector3.zero; (width * width) - rightDelta.sqrMagnitude > (step * step); rightDelta += stepVecRight) {
@@ -991,11 +1045,13 @@ namespace Thor.Procedural {
             //var mats = ProceduralTools.FindAssetsByType<Material>().ToDictionary(m => m.name, m => m);
             // var mats = ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First());
 
+            
             var visibilityPointsGO = CreateVisibilityPointsOnPlane(
                 toCreate.p0,
                 toCreate.p1 - toCreate.p0,
                 (Vector3.up * toCreate.height),
                 visibilityPointInterval,
+                wallGO.transform,
                 toCreate.hole
             );
 
@@ -2026,6 +2082,32 @@ namespace Thor.Procedural {
             var go = prefab;
 
             var spawned = GameObject.Instantiate(original: go); //, position, Quaternion.identity); //, position, rotation);
+
+            if (openness.HasValue) {
+                var canOpen = spawned.GetComponentInChildren<CanOpen_Object>();
+                if (canOpen != null) {
+                    canOpen.SetOpennessImmediate(openness.Value);
+                }
+            }
+
+            if (isOn.HasValue) {
+                var canToggle = spawned.GetComponentInChildren<CanToggleOnOff>();
+                if (canToggle != null) {
+                    if (isOn.Value != canToggle.isOn) {
+                        canToggle.Toggle();
+                    }
+                }
+            }
+
+            if (isDirty.HasValue) {
+                var dirt = spawned.GetComponentInChildren<Dirty>();
+                if (dirt != null) {
+                    if (isDirty.Value != dirt.IsDirty()) {
+                        dirt.ToggleCleanOrDirty();
+                    }
+                }
+            }
+
             spawned.transform.parent = GameObject.Find("Objects").transform;
             // var rotaiton = Quaternion.AngleAxis(rotation.degrees, rotation.axis);
             if (positionBoundingBoxCenter) {
@@ -2053,31 +2135,6 @@ namespace Thor.Procedural {
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
             rb.isKinematic = kinematic;
-
-            if (openness.HasValue) {
-                var canOpen = spawned.GetComponentInChildren<CanOpen_Object>();
-                if (canOpen != null) {
-                    canOpen.SetOpennessImmediate(openness.Value);
-                }
-            }
-
-            if (isOn.HasValue) {
-                var canToggle = spawned.GetComponentInChildren<CanToggleOnOff>();
-                if (canToggle != null) {
-                    if (isOn.Value != canToggle.isOn) {
-                        canToggle.Toggle();
-                    }
-                }
-            }
-
-            if (isDirty.HasValue) {
-                var dirt = spawned.GetComponentInChildren<Dirty>();
-                if (dirt != null) {
-                    if (isDirty.Value != dirt.IsDirty()) {
-                        dirt.ToggleCleanOrDirty();
-                    }
-                }
-            }
 
             toSpawn.objectID = id;
             toSpawn.name = id;
