@@ -50,7 +50,7 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
 
     # subprocess.run("ls %s" % build_archive_name, shell=True)
     # subprocess.run("gsha256sum %s" % build_archive_name)
-    s3 = boto3.resource("s3")
+    s3 = boto3.resource("s3", region_name="us-west-2")
     acl = "public-read"
     bucket = ai2thor.build.PUBLIC_S3_BUCKET
     if include_private_scenes:
@@ -61,10 +61,15 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
     key = "builds/%s" % (archive_base,)
     sha256_key = "builds/%s.sha256" % (os.path.splitext(archive_base)[0],)
 
-    s3.Object(bucket, key).put(Body=zip_data, ACL=acl)
-    s3.Object(bucket, sha256_key).put(
-        Body=hashlib.sha256(zip_data).hexdigest(), ACL=acl, ContentType="text/plain"
-    )
+    sha = hashlib.sha256(zip_data)
+    try:
+        s3.Object(bucket, key).put(Body=zip_data, ACL=acl, ChecksumSHA256=b64encode(sha.digest()).decode('ascii'))
+        s3.Object(bucket, sha256_key).put(
+            Body=sha.hexdigest(), ACL=acl, ContentType="text/plain"
+        )
+    except botocore.exceptions.ClientError as e:
+        logger.error("caught error uploading archive %s: %s" % (build_archive_name, e))
+
     logger.info("pushed build %s to %s" % (bucket, build_archive_name))
 
 
