@@ -92,6 +92,7 @@ class InteractiveControllerPrompt(object):
         depth_frame=False,
         color_frame=False,
         metadata=False,
+        step=True
     ):
 
         if not sys.stdout.isatty():
@@ -114,19 +115,23 @@ class InteractiveControllerPrompt(object):
                     new_commands[str(cc["counter"])] = com
                     cc["counter"] += 1
 
-            event = controller.step(a)
+            if step:
+                event = controller.step(a)
+            else:
+                event = controller.last_event
             visible_objects = []
-            InteractiveControllerPrompt.write_image(
-                event,
-                self.image_dir,
-                "_{}".format(self.counter),
-                image_per_frame=self.image_per_frame,
-                semantic_segmentation_frame=semantic_segmentation_frame,
-                instance_segmentation_frame=instance_segmentation_frame,
-                color_frame=color_frame,
-                depth_frame=depth_frame,
-                metadata=metadata,
-            )
+            if self.image_dir is not None:
+                InteractiveControllerPrompt.write_image(
+                    event,
+                    self.image_dir,
+                    "_{}".format(self.counter),
+                    image_per_frame=self.image_per_frame,
+                    semantic_segmentation_frame=semantic_segmentation_frame,
+                    instance_segmentation_frame=instance_segmentation_frame,
+                    color_frame=color_frame,
+                    depth_frame=depth_frame,
+                    metadata=metadata,
+                )
 
             self.counter += 1
             if self.has_object_actions:
@@ -214,6 +219,8 @@ class InteractiveControllerPrompt(object):
                     command_info.append("%s: %s" % (ak, av))
 
                 print(" ".join(command_info))
+
+            return a['action']
 
     def next_interact_command(self):
 

@@ -3637,3 +3637,35 @@ class {encoded_class_name}:
 """
         )
     return class_data
+
+
+@task
+def test_local_action(context):
+    import ai2thor.controller
+    import random
+
+    width = 300
+    height = 300
+    fov = 60
+
+    # def act(controller, actions, n):
+    #     for i in range(n):
+    #         action = random.choice(actions)
+    #         controller.step(dict(action=action))
+
+    controller = ai2thor.controller.Controller(
+        local_executable_path=None,
+        # scene=scene,
+        gridSize=0.25,
+        width=width,
+        height=height,
+        fieldOfView=fov,
+        agentControllerType="mid-level",
+        server_class=ai2thor.fifo_server.FifoServer
+    )
+
+    controller.step(action="MoveAhead")
+
+    evt = controller.step(action="ObjectNavHumanAction")
+
+    print("Return " + evt.metadata["actionReturn"])

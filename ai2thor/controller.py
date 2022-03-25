@@ -39,6 +39,8 @@ from ai2thor.util import makedirs, atomic_write
 from ai2thor.util.lock import LockEx
 import ai2thor.platform
 
+from ai2thor.local_actions import INTERCEPT_ACTIONS, LocalActionRunner
+
 import warnings
 
 logger = logging.getLogger(__name__)
@@ -401,6 +403,14 @@ class Controller(object):
         self.container_id = None
         self.width = width
         self.height = height
+        self.local_action_runner = LocalActionRunner(default_actions=[
+            DefaultActions.RotateLeft,
+            DefaultActions.RotateRight,
+            DefaultActions.MoveAhead,
+            DefaultActions.MoveBack,
+            DefaultActions.MoveLeft,
+            DefaultActions.MoveRight
+        ])
 
         self.last_event = None
         self.scene = None
@@ -889,6 +899,20 @@ class Controller(object):
 
         return events
 
+    def intercept_action(self, action):
+        if action['action'] in INTERCEPT_ACTIONS:
+            try:
+                method = getattr(self.local_action_runner, action['action'])
+                event = method(action, self)
+                self.last_event = event
+            except AttributeError:
+                raise NotImplementedError(
+                    "Controller `{}` does not implement method `{}` and is in list of INTERCEPT_ACTIONS,"
+                    " actions meant to be run and returned in python without going through Unity."
+                    .format(self.__class__.__name__, method_name))
+            return True
+        return False
+
     def step(self, action=None, **action_args):
 
         if type(action) is dict:
@@ -933,34 +957,37 @@ class Controller(object):
                 # not deleting to allow for older builds to continue to work
                 # del action[old]
 
-        self.server.send(action)
-        try:
-            self.last_event = self.server.receive()
-        except UnityCrashException as e:
-            self.server.stop()
-            self.server = None
-            # we don't need to pass port or host, since this Exception
-            # is only thrown from the FifoServer, start_unity is also
-            # not passed since Unity would have to have been started
-            # for this to be thrown
-            message = "Restarting unity due to crash: %s" % e
-            warnings.warn(message)
-            self.start(width=self.width, height=self.height, x_display=self.x_display)
-            self.reset()
-            raise RestartError(message)
+        skip_server = self.intercept_action(action)
 
-        if not self.last_event.metadata["lastActionSuccess"]:
-            if self.last_event.metadata["errorCode"] in [
-                "InvalidAction",
-                "MissingArguments",
-                "AmbiguousAction",
-                "InvalidArgument",
-            ]:
-                raise ValueError(self.last_event.metadata["errorMessage"])
-            elif raise_for_failure:
-                raise RuntimeError(
-                    self.last_event.metadata.get("errorMessage", f"{action} failed")
-                )
+        if not skip_server:
+            self.server.send(action)
+            try:
+                self.last_event = self.server.receive()
+            except UnityCrashException as e:
+                self.server.stop()
+                self.server = None
+                # we don't need to pass port or host, since this Exception
+                # is only thrown from the FifoServer, start_unity is also
+                # not passed since Unity would have to have been started
+                # for this to be thrown
+                message = "Restarting unity due to crash: %s" % e
+                warnings.warn(message)
+                self.start(width=self.width, height=self.height, x_display=self.x_display)
+                self.reset()
+                raise RestartError(message)
+
+            if not self.last_event.metadata["lastActionSuccess"]:
+                if self.last_event.metadata["errorCode"] in [
+                    "InvalidAction",
+                    "MissingArguments",
+                    "AmbiguousAction",
+                    "InvalidArgument",
+                ]:
+                    raise ValueError(self.last_event.metadata["errorMessage"])
+                elif raise_for_failure:
+                    raise RuntimeError(
+                        self.last_event.metadata.get("errorMessage", f"{action} failed")
+                    )
 
         return self.last_event
 
