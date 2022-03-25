@@ -47,6 +47,7 @@ def add_files(zipf, start_dir, exclude_ext=()):
 
 def push_build(build_archive_name, zip_data, include_private_scenes):
     import boto3
+    from base64 import b64encode
 
     # subprocess.run("ls %s" % build_archive_name, shell=True)
     # subprocess.run("gsha256sum %s" % build_archive_name)
