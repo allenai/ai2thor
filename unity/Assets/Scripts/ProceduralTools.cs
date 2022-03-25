@@ -2026,6 +2026,32 @@ namespace Thor.Procedural {
             var go = prefab;
 
             var spawned = GameObject.Instantiate(original: go); //, position, Quaternion.identity); //, position, rotation);
+
+            if (openness.HasValue) {
+                var canOpen = spawned.GetComponentInChildren<CanOpen_Object>();
+                if (canOpen != null) {
+                    canOpen.SetOpennessImmediate(openness.Value);
+                }
+            }
+
+            if (isOn.HasValue) {
+                var canToggle = spawned.GetComponentInChildren<CanToggleOnOff>();
+                if (canToggle != null) {
+                    if (isOn.Value != canToggle.isOn) {
+                        canToggle.Toggle();
+                    }
+                }
+            }
+
+            if (isDirty.HasValue) {
+                var dirt = spawned.GetComponentInChildren<Dirty>();
+                if (dirt != null) {
+                    if (isDirty.Value != dirt.IsDirty()) {
+                        dirt.ToggleCleanOrDirty();
+                    }
+                }
+            }
+
             spawned.transform.parent = GameObject.Find("Objects").transform;
             // var rotaiton = Quaternion.AngleAxis(rotation.degrees, rotation.axis);
             if (positionBoundingBoxCenter) {
@@ -2053,31 +2079,6 @@ namespace Thor.Procedural {
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
             rb.isKinematic = kinematic;
-
-            if (openness.HasValue) {
-                var canOpen = spawned.GetComponentInChildren<CanOpen_Object>();
-                if (canOpen != null) {
-                    canOpen.SetOpennessImmediate(openness.Value);
-                }
-            }
-
-            if (isOn.HasValue) {
-                var canToggle = spawned.GetComponentInChildren<CanToggleOnOff>();
-                if (canToggle != null) {
-                    if (isOn.Value != canToggle.isOn) {
-                        canToggle.Toggle();
-                    }
-                }
-            }
-
-            if (isDirty.HasValue) {
-                var dirt = spawned.GetComponentInChildren<Dirty>();
-                if (dirt != null) {
-                    if (isDirty.Value != dirt.IsDirty()) {
-                        dirt.ToggleCleanOrDirty();
-                    }
-                }
-            }
 
             toSpawn.objectID = id;
             toSpawn.name = id;
