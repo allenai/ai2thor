@@ -3661,11 +3661,23 @@ def test_local_action(context):
         height=height,
         fieldOfView=fov,
         agentControllerType="mid-level",
-        server_class=ai2thor.fifo_server.FifoServer
+        server_class=ai2thor.fifo_server.FifoServer,
+        human_selectable_actions=[
+            "RotateLeft",
+            "RotateRight",
+            "MoveAhead",
+            "MoveBack",
+            "MoveLeft",
+            "MoveRight"
+        ]
     )
 
     controller.step(action="MoveAhead")
 
     evt = controller.step(action="ObjectNavHumanAction")
 
-    print("Return " + evt.metadata["actionReturn"])
+    print("User Action1 " + evt.metadata["actionReturn"])
+
+    # evt = controller.step(action="ObjectNavHumanAction")
+    #
+    # print("User Action2 " + evt.metadata["actionReturn"])

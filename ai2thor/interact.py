@@ -203,7 +203,7 @@ class InteractiveControllerPrompt(object):
             self._interact_commands.update(new_commands)
 
             print("Position: {}".format(event.metadata["agent"]["position"]))
-            print(command_message)
+            # print(command_message)
             print("Visible Objects:\n" + "\n".join(sorted(visible_objects)))
 
             skip_keys = ["action", "objectId"]

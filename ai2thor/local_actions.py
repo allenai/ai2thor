@@ -30,7 +30,8 @@ class LocalActionRunner(object):
         # )
 
         print("Select next action:")
-        # Simple version instead of interact controller
+
+        # Simpler version instead of interact controller
         # actions = {"1": "RotateLeft", "2": "RotateRight"}
         # for key, a in actions.items():
         #     print("({}) {}".format(key, a))
@@ -51,11 +52,10 @@ class LocalActionRunner(object):
         cv2.setWindowProperty("image", cv2.WND_PROP_TOPMOST, 1)
         cv2.imshow("image", img)
 
-        # TODO figure waitKey requires double input to close opencv window, perhaps opencv not needed,
-        # just a good resolution for THOR
+        # TODO  perhaps opencv not needed, just a good resolution for THOR
         cv2.waitKey(1)
 
-        # TODO modify interactive controller accordingly, or use simple version above
+        # TODO modify interactive controller accordingly, or use simple version commented above
         result = self.interactive_prompt.interact(
             controller,
             step=False

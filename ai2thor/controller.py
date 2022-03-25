@@ -395,6 +395,7 @@ class Controller(object):
         server_class=None,
         gpu_device=None,
         platform=None,
+        human_selectable_actions=None,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -403,14 +404,9 @@ class Controller(object):
         self.container_id = None
         self.width = width
         self.height = height
-        self.local_action_runner = LocalActionRunner(default_actions=[
-            DefaultActions.RotateLeft,
-            DefaultActions.RotateRight,
-            DefaultActions.MoveAhead,
-            DefaultActions.MoveBack,
-            DefaultActions.MoveLeft,
-            DefaultActions.MoveRight
-        ])
+
+        self.local_action_runner = LocalActionRunner(
+            default_actions=[DefaultActions[a] for a in human_selectable_actions])
 
         self.last_event = None
         self.scene = None
