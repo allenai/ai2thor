@@ -2037,7 +2037,8 @@ namespace Thor.Procedural {
                     unlit: ho.unlit,
                     materialProperties: ho.materialProperties,
                     openness: ho.openness,
-                    isOn: ho.isOn
+                    isOn: ho.isOn,
+                    isDirty: ho.isDirty
                 );
             } else {
 
@@ -2075,11 +2076,38 @@ namespace Thor.Procedural {
             bool unlit = false,
             MaterialProperties materialProperties = null,
             float? openness = null,
-            bool? isOn = null
+            bool? isOn = null,
+            bool? isDirty = null
         ) {
             var go = prefab;
 
             var spawned = GameObject.Instantiate(original: go); //, position, Quaternion.identity); //, position, rotation);
+
+            if (openness.HasValue) {
+                var canOpen = spawned.GetComponentInChildren<CanOpen_Object>();
+                if (canOpen != null) {
+                    canOpen.SetOpennessImmediate(openness.Value);
+                }
+            }
+
+            if (isOn.HasValue) {
+                var canToggle = spawned.GetComponentInChildren<CanToggleOnOff>();
+                if (canToggle != null) {
+                    if (isOn.Value != canToggle.isOn) {
+                        canToggle.Toggle();
+                    }
+                }
+            }
+
+            if (isDirty.HasValue) {
+                var dirt = spawned.GetComponentInChildren<Dirty>();
+                if (dirt != null) {
+                    if (isDirty.Value != dirt.IsDirty()) {
+                        dirt.ToggleCleanOrDirty();
+                    }
+                }
+            }
+
             spawned.transform.parent = GameObject.Find("Objects").transform;
             // var rotaiton = Quaternion.AngleAxis(rotation.degrees, rotation.axis);
             if (positionBoundingBoxCenter) {
@@ -2107,22 +2135,6 @@ namespace Thor.Procedural {
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
             rb.isKinematic = kinematic;
-
-            if (openness.HasValue) {
-                var canOpen = spawned.GetComponentInChildren<CanOpen_Object>();
-                if (canOpen != null) {
-                    canOpen.SetOpennessImmediate(openness.Value);
-                }
-            }
-
-            if (isOn.HasValue) {
-                var canToggle = spawned.GetComponentInChildren<CanToggleOnOff>();
-                if (canToggle != null) {
-                    if (isOn.Value != canToggle.isOn) {
-                        canToggle.Toggle();
-                    }
-                }
-            }
 
             toSpawn.objectID = id;
             toSpawn.name = id;
