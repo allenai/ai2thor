@@ -20,9 +20,9 @@ Included with ManipulaTHOR is a range of new actions specific to arm manipulatio
 The full details can be found in the [ManipulaTHOR Documentation here.](https://ai2thor.allenai.org/manipulathor/)
 
 ## Environmental Lighting Randomization
-<img src="https://user-images.githubusercontent.com/28768645/111756723-c5620600-8857-11eb-90d0-c8810b276716.png" width="49%"> <img src="https://user-images.githubusercontent.com/28768645/111756731-c6933300-8857-11eb-8be9-5ede098841ea.png" width="49%">
+<img src="https://user-images.githubusercontent.com/28768645/111756723-c5620600-8857-11eb-90d0-c8810b276716.png" width="49%"/> <img src="https://user-images.githubusercontent.com/28768645/111756731-c6933300-8857-11eb-8be9-5ede098841ea.png" width="49%"/>
 
-<img src="https://user-images.githubusercontent.com/28768645/111756604-a3688380-8857-11eb-90b4-c172549204db.png" width="49%"> <img src="https://user-images.githubusercontent.com/28768645/111756610-a499b080-8857-11eb-9752-e7d22c14bd7d.png" width="49%">
+<img src="https://user-images.githubusercontent.com/28768645/111756604-a3688380-8857-11eb-90b4-c172549204db.png" width="49%"/> <img src="https://user-images.githubusercontent.com/28768645/111756610-a499b080-8857-11eb-9752-e7d22c14bd7d.png" width="49%"/>
 
 A new `RandomizeLighting` action has been added. This action allows a range of lighting changes across the `iTHOR`, `RoboTHOR`, and `ManipulaTHOR` environments to add more variation to a scene. `RandomizeLighting` has the following options to control how the light is randomized across a scene:
 - **synchronized** - Denotes if all lights should be multiplied by the same random intensity and be randomized to the same color. When false, each light object is randomized independantly.
