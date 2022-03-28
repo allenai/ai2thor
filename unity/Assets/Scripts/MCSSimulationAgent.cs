@@ -62,6 +62,7 @@ public class MCSSimulationAgent : MonoBehaviour {
     public bool gettingHeldObject;
     public bool holdingOutHeldObjectForPickup;
     private int currentGetHeldObjectAnimation = 0;
+    private static int ANIMATION_FRAME_TO_ENHANCE_INTERACTION_ACTION = 34; //this makes the interaction action looks more believable.
     private MCSController mcsController;
 
     void Awake() {
