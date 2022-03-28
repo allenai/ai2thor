@@ -200,7 +200,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         List<GameObject> heldAgentObjects = new List<GameObject>();
         foreach(MCSSimulationAgent agent in this.simulationAgents) {
-            if(agent.isHoldingHeldObject && !agent.holdingOutHeldObjectForPickup && !agent.gettingHeldObject) {
+            if(agent.isHoldingHeldObject && 
+                agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject && 
+                agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject) {
                 agent.heldObject.gameObject.SetActive(true);
                 heldAgentObjects.Add(agent.heldObject.gameObject);
             }
@@ -1069,8 +1071,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             if(sop.associatedWithAgent != "" && this.agentObjectAssociations.ContainsKey(sop.associatedWithAgent)) {
                 foreach(MCSSimulationAgent agent in this.simulationAgents) {
                     if(sop.associatedWithAgent == agent.name) {
-                        agent.SetDefaultAnimation();
-                        agent.holdingOutHeldObjectForPickup = false;
+                        agent.SetDefaultAnimation(usePreviousClip: agent.previousClip != "");
                         agent.isHoldingHeldObject = false;
                     }
                 }
@@ -1094,24 +1095,34 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
+
+
+        if(simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject || 
+                simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingNotHoldingHeldObject ||
+                simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject) {
+                    
+            string outputMessage = "Simulation Agent is currently interacting with performer.";
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.IS_AGENT_CURRENTLY_INTERACTING_WTIH_PERFORMER);
+            Debug.Log(outputMessage);
+            actionFinished(false);
+            return;
+        }
+
         this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-        int type = simulationAgent.type == AgentType.ToonPeopleFemale ? (int) AgentType.ToonPeopleFemale : (int) AgentType.ToonPeopleMale;
-        if(simulationAgent.isHoldingHeldObject && !simulationAgent.holdingOutHeldObjectForPickup && !simulationAgent.gettingHeldObject) {
+        if (simulationAgent.isHoldingHeldObject && 
+            simulationAgent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject && 
+            simulationAgent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject) {
+
+            simulationAgent.simAgentActionState = MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject;
             simulationAgent.PlayGetHeldObjectAnimation();
         }
-        else if(simulationAgent.gettingHeldObject) {
-            string outputMessage = "Simulation Agent is currently giving held object.";
-            Debug.Log(outputMessage);
-        }
-        else if(simulationAgent.holdingOutHeldObjectForPickup) {
-            string outputMessage = "Simulation Agent is holding out held object for pickup.";
-            Debug.Log(outputMessage);
-        }
+
         else {
             int totalFrames = Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * simulationAgent.clipNamesAndDurations[MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION]);
             simulationAgent.AssignClip(MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION);
-            simulationAgent.currentAnimationFrame = totalFrames - MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION_LENGTH;
             simulationAgent.AnimationPlaysOnce(isLoopAnimation: false);
+            simulationAgent.simAgentActionState = MCSSimulationAgent.SimAgentActionState.InteractingNotHoldingHeldObject;
+            simulationAgent.currentAnimationFrame = totalFrames - MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION_LENGTH;
         }
         actionFinished(true);
     }
@@ -1139,7 +1150,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             
         SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
-        if (target == null || !target.GetComponent<SimObjPhysics>()) {
+        if (target == null || !target.GetComponent<SimObjPhysics>() || !target.isInteractable) {
             errorMessage = action.objectId + " is not interactable.";
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
             return false;

@@ -200,6 +200,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             SUCCESSFUL_WITH_INVALID_PARAMETERS,
             WRONG_POSE,
             IS_NOT_AGENT,
+            IS_AGENT_CURRENTLY_INTERACTING_WTIH_PERFORMER,
             FAILED // generic error code for unexpected failures
         }
 

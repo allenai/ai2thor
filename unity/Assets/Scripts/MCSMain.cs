@@ -2074,10 +2074,23 @@ public class MCSMain : MonoBehaviour {
         objectConfig.actions.Where(action => action.stepBegin == step).ToList().ForEach((action) => {
             Animator animator = objectConfig.GetGameObject().GetComponent<Animator>();
             if (objectConfig.agent) {
-                MCSSimulationAgent simulationAgent = objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>();
-                simulationAgent.AssignClip(action.id);
-                simulationAgent.AnimationPlaysOnce(action.isLoopAnimation);
-                simulationAgent.SetStepToEndAnimation(action.stepEnd);
+                MCSSimulationAgent simulationAgent = objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>();                
+                if(simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject ||
+                    simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject ||
+                    simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject) {
+                        
+                    simulationAgent.delayedAnimation = action.id;
+                    simulationAgent.delayedStepStart = action.stepBegin;
+                    simulationAgent.delayedStepEnd = action.stepEnd;
+                    simulationAgent.delayedIsLoopAnimation = action.isLoopAnimation;
+                }
+                else { 
+                    simulationAgent.simAgentActionState = MCSSimulationAgent.SimAgentActionState.Action;
+                    simulationAgent.AssignClip(action.id);
+                    simulationAgent.AnimationPlaysOnce(action.isLoopAnimation);
+                    simulationAgent.SetStepToEndAnimation(action.stepEnd);
+                }
+                
             }
             else if (animator != null) {
                 // Play the animation on the game object, not on the parent object.
