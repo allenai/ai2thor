@@ -1041,11 +1041,24 @@ def ci_build(context):
 
                         # ci_build_arch(temp_dir, arch, build["commit_id"], include_private_scenes)
                         p = multiprocessing.Process(target=ci_build_arch, args=(temp_dir, arch, build["commit_id"], include_private_scenes,))
-                        p.start()
-                        # wait for Unity to start so that it can pick up the GICache config
-                        # changes
-                        time.sleep(30)
-                        procs.append(p)
+                        active_procs = lambda x: sum([p.is_alive() for p in x])
+                        started = False
+                        for _ in range(200):
+                            if active_procs(procs) > 0:
+                                logger.info("too many active procs - waiting before start %s " % arch)
+                                time.sleep(15)
+                                continue
+                            else:
+                                logger.info("starting build process for %s " % arch)
+                                started = True
+                                p.start()
+                                # wait for Unity to start so that it can pick up the GICache config
+                                # changes
+                                time.sleep(30)
+                                procs.append(p)
+                                break
+                        if not started:
+                            logger.error("could not start build for %s" % arch)
 
             # the UnityLockfile is used as a trigger to indicate that Unity has closed
             # the project and we can run the unit tests
