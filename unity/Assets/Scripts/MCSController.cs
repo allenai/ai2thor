@@ -1088,21 +1088,19 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         MCSSimulationAgent simulationAgent = GameObject.Find(action.objectId).GetComponent<MCSSimulationAgent>();
         if(simulationAgent == null) {
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.IS_NOT_AGENT);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_AGENT);
             string outputMessage = "The object being interacted with is NOT an agent.";
             Debug.Log(outputMessage);
             actionFinished(false);
             return;
         }
 
-
-
         if(simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject || 
                 simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingNotHoldingHeldObject ||
                 simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject) {
-                    
+
             string outputMessage = "Simulation Agent is currently interacting with performer.";
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.IS_AGENT_CURRENTLY_INTERACTING_WTIH_PERFORMER);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.AGENT_CURRENTLY_INTERACTING_WTIH_PERFORMER);
             Debug.Log(outputMessage);
             actionFinished(false);
             return;
