@@ -2077,8 +2077,9 @@ public class MCSMain : MonoBehaviour {
                 MCSSimulationAgent simulationAgent = objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>();                
                 if(simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject ||
                     simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject ||
-                    simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject) {
-                        
+                    simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingNotHoldingHeldObject ||
+                    simulationAgent.rotating) {
+                    
                     simulationAgent.delayedAnimation = action.id;
                     simulationAgent.delayedStepStart = action.stepBegin;
                     simulationAgent.delayedStepEnd = action.stepEnd;

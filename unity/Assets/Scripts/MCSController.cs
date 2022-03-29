@@ -200,9 +200,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         List<GameObject> heldAgentObjects = new List<GameObject>();
         foreach(MCSSimulationAgent agent in this.simulationAgents) {
-            if(agent.isHoldingHeldObject && 
-                agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject && 
-                agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject) {
+            if (agent.isHoldingHeldObject && 
+                (agent.rotating || (agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject && 
+                agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject))) {
+                
                 agent.heldObject.gameObject.SetActive(true);
                 heldAgentObjects.Add(agent.heldObject.gameObject);
             }
@@ -1112,19 +1113,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             simulationAgent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject) {
 
             simulationAgent.simAgentActionState = MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject;
-            //do stuff here
             simulationAgent.RotateAgentToLookAtPerformer();
-            simulationAgent.PlayGetHeldObjectAnimation();
         }
 
         else {
-            //do stuff here
-            simulationAgent.RotateAgentToLookAtPerformer();
-            int totalFrames = Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * simulationAgent.clipNamesAndDurations[MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION]);
-            simulationAgent.AssignClip(MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION);
-            simulationAgent.AnimationPlaysOnce(isLoopAnimation: false);
             simulationAgent.simAgentActionState = MCSSimulationAgent.SimAgentActionState.InteractingNotHoldingHeldObject;
-            simulationAgent.currentAnimationFrame = totalFrames - MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION_LENGTH;
+            simulationAgent.RotateAgentToLookAtPerformer();
         }
         actionFinished(true);
     }
