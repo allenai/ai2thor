@@ -1040,7 +1040,7 @@ def ci_build(context):
                         active_procs = lambda x: sum([p.is_alive() for p in x])
                         started = False
                         for _ in range(200):
-                            if active_procs(procs) > 1:
+                            if active_procs(procs) > 0:
                                 logger.info("too many active procs - waiting before start %s " % arch)
                                 time.sleep(15)
                                 continue
