@@ -58,13 +58,22 @@
                 "y": 1,
                 "z": 1
             }
+        }],
+        "actions": [{
+            "stepBegin": 1,
+            "id": "TPF_clap",
+            "isLoopAnimation": true,
+            "stepEnd":10
+        },{
+            "stepBegin": 20,
+            "id": "TPF_wave",
+            "isLoopAnimation": true
         }]
     }, {
         "id": "soccer_ball",
         "type": "soccer_ball",
         "mass": 1,
         "salientMaterials": ["plastic"],
-        "materials": ["UnityAssetStore/Kindergarten_Interior/Models/Materials/color 1"],
         "pickupable": true,
         "associatedWithAgent": "agent_male",
         "shows": [{
@@ -118,6 +127,17 @@
                 "y": 1,
                 "z": 1
             }
+        }],
+        "actions": [{
+            "stepBegin": 1,
+            "id": "TPF_wave",
+            "isLoopAnimation": true
+        },
+        {
+            "stepBegin": 10,
+            "id": "TPF_jump",
+            "isLoopAnimation": false,
+            "stepEnd": 15
         }]
     }]
 }

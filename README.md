@@ -326,6 +326,7 @@ For playback:
   - Added `ApplyTorque` method to apply a torque force to an object
   - Added `ApplyRotation` method to apply a rotation transformation to an object
   - Added `ApplyMovement` method to apply a movement transformation to an object
+  - Added `associatedWithAgent` property signifying that this object is held by a simulation agent and interacting with that agent will present this object to the performer
 - `Scripts/SimObjType`:
   - Added `IgnoreType` to the `SimObjType` enum, `ReturnAllPoints`, and `AlwaysPlaceUpright`
   - Added `Stacking` to the `SimObjSecondaryProperty` enum.

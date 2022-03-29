@@ -4566,18 +4566,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 sop.isInAgentHand = true;
                 sop.transform.localEulerAngles = Vector3.zero;
                 sop.GetComponent<Rigidbody>().isKinematic = false;
-                MCSController mcsController = FindObjectOfType<MCSController>();
-                if(mcsController.simulationAgents.Count > 0) {
-                    if(sop.associatedWithAgent != "" && mcsController.agentObjectAssociations.ContainsKey(sop.associatedWithAgent)) {
-                        foreach(MCSSimulationAgent agent in mcsController.simulationAgents) {
-                            if(sop.associatedWithAgent == agent.name) {
-                                agent.SetDefaultAnimation();
-                                agent.holdingOutHeldObjectForPickup = false;
-                                agent.isHoldingHeldObject = false;
-                            }
-                        }
-                    }
-                }
+                UpdateAgentObjectAssociations(sop);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 actionFinished(true, target.ObjectID);
                 return;
@@ -4589,6 +4578,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
+        }
+
+        public virtual void UpdateAgentObjectAssociations(SimObjPhysics sop) {
+
         }
 
         public bool tryPickupTarget(SimObjPhysics target, ServerAction action, bool manualInteract = false)

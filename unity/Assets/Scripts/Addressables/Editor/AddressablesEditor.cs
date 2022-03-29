@@ -15,10 +15,8 @@ using UnityEngine;
 /// </summary>
 public class AddressablesEditor
 {
-    private static string LINUX_CACHED_DIR = "CachedAddressableLink/Linux/aa";
     private static string LINUX_STREAMING_DIR = "StreamingAssets/aa";
 
-    private static string OSX_CACHED_DIR = "CachedAddressableLink/OSX/aa";
     private static string OSX_STREAMING_DIR = "Contents/Resources/Data/StreamingAssets/aa";
 
     /// <summary>
@@ -99,65 +97,18 @@ public class AddressablesEditor
         return string.Empty;
     }
 
-    [PostProcessBuild]
-    public static void OnPostprocessBuild(BuildTarget target, string pathToBuiltProject)
-    {
-        var (sourceDir, targetDir) = GetBuildAssetsDirectories(target, pathToBuiltProject);
-
-        #if UNITY_STANDALONE_OSX || UNITY_STANDALONE_LINUX
-            // If no addressable catalog is found, bring it from cache. Otherwise bring it from S3
-            if (!Directory.Exists(targetDir))
-            {
-                if(Directory.Exists(sourceDir))
-                    CopyFilesRecursively(sourceDir, targetDir);
-                else 
-                    CopyAddressableFilesFromS3(targetDir);
-            }
-           
-        #endif
-    }
-
-    public static (string sourceDir, string targetDir) GetBuildAssetsDirectories(BuildTarget target, string pathToBuiltProject) {
-        string sourceDir = null;
+    public static string GetBuildAssetsDirectories(BuildTarget target, string pathToBuiltProject) {
         string targetDir = null;
 
         if (target == BuildTarget.StandaloneLinux64) {
-            sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), LINUX_CACHED_DIR);
             string dataDir = Path.ChangeExtension(pathToBuiltProject, null) + "_Data/";
             targetDir = Path.Combine(dataDir, LINUX_STREAMING_DIR);
         }
         else if (target == BuildTarget.StandaloneOSX) {
-            sourceDir = Path.Combine(Path.GetDirectoryName(Application.dataPath), OSX_CACHED_DIR);
             targetDir = Path.Combine(pathToBuiltProject, OSX_STREAMING_DIR);
         }
         
-        return (sourceDir, targetDir);
+        return targetDir;
     }
 
-    private static void CopyFilesRecursively(string sourceDir, string targetDir)
-    {
-        Directory.CreateDirectory(targetDir);
-
-        foreach (var file in Directory.GetFiles(sourceDir))
-            File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)));
-
-        foreach (var directory in Directory.GetDirectories(sourceDir))
-            CopyFilesRecursively(directory, Path.Combine(targetDir, Path.GetFileName(directory)));
-    }
-
-    private static void CopyAddressableFilesFromS3(string targetDir) {
-        string bucketUrl = "https://ai2thor-mcs-addressables.s3.amazonaws.com/";
-        string catalogUrl = bucketUrl + "StandaloneLinux64/catalog.json";
-        string settingsUrl = bucketUrl + "StandaloneLinux64/settings.json";
-        string linkUrl = bucketUrl + "StandaloneLinux64/link.xml";
-
-        //Download files
-        using (var client = new WebClient())
-        {
-            client.DownloadFile(catalogUrl, targetDir + "/catalog.json");
-            client.DownloadFile(settingsUrl, targetDir + "/settings.json");
-            Directory.CreateDirectory(targetDir + "AddressablesLink/");
-            client.DownloadFile(linkUrl, targetDir + "/AddressablesLink/link.xml");
-        }
-    }
 }

@@ -199,6 +199,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             SUCCESSFUL,
             SUCCESSFUL_WITH_INVALID_PARAMETERS,
             WRONG_POSE,
+            NOT_AGENT,
+            AGENT_CURRENTLY_INTERACTING_WTIH_PERFORMER,
             FAILED // generic error code for unexpected failures
         }
 
@@ -223,7 +225,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] GameObject CrackedCameraCanvas = null;
 
 		// Initialize parameters from environment variables
-		protected virtual void Awake()
+		public virtual void Awake()
 		{
             #if UNITY_WEBGL
                 this.jsInterface = this.GetComponent<JavaScriptInterface>();
