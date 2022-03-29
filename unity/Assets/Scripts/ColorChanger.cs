@@ -236,4 +236,24 @@ public class ColorChanger : MonoBehaviour {
             }
         }
     }
+
+    public Dictionary<string, string[]> GetMaterials() {
+        Dictionary<string, string[]> orSomething = new Dictionary<string, string[]>();
+
+        if (objectMaterials == null) {
+            cacheMaterials();
+        }
+
+        foreach (KeyValuePair<string, List<ResourceAssetReference<Material>>> sm in objectMaterials) {
+            List<string> materialNames = new List<string>();
+
+            foreach (ResourceAssetReference<Material> resourceAssetReference in sm.Value) {
+                materialNames.Add(resourceAssetReference.Name);
+            }
+
+            orSomething.Add(sm.Key, materialNames.ToArray());
+        }
+
+        return orSomething;
+    }
 }

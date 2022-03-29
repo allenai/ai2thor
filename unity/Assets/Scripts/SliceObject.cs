@@ -73,14 +73,24 @@ public class SliceObject : MonoBehaviour {
 
         if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeCooked)) {
             // instantiate the normal object if this object is not cooked, otherwise....
-            resultObject = Instantiate(ObjectToChangeTo, transform.position, transform.rotation);
+            resultObject = Instantiate(
+                original: ObjectToChangeTo,
+                position: transform.position,
+                rotation: transform.rotation
+            );
+            resultObject.transform.parent = GameObject.Find("Objects").transform;
             isSliced = true;
         }
 
         // if the object can be cooked, check if it is cooked and then spawn the cooked object to change to, otherwise spawn the normal object
         else {
             // instantiate the normal object if this object is not cooked, otherwise....
-            resultObject = Instantiate(ObjectToChangeTo, transform.position, transform.rotation);
+            resultObject = Instantiate(
+                original: ObjectToChangeTo,
+                position: transform.position,
+                rotation: transform.rotation
+            );
+            resultObject.transform.parent = GameObject.Find("Objects").transform;
             isSliced = true;
 
             if (gameObject.GetComponent<CookObject>().IsCooked()) {

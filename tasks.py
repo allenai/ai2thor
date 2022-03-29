@@ -102,11 +102,18 @@ def _unity_path():
                 unity_version
             )
         )
+        # /Applications/Unity/2019.4.20f1/Unity.app/Contents/MacOS
+
         standalone_path = (
-            "/Applications/Unity-{}/Unity.app/Contents/MacOS/Unity".format(
+            "/Applications/Unity/{}/Unity.app/Contents/MacOS/Unity".format(
                 unity_version
             )
         )
+        # standalone_path = (
+        #     "/Applications/Unity-{}/Unity.app/Contents/MacOS/Unity".format(
+        #         unity_version
+        #     )
+        # )
     elif "win" in sys.platform:
         unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Unity.exe".format(
             unity_version
@@ -1817,16 +1824,31 @@ def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
 @task
 def benchmark(
     ctx,
-    screen_width=600,
-    screen_height=600,
+    width=600,
+    height=600,
     editor_mode=False,
     out="benchmark.json",
     verbose=False,
     local_build=False,
+    number_samples=100,
+    gridSize=0.25,
+    scenes=None,
+    house_json_path=None,
+    filter_object_types="",
+    teleport_random_before_actions=False,
     commit_id=ai2thor.build.COMMIT_ID,
+    distance_visibility_scheme=False,
+    title=""
 ):
     import ai2thor.controller
     import random
+    import platform
+    import time
+    from functools import reduce
+    from pprint import pprint
+
+    import os
+    curr = os.path.dirname(os.path.abspath(__file__))
 
     move_actions = ["MoveAhead", "MoveBack", "MoveLeft", "MoveRight"]
     rotate_actions = ["RotateRight", "RotateLeft"]
@@ -1854,6 +1876,89 @@ def benchmark(
             print("{} average: {}".format(action_name, 1 / frame_time))
         return 1 / frame_time
 
+    procedural = False
+    if house_json_path:
+        procedural = True
+
+    def create_procedural_house(procedural_house_path):
+        house = None
+        if procedural_house_path:
+            if verbose:
+                print("Loading house from path: '{}'. cwd: '{}'".format(procedural_house_path, curr))
+            with open(procedural_house_path, "r") as f:
+                house = json.load(f)
+                env.step(
+                    action="CreateHouse",
+                    house=house
+                )
+
+        if filter_object_types != "":
+            if filter_object_types == "*":
+                if verbose:
+                    print("-- Filter All Objects From Metadata")
+                env.step(action="SetObjectFilter", objectIds=[])
+            else:
+                types = filter_object_types.split(",")
+                evt = env.step(action="SetObjectFilterForType", objectTypes=types)
+                if verbose:
+                    print("Filter action, Success: {}, error: {}".format(evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]))
+        return house
+
+    def telerport_to_random_reachable(env, house=None):
+
+        # teleport within scene for reachable positions to work
+        def centroid(poly):
+            n = len(poly)
+            total = reduce(lambda acc, e: {'x':acc['x']+e['x'], 'y': acc['y']+e['y'], 'z': acc['z']+e['z']}, poly, {'x':0, 'y': 2, 'z': 0})
+            return {'x':total['x']/n, 'y': total['y']/n, 'z': total['z']/n}
+
+        if procedural:
+            pos = {'x':0, 'y': 2, 'z': 0}
+
+            if house['rooms'] and len(house['rooms']) > 0 :
+                poly = house['rooms'][0]['floorPolygon']
+                pos = centroid(poly)
+
+                print("poly center: {0}".format(pos))
+            evt = env.step(
+                dict(
+                    action="TeleportFull",
+                    x=1.6,#pos['x'],
+                    y=0.5, #pos['y'],
+                    z=1.6, #pos['z'],
+                    rotation=dict(x=0, y=0, z=0),
+                    horizon=0.0,
+                    standing=True,
+                    forceAction=True
+                )
+            )
+            if verbose:
+                print("--Teleport, " +  " err: " + evt.metadata["errorMessage"])
+
+        evt = env.step(action="GetReachablePositions")
+
+        # print("After GetReachable AgentPos: {}".format(evt.metadata["agent"]["position"]))
+        if verbose:
+            print("-- GetReachablePositions success: {}, message: {}".format(evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]))
+
+        reachable_pos = evt.metadata["actionReturn"]
+
+        # print(evt.metadata["actionReturn"])
+        pos = random.choice(reachable_pos)
+        rot = random.choice([0, 90, 180, 270])
+
+        evt = env.step(
+            dict(
+                action="TeleportFull",
+                x=pos['x'],
+                y=pos['y'],
+                z=pos['z'],
+                rotation=dict(x=0, y=rot, z=0),
+                horizon=0.0,
+                standing=True
+            )
+        )
+
     args = {}
     if editor_mode:
         args["port"] = 8200
@@ -1863,8 +1968,14 @@ def benchmark(
     else:
         args["commit_id"] = commit_id
 
+    args['width'] = width
+    args['height'] = height
+    args['gridSize'] = gridSize
+    args['snapToGrid'] = True
+    args['visibilityScheme'] = 'Distance' if distance_visibility_scheme else 'Collider'
+
     env = ai2thor.controller.Controller(
-        width=screen_width, height=screen_height, **args
+        **args
     )
 
     # Kitchens:       FloorPlan1 - FloorPlan30
@@ -1873,24 +1984,43 @@ def benchmark(
     # Bathrooms:      FloorPLan401 - FloorPlan430
 
     room_ranges = [(1, 30), (201, 230), (301, 330), (401, 430)]
+    if scenes:
+        scene_list = scenes.split(",")
+    else:
+        scene_list = [["FloorPlan{}_physics".format(i) for i in range(room_range[0], room_range[1])] for room_range in room_ranges]
 
-    benchmark_map = {"scenes": {}}
+    procedural_json_filenames = None
+    if house_json_path:
+        scene_list = house_json_path.split(",")
+
+    # inv_args = locals()
+    # del inv_args['ctx']
+    # inv_args['platform'] =platform.system()
+
+    benchmark_map = {"scenes": {}, "controller_params": {**args}, "benchmark_params": { "platform": platform.system(), "filter_object_types": filter_object_types, "action_sample_number": number_samples}}
+    if title != '':
+        benchmark_map['title'] = title
     total_average_ft = 0
     scene_count = 0
-    print("Start loop")
-    for room_range in room_ranges:
-        for i in range(room_range[0], room_range[1]):
-            scene = "FloorPlan{}_physics".format(i)
+
+    for scene in scene_list:
             scene_benchmark = {}
             if verbose:
                 print("Loading scene {}".format(scene))
-            # env.reset(scene)
-            env.step(dict(action="Initialize", gridSize=0.25))
+            if not procedural:
+                 env.reset(scene)
+            else:
+                if verbose:
+                    print("------ RESET")
+                env.reset("procedural")
+
+            # env.step(dict(action="Initialize", gridSize=0.25))
 
             if verbose:
                 print("------ {}".format(scene))
 
-            sample_number = 100
+            # initial_teleport(env)
+            sample_number = number_samples
             action_tuples = [
                 ("move", move_actions, sample_number),
                 ("rotate", rotate_actions, sample_number),
@@ -1898,7 +2028,13 @@ def benchmark(
                 ("all", all_actions, sample_number),
             ]
             scene_average_fr = 0
+            procedural_house_path = scene if procedural else None
+
+            house = create_procedural_house(procedural_house_path) if procedural else None
+
             for action_name, actions, n in action_tuples:
+
+                telerport_to_random_reachable(env, house)
                 ft = benchmark_actions(env, action_name, actions, n)
                 scene_benchmark[action_name] = ft
                 scene_average_fr += ft
@@ -3640,4 +3776,359 @@ class {encoded_class_name}:
     {test_record_data}
 """
         )
+    with open("ai2thor/tests/test_utf.py", "w") as f:
+        f.write("\n".join(class_data))
+
     return class_data
+
+@task
+def create_room(ctx, file_path="unity/Assets/Resources/rooms/1.json", editor_mode=False, local_build=False):
+    import ai2thor.controller
+    import random
+    import json
+    import os
+    print(os.getcwd())
+    width = 300
+    height = 300
+    fov = 100
+    n = 20
+    import os;
+    controller = ai2thor.controller.Controller(
+        local_executable_path=None,
+        local_build=local_build,
+        start_unity=False if editor_mode else True,
+        scene="Procedural",
+        gridSize=0.25,
+        width=width,
+        height=height,
+        fieldOfView=fov,
+        agentControllerType='mid-level',
+        server_class=ai2thor.fifo_server.FifoServer,
+        visibilityScheme='Distance'
+    )
+
+    # print(
+    #     "constoller.last_action Agent Pos: {}".format(
+    #         controller.last_event.metadata["agent"]["position"]
+    #     )
+    # )
+
+    # evt = controller.step(action="GetReachablePositions", gridSize=gridSize)
+
+    # print("After GetReachable AgentPos: {}".format(evt.metadata["agent"]["position"]))
+    #
+    # print(evt.metadata["lastActionSuccess"])
+    # print(evt.metadata["errorMessage"])
+    #
+    # reachable_pos = evt.metadata["actionReturn"]
+    #
+    # print(evt.metadata["actionReturn"])
+    print(os.getcwd())
+    with open(file_path, "r") as f:
+        obj = json.load(f)
+        walls = obj["walls"]
+
+        evt = controller.step(
+            dict(
+                action="CreateRoom",
+                walls=walls,
+                wallHeight=2.0,
+                wallMaterialId="DrywallOrange",
+                floorMaterialId="DarkWoodFloors"
+            )
+        )
+
+        for i in range(n):
+            controller.step("MoveAhead")
+
+
+# def walls_to_polygon(walls):
+
+
+@task
+def create_json(ctx, file_path, output=None):
+    import json
+    import functools
+    import itertools
+    from pprint import pprint
+
+    add = lambda x, y: x + y
+    sub = lambda x, y: x - y
+
+    def vec3(x, y, z):
+        return {"x": x, "y": y, "z": z}
+
+    def point_wise_2(v1, v2, func):
+        return {k: func(v1[k], v2[k]) for k in ['x', 'y', 'z']}
+
+    def point_wise(v1, func):
+        return {k: func(v1[k]) for k in ['x', 'y', 'z']}
+
+    def sum(vec):
+        return functools.reduce(lambda a, b: a + b, vec.values())
+
+    def sqr_dist(v1, v2):
+        return sum(point_wise(point_wise_2(v1, v2, sub), lambda x: x ** 2))
+
+    def wall_to_poly(wall):
+        return [ wall['p0'], wall['p1'], point_wise_2(wall['p1'], vec3(0, wall['height'], 0), add), point_wise_2(wall['p0'], vec3(0, wall['height'], 0), add)]
+
+
+    def walls_to_floor_poly(walls):
+        result = []
+        wall_list = list(walls)
+        eps = 1e-4
+        eps_sqr = eps ** 2
+
+        result.append(walls[0]['p0'])
+
+        while len(wall_list) != 0:
+            wall = wall_list.pop(0)
+            p1 = wall['p1']
+            wall_list = sorted(wall_list, key=lambda w: sqr_dist(p1, w['p0']))
+            if len(wall_list) != 0:
+                closest = wall_list[0]
+                dist = sqr_dist(p1, closest['p0'])
+                if dist < eps_sqr:
+                    result.append(closest['p0'])
+                else:
+                    return None
+        return result
+
+
+    with open(file_path, "r") as f:
+        obj = json.load(f)
+        walls = \
+        [
+            [
+                {
+                    "id": "wall_{}_{}".format(room_i, wall_indx),
+                    "roomId": "room_{}".format(room_i),
+                    "material": wall['materialId'],
+                    "empty": wall['empty'] if 'empty' in wall else False,
+                    'polygon': wall_to_poly(wall)
+                } for (wall, wall_indx) in zip(room["walls"], range(0, len(room["walls"])))
+            ] for (room, room_i) in zip(obj["rooms"], range(len(obj["rooms"])))
+        ]
+
+
+        rooms = \
+        [
+            {
+                "id": "room_{}".format(room_i),
+                "type": "",
+                "floorMaterial": room['rectangleFloor']['materialId'],
+                "children": [],
+                "ceilings": [],
+                "floorPolygon": walls_to_floor_poly(room["walls"])}
+            for (room, room_i) in zip(obj["rooms"], range(len(obj["rooms"])))
+
+        ]
+
+        walls = list(itertools.chain(*walls))
+
+        house = {
+            'rooms': rooms,
+            'walls': walls,
+            'proceduralParameters': {
+                'ceilingMaterial': obj['ceilingMaterialId'],
+                "floorColliderThickness": 1.0,
+                "receptacleHeight": 0.7,
+                "skyboxId": "Sky1",
+                "lights": []
+            }
+        }
+
+        pprint(house)
+
+        if output is not None:
+            with open(output, "w") as fw:
+                json.dump(house, fw, indent=4, sort_keys=True)
+
+
+@task
+def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False):
+    import ai2thor.controller
+    import random
+    import json
+    import os
+    import time
+
+    print(os.getcwd())
+    width = 300
+    height = 300
+    fov = 100
+    n = 20
+    import os
+    from pprint import pprint
+    controller = ai2thor.controller.Controller(
+        local_executable_path=None,
+        local_build=local_build,
+        start_unity=False if editor_mode else True,
+        scene="Procedural",
+        gridSize=0.25,
+        width=width,
+        height=height,
+        fieldOfView=fov,
+        agentControllerType='mid-level',
+        server_class=ai2thor.fifo_server.FifoServer,
+        visibilityScheme='Distance'
+    )
+
+    # print(
+    #     "constoller.last_action Agent Pos: {}".format(
+    #         controller.last_event.metadata["agent"]["position"]
+    #     )
+    # )
+
+    # evt = controller.step(action="GetReachablePositions", gridSize=gridSize)
+
+    # print("After GetReachable AgentPos: {}".format(evt.metadata["agent"]["position"]))
+    #
+    # print(evt.metadata["lastActionSuccess"])
+    # print(evt.metadata["errorMessage"])
+    #
+    # reachable_pos = evt.metadata["actionReturn"]
+    #
+    # print(evt.metadata["actionReturn"])
+    print(os.getcwd())
+    with open(file_path, "r") as f:
+        obj = json.load(f)
+
+        obj['walls'] = [wall for wall in obj['walls'] if wall['roomId'] == room_id]
+        obj['rooms'] = [room for room in obj['rooms'] if room['id'] == room_id]
+        obj['objects'] = []
+
+        pprint(obj)
+        evt = controller.step(
+            dict(
+                action="CreateHouseFromJson",
+                house=obj
+            )
+        )
+
+        evt = controller.step(dict(
+            action="TeleportFull", x=4.0, y=0.9010001, z=4.0, rotation=dict(x=0, y=0, z=0),
+            horizon = 30, standing = True, forceAction = True
+        ))
+        # dict("axis" = dict(x=0, y=1.0, z=0), "degrees": 90)
+
+        # SpawnObjectInReceptacleRandomly(string objectId, string prefabName, string targetReceptacle, AxisAngleRotation rotation)
+        evt = controller.step(dict(
+            action="SpawnObjectInReceptacleRandomly",
+            objectId="table_1",
+            prefabName="Coffee_Table_211_1",
+            targetReceptacle="Floor|+00.00|+00.00|+00.00",
+
+            rotation=dict(axis=dict(x=0, y=1.0, z=0), degrees=90)
+        ))
+        print(evt.metadata['lastActionSuccess'])
+        print(evt.metadata['errorMessage'])
+
+        # this is what you need
+        object_position = evt.metadata['actionReturn'];
+
+        print(object_position)
+
+        for i in range(n):
+            controller.step("MoveAhead")
+            time.sleep(0.4)
+        for j in range(6):
+            controller.step("RotateRight")
+            time.sleep(0.7)
+            
+@task
+def plot(
+        ctx,
+        benchamrk_filenames,
+        plot_titles=None,
+        x_label="Rooms",
+        y_label="Actions Per Second",
+        title="Procedural Benchmark",
+        last_ithor=False,
+        output_filename="benchmark",
+        width=9.50,
+        height=7.5,
+        action_breakdown=False
+):
+    import matplotlib.pyplot as plt
+    from functools import reduce
+    from matplotlib.lines import Line2D
+
+    filter = 'all'
+
+    def get_data(benchmark, filter='all'):
+        keys = list(benchmark['scenes'].keys())
+        if filter is not None:
+            y = [benchmark['scenes'][m][filter] for m in keys]
+        else:
+            y = [benchmark['scenes'][m] for m in keys]
+        return keys, y
+
+    def load_benchmark_filename(filename):
+        with open(filename) as f:
+            return json.load(f)
+
+    def get_benchmark_title(benchmark, default_title=''):
+        if 'title' in benchmark:
+            return benchmark['title']
+        else:
+            return default_title
+
+    benchmark_filenames = benchamrk_filenames.split(",")
+
+    # markers = ["o", "*", "^", "+", "~"]
+    markers = list(Line2D.markers.keys())
+    # remove empty marker
+    markers.pop(1)
+    benchmarks = [load_benchmark_filename(filename) for filename in benchmark_filenames]
+
+    benchmark_titles = [get_benchmark_title(b, '') for (i, b) in zip(range(0, len(benchmarks)), benchmarks)]
+
+    if plot_titles is not None:
+        titles = plot_titles.split(",")
+    else:
+        titles = [''] * len(benchmark_titles)
+
+    plot_titles = [benchmark_titles[i] if title == '' else title for (i, title) in zip(range(0, len(titles)), titles)]
+
+    filter = 'all' if not action_breakdown else None
+    all_data = [get_data(b, filter) for b in benchmarks]
+
+    import numpy as np
+    if action_breakdown:
+        plot_titles = reduce(list.__add__, [["{} {}".format(title, action) for action in all_data[0][1][0]] for title in plot_titles])
+        all_data = reduce(list.__add__,[[(x, [y[action] for y in b]) for action in all_data[0][1][0]] for (x, b) in all_data])
+
+    keys = [k for (k, y) in all_data]
+    y = [y for (k, y) in all_data]
+    min_key_number = min(keys)
+
+    ax = plt.gca()
+
+    plt.rcParams["figure.figsize"] = [width, height]
+    plt.rcParams["figure.autolayout"] = True
+    fig = plt.figure()
+
+    for (i, (x, y)) in zip(range(0, len(all_data)), all_data):
+        marker = markers[i] if i < len(markers) else "*"
+
+        ithor_datapoint = last_ithor and i == len(all_data) - 1
+
+        x_a =  all_data[i-1][0] if ithor_datapoint else x
+
+        plt.plot([x_s.split('/')[-1].split("_")[0] for x_s in x_a], y, marker=marker, label=plot_titles[i])
+
+        if ithor_datapoint:
+            for j in range(len(x)):
+                print(j)
+                print(x[j])
+                plt.annotate(x[j].split("_")[0], (j, y[j] + 0.2))
+
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+
+    plt.title(title)
+    plt.legend()
+
+    plt.savefig('{}.png'.format(output_filename.replace(".png", "")))

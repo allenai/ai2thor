@@ -20,31 +20,52 @@ public class PlacementManager : MonoBehaviour {
     public const float DefaultDropDistance = 0.05f;
     public const float MaxRaycastCheckDistance = 0.25f;
 
-    public static bool GetPlacementPoint(Vector3 origin, Vector3 direction, Camera agentCamera, float reach, float maxDistance, ref Vector3 point) {
+    public static bool GetPlacementPoint(
+        Vector3 origin,
+        Vector3 direction,
+        Camera agentCamera,
+        float reach,
+        float maxDistance,
+        ref Vector3 point
+    ) {
         UnityEngine.AI.NavMeshHit hit;
-        if (UnityEngine.AI.NavMesh.SamplePosition(origin + (direction.normalized * reach), out hit, maxDistance, 1 << NavmeshShelfArea)) {
+        if (
+            UnityEngine.AI.NavMesh.SamplePosition(
+                sourcePosition: origin + (direction.normalized * reach),
+                hit: out hit,
+                maxDistance: maxDistance,
+                areaMask: 1 << NavmeshShelfArea
+            )
+        ) {
             // check whether we can see this point
             Vector3 viewPoint = agentCamera.WorldToViewportPoint(hit.position);
             Vector3 pointDirection = Vector3.zero;
             Vector3 agentCameraPos = agentCamera.transform.position;
-            if (viewPoint.z > 0// in front of camera
-                && viewPoint.x < SimUtil.ViewPointRangeHigh && viewPoint.x > SimUtil.ViewPointRangeLow// within x bounds
-                && viewPoint.y < SimUtil.ViewPointRangeHigh && viewPoint.y > SimUtil.ViewPointRangeLow) { // within y bounds
-                                                                                                          // do a raycast in the direction of the item
+            if (
+                viewPoint.z > 0// in front of camera
+                && viewPoint.x < SimUtil.ViewPointRangeHigh
+                && viewPoint.x > SimUtil.ViewPointRangeLow// within x bounds
+                && viewPoint.y < SimUtil.ViewPointRangeHigh
+                && viewPoint.y > SimUtil.ViewPointRangeLow
+            ) { // within y bounds
+                // do a raycast in the direction of the item
                 pointDirection = (hit.position - agentCameraPos).normalized;
                 RaycastHit pointHit;
-                if (Physics.Raycast(
+                if (
+                    Physics.Raycast(
                         agentCameraPos,
                         pointDirection,
                         out pointHit,
                         maxDistance * 2,
                         SimUtil.RaycastVisibleLayerMask,
-                        QueryTriggerInteraction.Ignore)) {
+                        QueryTriggerInteraction.Ignore
+                    ) && (
+                        Vector3.Distance(pointHit.point, hit.position) < MaxRaycastCheckDistance
+                    )
+                ) {
                     // if it's within reasonable distance of the original point, we'll know we're fine
-                    if (Vector3.Distance(pointHit.point, hit.position) < MaxRaycastCheckDistance) {
-                        point = hit.position;
-                        return true;
-                    }
+                    point = hit.position;
+                    return true;
                 }
             }
         }

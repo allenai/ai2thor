@@ -116,3 +116,4 @@ inv webgl-s3-deploy -b=<s3_bucket> -t=<target_dir_in_s3> -s=8 -v
 The `-s` or `--scene` parameter is a comma separated list of numbers representing the scenes to build, `-v` is just to have verbose output.
 
 This task, builds and deploys your interface to s3 (make sure you have your WebGL template selected as the one to use in Unity).
+

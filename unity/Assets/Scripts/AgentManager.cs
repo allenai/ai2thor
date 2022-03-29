@@ -181,22 +181,22 @@ public class AgentManager : MonoBehaviour {
             else if (action.agentControllerType.ToLower() == "stochastic") {
                 // set up stochastic controller
                 primaryAgent.actionFinished(success: false, errorMessage: "Invalid combination of agentControllerType=stochastic and agentMode=default. In order to use agentControllerType=stochastic, agentMode must be set to stochastic");
-		return;
+                return;
             }
         } else if (action.agentMode.ToLower() == "locobot") {
             // if not stochastic, default to stochastic
             if (action.agentControllerType.ToLower() != "stochastic") {
                 Debug.Log("'bot' mode only fully supports the 'stochastic' controller type at the moment. Forcing agentControllerType to 'stochastic'");
                 action.agentControllerType = "stochastic";
-            } 
+            }
             // LocobotController is a subclass of Stochastic which just the agentMode (VisibilityCapsule) changed
             SetUpLocobotController(action);
-            
+
         } else if (action.agentMode.ToLower() == "drone") {
             if (action.agentControllerType.ToLower() != "drone") {
                 Debug.Log("'drone' agentMode is only compatible with 'drone' agentControllerType, forcing agentControllerType to 'drone'");
                 action.agentControllerType = "drone";
-            } 
+            }
             SetUpDroneController(action);
 
         } else if (action.agentMode.ToLower() == "arm") {
@@ -260,11 +260,18 @@ public class AgentManager : MonoBehaviour {
         if (action.alwaysReturnVisibleRange) {
             ((PhysicsRemoteFPSAgentController)primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
         }
-        print("start addAgents");
-        StartCoroutine(addAgents(action));
-
+        //if multi agent requested, add duplicates of primary agent now
+        //note: for Houses, adding multiple agents in will need to be done differently as currently
+        //initializing additional agents assumes the scene is already setup, and Houses initialize the 
+        //primary agent floating in space, then generates the house, then teleports the primary agent.
+        //this will need a rework to make multi agent work as GetReachablePositions is used to position additional
+        //agents, which won't work if we initialize the agent(s) before the scene exists
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (!sceneName.StartsWith("Procedural")) {
+            StartCoroutine(addAgents(action));
+        }
     }
-    
+
     private void SetUpLocobotController(ServerAction action) {
         this.agents.Clear();
         // force snapToGrid to be false since we are stochastic
@@ -290,7 +297,7 @@ public class AgentManager : MonoBehaviour {
     }
 
     private BaseFPSAgentController createAgentType(Type agentType, BaseAgentComponent agentComponent) {
-        BaseFPSAgentController agent = Activator.CreateInstance(agentType, new object[]{agentComponent, this}) as BaseFPSAgentController;
+        BaseFPSAgentController agent = Activator.CreateInstance(agentType, new object[] { agentComponent, this }) as BaseFPSAgentController;
         this.agents.Add(agent);
         return agent;
     }
@@ -508,7 +515,7 @@ public class AgentManager : MonoBehaviour {
         Camera camera = gameObject.GetComponentInChildren<Camera>();
 
         // set up returned image
-        camera.cullingMask = ~(1 << 11);
+        camera.cullingMask = ~LayerMask.GetMask("PlaceableSurface");
         if (renderDepthImage || renderSemanticSegmentation || renderInstanceSegmentation || renderNormalsImage || renderFlowImage) {
             gameObject.AddComponent(typeof(ImageSynthesis));
         }
@@ -1449,7 +1456,7 @@ public class ObjectMetadata {
     // what type of object is this?
     public string objectType;
 
-    // uuid of the object
+    // uuid of the object in scene
     public string objectId;
 
     //name of this game object's prefab asset if it has one
@@ -1803,6 +1810,8 @@ public class ServerAction {
     public int thirdPartyCameraId;
     public float y;
     public float fieldOfView;
+    public float cameraNearPlane;
+    public float cameraFarPlane;
     public float x;
     public float z;
     public float pushAngle;
@@ -1977,6 +1986,23 @@ public class ServerAction {
 public class InitializeReturn {
     public float cameraNearPlane;
     public float cameraFarPlane;
+}
+
+[Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
+public class Geometry3D {
+    public Vector3[] vertices;
+    public int[] triangleIndices;
+    public Vector2[] uvs;
+    public Vector3[] normals;
+}
+
+[Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
+public class ObjectSphereBounds {
+    public string id;
+    public Vector3 worldSpaceCenter;
+    public float radius;
 }
 
 public enum ServerActionErrorCode {

@@ -34,7 +34,12 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour {
         var center = transform.TransformPoint(sphereCol.center);
         var radius = sphereCol.radius;
 
-        Collider[] hitColliders = Physics.OverlapSphere(center, radius, 1 << 8, QueryTriggerInteraction.Ignore);
+        Collider[] hitColliders = Physics.OverlapSphere(
+            position: center,
+            radius: radius,
+            layerMask: LayerMask.GetMask("SimObjVisible"),
+            queryTriggerInteraction: QueryTriggerInteraction.Ignore
+        );
         foreach (var col in hitColliders) {
             if (col.GetComponentInParent<SimObjPhysics>()) {
                 SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
