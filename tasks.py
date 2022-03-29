@@ -41,6 +41,9 @@ def add_files(zipf, start_dir, exclude_ext=()):
                 continue
 
             arcname = os.path.relpath(fn, start_dir)
+            if arcname.split("/")[0].endswith("_BackUpThisFolder_ButDontShipItWithYourGame"):
+                # print("skipping %s" % arcname)
+                continue
             # print("adding %s" % arcname)
             zipf.write(fn, arcname)
 
@@ -128,9 +131,14 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
 
     project_path = os.path.join(os.getcwd(), unity_path)
 
+    # osxintel64 is not a BuildTarget
+    build_target_map = dict(OSXIntel64="OSXUniversal")
+
+    # -buildTarget must be passed as an option for the CloudRendering target otherwise a clang error
+    # will get thrown complaining about missing features.h
     command = (
-        "%s -quit -batchmode -logFile %s/%s.log -projectpath %s -executeMethod Build.%s"
-        % (_unity_path(), os.getcwd(), build_name, project_path, arch)
+        "%s -quit -batchmode -logFile %s/%s.log -projectpath %s -buildTarget %s -executeMethod Build.%s"
+        % (_unity_path(), os.getcwd(), build_name, project_path, build_target_map.get(arch, arch), arch)
     )
 
     target_path = os.path.join(build_dir, build_name)
@@ -420,17 +428,6 @@ def local_build(
     generate_quality_settings(context)
 
 
-def fix_webgl_unity_loader_regex(unity_loader_path):
-    # Bug in the UnityLoader.js causes Chrome on Big Sur to fail to load
-    # https://issuetracker.unity3d.com/issues/unity-webgl-builds-do-not-run-on-macos-big-sur
-    with open(unity_loader_path) as f:
-        loader = f.read()
-
-    loader = loader.replace("Mac OS X (10[\.\_\d]+)", "Mac OS X (1[\.\_\d][\.\_\d]+)")
-    with open(unity_loader_path, "w") as f:
-        f.write(loader)
-
-
 @task
 def webgl_build(
     context,
@@ -509,7 +506,6 @@ def webgl_build(
         print("Build Failure")
 
     build_path = _webgl_local_build_path(prefix, directory)
-    fix_webgl_unity_loader_regex(os.path.join(build_path, "Build/UnityLoader.js"))
     generate_quality_settings(context)
 
     # the remainder of this is only used to generate scene metadata, but it
@@ -548,9 +544,10 @@ def webgl_build(
         print(scene_metadata)
 
     to_content_addressable = [
-        ("{}.data.unityweb".format(build_name), "dataUrl"),
-        ("{}.wasm.code.unityweb".format(build_name), "wasmCodeUrl"),
-        ("{}.wasm.framework.unityweb".format(build_name), "wasmFrameworkUrl"),
+        ("{}.data".format(build_name), "dataUrl"),
+        ("{}.loader.js".format(build_name), "loaderUrl"),
+        ("{}.wasm".format(build_name), "wasmCodeUrl"),
+        ("{}.framework.js".format(build_name), "wasmFrameworkUrl"),
     ]
     for file_name, key in to_content_addressable:
         file_to_content_addressable(
@@ -1138,6 +1135,28 @@ def ci_build(context):
 
 
     lock_f.close()
+
+
+@task
+def install_cloudrendering_engine(context, force=False):
+    if not sys.platform.startswith("darwin"):
+        raise Exception("CloudRendering Engine can only be installed on Mac")
+    s3 = boto3.resource("s3")
+    target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(_unity_version())
+    full_dir = os.path.join(target_base_dir, "CloudRendering")
+    if os.path.isdir(full_dir):
+        if force:
+            shutil.rmtree(full_dir)
+            logger.info("CloudRendering engine already installed - removing due to force")
+        else:
+            logger.info("skipping installation - CloudRendering engine already installed")
+            return
+
+    print("packages/CloudRendering-%s.zip" % _unity_version())
+    res = s3.Object(ai2thor.build.PRIVATE_S3_BUCKET, "packages/CloudRendering-%s.zip" % _unity_version()).get()
+    data = res["Body"].read()
+    z = zipfile.ZipFile(io.BytesIO(data))
+    z.extractall(target_base_dir)
 
 
 @task
@@ -3332,28 +3351,6 @@ def get_physics_determinism(
                 action_name, metric
             )
         )
-
-
-@task
-def generate_msgpack_resolver(task):
-    import glob
-
-    # mpc can be downloaded from: https://github.com/neuecc/MessagePack-CSharp/releases/download/v2.1.194/mpc.zip
-    # need to download/unzip into this path, add gatekeeper permission
-    target_dir = "unity/Assets/Scripts/ThorMsgPackResolver"
-    shutil.rmtree(target_dir, ignore_errors=True)
-    mpc_path = os.path.join(os.environ["HOME"], "local/bin/mpc")
-    subprocess.check_call(
-        "%s -i unity -o %s -m -r ThorIL2CPPGeneratedResolver" % (mpc_path, target_dir),
-        shell=True,
-    )
-    for g in glob.glob(os.path.join(target_dir, "*.cs")):
-        with open(g) as f:
-            source_code = f.read()
-            source_code = "using UnityEngine;\n" + source_code
-        with open(g, "w") as f:
-            f.write(source_code)
-
 
 @task
 def generate_pypi_index(context):
