@@ -50,10 +50,11 @@ def add_files(zipf, start_dir, exclude_ext=()):
 
 def push_build(build_archive_name, zip_data, include_private_scenes):
     import boto3
+    from base64 import b64encode
 
     # subprocess.run("ls %s" % build_archive_name, shell=True)
     # subprocess.run("gsha256sum %s" % build_archive_name)
-    s3 = boto3.resource("s3")
+    s3 = boto3.resource("s3", region_name="us-west-2")
     acl = "public-read"
     bucket = ai2thor.build.PUBLIC_S3_BUCKET
     if include_private_scenes:
@@ -64,10 +65,15 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
     key = "builds/%s" % (archive_base,)
     sha256_key = "builds/%s.sha256" % (os.path.splitext(archive_base)[0],)
 
-    s3.Object(bucket, key).put(Body=zip_data, ACL=acl)
-    s3.Object(bucket, sha256_key).put(
-        Body=hashlib.sha256(zip_data).hexdigest(), ACL=acl, ContentType="text/plain"
-    )
+    sha = hashlib.sha256(zip_data)
+    try:
+        s3.Object(bucket, key).put(Body=zip_data, ACL=acl, ChecksumSHA256=b64encode(sha.digest()).decode('ascii'))
+        s3.Object(bucket, sha256_key).put(
+            Body=sha.hexdigest(), ACL=acl, ContentType="text/plain"
+        )
+    except botocore.exceptions.ClientError as e:
+        logger.error("caught error uploading archive %s: %s" % (build_archive_name, e))
+
     logger.info("pushed build %s to %s" % (bucket, build_archive_name))
 
 
@@ -862,7 +868,7 @@ def link_build_cache(root_dir, arch, branch):
     os.makedirs(branch_library_cache_dir, exist_ok=True)
     os.symlink(branch_library_cache_dir, library_path)
     # update atime/mtime to simplify cache pruning
-    os.utime(branch_cache_dir)
+    os.utime(os.path.join(cache_base_dir, encoded_branch))
 
 
 def travis_build(build_id):
@@ -1026,6 +1032,7 @@ def ci_build(context):
                         # been built, we avoid bootstrapping the cache since we short circuited on the line above
                         link_build_cache(temp_dir, arch, build["branch"])
 
+                        # ci_build_arch(temp_dir, arch, build["commit_id"], include_private_scenes)
                         p = multiprocessing.Process(target=ci_build_arch, args=(temp_dir, arch, build["commit_id"], include_private_scenes,))
                         p.start()
                         # wait for Unity to start so that it can pick up the GICache config
