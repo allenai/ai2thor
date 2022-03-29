@@ -1045,6 +1045,7 @@ def ci_build(context):
                                 time.sleep(15)
                                 continue
                             else:
+                                logger.info("starting build process for %s " % arch)
                                 started = True
                                 p.start()
                                 # wait for Unity to start so that it can pick up the GICache config
