@@ -1039,10 +1039,10 @@ def ci_build(context):
                         p = multiprocessing.Process(target=ci_build_arch, args=(temp_dir, arch, build["commit_id"], include_private_scenes,))
                         active_procs = lambda x: sum([p.is_alive() for p in x])
                         started = False
-                        for _ in range(300):
+                        for _ in range(200):
                             if active_procs(procs) > 1:
                                 logger.info("too many active procs - waiting before start %s " % arch)
-                                time.sleep(30)
+                                time.sleep(15)
                                 continue
                             else:
                                 started = True
