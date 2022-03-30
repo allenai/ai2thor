@@ -49,11 +49,13 @@ def add_files(zipf, start_dir, exclude_ext=()):
 
 
 def push_build(build_archive_name, zip_data, include_private_scenes):
+    logger.info("start of push_build")
     import boto3
     from base64 import b64encode
 
     # subprocess.run("ls %s" % build_archive_name, shell=True)
     # subprocess.run("gsha256sum %s" % build_archive_name)
+    logger.info("boto3 resource")
     s3 = boto3.resource("s3", region_name="us-west-2")
     acl = "public-read"
     bucket = ai2thor.build.PUBLIC_S3_BUCKET
@@ -61,10 +63,12 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
         bucket = ai2thor.build.PRIVATE_S3_BUCKET
         acl = "private"
 
+    logger.info("archive base")
     archive_base = os.path.basename(build_archive_name)
     key = "builds/%s" % (archive_base,)
     sha256_key = "builds/%s.sha256" % (os.path.splitext(archive_base)[0],)
 
+    logger.info("hashlib sha256")
     sha = hashlib.sha256(zip_data)
     try:
         logger.info("pushing build %s" % (key,))
