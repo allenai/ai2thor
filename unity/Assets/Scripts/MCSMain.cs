@@ -1639,6 +1639,9 @@ public class MCSMain : MonoBehaviour {
                 agentScript.SetTie(objectConfig.agentSettings?.tie, objectConfig.agentSettings?.tieMaterial);
             }
             agentScript.SetElder((bool)objectConfig.agentSettings?.isElder);
+            if(objectConfig.movement != null) {
+                agentScript.SetMovement(objectConfig.movement);
+            }
         }
 
         // Set animations.
@@ -2078,7 +2081,7 @@ public class MCSMain : MonoBehaviour {
                 if(simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject ||
                     simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject ||
                     simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingNotHoldingHeldObject ||
-                    simulationAgent.rotating) {
+                    simulationAgent.rotatingToFacePerformer) {
                     
                     simulationAgent.delayedAnimation = action.id;
                     simulationAgent.delayedStepStart = action.stepBegin;
@@ -2264,8 +2267,26 @@ public class MCSConfigCollider : MCSConfigTransform {
 }
 
 [Serializable]
+public class MCSConfigSimAgentMovement: MCSConfigStepBegin {
+    public bool repeat = true;
+    public List<MCSConfigSequence> sequence;
+}
+
+[Serializable]
+public class MCSConfigSequence {
+    public string animation = "TPM_walk";
+    public MCSConfigVector endPoint = new MCSConfigVector();
+
+    public MCSConfigSequence() {
+        endPoint.x = Mathf.NegativeInfinity;
+        endPoint.z = Mathf.NegativeInfinity;
+    }
+}
+
+[Serializable]
 public class MCSConfigGameObject : MCSConfigAbstractObject {
     public MCSConfigAgentSettings agentSettings = null;
+    public MCSConfigSimAgentMovement movement = null;
     public string associatedWithAgent;
     public string controller;
     public string locationParent;

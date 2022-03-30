@@ -201,7 +201,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         List<GameObject> heldAgentObjects = new List<GameObject>();
         foreach(MCSSimulationAgent agent in this.simulationAgents) {
             if (agent.isHoldingHeldObject && 
-                (agent.rotating || (agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject && 
+                (agent.rotatingToFacePerformer || (agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject && 
                 agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject))) {
                 
                 agent.heldObject.gameObject.SetActive(true);
@@ -1096,9 +1096,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        if(simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject || 
-                simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingNotHoldingHeldObject ||
-                simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject) {
+        if(simulationAgent.IsDoingAnyInteractions()) {
 
             string outputMessage = "Simulation Agent is currently interacting with performer.";
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.AGENT_CURRENTLY_INTERACTING_WTIH_PERFORMER);
