@@ -976,10 +976,6 @@ def ci_pytest(branch, commit_id):
 
 @task
 def ci_build(context):
-    # using fork can potentially lead to crashes (https://bugs.python.org/issue33725)
-    # if this ever becomes an issue, a separate clone will need to be used
-    # instead of mutating the clone beneath running invoke ci-build task
-    multiprocessing.set_start_method("fork")
 
     lock_f = open(os.path.join(os.environ["HOME"], ".ci-build.lock"), "w")
     arch_temp_dirs = dict()
