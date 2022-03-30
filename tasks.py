@@ -49,11 +49,13 @@ def add_files(zipf, start_dir, exclude_ext=()):
 
 
 def push_build(build_archive_name, zip_data, include_private_scenes):
+    logger.info("start of push_build")
     import boto3
     from base64 import b64encode
 
     # subprocess.run("ls %s" % build_archive_name, shell=True)
     # subprocess.run("gsha256sum %s" % build_archive_name)
+    logger.info("boto3 resource")
     s3 = boto3.resource("s3", region_name="us-west-2")
     acl = "public-read"
     bucket = ai2thor.build.PUBLIC_S3_BUCKET
@@ -61,13 +63,17 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
         bucket = ai2thor.build.PRIVATE_S3_BUCKET
         acl = "private"
 
+    logger.info("archive base")
     archive_base = os.path.basename(build_archive_name)
     key = "builds/%s" % (archive_base,)
     sha256_key = "builds/%s.sha256" % (os.path.splitext(archive_base)[0],)
 
+    logger.info("hashlib sha256")
     sha = hashlib.sha256(zip_data)
     try:
+        logger.info("pushing build %s" % (key,))
         s3.Object(bucket, key).put(Body=zip_data, ACL=acl, ChecksumSHA256=b64encode(sha.digest()).decode('ascii'))
+        logger.info("pushing sha256 %s" % (sha256_key,))
         s3.Object(bucket, sha256_key).put(
             Body=sha.hexdigest(), ACL=acl, ContentType="text/plain"
         )
@@ -786,12 +792,14 @@ def archive_push(unity_path, build_path, build_dir, build_info, include_private_
     zip_buf = io.BytesIO()
     # Unity build is done with CompressWithLz4. Zip with compresslevel=1
     # results in smaller builds than Uncompressed Unity + zip comprseslevel=6 (default)
+    logger.info("building zip archive  %s %s" % (archive_name, os.path.join(unity_path, build_dir)))
     zipf = zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED, compresslevel=1)
     add_files(zipf, os.path.join(unity_path, build_dir), exclude_ext=('.debug',))
     zipf.close()
     zip_buf.seek(0)
     zip_data = zip_buf.read()
 
+    logger.info("generated zip archive %s %s" % (archive_name, len(zip_data)))
     push_build(archive_name, zip_data, include_private_scenes)
     build_log_push(build_info, include_private_scenes)
     print("Build successful")
@@ -975,10 +983,6 @@ def ci_pytest(branch, commit_id):
 
 @task
 def ci_build(context):
-    # using fork can potentially lead to crashes (https://bugs.python.org/issue33725)
-    # if this ever becomes an issue, a separate clone will need to be used
-    # instead of mutating the clone beneath running invoke ci-build task
-    multiprocessing.set_start_method("fork")
 
     lock_f = open(os.path.join(os.environ["HOME"], ".ci-build.lock"), "w")
     arch_temp_dirs = dict()
