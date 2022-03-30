@@ -67,8 +67,9 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
 
     sha = hashlib.sha256(zip_data)
     try:
-        logger.info("pushing build %k" % (key,))
+        logger.info("pushing build %s" % (key,))
         s3.Object(bucket, key).put(Body=zip_data, ACL=acl, ChecksumSHA256=b64encode(sha.digest()).decode('ascii'))
+        logger.info("pushing sha256 %s" % (sha256_key,))
         s3.Object(bucket, sha256_key).put(
             Body=sha.hexdigest(), ACL=acl, ContentType="text/plain"
         )
