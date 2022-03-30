@@ -67,6 +67,7 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
 
     sha = hashlib.sha256(zip_data)
     try:
+        logger.info("pushing build %k" % (key,))
         s3.Object(bucket, key).put(Body=zip_data, ACL=acl, ChecksumSHA256=b64encode(sha.digest()).decode('ascii'))
         s3.Object(bucket, sha256_key).put(
             Body=sha.hexdigest(), ACL=acl, ContentType="text/plain"
@@ -779,12 +780,14 @@ def archive_push(unity_path, build_path, build_dir, build_info, include_private_
     zip_buf = io.BytesIO()
     # Unity build is done with CompressWithLz4. Zip with compresslevel=1
     # results in smaller builds than Uncompressed Unity + zip comprseslevel=6 (default)
+    logger.info("building zip archive  %s %s" % (archive_name, os.path.join(unity_path, build_dir)))
     zipf = zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED, compresslevel=1)
     add_files(zipf, os.path.join(unity_path, build_dir), exclude_ext=('.debug',))
     zipf.close()
     zip_buf.seek(0)
     zip_data = zip_buf.read()
 
+    logger.info("generated zip archive %s %s" % (archive_name, len(zip_data)))
     push_build(archive_name, zip_data, include_private_scenes)
     build_log_push(build_info, include_private_scenes)
     print("Build successful")
@@ -3654,5 +3657,4 @@ class {encoded_class_name}:
 """
         )
     return class_data
-
 
