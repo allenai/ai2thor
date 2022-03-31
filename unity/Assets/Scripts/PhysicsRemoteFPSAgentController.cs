@@ -4562,8 +4562,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (tryPickupTarget(target, action, action.manualInteract))
             {
                 //we have succesfully picked up something! 
-                target.GetComponent<SimObjPhysics>().isInAgentHand = true;
-                target.transform.localEulerAngles = Vector3.zero;
+                SimObjPhysics sop = target.GetComponent<SimObjPhysics>();
+                sop.isInAgentHand = true;
+                sop.transform.localEulerAngles = Vector3.zero;
+                sop.GetComponent<Rigidbody>().isKinematic = false;
+                UpdateAgentObjectAssociations(sop);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 actionFinished(true, target.ObjectID);
                 return;
@@ -4575,6 +4578,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
+        }
+
+        public virtual void UpdateAgentObjectAssociations(SimObjPhysics sop) {
+
         }
 
         public bool tryPickupTarget(SimObjPhysics target, ServerAction action, bool manualInteract = false)

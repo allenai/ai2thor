@@ -437,6 +437,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.straight = this.straight;
                         PhysicsController.ProcessControlCommand(action);
                     }
+
+                    if (Input.GetKeyDown(KeyCode.I))
+                    {
+                        action.action = "InteractWithAgent";
+                        action.objectImageCoords = this.moveOrPickupObjectImageCoords;
+                        action.objectId = this.moveOrPickupObjectId;
+                        PhysicsController.ProcessControlCommand(action);
+                    }
                 }
             }
         }

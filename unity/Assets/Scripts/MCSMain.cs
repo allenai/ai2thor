@@ -122,6 +122,11 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallBack;
     private List<Light> sceneLights = new List<Light>();
 
+    private static string ASSOCIATED_WITH_AGENT_SHAPE_RESTRICTION = "ball";
+    private static float ASSOCIATED_WITH_AGENT_MIN_BOUNDING_BOX_SCALE = 0.2f;
+    private static float ASSOCIATED_WITH_AGENT_MAX_BOUNDING_BOX_SCALE = 0.25f;    
+    private static float ASSOCIATED_WITH_AGENT_SCALE_RESTRICTION = 1f;
+
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
         TextAsset currentSceneFile = AddressablesUtil.Instance.InstantiateAddressableAsset<TextAsset>(MCSMain.ADDRESSABLE_PATH_PREFIX + "Scenes/" + filePath + ".json");
         Debug.Log("MCS: Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
@@ -261,6 +266,7 @@ public class MCSMain : MonoBehaviour {
         }
 
         this.agentController.simulationAgents.Clear();
+        this.agentController.agentObjectAssociations.Clear();
         if (this.currentScene != null && this.currentScene.objects != null) {
             this.currentScene.objects.ForEach(objectConfig => {
                 GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
@@ -321,6 +327,16 @@ public class MCSMain : MonoBehaviour {
             controller.transform.rotation = Quaternion.Euler(0, 0, 0);
             controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
                 0, 0, 0);
+        }
+
+        foreach(string simulationAgentId in this.agentController.agentObjectAssociations.Keys) {
+            MCSSimulationAgent simulationAgent = null;
+            foreach (MCSSimulationAgent simAgent in this.agentController.simulationAgents) {
+                if(simAgent.name == simulationAgentId)
+                    simulationAgent = simAgent.GetComponent<MCSSimulationAgent>();
+            }
+            SimObjPhysics heldSimObj = this.agentController.agentObjectAssociations[simulationAgentId];
+            simulationAgent.heldObject = heldSimObj;
         }
 
         this.lastStep = -1;
@@ -1430,6 +1446,28 @@ public class MCSMain : MonoBehaviour {
                 }
             }
         }
+        if(objectConfig.agentSettings != null)
+            ai2thorPhysicsScript.GetComponent<Rigidbody>().isKinematic = true;
+
+        if(objectConfig.associatedWithAgent != null && objectConfig.associatedWithAgent.Length > 0) {
+            if(ai2thorPhysicsScript.shape != "ball") {
+                Debug.LogError("Associated with agent object " + objectConfig.id + " is not a type of ball. Interaction Actions with the agent holding this object will have visual glitches." );
+            }
+
+            Vector3 boundingBoxScale = ai2thorPhysicsScript.BoundingBox.transform.localScale;
+            MCSConfigSize size = objectConfig.shows[0].scale;
+            if(boundingBoxScale.x < ASSOCIATED_WITH_AGENT_MIN_BOUNDING_BOX_SCALE || boundingBoxScale.x > ASSOCIATED_WITH_AGENT_MAX_BOUNDING_BOX_SCALE 
+                || boundingBoxScale.y < ASSOCIATED_WITH_AGENT_MIN_BOUNDING_BOX_SCALE || boundingBoxScale.y > ASSOCIATED_WITH_AGENT_MAX_BOUNDING_BOX_SCALE 
+                || boundingBoxScale.z < ASSOCIATED_WITH_AGENT_MIN_BOUNDING_BOX_SCALE || boundingBoxScale.z > ASSOCIATED_WITH_AGENT_MAX_BOUNDING_BOX_SCALE) {
+                Debug.LogError("Associated with agent object " + objectConfig.id + " bounding box is not scaled between 0.2 and 0.25. Interaction Actions with the agent holding this object will have visual glitches.");
+            }
+            if(size.x != ASSOCIATED_WITH_AGENT_SCALE_RESTRICTION || size.y != ASSOCIATED_WITH_AGENT_SCALE_RESTRICTION || size.z != ASSOCIATED_WITH_AGENT_SCALE_RESTRICTION) {
+                Debug.LogError("Associated with agent object " + objectConfig.id + " scale values are not 1. Interaction Actions with the agent holding this object will have visual glitches.");
+            }
+
+            ai2thorPhysicsScript.associatedWithAgent = objectConfig.associatedWithAgent;
+            this.agentController.agentObjectAssociations.Add(ai2thorPhysicsScript.associatedWithAgent, ai2thorPhysicsScript);
+        }
 
         // Call Start to initialize the script since it did not exist on game start.
         ai2thorPhysicsScript.Start();
@@ -2036,10 +2074,23 @@ public class MCSMain : MonoBehaviour {
         objectConfig.actions.Where(action => action.stepBegin == step).ToList().ForEach((action) => {
             Animator animator = objectConfig.GetGameObject().GetComponent<Animator>();
             if (objectConfig.agent) {
-                MCSSimulationAgent simulationAgent = objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>();
-                simulationAgent.AssignClip(action.id);
-                simulationAgent.AnimationPlaysOnce(action.isLoopAnimation);
-                simulationAgent.SetStepToEndAnimation(action.stepEnd);
+                MCSSimulationAgent simulationAgent = objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>();                
+                if(simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject ||
+                    simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject ||
+                    simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject) {
+                        
+                    simulationAgent.delayedAnimation = action.id;
+                    simulationAgent.delayedStepStart = action.stepBegin;
+                    simulationAgent.delayedStepEnd = action.stepEnd;
+                    simulationAgent.delayedIsLoopAnimation = action.isLoopAnimation;
+                }
+                else { 
+                    simulationAgent.simAgentActionState = MCSSimulationAgent.SimAgentActionState.Action;
+                    simulationAgent.AssignClip(action.id);
+                    simulationAgent.AnimationPlaysOnce(action.isLoopAnimation);
+                    simulationAgent.SetStepToEndAnimation(action.stepEnd);
+                }
+                
             }
             else if (animator != null) {
                 // Play the animation on the game object, not on the parent object.
@@ -2053,7 +2104,9 @@ public class MCSMain : MonoBehaviour {
 
         // If an agent wasn't assigned an animation on its initialization, ensure it's assigned a default animation.
         if (step == 0 && !actionPlayed && objectConfig.agent) {
-            objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>().SetDefaultAnimation();
+            MCSSimulationAgent simulationAgent = objectConfig.GetGameObject().GetComponent<MCSSimulationAgent>();
+            if(simulationAgent != null)
+                simulationAgent.SetDefaultAnimation();
         }
 
         objectConfig.changeMaterials.Where(change => change.stepBegin == step).ToList().ForEach((change) => {
@@ -2212,6 +2265,7 @@ public class MCSConfigCollider : MCSConfigTransform {
 [Serializable]
 public class MCSConfigGameObject : MCSConfigAbstractObject {
     public MCSConfigAgentSettings agentSettings = null;
+    public string associatedWithAgent;
     public string controller;
     public string locationParent;
     public string materialFile; // deprecated; please use materials

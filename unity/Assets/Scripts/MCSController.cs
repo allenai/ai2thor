@@ -72,6 +72,13 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     [SerializeField] private string resolvedReceptacle;
     public List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
     public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 1;
+    public Dictionary<string, SimObjPhysics> agentObjectAssociations = new Dictionary<string, SimObjPhysics>();
+    private MCSMain mcsMain;
+
+    public override void Awake() {
+        mcsMain = FindObjectOfType<MCSMain>();
+        base.Awake();
+    }
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachScreenPointToId(action);
@@ -182,12 +189,23 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
     }
 
+///////////////////////////////
     public override ObjectMetadata[] generateObjectMetadata() {
         // TODO MCS-77 The held objects will always be active, so we won't need to reactivate this object again.
         bool deactivate = false;
         if (this.ItemInHand != null && !this.ItemInHand.activeSelf) {
             deactivate = true;
             this.ItemInHand.SetActive(true);
+        }
+
+        List<GameObject> heldAgentObjects = new List<GameObject>();
+        foreach(MCSSimulationAgent agent in this.simulationAgents) {
+            if(agent.isHoldingHeldObject && 
+                agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject && 
+                agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject) {
+                agent.heldObject.gameObject.SetActive(true);
+                heldAgentObjects.Add(agent.heldObject.gameObject);
+            }
         }
 
         List<string> visibleObjectIds = this.GetAllVisibleSimObjPhysics(this.m_Camera,
@@ -206,6 +224,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         // TODO MCS-77 The held objects will always be active, so we shouldn't deactivate this object again.
         if (deactivate) {
             this.ItemInHand.SetActive(false);
+        }
+        
+        foreach(GameObject heldAgentObject in heldAgentObjects) {
+            heldAgentObject.SetActive(false);
         }
 
         return objectMetadata;
@@ -278,10 +300,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 hapticFeedback.Add(hf.ToString().ToLower(), false);
         }
       
-        MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
-        main.enableVerboseLog = main.enableVerboseLog || action.logs;
+        mcsMain.enableVerboseLog = mcsMain.enableVerboseLog || action.logs;
         // Reset the MCS scene configuration data and player.
-        main.ChangeCurrentScene(action.sceneConfig);
+        mcsMain.ChangeCurrentScene(action.sceneConfig);
     }
 
     public void OnSceneChange() {
@@ -331,6 +352,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         objectMetadata.colorsFromMaterials = colors.ToArray();
 
         objectMetadata.shape = simObj.shape;
+        objectMetadata.associatedWithAgent = simObj.associatedWithAgent == null ? "" : simObj.associatedWithAgent;
+
+        MCSSimulationAgent simulationAgent = simObj.GetComponent<MCSSimulationAgent>();
+        objectMetadata.simulationAgentHeldObject = simulationAgent == null ? "" : simulationAgent.heldObject == null ? "" : simulationAgent.heldObject.objectID;
+        objectMetadata.simulationAgentIsHoldingHeldObject = simulationAgent == null ? false : simulationAgent.isHoldingHeldObject;
 
         return objectMetadata;
     }
@@ -342,8 +368,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
-        action.restrictOpenDoors = main.currentScene.restrictOpenDoors;
+        action.restrictOpenDoors = mcsMain.currentScene.restrictOpenDoors;
 
         base.OpenObject(action);
     }
@@ -572,7 +597,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         else {
             // (Also simulate the physics after initialization so that the objects can settle down onto the floor.)
             this.SimulatePhysicsOnce();
-            GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep();
+            mcsMain.UpdateOnPhysicsSubstep();
             // Notify the AgentManager to send the action output metadata and images to the Python API.
             ((MCSPerformerManager)this.agentManager).FinalizeEmit();
         }
@@ -620,8 +645,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private void CheckIfInLava() {
-        MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
-        if (main.isPassiveScene) {
+        if (mcsMain.isPassiveScene) {
             return;
         }
         Ray ray = new Ray(transform.position, Vector3.down);
@@ -645,7 +669,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         // Run the physics simulation for a little bit, then pause and save the images for the current scene.
         this.SimulatePhysicsOnce();
 
-        GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep();
+        mcsMain.UpdateOnPhysicsSubstep();
 
         // Wait for the end of frame after we run the physics simulation but before we save the images.
         yield return new WaitForEndOfFrame(); // Required for coroutine functions
@@ -834,8 +858,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public float MatchAgentHeightToStructureBelow() {
-        MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
-        if (main.currentScene == null || main.isPassiveScene) {
+        if (mcsMain.currentScene == null || mcsMain.isPassiveScene) {
             return 0;
         }
 
@@ -1041,6 +1064,115 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             action.agentTransform = transform;
             ApplyForceObject(action);
         }
+    }
+
+    public override void UpdateAgentObjectAssociations(SimObjPhysics sop) {
+        if(this.simulationAgents.Count > 0) {
+            if(sop.associatedWithAgent != "" && this.agentObjectAssociations.ContainsKey(sop.associatedWithAgent)) {
+                foreach(MCSSimulationAgent agent in this.simulationAgents) {
+                    if(sop.associatedWithAgent == agent.name) {
+                        agent.SetDefaultAnimation(usePreviousClip: agent.previousClip != "");
+                        agent.isHoldingHeldObject = false;
+                    }
+                }
+            }
+        }
+    }
+
+    public void InteractWithAgent(ServerAction action) {
+        bool continueInteraction = IsVisableAndInDistance(action, "Simulation Agent");
+        if(!continueInteraction) {
+            actionFinished(false);
+            return;
+        }
+
+        MCSSimulationAgent simulationAgent = GameObject.Find(action.objectId).GetComponent<MCSSimulationAgent>();
+        if(simulationAgent == null) {
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_AGENT);
+            string outputMessage = "The object being interacted with is NOT an agent.";
+            Debug.Log(outputMessage);
+            actionFinished(false);
+            return;
+        }
+
+        if(simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject || 
+                simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingNotHoldingHeldObject ||
+                simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject) {
+
+            string outputMessage = "Simulation Agent is currently interacting with performer.";
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.AGENT_CURRENTLY_INTERACTING_WTIH_PERFORMER);
+            Debug.Log(outputMessage);
+            actionFinished(false);
+            return;
+        }
+
+        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+        if (simulationAgent.isHoldingHeldObject && 
+            simulationAgent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject && 
+            simulationAgent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject) {
+
+            simulationAgent.simAgentActionState = MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject;
+            simulationAgent.PlayGetHeldObjectAnimation();
+        }
+
+        else {
+            int totalFrames = Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * simulationAgent.clipNamesAndDurations[MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION]);
+            simulationAgent.AssignClip(MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION);
+            simulationAgent.AnimationPlaysOnce(isLoopAnimation: false);
+            simulationAgent.simAgentActionState = MCSSimulationAgent.SimAgentActionState.InteractingNotHoldingHeldObject;
+            simulationAgent.currentAnimationFrame = totalFrames - MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION_LENGTH;
+        }
+        actionFinished(true);
+    }
+
+    public bool IsVisableAndInDistance(ServerAction action, string obstructedObject) {
+        bool continueAction = TryConvertingEachScreenPointToId(action);
+
+        if (!continueAction) {
+            return false;
+        }
+
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            errorMessage = "Object ID appears to be invalid.";
+            Debug.Log(errorMessage);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            return false;
+        }
+
+        if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID " + action.objectId + " appears to be invalid.";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                return false;
+            }
+            
+        SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+
+        if (target == null || !target.GetComponent<SimObjPhysics>() || !target.isInteractable) {
+            errorMessage = action.objectId + " is not interactable.";
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
+            return false;
+        }
+
+        // Must call this now because it will set target.isInteractable
+        bool isNotVisible = !objectIsCurrentlyVisible(target, maxVisibleDistance);
+
+        if (isNotVisible || !target.isInteractable) {
+            if (Vector3.Distance(transform.position, FindClosestPoint(transform.position, target)) < maxVisibleDistance) {
+                errorMessage = obstructedObject + " " + action.objectId + " is obstructed.";
+                Debug.Log(errorMessage);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                return false;
+            }
+            
+        }
+
+        if (!action.forceAction && (isNotVisible || !target.isInteractable)) {
+            errorMessage = action.objectId + " is not visible.";
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
+            return false;
+        }
+        return true;
     }
 }
 

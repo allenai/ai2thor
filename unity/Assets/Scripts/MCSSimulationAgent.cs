@@ -34,15 +34,55 @@ public class MCSSimulationAgent : MonoBehaviour {
     private SkinObjectMaterialOption legs = null;
     private int skin = 0;
     private ObjectMaterialOption tie = null;
-    private Animator animator;
+    private MCSMain mcsMain;
 
-    private int currentAnimationFrame = 0;
-    private static int ANIMATION_FRAME_RATE = 25;
+
+    private Animator animator;
+    public static int ANIMATION_FRAME_RATE = 25;
+    public static int AGENT_INTERACTION_ACTION_STARTING_ANIMATION_FRAME = 3;
+    public int currentAnimationFrame = 0;
     [SerializeField] private string currentClip;
-    private Dictionary<string, float> clipNamesAndDurations = new Dictionary<string,float>();
-    private bool resetAnimationToIdleAfterPlayingOnce = false;
-    private int stepToEndAnimation = -1;
+    public Dictionary<string, float> clipNamesAndDurations = new Dictionary<string,float>();
+    [SerializeField] private bool resetAnimationToIdleAfterPlayingOnce = false;
+    [SerializeField] private int stepToEndAnimation = -1;
+    [SerializeField] private bool resetOncePickedUp = false;
+    
+    
+    //local position adjustments of the held object throughout the animation sequence, calculated by hand in the editor
+    private static Vector3 REACH_INTO_BACK_POSITION_1 = new Vector3(0.0057f, 1.41f, -0.156f);
+    private static Vector3 REACH_INTO_BACK_POSITION_2 = new Vector3(0.1296f, 1.4736f, 0.1247f);
+    private static Vector3 REACH_INTO_BACK_POSITION_3 = new Vector3(0.032f, 1.417f, 0.191f);
+    private static Vector3 HOLDING_POSITION = new Vector3(0.002f, 1.119f, 0.1907f);
+    private static Vector3[] AGENT_INTERACTION_ACTION_OBJECT_POSITIONS = {Vector3.zero, REACH_INTO_BACK_POSITION_1, REACH_INTO_BACK_POSITION_2, REACH_INTO_BACK_POSITION_3};
+    private static string[] AGENT_INTERACTION_ACTION_ANIMATIONS = {"TPF_phone1", "TPM_phone1", "TPM_phone1", "TPM_phone2"};
+    public static string NOT_HOLDING_OBJECT_ANIMATION = "TPM_idle5";
+    public static int NOT_HOLDING_OBJECT_ANIMATION_LENGTH = 5;
+    private static string HAND_NAME = "TP R Hand";
+    public SimObjPhysics heldObject;
+    public bool isHoldingHeldObject;
+    public int currentGetHeldObjectAnimation = 0;
+    private static int ANIMATION_FRAME_TO_ENHANCE_INTERACTION_ACTION = 34; //this makes the interaction action looks more believable.
     private MCSController mcsController;
+
+    public enum SimAgentActionState {
+        Action,
+        Idle,
+        InteractingHoldingHeldObject,
+        InteractingNotHoldingHeldObject,
+        HoldingOutHeldObject,
+        Moving,
+        Rotating,
+        None
+    }
+    public SimAgentActionState simAgentActionState = SimAgentActionState.Idle;
+    public string previousClip = "";
+    public bool previousClipWasLoop = false;
+    public static string IDLE_FEMALE = "TPF_idle1";
+    public static string IDLE_MALE = "TPM_idle1";
+    public int delayedStepStart = -1;
+    public int delayedStepEnd = -1;
+    public bool delayedIsLoopAnimation = false;
+    public string delayedAnimation = "";
 
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
@@ -69,21 +109,79 @@ public class MCSSimulationAgent : MonoBehaviour {
         mcsController.simulationAgents.Add(this);
         SetDefaultAnimation();
         IncrementAnimationFrame();
+        
+        currentGetHeldObjectAnimation = 0;
+        isHoldingHeldObject = false;
+        resetOncePickedUp = false;
+    }
+    
+    void Start() {
+        if(heldObject != null) {
+            isHoldingHeldObject = true;
+            foreach(Collider c in heldObject.MyColliders)
+                c.enabled = false;
+            heldObject.transform.parent = this.transform;
+            heldObject.transform.localPosition = Vector3.zero;
+            heldObject.GetComponent<Rigidbody>().isKinematic = true;
+            heldObject.gameObject.SetActive(false);
+        }
     }
 
-    public void SetDefaultAnimation(string name = null) {
+    public void SetDefaultAnimation(bool usePreviousClip = false, string name = null) {
+        if(usePreviousClip) {
+            AssignClip(previousClip);
+            AnimationPlaysOnce(isLoopAnimation: previousClipWasLoop);
+            if(previousClip == IDLE_FEMALE || previousClip == IDLE_MALE)
+                simAgentActionState = SimAgentActionState.Idle;
+            else
+                simAgentActionState = SimAgentActionState.Action;
+            return;
+        }
         if (this.type == AgentType.ToonPeopleFemale) {
-            this.currentClip = name != null ? name : "TPF_idle1";
+            this.currentClip = name != null ? name : IDLE_FEMALE;
         }
         if (this.type == AgentType.ToonPeopleMale) {
-            this.currentClip = name != null ? name : "TPM_idle1";
+            this.currentClip = name != null ? name : IDLE_MALE;
         }
-        resetAnimationToIdleAfterPlayingOnce = false;
+        simAgentActionState = SimAgentActionState.Idle;
+        AnimationPlaysOnce(isLoopAnimation: true);
         currentAnimationFrame = 0;
 
     }
 
+    public void PlayGetHeldObjectAnimation() {
+        heldObject.gameObject.SetActive(true);
+        heldObject.transform.localPosition = AGENT_INTERACTION_ACTION_OBJECT_POSITIONS[currentGetHeldObjectAnimation];
+        AssignClip(AGENT_INTERACTION_ACTION_ANIMATIONS[currentGetHeldObjectAnimation]);
+        if(currentGetHeldObjectAnimation == 2) {
+            currentAnimationFrame = ANIMATION_FRAME_TO_ENHANCE_INTERACTION_ACTION;
+        }
+    }
+
+    public void HoldHeldObjectOutForPickup() {
+        heldObject.transform.localPosition = HOLDING_POSITION;
+        foreach(Collider c in heldObject.MyColliders)
+            c.enabled = true;
+        AssignClip(AGENT_INTERACTION_ACTION_ANIMATIONS[AGENT_INTERACTION_ACTION_ANIMATIONS.Length-1]);
+        AnimationPlaysOnce(isLoopAnimation: true);
+        simAgentActionState = SimAgentActionState.HoldingOutHeldObject;
+    }
+
+
     public void AssignClip(string clipId) {
+        if(simAgentActionState == SimAgentActionState.HoldingOutHeldObject)
+            simAgentActionState = SimAgentActionState.Action;
+        else if(simAgentActionState == SimAgentActionState.InteractingHoldingHeldObject && currentGetHeldObjectAnimation == 0) {
+            previousClip = currentClip;
+            previousClipWasLoop = !resetAnimationToIdleAfterPlayingOnce;
+        }
+
+        if(simAgentActionState == SimAgentActionState.Action || simAgentActionState == SimAgentActionState.Idle) {
+            if(previousClip != NOT_HOLDING_OBJECT_ANIMATION && clipId == NOT_HOLDING_OBJECT_ANIMATION) {
+                previousClip = currentClip;
+                previousClipWasLoop = !resetAnimationToIdleAfterPlayingOnce;
+            }
+        }
         currentAnimationFrame = 0;
         currentClip = clipId;
     }
@@ -91,15 +189,58 @@ public class MCSSimulationAgent : MonoBehaviour {
     public void IncrementAnimationFrame() {
         currentAnimationFrame++;
         int totalFrames = Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * clipNamesAndDurations[this.currentClip]);
-        if (resetAnimationToIdleAfterPlayingOnce && currentAnimationFrame > totalFrames)
+        
+
+        if (resetOncePickedUp && (simAgentActionState != SimAgentActionState.InteractingHoldingHeldObject && simAgentActionState != SimAgentActionState.HoldingOutHeldObject)) {
             SetDefaultAnimation();
-        if(mcsController.step == stepToEndAnimation) {
+            resetOncePickedUp = false;
+        }
+
+        if (delayedStepStart > -1 && 
+            simAgentActionState != SimAgentActionState.InteractingHoldingHeldObject && 
+            simAgentActionState != SimAgentActionState.HoldingOutHeldObject &&
+            simAgentActionState != SimAgentActionState.InteractingNotHoldingHeldObject) {
+            simAgentActionState = SimAgentActionState.Action;
+            AssignClip(delayedAnimation);
+            stepToEndAnimation = delayedStepEnd;
+            AnimationPlaysOnce(isLoopAnimation: delayedIsLoopAnimation);
+            
+            delayedStepStart = -1;
+            delayedStepEnd = -1;
+            delayedIsLoopAnimation = false;
+            delayedAnimation = "";
+        }
+
+        else if (resetAnimationToIdleAfterPlayingOnce && currentAnimationFrame > totalFrames && 
+                (simAgentActionState != SimAgentActionState.InteractingHoldingHeldObject || simAgentActionState != SimAgentActionState.HoldingOutHeldObject)) {
+            SetDefaultAnimation(usePreviousClip: simAgentActionState == SimAgentActionState.InteractingNotHoldingHeldObject);
+        }
+
+        else if(mcsController.step == stepToEndAnimation && (simAgentActionState == SimAgentActionState.InteractingHoldingHeldObject || simAgentActionState == SimAgentActionState.HoldingOutHeldObject)) {
+            resetOncePickedUp = true;
+        }
+
+        else if(mcsController.step == stepToEndAnimation && simAgentActionState != SimAgentActionState.InteractingNotHoldingHeldObject) {
             SetDefaultAnimation();
             stepToEndAnimation = -1;
         }
+        else if(mcsController.step == stepToEndAnimation && simAgentActionState == SimAgentActionState.InteractingNotHoldingHeldObject) {
+            stepToEndAnimation += Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * clipNamesAndDurations[MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION]) - currentAnimationFrame + 1;
+        }
+
         currentAnimationFrame = currentAnimationFrame > totalFrames ? 0 : currentAnimationFrame;
         float percentOfAnimation = currentAnimationFrame / (float)(totalFrames);
         animator.Play(currentClip, 0, percentOfAnimation);
+
+        if(simAgentActionState == SimAgentActionState.InteractingHoldingHeldObject) {
+            currentGetHeldObjectAnimation++;
+            if(currentGetHeldObjectAnimation >= AGENT_INTERACTION_ACTION_ANIMATIONS.Length) {
+                HoldHeldObjectOutForPickup();
+            }
+            else {
+                PlayGetHeldObjectAnimation();
+            }
+        }
     }
 
     public void AnimationPlaysOnce(bool isLoopAnimation) {
