@@ -1072,7 +1072,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             if(sop.associatedWithAgent != "" && this.agentObjectAssociations.ContainsKey(sop.associatedWithAgent)) {
                 foreach(MCSSimulationAgent agent in this.simulationAgents) {
                     if(sop.associatedWithAgent == agent.name) {
-                        agent.SetDefaultAnimation(usePreviousClip: agent.previousClip != "");
+                        agent.SetDefaultAnimation(usePreviousClip: agent.previousClip != "", interactionComplete: true);
                         agent.isHoldingHeldObject = false;
                     }
                 }

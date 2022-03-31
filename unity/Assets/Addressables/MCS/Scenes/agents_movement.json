@@ -11,7 +11,7 @@
     },
     "performerStart": {
         "position": {
-            "x": 0.5,
+            "x": 0.7,
             "z": -0.3
         },
         "rotation": {
@@ -21,6 +21,26 @@
         }
     },
     "objects": [{
+        "id": "soccer_ball",
+        "type": "soccer_ball",
+        "mass": 1,
+        "salientMaterials": ["plastic"],
+        "pickupable": true,
+        "associatedWithAgent": "agent_female",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0.6,
+                "y": 0.125,
+                "z": 1
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
         "id": "agent_female",
         "type": "agent_female_01",
         "agentSettings": {
@@ -60,10 +80,10 @@
             }
         }],
         "actions": [{
-            "stepBegin": 1,
+            "stepBegin": 2,
             "id": "TPF_wave",
             "isLoopAnimation": false,
-            "stepEnd": 1
+            "stepEnd": 6
         },
         {
             "stepBegin": 18,
@@ -73,7 +93,7 @@
         }],
         "movement": {
             "repeat": true,
-            "stepBegin": 1,
+            "stepBegin": 4,
             "sequence": [
             {
                 "animation": "TPM_walk",
