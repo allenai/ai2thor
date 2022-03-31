@@ -1639,8 +1639,8 @@ public class MCSMain : MonoBehaviour {
                 agentScript.SetTie(objectConfig.agentSettings?.tie, objectConfig.agentSettings?.tieMaterial);
             }
             agentScript.SetElder((bool)objectConfig.agentSettings?.isElder);
-            if(objectConfig.movement != null) {
-                agentScript.SetMovement(objectConfig.movement);
+            if(objectConfig.agentMovement != null) {
+                agentScript.SetMovement(objectConfig.agentMovement);
             }
         }
 
@@ -2286,7 +2286,7 @@ public class MCSConfigSequence {
 [Serializable]
 public class MCSConfigGameObject : MCSConfigAbstractObject {
     public MCSConfigAgentSettings agentSettings = null;
-    public MCSConfigSimAgentMovement movement = null;
+    public MCSConfigSimAgentMovement agentMovement = null;
     public string associatedWithAgent;
     public string controller;
     public string locationParent;

@@ -98,7 +98,7 @@ public class MCSSimulationAgent : MonoBehaviour {
     public int moveIndex = 0;
     public Vector3 targetPos = Vector3.zero;
     public Vector3 direction;
-    public MCSConfigSimAgentMovement movement = null;
+    public MCSConfigSimAgentMovement agentMovement = null;
     public static float MOVE_MAGNITUDE = 0.04f;
     private static string MOVEMENT_TURNS_LEFT = "TPM_turnL45";
     private static string MOVEMENT_TURNS_RIGHT = "TPM_turnR45";
@@ -390,7 +390,7 @@ public class MCSSimulationAgent : MonoBehaviour {
 
         //otherwise if there is a movement path and the agent is not interacting or rotating torward the performer
         //move the agent toward its target direction
-        else if(movement != null && !IsDoingAnyInteractions() && !rotatingToFacePerformer) {
+        else if(agentMovement != null && !IsDoingAnyInteractions() && !rotatingToFacePerformer) {
             if (simAgentActionState == SimAgentActionState.Action && previouslyWasMoving) {
                 return;
             }
@@ -411,9 +411,9 @@ public class MCSSimulationAgent : MonoBehaviour {
         if(doneWithMovementSequence) 
             return;
         //if there is a movment config assinged to this agent then move it
-        if(movement != null && movement.sequence != null && movement.sequence.Count > 0 && mcsController.step >= movement.stepBegin) {
+        if(agentMovement != null && agentMovement.sequence != null && agentMovement.sequence.Count > 0 && mcsController.step >= agentMovement.stepBegin) {
             //if the movement sequence is complete and it should not repeat then set the agent to its default animation
-            if(moveIndex >= movement.sequence.Count && !movement.repeat) {
+            if(moveIndex >= agentMovement.sequence.Count && !agentMovement.repeat) {
                 SetDefaultAnimation();
                 AnimationPlaysOnce(isLoopAnimation: true);
                 return;
@@ -445,20 +445,20 @@ public class MCSSimulationAgent : MonoBehaviour {
                     SetMovementRotation();
                     return;
                 }
-                AssignClip(movement.sequence[moveIndex].animation);
+                AssignClip(agentMovement.sequence[moveIndex].animation);
                 AnimationPlaysOnce(isLoopAnimation: true);
                 simAgentActionState = SimAgentActionState.Moving;
                 return;
             }
 
             //calculate movement direction
-            float x = movement.sequence[moveIndex].endPoint.x;
-            float z = movement.sequence[moveIndex].endPoint.z;
+            float x = agentMovement.sequence[moveIndex].endPoint.x;
+            float z = agentMovement.sequence[moveIndex].endPoint.z;
             targetPos = new Vector3(x, transform.position.y, z);
             direction = (targetPos-transform.position).normalized;
 
             //if direction magnitude greater than zero then move
-            if(direction != Vector3.zero && direction.sqrMagnitude > float.Epsilon) {
+            if(direction.sqrMagnitude > float.Epsilon) {
                 transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
                 transform.Translate(direction * MOVE_MAGNITUDE, Space.World);
                 previouslyWasMoving = true;
@@ -470,7 +470,7 @@ public class MCSSimulationAgent : MonoBehaviour {
                 moveIndex++;
 
                 //dont repeat is the config says so
-                if((simAgentActionState != SimAgentActionState.Idle || simAgentActionState != SimAgentActionState.Action) && moveIndex >= movement.sequence.Count && !movement.repeat) {
+                if((simAgentActionState != SimAgentActionState.Idle || simAgentActionState != SimAgentActionState.Action) && moveIndex >= agentMovement.sequence.Count && !agentMovement.repeat) {
                     doneWithMovementSequence = true;
                     SetDefaultAnimation();
                     AnimationPlaysOnce(isLoopAnimation: true);
@@ -479,13 +479,13 @@ public class MCSSimulationAgent : MonoBehaviour {
                 }
 
                 //if at the end of the movement loop and need to repeat then reset
-                if(moveIndex >= movement.sequence.Count - 1 && movement.repeat) {
+                if(moveIndex >= agentMovement.sequence.Count && agentMovement.repeat) {
                     previouslyWasMoving = true;
                     moveIndex = 0;
                 }
 
                 //if the next endpoint exists then rotate to next point
-                if(movement.sequence[moveIndex].endPoint.x != Mathf.NegativeInfinity) {
+                if(agentMovement.sequence[moveIndex].endPoint.x != Mathf.NegativeInfinity) {
                     previouslyWasMoving = true;
                     SetMovementRotation();
                 }
@@ -495,18 +495,20 @@ public class MCSSimulationAgent : MonoBehaviour {
     }
 
     private void SetMovementRotation() {
-        float x = movement.sequence[moveIndex].endPoint.x;
-        float z = movement.sequence[moveIndex].endPoint.z;
+        float x = agentMovement.sequence[moveIndex].endPoint.x;
+        float z = agentMovement.sequence[moveIndex].endPoint.z;
         simAgentActionState = SimAgentActionState.Rotating;
 
-        x = movement.sequence[moveIndex].endPoint.x;
-        z = movement.sequence[moveIndex].endPoint.z;
+        x = agentMovement.sequence[moveIndex].endPoint.x;
+        z = agentMovement.sequence[moveIndex].endPoint.z;
 
         targetPos = new Vector3(x, transform.position.y, z);
         direction = (targetPos-transform.position).normalized;
 
         originalRotation = transform.eulerAngles;
-        transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
+        if(direction.sqrMagnitude > float.Epsilon) {
+            transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
+        }
         targetRotation = transform.eulerAngles;
         transform.eulerAngles = originalRotation;
 
@@ -531,7 +533,7 @@ public class MCSSimulationAgent : MonoBehaviour {
     }
 
     public void SetMovement(MCSConfigSimAgentMovement configSimAgentMovement) {
-        this.movement = configSimAgentMovement;
+        this.agentMovement = configSimAgentMovement;
     }
 
     public void AnimationPlaysOnce(bool isLoopAnimation) {
