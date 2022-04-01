@@ -3058,7 +3058,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // only check against the visible layer, ignore the invisible layer
             // so if an object ONLY has colliders on it that are not on layer 8, this raycast will go through them
-<<<<<<< HEAD
             else if (
                 Physics.Raycast(
                     camera.transform.position,
@@ -3071,6 +3070,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (
                     hit.transform == sop.transform
                     || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                    || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))
                 ) {
                     // if this line is drawn, then this visibility point is in camera frame and not occluded
                     // might want to use this for a targeting check as well at some point....
@@ -3092,47 +3092,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             LayerMask.GetMask("SimObjVisible"),
                             QueryTriggerInteraction.Ignore
                         );
-=======
-            else {
-                if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, (1 << 8) | (1 << 10))) {
-                    if (
-                        hit.transform == sop.transform
-                        || ( isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
-                    ) {
-                        // if this line is drawn, then this visibility point is in camera frame and not occluded
-                        // might want to use this for a targeting check as well at some point....
-                        visCheck.visible = true;
-                        visCheck.interactable = true;
-                    } else {
-                        // we didn't directly hit the sop we are checking for with this cast,
-                        // check if it's because we hit something see-through
-                        SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();
-
-                        if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
-                            // we hit something see through, so now find all objects in the path between
-                            // the sop and the camera
-                            RaycastHit[] hits;
-                            hits = Physics.RaycastAll(
-                                camera.transform.position,
-                                point.position - camera.transform.position,
-                                raycastDistance,
-                                (1 << 8),
-                                QueryTriggerInteraction.Ignore
-                            );
->>>>>>> origin/stretch_robot_tilted_camera_solution
 
                         float[] hitDistances = new float[hits.Length];
                         for (int i = 0; i < hitDistances.Length; i++) {
                             hitDistances[i] = hits[i].distance; // Vector3.Distance(hits[i].transform.position, camera.transform.position);
                         }
 
-<<<<<<< HEAD
                         Array.Sort(hitDistances, hits);
 
                         foreach (RaycastHit h in hits) {
                             if (
                                 h.transform == sop.transform
-                                || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                                || (Arm != null && isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                                || (SArm != null && isSopHeldByArm && SArm.heldObjects[sop].Contains(hit.collider))
                             ) {
                                 // found the object we are looking for, great!
                                 //set it to visible via 'result' but the object is not interactable because it is behind some transparent object
@@ -3144,20 +3116,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 SimObjPhysics sopHitOnPath = null;
                                 sopHitOnPath = h.transform.GetComponentInParent<SimObjPhysics>();
                                 if (sopHitOnPath == null || !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
-=======
-                            Array.Sort(hitDistances, hits);
-
-                            foreach (RaycastHit h in hits) {
-                                if (
-                                    h.transform == sop.transform
-                                    || (Arm != null && isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
-                                    || (SArm != null && isSopHeldByArm && SArm.heldObjects[sop].Contains(hit.collider))
-                                ) {
-                                    // found the object we are looking for, great!
-                                    //set it to visible via 'result' but the object is not interactable because it is behind some transparent object
-                                    visCheck.visible = true;
-                                    visCheck.interactable = false;
->>>>>>> origin/stretch_robot_tilted_camera_solution
                                     break;
                                 }
                             }
@@ -4373,7 +4331,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             if (!startWasHit || !targetWasHit) {
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 if (!startWasHit) {
                     throw new InvalidOperationException(
                         $"No point on NavMesh near startPosition {startPosition}."
@@ -4384,8 +4342,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         $"No point on NavMesh near targetPosition {targetPosition}."
                     );
                 }
-                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                return false;
             }
 
             float startOffset = Vector3.Distance(
@@ -4397,20 +4353,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 new Vector3(targetPosition.x, targetHit.position.y, targetPosition.z)
             );
             if (startOffset > allowedError && targetOffset > allowedError) {
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 throw new InvalidOperationException(
                     $"Closest point on NavMesh was too far from the agent: " +
                     $" (startPosition={startPosition.ToString("F3")}," +
                     $" closest navmesh position {startHit.position.ToString("F3")}) and" +
                     $" (targetPosition={targetPosition.ToString("F3")}," +
-<<<<<<< HEAD
                     $" closest navmesh position {targetHit.position.ToString("F3")})."
                 );
-=======
-                    $" closest navmesh position {targetHit.position.ToString("F3")}).";
-                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                return false;
->>>>>>> origin/stretch_robot_tilted_camera_solution
             }
 
 #if UNITY_EDITOR
@@ -4419,33 +4369,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
                 startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
             );
-<<<<<<< HEAD
 
             if (path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 throw new InvalidOperationException(
                     $"Could not find path between {startHit.position.ToString("F3")}" +
                     $" and {targetHit.position.ToString("F3")} using the NavMesh."
                 );
-=======
-            if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-#if UNITY_EDITOR
-                VisualizePath(startHit.position, path);
-#endif
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                return true;
-            } else {
-                errorMessage = $"Could not find path between {startHit.position.ToString("F3")}" +
-                    $" and {targetHit.position.ToString("F3")} using the NavMesh.";
-                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                return false;
->>>>>>> origin/stretch_robot_tilted_camera_solution
             }
-
 #if UNITY_EDITOR
             VisualizePath(startHit.position, path);
 #endif
             this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+            return true;
         }
 
         public void GetShortestPathToPoint(
