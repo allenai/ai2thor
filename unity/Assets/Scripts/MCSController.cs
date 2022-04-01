@@ -1069,11 +1069,13 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     public override void UpdateAgentObjectAssociations(SimObjPhysics sop) {
         if(this.simulationAgents.Count > 0) {
-            if(sop.associatedWithAgent != "" && this.agentObjectAssociations.ContainsKey(sop.associatedWithAgent)) {
-                foreach(MCSSimulationAgent agent in this.simulationAgents) {
-                    if(sop.associatedWithAgent == agent.name) {
-                        agent.SetDefaultAnimation(usePreviousClip: agent.previousClip != "", interactionComplete: true);
+            if (sop.associatedWithAgent != "" && this.agentObjectAssociations.ContainsKey(sop.associatedWithAgent)) {
+                foreach (MCSSimulationAgent agent in this.simulationAgents) {
+                    if (sop.associatedWithAgent == agent.name) {
                         agent.isHoldingHeldObject = false;
+                        if (agent.SetPrevious())
+                            return;
+                        agent.SetDefaultAnimation(usePreviousClip: agent.previousClip != "", interactionComplete: true);
                     }
                 }
             }
