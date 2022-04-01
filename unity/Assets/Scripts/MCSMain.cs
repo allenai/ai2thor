@@ -1446,7 +1446,7 @@ public class MCSMain : MonoBehaviour {
                 }
             }
         }
-        if(objectConfig.agentSettings != null)
+        if(objectDefinition.agent)
             ai2thorPhysicsScript.GetComponent<Rigidbody>().isKinematic = true;
 
         if(objectConfig.associatedWithAgent != null && objectConfig.associatedWithAgent.Length > 0) {
@@ -1641,6 +1641,9 @@ public class MCSMain : MonoBehaviour {
             agentScript.SetElder((bool)objectConfig.agentSettings?.isElder);
             if(objectConfig.agentMovement != null) {
                 agentScript.SetMovement(objectConfig.agentMovement);
+            }
+            foreach(MCSConfigAction action in objectConfig.actions) {
+                agentScript.stepBegins.Add(action.stepBegin);
             }
         }
 

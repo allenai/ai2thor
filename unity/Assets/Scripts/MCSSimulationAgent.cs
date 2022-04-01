@@ -103,6 +103,7 @@ public class MCSSimulationAgent : MonoBehaviour {
     private static string MOVEMENT_TURNS_LEFT = "TPM_turnL45";
     private static string MOVEMENT_TURNS_RIGHT = "TPM_turnR45";
     public bool previouslyWasMoving;
+    public List<int> stepBegins = null;
 
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
@@ -149,8 +150,9 @@ public class MCSSimulationAgent : MonoBehaviour {
 
     public void SetDefaultAnimation(bool usePreviousClip = false, string name = null, bool interactionComplete = false) {
         if(previouslyWasMoving && !doneWithMovementSequence) {
-            MoveSimAgent(interactionComplete: interactionComplete);
-            return;
+            bool completed = MoveSimAgent(interactionComplete: interactionComplete);
+            if(completed) 
+                return;
         }
         if(usePreviousClip && previousClip != "") {
             AssignClip(previousClip);
@@ -193,8 +195,9 @@ public class MCSSimulationAgent : MonoBehaviour {
 
 
     public void AssignClip(string clipId) {
-        if(simAgentActionState == SimAgentActionState.HoldingOutHeldObject)
+        if(simAgentActionState == SimAgentActionState.HoldingOutHeldObject) {
             simAgentActionState = SimAgentActionState.Action;
+        }
         
         else if((simAgentActionState == SimAgentActionState.InteractingHoldingHeldObject || simAgentActionState == SimAgentActionState.InteractingNotHoldingHeldObject) && getPreviousClip) {
             getPreviousClip = false;
@@ -285,12 +288,12 @@ public class MCSSimulationAgent : MonoBehaviour {
         //if there is a delayed start because an action's step beging was called while the agent was interacting with performer and now the performer is done interacting
         if (delayedStepStart > -1 && !IsDoingAnyInteractions()) {
             //if the step end of that delayed action is past the current mcs step then we dont play it and reset to idle
-            if(mcsController.step >= delayedStepEnd && delayedStepEnd != -1) {
+            if(mcsController.step >= delayedStepEnd && delayedStepEnd != -1 && (!stepBegins.Contains(mcsController.step))) {
                 SetDefaultAnimation();
                 AnimationPlaysOnce(isLoopAnimation: true);
             }
             //otherwise play the action 
-            else {
+            else if (!stepBegins.Contains(mcsController.step)) {
                 simAgentActionState = SimAgentActionState.Action;
                 AssignClip(delayedAnimation);
                 stepToEndAnimation = delayedStepEnd;
@@ -301,11 +304,13 @@ public class MCSSimulationAgent : MonoBehaviour {
             delayedStepEnd = -1;
             delayedIsLoopAnimation = false;
             delayedAnimation = "";
+            resetOncePickedUp = false;
         }
 
         //reset to idle after the agent was holding out its object and the performer picked it up
-        if (resetOncePickedUp && (simAgentActionState != SimAgentActionState.InteractingHoldingHeldObject && simAgentActionState != SimAgentActionState.HoldingOutHeldObject)) {
-            SetDefaultAnimation();
+        else if (resetOncePickedUp && (simAgentActionState != SimAgentActionState.InteractingHoldingHeldObject && simAgentActionState != SimAgentActionState.HoldingOutHeldObject)) {
+            if(!stepBegins.Contains(mcsController.step))
+                SetDefaultAnimation();
             resetOncePickedUp = false;
         }
         //if the animation currently playing is not supposed to loop, and the current frame is greater than the total frames, and the agent is not interacting with a held object
@@ -407,48 +412,49 @@ public class MCSSimulationAgent : MonoBehaviour {
     }
 
 
-    public void MoveSimAgent(bool moveFromRotatingAnimation = false, bool interactionComplete = false) {
+    public bool MoveSimAgent(bool moveFromRotatingAnimation = false, bool interactionComplete = false) {
         if(doneWithMovementSequence) 
-            return;
+            return true;
         //if there is a movment config assinged to this agent then move it
         if(agentMovement != null && agentMovement.sequence != null && agentMovement.sequence.Count > 0 && mcsController.step >= agentMovement.stepBegin) {
             //if the movement sequence is complete and it should not repeat then set the agent to its default animation
             if(moveIndex >= agentMovement.sequence.Count && !agentMovement.repeat) {
                 SetDefaultAnimation();
                 AnimationPlaysOnce(isLoopAnimation: true);
-                return;
+                return true;
             }
 
             //if doing a rotation to look at its new direction, dont move
             if(simAgentActionState == SimAgentActionState.Rotating && !moveFromRotatingAnimation) {
                 previouslyWasMoving = true;
-                return;
+                return true;
             }
 
             //if any interaction are not complete dont move
             if(IsDoingAnyInteractions() && !interactionComplete) {
-                return;
+                return false;
             }
             
             //if any interactions are complete then rotate the agent back to its previous direction
             if(IsDoingAnyInteractions() && interactionComplete) {
+                if(stepBegins.Contains(mcsController.step)) {
+                    return false;
+                }
                 previouslyWasMoving = true;
                 SetMovementRotation();
-                return;
+                return true;
             }
 
             //if not currently moving but needs to move, then move the agent
             if (simAgentActionState != SimAgentActionState.Moving && !interactionComplete) {
                 previouslyWasMoving = true;
                 //if not looking the way we need to then set the movement rotation instead
-                if(transform.eulerAngles != targetRotation) {
-                    SetMovementRotation();
-                    return;
-                }
+                if(SetMovementRotation())
+                    return true;
                 AssignClip(agentMovement.sequence[moveIndex].animation);
                 AnimationPlaysOnce(isLoopAnimation: true);
                 simAgentActionState = SimAgentActionState.Moving;
-                return;
+                return true;
             }
 
             //calculate movement direction
@@ -475,7 +481,7 @@ public class MCSSimulationAgent : MonoBehaviour {
                     SetDefaultAnimation();
                     AnimationPlaysOnce(isLoopAnimation: true);
                     previouslyWasMoving = false;
-                    return;
+                    return true;
                 }
 
                 //if at the end of the movement loop and need to repeat then reset
@@ -492,9 +498,10 @@ public class MCSSimulationAgent : MonoBehaviour {
             } 
 
         }
+        return false;
     }
 
-    private void SetMovementRotation() {
+    private bool SetMovementRotation() {
         float x = agentMovement.sequence[moveIndex].endPoint.x;
         float z = agentMovement.sequence[moveIndex].endPoint.z;
         simAgentActionState = SimAgentActionState.Rotating;
@@ -511,10 +518,14 @@ public class MCSSimulationAgent : MonoBehaviour {
         }
         targetRotation = transform.eulerAngles;
         transform.eulerAngles = originalRotation;
-
+        
+        if(transform.eulerAngles == targetRotation) {
+            return false;
+        }
         float degreeChange = CalculateRotationForMovement();
         AssignClip(degreeChange > 0 ? MOVEMENT_TURNS_RIGHT : MOVEMENT_TURNS_LEFT);
         AnimationPlaysOnce(isLoopAnimation: false);
+        return true;
     }
 
     private float CalculateRotationForMovement () {
