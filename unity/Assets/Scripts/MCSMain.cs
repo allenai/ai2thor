@@ -1446,8 +1446,10 @@ public class MCSMain : MonoBehaviour {
                 }
             }
         }
-        if(objectConfig.agentSettings != null)
+
+        if(objectDefinition.agent) {
             ai2thorPhysicsScript.GetComponent<Rigidbody>().isKinematic = true;
+        }
 
         if(objectConfig.associatedWithAgent != null && objectConfig.associatedWithAgent.Length > 0) {
             if(ai2thorPhysicsScript.shape != "ball") {
