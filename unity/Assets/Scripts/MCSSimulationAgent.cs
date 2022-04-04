@@ -78,7 +78,7 @@ public class MCSSimulationAgent : MonoBehaviour {
     public string previousClip = "";
     public int previousCurrentFrame = 0;
     public int previousClipStepEnd = -1;
-    public int delayedStepStart = -1;
+    public int delayedStepBeginAction = -1;
     public int delayedStepEnd = -1;
     public bool delayedIsLoopAnimation = false;
     public string delayedAnimation = "";
@@ -101,13 +101,13 @@ public class MCSSimulationAgent : MonoBehaviour {
     public Vector3 targetPos = Vector3.zero;
     public Vector3 direction;
     public MCSConfigSimAgentMovement agentMovement = null;
-    public static float MOVE_MAGNITUDE = 0.04f;
     public List<int> stepBegins = null;
     public bool previouslyWasMoving;
     public bool doneWithMovementSequence = false;
-    public bool delayedStepBeginMovement = false;
+    public int delayedStepBeginMovement = -1;
     private static string MOVEMENT_TURNS_LEFT = "TPM_turnL45";
     private static string MOVEMENT_TURNS_RIGHT = "TPM_turnR45";
+    private static float MOVE_MAGNITUDE = 0.5f;//0.04f;
 
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
@@ -271,6 +271,14 @@ public class MCSSimulationAgent : MonoBehaviour {
         return false;
     }
 
+    private void ResetDelayedActionStepTriggers() {
+        delayedStepBeginAction = -1;
+        delayedStepEnd = -1;
+        delayedIsLoopAnimation = false;
+        delayedAnimation = "";
+        resetOncePickedUp = false;
+    }
+
     public void IncrementAnimationFrame() {
         //increment the current animation frame and get total frames
         currentAnimationFrame++;
@@ -279,9 +287,18 @@ public class MCSSimulationAgent : MonoBehaviour {
             AssignPrevious();
         }
 
-        if(delayedStepBeginMovement && !IsDoingAnyInteractions() && !rotatingToFacePerformer) {
-            delayedStepBeginMovement = false;
+        //if the step to begin movement occured during an interaction and its step begin was later than an action that was also triggered during the interaction, 
+        //start the movement sequence when the interaction is complete
+        if(delayedStepBeginMovement > -1 && delayedStepBeginMovement > delayedStepBeginAction && !IsDoingAnyInteractions() && !rotatingToFacePerformer) {
+            delayedStepBeginMovement = -1;
+            ResetDelayedActionStepTriggers();
             MoveSimAgent();
+        }
+
+        //otherwise if the step to begin movement occured during an interaction and the interaction is complete but another action was triggered after the step begin of movement
+        //then do not start movement until the triggered action is complete
+        else if (delayedStepBeginMovement > -1 && !IsDoingAnyInteractions() && !rotatingToFacePerformer) {
+            delayedStepBeginMovement = -1;
         }
 
         //if the agent is interacting with the performer and currently not rotating to face the performer play through the not holding object animation
@@ -302,7 +319,7 @@ public class MCSSimulationAgent : MonoBehaviour {
 
 
         //if there is a delayed start because an action's step beging was called while the agent was interacting with performer and now the performer is done interacting
-        if (delayedStepStart > -1 && !IsDoingAnyInteractions()) {
+        if (delayedStepBeginAction > -1 && !IsDoingAnyInteractions()) {
             //if the step end of that delayed action is past the current mcs step then we dont play it and reset to idle
             if(mcsController.step >= delayedStepEnd && delayedStepEnd != -1 && (!stepBegins.Contains(mcsController.step))) {
                 SetDefaultAnimation();
@@ -317,11 +334,7 @@ public class MCSSimulationAgent : MonoBehaviour {
                 AssignPrevious();
             }
             //then reset these to their defaults to prepare for the next occurence of delayed action calls
-            delayedStepStart = -1;
-            delayedStepEnd = -1;
-            delayedIsLoopAnimation = false;
-            delayedAnimation = "";
-            resetOncePickedUp = false;
+            ResetDelayedActionStepTriggers();
         }
 
         //reset to idle after the agent was holding out its object and the performer picked it up
@@ -414,12 +427,16 @@ public class MCSSimulationAgent : MonoBehaviour {
         else if(agentMovement != null && !IsDoingAnyInteractions() && !rotatingToFacePerformer && simAgentActionState != SimAgentActionState.Action)
             MoveSimAgent();
 
+        //if there is a movement path and the step to begin for movement is the current step and the agent is not interacting then start the movement sequence
         if(agentMovement != null && mcsController.step == agentMovement.stepBegin && !rotatingToFacePerformer && !IsDoingAnyInteractions()) {
             MoveSimAgent();
             previousClipStepEnd = -2; //this makes sure that the agent moves and does not think an action needs to be played
+            return;
         }
-        else if(agentMovement != null && mcsController.step == agentMovement.stepBegin && (rotatingToFacePerformer || IsDoingAnyInteractions())) {
-            delayedStepBeginMovement = true;
+        //if there is a movement path and the step to begin for movement is the current step and the agent is interacting then delay the movement till when the action is complete
+        if(agentMovement != null && mcsController.step == agentMovement.stepBegin && (rotatingToFacePerformer || IsDoingAnyInteractions())) {
+            delayedStepBeginMovement = agentMovement.stepBegin;
+            return;
         }
     }
 
@@ -494,7 +511,7 @@ public class MCSSimulationAgent : MonoBehaviour {
                 moveIndex++;
 
                 //dont repeat is the config says so
-                if((simAgentActionState != SimAgentActionState.Idle || simAgentActionState != SimAgentActionState.Action) && moveIndex >= agentMovement.sequence.Count - 1 && !agentMovement.repeat) {
+                if((simAgentActionState != SimAgentActionState.Idle || simAgentActionState != SimAgentActionState.Action) && moveIndex >= agentMovement.sequence.Count && !agentMovement.repeat) {
                     doneWithMovementSequence = true;
                     SetDefaultAnimation();
                     AnimationPlaysOnce(isLoopAnimation: true);
@@ -503,9 +520,10 @@ public class MCSSimulationAgent : MonoBehaviour {
                 }
 
                 //if at the end of the movement loop and need to repeat then reset
-                if(moveIndex >= agentMovement.sequence.Count - 1 && agentMovement.repeat) {
+                if(moveIndex >= agentMovement.sequence.Count && agentMovement.repeat) {
                     previouslyWasMoving = true;
                     moveIndex = 0;
+                    SetMovementRotation();
                     return true;
                 }
 
@@ -537,8 +555,8 @@ public class MCSSimulationAgent : MonoBehaviour {
         }
         targetRotation = transform.eulerAngles;
         transform.eulerAngles = originalRotation;
-        
-        if(transform.eulerAngles == targetRotation) {
+        if(Mathf.Approximately(transform.eulerAngles.y, targetRotation.y)) {
+            transform.eulerAngles = targetRotation;
             return false;
         }
         float degreeChange = CalculateRotationForMovement();

@@ -1446,8 +1446,9 @@ public class MCSMain : MonoBehaviour {
                 }
             }
         }
-        if(objectDefinition.agent)
+        if(objectDefinition.agent) {
             ai2thorPhysicsScript.GetComponent<Rigidbody>().isKinematic = true;
+        }
 
         if(objectConfig.associatedWithAgent != null && objectConfig.associatedWithAgent.Length > 0) {
             if(ai2thorPhysicsScript.shape != "ball") {
@@ -2087,7 +2088,7 @@ public class MCSMain : MonoBehaviour {
                     simulationAgent.rotatingToFacePerformer) {
                     
                     simulationAgent.delayedAnimation = action.id;
-                    simulationAgent.delayedStepStart = action.stepBegin;
+                    simulationAgent.delayedStepBeginAction = action.stepBegin;
                     simulationAgent.delayedStepEnd = action.stepEnd;
                     simulationAgent.delayedIsLoopAnimation = action.isLoopAnimation;
                 }
