@@ -1446,6 +1446,7 @@ public class MCSMain : MonoBehaviour {
                 }
             }
         }
+      
         if(objectDefinition.agent) {
             ai2thorPhysicsScript.GetComponent<Rigidbody>().isKinematic = true;
         }
