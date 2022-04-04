@@ -68,10 +68,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             get => this.baseAgentComponent.TallVisCap;
         }
 
-        public GameObject IKArm {
-            get => this.baseAgentComponent.IKArm;
-        }
-
         public GameObject BotVisCap {
             get => this.baseAgentComponent.BotVisCap;
         }
@@ -4381,7 +4377,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             VisualizePath(startHit.position, path);
 #endif
             this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-            return true;
         }
 
         public void GetShortestPathToPoint(
