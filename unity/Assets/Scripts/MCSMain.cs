@@ -1644,7 +1644,7 @@ public class MCSMain : MonoBehaviour {
                 agentScript.SetMovement(objectConfig.agentMovement);
             }
             foreach(MCSConfigAction action in objectConfig.actions) {
-                agentScript.stepBegins.Add(action.stepBegin);
+                agentScript.actionsStepBegins.Add(action.stepBegin);
             }
         }
 

@@ -39,12 +39,11 @@ public class MCSSimulationAgent : MonoBehaviour {
 
 
     [Header("Animation")]
-    public int currentAnimationFrame = 0;
+    [SerializeField] private int currentAnimationFrame = 0;
     private Animator animator;
-    public static int ANIMATION_FRAME_RATE = 25;
-    public static int AGENT_INTERACTION_ACTION_STARTING_ANIMATION_FRAME = 3;
+    private static int ANIMATION_FRAME_RATE = 25;
     [SerializeField] private string currentClip;
-    public Dictionary<string, float> clipNamesAndDurations = new Dictionary<string,float>();
+    private Dictionary<string, float> clipNamesAndDurations = new Dictionary<string,float>();
     [SerializeField] private bool resetAnimationToIdleAfterPlayingOnce = false;
     [SerializeField] private int stepToEndAnimation = -1;
     
@@ -56,8 +55,8 @@ public class MCSSimulationAgent : MonoBehaviour {
     private static Vector3 HOLDING_POSITION = new Vector3(0.002f, 1.119f, 0.1907f);
     private static Vector3[] AGENT_INTERACTION_ACTION_OBJECT_POSITIONS = {Vector3.zero, REACH_INTO_BACK_POSITION_1, REACH_INTO_BACK_POSITION_2, REACH_INTO_BACK_POSITION_3};
     private static string[] AGENT_INTERACTION_ACTION_ANIMATIONS = {"TPF_phone1", "TPM_phone1", "TPM_phone1", "TPM_phone2"};
-    public static string NOT_HOLDING_OBJECT_ANIMATION = "TPM_idle5";
-    public static int NOT_HOLDING_OBJECT_ANIMATION_LENGTH = 5;
+    private static string NOT_HOLDING_OBJECT_ANIMATION = "TPM_idle5";
+    private static int NOT_HOLDING_OBJECT_ANIMATION_LENGTH = 5;
     private static int NOT_HOLDING_OBJECT_STARTING_FRAME = 150;
     private static int ANIMATION_FRAME_TO_ENHANCE_INTERACTION_ACTION = 34; //this makes the interaction action looks more believable.
     private static string TURN_LEFT = "TPM_turnL45";
@@ -67,23 +66,23 @@ public class MCSSimulationAgent : MonoBehaviour {
     [Header("Interaction Animation")]
     public SimObjPhysics heldObject;
     public bool isHoldingHeldObject;
-    public int currentGetHeldObjectAnimation = 0;
+    [SerializeField] private int currentGetHeldObjectAnimation = 0;
     public bool rotatingToFacePerformer = false;
-    public float rotationPercent = 0;
-    public Vector3 originalRotation;
-    public Vector3 targetRotation;
+    [SerializeField] private float rotationPercent = 0;
+    [SerializeField] private Vector3 originalRotation;
+    [SerializeField] private Vector3 targetRotation;
     public SimAgentActionState simAgentActionState = SimAgentActionState.Idle;
     [SerializeField] private bool resetOncePickedUp = false;
-    public bool previousClipWasLoop = false;
+    [SerializeField] private bool previousClipWasLoop = false;
     public string previousClip = "";
-    public int previousCurrentFrame = 0;
-    public int previousClipStepEnd = -1;
+    [SerializeField] private int previousCurrentFrame = 0;
+    [SerializeField] private int previousClipStepEnd = -1;
     public int delayedStepBeginAction = -1;
     public int delayedStepEnd = -1;
     public bool delayedIsLoopAnimation = false;
     public string delayedAnimation = "";
-    public static string IDLE_FEMALE = "TPF_idle1";
-    public static string IDLE_MALE = "TPM_idle1";
+    private static string IDLE_FEMALE = "TPF_idle1";
+    private static string IDLE_MALE = "TPM_idle1";
     private int notHoldingObjectCurrentFrame = 0;
     public enum SimAgentActionState {
         Action,
@@ -97,14 +96,14 @@ public class MCSSimulationAgent : MonoBehaviour {
     }
     
     [Header("Movement")]
-    public int moveIndex = 0;
-    public Vector3 targetPos = Vector3.zero;
-    public Vector3 direction;
-    public MCSConfigSimAgentMovement agentMovement = null;
-    public List<int> stepBegins = null;
-    public bool previouslyWasMoving;
-    public bool doneWithMovementSequence = false;
-    public int delayedStepBeginMovement = -1;
+    [SerializeField] private MCSConfigSimAgentMovement agentMovement = null;
+    public List<int> actionsStepBegins = null;
+    [SerializeField] private int moveIndex = 0;
+    [SerializeField] private Vector3 targetPos = Vector3.zero;
+    [SerializeField] private Vector3 direction;
+    [SerializeField] private bool previouslyWasMoving;
+    [SerializeField] private bool doneWithMovementSequence = false;
+    [SerializeField] private int delayedStepBeginMovement = -1;
     private static string MOVEMENT_TURNS_LEFT = "TPM_turnL45";
     private static string MOVEMENT_TURNS_RIGHT = "TPM_turnR45";
     private static float MOVE_MAGNITUDE = 0.04f;
@@ -321,12 +320,12 @@ public class MCSSimulationAgent : MonoBehaviour {
         //if there is a delayed start because an action's step beging was called while the agent was interacting with performer and now the performer is done interacting
         if (delayedStepBeginAction > -1 && !IsDoingAnyInteractions()) {
             //if the step end of that delayed action is past the current mcs step then we dont play it and reset to idle
-            if(mcsController.step >= delayedStepEnd && delayedStepEnd != -1 && (!stepBegins.Contains(mcsController.step))) {
+            if(mcsController.step >= delayedStepEnd && delayedStepEnd != -1 && (!actionsStepBegins.Contains(mcsController.step))) {
                 SetDefaultAnimation();
                 AnimationPlaysOnce(isLoopAnimation: true);
             }
             //otherwise play the action 
-            else if (!stepBegins.Contains(mcsController.step)) {
+            else if (!actionsStepBegins.Contains(mcsController.step)) {
                 simAgentActionState = SimAgentActionState.Action;
                 AssignClip(delayedAnimation);
                 stepToEndAnimation = delayedStepEnd;
@@ -339,7 +338,7 @@ public class MCSSimulationAgent : MonoBehaviour {
 
         //reset to idle after the agent was holding out its object and the performer picked it up
         else if (resetOncePickedUp && (simAgentActionState != SimAgentActionState.InteractingHoldingHeldObject && simAgentActionState != SimAgentActionState.HoldingOutHeldObject)) {
-            if(!stepBegins.Contains(mcsController.step))
+            if(!actionsStepBegins.Contains(mcsController.step))
                 SetDefaultAnimation();
             resetOncePickedUp = false;
         }
@@ -472,7 +471,7 @@ public class MCSSimulationAgent : MonoBehaviour {
             
             //if any interactions are complete then rotate the agent back to its previous direction
             if(IsDoingAnyInteractions() && interactionComplete) {
-                if(stepBegins.Contains(mcsController.step)) {
+                if(actionsStepBegins.Contains(mcsController.step)) {
                     return false;
                 }
                 previouslyWasMoving = true;
