@@ -107,7 +107,7 @@ public class MCSSimulationAgent : MonoBehaviour {
     public int delayedStepBeginMovement = -1;
     private static string MOVEMENT_TURNS_LEFT = "TPM_turnL45";
     private static string MOVEMENT_TURNS_RIGHT = "TPM_turnR45";
-    private static float MOVE_MAGNITUDE = 0.5f;//0.04f;
+    private static float MOVE_MAGNITUDE = 0.04f;
 
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
