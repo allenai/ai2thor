@@ -474,6 +474,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+                case "bboxdist": {
+                    Dictionary<string, object> action = new Dictionary<string, object> {
+                        {"action", "BBoxDistance"},
+                        {"objectId0", splitcommand[1]},
+                        {"objectId1", splitcommand[2]}
+                    };
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
                 case "expspawn": {
                         ServerAction action = new ServerAction();
 

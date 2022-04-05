@@ -121,6 +121,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
 
+    private bool forceCreateObjectOrientedBoundingBox = false;
+    
+    private bool shouldCreateObjectOrientedBoundingBox {
+        get {
+            return this.forceCreateObjectOrientedBoundingBox || this.IsPickupable || this.IsMoveable;
+        }
+    }
+
     public float GetTimerResetValue() {
         return TimerResetValue;
     }
@@ -164,7 +172,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         ContainedObjectReferences.Remove(t);
     }
 
-    public void syncBoundingBoxes(bool forceCacheReset = false) {
+    public void syncBoundingBoxes(
+        bool forceCacheReset = false,
+        bool forceCreateObjectOrientedBoundingBox = false
+    ) {
+
+        if (forceCreateObjectOrientedBoundingBox) {
+            bool shouldCreateBefore = this.shouldCreateObjectOrientedBoundingBox;
+            this.forceCreateObjectOrientedBoundingBox = forceCreateObjectOrientedBoundingBox;
+
+            forceCacheReset = forceCacheReset || shouldCreateBefore != this.shouldCreateObjectOrientedBoundingBox;
+        }
 
         Vector3 position = this.gameObject.transform.position;
         Quaternion rotation = this.gameObject.transform.rotation;
@@ -294,7 +312,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
 
     private ObjectOrientedBoundingBox objectOrientedBoundingBox() {
-        if (this.IsPickupable || this.IsMoveable) {
+        if (this.shouldCreateObjectOrientedBoundingBox) {
             ObjectOrientedBoundingBox b = new ObjectOrientedBoundingBox();
 
             if (this.BoundingBox == null) {
