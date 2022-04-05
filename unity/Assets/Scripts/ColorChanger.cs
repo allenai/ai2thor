@@ -34,6 +34,7 @@ public class ColorChanger : MonoBehaviour {
             "WatchMaterials",
             "ArmChairMaterials",
             "BedMaterials",
+            "BedsheetMaterials",
             "ChairMaterials",
             "CoffeeTableMaterials",
             "DeskMaterials",
@@ -165,7 +166,11 @@ public class ColorChanger : MonoBehaviour {
         HashSet<string> activeMaterialNames = new HashSet<string>();
         foreach (var renderer in GameObject.FindObjectsOfType<Renderer>()) {
             foreach (var mat in renderer.sharedMaterials) {
-                activeMaterialNames.Add(mat.name);
+                if (mat != null && mat.name != null) {
+                    Debug.Log("a");
+                    Debug.Log("Found material: " + mat.name);
+                    activeMaterialNames.Add(mat.name);
+                }
             }
         }
 
