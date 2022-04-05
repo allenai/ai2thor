@@ -342,7 +342,7 @@ class Event:
 
             multiplier /= 256.0
         else:
-            raise Exception("invali shape for depth image %s" % (image_depth.shape,))
+            raise Exception("invalid shape for depth image %s" % (image_depth.shape,))
 
         if multiplier != 1.0:
             if not image_depth_out.flags["WRITEABLE"]:
