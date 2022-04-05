@@ -108,10 +108,10 @@ public class MCSSimulationAgent : MonoBehaviour {
     private static string MOVEMENT_TURNS_RIGHT = "TPM_turnR45";
     private static float MOVE_MAGNITUDE = 0.04f;
 
-    public List<Collider> collisions = new List<Collider>();
+    [SerializeField] private bool obstructed = false;
+    private bool obstructedAnimationSet = false;
+    private List<Collider> collisions = new List<Collider>();
     private CapsuleCollider cc;
-    public bool obstructed = false;
-    public bool obstructedAnimationSet = false;
 
 
     void Awake() {
@@ -162,8 +162,6 @@ public class MCSSimulationAgent : MonoBehaviour {
     void Update() {
         Vector3 p1 = transform.TransformPoint(new Vector3(cc.center.x, cc.center.y - cc.height/2 + cc.radius, cc.center.z)) + (transform.forward.normalized * MOVE_MAGNITUDE);
         Vector3 p2 = transform.TransformPoint(new Vector3(cc.center.x, cc.center.y + cc.height/2 - cc.radius, cc.center.z)) + (transform.forward.normalized * MOVE_MAGNITUDE);
-        Debug.DrawRay(p1, transform.forward, Color.red, 0.5f);
-        Debug.DrawRay(p2, transform.forward, Color.yellow, 0.5f);
         collisions = Physics.OverlapCapsule(p1, p2, cc.radius * transform.localScale.x, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore).ToList();
         foreach (Collider c in collisions) {
             //if not the floor or this capsule collider then the agent is colliding with something and needs to stop
