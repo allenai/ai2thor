@@ -41,16 +41,21 @@ def add_files(zipf, start_dir, exclude_ext=()):
                 continue
 
             arcname = os.path.relpath(fn, start_dir)
+            if arcname.split("/")[0].endswith("_BackUpThisFolder_ButDontShipItWithYourGame"):
+                # print("skipping %s" % arcname)
+                continue
             # print("adding %s" % arcname)
             zipf.write(fn, arcname)
 
 
 def push_build(build_archive_name, zip_data, include_private_scenes):
+    logger.info("start of push_build")
     import boto3
     from base64 import b64encode
 
     # subprocess.run("ls %s" % build_archive_name, shell=True)
     # subprocess.run("gsha256sum %s" % build_archive_name)
+    logger.info("boto3 resource")
     s3 = boto3.resource("s3", region_name="us-west-2")
     acl = "public-read"
     bucket = ai2thor.build.PUBLIC_S3_BUCKET
@@ -58,13 +63,17 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
         bucket = ai2thor.build.PRIVATE_S3_BUCKET
         acl = "private"
 
+    logger.info("archive base")
     archive_base = os.path.basename(build_archive_name)
     key = "builds/%s" % (archive_base,)
     sha256_key = "builds/%s.sha256" % (os.path.splitext(archive_base)[0],)
 
+    logger.info("hashlib sha256")
     sha = hashlib.sha256(zip_data)
     try:
+        logger.info("pushing build %s" % (key,))
         s3.Object(bucket, key).put(Body=zip_data, ACL=acl, ChecksumSHA256=b64encode(sha.digest()).decode('ascii'))
+        logger.info("pushing sha256 %s" % (sha256_key,))
         s3.Object(bucket, sha256_key).put(
             Body=sha.hexdigest(), ACL=acl, ContentType="text/plain"
         )
@@ -135,9 +144,14 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
 
     project_path = os.path.join(os.getcwd(), unity_path)
 
+    # osxintel64 is not a BuildTarget
+    build_target_map = dict(OSXIntel64="OSXUniversal")
+
+    # -buildTarget must be passed as an option for the CloudRendering target otherwise a clang error
+    # will get thrown complaining about missing features.h
     command = (
-        "%s -quit -batchmode -logFile %s/%s.log -projectpath %s -executeMethod Build.%s"
-        % (_unity_path(), os.getcwd(), build_name, project_path, arch)
+        "%s -quit -batchmode -logFile %s/%s.log -projectpath %s -buildTarget %s -executeMethod Build.%s"
+        % (_unity_path(), os.getcwd(), build_name, project_path, build_target_map.get(arch, arch), arch)
     )
 
     target_path = os.path.join(build_dir, build_name)
@@ -427,17 +441,6 @@ def local_build(
     generate_quality_settings(context)
 
 
-def fix_webgl_unity_loader_regex(unity_loader_path):
-    # Bug in the UnityLoader.js causes Chrome on Big Sur to fail to load
-    # https://issuetracker.unity3d.com/issues/unity-webgl-builds-do-not-run-on-macos-big-sur
-    with open(unity_loader_path) as f:
-        loader = f.read()
-
-    loader = loader.replace("Mac OS X (10[\.\_\d]+)", "Mac OS X (1[\.\_\d][\.\_\d]+)")
-    with open(unity_loader_path, "w") as f:
-        f.write(loader)
-
-
 @task
 def webgl_build(
     context,
@@ -516,7 +519,6 @@ def webgl_build(
         print("Build Failure")
 
     build_path = _webgl_local_build_path(prefix, directory)
-    fix_webgl_unity_loader_regex(os.path.join(build_path, "Build/UnityLoader.js"))
     generate_quality_settings(context)
 
     # the remainder of this is only used to generate scene metadata, but it
@@ -555,9 +557,10 @@ def webgl_build(
         print(scene_metadata)
 
     to_content_addressable = [
-        ("{}.data.unityweb".format(build_name), "dataUrl"),
-        ("{}.wasm.code.unityweb".format(build_name), "wasmCodeUrl"),
-        ("{}.wasm.framework.unityweb".format(build_name), "wasmFrameworkUrl"),
+        ("{}.data".format(build_name), "dataUrl"),
+        ("{}.loader.js".format(build_name), "loaderUrl"),
+        ("{}.wasm".format(build_name), "wasmCodeUrl"),
+        ("{}.framework.js".format(build_name), "wasmFrameworkUrl"),
     ]
     for file_name, key in to_content_addressable:
         file_to_content_addressable(
@@ -789,12 +792,14 @@ def archive_push(unity_path, build_path, build_dir, build_info, include_private_
     zip_buf = io.BytesIO()
     # Unity build is done with CompressWithLz4. Zip with compresslevel=1
     # results in smaller builds than Uncompressed Unity + zip comprseslevel=6 (default)
+    logger.info("building zip archive  %s %s" % (archive_name, os.path.join(unity_path, build_dir)))
     zipf = zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED, compresslevel=1)
     add_files(zipf, os.path.join(unity_path, build_dir), exclude_ext=('.debug',))
     zipf.close()
     zip_buf.seek(0)
     zip_data = zip_buf.read()
 
+    logger.info("generated zip archive %s %s" % (archive_name, len(zip_data)))
     push_build(archive_name, zip_data, include_private_scenes)
     build_log_push(build_info, include_private_scenes)
     print("Build successful")
@@ -978,10 +983,6 @@ def ci_pytest(branch, commit_id):
 
 @task
 def ci_build(context):
-    # using fork can potentially lead to crashes (https://bugs.python.org/issue33725)
-    # if this ever becomes an issue, a separate clone will need to be used
-    # instead of mutating the clone beneath running invoke ci-build task
-    multiprocessing.set_start_method("fork")
 
     lock_f = open(os.path.join(os.environ["HOME"], ".ci-build.lock"), "w")
     arch_temp_dirs = dict()
@@ -1042,12 +1043,26 @@ def ci_build(context):
                         # been built, we avoid bootstrapping the cache since we short circuited on the line above
                         link_build_cache(temp_dir, arch, build["branch"])
 
+                        # ci_build_arch(temp_dir, arch, build["commit_id"], include_private_scenes)
                         p = multiprocessing.Process(target=ci_build_arch, args=(temp_dir, arch, build["commit_id"], include_private_scenes,))
-                        p.start()
-                        # wait for Unity to start so that it can pick up the GICache config
-                        # changes
-                        time.sleep(30)
-                        procs.append(p)
+                        active_procs = lambda x: sum([p.is_alive() for p in x])
+                        started = False
+                        for _ in range(200):
+                            if active_procs(procs) > 0:
+                                logger.info("too many active procs - waiting before start %s " % arch)
+                                time.sleep(15)
+                                continue
+                            else:
+                                logger.info("starting build process for %s " % arch)
+                                started = True
+                                p.start()
+                                # wait for Unity to start so that it can pick up the GICache config
+                                # changes
+                                time.sleep(30)
+                                procs.append(p)
+                                break
+                        if not started:
+                            logger.error("could not start build for %s" % arch)
 
             # the UnityLockfile is used as a trigger to indicate that Unity has closed
             # the project and we can run the unit tests
@@ -1131,6 +1146,28 @@ def ci_build(context):
 
 
     lock_f.close()
+
+
+@task
+def install_cloudrendering_engine(context, force=False):
+    if not sys.platform.startswith("darwin"):
+        raise Exception("CloudRendering Engine can only be installed on Mac")
+    s3 = boto3.resource("s3")
+    target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(_unity_version())
+    full_dir = os.path.join(target_base_dir, "CloudRendering")
+    if os.path.isdir(full_dir):
+        if force:
+            shutil.rmtree(full_dir)
+            logger.info("CloudRendering engine already installed - removing due to force")
+        else:
+            logger.info("skipping installation - CloudRendering engine already installed")
+            return
+
+    print("packages/CloudRendering-%s.zip" % _unity_version())
+    res = s3.Object(ai2thor.build.PRIVATE_S3_BUCKET, "packages/CloudRendering-%s.zip" % _unity_version()).get()
+    data = res["Body"].read()
+    z = zipfile.ZipFile(io.BytesIO(data))
+    z.extractall(target_base_dir)
 
 
 @task
@@ -3454,28 +3491,6 @@ def get_physics_determinism(
                 action_name, metric
             )
         )
-
-
-@task
-def generate_msgpack_resolver(task):
-    import glob
-
-    # mpc can be downloaded from: https://github.com/neuecc/MessagePack-CSharp/releases/download/v2.1.194/mpc.zip
-    # need to download/unzip into this path, add gatekeeper permission
-    target_dir = "unity/Assets/Scripts/ThorMsgPackResolver"
-    shutil.rmtree(target_dir, ignore_errors=True)
-    mpc_path = os.path.join(os.environ["HOME"], "local/bin/mpc")
-    subprocess.check_call(
-        "%s -i unity -o %s -m -r ThorIL2CPPGeneratedResolver" % (mpc_path, target_dir),
-        shell=True,
-    )
-    for g in glob.glob(os.path.join(target_dir, "*.cs")):
-        with open(g) as f:
-            source_code = f.read()
-            source_code = "using UnityEngine;\n" + source_code
-        with open(g, "w") as f:
-            f.write(source_code)
-
 
 @task
 def generate_pypi_index(context):

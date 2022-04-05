@@ -1224,6 +1224,9 @@ namespace Thor.Procedural {
             Vector3 boxCenter,
             Vector3 boxSize
         ) {
+            var wallrb = wallGameObject.AddComponent<Rigidbody>();
+            wallrb.isKinematic = true;
+
             var boundingBox = new GameObject("BoundingBox");
             // SimObjInvisible
             boundingBox.layer = 9;
@@ -1248,9 +1251,14 @@ namespace Thor.Procedural {
 
             simObjPhysics.VisibilityPoints = visibilityPoints.GetComponentsInChildren<Transform>();
 
-            // simObjPhysics.ReceptacleTriggerBoxes = new GameObject[] { receptacleTriggerBox };
-           
-            simObjPhysics.MyColliders =  wallGameObject.GetComponentsInChildren<Collider>();
+            var PotentialColliders = wallGameObject.GetComponentsInChildren<Collider>(false);
+            List<Collider> actuallyMyColliders = new List<Collider>();
+            foreach (Collider c in PotentialColliders) {
+                if(c.enabled)
+                actuallyMyColliders.Add(c);
+            }
+
+            simObjPhysics.MyColliders =  actuallyMyColliders.ToArray();
 
             simObjPhysics.transform.parent = wallGameObject.transform;
 
@@ -1604,8 +1612,6 @@ namespace Thor.Procedural {
                 .SelectMany(vertices => GenerateTriangleVisibilityPoints(vertices.ElementAt(0), vertices.ElementAt(1), vertices.ElementAt(2), visibilityPointInterval));
 
                 var visibilityPointsGO = CreateVisibilityPointsGameObject(floorVisibilityPoints);
-                ProceduralTools.setRoomSimObjectPhysics(subFloorGO, room.id, visibilityPointsGO);
-                ProceduralTools.setRoomProperties(subFloorGO, room);
 
                 // mesh.subMeshCount
                 subFloorGO.GetComponent<MeshFilter>().mesh = mesh;
@@ -1629,6 +1635,12 @@ namespace Thor.Procedural {
                 subFloorGO.layer = 12; //raycast to layer 12 so it doesn't interact with any other layer
 
                 subFloorGO.transform.parent = floorGameObject.transform;
+
+                ProceduralTools.setRoomSimObjectPhysics(subFloorGO, room.id, visibilityPointsGO);
+                ProceduralTools.setRoomProperties(subFloorGO, room);
+
+                Collider[] RoomMeshCollider = new Collider[] {meshCollider};
+                subFloorGO.GetComponent<SimObjPhysics>().MyColliders = RoomMeshCollider;
             }
 
             // var minPoint = mesh.vertices[0];

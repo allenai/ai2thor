@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class PrefabNameRevert {
     [MenuItem("Prefab/RevertName")]
     static void RevertPrefabNames() {
-        RevertAllNames(Selection.GetFiltered(typeof(GameObject), SelectionMode.OnlyUserModifiable));
+        RevertAllNames(Selection.GetFiltered(typeof(GameObject), SelectionMode.Editable));
     }
 
     public static string GetPrefabAssetName(GameObject prefab, string name = "") {
