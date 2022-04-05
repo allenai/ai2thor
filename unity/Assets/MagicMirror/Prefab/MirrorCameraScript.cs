@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.VR;
 
 public class MirrorCameraScript : MonoBehaviour
 {
