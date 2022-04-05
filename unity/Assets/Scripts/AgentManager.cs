@@ -1133,7 +1133,6 @@ public class AgentManager : MonoBehaviour {
                 }
             } else if (serverType == serverTypes.FIFO) {
 
-
                 byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(multiMeta,
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
 
@@ -1326,7 +1325,7 @@ public class AgentMetadata {
 public class DroneAgentMetadata : AgentMetadata {
     // why is the launcher position even attached to the agent's metadata
     // and not the generic metdata?
-    public Vector3 LauncherPosition;
+    public Vector3 launcherPosition;
 }
 
 // additional metadata for drone objects (only use with Drone controller)
@@ -1338,7 +1337,7 @@ public class DroneObjectMetadata : ObjectMetadata {
     public int numFloorHits;
     public int numStructureHits;
     public float lastVelocity;
-    public Vector3 LauncherPosition;
+    public Vector3 launcherPosition;
     public bool isCaught;
     public DroneObjectMetadata() { }
 }
