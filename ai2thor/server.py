@@ -596,7 +596,6 @@ class Event:
         self.instance_segmentation_frame = read_buffer_image(
             image_ids_data, self.screen_width, self.screen_height
             )[:, :, :3]
-<<<<<<< HEAD
 
         self.process_colors_ids(image_ids_data)
 
@@ -609,14 +608,6 @@ class Event:
             instance_segmentation_frame
         )
         instance_masks = LazyInstanceSegmentationMasks(image_ids_data, self.metadata)
-=======
-        self.process_colors_ids()
-
-    def add_third_party_image_ids(self, image_ids_data):
-        instance_segmentation_frame  = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)[:, :, :3]
-        self.third_party_instance_segmentation_frames.append(instance_segmentation_frame)
-        class_masks, instance_masks = self.process_thirdparty_color_ids(instance_segmentation_frame)
->>>>>>> main
         self.third_party_instance_masks.append(instance_masks)
         self.third_party_class_masks.append(LazyClassSegmentationMasks(instance_masks))
 
