@@ -204,7 +204,8 @@ class InteractiveControllerPrompt(object):
 
             print("Position: {}".format(event.metadata["agent"]["position"]))
             # print(command_message)
-            print("Visible Objects:\n" + "\n".join(sorted(visible_objects)))
+            if len(visible_objects):
+                print("Visible Objects:\n" + "\n".join(sorted(visible_objects)))
 
             skip_keys = ["action", "objectId"]
             for k in sorted(new_commands.keys()):
@@ -225,6 +226,7 @@ class InteractiveControllerPrompt(object):
     def next_interact_command(self):
 
         current_buffer = ""
+        print(["k {} v {}".format(k, v) for (k, v) in self._interact_commands.items()])
         while True:
             commands = self._interact_commands
             current_buffer += get_term_character()

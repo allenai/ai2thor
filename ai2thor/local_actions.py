@@ -17,7 +17,7 @@ class LocalActionRunner(object):
         ):
         self.interactive_prompt = InteractiveControllerPrompt(
             default_actions=default_actions,
-            has_object_actions=False,
+            has_object_actions=True,
             image_dir=None,
             image_per_frame=False
         )
@@ -38,7 +38,7 @@ class LocalActionRunner(object):
         #
         # cv2.namedWindow("image")
         # cv2.imshow("image", img)
-        # cv2.waitKey(0)
+        # cv2.waitKey(1)
 
         # choice = str(input())
         # result = ""

@@ -3678,6 +3678,6 @@ def test_local_action(context):
 
     print("User Action1 " + evt.metadata["actionReturn"])
 
-    # evt = controller.step(action="ObjectNavHumanAction")
-    #
-    # print("User Action2 " + evt.metadata["actionReturn"])
+    evt = controller.step(action="ObjectNavHumanAction")
+
+    print("User Action2 " + evt.metadata["actionReturn"])
