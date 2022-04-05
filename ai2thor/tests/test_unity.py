@@ -1045,6 +1045,15 @@ def test_jsonschema_metadata(controller):
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
+def test_drone_jsonschema_metadata(controller):
+    controller.reset(agentMode="drone")
+    event = controller.step(action="Pass")
+    with open(os.path.join(TESTS_DATA_DIR, "drone-metadata-schema.json")) as f:
+        schema = json.loads(f.read())
+
+    jsonschema.validate(instance=event.metadata, schema=schema)
+
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_arm_jsonschema_metadata(controller):
     controller.reset(agentMode="arm")
     event = controller.step(action="Pass")
