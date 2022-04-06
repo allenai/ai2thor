@@ -315,9 +315,23 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         if (this.shouldCreateObjectOrientedBoundingBox) {
             ObjectOrientedBoundingBox b = new ObjectOrientedBoundingBox();
 
-            if (this.BoundingBox == null) {
-                Debug.LogError(this.transform.name + " is missing BoundingBox reference!");
-                return b;
+            bool shouldSetupBBox = false;
+            try {
+                shouldSetupBBox = this.BoundingBox == null;
+            } catch (UnassignedReferenceException e) {
+                shouldSetupBBox = true;
+            }
+
+            if (shouldSetupBBox) {
+                GameObject bb = new GameObject("BoundingBox");
+                bb.transform.position = gameObject.transform.position;
+                bb.transform.SetParent(gameObject.transform);
+                bb.AddComponent<BoxCollider>();
+                bb.GetComponent<BoxCollider>().enabled = false;
+                bb.tag = "Untagged";
+                bb.layer = 0;
+                this.BoundingBox = bb;
+                ContextSetUpBoundingBox();
             }
 
             // unparent child simobjects during bounding box generation
@@ -2105,7 +2119,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         transform.eulerAngles = Vector3.zero;
 
         if (BoundingBox == null) {
-            GameObject BoundingBox = new GameObject();
+            GameObject BoundingBox = new GameObject("BoundingBox");
             BoundingBox.transform.parent = gameObject.transform;
             BoundingBox.transform.localPosition = Vector3.zero;
             BoundingBox.transform.localEulerAngles = Vector3.zero;
