@@ -226,7 +226,7 @@ class InteractiveControllerPrompt(object):
     def next_interact_command(self):
 
         current_buffer = ""
-        print(["k {} v {}".format(k, v) for (k, v) in self._interact_commands.items()])
+        #print(["k {} v {}".format(k, v) for (k, v) in self._interact_commands.items()])
         while True:
             commands = self._interact_commands
             current_buffer += get_term_character()

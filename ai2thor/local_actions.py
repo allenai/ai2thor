@@ -17,7 +17,7 @@ class LocalActionRunner(object):
         ):
         self.interactive_prompt = InteractiveControllerPrompt(
             default_actions=default_actions,
-            has_object_actions=True,
+            has_object_actions=False,
             image_dir=None,
             image_per_frame=False
         )
