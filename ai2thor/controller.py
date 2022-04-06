@@ -395,7 +395,8 @@ class Controller(object):
         server_class=None,
         gpu_device=None,
         platform=None,
-        human_selectable_actions=None,
+        local_action_runner_class=None,
+        local_action_runner_params={},
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -405,8 +406,7 @@ class Controller(object):
         self.width = width
         self.height = height
 
-        self.local_action_runner = LocalActionRunner(
-            default_actions=[DefaultActions[a] for a in human_selectable_actions])
+        self.local_action_runner = local_action_runner_class(**local_action_runner_params) if local_action_runner_class is not None else None
 
         self.last_event = None
         self.scene = None

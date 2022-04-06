@@ -3664,6 +3664,7 @@ def test_local_action(context):
     import ai2thor.controller
     import random
     import time
+    from ai2thor.local_actions import LocalActionRunner
 
     width = 300
     height = 300
@@ -3678,14 +3679,18 @@ def test_local_action(context):
         fieldOfView=fov,
         agentControllerType="mid-level",
         server_class=ai2thor.fifo_server.FifoServer,
-        human_selectable_actions=[
-            "RotateLeft",
-            "RotateRight",
-            "MoveAhead",
-            "MoveBack",
-            "MoveLeft",
-            "MoveRight"
-        ]
+        local_action_runner_class=LocalActionRunner,
+        local_action_runner_params={
+            "enabled_actions":
+            [
+                "RotateLeft",
+                "RotateRight",
+                "MoveAhead",
+                "MoveBack",
+                "MoveLeft",
+                "MoveRight"
+            ]
+        },
     )
 
     controller.step(action="MoveAhead")

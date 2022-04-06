@@ -26,6 +26,8 @@ class Controller(object):
         depth_format=DepthFormat.Meters,
         camera_near_plane=0.1,
         camera_far_plane=20,
+        local_action_runner_class=None,
+        local_action_runner_params={},
     ):
         self.host = host
         self.port = port
@@ -39,6 +41,9 @@ class Controller(object):
         self.depth_format = depth_format
         self.camera_near_plane = (camera_near_plane,)
         self.camera_far_plane = camera_far_plane
+
+        self.local_action_runner = local_action_runner_class(
+            **local_action_runner_params) if local_action_runner_class is not None else None
 
         if image_dir != ".":
             if os.path.exists(image_dir):

@@ -48,7 +48,48 @@ def get_term_character():
     return ch
 
 
-class InteractiveControllerPrompt(object):
+class StdinPrompt(object):
+    def __init__(
+            self,
+            default_actions,
+            has_object_actions=True
+    ):
+        self.default_actions = default_actions
+        self.has_object_actions = has_object_actions
+
+    def interact(
+            self,
+            controller,
+            step=True,
+            **kwargs
+    ):
+        pass
+
+    @classmethod
+    def next_interact_command(cls, interact_commands):
+        current_buffer = ""
+        #print(["k {} v {}".format(k, v) for (k, v) in self._interact_commands.items()])
+        while True:
+            commands = interact_commands
+            current_buffer += get_term_character()
+            if current_buffer == "q" or current_buffer == "\x03":
+                break
+
+            if current_buffer in commands:
+                yield commands[current_buffer]
+                current_buffer = ""
+            else:
+                match = False
+                for k, v in commands.items():
+                    if k.startswith(current_buffer):
+                        match = True
+                        break
+
+                if not match:
+                    current_buffer = ""
+
+
+class InteractiveControllerPrompt(StdinPrompt):
     def __init__(
         self,
         default_actions,
@@ -104,16 +145,9 @@ class InteractiveControllerPrompt(object):
 
         command_message = u"Enter a Command: Move \u2190\u2191\u2192\u2193, Rotate/Look Shift + \u2190\u2191\u2192\u2193, Quit 'q' or Ctrl-C"
         print(command_message)
-        for a in self.next_interact_command():
+        for a in StdinPrompt.next_interact_command(self._interact_commands):
             new_commands = {}
             command_counter = dict(counter=1)
-
-            def add_command(cc, action, **args):
-                if cc["counter"] < 15:
-                    com = dict(action=action)
-                    com.update(args)
-                    new_commands[str(cc["counter"])] = com
-                    cc["counter"] += 1
 
             if step:
                 event = controller.step(a)
@@ -134,70 +168,9 @@ class InteractiveControllerPrompt(object):
                 )
 
             self.counter += 1
+
             if self.has_object_actions:
-                for o in event.metadata["objects"]:
-                    if o["visible"]:
-                        visible_objects.append(o["objectId"])
-                        if o["openable"]:
-                            if o["isOpen"]:
-                                add_command(
-                                    command_counter,
-                                    "CloseObject",
-                                    objectId=o["objectId"],
-                                )
-                            else:
-                                add_command(
-                                    command_counter,
-                                    "OpenObject",
-                                    objectId=o["objectId"],
-                                )
-
-                        if o["toggleable"]:
-                            add_command(
-                                command_counter,
-                                "ToggleObjectOff",
-                                objectId=o["objectId"],
-                            )
-
-                        if len(event.metadata["inventoryObjects"]) > 0:
-                            inventoryObjectId = event.metadata["inventoryObjects"][0][
-                                "objectId"
-                            ]
-                            if (
-                                o["receptacle"]
-                                and (not o["openable"] or o["isOpen"])
-                                and inventoryObjectId != o["objectId"]
-                            ):
-                                add_command(
-                                    command_counter,
-                                    "PutObject",
-                                    objectId=inventoryObjectId,
-                                    receptacleObjectId=o["objectId"],
-                                )
-                                add_command(
-                                    command_counter, "MoveHandAhead", moveMagnitude=0.1
-                                )
-                                add_command(
-                                    command_counter, "MoveHandBack", moveMagnitude=0.1
-                                )
-                                add_command(
-                                    command_counter, "MoveHandRight", moveMagnitude=0.1
-                                )
-                                add_command(
-                                    command_counter, "MoveHandLeft", moveMagnitude=0.1
-                                )
-                                add_command(
-                                    command_counter, "MoveHandUp", moveMagnitude=0.1
-                                )
-                                add_command(
-                                    command_counter, "MoveHandDown", moveMagnitude=0.1
-                                )
-                                add_command(command_counter, "DropHandObject")
-
-                        elif o["pickupable"]:
-                            add_command(
-                                command_counter, "PickupObject", objectId=o["objectId"]
-                            )
+                visible_objects = InteractiveControllerPrompt._add_contextual_commands(event, new_commands, command_counter)
 
             self._interact_commands = default_interact_commands.copy()
             self._interact_commands.update(new_commands)
@@ -221,30 +194,82 @@ class InteractiveControllerPrompt(object):
 
                 print(" ".join(command_info))
 
-            return a['action']
+            #return a['action']
 
-    def next_interact_command(self):
+    @classmethod
+    def _add_contextual_commands(cls, event, new_commands, command_counter):
+        def add_command(cc, action, **args):
+            if cc["counter"] < 15:
+                com = dict(action=action)
+                com.update(args)
+                new_commands[str(cc["counter"])] = com
+                cc["counter"] += 1
 
-        current_buffer = ""
-        #print(["k {} v {}".format(k, v) for (k, v) in self._interact_commands.items()])
-        while True:
-            commands = self._interact_commands
-            current_buffer += get_term_character()
-            if current_buffer == "q" or current_buffer == "\x03":
-                break
+        visible_objects = []
+        for o in event.metadata["objects"]:
+            if o["visible"]:
+                visible_objects.append(o["objectId"])
+                if o["openable"]:
+                    if o["isOpen"]:
+                        add_command(
+                            command_counter,
+                            "CloseObject",
+                            objectId=o["objectId"],
+                        )
+                    else:
+                        add_command(
+                            command_counter,
+                            "OpenObject",
+                            objectId=o["objectId"],
+                        )
 
-            if current_buffer in commands:
-                yield commands[current_buffer]
-                current_buffer = ""
-            else:
-                match = False
-                for k, v in commands.items():
-                    if k.startswith(current_buffer):
-                        match = True
-                        break
+                if o["toggleable"]:
+                    add_command(
+                        command_counter,
+                        "ToggleObjectOff",
+                        objectId=o["objectId"],
+                    )
 
-                if not match:
-                    current_buffer = ""
+                if len(event.metadata["inventoryObjects"]) > 0:
+                    inventoryObjectId = event.metadata["inventoryObjects"][0][
+                        "objectId"
+                    ]
+                    if (
+                            o["receptacle"]
+                            and (not o["openable"] or o["isOpen"])
+                            and inventoryObjectId != o["objectId"]
+                    ):
+                        add_command(
+                            command_counter,
+                            "PutObject",
+                            objectId=inventoryObjectId,
+                            receptacleObjectId=o["objectId"],
+                        )
+                        add_command(
+                            command_counter, "MoveHandAhead", moveMagnitude=0.1
+                        )
+                        add_command(
+                            command_counter, "MoveHandBack", moveMagnitude=0.1
+                        )
+                        add_command(
+                            command_counter, "MoveHandRight", moveMagnitude=0.1
+                        )
+                        add_command(
+                            command_counter, "MoveHandLeft", moveMagnitude=0.1
+                        )
+                        add_command(
+                            command_counter, "MoveHandUp", moveMagnitude=0.1
+                        )
+                        add_command(
+                            command_counter, "MoveHandDown", moveMagnitude=0.1
+                        )
+                        add_command(command_counter, "DropHandObject")
+
+                elif o["pickupable"]:
+                    add_command(
+                        command_counter, "PickupObject", objectId=o["objectId"]
+                    )
+        return visible_objects
 
     @classmethod
     def write_image(

@@ -8,20 +8,17 @@ to run locally and be resolved in python without going through Unity
 """
 import cv2
 import copy
-from ai2thor.interact import InteractiveControllerPrompt
+from ai2thor.interact import DefaultActions
+from ai2thor.interact_navigation import NavigationPrompt
 
 class LocalActionRunner(object):
     def __init__(
             self,
-            default_actions
+            enabled_actions
         ):
-        self.interactive_prompt = InteractiveControllerPrompt(
-            default_actions=default_actions,
-            has_object_actions=False,
-            image_dir=None,
-            image_per_frame=False
+        self.interactive_prompt = NavigationPrompt(
+            default_actions=[DefaultActions[a] for a in enabled_actions]
         )
-
 
     def ObjectNavHumanAction(self, action, controller):
         img = controller.last_event.cv2img[:, :, :]
