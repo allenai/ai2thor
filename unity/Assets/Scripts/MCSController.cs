@@ -201,7 +201,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         List<GameObject> heldAgentObjects = new List<GameObject>();
         foreach(MCSSimulationAgent agent in this.simulationAgents) {
             if (agent.isHoldingHeldObject && 
-                (agent.rotating || (agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject && 
+                (agent.rotatingToFacePerformer || (agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject && 
                 agent.simAgentActionState != MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject))) {
                 
                 agent.heldObject.gameObject.SetActive(true);
@@ -1069,11 +1069,13 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     public override void UpdateAgentObjectAssociations(SimObjPhysics sop) {
         if(this.simulationAgents.Count > 0) {
-            if(sop.associatedWithAgent != "" && this.agentObjectAssociations.ContainsKey(sop.associatedWithAgent)) {
-                foreach(MCSSimulationAgent agent in this.simulationAgents) {
-                    if(sop.associatedWithAgent == agent.name) {
-                        agent.SetDefaultAnimation(usePreviousClip: agent.previousClip != "");
+            if (sop.associatedWithAgent != "" && this.agentObjectAssociations.ContainsKey(sop.associatedWithAgent)) {
+                foreach (MCSSimulationAgent agent in this.simulationAgents) {
+                    if (sop.associatedWithAgent == agent.name) {
                         agent.isHoldingHeldObject = false;
+                        if (agent.SetPrevious())
+                            return;
+                        agent.SetDefaultAnimation(usePreviousClip: agent.previousClip != "", interactionComplete: true);
                     }
                 }
             }
@@ -1096,9 +1098,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        if(simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingHoldingHeldObject || 
-                simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.InteractingNotHoldingHeldObject ||
-                simulationAgent.simAgentActionState == MCSSimulationAgent.SimAgentActionState.HoldingOutHeldObject) {
+        if(simulationAgent.IsDoingAnyInteractions()) {
 
             string outputMessage = "Simulation Agent is currently interacting with performer.";
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.AGENT_CURRENTLY_INTERACTING_WTIH_PERFORMER);

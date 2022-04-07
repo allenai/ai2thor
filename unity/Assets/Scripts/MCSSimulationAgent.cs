@@ -35,18 +35,17 @@ public class MCSSimulationAgent : MonoBehaviour {
     private SkinObjectMaterialOption legs = null;
     private int skin = 0;
     private ObjectMaterialOption tie = null;
-    private MCSMain mcsMain;
+    private MCSController mcsController;
 
 
+    [Header("Animation")]
+    [SerializeField] private int currentAnimationFrame = 0;
     private Animator animator;
-    public static int ANIMATION_FRAME_RATE = 25;
-    public static int AGENT_INTERACTION_ACTION_STARTING_ANIMATION_FRAME = 3;
-    public int currentAnimationFrame = 0;
+    private static int ANIMATION_FRAME_RATE = 25;
     [SerializeField] private string currentClip;
-    public Dictionary<string, float> clipNamesAndDurations = new Dictionary<string,float>();
+    private Dictionary<string, float> clipNamesAndDurations = new Dictionary<string,float>();
     [SerializeField] private bool resetAnimationToIdleAfterPlayingOnce = false;
     [SerializeField] private int stepToEndAnimation = -1;
-    [SerializeField] private bool resetOncePickedUp = false;
     
     
     //local position adjustments of the held object throughout the animation sequence, calculated by hand in the editor
@@ -56,23 +55,35 @@ public class MCSSimulationAgent : MonoBehaviour {
     private static Vector3 HOLDING_POSITION = new Vector3(0.002f, 1.119f, 0.1907f);
     private static Vector3[] AGENT_INTERACTION_ACTION_OBJECT_POSITIONS = {Vector3.zero, REACH_INTO_BACK_POSITION_1, REACH_INTO_BACK_POSITION_2, REACH_INTO_BACK_POSITION_3};
     private static string[] AGENT_INTERACTION_ACTION_ANIMATIONS = {"TPF_phone1", "TPM_phone1", "TPM_phone1", "TPM_phone2"};
-    public static string NOT_HOLDING_OBJECT_ANIMATION = "TPM_idle5";
-    public static int NOT_HOLDING_OBJECT_ANIMATION_LENGTH = 5;
+    private static string NOT_HOLDING_OBJECT_ANIMATION = "TPM_idle5";
+    private static int NOT_HOLDING_OBJECT_ANIMATION_LENGTH = 5;
     private static int NOT_HOLDING_OBJECT_STARTING_FRAME = 150;
-    private int notHoldingObjectCurrentFrame = 0;
-    public SimObjPhysics heldObject;
-    public bool isHoldingHeldObject;
-    public int currentGetHeldObjectAnimation = 0;
     private static int ANIMATION_FRAME_TO_ENHANCE_INTERACTION_ACTION = 34; //this makes the interaction action looks more believable.
-    private MCSController mcsController;
-    public bool rotating = false;
-    public float rotationPercent = 0;
-    public Vector3 originalRotation;
-    public Vector3 targetRotation;
     private static string TURN_LEFT = "TPM_turnL45";
     private static string TURN_RIGHT = "TPM_turnR45";
     private static float MIMIMUM_ROTATION_ANGLE_FOR_ANIMATION = 15f;
-
+    
+    [Header("Interaction Animation")]
+    public SimObjPhysics heldObject;
+    public bool isHoldingHeldObject;
+    [SerializeField] private int currentGetHeldObjectAnimation = 0;
+    public bool rotatingToFacePerformer = false;
+    [SerializeField] private float rotationPercent = 0;
+    [SerializeField] private Vector3 originalRotation;
+    [SerializeField] private Vector3 targetRotation;
+    public SimAgentActionState simAgentActionState = SimAgentActionState.Idle;
+    [SerializeField] private bool resetOncePickedUp = false;
+    [SerializeField] private bool previousClipWasLoop = false;
+    public string previousClip = "";
+    [SerializeField] private int previousCurrentFrame = 0;
+    [SerializeField] private int previousClipStepEnd = -1;
+    public int delayedStepBeginAction = -1;
+    public int delayedStepEnd = -1;
+    public bool delayedIsLoopAnimation = false;
+    public string delayedAnimation = "";
+    private static string IDLE_FEMALE = "TPF_idle1";
+    private static string IDLE_MALE = "TPM_idle1";
+    private int notHoldingObjectCurrentFrame = 0;
     public enum SimAgentActionState {
         Action,
         Idle,
@@ -83,16 +94,19 @@ public class MCSSimulationAgent : MonoBehaviour {
         Rotating,
         None
     }
-    public SimAgentActionState simAgentActionState = SimAgentActionState.Idle;
-    public string previousClip = "";
-    public bool previousClipWasLoop = false;
-    public static string IDLE_FEMALE = "TPF_idle1";
-    public static string IDLE_MALE = "TPM_idle1";
-    public int delayedStepStart = -1;
-    public int delayedStepEnd = -1;
-    public bool delayedIsLoopAnimation = false;
-    public string delayedAnimation = "";
-    public bool getPreviousClip = false;
+    
+    [Header("Movement")]
+    [SerializeField] private MCSConfigSimAgentMovement agentMovement = null;
+    public List<int> actionsStepBegins = null;
+    [SerializeField] private int moveIndex = 0;
+    [SerializeField] private Vector3 targetPos = Vector3.zero;
+    [SerializeField] private Vector3 direction;
+    [SerializeField] private bool previouslyWasMoving;
+    [SerializeField] private bool doneWithMovementSequence = false;
+    [SerializeField] private int delayedStepBeginMovement = -1;
+    private static string MOVEMENT_TURNS_LEFT = "TPM_turnL45";
+    private static string MOVEMENT_TURNS_RIGHT = "TPM_turnR45";
+    private static float MOVE_MAGNITUDE = 0.04f;
 
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
@@ -137,7 +151,12 @@ public class MCSSimulationAgent : MonoBehaviour {
         }
     }
 
-    public void SetDefaultAnimation(bool usePreviousClip = false, string name = null) {
+    public void SetDefaultAnimation(bool usePreviousClip = false, string name = null, bool interactionComplete = false) {
+        if(previouslyWasMoving && !doneWithMovementSequence) {
+            bool completed = MoveSimAgent(interactionComplete: interactionComplete);
+            if(completed) 
+                return;
+        }
         if(usePreviousClip && previousClip != "") {
             AssignClip(previousClip);
             AnimationPlaysOnce(isLoopAnimation: previousClipWasLoop);
@@ -179,22 +198,10 @@ public class MCSSimulationAgent : MonoBehaviour {
 
 
     public void AssignClip(string clipId) {
-        if(simAgentActionState == SimAgentActionState.HoldingOutHeldObject)
+        if(simAgentActionState == SimAgentActionState.HoldingOutHeldObject) {
             simAgentActionState = SimAgentActionState.Action;
+        }
         
-        else if((simAgentActionState == SimAgentActionState.InteractingHoldingHeldObject || simAgentActionState == SimAgentActionState.InteractingNotHoldingHeldObject) && getPreviousClip) {
-            getPreviousClip = false;
-            previousClip = currentClip;
-            previousClipWasLoop = !resetAnimationToIdleAfterPlayingOnce;
-        }
-
-        else if((simAgentActionState == SimAgentActionState.Action || simAgentActionState == SimAgentActionState.Idle) && getPreviousClip) {
-            if(previousClip != NOT_HOLDING_OBJECT_ANIMATION && clipId == NOT_HOLDING_OBJECT_ANIMATION) {
-                getPreviousClip = false;
-                previousClip = currentClip;
-                previousClipWasLoop = !resetAnimationToIdleAfterPlayingOnce;
-            }
-        }
         currentAnimationFrame = 0;
         currentClip = clipId;
     }
@@ -205,8 +212,7 @@ public class MCSSimulationAgent : MonoBehaviour {
         targetRotation = new Vector3(0, transform.eulerAngles.y, 0);
         bool doRotationAnimation = false;
         float degreeChange = CalculateRotation(ref doRotationAnimation);
-        rotating = doRotationAnimation;
-        getPreviousClip = true;
+        rotatingToFacePerformer = doRotationAnimation;
         if(!doRotationAnimation) {
             transform.eulerAngles = targetRotation;
             if(isHoldingHeldObject && simAgentActionState == SimAgentActionState.InteractingHoldingHeldObject) { 
@@ -248,90 +254,150 @@ public class MCSSimulationAgent : MonoBehaviour {
         return degreeChange;
     }
 
+    private void AssignPrevious() {
+        previousClip = currentClip;
+        previousClipWasLoop = !resetAnimationToIdleAfterPlayingOnce;
+        previousCurrentFrame = currentAnimationFrame;
+        previousClipStepEnd = stepToEndAnimation;
+    }
+
+    public bool SetPrevious() {
+        if((previousClipStepEnd > -1 && mcsController.step < previousClipStepEnd) || previousClipStepEnd == -1) {
+            SetDefaultAnimation(usePreviousClip: previousClip != "");
+            currentAnimationFrame = previousCurrentFrame;
+            return true;
+        }
+        return false;
+    }
+
+    private void ResetDelayedActionStepTriggers() {
+        delayedStepBeginAction = -1;
+        delayedStepEnd = -1;
+        delayedIsLoopAnimation = false;
+        delayedAnimation = "";
+        resetOncePickedUp = false;
+    }
+
     public void IncrementAnimationFrame() {
+        //increment the current animation frame and get total frames
         currentAnimationFrame++;
         int totalFrames = Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * clipNamesAndDurations[this.currentClip]);
+        if(simAgentActionState == SimAgentActionState.Action) {
+            AssignPrevious();
+        }
 
-        if(simAgentActionState==SimAgentActionState.InteractingNotHoldingHeldObject && !rotating) {
+        //if the step to begin movement occured during an interaction and its step begin was later than an action that was also triggered during the interaction, 
+        //start the movement sequence when the interaction is complete
+        if(delayedStepBeginMovement > -1 && delayedStepBeginMovement > delayedStepBeginAction && !IsDoingAnyInteractions() && !rotatingToFacePerformer) {
+            delayedStepBeginMovement = -1;
+            ResetDelayedActionStepTriggers();
+            MoveSimAgent();
+        }
+
+        //otherwise if the step to begin movement occured during an interaction and the interaction is complete but another action was triggered after the step begin of movement
+        //then do not start movement until the triggered action is complete
+        else if (delayedStepBeginMovement > -1 && !IsDoingAnyInteractions() && !rotatingToFacePerformer) {
+            delayedStepBeginMovement = -1;
+        }
+
+        //if the agent is interacting with the performer and currently not rotating to face the performer play through the not holding object animation
+        if(simAgentActionState == SimAgentActionState.InteractingNotHoldingHeldObject && !rotatingToFacePerformer) {
             notHoldingObjectCurrentFrame++;
             if(notHoldingObjectCurrentFrame >= NOT_HOLDING_OBJECT_ANIMATION_LENGTH) {
-                SetDefaultAnimation(usePreviousClip: previousClip != "");
+                //if there was an action before make sure to finish it
+                if (SetPrevious())
+                    return;
+                //if on a movement cycle before the interaction return to it
+                if(previouslyWasMoving)
+                    MoveSimAgent(interactionComplete: true);
+                //otherwise reset to the default idle
+                else
+                    SetDefaultAnimation();
             }
         }
 
-        if (delayedStepStart > -1 && 
-            simAgentActionState != SimAgentActionState.InteractingHoldingHeldObject && 
-            simAgentActionState != SimAgentActionState.HoldingOutHeldObject &&
-            simAgentActionState != SimAgentActionState.InteractingNotHoldingHeldObject) {
 
-            if(mcsController.step >= delayedStepEnd && delayedStepEnd != -1) {
+        //if there is a delayed start because an action's step beging was called while the agent was interacting with performer and now the performer is done interacting
+        if (delayedStepBeginAction > -1 && !IsDoingAnyInteractions()) {
+            //if the step end of that delayed action is past the current mcs step then we dont play it and reset to idle
+            if(mcsController.step >= delayedStepEnd && delayedStepEnd != -1 && (!actionsStepBegins.Contains(mcsController.step))) {
                 SetDefaultAnimation();
                 AnimationPlaysOnce(isLoopAnimation: true);
             }
-            else {
+            //otherwise play the action 
+            else if (!actionsStepBegins.Contains(mcsController.step)) {
                 simAgentActionState = SimAgentActionState.Action;
                 AssignClip(delayedAnimation);
                 stepToEndAnimation = delayedStepEnd;
                 AnimationPlaysOnce(isLoopAnimation: delayedIsLoopAnimation);
+                AssignPrevious();
             }
-            
-            delayedStepStart = -1;
-            delayedStepEnd = -1;
-            delayedIsLoopAnimation = false;
-            delayedAnimation = "";
+            //then reset these to their defaults to prepare for the next occurence of delayed action calls
+            ResetDelayedActionStepTriggers();
         }
 
-        if (resetOncePickedUp && (simAgentActionState != SimAgentActionState.InteractingHoldingHeldObject && simAgentActionState != SimAgentActionState.HoldingOutHeldObject)) {
-            SetDefaultAnimation();
+        //reset to idle after the agent was holding out its object and the performer picked it up
+        else if (resetOncePickedUp && (simAgentActionState != SimAgentActionState.InteractingHoldingHeldObject && simAgentActionState != SimAgentActionState.HoldingOutHeldObject)) {
+            if(!actionsStepBegins.Contains(mcsController.step))
+                SetDefaultAnimation();
             resetOncePickedUp = false;
         }
-
+        //if the animation currently playing is not supposed to loop, and the current frame is greater than the total frames, and the agent is not interacting with a held object
+        //then set the agent animation to the default
         else if (resetAnimationToIdleAfterPlayingOnce && currentAnimationFrame > totalFrames && 
                 (simAgentActionState != SimAgentActionState.InteractingHoldingHeldObject || simAgentActionState != SimAgentActionState.HoldingOutHeldObject)) {
             SetDefaultAnimation(usePreviousClip: simAgentActionState == SimAgentActionState.InteractingNotHoldingHeldObject);
         }
-
+        //if the the step to reset to idle occurs while the agent is interacting while holding an object signify that we need to reset to the default after the object is picked up
         else if(mcsController.step == stepToEndAnimation && (simAgentActionState == SimAgentActionState.InteractingHoldingHeldObject || simAgentActionState == SimAgentActionState.HoldingOutHeldObject)) {
             resetOncePickedUp = true;
         }
-
+        //if step to end animation is the current step we are not interacting then reset or move the sim agent 
         else if(mcsController.step == stepToEndAnimation && simAgentActionState != SimAgentActionState.InteractingNotHoldingHeldObject) {
-            SetDefaultAnimation();
             stepToEndAnimation = -1;
+            SetDefaultAnimation();
+            if(previouslyWasMoving)
+                MoveSimAgent();
         }
+        //if step to end animation and interacting with the performer but not holding anything then increment the end step so it
+        //ends when the not holding object interaction is complete
         else if(mcsController.step == stepToEndAnimation && simAgentActionState == SimAgentActionState.InteractingNotHoldingHeldObject) {
             stepToEndAnimation += Mathf.FloorToInt(MCSSimulationAgent.ANIMATION_FRAME_RATE * clipNamesAndDurations[MCSSimulationAgent.NOT_HOLDING_OBJECT_ANIMATION]) - currentAnimationFrame + 1;
         }
 
+        //play a single frame of the animation
         currentAnimationFrame = currentAnimationFrame > totalFrames ? 0 : currentAnimationFrame;
         float percentOfAnimation = currentAnimationFrame / (float)(totalFrames);
         animator.Play(currentClip, 0, percentOfAnimation);
 
-        if(simAgentActionState == SimAgentActionState.InteractingHoldingHeldObject && !rotating) {
+        //if the agent is playing its get held object animation and completed its rotation toward the agent
+        if(simAgentActionState == SimAgentActionState.InteractingHoldingHeldObject && !rotatingToFacePerformer) {
             currentGetHeldObjectAnimation++;
+            //hold out the held object for pickup once the animation is complete
             if(currentGetHeldObjectAnimation >= AGENT_INTERACTION_ACTION_ANIMATIONS.Length) {
                 HoldHeldObjectOutForPickup();
             }
+            //otherwise keep playing the animation
             else {
                 PlayGetHeldObjectAnimation();
             }
         }
 
-        if ((simAgentActionState == SimAgentActionState.InteractingNotHoldingHeldObject || 
-            simAgentActionState == SimAgentActionState.InteractingHoldingHeldObject || 
-            simAgentActionState == SimAgentActionState.HoldingOutHeldObject) && !rotating) {
-
+        //if the agent is currently interacting with performer and completed its rotation animation then always look at the agent
+        if (IsDoingAnyInteractions() && !rotatingToFacePerformer) {
             transform.LookAt(mcsController.transform);
             transform.eulerAngles = new Vector3(0, transform.eulerAngles.y, 0);
         }
 
-        if(rotating) {
+        //handles rotations
+        if(rotatingToFacePerformer) {
             float speedRatio = 500f; //this is so shorter rotations are quicker and longer rotations are slower to sync with the animation
             float speedMultiplier = Mathf.Clamp(speedRatio / Mathf.Abs(targetRotation.y - originalRotation.y), 5, 10);
             rotationPercent = ((float) currentAnimationFrame / (float) MCSSimulationAgent.ANIMATION_FRAME_RATE) * speedMultiplier;
             transform.rotation = Quaternion.Slerp(Quaternion.Euler(originalRotation), Quaternion.Euler(targetRotation), rotationPercent);
-            if(rotationPercent >= 0.75) {
-                rotating = false;
+            float snapToLookAtPerformerPercent = 0.75f;
+            if(rotationPercent >= snapToLookAtPerformerPercent) { //snap to face the performer after the rotation is 75 percent done
+                rotatingToFacePerformer = false;
                 if(this.isHoldingHeldObject) {
                     PlayGetHeldObjectAnimation();
                 }
@@ -340,6 +406,181 @@ public class MCSSimulationAgent : MonoBehaviour {
                 }
             }
         }
+
+        //if the agent is doing a rotation for its movement path and not interacting with the agent and not rotating to face the agent
+        //then rotate to the movement path direction
+        if(simAgentActionState == SimAgentActionState.Rotating && !IsDoingAnyInteractions() && !rotatingToFacePerformer) {
+            float speedRatio = 500f; //this is so shorter rotations are quicker and longer rotations are slower to sync with the animation
+            float speedMultiplier = Mathf.Clamp(speedRatio / Mathf.Abs(targetRotation.y - originalRotation.y), 5, 10);
+            rotationPercent = ((float) currentAnimationFrame / (float) MCSSimulationAgent.ANIMATION_FRAME_RATE) * speedMultiplier;
+            transform.rotation = Quaternion.Slerp(Quaternion.Euler(originalRotation), Quaternion.Euler(targetRotation), rotationPercent);
+            float snapToLookAtTargetDirectionPercent = 0.85f;
+            if(rotationPercent >= snapToLookAtTargetDirectionPercent) { //when done rotating move the agent
+                transform.eulerAngles = targetRotation;
+                MoveSimAgent(true);
+            }
+        }
+
+        //otherwise if there is a movement path and the agent is not interacting or rotating torward the performer or doing an action
+        //move the agent toward its target direction
+        else if(agentMovement != null && !IsDoingAnyInteractions() && !rotatingToFacePerformer && simAgentActionState != SimAgentActionState.Action)
+            MoveSimAgent();
+
+        //if there is a movement path and the step to begin for movement is the current step and the agent is not interacting then start the movement sequence
+        if(agentMovement != null && mcsController.step == agentMovement.stepBegin && !rotatingToFacePerformer && !IsDoingAnyInteractions()) {
+            MoveSimAgent();
+            previousClipStepEnd = -2; //this makes sure that the agent moves and does not think an action needs to be played
+            return;
+        }
+        //if there is a movement path and the step to begin for movement is the current step and the agent is interacting then delay the movement till when the action is complete
+        if(agentMovement != null && mcsController.step == agentMovement.stepBegin && (rotatingToFacePerformer || IsDoingAnyInteractions())) {
+            delayedStepBeginMovement = agentMovement.stepBegin;
+            return;
+        }
+    }
+
+    public bool IsDoingAnyInteractions() {
+        return (simAgentActionState == SimAgentActionState.InteractingNotHoldingHeldObject || 
+            simAgentActionState == SimAgentActionState.InteractingHoldingHeldObject || 
+            simAgentActionState == SimAgentActionState.HoldingOutHeldObject);
+    }
+
+
+    public bool MoveSimAgent(bool moveFromRotatingAnimation = false, bool interactionComplete = false) {
+        if(doneWithMovementSequence) 
+            return true;
+        //if there is a movment config assinged to this agent then move it
+        if(agentMovement != null && agentMovement.sequence != null && agentMovement.sequence.Count > 0 && mcsController.step >= agentMovement.stepBegin) {
+            //if the movement sequence is complete and it should not repeat then set the agent to its default animation
+            if(moveIndex >= agentMovement.sequence.Count && !agentMovement.repeat) {
+                SetDefaultAnimation();
+                AnimationPlaysOnce(isLoopAnimation: true);
+                return true;
+            }
+
+            //if doing a rotation to look at its new direction, dont move
+            if(simAgentActionState == SimAgentActionState.Rotating && !moveFromRotatingAnimation) {
+                previouslyWasMoving = true;
+                return true;
+            }
+
+            //if any interaction are not complete dont move
+            if(IsDoingAnyInteractions() && !interactionComplete) {
+                return false;
+            }
+            
+            //if any interactions are complete then rotate the agent back to its previous direction
+            if(IsDoingAnyInteractions() && interactionComplete) {
+                if(actionsStepBegins.Contains(mcsController.step)) {
+                    return false;
+                }
+                previouslyWasMoving = true;
+                SetMovementRotation();
+                return true;
+            }
+
+            //if not currently moving but needs to move, then move the agent
+            if (simAgentActionState != SimAgentActionState.Moving && !interactionComplete) {
+                previouslyWasMoving = true;
+                //if not looking the way we need to then set the movement rotation instead
+                if(SetMovementRotation())
+                    return true;
+                AssignClip(agentMovement.sequence[moveIndex].animation);
+                AnimationPlaysOnce(isLoopAnimation: true);
+                simAgentActionState = SimAgentActionState.Moving;
+                return true;
+            }
+
+            //calculate movement direction
+            float x = agentMovement.sequence[moveIndex].endPoint.x;
+            float z = agentMovement.sequence[moveIndex].endPoint.z;
+            targetPos = new Vector3(x, transform.position.y, z);
+            direction = (targetPos-transform.position).normalized;
+
+            //if direction magnitude greater than zero then move
+            if(direction.sqrMagnitude > float.Epsilon) {
+                transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
+                transform.Translate(direction * MOVE_MAGNITUDE, Space.World);
+                previouslyWasMoving = true;
+            }
+
+            //if close enough then snap to position
+            if(Mathf.Abs(transform.position.x - x) <= MOVE_MAGNITUDE && Mathf.Abs(transform.position.z - z) <= MOVE_MAGNITUDE) {
+                transform.position = targetPos;
+                moveIndex++;
+
+                //dont repeat is the config says so
+                if((simAgentActionState != SimAgentActionState.Idle || simAgentActionState != SimAgentActionState.Action) && moveIndex >= agentMovement.sequence.Count && !agentMovement.repeat) {
+                    doneWithMovementSequence = true;
+                    SetDefaultAnimation();
+                    AnimationPlaysOnce(isLoopAnimation: true);
+                    previouslyWasMoving = false;
+                    return true;
+                }
+
+                //if at the end of the movement loop and need to repeat then reset
+                if(moveIndex >= agentMovement.sequence.Count && agentMovement.repeat) {
+                    previouslyWasMoving = true;
+                    moveIndex = 0;
+                    SetMovementRotation();
+                    return true;
+                }
+
+                //if the next endpoint exists then rotate to next point
+                if(agentMovement.sequence[moveIndex].endPoint.x != Mathf.NegativeInfinity) {
+                    previouslyWasMoving = true;
+                    SetMovementRotation();
+                    return true;
+                }
+            } 
+        }
+        return false;
+    }
+
+    private bool SetMovementRotation() {
+        float x = agentMovement.sequence[moveIndex].endPoint.x;
+        float z = agentMovement.sequence[moveIndex].endPoint.z;
+        simAgentActionState = SimAgentActionState.Rotating;
+
+        x = agentMovement.sequence[moveIndex].endPoint.x;
+        z = agentMovement.sequence[moveIndex].endPoint.z;
+
+        targetPos = new Vector3(x, transform.position.y, z);
+        direction = (targetPos-transform.position).normalized;
+
+        originalRotation = transform.eulerAngles;
+        if(direction.sqrMagnitude > float.Epsilon) {
+            transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
+        }
+        targetRotation = transform.eulerAngles;
+        transform.eulerAngles = originalRotation;
+        if(Mathf.Approximately(transform.eulerAngles.y, targetRotation.y)) {
+            transform.eulerAngles = targetRotation;
+            return false;
+        }
+        float degreeChange = CalculateRotationForMovement();
+        AssignClip(degreeChange > 0 ? MOVEMENT_TURNS_RIGHT : MOVEMENT_TURNS_LEFT);
+        AnimationPlaysOnce(isLoopAnimation: false);
+        return true;
+    }
+
+    private float CalculateRotationForMovement () {
+        float target = targetRotation.y;
+        float original = originalRotation.y;
+        float degreeChange = 0;
+        
+        if(target > original + 180) {
+            target -= 360;
+        }
+        else if(target < original - 179) {
+            target += 360;
+        }
+        degreeChange = target - original;
+        return degreeChange;
+    }
+
+    public void SetMovement(MCSConfigSimAgentMovement configSimAgentMovement) {
+        this.agentMovement = configSimAgentMovement;
     }
 
     public void AnimationPlaysOnce(bool isLoopAnimation) {
