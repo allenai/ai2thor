@@ -3449,6 +3449,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics sop1 = getSimObjectFromId(objectId1);
             if (sop0 == null || sop1 == null) {
                 actionFinishedEmit(false); // Error message set already by getSimObjectFromId
+                return;
             }
             sop0.syncBoundingBoxes(forceCreateObjectOrientedBoundingBox: true); // Ensures the sop has an object oriented bounding box attached
             sop1.syncBoundingBoxes(forceCreateObjectOrientedBoundingBox: true);
@@ -3512,6 +3513,61 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, actionReturn: dist);
         }
 
+        public void CheckUnobstructedPathBetweenObjectCenters(string objectId0, string objectId1) {
+            SimObjPhysics sop0 = getSimObjectFromId(objectId0);
+            SimObjPhysics sop1 = getSimObjectFromId(objectId1);
+            if (sop0 == null || sop1 == null) {
+                actionFinishedEmit(false); // Error message set already by getSimObjectFromId
+                return;
+            }
+
+            sop0.syncBoundingBoxes(forceCreateObjectOrientedBoundingBox: true); // Ensures the sop has an object oriented bounding box attached
+            sop1.syncBoundingBoxes(forceCreateObjectOrientedBoundingBox: true);
+
+            BoxCollider c0 = sop0.BoundingBox.GetComponent<BoxCollider>();
+            BoxCollider c1 = sop1.BoundingBox.GetComponent<BoxCollider>();
+
+            Vector3 p0 = c0.transform.TransformPoint(c0.center);
+            Vector3 p1 = c1.transform.TransformPoint(c1.center);
+
+            HashSet<Collider> okColliders = new HashSet<Collider>();
+            foreach (Collider c in sop0.GetComponentsInChildren<Collider>()) {
+                okColliders.Add(c);
+            }
+            foreach (Collider c in sop1.GetComponentsInChildren<Collider>()) {
+                okColliders.Add(c);
+            }
+
+            Dictionary<string, object> toReturn = new Dictionary<String, object>();
+            List<string> objectsInWay = new List<string>();
+#if UNITY_EDITOR
+            Debug.DrawLine(p0, p1, Color.cyan, 10f);
+#endif
+
+            foreach (
+                RaycastHit hit in Physics.RaycastAll(
+                    p0,
+                    p1 - p0,
+                    Vector3.Distance(p0, p1),
+                    LayerMask.GetMask("SimObjVisible"),
+                    QueryTriggerInteraction.Ignore
+                )
+            ) {
+                if (!okColliders.Contains(hit.collider)) {
+                    SimObjPhysics hitSop = ancestorSimObjPhysics(hit.collider.gameObject);
+                    string hitId = (hitSop != null) ? hitSop.ObjectID : hit.collider.gameObject.name;
+                    objectsInWay.Add(hitId);
+                }
+            }
+
+            toReturn["adjacent"] = objectsInWay.Count == 0;
+#if UNITY_EDITOR
+            string are_arent = (bool) toReturn["adjacent"] ? "are" : "aren't";
+            Debug.Log($"Objects {are_arent} adjacent ({String.Join(", ", objectsInWay)}).");
+#endif
+            toReturn["objectInWay"] = objectsInWay;
+            actionFinishedEmit(true, toReturn);
+        }
         /*
         Get the 2D (x, z) convex hull of a GameObject. See the Get2DSemanticHulls
         function for more information.
