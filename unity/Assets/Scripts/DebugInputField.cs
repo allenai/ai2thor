@@ -496,6 +496,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+                case "whaton": {
+
+                    List<string> objectIds = new List<string>();
+
+                    for (int i = 1; i < splitcommand.Length; i++) {
+                        objectIds.Add(splitcommand[i]);
+                    }
+                    Dictionary<string, object> action = new Dictionary<string, object> {
+                        {"action", "CheckWhatObjectsOn"},
+                        {"objectIds", objectIds},
+                    };
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
                 case "expspawn": {
                         ServerAction action = new ServerAction();
 

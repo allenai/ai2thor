@@ -3568,6 +3568,83 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             toReturn["objectInWay"] = objectsInWay;
             actionFinishedEmit(true, toReturn);
         }
+
+        protected string whatObjectOn(SimObjPhysics sop, int divisions, float belowDistance) {
+            sop.syncBoundingBoxes(forceCreateObjectOrientedBoundingBox: true); // Ensures the sop has an object oriented bounding box attached
+
+            List<Vector3> points = pointsOnSurfaceOfBoxCollider(
+                sop.BoundingBox.GetComponent<BoxCollider>(),
+                divisions
+            ).ToList();
+            points.Sort((v0, v1) => v0.y.CompareTo(v1.y));
+
+            HashSet<string> onObjectIds = new HashSet<string>();
+            List<Collider> collidersToDisable = sop.GetComponentsInChildren<Collider>().Where(c => c.enabled).ToList();
+            try {
+                foreach (Collider c in collidersToDisable) {
+                    c.enabled = false;
+                }
+
+                for (int i = 0; i < divisions * divisions; i++) { // divisions**2 as this is the number of points on a single face
+                    Vector3 point = points[i];
+
+# if UNITY_EDITOR
+                    Debug.DrawLine(point + transform.up * 1e-3f, point - transform.up * belowDistance, Color.red, 10.0f);
+# endif
+                    RaycastHit hit;
+                    if (Physics.Raycast(point + transform.up * 1e-3f, -transform.up, out hit, belowDistance + 1e-3f, LayerMask.GetMask("SimObjVisible"))) {
+                        SimObjPhysics onSop = ancestorSimObjPhysics(hit.collider.gameObject);
+                        if (onSop != null) {
+# if UNITY_EDITOR
+                            if (!onObjectIds.Contains(onSop.ObjectID)) {
+                                Debug.Log($"{sop.ObjectID} is on {onSop.ObjectID}");
+                            }
+# endif
+
+                            onObjectIds.Add(onSop.ObjectID);
+# if !UNITY_EDITOR
+                            break;
+# endif
+                        }
+                    }
+                }
+            } finally {
+                foreach (Collider c in collidersToDisable) {
+                    c.enabled = true;
+                }
+            }
+            return (onObjectIds.Count != 0 ? onObjectIds.ToList()[0] : null);
+        }
+
+        public void CheckWhatObjectOn(string objectId, int divisions=3, float belowDistance=1e-2f) {
+            SimObjPhysics sop = getSimObjectFromId(objectId);
+            if (sop == null) {
+                actionFinishedEmit(false); // Error message set already by getSimObjectFromId
+                return;
+            }
+            actionFinishedEmit(
+                true,
+                whatObjectOn(sop: sop, divisions: divisions, belowDistance: belowDistance)
+            );
+        }
+
+        public void CheckWhatObjectsOn(List<string> objectIds, int divisions=3, float belowDistance=1e-2f) {
+            Dictionary<string, string> objectIdToOnObjectId = new Dictionary<string, string>();
+            foreach (string objectId in objectIds) {
+                SimObjPhysics sop = getSimObjectFromId(objectId);
+                if (sop == null) {
+                    actionFinishedEmit(false); // Error message set already by getSimObjectFromId
+                    return;
+                }
+                objectIdToOnObjectId[objectId] = whatObjectOn(sop: sop, divisions: divisions, belowDistance: belowDistance);
+            }
+            actionFinishedEmit(
+                true,
+                objectIdToOnObjectId
+            );
+        }
+
+
         /*
         Get the 2D (x, z) convex hull of a GameObject. See the Get2DSemanticHulls
         function for more information.
