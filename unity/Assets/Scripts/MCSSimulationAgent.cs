@@ -108,6 +108,12 @@ public class MCSSimulationAgent : MonoBehaviour {
     private static string MOVEMENT_TURNS_RIGHT = "TPM_turnR45";
     private static float MOVE_MAGNITUDE = 0.04f;
 
+    [SerializeField] private bool obstructed = false;
+    private bool obstructedAnimationSet = false;
+    private List<Collider> collisions = new List<Collider>();
+    private CapsuleCollider cc;
+
+
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
         this.SetChest(0, 0);
@@ -137,6 +143,8 @@ public class MCSSimulationAgent : MonoBehaviour {
         currentGetHeldObjectAnimation = 0;
         isHoldingHeldObject = false;
         resetOncePickedUp = false;
+        
+        cc = GetComponent<CapsuleCollider>();
     }
     
     void Start() {
@@ -151,8 +159,25 @@ public class MCSSimulationAgent : MonoBehaviour {
         }
     }
 
+    void Update() {
+        Vector3 p1 = transform.TransformPoint(new Vector3(cc.center.x, cc.center.y - cc.height/2 + cc.radius, cc.center.z)) + (transform.forward.normalized * MOVE_MAGNITUDE);
+        Vector3 p2 = transform.TransformPoint(new Vector3(cc.center.x, cc.center.y + cc.height/2 - cc.radius, cc.center.z)) + (transform.forward.normalized * MOVE_MAGNITUDE);
+        collisions = Physics.OverlapCapsule(p1, p2, cc.radius * transform.localScale.x, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore).ToList();
+        foreach (Collider c in collisions) {
+            //if not the floor or this capsule collider then the agent is colliding with something and needs to stop
+            bool isFloor = c.GetComponent<StructureObject>() != null && (c.name.Contains("Floor") || c.name.Contains("floor")); 
+            if (!isFloor && c!=cc) {
+                if(!obstructed)
+                    obstructedAnimationSet = false;
+                obstructed = true;
+                return;
+            }
+        }
+        obstructed = false;
+    }
+
     public void SetDefaultAnimation(bool usePreviousClip = false, string name = null, bool interactionComplete = false) {
-        if(previouslyWasMoving && !doneWithMovementSequence) {
+        if(previouslyWasMoving && !doneWithMovementSequence && !obstructed) {
             bool completed = MoveSimAgent(interactionComplete: interactionComplete);
             if(completed) 
                 return;
@@ -449,6 +474,15 @@ public class MCSSimulationAgent : MonoBehaviour {
     public bool MoveSimAgent(bool moveFromRotatingAnimation = false, bool interactionComplete = false) {
         if(doneWithMovementSequence) 
             return true;
+
+        if(obstructed) {
+            if(!obstructedAnimationSet) {
+                SetDefaultAnimation();
+                AnimationPlaysOnce(isLoopAnimation: true);
+                obstructedAnimationSet = true;
+            }
+            return false;
+        }
         //if there is a movment config assinged to this agent then move it
         if(agentMovement != null && agentMovement.sequence != null && agentMovement.sequence.Count > 0 && mcsController.step >= agentMovement.stepBegin) {
             //if the movement sequence is complete and it should not repeat then set the agent to its default animation
