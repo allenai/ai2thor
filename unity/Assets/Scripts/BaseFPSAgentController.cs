@@ -2197,10 +2197,55 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         " hit object, but not a SimObject!"
                     )
                 );
+                return;
             }
             actionFinishedEmit(
                 success: true,
                 actionReturn: target.ObjectID
+            );
+        }
+
+        public void PerformRaycast(Vector3 origin, Vector3 destination) {
+            RaycastHit hit;
+            if (
+                !Physics.Raycast(
+                    origin: origin,
+                    direction: destination - origin,
+                    hitInfo: out hit,
+                    maxDistance: Mathf.Infinity,
+                    layerMask: LayerMask.GetMask("Default", "SimObjVisible", "NonInteractive"),
+                    queryTriggerInteraction: QueryTriggerInteraction.Ignore
+                )
+            ) {
+                actionFinishedEmit(
+                    success: false,
+                    errorMessage: (
+                        $"Raycast from ({origin.x}, {origin.y}, {origin.z})" +
+                        $" to ({destination.x}, {destination.y}, {destination.z})" +
+                        " failed to hit any target object!"
+                    )
+                );
+                return;
+            }
+            SimObjPhysics target = hit.transform.GetComponentInParent<SimObjPhysics>();
+            if (target == null) {
+                actionFinishedEmit(
+                    success: false,
+                    errorMessage: (
+                        $"Raycast from ({origin.x}, {origin.y}, {origin.z})" +
+                        $" to ({destination.x}, {destination.y}, {destination.z})" +
+                        " hit object, but not a SimObject!"
+                    )
+                );
+                return;
+            }
+            actionFinishedEmit(
+                success: true,
+                actionReturn: new Dictionary<string, object>() {
+                    ["objectId"] = target.ObjectID,
+                    ["hitPoint"] = hit.point,
+                    ["hitDistance"] = hit.distance
+                }
             );
         }
 
