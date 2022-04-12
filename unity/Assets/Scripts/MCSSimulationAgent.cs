@@ -33,6 +33,7 @@ public class MCSSimulationAgent : MonoBehaviour {
     private HairObjectMaterialOption hair = null;
     private ObjectMaterialOption jacket = null;
     private SkinObjectMaterialOption legs = null;
+    public SkinObjectMaterialOption facelessHead = null;
     private int skin = 0;
     private ObjectMaterialOption tie = null;
     private MCSController mcsController;
@@ -116,6 +117,7 @@ public class MCSSimulationAgent : MonoBehaviour {
 
     void Awake() {
         // Activate a default chest, legs, and feet option so we won't have a disembodied floating head.
+        this.GetFacelessHead();
         this.SetChest(0, 0);
         this.SetFeet(0, 0);
         this.SetLegs(0, 0);
@@ -737,7 +739,12 @@ public class MCSSimulationAgent : MonoBehaviour {
         // There are 4 elder skins corresponding to the 4 male or 12 female skins.
         this.skin = this.elder ? ((int)skinIndex % 4) : (int)skinIndex;
         Material[] skinOptions = this.elder ? this.elderSkinOptions : this.skinOptions;
-        this.SetSkinMaterial(new SkinObjectMaterialOption[]{this.head}, skinOptions, this.skin);
+        if (facelessHead != null) {
+            this.SetMaterial(facelessHead, skinIndex);
+        }
+        else {
+            this.SetSkinMaterial(new SkinObjectMaterialOption[]{this.head}, skinOptions, this.skin);
+        }
         this.SetSkinMaterial(this.chestOptions, skinOptions, this.skin);
         this.SetSkinMaterial(this.feetOptions, skinOptions, this.skin);
         this.SetSkinMaterial(this.legsOptions, skinOptions, this.skin);
@@ -754,6 +761,17 @@ public class MCSSimulationAgent : MonoBehaviour {
         // If the current chest model is not compatible with ties, then deactivate the tie.
         if (this.chest != null && !this.chest.enableTies) {
             this.tie.gameObject.SetActive(false);
+        }
+    }
+
+    private void GetFacelessHead() {
+        foreach (Transform child in GetComponentsInChildren<Transform>()){
+            if (child.name == "FacelessHead"){
+                facelessHead.gameObject = child.gameObject;
+                facelessHead.materials = skinOptions;
+                facelessHead.renderer = facelessHead.gameObject.GetComponent<Renderer>();
+                break;
+            }
         }
     }
 
