@@ -968,6 +968,10 @@ public class AgentManager : MonoBehaviour {
         for (int i = 0; i < this.agents.Count; i++) {
             BaseFPSAgentController agent = this.agents[i];
             MetadataWrapper metadata = agent.generateMetadataWrapper();
+            // This value may never change, but the purpose is to provide a way
+            //  to be backwards compatible in the future by knowing the output format
+            //  so that it can be converted if necessary on the Python side
+            metadata.depthFormat = DepthFormat.Meters.ToString();
             metadata.agentId = i;
 
             // we don't need to render the agent's camera for the first agent
@@ -1156,7 +1160,6 @@ public class AgentManager : MonoBehaviour {
                     ProcessControlCommand(msg);
                 }
             } else if (serverType == serverTypes.FIFO) {
-
 
                 byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(multiMeta,
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
@@ -1350,7 +1353,7 @@ public class AgentMetadata {
 public class DroneAgentMetadata : AgentMetadata {
     // why is the launcher position even attached to the agent's metadata
     // and not the generic metdata?
-    public Vector3 LauncherPosition;
+    public Vector3 launcherPosition;
 }
 
 // additional metadata for drone objects (only use with Drone controller)
@@ -1362,7 +1365,7 @@ public class DroneObjectMetadata : ObjectMetadata {
     public int numFloorHits;
     public int numStructureHits;
     public float lastVelocity;
-    public Vector3 LauncherPosition;
+    public Vector3 launcherPosition;
     public bool isCaught;
     public DroneObjectMetadata() { }
 }
@@ -1667,6 +1670,7 @@ public struct MetadataWrapper {
     public int screenWidth;
     public int screenHeight;
     public int agentId;
+    public string depthFormat;
     public ColorId[] colors;
 
     // Extras
@@ -2112,6 +2116,12 @@ public class ShouldSerializeContractResolver : DefaultContractResolver {
             return base.CreateProperty(member, memberSerialization);
         }
     }
+}
+
+public enum DepthFormat {
+    Normalized,
+    Meters,
+    Millimeters
 }
 
 public enum AgentState {

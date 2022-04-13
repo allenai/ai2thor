@@ -779,10 +779,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool? useExternalMaterials = null,
             string[] inRoomTypes = null
         ) {
-            HashSet<string> chosenRoomTypes = new HashSet<string>();
+            string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             HashSet<string> validRoomTypes = new HashSet<string>() {
                 "bedroom", "bathroom", "kitchen", "livingroom", "robothor"
             };
+            ColorChanger colorChangeComponent;
+            if (scene.StartsWith("Procedural")) {
+                colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+                colorChangeComponent.RandomizeMaterials(
+                    useTrainMaterials: true,
+                    useValMaterials: true,
+                    useTestMaterials: true,
+                    useExternalMaterials: true,
+                    inRoomTypes: validRoomTypes
+                );
+
+                // Keep it here to make sure the action succeeds first
+                agentManager.doResetMaterials = true;
+
+                actionFinished(success: true);
+                return;
+            }
+
+            HashSet<string> chosenRoomTypes = new HashSet<string>();
             if (inRoomTypes != null) {
                 if (inRoomTypes.Length == 0) {
                     throw new ArgumentException("inRoomTypes must have a non-zero length!");
@@ -800,7 +819,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             string sceneType;
-            string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             if (scene.EndsWith("_physics")) {
                 // iTHOR scene
                 int sceneNumber = Int32.Parse(
@@ -886,7 +904,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     );
             }
 
-            ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+            colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             int numTotalMaterials = colorChangeComponent.RandomizeMaterials(
                 useTrainMaterials: useTrainMaterials.Value,
                 useValMaterials: useValMaterials.Value,
@@ -2206,10 +2224,55 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         " hit object, but not a SimObject!"
                     )
                 );
+                return;
             }
             actionFinishedEmit(
                 success: true,
                 actionReturn: target.ObjectID
+            );
+        }
+
+        public void PerformRaycast(Vector3 origin, Vector3 destination) {
+            RaycastHit hit;
+            if (
+                !Physics.Raycast(
+                    origin: origin,
+                    direction: destination - origin,
+                    hitInfo: out hit,
+                    maxDistance: Mathf.Infinity,
+                    layerMask: LayerMask.GetMask("Default", "SimObjVisible", "NonInteractive"),
+                    queryTriggerInteraction: QueryTriggerInteraction.Ignore
+                )
+            ) {
+                actionFinishedEmit(
+                    success: false,
+                    errorMessage: (
+                        $"Raycast from ({origin.x}, {origin.y}, {origin.z})" +
+                        $" to ({destination.x}, {destination.y}, {destination.z})" +
+                        " failed to hit any target object!"
+                    )
+                );
+                return;
+            }
+            SimObjPhysics target = hit.transform.GetComponentInParent<SimObjPhysics>();
+            if (target == null) {
+                actionFinishedEmit(
+                    success: false,
+                    errorMessage: (
+                        $"Raycast from ({origin.x}, {origin.y}, {origin.z})" +
+                        $" to ({destination.x}, {destination.y}, {destination.z})" +
+                        " hit object, but not a SimObject!"
+                    )
+                );
+                return;
+            }
+            actionFinishedEmit(
+                success: true,
+                actionReturn: new Dictionary<string, object>() {
+                    ["objectId"] = target.ObjectID,
+                    ["hitPoint"] = hit.point,
+                    ["hitDistance"] = hit.distance
+                }
             );
         }
 
@@ -3065,8 +3128,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ) {
                 if (
                     hit.transform == sop.transform
-                    || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
-                    || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))
+                    || ( isSopHeldByArm
+                    && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
                 ) {
                     // if this line is drawn, then this visibility point is in camera frame and not occluded
                     // might want to use this for a targeting check as well at some point....

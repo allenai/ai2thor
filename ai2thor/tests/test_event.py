@@ -1,6 +1,6 @@
 import os
 
-from ai2thor.server import Event
+from ai2thor.server import Event, DepthFormat
 import warnings
 import json
 import numpy as np
@@ -3394,6 +3394,36 @@ def test_objects_by_test(event):
     ]
     assert all_mugs == mug_object_ids
     assert event.objects_by_type("FOO") == []
+
+def test_depth_float32():
+    metadata = json.loads(json.dumps(metadata_simple))
+    metadata["depthFormat"] = "Meters"
+    data =  open(os.path.join(TESTS_DATA_DIR, "image-depth-datafloat32.raw"), "rb").read()
+    event_float32 = Event(metadata)
+    event_float32.add_image_depth(
+                data,
+                depth_format=DepthFormat.Meters,
+                camera_near_plane=0.1,
+                camera_far_plane=20.0,
+                add_noise=False
+            )
+
+    assert np.all(event_float32.depth_frame[0:1, 0:8] == np.array([[0.82262456, 0.82262456, 0.82262456, 0.82262456, 0.82262456, 0.82262456, 0.82262456, 0.82262456]], dtype=np.float32))
+
+def test_depth_256():
+    metadata = json.loads(json.dumps(metadata_simple))
+
+    if "depthFormat" in metadata:
+        del(metadata["depthFormat"])
+    event_256 = Event(metadata)
+    data =  open(os.path.join(TESTS_DATA_DIR, "image-depth-data256.raw"), "rb").read()
+    event_256.add_image_depth(
+                data,
+                depth_format=DepthFormat.Meters,
+                camera_near_plane=0.1,
+                camera_far_plane=20.0,
+                add_noise=False)
+    assert np.all(event_256.depth_frame[0:1, 0:8] == np.array([[0.8223207, 0.8223207, 0.8223207, 0.8223207, 0.8223207, 0.8223207, 0.8223207, 0.8223207]], dtype=np.float32))
 
 
 def test_process_colors(event_complex):
