@@ -28,6 +28,7 @@ class LazyInstanceDetections2D(Mapping):
 
         self._detections2d = {}
         self.instance_masks = instance_masks
+        self._loaded = False
 
     def mask_bounding_box(self, mask):
         rows = np.any(mask, axis=1)
@@ -66,14 +67,22 @@ class LazyInstanceDetections2D(Mapping):
 class LazyClassDetections2D(LazyInstanceDetections2D):
 
     def __len__(self):
-        return len(self._class_names())
+        self._load_all()
+        return len(self._detections2d)
 
-    def _class_names(self):
-        return set([k.split("|")[0] for k in self.instance_masks.keys()])
+    def _load_all(self):
+        if not self._loaded:
+            all_integer_keys = self.instance_masks.unique_integer_keys
+            for cls, colors in self.instance_masks.class_colors.items():
+                for color in colors:
+                    if self.instance_masks._integer_color_key(color) in all_integer_keys:
+                        self.__getitem__(cls)
+                        break
+
+        self._loaded = True
 
     def __iter__(self):
-        for cls in self._class_names():
-            self.__getitem__(cls)
+        self._load_all()
 
         return iter(self._detections2d)
 
@@ -83,11 +92,11 @@ class LazyClassDetections2D(LazyInstanceDetections2D):
 
         detections = []
 
-        for color_name in self.instance_masks.instance_colors.keys():
-            if "|" in color_name and color_name.split("|")[0] == cls:
-                bb = self.mask_bounding_box(self.instance_masks.mask(color_name, self.instance_masks.empty_mask))
-                if bb:
-                    detections.append(bb)
+        for color in self.instance_masks.class_colors.get(cls, []):
+            mask = self.instance_masks.instance_segmentation_frame_uint32 == self.instance_masks._integer_color_key(color)
+            bb = self.mask_bounding_box(mask)
+            if bb:
+                detections.append(bb)
         if detections:
             self._detections2d[cls] = detections
         else:
@@ -156,9 +165,19 @@ class LazyInstanceSegmentationMasks(LazyMask):
         # with a 32bit uint as the value
 
         self.instance_colors = {}
+        self.class_colors = {}
         for c in metadata["colors"]:
+            cls = c["name"]
+
             if "|" in c["name"]:
                 self.instance_colors[c["name"]] = c["color"]
+                cls = c["name"].split("|")[0]
+
+            if cls not in self.class_colors:
+                self.class_colors[cls] = []
+
+            self.class_colors[cls].append(c["color"])
+
 
     @property
     def empty_mask(self):
@@ -216,10 +235,11 @@ class LazyClassSegmentationMasks(LazyMask):
     def _load_all(self):
         if not self._loaded:
             all_integer_keys = self.instance_masks.unique_integer_keys
-            for color_name, color in self.instance_masks.instance_colors.items():
-                if self.instance_masks._integer_color_key(color) in all_integer_keys:
-                    cls = color_name.split("|")[0]
-                    self.__getitem__(cls)
+            for cls, colors in self.instance_masks.class_colors.items():
+                for color in colors:
+                    if self.instance_masks._integer_color_key(color) in all_integer_keys:
+                        self.__getitem__(cls)
+                        break
         self._loaded = True
 
     def mask(self, key, default=None):
@@ -233,17 +253,20 @@ class LazyClassSegmentationMasks(LazyMask):
             # this is mainly done for backwards compatibility since we only have a handful of instances
             # of this across all scenes (e.g. FloorPlan412 - thin strip above the doorway)
             all_integer_keys = self.instance_masks.unique_integer_keys
-            metadata_color_keys = set([self.instance_masks._integer_color_key(color) for color in self.instance_masks.instance_colors.values()])
+            metadata_color_keys = set()
+            for cls, colors in self.instance_masks.class_colors.items():
+                for color in colors:
+                    metadata_color_keys.add(self.instance_masks._integer_color_key(color))
+
             background_keys = all_integer_keys - metadata_color_keys
             for ik in background_keys:
                 mask = self.instance_masks.instance_segmentation_frame_uint32 == ik
                 class_mask = np.logical_or(class_mask, mask)
 
         elif "|" not in key:
-            for color_name in self.instance_masks.instance_colors.keys():
-                if "|" in color_name and color_name.split("|")[0] == key:
-                    mask = self.instance_masks.mask(color_name, self.instance_masks.empty_mask)
-                    class_mask = np.logical_or(class_mask, mask)
+            for color in self.instance_masks.class_colors.get(key, []):
+                mask = self.instance_masks.instance_segmentation_frame_uint32 == self.instance_masks._integer_color_key(color)
+                class_mask = np.logical_or(class_mask, mask)
 
         if class_mask.any():
             self._masks[key] = class_mask

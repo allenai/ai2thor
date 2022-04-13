@@ -3578,16 +3578,10 @@ def test_lazy_class_segmentation_missing(event_with_segmentation):
 @pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_class_segmentation_background(event_with_segmentation):
     # colors that don't appear in the metadata get labeled as "background"
-    cabinet_keys = []
-    for k in event_with_segmentation.instance_masks.instance_colors.keys():
-        if k.startswith("Cabinet"):
-            cabinet_keys.append(k)
-
-    instance_colors_copy = json.loads(
-        json.dumps(event_with_segmentation.instance_masks.instance_colors)
+    class_colors_copy = json.loads(
+        json.dumps(event_with_segmentation.instance_masks.class_colors)
     )
-    for k in cabinet_keys:
-        del event_with_segmentation.instance_masks.instance_colors[k]
+    del event_with_segmentation.instance_masks.class_colors["Cabinet"]
 
     if "background" in event_with_segmentation.class_masks._masks:
         del event_with_segmentation.class_masks._masks["background"]
@@ -3596,10 +3590,11 @@ def test_lazy_class_segmentation_background(event_with_segmentation):
         del event_with_segmentation.class_masks._masks["Cabinet"]
 
     assert event_with_segmentation.class_masks["background"].sum() == 111227
+
     with pytest.raises(KeyError):
         event_with_segmentation.class_masks["Cabinet"]
 
-    event_with_segmentation.instance_masks.instance_colors = instance_colors_copy
+    event_with_segmentation.instance_masks.class_colors = class_colors_copy
 
 
 @pytest.mark.parametrize("event_with_segmentation", segmentation_events)
