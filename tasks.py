@@ -1083,16 +1083,18 @@ def ci_build(context):
 
                 # its possible that the cache doesn't get linked if the builds
                 # succeeded during an earlier run
-                link_build_cache(os.getcwd(), "OSXIntel64", build["branch"])
+                link_build_cache(arch_temp_dirs["OSXIntel64"], "OSXIntel64", build["branch"])
 
                 # link builds directory so pytest can run
                 logger.info("current directory pre-symlink %s" % os.getcwd())
                 os.symlink(os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"), "unity/builds")
                 os.makedirs('tmp', exist_ok=True)
-                utf_proc = multiprocessing.Process(target=ci_test_utf, args=(build["branch"], build["commit_id"]))
+                # using threading here instead of multiprocessing since we must use the start_method of spawn, which 
+                # causes the tasks.py to get reloaded, which may be different on a branch from main
+                utf_proc = threading.Thread(target=ci_test_utf, args=(build["branch"], build["commit_id"], arch_temp_dirs["OSXIntel64"]))
                 utf_proc.start()
                 procs.append(utf_proc)
-                pytest_proc = multiprocessing.Process(target=ci_pytest, args=(build["branch"], build["commit_id"]))
+                pytest_proc = threading.Thread(target=ci_pytest, args=(build["branch"], build["commit_id"]))
                 pytest_proc.start()
                 procs.append(pytest_proc)
 
@@ -1109,7 +1111,7 @@ def ci_build(context):
                 if p:
                     logger.info(
                         "joining proc %s for %s %s"
-                        % (p.pid, build["branch"], build["commit_id"])
+                        % (p, build["branch"], build["commit_id"])
                     )
                     p.join()
 
@@ -3526,13 +3528,13 @@ def generate_pypi_index(context):
     )
 
 
-def ci_test_utf(branch, commit_id):
+def ci_test_utf(branch, commit_id, base_dir):
     logger.info(
-        "running Unity Test framework testRunner for %s %s"
-        % (branch, commit_id)
+        "running Unity Test framework testRunner for %s %s %s"
+        % (branch, commit_id, base_dir)
     )
 
-    results_path, results_logfile = test_utf()
+    results_path, results_logfile = test_utf(base_dir)
 
     class_data = generate_pytest_utf(results_path)
 
@@ -3713,22 +3715,26 @@ def activate_unity_license(context, ulf_path):
 
     subprocess.run('%s -batchmode -manualLicenseFile "%s"' % (_unity_path(), ulf_path), shell=True)
 
-def test_utf():
+def test_utf(base_dir=None):
     """
     Generates a module named ai2thor/tests/test_utf.py with test_XYZ style methods
     that include failures (if any) extracted from the xml output
     of the Unity Test Runner
     """
-    project_path = os.path.join(os.getcwd(), "unity")
+    if base_dir is None:
+        base_dir = os.getcwd()
+
+    project_path = os.path.join(base_dir, "unity")
     commit_id = git_commit_id()
     test_results_path = os.path.join(project_path, "utf_testResults-%s.xml" % commit_id)
-    logfile_path = os.path.join(os.getcwd(), "thor-testResults-%s.log" % commit_id)
+    logfile_path = os.path.join(base_dir, "thor-testResults-%s.log" % commit_id)
 
     command = (
         "%s -runTests -testResults %s -logFile %s -testPlatform PlayMode -projectpath %s "
         % (_unity_path(), test_results_path, logfile_path, project_path)
     )
-    subprocess.call(command, shell=True)
+
+    subprocess.call(command, shell=True, cwd=base_dir)
 
     return test_results_path, logfile_path
 
