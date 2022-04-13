@@ -800,6 +800,8 @@ public class MCSSimulationAgent : MonoBehaviour {
         int rendererMaterialIndex = 0
     ) {
         // If we haven't cached the game object's renderer yet, do it now.
+        if (option.gameObject == null)
+            return;
         if (option.renderer == null) {
             option.renderer = option.gameObject.GetComponent<Renderer>();
         }
