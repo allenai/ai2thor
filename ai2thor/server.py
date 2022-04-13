@@ -30,6 +30,12 @@ class LazyInstanceDetections2D(Mapping):
         self.instance_masks = instance_masks
         self._loaded = False
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.instance_masks == other.instance_masks
+        else:
+            return False
+
     def mask_bounding_box(self, mask):
         rows = np.any(mask, axis=1)
         cols = np.any(mask, axis=0)
