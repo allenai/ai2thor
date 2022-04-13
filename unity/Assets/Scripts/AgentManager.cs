@@ -196,9 +196,24 @@ public class AgentManager : MonoBehaviour {
             if (action.agentControllerType.ToLower() != "drone") {
                 Debug.Log("'drone' agentMode is only compatible with 'drone' agentControllerType, forcing agentControllerType to 'drone'");
                 action.agentControllerType = "drone";
-            } 
+            }
             SetUpDroneController(action);
+        } else if (action.agentMode.ToLower() == "stretch") {
+                SetUpStretchController(action);
 
+                action.autoSimulation = false;
+                physicsSceneManager.MakeAllObjectsMoveable();
+
+                if (action.massThreshold.HasValue) {
+                    if (action.massThreshold.Value > 0.0) {
+                        SetUpMassThreshold(action.massThreshold.Value);
+                    } else {
+                        var error = "massThreshold must have nonzero value - invalid value: " + action.massThreshold.Value;
+                        Debug.Log(error);
+                        primaryAgent.actionFinished(false, error);
+                        return;
+                    }
+                }
         } else if (action.agentMode.ToLower() == "arm") {
 
             if (action.agentControllerType == "") {
@@ -229,6 +244,7 @@ public class AgentManager : MonoBehaviour {
                         return;
                     }
                 }
+
             } else {
                 var error = "unsupported";
                 Debug.Log(error);
@@ -279,6 +295,14 @@ public class AgentManager : MonoBehaviour {
         action.snapToGrid = false;
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(DroneFPSAgentController), baseAgentComponent);
+    }
+
+    private void SetUpStretchController(ServerAction action) {
+        this.agents.Clear();
+        // force snapToGrid to be false
+        action.snapToGrid = false;
+        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
+        primaryAgent = createAgentType(typeof(StretchAgentController), baseAgentComponent);
     }
 
     // note: this doesn't take a ServerAction because we don't have to force the snpToGrid bool
@@ -394,13 +418,13 @@ public class AgentManager : MonoBehaviour {
         return (fov <= min || fov > max) ? defaultVal : fov;
     }
 
-    private void updateImageSynthesis(bool status) {
+    public void updateImageSynthesis(bool status) {
         foreach (var agent in this.agents) {
             agent.updateImageSynthesis(status);
         }
     }
 
-    private void updateThirdPartyCameraImageSynthesis(bool status) {
+    public void updateThirdPartyCameraImageSynthesis(bool status) {
         if (status) {
             foreach (var camera in this.thirdPartyCameras) {
                 GameObject gameObject = camera.gameObject;
