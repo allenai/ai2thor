@@ -335,8 +335,10 @@ public class MCSMain : MonoBehaviour {
                 if(simAgent.name == simulationAgentId)
                     simulationAgent = simAgent.GetComponent<MCSSimulationAgent>();
             }
-            SimObjPhysics heldSimObj = this.agentController.agentObjectAssociations[simulationAgentId];
-            simulationAgent.heldObject = heldSimObj;
+            if(simulationAgent != null) { 
+                SimObjPhysics heldSimObj = this.agentController.agentObjectAssociations[simulationAgentId];
+                simulationAgent.heldObject = heldSimObj;
+            }
         }
 
         this.lastStep = -1;
