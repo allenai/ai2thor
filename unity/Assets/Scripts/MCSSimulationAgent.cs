@@ -98,6 +98,7 @@ public class MCSSimulationAgent : MonoBehaviour {
     
     [Header("Movement")]
     [SerializeField] private MCSConfigSimAgentMovement agentMovement = null;
+    [SerializeField] private Vector3 previousAgentMovementEndPoint = Vector3.zero;
     public List<int> actionsStepBegins = null;
     [SerializeField] private int moveIndex = 0;
     [SerializeField] private Vector3 targetPos = Vector3.zero;
@@ -472,9 +473,19 @@ public class MCSSimulationAgent : MonoBehaviour {
             simAgentActionState == SimAgentActionState.HoldingOutHeldObject);
     }
 
+    public bool HasMovementSequence() {
+        return agentMovement != null && agentMovement.sequence != null && agentMovement.sequence.Count > 0;
+    }
 
     public bool MoveSimAgent(bool moveFromRotatingAnimation = false, bool interactionComplete = false) {
-        if(doneWithMovementSequence) 
+        //if its the first step make sure that a next endpoint is available to start the sequence
+        if(HasMovementSequence() && mcsController.step == 0) {
+            previousAgentMovementEndPoint = new Vector3(transform.position.x, 0, transform.position.z);
+            moveIndex = -1;
+            doneWithMovementSequence = !GetNextValidNonEqualPosition();
+        }
+
+        if(doneWithMovementSequence)
             return true;
 
         if(obstructed) {
@@ -486,7 +497,7 @@ public class MCSSimulationAgent : MonoBehaviour {
             return false;
         }
         //if there is a movment config assinged to this agent then move it
-        if(agentMovement != null && agentMovement.sequence != null && agentMovement.sequence.Count > 0 && mcsController.step >= agentMovement.stepBegin) {
+        if(HasMovementSequence() && mcsController.step >= agentMovement.stepBegin) {
             //if the movement sequence is complete and it should not repeat then set the agent to its default animation
             if(moveIndex >= agentMovement.sequence.Count && !agentMovement.repeat) {
                 SetDefaultAnimation();
@@ -543,10 +554,13 @@ public class MCSSimulationAgent : MonoBehaviour {
             //if close enough then snap to position
             if(Mathf.Abs(transform.position.x - x) <= MOVE_MAGNITUDE && Mathf.Abs(transform.position.z - z) <= MOVE_MAGNITUDE) {
                 transform.position = targetPos;
-                moveIndex++;
+                previousAgentMovementEndPoint = targetPos;
+                if(!GetNextValidNonEqualPosition()) {
+                    doneWithMovementSequence = true;
+                }
 
                 //dont repeat is the config says so
-                if((simAgentActionState != SimAgentActionState.Idle || simAgentActionState != SimAgentActionState.Action) && moveIndex >= agentMovement.sequence.Count && !agentMovement.repeat) {
+                if((simAgentActionState != SimAgentActionState.Idle || simAgentActionState != SimAgentActionState.Action) && ((moveIndex >= agentMovement.sequence.Count && !agentMovement.repeat) || doneWithMovementSequence)) {
                     doneWithMovementSequence = true;
                     SetDefaultAnimation();
                     AnimationPlaysOnce(isLoopAnimation: true);
@@ -613,6 +627,34 @@ public class MCSSimulationAgent : MonoBehaviour {
         }
         degreeChange = target - original;
         return degreeChange;
+    }
+
+    private bool GetNextValidNonEqualPosition() {
+        int startingIndex = moveIndex;
+        float previousX = previousAgentMovementEndPoint.x;
+        float previousZ = previousAgentMovementEndPoint.z;
+
+        bool playedThroughSequenceAtLeastOnce = moveIndex + 1 >= agentMovement.sequence.Count;
+        moveIndex = moveIndex + 1 >= agentMovement.sequence.Count ? 0 : moveIndex + 1;
+        if (moveIndex == 0 && !agentMovement.repeat && playedThroughSequenceAtLeastOnce)
+            return false;
+
+        float x = agentMovement.sequence[moveIndex].endPoint.x;
+        float z = agentMovement.sequence[moveIndex].endPoint.z;
+        for(int i = 0; i < agentMovement.sequence.Count; i++) {
+            bool equal = (x > previousX - MOVE_MAGNITUDE && x < previousX + MOVE_MAGNITUDE) && (z > previousZ - MOVE_MAGNITUDE && z < previousZ + MOVE_MAGNITUDE);
+            if (!equal)
+                return true;
+            if (equal) {
+                moveIndex = moveIndex + 1 >= agentMovement.sequence.Count ? 0 : moveIndex + 1;
+                if (moveIndex == 0 && !agentMovement.repeat)
+                    return false;
+                x = agentMovement.sequence[moveIndex].endPoint.x;
+                z = agentMovement.sequence[moveIndex].endPoint.z;
+            }
+        }
+        return false; //loop through the whole sequence and could not find a next valid point
+
     }
 
     public void SetMovement(MCSConfigSimAgentMovement configSimAgentMovement) {
