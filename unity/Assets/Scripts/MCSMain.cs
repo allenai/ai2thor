@@ -736,6 +736,14 @@ public class MCSMain : MonoBehaviour {
         return floorSection;
     }
 
+    private void TileMaterialsInRenderers(Renderer[] renderers, float xScale, float zScale) {
+        foreach(Renderer renderer in renderers) {
+            foreach(Material material in renderer.materials) {
+                material.mainTextureScale = new Vector2(xScale, zScale);
+            }
+        }
+    }
+
     private void CleanupFloorAfterCloning() {
         this.floor.isStatic = true;
         this.floor.transform.localPosition = new Vector3(0, MCSMain.FLOOR_LOWERED_HEIGHT, 0); //this moves the floor below the important elements in the scene
@@ -762,7 +770,8 @@ public class MCSMain : MonoBehaviour {
 
         GameObject floorSectionLeft = this.CreateClonedFloorSection(floors, "floorLeft", xLeftPosition, yPosition, 0f, xLeftScale,
                 roomDimensions.z);
-        AssignMaterialFromConfig(floorSectionLeft, lavaMaterial);
+        Renderer[] renderersLeft = AssignMaterialFromConfig(floorSectionLeft, lavaMaterial);
+        this.TileMaterialsInRenderers(renderersLeft, xLeftScale, roomDimensions.z);
 
         if(xCenterScale > 0) {
             GameObject floorSectionCenter = this.CreateClonedFloorSection(floors, "floorCenter", xCenterPosition, yPosition, 0f,
@@ -772,7 +781,8 @@ public class MCSMain : MonoBehaviour {
 
         GameObject floorSectionRight = this.CreateClonedFloorSection(floors, "floorRight", xRightPosition, yPosition, 0f, xRightScale,
                 roomDimensions.z);
-        AssignMaterialFromConfig(floorSectionRight, lavaMaterial);
+        Renderer[] renderersRight = AssignMaterialFromConfig(floorSectionRight, lavaMaterial);
+        this.TileMaterialsInRenderers(renderersRight, xRightScale, roomDimensions.z);
 
         this.CleanupFloorAfterCloning();
     }
@@ -1048,18 +1058,18 @@ public class MCSMain : MonoBehaviour {
         return null;
     }
 
-    private void AssignMaterialFromConfig(GameObject gameObject, string configMaterialFile) {
-        this.AssignMaterialsFromConfig(gameObject, new string[] { configMaterialFile }, new string[] { }, new string[] { });
+    private Renderer[] AssignMaterialFromConfig(GameObject gameObject, string configMaterialFile) {
+        return this.AssignMaterialsFromConfig(gameObject, new string[] { configMaterialFile }, new string[] { }, new string[] { });
     }
 
-    private void AssignMaterialsFromConfig(
+    private Renderer[] AssignMaterialsFromConfig(
         GameObject gameObject,
         string[] configMaterialFiles,
         string[] objectMaterialNames,
         string[] objectMaterialRestrictions
     ) {
         if (configMaterialFiles.Length == 0) {
-            return;
+            return new Renderer[] {};
         }
 
         // If given objectMaterialNames, assign each objectMaterialName to its corresponding configMaterialFile.
@@ -1080,13 +1090,13 @@ public class MCSMain : MonoBehaviour {
             objectMaterialRestrictions);
 
         if (assignments.Count == 0 && singleConfigMaterial == null) {
-            return;
+            return new Renderer[] {};
         }
 
-        this.AssignMaterials(gameObject, singleConfigMaterial, assignments);
+        return this.AssignMaterials(gameObject, singleConfigMaterial, assignments);
     }
 
-    private void AssignMaterials(
+    private Renderer[] AssignMaterials(
         GameObject gameObject,
         Material singleConfigMaterial,
         Dictionary<string, Material> assignments
@@ -1108,6 +1118,7 @@ public class MCSMain : MonoBehaviour {
                 return singleConfigMaterial;
             }).ToArray();
         });
+        return renderers;
     }
 
     private GameObject AssignProperties(
