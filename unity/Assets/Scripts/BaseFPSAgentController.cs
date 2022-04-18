@@ -10,6 +10,7 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 using UnityStandardAssets.ImageEffects;
 using System.Linq;
+using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.AI;
 using Newtonsoft.Json.Linq;
 using MIConvexHull;
@@ -68,20 +69,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             get => this.baseAgentComponent.TallVisCap;
         }
 
-        public GameObject IKArm {
-            get => this.baseAgentComponent.IKArm;
-        }
-
         public GameObject BotVisCap {
             get => this.baseAgentComponent.BotVisCap;
-        }
 
-        public GameObject StretchVisCap {
-            get => this.baseAgentComponent.StretchVisCap;
-        }
-
-        public GameObject StretchArm {
-            get => this.baseAgentComponent.StretchArm;
         }
 
         public GameObject DroneVisCap {
@@ -95,7 +85,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject DroneBasket {
             get => this.baseAgentComponent.DroneBasket;
         }
-        
+
+        public GameObject IKArm {
+            get => this.baseAgentComponent.IKArm;
+        }
+
         // reference to prefab for activiting the cracked camera effect via CameraCrack()
         public GameObject CrackedCameraCanvas {
             get => this.baseAgentComponent.CrackedCameraCanvas;
@@ -179,7 +173,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.m_WalkSpeed = 2;
             this.m_RunSpeed = 10;
             this.m_GravityMultiplier = 2;
-            this.m_Camera = this.transform.Find("FirstPersonCharacter").GetComponent<Camera>();
+            this.m_Camera = this.gameObject.GetComponentInChildren<Camera>();
             this.m_CharacterController = GetComponent<CharacterController>();
             collidedObjects = new string[0];
             collisionsInAction = new List<string>();
@@ -191,8 +185,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // culling in FirstPersonCharacterCull.cs to ignore tall mode renderers
             HideAllAgentRenderers();
 
+
+
             // default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
-            this.GetComponentInChildren<NavMeshAgent>().enabled = false;
+            this.GetComponent<NavMeshAgent>().enabled = false;
 
             // Recording initially disabled renderers and scene bounds
             // then setting up sceneBounds based on encapsulating all renderers
@@ -320,9 +316,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 		}
 #endif
 
-        // Arms
+        // Arm
         protected IK_Robot_Arm_Controller Arm;
-        protected Stretch_Robot_Arm_Controller SArm;
 
         private PhysicsSceneManager _physicsSceneManager = null;
         // use as reference to the PhysicsSceneManager object
@@ -355,12 +350,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     r.enabled = false;
                 }
             }
-
-            foreach (Renderer r in StretchVisCap.GetComponentsInChildren<Renderer>()) {
-                if (r.enabled) {
-                    r.enabled = false;
-                }
-            }
         }
 
         public void actionFinishedEmit(bool success, object actionReturn = null, string errorMessage = null) {
@@ -389,7 +378,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             targetTeleport = Vector3.zero;
 
 #if UNITY_EDITOR
-            Debug.Log($"lastAction: '{this.lastAction}'");            Debug.Log($"lastActionSuccess: '{success}'");
+            Debug.Log($"lastAction: '{this.lastAction}'");
+            Debug.Log($"lastActionSuccess: '{success}'");
             if (!success) {
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
             } else if (actionReturn != null) {
@@ -544,14 +534,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 #if UNITY_EDITOR
             Debug.Log("count of reachable positions: " + reachablePos.Length);
-            // Debug.Log("REACHABLE POSITIONS LIST: ");
-            // for (int i = 0; i < reachablePos.Length; i++) {
-            //      if (Mathf.Abs(reachablePos[i].x - (-1f)) < Mathf.Epsilon &&
-            //          Mathf.Abs(reachablePos[i].y - (0.9109584f)) < Mathf.Epsilon &&
-            //          Mathf.Abs(reachablePos[i].z - (1.5f)) < Mathf.Epsilon ) {
-            //         Debug.Log("Reachable-point " + (i+1) + ": (" + reachablePos[i].x + ", " + reachablePos[i].y + ", " + reachablePos[i].z + ")");
-            //     }
-            // }
 #endif
 
             return reachablePos;
@@ -582,7 +564,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public abstract void InitializeBody();
 
         public void Initialize(ServerAction action) {
-
             this.InitializeBody();
             m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
 
@@ -641,13 +622,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.maxVisibleDistance = action.visibilityDistance;
             }
 
-            var navmeshAgent = this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>();
+            var navmeshAgent = this.GetComponent<UnityEngine.AI.NavMeshAgent>();
             var collider = this.GetComponent<CapsuleCollider>();
 
             if (collider != null && navmeshAgent != null) {
                 navmeshAgent.radius = collider.radius;
                 navmeshAgent.height = collider.height;
-                navmeshAgent.transform.localPosition = new Vector3(navmeshAgent.transform.localPosition.x, navmeshAgent.transform.localPosition.y, collider.center.z);
             }
 
             // navmeshAgent.radius =
@@ -680,6 +660,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.visibilityScheme = action.GetVisibilityScheme();
             this.originalLightingValues = null;
         }
+
 
         public IEnumerator checkInitializeAgentLocationAction() {
             yield return null;
@@ -1794,9 +1775,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (Arm != null) {
                 metaMessage.arm = Arm.GenerateMetadata();
             }
-            else if (SArm != null) {
-                metaMessage.arm = SArm.GenerateMetadata();
-            }
 
             // EXTRAS
             metaMessage.flatSurfacesOnGrid = flatten3DimArray(flatSurfacesOnGrid);
@@ -1835,9 +1813,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
-        public virtual void updateImageSynthesis(bool status) {
+        public void updateImageSynthesis(bool status) {
             if (this.imageSynthesis == null) {
-                imageSynthesis = this.m_Camera.gameObject.GetComponent<ImageSynthesis>() as ImageSynthesis;
+                imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis>() as ImageSynthesis;
             }
             imageSynthesis.enabled = status;
         }
@@ -1943,11 +1921,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // TargetInvocationException is called whenever an action
                 // throws an exception. It is used to short circuit errors,
                 // which terminates the action immediately.
-#if UNITY_EDITOR
-		Debug.Log("Caught target invocation exception");
-		Debug.Log(e);
-		Debug.Log(e.InnerException.Message);
-#endif
                 actionFinished(
                     success: false,
                     errorMessage: $"{e.InnerException.GetType().Name}: {e.InnerException.Message}. trace: {e.InnerException.StackTrace.ToString()}"
@@ -2573,7 +2546,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // Don't disable colliders for the arm (unless the agent is invisible)
                 // or for any objects held by the arm
-                // Standard IK arm
                 if (Arm != null && Arm.gameObject.activeSelf) {
                     if (this.IsVisible) {
                         foreach (Collider c in Arm.gameObject.GetComponentsInChildren<Collider>()) {
@@ -2583,23 +2555,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     } else {
                         foreach (HashSet<Collider> hsc in Arm.heldObjects.Values) {
-                            foreach (Collider c in hsc) {
-                                collidersToNotDisable.Add(c);
-                            }
-                        }
-                    }
-                }
-
-                // Stretch arm
-                else if (SArm != null && SArm.gameObject.activeSelf) {
-                    if (this.IsVisible) {
-                        foreach (Collider c in SArm.gameObject.GetComponentsInChildren<Collider>()) {
-                            if (!c.isTrigger) {
-                                collidersToNotDisable.Add(c);
-                            }
-                        }
-                    } else {
-                        foreach (HashSet<Collider> hsc in SArm.heldObjects.Values) {
                             foreach (Collider c in hsc) {
                                 collidersToNotDisable.Add(c);
                             }
@@ -3008,11 +2963,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     sopAndIncInvisibleTuples.Add((sop, false));
                 }
             }
-            else if (SArm != null && SArm.gameObject.activeSelf) {
-                foreach (SimObjPhysics sop in SArm.heldObjects.Keys) {
-                    sopAndIncInvisibleTuples.Add((sop, false));
-                }
-            }
 
             if (sopAndIncInvisibleTuples.Count != 0) {
                 foreach ((SimObjPhysics, bool) sopAndIncInvisible in sopAndIncInvisibleTuples) {
@@ -3088,15 +3038,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // adding slight buffer to this distance to ensure the ray goes all the way to the collider of the object being cast to
             float raycastDistance = distFromPointToCamera + 0.5f;
 
-            LayerMask mask = (1 << 8) | (1 << 9) | (1 << 10);
+            LayerMask mask = LayerMask.GetMask("SimObjVisible", "SimObjInvisible", "Agent");
 
             // change mask if its a floor so it ignores the receptacle trigger boxes on the floor
             if (sop.Type == SimObjType.Floor) {
-                mask = (1 << 8) | (1 << 10);
+                mask = LayerMask.GetMask("SimObjVisible", "Agent");
             }
 
-            bool isSopHeldByArm = ( Arm != null && Arm.gameObject.activeSelf && Arm.heldObjects.ContainsKey(sop) ) ||
-                                  ( SArm != null && SArm.gameObject.activeSelf && SArm.heldObjects.ContainsKey(sop) );
+            bool isSopHeldByArm = Arm != null && Arm.gameObject.activeSelf && Arm.heldObjects.ContainsKey(sop);
 
             // check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
             // ignored by the other raycast
@@ -3104,82 +3053,87 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, mask)) {
                     if (
                         hit.transform == sop.transform
-                        || ( isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
+                        || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
                     ) {
                         visCheck.visible = true;
                         visCheck.interactable = true;
 #if UNITY_EDITOR
                         Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
 #endif
-                    } 
+                    }
                 }
             }
 
             // only check against the visible layer, ignore the invisible layer
             // so if an object ONLY has colliders on it that are not on layer 8, this raycast will go through them
-            else {
-                if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, (1 << 8) | (1 << 10))) {
-                    if (
-                        hit.transform == sop.transform
-                        || ( isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
-                    ) {
-                        // if this line is drawn, then this visibility point is in camera frame and not occluded
-                        // might want to use this for a targeting check as well at some point....
-                        visCheck.visible = true;
-                        visCheck.interactable = true;
-                    } else {
-                        // we didn't directly hit the sop we are checking for with this cast,
-                        // check if it's because we hit something see-through
-                        SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();
+            else if (
+                Physics.Raycast(
+                    camera.transform.position,
+                    point.position - camera.transform.position,
+                    out hit,
+                    raycastDistance,
+                    LayerMask.GetMask("SimObjVisible", "Agent")
+                )
+            ) {
+                if (
+                    hit.transform == sop.transform
+                    || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                ) {
+                    // if this line is drawn, then this visibility point is in camera frame and not occluded
+                    // might want to use this for a targeting check as well at some point....
+                    visCheck.visible = true;
+                    visCheck.interactable = true;
+                } else {
+                    // we didn't directly hit the sop we are checking for with this cast,
+                    // check if it's because we hit something see-through
+                    SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();
 
-                        if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
-                            // we hit something see through, so now find all objects in the path between
-                            // the sop and the camera
-                            RaycastHit[] hits;
-                            hits = Physics.RaycastAll(
-                                camera.transform.position,
-                                point.position - camera.transform.position,
-                                raycastDistance,
-                                (1 << 8),
-                                QueryTriggerInteraction.Ignore
-                            );
+                    if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
+                        // we hit something see through, so now find all objects in the path between
+                        // the sop and the camera
+                        RaycastHit[] hits;
+                        hits = Physics.RaycastAll(
+                            camera.transform.position,
+                            point.position - camera.transform.position,
+                            raycastDistance,
+                            LayerMask.GetMask("SimObjVisible"),
+                            QueryTriggerInteraction.Ignore
+                        );
 
-                            float[] hitDistances = new float[hits.Length];
-                            for (int i = 0; i < hitDistances.Length; i++) {
-                                hitDistances[i] = hits[i].distance; // Vector3.Distance(hits[i].transform.position, camera.transform.position);
-                            }
+                        float[] hitDistances = new float[hits.Length];
+                        for (int i = 0; i < hitDistances.Length; i++) {
+                            hitDistances[i] = hits[i].distance; // Vector3.Distance(hits[i].transform.position, camera.transform.position);
+                        }
 
-                            Array.Sort(hitDistances, hits);
+                        Array.Sort(hitDistances, hits);
 
-                            foreach (RaycastHit h in hits) {
-                                if (
-                                    h.transform == sop.transform
-                                    || (Arm != null && isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
-                                    || (SArm != null && isSopHeldByArm && SArm.heldObjects[sop].Contains(hit.collider))
-                                ) {
-                                    // found the object we are looking for, great!
-                                    //set it to visible via 'result' but the object is not interactable because it is behind some transparent object
-                                    visCheck.visible = true;
-                                    visCheck.interactable = false;
+                        foreach (RaycastHit h in hits) {
+                            if (
+                                h.transform == sop.transform
+                                || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                            ) {
+                                // found the object we are looking for, great!
+                                //set it to visible via 'result' but the object is not interactable because it is behind some transparent object
+                                visCheck.visible = true;
+                                visCheck.interactable = false;
+                                break;
+                            } else {
+                                // Didn't find it, continue on only if the hit object was translucent
+                                SimObjPhysics sopHitOnPath = null;
+                                sopHitOnPath = h.transform.GetComponentInParent<SimObjPhysics>();
+                                if (sopHitOnPath == null || !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
                                     break;
-                                } else {
-                                    // Didn't find it, continue on only if the hit object was translucent
-                                    SimObjPhysics sopHitOnPath = null;
-                                    sopHitOnPath = h.transform.GetComponentInParent<SimObjPhysics>();
-                                    if (sopHitOnPath == null || !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
-                                        break;
-                                    }
                                 }
                             }
                         }
                     }
+                }
 
 #if UNITY_EDITOR
-                    if (visCheck.visible) {
-                        Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
-                    }
-#endif
+                if (visCheck.visible) {
+                    Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
                 }
+#endif
             }
 
             return visCheck;
@@ -4116,14 +4070,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float moveMagnitude,
             int layerMask
         ) {
-            // make sure to offset this by capsuleCollider.center since we adjust the capsule size vertically, and in some cases horizontally
-            Vector3 startPositionCapsuleCenter = startPosition + capsuleCollider.transform.TransformDirection(capsuleCollider.center);
+            // make sure to offset this by capsuleCollider.center since we shrank the capsule size
+            Vector3 center = capsuleCollider.transform.position + capsuleCollider.center;
             float radius = capsuleCollider.radius + skinWidth;
             float innerHeight = capsuleCollider.height / 2.0f - radius;
-
-            Vector3 point1 = startPositionCapsuleCenter + new Vector3(0, innerHeight, 0);
-            Vector3 point2 = startPositionCapsuleCenter + new Vector3(0, -innerHeight + skinWidth, 0);
-            
+            Vector3 point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
+            Vector3 point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);
             return Physics.CapsuleCastAll(
                 point1: point1,
                 point2: point2,
@@ -4357,7 +4309,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return getFloorY(x, hit.point.y + 0.1f, z);
         }
 
-        protected bool SafelyComputeNavMeshPath(
+        protected void SafelyComputeNavMeshPath(
             Vector3 start,
             Vector3 target,
             UnityEngine.AI.NavMeshPath path,
@@ -4370,7 +4322,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 startPosition = new Vector3(start.x, floorY, start.z);
             Vector3 targetPosition = new Vector3(target.x, floorY, target.z);
 
-            this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = true;
+            this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
 
             NavMeshHit startHit;
             bool startWasHit = UnityEngine.AI.NavMesh.SamplePosition(
@@ -4383,14 +4335,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             if (!startWasHit || !targetWasHit) {
+                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 if (!startWasHit) {
-                    errorMessage = $"No point on NavMesh near {startPosition}.";
+                    throw new InvalidOperationException(
+                        $"No point on NavMesh near startPosition {startPosition}."
+                    );
                 }
                 if (!targetWasHit) {
-                    errorMessage = $"No point on NavMesh near {targetPosition}.";
+                    throw new InvalidOperationException(
+                        $"No point on NavMesh near targetPosition {targetPosition}."
+                    );
                 }
-                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                return false;
             }
 
             float startOffset = Vector3.Distance(
@@ -4402,13 +4357,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 new Vector3(targetPosition.x, targetHit.position.y, targetPosition.z)
             );
             if (startOffset > allowedError && targetOffset > allowedError) {
-                errorMessage = $"Closest point on NavMesh was too far from the agent: " +
+                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                throw new InvalidOperationException(
+                    $"Closest point on NavMesh was too far from the agent: " +
                     $" (startPosition={startPosition.ToString("F3")}," +
                     $" closest navmesh position {startHit.position.ToString("F3")}) and" +
                     $" (targetPosition={targetPosition.ToString("F3")}," +
-                    $" closest navmesh position {targetHit.position.ToString("F3")}).";
-                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                return false;
+                    $" closest navmesh position {targetHit.position.ToString("F3")})."
+                );
             }
 
 #if UNITY_EDITOR
@@ -4417,18 +4373,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
                 startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
             );
-            if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-#if UNITY_EDITOR
-                VisualizePath(startHit.position, path);
-#endif
+
+            if (path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                return true;
-            } else {
-                errorMessage = $"Could not find path between {startHit.position.ToString("F3")}" +
-                    $" and {targetHit.position.ToString("F3")} using the NavMesh.";
-                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                return false;
+                throw new InvalidOperationException(
+                    $"Could not find path between {startHit.position.ToString("F3")}" +
+                    $" and {targetHit.position.ToString("F3")} using the NavMesh."
+                );
             }
+
+#if UNITY_EDITOR
+            VisualizePath(startHit.position, path);
+#endif
+            this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
         }
 
         public void GetShortestPathToPoint(

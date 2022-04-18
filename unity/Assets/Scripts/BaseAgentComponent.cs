@@ -15,12 +15,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject DebugTargetPointPrefab;
         public GameObject VisibilityCapsule = null;// used to keep track of currently active VisCap: see different vis caps for modes below
         public GameObject TallVisCap;// meshes used for Tall mode
-        public GameObject IKArm; // reference to the IK_Robot_Arm_Controller arm
         public GameObject BotVisCap;// meshes used for Bot mode
         public GameObject DroneVisCap;// meshes used for Drone mode
         public GameObject DroneBasket;// reference to the drone's basket object
-        public GameObject StretchVisCap; // meshes used for Stretch mode
-        public GameObject StretchArm; // reference to the Stretch_Arm_Controller arm
+        public GameObject IKArm; // reference to the IK_Robot_Arm_Controller arm
         public GameObject CrackedCameraCanvas = null;
 
         public GameObject[] ToSetActive = null;
