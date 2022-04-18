@@ -171,7 +171,7 @@ public class NavMeshSetup : MonoBehaviour {
 
         var agentController = FindObjectOfType<BaseAgentComponent>();
         // var capsuleCollider = agentController.GetComponent<CapsuleCollider>();
-        var navmeshAgent = agentController.GetComponent<NavMeshAgent>();
+        var navmeshAgent = agentController.GetComponentInChildren<NavMeshAgent>();
         navmeshAgent.enabled = true;
         // The Editor bake interface does not take with parameters and could not be modified as of 2018.3
         //var buildSettings = 
