@@ -1769,6 +1769,7 @@ namespace Thor.Procedural {
                         squareTiling: house.proceduralParameters.squareTiling,
                         materialProperties: ceilingMaterialProperties
                     );
+                    ceilingMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.TwoSided;
 
                     tagObjectNavmesh(ceilingGameObject, "Not Walkable");
 
