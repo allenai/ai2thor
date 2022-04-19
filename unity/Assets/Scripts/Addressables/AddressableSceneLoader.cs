@@ -10,12 +10,14 @@ using UnityEngine.UI;
 /// </summary>
 public class AddressableSceneLoader : MonoBehaviour
 {
-    public GameObject menu;
-    public GameObject loadingTextGameObject;
+    public GameObject loadingAddressablesUI;
+    public GameObject loadingLogo;
+    public GameObject loadingText;
     public AssetReference scene;
     public string defaultSceneFile;
     private AsyncOperationHandle<SceneInstance> asyncOperationHandle;
     private Text text;
+    public AsyncOperationHandle loadingAddressable;
 
     private void Awake() 
     {
@@ -24,7 +26,7 @@ public class AddressableSceneLoader : MonoBehaviour
 
     private void Start() 
     {
-        text = loadingTextGameObject.GetComponent<Text>();
+        text = loadingText.GetComponent<Text>();
         LoadScene();
     }
 
@@ -33,8 +35,13 @@ public class AddressableSceneLoader : MonoBehaviour
     /// </summary>
     public void LoadScene()
     {
-        Addressables.LoadSceneAsync(scene, UnityEngine.SceneManagement.LoadSceneMode.Single).Completed += SceneLoadComplete;
-        loadingTextGameObject.SetActive(true);
+        loadingAddressablesUI.SetActive(true);
+
+        AsyncOperationHandle<SceneInstance> loadingScene = Addressables.LoadSceneAsync(scene, UnityEngine.SceneManagement.LoadSceneMode.Single);
+        loadingAddressable = loadingScene;
+        loadingScene.Completed += SceneLoadComplete;
+        loadingText.SetActive(true);
+        loadingLogo.SetActive(true);
         text.text = "Loading MCS scene...";
         text.color = new Color(0f, 1f, 0f);
     }
@@ -47,10 +54,12 @@ public class AddressableSceneLoader : MonoBehaviour
     {
         if(operationHandle.Status == AsyncOperationStatus.Succeeded)
         {
+            loadingAddressablesUI.SetActive(false);
+
             text.text = "Scene load successful.";
             text.color = new Color(0f, 1f, 0f);
-            loadingTextGameObject.SetActive(false);
-            menu.SetActive(false);
+            loadingText.SetActive(false);
+            loadingLogo.SetActive(false);
 
             asyncOperationHandle = operationHandle;
 
