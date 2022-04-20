@@ -546,7 +546,13 @@ namespace Thor.Procedural {
                         w1, 
                         w2,
                         squareTiling: proceduralParameters.squareTiling,
-                        minimumBoxColliderThickness: proceduralParameters.minWallColliderThickness);
+                        minimumBoxColliderThickness: proceduralParameters.minWallColliderThickness,
+                        layer: (
+                            String.IsNullOrEmpty(w0.layer)
+                            ? LayerMask.NameToLayer("SimObjVisible")
+                            : LayerMask.NameToLayer(w0.layer)
+                        )
+                    );
 
                     wallGO.transform.parent = structure.transform;
                     index++;
@@ -714,7 +720,7 @@ namespace Thor.Procedural {
         ) {
             var wallGO = new GameObject(toCreate.id);
 
-            wallGO.layer = layer;
+            SetLayer<Transform>(wallGO, layer);
 
             var meshF = wallGO.AddComponent<MeshFilter>();
             //var boxC = wallGO.AddComponent<BoxCollider>();
@@ -1422,7 +1428,8 @@ namespace Thor.Procedural {
                 materialTilingXDivisor = wall.materialTilingXDivisor,
                 materialTilingYDivisor = wall.materialTilingYDivisor,
                 color = wall.color,
-                unlit = wall.unlit
+                unlit = wall.unlit,
+                layer = wall.layer,
             };
         }
 
@@ -1515,6 +1522,14 @@ namespace Thor.Procedural {
         public static string DefaultLightingRootName => "ProceduralLighting";
         public static string DefaultObjectsRootName => "Objects";
 
+        public static void SetLayer<T>(GameObject go, int layer) where T : Component {
+            if (go.GetComponent<T>() != null) {
+                go.layer = layer;
+            }
+            foreach (Transform child in go.transform) {
+                SetLayer<T>(child.gameObject, layer);
+            }
+        }
 
         public static GameObject CreateHouse(
            ProceduralHouse house,
@@ -1633,6 +1648,12 @@ namespace Thor.Procedural {
                 var meshCollider = subFloorGO.GetComponent<MeshCollider>();
                 meshCollider.sharedMesh = mesh;
                 subFloorGO.layer = 12; //raycast to layer 12 so it doesn't interact with any other layer
+
+                // allow layer to be overwritten
+                // will break support for spawnObjectInReceptacle
+                if (!String.IsNullOrEmpty(room.layer)) {
+                    SetLayer<MeshRenderer>(subFloorGO, LayerMask.NameToLayer(room.layer));
+                }
 
                 subFloorGO.transform.parent = floorGameObject.transform;
 
@@ -1769,6 +1790,7 @@ namespace Thor.Procedural {
                         squareTiling: house.proceduralParameters.squareTiling,
                         materialProperties: ceilingMaterialProperties
                     );
+                    ceilingMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.TwoSided;
 
                     tagObjectNavmesh(ceilingGameObject, "Not Walkable");
 
@@ -1866,6 +1888,12 @@ namespace Thor.Procedural {
                 light.intensity = lightParams.intensity;
                 light.bounceIntensity = lightParams.indirectMultiplier;
                 light.range = lightParams.range;
+                if (lightParams.cullingMaskOff != null) {
+                    foreach (var layer in lightParams.cullingMaskOff) {
+                        light.cullingMask &= ~(1 << LayerMask.NameToLayer(layer));
+                    }
+                }
+
                 if (lightParams.shadow != null) {
                     light.shadowStrength = lightParams.shadow.strength;
                     light.shadows = (LightShadows)Enum.Parse(typeof(LightShadows), lightParams.shadow.type, ignoreCase: true);
@@ -2050,7 +2078,8 @@ namespace Thor.Procedural {
                     materialProperties: ho.materialProperties,
                     openness: ho.openness,
                     isOn: ho.isOn,
-                    isDirty: ho.isDirty
+                    isDirty: ho.isDirty,
+                    layer: ho.layer
                 );
             } else {
 
@@ -2089,11 +2118,16 @@ namespace Thor.Procedural {
             MaterialProperties materialProperties = null,
             float? openness = null,
             bool? isOn = null,
-            bool? isDirty = null
+            bool? isDirty = null,
+            string layer = null
         ) {
             var go = prefab;
 
             var spawned = GameObject.Instantiate(original: go); //, position, Quaternion.identity); //, position, rotation);
+
+            if (!String.IsNullOrEmpty(layer)) {
+                SetLayer<MeshRenderer>(spawned, LayerMask.NameToLayer(layer));
+            }
 
             if (openness.HasValue) {
                 var canOpen = spawned.GetComponentInChildren<CanOpen_Object>();

@@ -486,10 +486,10 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
         // if spawning in the agent's hand, ignore collisions with the Agent
         if (spawningInHand) {
-            layermask = LayerMask.GetMask("SimObjVisible");
+            layermask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural4");
         } else {
             // oh we are spawning it somewhere in the environment, we do need to make sure not to spawn inside the agent or the environment
-            layermask = LayerMask.GetMask("SimObjVisible", "Agent");
+            layermask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural4", "Agent");
         }
 
         // get list of all active colliders of sim object, then toggle them off for now
