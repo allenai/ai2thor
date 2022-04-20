@@ -42,6 +42,8 @@ namespace Thor.Procedural.Data {
         public string type { get; set; }
         public Vector3 position { get; set; }
 
+        public string[] cullingMaskOff { get; set;}
+
         public FlexibleRotation rotation;
         public float intensity { get; set; }
         public float indirectMultiplier { get; set; }
@@ -154,6 +156,8 @@ namespace Thor.Procedural.Data {
         public float? floorMaterialTilingXDivisor = 1.0f;
         public float? floorMaterialTilingYDivisor = 1.0f;
 
+        public string layer { get; set; }
+
         public SerializableColor floorColor { get; set; } = null;
         // public float y { get; set; }
         public List<Vector3> floorPolygon { get; set; }
@@ -169,6 +173,8 @@ namespace Thor.Procedural.Data {
         public string roomId { get; set; }
         public float thickness { get; set; }
         public string material { get; set; }
+
+        public string layer { get; set; }
 
         public MaterialProperties materialProperties;
 
@@ -320,6 +326,8 @@ namespace Thor.Procedural.Data {
         public string assetId { get; set; } //name of prefab asset from asset database
         public string navmeshArea { get; set; }
 
+        public string layer { get; set; }
+
         public float? openness { get; set; } = null;
         public bool? isOn { get; set; } = null;
         public bool? isDirty { get; set; } = null;
@@ -402,6 +410,8 @@ namespace Thor.Procedural.Data {
         public MaterialProperties materialProperties;
 
         public string roomId;
+
+        public string layer { get; set; }
 
         public float materialTilingXDivisor = 1.0f;
         public float materialTilingYDivisor = 1.0f;
@@ -496,6 +506,8 @@ namespace Thor.Procedural.Data {
         public Wall[] walls { get; set; }
 
         public string type { get; set; }
+
+        // public string layer { get; set; }
 
         public string id { get; set; }
         public Floor floor { get { return rectangleFloor; } }
