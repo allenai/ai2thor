@@ -70,6 +70,12 @@ class LazyInstanceDetections2D(Mapping):
 
 class LazyClassDetections2D(LazyInstanceDetections2D):
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.instance_masks == other.instance_masks
+        else:
+            return False
+
     def __len__(self):
         self._load_all()
         return len(self._detections2d)
