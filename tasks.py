@@ -1244,7 +1244,7 @@ def poll_ci_build(context):
                     last_modified = datetime.datetime.strptime(res.headers['Last-Modified'], '%a, %d %b %Y %H:%M:%S GMT')
                     # if a build is restarted, a log from a previous build will exist
                     # but its last-modified date will precede the start datetime
-                    if last_modified > start_datetime || commit_build.exists():
+                    if last_modified > start_datetime or commit_build.exists():
                         log_exist_count += 1
 
             # we observe errors when polling AWS periodically - we don't want these to stop
@@ -1252,7 +1252,7 @@ def poll_ci_build(context):
             except requests.exceptions.ConnectionError as e:
                 print("Caught exception %s" % e)
 
-        if log_exist_count == len(check_platforms)
+        if log_exist_count == len(check_platforms):
             break
         sys.stdout.flush()
         time.sleep(10)
