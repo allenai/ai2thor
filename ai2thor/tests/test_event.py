@@ -3598,11 +3598,11 @@ def test_lazy_class_segmentation_background(event_with_segmentation):
 
 @pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_class_detections2d(event_with_segmentation):
-    assert event_with_segmentation.class_detections2D["Cabinet"] == [
+    assert event_with_segmentation.class_detections2D["Cabinet"] == (
         (473, 0, 599, 284),
         (0, 0, 145, 284),
         (164, 0, 467, 109),
-    ]
+    )
     with pytest.raises(KeyError):
         event_with_segmentation.class_detections2D["Stove"]
 
