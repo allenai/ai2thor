@@ -720,8 +720,7 @@ namespace Thor.Procedural {
         ) {
             var wallGO = new GameObject(toCreate.id);
 
-            Debug.Log($"Creating wall {toCreate.id} with layer {layer}");
-            wallGO.layer = layer;
+            SetLayer<Transform>(wallGO, layer);
 
             var meshF = wallGO.AddComponent<MeshFilter>();
             //var boxC = wallGO.AddComponent<BoxCollider>();
@@ -1523,6 +1522,14 @@ namespace Thor.Procedural {
         public static string DefaultLightingRootName => "ProceduralLighting";
         public static string DefaultObjectsRootName => "Objects";
 
+        public static void SetLayer<T>(GameObject go, int layer) where T : Component {
+            if (go.GetComponent<T>() != null) {
+                go.layer = layer;
+            }
+            foreach (Transform child in go.transform) {
+                SetLayer<T>(child.gameObject, layer);
+            }
+        }
 
         public static GameObject CreateHouse(
            ProceduralHouse house,
@@ -1645,7 +1652,7 @@ namespace Thor.Procedural {
                 // allow layer to be overwritten
                 // will break support for spawnObjectInReceptacle
                 if (!String.IsNullOrEmpty(room.layer)) {
-                    subFloorGO.layer = LayerMask.NameToLayer(room.layer);
+                    SetLayer<MeshRenderer>(subFloorGO, LayerMask.NameToLayer(room.layer));
                 }
 
                 subFloorGO.transform.parent = floorGameObject.transform;
@@ -2119,7 +2126,7 @@ namespace Thor.Procedural {
             var spawned = GameObject.Instantiate(original: go); //, position, Quaternion.identity); //, position, rotation);
 
             if (!String.IsNullOrEmpty(layer)) {
-                spawned.layer = LayerMask.NameToLayer(layer);
+                SetLayer<MeshRenderer>(spawned, LayerMask.NameToLayer(layer));
             }
 
             if (openness.HasValue) {

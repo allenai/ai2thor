@@ -152,7 +152,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
             // Doesnt work for some reason
             //         var colliders = Physics.OverlapBox(d.transform.TransformPoint(box.center), boxOffset * 4, 
             //   Quaternion.identity, 
-            //     LayerMask.GetMask("SimObjVisible"), 
+            //     LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural4"), 
             //  QueryTriggerInteraction.UseGlobal);
             var colliders = GameObject.Find(
                 $"/{ProceduralTools.DefaultRootStructureObjectName}/{ProceduralTools.DefaultRootWallsObjectName}"
@@ -958,7 +958,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 if (didHit) {
                     room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
                 }
-                // didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, 1.0f, LayerMask.GetMask("SimObjVisible"));
+                // didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, 1.0f, LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural4"));
                 string objectLink = "";
                 var parentSim = l.GetComponentInParent<SimObjPhysics>();
                 //SimObjType.Lamp

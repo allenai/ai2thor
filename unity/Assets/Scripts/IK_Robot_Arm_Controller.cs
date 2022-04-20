@@ -189,7 +189,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
                 point0: point0,
                 point1: point1,
                 radius: radius,
-                layerMask: LayerMask.GetMask("SimObjVisible"),
+                layerMask: LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural4"),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
             foreach (Collider col in cols) {
@@ -203,7 +203,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
                 center: b.transform.TransformPoint(b.center),
                 halfExtents: b.size / 2.0f,
                 orientation: b.transform.rotation,
-                layerMask: LayerMask.GetMask("SimObjVisible"),
+                layerMask: LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural4"),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
             foreach (Collider col in cols) {
