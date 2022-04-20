@@ -396,7 +396,16 @@ class Controller(object):
         gpu_device=None,
         platform=None,
         local_action_runner_class=LocalActionRunner,
-        local_action_runner_params={},
+        local_action_runner_params={
+            "enabled_actions":
+            [
+                "MoveAhead",
+                "RotateLeft",
+                "RotateRight",
+                "LookUp",
+                "LookDown"
+            ]
+        },
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
