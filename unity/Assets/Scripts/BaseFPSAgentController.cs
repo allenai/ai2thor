@@ -437,7 +437,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
             HashSet<(int, int)> seenRightForwards = new HashSet<(int, int)>();
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural4");
             int stepsTaken = 0;
             while (rightForwardQueue.Count != 0) {
                 stepsTaken += 1;
