@@ -3669,7 +3669,7 @@ def test_local_action(context):
     width = 300
     height = 300
     fov = 60
-
+    fov = 60
     controller = ai2thor.controller.Controller(
         local_executable_path=None,
         # scene=scene,
@@ -3683,12 +3683,11 @@ def test_local_action(context):
         local_action_runner_params={
             "enabled_actions":
             [
+                "MoveAhead",
                 "RotateLeft",
                 "RotateRight",
-                "MoveAhead",
-                "MoveBack",
-                "MoveLeft",
-                "MoveRight"
+                "LookUp",
+                "LookDown"
             ]
         },
     )
