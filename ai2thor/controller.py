@@ -395,7 +395,7 @@ class Controller(object):
         server_class=None,
         gpu_device=None,
         platform=None,
-        local_action_runner_class=None,
+        local_action_runner_class=LocalActionRunner,
         local_action_runner_params={},
         **unity_initialization_parameters,
     ):
@@ -407,6 +407,7 @@ class Controller(object):
         self.height = height
 
         self.local_action_runner = local_action_runner_class(**local_action_runner_params) if local_action_runner_class is not None else None
+        self.intercept_actions =  {func for func in dir(local_action_runner_class) if callable(getattr(local_action_runner_class, func))} if self.local_action_runner is not None else None
 
         self.last_event = None
         self.scene = None
@@ -896,7 +897,7 @@ class Controller(object):
         return events
 
     def intercept_action(self, action):
-        if action['action'] in INTERCEPT_ACTIONS:
+        if action['action'] in self.intercept_actions:
             try:
                 method = getattr(self.local_action_runner, action['action'])
                 event = method(action, self)
