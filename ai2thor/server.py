@@ -12,6 +12,7 @@ from enum import Enum
 from ai2thor.util.depth import apply_real_noise, generate_noise_indices
 import json
 from collections.abc import Mapping
+from abc import abstractmethod
 
 
 class NumpyAwareEncoder(json.JSONEncoder):
@@ -123,6 +124,10 @@ class LazyMask(Mapping):
             raise KeyError(key)
 
         return m
+
+    @abstractmethod
+    def _load_all(self):
+        pass
 
     def __iter__(self):
         self._load_all()
