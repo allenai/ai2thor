@@ -7,7 +7,6 @@ import numpy as np
 import pytest
 from ai2thor.tests.constants import TESTS_DATA_DIR, TEST_SCENE
 
-from ai2thor.tests.constants import TESTS_DATA_DIR
 
 metadata_complex = {
     "agent": {
