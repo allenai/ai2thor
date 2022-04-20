@@ -3128,8 +3128,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ) {
                 if (
                     hit.transform == sop.transform
-                    || ( isSopHeldByArm
-                    && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
+                    || ( isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
                 ) {
                     // if this line is drawn, then this visibility point is in camera frame and not occluded
                     // might want to use this for a targeting check as well at some point....
