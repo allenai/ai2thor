@@ -1220,12 +1220,14 @@ def ci_build_arch(root_dir, arch, commit_id, include_private_scenes=False):
 def poll_ci_build(context):
     import requests.exceptions
     import requests
+    import datetime
 
     commit_id = git_commit_id()
+    start_datetime = datetime.datetime.utcnow()
 
     last_emit_time = 0
     for i in range(360):
-        missing = False
+        log_exist_count = 0
         # must emit something at least once every 10 minutes
         # otherwise travis will time out the build
         if (time.time() - last_emit_time) > 120:
@@ -1237,14 +1239,20 @@ def poll_ci_build(context):
         for plat in check_platforms:
             commit_build = ai2thor.build.Build(plat, commit_id, False)
             try:
-                if not commit_build.log_exists():
-                    missing = True
+                res = requests.head(commit_build.log_url)    
+                if res.status_code == 200:
+                    last_modified = datetime.datetime.strptime(res.headers['Last-Modified'], '%a, %d %b %Y %H:%M:%S GMT')
+                    # if a build is restarted, a log from a previous build will exist
+                    # but its last-modified date will precede the start datetime
+                    if last_modified > start_datetime || commit_build.exists():
+                        log_exist_count += 1
+
             # we observe errors when polling AWS periodically - we don't want these to stop
             # the build
             except requests.exceptions.ConnectionError as e:
                 print("Caught exception %s" % e)
 
-        if not missing:
+        if log_exist_count == len(check_platforms)
             break
         sys.stdout.flush()
         time.sleep(10)
