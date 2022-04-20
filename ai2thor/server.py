@@ -105,7 +105,7 @@ class LazyClassDetections2D(LazyInstanceDetections2D):
             if bb:
                 detections.append(bb)
         if detections:
-            self._detections2d[cls] = detections
+            self._detections2d[cls] = tuple(detections)
         else:
             raise KeyError(cls)
 
