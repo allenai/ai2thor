@@ -1994,6 +1994,8 @@ def webgl_deploy(
         ".png": "image/png",
         ".txt": "text/plain",
         ".jpg": "image/jpeg",
+        ".wasm": "application/wasm",
+        ".data": "application/octet-stream",
         ".unityweb": "application/octet-stream",
         ".json": "application/json",
     }
