@@ -736,11 +736,11 @@ public class PhysicsSceneManager : MonoBehaviour {
 
         // if spawning in the agent's hand, ignore collisions with the Agent
         if (spawningInHand) {
-            layermask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural4");
+            layermask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
         } else {
             // oh we are spawning it somwhere in the environment,
             // we do need to make sure not to spawn inside the agent or the environment
-            layermask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural4", "Agent");
+            layermask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent");
         }
 
         // make sure ALL colliders of the simobj are turned off for this check - can't just turn off the Colliders child object because of objects like
