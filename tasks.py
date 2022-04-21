@@ -456,7 +456,7 @@ def webgl_build(
     """
     from functools import reduce
 
-    def file_to_content_addressable(file_path, json_metadata_file_path, json_key):
+    def file_to_content_addressable(file_path):
         # name_split = os.path.splitext(file_path)
         path_split = os.path.split(file_path)
         directory = path_split[0]
@@ -469,16 +469,6 @@ def webgl_build(
             md5_id = h.hexdigest()
         new_file_name = "{}_{}".format(md5_id, file_name)
         os.rename(file_path, os.path.join(directory, new_file_name))
-
-        with open(json_metadata_file_path, "r+") as f:
-            unity_json = json.load(f)
-            print("UNITY json {}".format(unity_json))
-            unity_json[json_key] = new_file_name
-
-            print("UNITY L {}".format(unity_json))
-
-            f.seek(0)
-            json.dump(unity_json, f, indent=4)
 
     arch = "WebGL"
     build_name = local_build_name(prefix, arch)
@@ -503,6 +493,10 @@ def webgl_build(
         print(scenes)
 
     env = dict(BUILD_SCENES=scenes)
+
+    # https://forum.unity.com/threads/cannot-build-for-webgl-in-unity-system-dllnotfoundexception.1254429/
+    # without setting this environment variable the error mentioned in the thread will get thrown
+    os.environ["EMSDK_PYTHON"] = "/usr/bin/python3"
 
     if crowdsource_build:
         env["DEFINES"] = "CROWDSOURCE_TASK"
@@ -558,8 +552,6 @@ def webgl_build(
     for file_name, key in to_content_addressable:
         file_to_content_addressable(
             os.path.join(build_path, "Build/{}".format(file_name)),
-            os.path.join(build_path, "Build/{}.json".format(build_name)),
-            key,
         )
 
     with open(os.path.join(build_path, "scenes.json"), "w") as f:
@@ -3673,3 +3665,7 @@ class {encoded_class_name}:
         )
     return class_data
 
+
+@task
+def build_webgl(context):
+    webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
