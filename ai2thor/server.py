@@ -13,7 +13,7 @@ from ai2thor.util.depth import apply_real_noise, generate_noise_indices
 import json
 from collections.abc import Mapping
 from abc import abstractmethod
-from typing import Optional, Tuple, Dict, Type, cast, List, Set
+from typing import Optional, Tuple, Dict, cast, List, Set
 
 
 class NumpyAwareEncoder(json.JSONEncoder):
@@ -223,6 +223,12 @@ class LazyDetections2D(Mapping):
 
     def __contains__(self, key: object) -> bool:
         return key in self.instance_masks
+
+    def __eq__(self, other: object):
+        if isinstance(other, self.__class__):
+            return self.instance_masks == other.instance_masks
+        else:
+            return False
 
 class LazyInstanceDetections2D(LazyDetections2D):
     
