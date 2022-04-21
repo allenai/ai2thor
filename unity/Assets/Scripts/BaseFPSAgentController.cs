@@ -335,6 +335,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void DeleteMe() {
+            actionFinished(success: true, actionReturn: "called in build!");
+        }
 
         // defaults all agent renderers, from all modes (tall, bot, drone), to hidden for initialization default
         protected void HideAllAgentRenderers() {
