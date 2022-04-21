@@ -28,7 +28,7 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour {
         Collider[] hitColliders = Physics.OverlapSphere(
             position: center,
             radius: radius,
-            layerMask: LayerMask.GetMask("SimObjVisible"),
+            layerMask: LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
             queryTriggerInteraction: QueryTriggerInteraction.Ignore
         );
         foreach (var col in hitColliders) {

@@ -10,7 +10,6 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 using UnityStandardAssets.ImageEffects;
 using System.Linq;
-using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.AI;
 using Newtonsoft.Json.Linq;
 using MIConvexHull;
@@ -69,9 +68,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             get => this.baseAgentComponent.TallVisCap;
         }
 
+        public GameObject IKArm {
+            get => this.baseAgentComponent.IKArm;
+        }
+
         public GameObject BotVisCap {
             get => this.baseAgentComponent.BotVisCap;
+        }
 
+        public GameObject StretchVisCap {
+            get => this.baseAgentComponent.StretchVisCap;
+        }
+
+        public GameObject StretchArm {
+            get => this.baseAgentComponent.StretchArm;
         }
 
         public GameObject DroneVisCap {
@@ -85,11 +95,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject DroneBasket {
             get => this.baseAgentComponent.DroneBasket;
         }
-
-        public GameObject IKArm {
-            get => this.baseAgentComponent.IKArm;
-        }
-
         // reference to prefab for activiting the cracked camera effect via CameraCrack()
         public GameObject CrackedCameraCanvas {
             get => this.baseAgentComponent.CrackedCameraCanvas;
@@ -173,7 +178,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.m_WalkSpeed = 2;
             this.m_RunSpeed = 10;
             this.m_GravityMultiplier = 2;
-            this.m_Camera = this.gameObject.GetComponentInChildren<Camera>();
+            this.m_Camera = this.transform.Find("FirstPersonCharacter").GetComponent<Camera>();
             this.m_CharacterController = GetComponent<CharacterController>();
             collidedObjects = new string[0];
             collisionsInAction = new List<string>();
@@ -185,10 +190,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // culling in FirstPersonCharacterCull.cs to ignore tall mode renderers
             HideAllAgentRenderers();
 
-
-
             // default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
-            this.GetComponent<NavMeshAgent>().enabled = false;
+            this.GetComponentInChildren<NavMeshAgent>().enabled = false;
 
             // Recording initially disabled renderers and scene bounds
             // then setting up sceneBounds based on encapsulating all renderers
@@ -316,8 +319,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 		}
 #endif
 
-        // Arm
+        // Arms
         protected IK_Robot_Arm_Controller Arm;
+        protected Stretch_Robot_Arm_Controller SArm;
 
         private PhysicsSceneManager _physicsSceneManager = null;
         // use as reference to the PhysicsSceneManager object
@@ -330,6 +334,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void DeleteMe() {
+            actionFinished(success: true, actionReturn: "called in build!");
+        }
 
         // defaults all agent renderers, from all modes (tall, bot, drone), to hidden for initialization default
         protected void HideAllAgentRenderers() {
@@ -346,6 +353,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             foreach (Renderer r in DroneVisCap.GetComponentsInChildren<Renderer>()) {
+                if (r.enabled) {
+                    r.enabled = false;
+                }
+            }
+
+            foreach (Renderer r in StretchVisCap.GetComponentsInChildren<Renderer>()) {
                 if (r.enabled) {
                     r.enabled = false;
                 }
@@ -378,8 +391,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             targetTeleport = Vector3.zero;
 
 #if UNITY_EDITOR
-            Debug.Log($"lastAction: '{this.lastAction}'");
-            Debug.Log($"lastActionSuccess: '{success}'");
+            Debug.Log($"lastAction: '{this.lastAction}'");            Debug.Log($"lastActionSuccess: '{success}'");
             if (!success) {
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
             } else if (actionReturn != null) {
@@ -427,7 +439,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
             HashSet<(int, int)> seenRightForwards = new HashSet<(int, int)>();
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             int stepsTaken = 0;
             while (rightForwardQueue.Count != 0) {
                 stepsTaken += 1;
@@ -534,6 +546,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 #if UNITY_EDITOR
             Debug.Log("count of reachable positions: " + reachablePos.Length);
+            // Debug.Log("REACHABLE POSITIONS LIST: ");
+            // for (int i = 0; i < reachablePos.Length; i++) {
+            //      if (Mathf.Abs(reachablePos[i].x - (-1f)) < Mathf.Epsilon &&
+            //          Mathf.Abs(reachablePos[i].y - (0.9109584f)) < Mathf.Epsilon &&
+            //          Mathf.Abs(reachablePos[i].z - (1.5f)) < Mathf.Epsilon ) {
+            //         Debug.Log("Reachable-point " + (i+1) + ": (" + reachablePos[i].x + ", " + reachablePos[i].y + ", " + reachablePos[i].z + ")");
+            //     }
+            // }
 #endif
 
             return reachablePos;
@@ -564,6 +584,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public abstract void InitializeBody();
 
         public void Initialize(ServerAction action) {
+
             this.InitializeBody();
             m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
 
@@ -622,12 +643,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.maxVisibleDistance = action.visibilityDistance;
             }
 
-            var navmeshAgent = this.GetComponent<UnityEngine.AI.NavMeshAgent>();
+            var navmeshAgent = this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>();
             var collider = this.GetComponent<CapsuleCollider>();
 
             if (collider != null && navmeshAgent != null) {
                 navmeshAgent.radius = collider.radius;
                 navmeshAgent.height = collider.height;
+                navmeshAgent.transform.localPosition = new Vector3(navmeshAgent.transform.localPosition.x, navmeshAgent.transform.localPosition.y, collider.center.z);
             }
 
             // navmeshAgent.radius =
@@ -660,7 +682,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.visibilityScheme = action.GetVisibilityScheme();
             this.originalLightingValues = null;
         }
-
 
         public IEnumerator checkInitializeAgentLocationAction() {
             yield return null;
@@ -1176,7 +1197,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 transform.position,
                 offset.normalized,
                 offset.magnitude,
-                LayerMask.GetMask("SimObjVisible", "Agent")
+                LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent")
             );
             // check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
             if (sweepResults.Length > 0) {
@@ -1775,6 +1796,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (Arm != null) {
                 metaMessage.arm = Arm.GenerateMetadata();
             }
+            else if (SArm != null) {
+                metaMessage.arm = SArm.GenerateMetadata();
+            }
 
             // EXTRAS
             metaMessage.flatSurfacesOnGrid = flatten3DimArray(flatSurfacesOnGrid);
@@ -1813,9 +1837,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
-        public void updateImageSynthesis(bool status) {
+        public virtual void updateImageSynthesis(bool status) {
             if (this.imageSynthesis == null) {
-                imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis>() as ImageSynthesis;
+                imageSynthesis = this.m_Camera.gameObject.GetComponent<ImageSynthesis>() as ImageSynthesis;
             }
             imageSynthesis.enabled = status;
         }
@@ -1921,6 +1945,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // TargetInvocationException is called whenever an action
                 // throws an exception. It is used to short circuit errors,
                 // which terminates the action immediately.
+#if UNITY_EDITOR
+		Debug.Log("Caught target invocation exception");
+		Debug.Log(e);
+		Debug.Log(e.InnerException.Message);
+#endif
                 actionFinished(
                     success: false,
                     errorMessage: $"{e.InnerException.GetType().Name}: {e.InnerException.Message}. trace: {e.InnerException.StackTrace.ToString()}"
@@ -2003,7 +2032,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ray: ray,
                 hitInfo: out hit,
                 maxDistance: Mathf.Infinity,
-                layerMask: LayerMask.GetMask("Default", "SimObjVisible", "Agent", "PlaceableSurface"),
+                layerMask: LayerMask.GetMask("Default", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "SimObjVisible", "Agent", "PlaceableSurface"),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
 
@@ -2094,7 +2123,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ray,
                     out hit,
                     Mathf.Infinity,
-                    LayerMask.GetMask("Default", "SimObjVisible", "Agent", "PlaceableSurface"),
+                    LayerMask.GetMask("Default", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "SimObjVisible", "Agent", "PlaceableSurface"),
                     QueryTriggerInteraction.Ignore
                 )
             ) {
@@ -2155,7 +2184,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ray: ray,
                 hitInfo: out hit,
                 maxDistance: Mathf.Infinity,
-                layerMask: LayerMask.GetMask("Default", "Agent", "SimObjVisible", "PlaceableSurface"),
+                layerMask: LayerMask.GetMask("Default", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent", "SimObjVisible", "PlaceableSurface"),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
 
@@ -2173,7 +2202,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     direction: destination - origin,
                     hitInfo: out hit,
                     maxDistance: Mathf.Infinity,
-                    layerMask: LayerMask.GetMask("Default", "SimObjVisible", "NonInteractive"),
+                    layerMask: LayerMask.GetMask("Default", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "SimObjVisible", "NonInteractive"),
                     queryTriggerInteraction: QueryTriggerInteraction.Ignore
                 )
             ) {
@@ -2197,10 +2226,55 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         " hit object, but not a SimObject!"
                     )
                 );
+                return;
             }
             actionFinishedEmit(
                 success: true,
                 actionReturn: target.ObjectID
+            );
+        }
+
+        public void PerformRaycast(Vector3 origin, Vector3 destination) {
+            RaycastHit hit;
+            if (
+                !Physics.Raycast(
+                    origin: origin,
+                    direction: destination - origin,
+                    hitInfo: out hit,
+                    maxDistance: Mathf.Infinity,
+                    layerMask: LayerMask.GetMask("Default", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "SimObjVisible", "NonInteractive"),
+                    queryTriggerInteraction: QueryTriggerInteraction.Ignore
+                )
+            ) {
+                actionFinishedEmit(
+                    success: false,
+                    errorMessage: (
+                        $"Raycast from ({origin.x}, {origin.y}, {origin.z})" +
+                        $" to ({destination.x}, {destination.y}, {destination.z})" +
+                        " failed to hit any target object!"
+                    )
+                );
+                return;
+            }
+            SimObjPhysics target = hit.transform.GetComponentInParent<SimObjPhysics>();
+            if (target == null) {
+                actionFinishedEmit(
+                    success: false,
+                    errorMessage: (
+                        $"Raycast from ({origin.x}, {origin.y}, {origin.z})" +
+                        $" to ({destination.x}, {destination.y}, {destination.z})" +
+                        " hit object, but not a SimObject!"
+                    )
+                );
+                return;
+            }
+            actionFinishedEmit(
+                success: true,
+                actionReturn: new Dictionary<string, object>() {
+                    ["objectId"] = target.ObjectID,
+                    ["hitPoint"] = hit.point,
+                    ["hitDistance"] = hit.distance
+                }
             );
         }
 
@@ -2459,7 +2533,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     RaycastHit hit;
                     Ray ray = m_Camera.ViewportPointToRay(new Vector3(
                         (i + 0.5f) / n, (j + 0.5f) / n, 0.0f));
-                    if (Physics.Raycast(ray, out hit, 100f, LayerMask.GetMask("SimObjVisible", "Agent"))) {
+                    if (Physics.Raycast(ray, out hit, 100f, LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent"))) {
                         points.Add(hit.point);
                     }
                 }
@@ -2501,6 +2575,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // Don't disable colliders for the arm (unless the agent is invisible)
                 // or for any objects held by the arm
+                // Standard IK arm
                 if (Arm != null && Arm.gameObject.activeSelf) {
                     if (this.IsVisible) {
                         foreach (Collider c in Arm.gameObject.GetComponentsInChildren<Collider>()) {
@@ -2510,6 +2585,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     } else {
                         foreach (HashSet<Collider> hsc in Arm.heldObjects.Values) {
+                            foreach (Collider c in hsc) {
+                                collidersToNotDisable.Add(c);
+                            }
+                        }
+                    }
+                }
+
+                // Stretch arm
+                else if (SArm != null && SArm.gameObject.activeSelf) {
+                    if (this.IsVisible) {
+                        foreach (Collider c in SArm.gameObject.GetComponentsInChildren<Collider>()) {
+                            if (!c.isTrigger) {
+                                collidersToNotDisable.Add(c);
+                            }
+                        }
+                    } else {
+                        foreach (HashSet<Collider> hsc in SArm.heldObjects.Values) {
                             foreach (Collider c in hsc) {
                                 collidersToNotDisable.Add(c);
                             }
@@ -2878,7 +2970,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Find all nearby colliders corresponding to visible components and grab
             // their corresponding SimObjPhysics component
             Collider[] collidersInView = Physics.OverlapCapsule(
-                point0, point1, maxDistance, LayerMask.GetMask("SimObjVisible"), QueryTriggerInteraction.Collide
+                point0, point1, maxDistance, LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"), QueryTriggerInteraction.Collide
             );
             if (collidersInView != null) {
                 foreach (Collider c in collidersInView) {
@@ -2915,6 +3007,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // rigidbodies are set to not detect collisions
             if (Arm != null && Arm.gameObject.activeSelf) {
                 foreach (SimObjPhysics sop in Arm.heldObjects.Keys) {
+                    sopAndIncInvisibleTuples.Add((sop, false));
+                }
+            }
+            else if (SArm != null && SArm.gameObject.activeSelf) {
+                foreach (SimObjPhysics sop in SArm.heldObjects.Keys) {
                     sopAndIncInvisibleTuples.Add((sop, false));
                 }
             }
@@ -2993,14 +3090,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // adding slight buffer to this distance to ensure the ray goes all the way to the collider of the object being cast to
             float raycastDistance = distFromPointToCamera + 0.5f;
 
-            LayerMask mask = LayerMask.GetMask("SimObjVisible", "SimObjInvisible", "Agent");
+            LayerMask mask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "SimObjInvisible", "Agent");
 
             // change mask if its a floor so it ignores the receptacle trigger boxes on the floor
             if (sop.Type == SimObjType.Floor) {
-                mask = LayerMask.GetMask("SimObjVisible", "Agent");
+                mask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent");
             }
 
-            bool isSopHeldByArm = Arm != null && Arm.gameObject.activeSelf && Arm.heldObjects.ContainsKey(sop);
+            bool isSopHeldByArm = ( Arm != null && Arm.gameObject.activeSelf && Arm.heldObjects.ContainsKey(sop) ) ||
+                                  ( SArm != null && SArm.gameObject.activeSelf && SArm.heldObjects.ContainsKey(sop) );
 
             // check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
             // ignored by the other raycast
@@ -3008,7 +3106,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, mask)) {
                     if (
                         hit.transform == sop.transform
-                        || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                        || ( isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
                     ) {
                         visCheck.visible = true;
                         visCheck.interactable = true;
@@ -3027,12 +3125,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     point.position - camera.transform.position,
                     out hit,
                     raycastDistance,
-                    LayerMask.GetMask("SimObjVisible", "Agent")
+                    LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent")
                 )
             ) {
                 if (
                     hit.transform == sop.transform
-                    || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                    || ( isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
                 ) {
                     // if this line is drawn, then this visibility point is in camera frame and not occluded
                     // might want to use this for a targeting check as well at some point....
@@ -3051,7 +3149,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             camera.transform.position,
                             point.position - camera.transform.position,
                             raycastDistance,
-                            LayerMask.GetMask("SimObjVisible"),
+                            LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
                             QueryTriggerInteraction.Ignore
                         );
 
@@ -3065,7 +3163,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         foreach (RaycastHit h in hits) {
                             if (
                                 h.transform == sop.transform
-                                || (isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                                || (Arm != null && isSopHeldByArm && Arm.heldObjects[sop].Contains(hit.collider))
+                                || (SArm != null && isSopHeldByArm && SArm.heldObjects[sop].Contains(hit.collider))
                             ) {
                                 // found the object we are looking for, great!
                                 //set it to visible via 'result' but the object is not interactable because it is behind some transparent object
@@ -4247,7 +4346,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Vector3 newHandPosition = handObjPosRelAgent + newAgentPosition;
 
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             foreach (CapsuleCollider cc in soInHand.GetComponentsInChildren<CapsuleCollider>()) {
                 foreach (Collider c in overlapCollider(cc, newHandPosition, rotation, layerMask)) {
                     if (!hasAncestor(c.transform.gameObject, gameObject)) {
@@ -4285,12 +4384,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float moveMagnitude,
             int layerMask
         ) {
-            // make sure to offset this by capsuleCollider.center since we shrank the capsule size
-            Vector3 center = capsuleCollider.transform.position + capsuleCollider.center;
+            // make sure to offset this by capsuleCollider.center since we adjust the capsule size vertically, and in some cases horizontally
+            Vector3 startPositionCapsuleCenter = startPosition + capsuleCollider.transform.TransformDirection(capsuleCollider.center);
             float radius = capsuleCollider.radius + skinWidth;
             float innerHeight = capsuleCollider.height / 2.0f - radius;
-            Vector3 point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
-            Vector3 point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);
+
+            Vector3 point1 = startPositionCapsuleCenter + new Vector3(0, innerHeight, 0);
+            Vector3 point2 = startPositionCapsuleCenter + new Vector3(0, -innerHeight + skinWidth, 0);
+            
             return Physics.CapsuleCastAll(
                 point1: point1,
                 point2: point2,
@@ -4306,7 +4407,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             HashSet<Collider> collidersToIgnore = null,
             bool includeErrorMessage = false
         ) {
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             foreach (
                 Collider c in PhysicsExtensions.OverlapCapsule(
                     GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore
@@ -4337,7 +4438,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected Collider[] objectsCollidingWithAgent() {
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             return PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore);
         }
 
@@ -4361,7 +4462,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
             HashSet<Vector3> seenPoints = new HashSet<Vector3>();
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             int stepsTaken = 0;
             pos = Vector3.negativeInfinity;
             while (pointsQueue.Count != 0) {
@@ -4537,7 +4638,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 startPosition = new Vector3(start.x, floorY, start.z);
             Vector3 targetPosition = new Vector3(target.x, floorY, target.z);
 
-            this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
+            this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = true;
 
             NavMeshHit startHit;
             bool startWasHit = UnityEngine.AI.NavMesh.SamplePosition(
@@ -5060,7 +5161,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         point - m_Camera.transform.position,
                         out hit,
                         Vector3.Distance(m_Camera.transform.position, point) - 0.01f,
-                        LayerMask.GetMask("SimObjVisible", "Agent")
+                        LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent")
                     )
                 ) {
                     updateAllAgentCollidersForVisibilityCheck(true);

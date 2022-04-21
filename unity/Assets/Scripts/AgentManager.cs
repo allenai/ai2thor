@@ -198,7 +198,22 @@ public class AgentManager : MonoBehaviour {
                 action.agentControllerType = "drone";
             }
             SetUpDroneController(action);
+        } else if (action.agentMode.ToLower() == "stretch") {
+                SetUpStretchController(action);
 
+                action.autoSimulation = false;
+                physicsSceneManager.MakeAllObjectsMoveable();
+
+                if (action.massThreshold.HasValue) {
+                    if (action.massThreshold.Value > 0.0) {
+                        SetUpMassThreshold(action.massThreshold.Value);
+                    } else {
+                        var error = "massThreshold must have nonzero value - invalid value: " + action.massThreshold.Value;
+                        Debug.Log(error);
+                        primaryAgent.actionFinished(false, error);
+                        return;
+                    }
+                }
         } else if (action.agentMode.ToLower() == "arm") {
 
             if (action.agentControllerType == "") {
@@ -229,6 +244,7 @@ public class AgentManager : MonoBehaviour {
                         return;
                     }
                 }
+
             } else {
                 var error = "unsupported";
                 Debug.Log(error);
@@ -286,6 +302,14 @@ public class AgentManager : MonoBehaviour {
         action.snapToGrid = false;
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(DroneFPSAgentController), baseAgentComponent);
+    }
+
+    private void SetUpStretchController(ServerAction action) {
+        this.agents.Clear();
+        // force snapToGrid to be false
+        action.snapToGrid = false;
+        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
+        primaryAgent = createAgentType(typeof(StretchAgentController), baseAgentComponent);
     }
 
     // note: this doesn't take a ServerAction because we don't have to force the snpToGrid bool
@@ -401,13 +425,13 @@ public class AgentManager : MonoBehaviour {
         return (fov <= min || fov > max) ? defaultVal : fov;
     }
 
-    private void updateImageSynthesis(bool status) {
+    public void updateImageSynthesis(bool status) {
         foreach (var agent in this.agents) {
             agent.updateImageSynthesis(status);
         }
     }
 
-    private void updateThirdPartyCameraImageSynthesis(bool status) {
+    public void updateThirdPartyCameraImageSynthesis(bool status) {
         if (status) {
             foreach (var camera in this.thirdPartyCameras) {
                 GameObject gameObject = camera.gameObject;
@@ -944,6 +968,10 @@ public class AgentManager : MonoBehaviour {
         for (int i = 0; i < this.agents.Count; i++) {
             BaseFPSAgentController agent = this.agents[i];
             MetadataWrapper metadata = agent.generateMetadataWrapper();
+            // This value may never change, but the purpose is to provide a way
+            //  to be backwards compatible in the future by knowing the output format
+            //  so that it can be converted if necessary on the Python side
+            metadata.depthFormat = DepthFormat.Meters.ToString();
             metadata.agentId = i;
 
             // we don't need to render the agent's camera for the first agent
@@ -1645,6 +1673,7 @@ public struct MetadataWrapper {
     public int screenWidth;
     public int screenHeight;
     public int agentId;
+    public string depthFormat;
     public ColorId[] colors;
 
     // Extras
@@ -2090,6 +2119,12 @@ public class ShouldSerializeContractResolver : DefaultContractResolver {
             return base.CreateProperty(member, memberSerialization);
         }
     }
+}
+
+public enum DepthFormat {
+    Normalized,
+    Meters,
+    Millimeters
 }
 
 public enum AgentState {

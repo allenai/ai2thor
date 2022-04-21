@@ -269,7 +269,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 point0.y += maxDistance;
             }
-            return Physics.OverlapCapsule(point0, point1, maxDistance, LayerMask.GetMask("SimObjVisible"), QueryTriggerInteraction.Collide);
+            return Physics.OverlapCapsule(point0, point1, maxDistance, LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"), QueryTriggerInteraction.Collide);
         }
 
 
@@ -466,7 +466,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             0.5f
                         ),
                         arcIncrementDistance,
-                        LayerMask.GetMask("SimObjVisible", "Agent"),
+                        LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent"),
                         QueryTriggerInteraction.Ignore
                     )
                 ) {
@@ -498,7 +498,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 rotPoint.position,
                 bbHalfExtents,
                 rotPoint.transform.rotation,
-                LayerMask.GetMask("SimObjVisible", "Agent"),
+                LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent"),
                 QueryTriggerInteraction.Ignore
             );
 
@@ -854,7 +854,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Vector3 testPosition = AgentHand.transform.position + 0.1f * i * transform.right + 0.1f * j * transform.forward;
 
                     RaycastHit hit;
-                    if (Physics.Raycast(testPosition, -transform.up, out hit, 1f, LayerMask.GetMask("SimObjVisible"))) {
+                    if (Physics.Raycast(testPosition, -transform.up, out hit, 1f, LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"))) {
                         Vector3 viewportPoint = m_Camera.WorldToViewportPoint(hit.point);
                         if (viewportPoint.x >= 0f && viewportPoint.x <= 1f && viewportPoint.y >= 0f && viewportPoint.y <= 1f) {
                             SimObjPhysics hitSop = hit.transform.gameObject.GetComponent<SimObjPhysics>();
@@ -1258,7 +1258,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 sop.gameObject,
                 targetPosition - sop.transform.position,
                 dir.magnitude,
-                LayerMask.GetMask("SimObjVisible", "Agent"),
+                LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent"),
                 QueryTriggerInteraction.Ignore
             );
 
@@ -2482,7 +2482,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ItemInHand.SetActive(false);
             }
             RaycastHit hit;
-            int layerMask = LayerMask.GetMask("SimObjVisible", "SimObjInvisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "SimObjInvisible");
             bool raycastDidHit = Physics.Raycast(
                 AgentHand.transform.position, direction, out hit, 10f, layerMask);
             if (ItemInHand != null) {
@@ -2536,7 +2536,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ray,
                     out hit,
                     action.handDistance,
-                    LayerMask.GetMask("Default", "SimObjVisible", "Agent"),
+                    LayerMask.GetMask("Default", "SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent"),
                     QueryTriggerInteraction.Ignore
                 )
             ) {
@@ -2907,7 +2907,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Collider[] hitColliders = Physics.OverlapSphere(
                     AgentHand.transform.position,
                     overlapRadius,
-                    LayerMask.GetMask("SimObjVisible"),
+                    LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
                     QueryTriggerInteraction.Ignore
                 );
 
@@ -4633,7 +4633,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             y = 1.0f - y;
 
             RaycastHit hit;
-            int layerMask = LayerMask.GetMask("SimObjVisible", "SimObjInvisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "SimObjInvisible");
             if (ItemInHand != null) {
                 foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
                     c.enabled = false;
@@ -4693,7 +4693,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float y = 1.0f - action.y;
             Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
             RaycastHit hit;
-            int layerMask = LayerMask.GetMask("SimObjVisible", "SimObjInvisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "SimObjInvisible");
             if (ItemInHand != null) {
                 foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
                     c.enabled = false;
@@ -5676,7 +5676,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 toggleColliders(ItemInHand.GetComponentsInChildren<Collider>());
             }
 
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             for (int i = 0; i < yGridSize; i++) {
                 for (int j = 0; j < xGridSize; j++) {
                     float x = j * (1.0f / xGridSize) + (0.5f / xGridSize);
@@ -5720,7 +5720,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 toggleColliders(ItemInHand.GetComponentsInChildren<Collider>());
             }
 
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             for (int i = 0; i < yGridSize; i++) {
                 for (int j = 0; j < xGridSize; j++) {
                     float x = j * (1.0f / xGridSize) + (0.5f / xGridSize);
@@ -5880,7 +5880,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 point.position - m_Camera.transform.position,
                                 out hit,
                                 Mathf.Infinity,
-                                LayerMask.GetMask("SimObjVisible", "Agent")
+                                LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent")
                             )
                         ) {
                             if (hit.transform != sop.transform) {
@@ -6381,7 +6381,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected bool isAgentCapsuleCollidingWith(GameObject otherGameObject) {
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             foreach (Collider c in PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore)) {
                 if (hasAncestor(c.transform.gameObject, otherGameObject)) {
                     return true;
@@ -6394,7 +6394,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand == null) {
                 return false;
             }
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             foreach (CapsuleCollider cc in ItemInHand.GetComponentsInChildren<CapsuleCollider>()) {
                 foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore)) {
                     if (hasAncestor(c.transform.gameObject, otherGameObject)) {
@@ -6570,7 +6570,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Vector3.down,
                     out hit,
                     10f,
-                    LayerMask.GetMask("Default", "SimObjVisible", "Agent"),
+                    LayerMask.GetMask("Default", "SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent"),
                     QueryTriggerInteraction.Ignore
                 )
             ) {
@@ -6607,7 +6607,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             int xGridSize = 100;
             int yGridSize = 100;
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             for (int i = 0; i < yGridSize; i++) {
                 for (int j = 0; j < xGridSize; j++) {
                     float x = j * (1.0f / xGridSize) + (0.5f / xGridSize);
@@ -7334,7 +7334,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 walkableParent.transform.parent = topLevelObject.transform;
             }
 
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             foreach (Vector3 p in reachablePositions) {
                 RaycastHit hit;
                 bool somethingHit = false;
@@ -7689,7 +7689,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var xsToTryArray = xsToTry.ToArray();
             var zsToTryArray = zsToTry.ToArray();
 
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             for (int i = 0; i < xsToTryArray.Length; i++) {
                 float xPos = xsToTryArray[i];
                 float zPos = zsToTryArray[i];
@@ -7896,7 +7896,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // var zsToTryArray = zsToTry.ToArray();
 
             List<SimObjPhysics> newObjects = new List<SimObjPhysics>();
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             // int attempts = 0;
             for (int i = 0; i < xsToTryArray.Length; i++) {
                 if (newObjects.Count >= 100) {
@@ -8289,7 +8289,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 newParent.transform.parent = topLevelObject.transform;
             }
 
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             foreach (SimObjPhysics so in physicsSceneManager.ObjectIdToSimObjPhysics.Values) {
                 if (objectIsOfIntoType(so)) {
                     foreach (GameObject rtb in so.ReceptacleTriggerBoxes) {

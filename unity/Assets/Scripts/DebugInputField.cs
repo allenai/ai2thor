@@ -438,7 +438,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         var armJointToRotate = GameObject.Find("IK_pole_manipulator");
                         armJointToRotate.transform.Rotate(0f, 0f, 90f);
-
                         var armBase = GameObject.Find("robot_arm_rig_gripper");
                         armBase.transform.Translate(0f, 0.27f, 0f);
 
@@ -449,6 +448,203 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+
+                case "sim": {
+                        var collisionListener = this.CurrentActiveController().GetComponent<CollisionListener>();
+                        Physics.Simulate(0.02f);
+                        var l = collisionListener.StaticCollisions();
+                        Debug.Log("total collisions: " + l.ToArray().Length);
+                        break;
+                    }
+
+                case "inits": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "stretch";
+                        action["agentControllerType"] = "stretch";
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+                
+                case "stretchtest1": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_1");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest2": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_2");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+                
+                case "stretchtest3": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_3");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest4": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_4");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest5": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_5");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest6": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_6");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest7": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_7");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest8": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_8");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+                
+                case "stretchtest9": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_9");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest10": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_10");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest11": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_11");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest12": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_12");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest13": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_13");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest14": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_14");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest15": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_15");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest16": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_16");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest17": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_17");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest18": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_18");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+
+                case "stretchtestu": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_u");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtestd": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_d");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "iktest1": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_ik_arm_1");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "iktest2": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_ik_arm_2");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
 
                 case "parent": {
                         Dictionary<string, object> action = new Dictionary<string, object>{
@@ -1001,14 +1197,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "debugstretcharmjoints": {
+                        var arm = CurrentActiveController().GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+                        ArmMetadata armmeta = arm.GenerateMetadata();
+                        foreach (JointMetadata jm in armmeta.joints) {
+                            Debug.Log(jm.name + " position: (" + jm.position.x + ", " + jm.position.y + ", " + jm.position.z + ")");
+                            Debug.Log(jm.name + " root-relative position: (" + jm.rootRelativePosition.x + ", " + jm.rootRelativePosition.y + ", " + jm.rootRelativePosition.z + ")");
+                            Debug.Log(jm.name + " rotation: " + jm.rotation);
+                            Debug.Log(jm.name + " root-relative rotation: " + jm.rootRelativeRotation);
+                            Debug.Log(jm.name + " local rotation: " + jm.localRotation);
+                        }
+                        break;
+                    }
+
                 case "debugarmjoints": {
                         var arm = CurrentActiveController().GetComponentInChildren<IK_Robot_Arm_Controller>();
                         ArmMetadata armmeta = arm.GenerateMetadata();
                         foreach (JointMetadata jm in armmeta.joints) {
-                            Debug.Log(jm.name);
-                            Debug.Log(jm.rotation);
+                            Debug.Log(jm.name + " position: (" + jm.position.x + ", " + jm.position.y + ", " + jm.position.z + ")");
+                            Debug.Log(jm.name + " root-relative position: (" + jm.rootRelativePosition.x + ", " + jm.rootRelativePosition.y + ", " + jm.rootRelativePosition.z + ")");
+                            Debug.Log(jm.name + " rotation: " + jm.rotation);
+                            Debug.Log(jm.name + " root-relative rotation: " + jm.rootRelativeRotation);
+                            Debug.Log(jm.name + " local rotation: " + jm.localRotation);
                         }
-
                         break;
                     }
 

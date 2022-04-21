@@ -281,7 +281,7 @@ public class Contains : MonoBehaviour {
                     -ydir,
                     out hit,
                     ydist,
-                    LayerMask.GetMask("SimObjVisible"),
+                    LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
                     QueryTriggerInteraction.Collide
                 )
             ) {
