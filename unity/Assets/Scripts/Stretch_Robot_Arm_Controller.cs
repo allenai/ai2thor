@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
-
+using System.Linq;
 public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
     [SerializeField]
     private Transform armBase, armTarget, handCameraTransform, FirstJoint, FinalJoint = null;
@@ -451,19 +451,15 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         }
     }
 
-    public List<string> WhatObjectsAreInsideMagnetSphereAsObjectID() {
-        return magnetSphereComp.CurrentlyContainedSimObjectsByID();
-    }
-
-    public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphereAsSOP() {
-        return magnetSphereComp.CurrentlyContainedSimObjects();
+    public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphereAsSOP(bool onlyPickupable) {
+        return magnetSphereComp.CurrentlyContainedSimObjects(onlyPickupable: onlyPickupable);
     }
 
     public IEnumerator ReturnObjectsInMagnetAfterPhysicsUpdate(PhysicsRemoteFPSAgentController controller) {
         yield return new WaitForFixedUpdate();
         List<string> listOfSOP = new List<string>();
-        foreach (string oid in this.WhatObjectsAreInsideMagnetSphereAsObjectID()) {
-            listOfSOP.Add(oid);
+        foreach (SimObjPhysics sop in this.WhatObjectsAreInsideMagnetSphereAsSOP(false)) {
+            listOfSOP.Add(sop.ObjectID);
         }
         Debug.Log("objs: " + string.Join(", ", listOfSOP));
         controller.actionFinished(true, listOfSOP);
@@ -498,7 +494,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         bool pickedUp = false;
 
         // grab all sim objects that are currently colliding with magnet sphere
-        foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP()) {
+        foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP(onlyPickupable: true)) {
             if (objectIds != null) {
                 if (!objectIds.Contains(sop.objectID)) {
                     continue;
@@ -742,7 +738,11 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         meta.heldObjects = heldObjectIDs;
         meta.handSphereCenter = magnetSphere.transform.TransformPoint(magnetSphere.center);
         meta.handSphereRadius = magnetSphere.radius;
-        meta.pickupableObjects = WhatObjectsAreInsideMagnetSphereAsObjectID();
+        List<SimObjPhysics> objectsInMagnet = WhatObjectsAreInsideMagnetSphereAsSOP(false);
+        meta.pickupableObjects = objectsInMagnet.Where(
+            x => x.PrimaryProperty == SimObjPrimaryProperty.CanPickup
+        ).Select(x => x.ObjectID).ToList();
+        meta.touchedNotHeldObjects = objectsInMagnet.Select(x => x.ObjectID).ToList();
         return meta;
     }
 
