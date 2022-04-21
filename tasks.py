@@ -549,10 +549,11 @@ def webgl_build(
         ("{}.wasm".format(build_name), "wasmCodeUrl"),
         ("{}.framework.js".format(build_name), "wasmFrameworkUrl"),
     ]
-    for file_name, key in to_content_addressable:
-        file_to_content_addressable(
-            os.path.join(build_path, "Build/{}".format(file_name)),
-        )
+    if content_addressable:
+        for file_name, key in to_content_addressable:
+            file_to_content_addressable(
+                os.path.join(build_path, "Build/{}".format(file_name)),
+            )
 
     with open(os.path.join(build_path, "scenes.json"), "w") as f:
         f.write(json.dumps(scene_metadata, sort_keys=False, indent=4))
@@ -1167,7 +1168,7 @@ def ci_build_webgl(context, commit_id):
     arch = "WebGL"
     set_gi_cache_folder(arch)
     link_build_cache(os.getcwd(), arch, branch)
-    webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
+    webgl_build_deploy_demo(context, verbose=True, content_addressable=False, force=True)
     logger.info("finished webgl build deploy %s %s" % (branch, commit_id))
     update_webgl_autodeploy_commit_id(commit_id)
 
@@ -3664,8 +3665,3 @@ class {encoded_class_name}:
 """
         )
     return class_data
-
-
-@task
-def build_webgl(context):
-    webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
