@@ -93,7 +93,7 @@ public static class UtilityFunctions {
             }
         }
 
-        int layerMask = LayerMask.GetMask("Agent", "SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural4");
+        int layerMask = LayerMask.GetMask("Agent", "SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
         foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
             if (cc.isTrigger) {
                 continue;
