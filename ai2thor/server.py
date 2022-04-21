@@ -13,6 +13,7 @@ from ai2thor.util.depth import apply_real_noise, generate_noise_indices
 import json
 from collections.abc import Mapping
 from abc import abstractmethod
+from typing import Optional, Tuple, Dict, Type, cast, List, Set
 
 
 class NumpyAwareEncoder(json.JSONEncoder):
@@ -24,102 +25,12 @@ class NumpyAwareEncoder(json.JSONEncoder):
         return super(NumpyAwareEncoder, self).default(obj)
 
 
-class LazyInstanceDetections2D(Mapping):
-    def __init__(self, instance_masks):
-
-        self._detections2d = {}
-        self.instance_masks = instance_masks
-        self._loaded = False
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.instance_masks == other.instance_masks
-        else:
-            return False
-
-    def mask_bounding_box(self, mask):
-        rows = np.any(mask, axis=1)
-        cols = np.any(mask, axis=0)
-        rw = np.where(rows)
-        if len(rw[0]) == 0:
-            return None
-
-        rmin, rmax = rw[0][[0, -1]]
-        cmin, cmax = np.where(cols)[0][[0, -1]]
-
-        return cmin, rmin, cmax, rmax
-
-    def __contains__(self, key):
-        return key in self.instance_masks
-
-    def __getitem__(self, key):
-        if key in self._detections2d:
-            return self._detections2d[key]
-
-        mask = self.instance_masks[key]
-        self._detections2d[key] = self.mask_bounding_box(mask)
-
-        return self._detections2d[key]
-
-    def __len__(self):
-        return len(self.instance_masks)
-
-    def __iter__(self):
-        return iter(self.instance_masks.keys())
-
-
-class LazyClassDetections2D(LazyInstanceDetections2D):
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.instance_masks == other.instance_masks
-        else:
-            return False
-
-    def __len__(self):
-        self._load_all()
-        return len(self._detections2d)
-
-    def _load_all(self):
-        if not self._loaded:
-            all_integer_keys = self.instance_masks.unique_integer_keys
-            for cls, colors in self.instance_masks.class_colors.items():
-                for color in colors:
-                    if self.instance_masks._integer_color_key(color) in all_integer_keys:
-                        self.__getitem__(cls)
-                        break
-
-        self._loaded = True
-
-    def __iter__(self):
-        self._load_all()
-
-        return iter(self._detections2d)
-
-    def __getitem__(self, cls):
-        if cls in self._detections2d:
-            return self._detections2d[cls]
-
-        detections = []
-
-        for color in self.instance_masks.class_colors.get(cls, []):
-            mask = self.instance_masks.instance_segmentation_frame_uint32 == self.instance_masks._integer_color_key(color)
-            bb = self.mask_bounding_box(mask)
-            if bb:
-                detections.append(bb)
-        if detections:
-            self._detections2d[cls] = tuple(detections)
-        else:
-            raise KeyError(cls)
-
-        return self._detections2d[cls]
-
 class LazyMask(Mapping):
 
-    def __contains__(self, key):
-        return self.mask(key) is not None
+    def __contains__(self, key: object) -> bool:
+        return self.mask(cast(str, key)) is not None
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str):
 
         m = self.mask(key)
 
@@ -127,6 +38,10 @@ class LazyMask(Mapping):
             raise KeyError(key)
 
         return m
+
+    @abstractmethod
+    def mask(self, key: str, default: Optional[np.ndarray]=None) -> Optional[np.ndarray]:
+        pass
 
     @abstractmethod
     def _load_all(self):
@@ -144,14 +59,14 @@ class LazyMask(Mapping):
 
 class LazyInstanceSegmentationMasks(LazyMask):
 
-    def __init__(self, image_ids_data, metadata):
-        self._masks = {}
+    def __init__(self, image_ids_data: bytes, metadata: dict):
+        self._masks: Dict[str, np.ndarray] = {}
         self._loaded = False
         screen_width = metadata["screenWidth"]
         screen_height = metadata["screenHeight"]
         item_size = int(len(image_ids_data)/(screen_width * screen_height))
-        self._unique_integer_keys = None
-        self._empty_mask = None
+        self._unique_integer_keys: Optional[Set[np.uint32]] = None
+        self._empty_mask: Optional[np.ndarray] = None
 
         if item_size == 4:
             self.instance_segmentation_frame_uint32 = read_buffer_image(
@@ -178,8 +93,8 @@ class LazyInstanceSegmentationMasks(LazyMask):
         # At this point we should have a 2d matrix of shape (height, width)
         # with a 32bit uint as the value
 
-        self.instance_colors = {}
-        self.class_colors = {}
+        self.instance_colors: Dict[str, List[int]]= {}
+        self.class_colors: Dict[str, List[List[int]]] = {}
         for c in metadata["colors"]:
             cls = c["name"]
 
@@ -194,7 +109,7 @@ class LazyInstanceSegmentationMasks(LazyMask):
 
 
     @property
-    def empty_mask(self):
+    def empty_mask(self) -> np.ndarray:
         if self._empty_mask is None:
             self._empty_mask = np.zeros(self.instance_segmentation_frame_uint32.shape, dtype=bool)
             self._empty_mask.flags["WRITEABLE"] = False
@@ -202,15 +117,16 @@ class LazyInstanceSegmentationMasks(LazyMask):
         return self._empty_mask
 
     @property
-    def unique_integer_keys(self):
+    def unique_integer_keys(self) -> Set[np.uint32]:
         if self._unique_integer_keys is None:
             self._unique_integer_keys = set(np.unique(self.instance_segmentation_frame_uint32))
 
         return self._unique_integer_keys
 
-    def _integer_color_key(self, color):
+    def _integer_color_key(self, color: List[int]) -> np.uint32:
         a = np.array(color + [self._alpha_channel_value], dtype=np.uint8)
-        a.dtype = np.uint32
+        # mypy complains, but it is safe to modify the dtype on an ndarray
+        a.dtype = np.uint32 # type: ignore 
         return a[0]
 
     def _load_all(self):
@@ -223,7 +139,7 @@ class LazyInstanceSegmentationMasks(LazyMask):
         self._loaded = True
     
 
-    def mask(self, key, default=None):
+    def mask(self, key: str, default: Optional[np.ndarray]=None) -> Optional[np.ndarray]:
         if key not in self.instance_colors:
             return default
         elif key in self._masks:
@@ -241,10 +157,10 @@ class LazyInstanceSegmentationMasks(LazyMask):
 
 
 class LazyClassSegmentationMasks(LazyMask):
-    def __init__(self, instance_masks):
+    def __init__(self, instance_masks: LazyInstanceSegmentationMasks):
         self.instance_masks = instance_masks
         self._loaded = False
-        self._masks = {}
+        self._masks: Dict[str, np.ndarray] = {}
 
     def _load_all(self):
         if not self._loaded:
@@ -256,7 +172,7 @@ class LazyClassSegmentationMasks(LazyMask):
                         break
         self._loaded = True
 
-    def mask(self, key, default=None):
+    def mask(self, key: str, default: Optional[np.ndarray]=None) -> Optional[np.ndarray]:
         if key in self._masks:
             return self._masks[key]
 
@@ -287,6 +203,122 @@ class LazyClassSegmentationMasks(LazyMask):
             return class_mask
         else:
             return default
+
+class LazyDetections2D(Mapping):
+    def __init__(self, instance_masks: LazyInstanceSegmentationMasks):
+
+        self.instance_masks = instance_masks
+    
+    def mask_bounding_box(self, mask: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
+        rows = np.any(mask, axis=1)
+        cols = np.any(mask, axis=0)
+        rw = np.where(rows)
+        if len(rw[0]) == 0:
+            return None
+
+        rmin, rmax = map(int, rw[0][[0, -1]])
+        cmin, cmax = map(int, np.where(cols)[0][[0, -1]])
+
+        return cmin, rmin, cmax, rmax
+
+    def __contains__(self, key: object) -> bool:
+        return key in self.instance_masks
+
+class LazyInstanceDetections2D(LazyDetections2D):
+    
+    def __init__(self, instance_masks: LazyInstanceSegmentationMasks):
+        super().__init__(instance_masks)
+        self._detections2d : Dict[str, Optional[Tuple[int, int, int, int]]] = {}
+
+    def __eq__(self, other: object):
+        if isinstance(other, self.__class__):
+            return self.instance_masks == other.instance_masks
+        else:
+            return False
+
+    def mask_bounding_box(self, mask: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
+        rows = np.any(mask, axis=1)
+        cols = np.any(mask, axis=0)
+        rw = np.where(rows)
+        if len(rw[0]) == 0:
+            return None
+
+        rmin, rmax = map(int, rw[0][[0, -1]])
+        cmin, cmax = map(int, np.where(cols)[0][[0, -1]])
+
+        return cmin, rmin, cmax, rmax
+
+    def __contains__(self, key: object) -> bool:
+        return key in self.instance_masks
+
+    def __getitem__(self, key: str) -> Optional[Tuple[int, int, int, int]]:
+        if key in self._detections2d:
+            return self._detections2d[key]
+
+        mask = self.instance_masks[key]
+        self._detections2d[key] = self.mask_bounding_box(mask)
+
+        return self._detections2d[key]
+
+    def __len__(self) -> int:
+        return len(self.instance_masks)
+
+    def __iter__(self):
+        return iter(self.instance_masks.keys())
+
+
+class LazyClassDetections2D(LazyDetections2D):
+
+    def __init__(self, instance_masks: LazyInstanceSegmentationMasks):
+
+        super().__init__(instance_masks)
+        self._loaded = False
+        self._detections2d : Dict[str, Optional[Tuple[Tuple[int, int, int, int], ...]]] = {}
+
+    def __eq__(self, other: object):
+        if isinstance(other, self.__class__):
+            return self.instance_masks == other.instance_masks
+        else:
+            return False
+
+    def __len__(self) -> int:
+        self._load_all()
+        return len(self._detections2d)
+
+    def _load_all(self):
+        if not self._loaded:
+            all_integer_keys = self.instance_masks.unique_integer_keys
+            for cls, colors in self.instance_masks.class_colors.items():
+                for color in colors:
+                    if self.instance_masks._integer_color_key(color) in all_integer_keys:
+                        self.__getitem__(cls)
+                        break
+
+        self._loaded = True
+
+    def __iter__(self):
+        self._load_all()
+
+        return iter(self._detections2d)
+
+    def __getitem__(self, cls: str) -> Optional[Tuple[Tuple[int, int, int, int], ...]]:
+        if cls in self._detections2d:
+            return self._detections2d[cls]
+
+        detections = []
+
+        for color in self.instance_masks.class_colors.get(cls, []):
+            mask = self.instance_masks.instance_segmentation_frame_uint32 == self.instance_masks._integer_color_key(color)
+            bb = self.mask_bounding_box(mask)
+            if bb:
+                detections.append(bb)
+        if detections:
+            self._detections2d[cls] = tuple(detections)
+        else:
+            raise KeyError(cls)
+
+        return self._detections2d[cls]
+
 
 class MultiAgentEvent(object):
     def __init__(self, active_agent_id, events):
