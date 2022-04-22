@@ -290,3 +290,6 @@ AI2 is a non-profit institute with the mission to contribute to humanity through
 <a href="//prior.allenai.org">
 <p align="center"><img width="100%" src="https://raw.githubusercontent.com/allenai/ai2thor/main/doc/static/ai2-prior.svg" /></p>
 </a>
+
+
+
