@@ -3509,6 +3509,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "PointOnObjectsCollidersClosestToPoint";
                         action["objectId"] = "Dumbbell|+00.00|+00.90|+00.00";
                         action["point"] = new Vector3(0f, 1000f, 0f);
+                        //action["objectId"] = "2|1";
+                        //action["point"] = new Vector3(13.569999694824219f, 0.8979997634887695f, 2.1710000038146973f);
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
