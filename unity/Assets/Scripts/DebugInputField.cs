@@ -3841,6 +3841,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["house"] = obj;
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
 
+                        // try teleporting the agent
+                        // Might fail if ["metadata"]["agent"] key is not in the json
+                        try {
+                            Dictionary<string, object> teleA = new Dictionary<string, object>() {
+                                ["action"] = "Teleport",
+                                ["position"] = obj["metadata"]["agent"]["position"],
+                                ["rotation"] =  obj["metadata"]["agent"]["rotation"],
+                                ["horizon"] = obj["metadata"]["agent"]["horizon"],
+                                ["forceAction"] = true
+                            };
+                            CurrentActiveController().ProcessControlCommand(new DynamicServerAction(teleA));
+                        } catch {}
+
                         break;
                     }
                 case "gad": {
