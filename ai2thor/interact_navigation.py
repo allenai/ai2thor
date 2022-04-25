@@ -4,7 +4,8 @@ import sys
 class NavigationPrompt(StdinPrompt):
     def __init__(
             self,
-            default_actions
+            default_actions,
+            arrow_controls = True
     ):
         self.default_actions = default_actions
         self.counter = 0
@@ -19,21 +20,31 @@ class NavigationPrompt(StdinPrompt):
             "RotateRight": "\u2192",
             "RotateLeft": "\u2190"
         }
+        #
+        # default_interact_commands = {
+        #     "\x1b[C": dict(action="MoveRight", moveMagnitude=0.25),
+        #     "\x1b[D": dict(action="MoveLeft", moveMagnitude=0.25),
+        #     "\x1b[A": dict(action="MoveAhead", moveMagnitude=0.25),
+        #     "\x1b[B": dict(action="MoveBack", moveMagnitude=0.25),
+        #     "\x1b[1;2A": dict(action="LookUp"),
+        #     "\x1b[1;2B": dict(action="LookDown"),
+        #     "i": dict(action="LookUp"),
+        #     "k": dict(action="LookDown"),
+        #     "l": dict(action="RotateRight"),
+        #     "j": dict(action="RotateLeft"),
+        #     "\x1b[1;2C": dict(action="RotateRight"),
+        #     "\x1b[1;2D": dict(action="RotateLeft"),
+        # }
 
         default_interact_commands = {
-            "\x1b[C": dict(action="MoveRight", moveMagnitude=0.25),
-            "\x1b[D": dict(action="MoveLeft", moveMagnitude=0.25),
-            "\x1b[A": dict(action="MoveAhead", moveMagnitude=0.25),
-            "\x1b[B": dict(action="MoveBack", moveMagnitude=0.25),
-            "\x1b[1;2A": dict(action="LookUp"),
-            "\x1b[1;2B": dict(action="LookDown"),
-            "i": dict(action="LookUp"),
-            "k": dict(action="LookDown"),
-            "l": dict(action="RotateRight"),
-            "j": dict(action="RotateLeft"),
-            "\x1b[1;2C": dict(action="RotateRight"),
-            "\x1b[1;2D": dict(action="RotateLeft"),
+            "1": dict(action="MoveAhead", moveMagnitude=0.25),
+            "2": dict(action="RotateLeft"),
+            "3": dict(action="RotateRight"),
+            "4": dict(action="LookUp"),
+            "5": dict(action="LookDown"),
+            "6": dict(action="End")
         }
+
         action_set = {a.name for a in default_actions}
 
         self.default_interact_commands = {
@@ -41,20 +52,27 @@ class NavigationPrompt(StdinPrompt):
             for (k, v) in default_interact_commands.items()
             if v["action"] in action_set
         }
-        print(action_set)
-        movePrompt = [prompt_character_map[a] for a in ["MoveLeft", "MoveAhead", "MoveRight", "MoveBack"] if a in action_set]
-        rotatePrompt = [prompt_character_map[a] for a in ["RotateLeft", "RotateRight", "LookUp", "LookDown"] if
-                      a in action_set]
 
-        print(movePrompt)
+        if not arrow_controls:
+            movePrompt = [prompt_character_map[a] for a in ["MoveLeft", "MoveAhead", "MoveRight", "MoveBack"] if a in action_set]
+            rotatePrompt = [prompt_character_map[a] for a in ["RotateLeft", "RotateRight", "LookUp", "LookDown"] if
+                          a in action_set]
 
-        moveMessage = "Move: {}".format("".join(movePrompt)) if len(movePrompt) > 0 else ""
-        lookMessage = "/Look" if any([a for a in action_set if "Look" in a]) else ""
-        rotateMessage = "Rotate{}: shift + {}".format(lookMessage, "".join(rotatePrompt)) if len(movePrompt) > 0 else ""
+            moveMessage = "Move: {}".format("".join(movePrompt)) if len(movePrompt) > 0 else ""
+            lookMessage = "/Look" if any([a for a in action_set if "Look" in a]) else ""
+            rotateMessage = "Rotate{}: shift + {}".format(lookMessage, "".join(rotatePrompt)) if len(movePrompt) > 0 else ""
 
-        messages = filter(lambda x: x != "", [moveMessage, rotateMessage])
+            messages = filter(lambda x: x != "", [moveMessage, rotateMessage])
 
-        self.command_message = u"Enter a Command:\n{} | Quit 'q' or Ctrl-C".format(" | ".join(messages))
+            self.command_message = u"Enter a Command:\n{} | Quit 'q' or Ctrl-C".format(" | ".join(messages))
+        else:
+            actions = [a.name for a in default_actions]
+            action_map = {v["action"]:k for (k, v) in default_interact_commands.items()}
+            self.command_message = u"Enter a Command:\n{} | Quit 'q' or Ctrl-C""".format(
+                " | ".join(
+                    ["({}) {}".format(action_map[a.name], a.name) for a in default_actions]
+                )
+            )
 
     def interact(
             self,

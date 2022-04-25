@@ -14,7 +14,9 @@ class DefaultActions(Enum):
     LookUp = (4,)
     LookDown = (5,)
     RotateRight = (8,)
-    RotateLeft = 9
+    RotateLeft = (9,)
+    End = (10,)
+
 
 
 # TODO tie this with actions
@@ -68,10 +70,14 @@ class StdinPrompt(object):
     @classmethod
     def next_interact_command(cls, interact_commands):
         current_buffer = ""
-        #print(["k {} v {}".format(k, v) for (k, v) in self._interact_commands.items()])
+        # print(["k {} v {}".format(k, v) for (k, v) in interact_commands.items()])
         while True:
             commands = interact_commands
             current_buffer += get_term_character()
+            from pprint import  pprint
+            #
+            # print("command: ")
+            # pprint( [hex(ord(x)) for x in current_buffer] )
             if current_buffer == "q" or current_buffer == "\x03":
                 break
 

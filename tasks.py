@@ -3670,6 +3670,7 @@ def test_local_action(context):
     height = 300
     fov = 60
     fov = 60
+    # MOVE_AHEAD, ROTATE_LEFT, ROTATE_RIGHT, END, LOOK_UP, LOOK_DOWN)
     controller = ai2thor.controller.Controller(
         local_executable_path=None,
         # scene=scene,
@@ -3687,7 +3688,8 @@ def test_local_action(context):
                 "RotateLeft",
                 "RotateRight",
                 "LookUp",
-                "LookDown"
+                "LookDown",
+                "End"
             ]
         },
     )
