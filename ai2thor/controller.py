@@ -915,7 +915,7 @@ class Controller(object):
                 raise NotImplementedError(
                     "Controller `{}` does not implement method `{}` and is in list of INTERCEPT_ACTIONS,"
                     " actions meant to be run and returned in python without going through Unity."
-                    .format(self.__class__.__name__, method_name))
+                    .format(self.__class__.__name__, action['action']))
             return True
         return False
 

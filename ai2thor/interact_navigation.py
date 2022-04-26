@@ -80,8 +80,8 @@ class NavigationPrompt(StdinPrompt):
             step=True,
             **kwargs
     ):
-        if not sys.stdout.isatty():
-            raise RuntimeError("controller.interact() must be run from a terminal")
+        # if not sys.stdout.isatty():
+        #     raise RuntimeError("controller.interact() must be run from a terminal")
 
         default_interact_commands = self.default_interact_commands
         interact_commands = default_interact_commands.copy()
