@@ -338,6 +338,8 @@ public class MCSMain : MonoBehaviour {
             }
         }
 
+        agentController.m_Camera.nearClipPlane = 0.1f;
+        
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
     }
