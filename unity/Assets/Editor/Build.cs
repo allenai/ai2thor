@@ -108,6 +108,7 @@ public class Build {
         }
 
         files.AddRange(Directory.GetFiles("Assets/Scenes/Procedural"));
+        files.AddRange(Directory.GetFiles("Assets/Scenes/Habitat_House"));
 
         foreach (string f in files) {
             // ignore entryway scenes in build since these are not yet complete
