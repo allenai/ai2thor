@@ -25,6 +25,7 @@ from platform import system  as platform_system
 from platform import architecture  as platform_architecture
 import uuid
 from functools import lru_cache
+import traceback
 
 
 import numpy as np
@@ -403,7 +404,8 @@ class Controller(object):
                 "RotateLeft",
                 "RotateRight",
                 "LookUp",
-                "LookDown"
+                "LookDown",
+                "End"
             ]
         },
         **unity_initialization_parameters,
@@ -912,6 +914,7 @@ class Controller(object):
                 event = method(action, self)
                 self.last_event = event
             except AttributeError:
+                traceback.print_stack()
                 raise NotImplementedError(
                     "Controller `{}` does not implement method `{}` and is in list of INTERCEPT_ACTIONS,"
                     " actions meant to be run and returned in python without going through Unity."

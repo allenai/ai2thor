@@ -26,7 +26,7 @@ class LocalActionRunner(object):
         #     img, (target_size, target_size), interpolation=cv2.INTER_LANCZOS4
         # )
 
-        print("Select next action:")
+        print("Select next action")
 
         # Simpler version instead of interact controller
         # actions = {"1": "RotateLeft", "2": "RotateRight"}

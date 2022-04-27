@@ -68,8 +68,8 @@ class NavigationPrompt(StdinPrompt):
         else:
             actions = [a.name for a in default_actions]
             action_map = {v["action"]:k for (k, v) in default_interact_commands.items()}
-            self.command_message = u"Enter a Command:\n{} | Quit 'q' or Ctrl-C""".format(
-                " | ".join(
+            self.command_message = u"Enter a Command with a Number Key:\n{}\nQuit 'q' or Ctrl-C""".format(
+                "\n".join(
                     ["({}) {}".format(action_map[a.name], a.name) for a in default_actions]
                 )
             )
@@ -80,8 +80,8 @@ class NavigationPrompt(StdinPrompt):
             step=True,
             **kwargs
     ):
-        # if not sys.stdout.isatty():
-        #     raise RuntimeError("controller.interact() must be run from a terminal")
+        if not sys.stdin.isatty():
+            raise RuntimeError("controller.interact() must be run from a terminal")
 
         default_interact_commands = self.default_interact_commands
         interact_commands = default_interact_commands.copy()
