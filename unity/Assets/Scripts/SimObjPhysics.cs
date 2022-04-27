@@ -12,7 +12,7 @@ using UnityEditor.SceneManagement;
 #endif
 
 public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
-    [Header("Unique String ID of this Object")]
+    [Header("Unique String ID of this Object In Scene")]
     [SerializeField]
     public string objectID = string.Empty;
 
@@ -164,7 +164,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         ContainedObjectReferences.Remove(t);
     }
 
-
     public void syncBoundingBoxes(bool forceCacheReset = false) {
 
         Vector3 position = this.gameObject.transform.position;
@@ -215,7 +214,18 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         foreach (SimObjPhysics simObject in this.transform.GetComponentsInChildren<SimObjPhysics>()) {
             if (simObject != this) {
                 childSimObjects.Add(simObject.transform);
+
+                // TODO: fix, This line makes accessing the axisAligned bounding box of some composed object during edior fail
+                // Which is needed for procedural serialization
+
+                // HACK the bounding box function needs to be reworked to not use parenting/unparenting
+                // And more information needs to be stored for the TWO cases of parenting
+                // Firs: structural parenting, where objects are permanently part of each other drawer child of dresser
+                // Second: another functional parenting, where objects are temporarily parented but shouldn't be treated as part of the same prefab
+                // e.g. apple on a plate
+#if !UNITY_EDITOR
                 simObject.transform.parent = null;
+#endif
             }
         }
 
@@ -388,7 +398,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public void DropContainedObjectsStationary() {
         this.DropContainedObjects(reparentContainedObjects: false, forceKinematic: true);
     }
-    
+
     public void DropContainedObjects(
         bool reparentContainedObjects,
         bool forceKinematic
@@ -453,6 +463,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public SimObjType ObjType {
         get {
             return Type;
+        }
+        set {
+            Type = value;
         }
     }
 
@@ -672,7 +685,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // this is to enable kinematics if this object hits another object that isKinematic but needs to activate
         // physics uppon being touched/collided
 
-        if (droneFPSAgent == null){
+        if (droneFPSAgent == null) {
             return;
         }
 
@@ -920,24 +933,25 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             new PhysicsMaterialValues(MyColliders[i].material.dynamicFriction, MyColliders[i].material.staticFriction, MyColliders[i].material.bounciness);
         }
 
-        myRigidbody = gameObject.GetComponent<Rigidbody>();
+        myRigidbody = gameObject.GetComponent<Rigidbody>(); myRigidbody = gameObject.GetComponent<Rigidbody>();
+        if (myRigidbody != null) {
+            Rigidbody rb = myRigidbody;
 
-        Rigidbody rb = myRigidbody;
+            RBoriginalAngularDrag = rb.angularDrag;
+            RBoriginalDrag = rb.drag;
 
-        RBoriginalAngularDrag = rb.angularDrag;
-        RBoriginalDrag = rb.drag;
+            //default all rigidbodies so that if their drag/angular drag is zero, it's at least nonzero
+            if (myRigidbody.drag == 0) {
+                myRigidbody.drag = 0.01f;
+            }
+            if (myRigidbody.angularDrag == 0) {
+                myRigidbody.angularDrag = 0.01f;
+            }
+        }
 
         TimerResetValue = HowManySecondsUntilRoomTemp;
 
         sceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-
-        // default all rigidbodies so that if their drag/angular drag is zero, it's at least nonzero
-        if (myRigidbody.drag == 0) {
-            myRigidbody.drag = 0.01f;
-        }
-        if (myRigidbody.angularDrag == 0) {
-            myRigidbody.angularDrag = 0.01f;
-        }
 
         initializeProperties();
     }
@@ -971,7 +985,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
     void LateUpdate() {
         // only update lastVelocity if physicsAutosimulation = true, otherwise let the Advance Physics function take care of it;
-        if (sceneManager.physicsSimulationPaused == false)
+        if (sceneManager.physicsSimulationPaused == false && myRigidbody != null)
         // record this object's current velocity
         {
             lastVelocity = Math.Abs(myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.velocity.sqrMagnitude);

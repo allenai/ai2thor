@@ -6,7 +6,10 @@ using System;
 using System.Linq;
 using UnityEditor;
 using Newtonsoft.Json.Linq;
-
+using Thor.Procedural.Data;
+using Thor.Procedural;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class DebugInputField : MonoBehaviour {
@@ -132,7 +135,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_WEBGL
                 Debug.Log("Player Control Set To:Webgl");
                 setControlMode(ControlMode.FPS);
-                CurrentActiveController().GetComponent<JavaScriptInterface>().enabled = true;
 #endif
 #if CROWDSOURCE_TASK
                 Debug.Log("CROWDSOURCE_TASK");
@@ -259,6 +261,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["fieldOfView"] = 90f;
                         // action.cameraY = 2.0f;
                         action["snapToGrid"] = true;
+                        //action["width"] = 100;
+                        //action["height"] = 100;
                         // action.rotateStepDegrees = 45;
                         action["action"] = "Initialize";
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
@@ -363,7 +367,63 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // am.Initialize(action);
                         break;
                     }
+                case "initp": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        // if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
+                        // by default the gridsize is 0.25, so only moving in increments of .25 will work
+                        // so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
+                        // grid size!
+                        if (splitcommand.Length == 2) {
+                            action["gridSize"] = float.Parse(splitcommand[1]);
+                        } else if (splitcommand.Length == 3) {
+                            action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
+                        } else if (splitcommand.Length == 4) {
+                            action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
+                            action["makeAgentsVisible"] = int.Parse(splitcommand[3]) == 1;
+                        }
 
+                        action["fieldOfView"] = 90f;
+                        action["snapToGrid"] = true;
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderSemanticSegmentation"] = true;
+                        action["action"] = "Initialize";
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        break;
+                    }
+                case "initpsynth": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        // if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
+                        // by default the gridsize is 0.25, so only moving in increments of .25 will work
+                        // so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
+                        // grid size!
+                        if (splitcommand.Length == 2) {
+                            action["gridSize"] = float.Parse(splitcommand[1]);
+                        } else if (splitcommand.Length == 3) {
+                            action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
+                        } else if (splitcommand.Length == 4) {
+                            action["gridSize"] = float.Parse(splitcommand[1]);
+                            action["agentCount"] = int.Parse(splitcommand[2]);
+                            action["makeAgentsVisible"] = int.Parse(splitcommand[3]) == 1;
+                        }
+                        action["renderNormalsImage"] = true;
+                        action["renderDepthImage"] = true;
+                        action["renderSemanticSegmentation"] = true;
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderFlowImage"] = true;
+
+                        action["fieldOfView"] = 90f;
+                        action["snapToGrid"] = true;
+                        action["action"] = "Initialize";
+                        action["procedural"] = true;
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+
+
+                        break;
+
+                    }
                 case "inite": {
                         Dictionary<string, object> action = new Dictionary<string, object>{
                             {"action", "Initialize"},
@@ -378,7 +438,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         var armJointToRotate = GameObject.Find("IK_pole_manipulator");
                         armJointToRotate.transform.Rotate(0f, 0f, 90f);
-
                         var armBase = GameObject.Find("robot_arm_rig_gripper");
                         armBase.transform.Translate(0f, 0.27f, 0f);
 
@@ -389,6 +448,203 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+
+                case "sim": {
+                        var collisionListener = this.CurrentActiveController().GetComponent<CollisionListener>();
+                        Physics.Simulate(0.02f);
+                        var l = collisionListener.StaticCollisions();
+                        Debug.Log("total collisions: " + l.ToArray().Length);
+                        break;
+                    }
+
+                case "inits": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "stretch";
+                        action["agentControllerType"] = "stretch";
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+                
+                case "stretchtest1": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_1");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest2": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_2");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+                
+                case "stretchtest3": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_3");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest4": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_4");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest5": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_5");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest6": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_6");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest7": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_7");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest8": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_8");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+                
+                case "stretchtest9": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_9");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest10": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_10");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest11": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_11");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest12": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_12");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest13": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_13");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest14": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_14");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest15": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_15");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest16": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_16");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest17": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_17");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtest18": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_18");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+
+                case "stretchtestu": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_u");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "stretchtestd": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_d");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "iktest1": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_ik_arm_1");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
+
+                case "iktest2": {
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_ik_arm_2");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                }
 
                 case "parent": {
                         Dictionary<string, object> action = new Dictionary<string, object>{
@@ -402,6 +658,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         );
                         break;
                     }
+
+                case "gohfr": {
+                    Dictionary<string, object> action = new Dictionary<string, object> {
+                        {"action", "GetObjectHitFromRaycast"},
+                        {"from", new Vector3(1.048016f, 1f, 9.798f) },
+                        {"to", new Vector3(1.048016f, 0f, 9.798f) }
+                    };
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
 
                 case "expspawn": {
                         ServerAction action = new ServerAction();
@@ -681,6 +948,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+                
+                case "geo": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "GetInSceneAssetGeometry",
+                            ["objectId"] = splitcommand[1],
+                            ["triangles"] = true
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "des": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "DestroyHouse"
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
 
                 // move ahead stochastic
                 case "mas": {
@@ -715,6 +1000,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     });
                     break;
 
+                case "getMaterials":
+                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
+                        ["action"] = "GetMaterials"
+                    });
+                    break;
                 // This is dangerous because it will modify the underlying
                 // materials, and you'll have to call "git restore *.mat *maT"
                 // to revert the materials.
@@ -869,14 +1159,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "debugstretcharmjoints": {
+                        var arm = CurrentActiveController().GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+                        ArmMetadata armmeta = arm.GenerateMetadata();
+                        foreach (JointMetadata jm in armmeta.joints) {
+                            Debug.Log(jm.name + " position: (" + jm.position.x + ", " + jm.position.y + ", " + jm.position.z + ")");
+                            Debug.Log(jm.name + " root-relative position: (" + jm.rootRelativePosition.x + ", " + jm.rootRelativePosition.y + ", " + jm.rootRelativePosition.z + ")");
+                            Debug.Log(jm.name + " rotation: " + jm.rotation);
+                            Debug.Log(jm.name + " root-relative rotation: " + jm.rootRelativeRotation);
+                            Debug.Log(jm.name + " local rotation: " + jm.localRotation);
+                        }
+                        break;
+                    }
+
                 case "debugarmjoints": {
                         var arm = CurrentActiveController().GetComponentInChildren<IK_Robot_Arm_Controller>();
                         ArmMetadata armmeta = arm.GenerateMetadata();
                         foreach (JointMetadata jm in armmeta.joints) {
-                            Debug.Log(jm.name);
-                            Debug.Log(jm.rotation);
+                            Debug.Log(jm.name + " position: (" + jm.position.x + ", " + jm.position.y + ", " + jm.position.z + ")");
+                            Debug.Log(jm.name + " root-relative position: (" + jm.rootRelativePosition.x + ", " + jm.rootRelativePosition.y + ", " + jm.rootRelativePosition.z + ")");
+                            Debug.Log(jm.name + " rotation: " + jm.rotation);
+                            Debug.Log(jm.name + " root-relative rotation: " + jm.rootRelativeRotation);
+                            Debug.Log(jm.name + " local rotation: " + jm.localRotation);
                         }
-
                         break;
                     }
 
@@ -1462,7 +1767,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         excludeThese[0] = "CounterTop";
                         action["excludedReceptacles"] = excludeThese;
 
-                        action["placeStationary"] = true;// set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
+                        action["placeStationary"] = false;// set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
                         CurrentActiveController().ProcessControlCommand(action);
 
                         break;
@@ -2092,7 +2397,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "SliceObject";
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
-                        } 
+                        }
                         action.x = 0.5f;
                         action.y = 0.5f;
                         CurrentActiveController().ProcessControlCommand(action);
@@ -2104,7 +2409,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "BreakObject";
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
-                        } 
+                        }
                         action.x = 0.5f;
                         action.y = 0.5f;
 
@@ -2117,7 +2422,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "DirtyObject";
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
-                        } 
+                        }
                         action.x = 0.5f;
                         action.y = 0.5f;
                         CurrentActiveController().ProcessControlCommand(action);
@@ -2143,7 +2448,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
                         } else {
-                            action.objectId = closestVisibleObjectId(); 
+                            action.objectId = closestVisibleObjectId();
                         }
 
                         action.fillLiquid = "water";
@@ -2205,7 +2510,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "UseUpObject";
                         if (splitcommand.Length > 1) {
                             action.objectId = splitcommand[1];
-                        } 
+                        }
 
                         action.x = 0.5f;
                         action.y = 0.5f;
@@ -2477,7 +2782,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else if (splitcommand.Length > 2) {
                             action.objectId = splitcommand[1];
                             action.moveMagnitude = float.Parse(splitcommand[2]);
-                        } 
+                        }
 
                         action.x = 0.5f;
                         action.y = 0.5f;
@@ -2628,7 +2933,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             // give the open percentage as 3rd param, from 0.0 to 1.0
                             action["objectId"] = splitcommand[1];
                             action["openness"] = float.Parse(splitcommand[2]);
-                        } 
+                        }
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -2777,9 +3082,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "ObjectNavExpertAction";
 
                         // pass in a min range, max range, delay
-                        if (splitcommand.Length > 1) {
+                        if (splitcommand.Length == 2) {
                             // ID of spawner
                             action.objectType = splitcommand[1];
+                        }
+                        else if (splitcommand.Length >= 4) {
+                            // Target position
+                            action.position = new Vector3(float.Parse(splitcommand[1]), float.Parse(splitcommand[2]), float.Parse(splitcommand[3]));
                         }
 
                         CurrentActiveController().ProcessControlCommand(action);
@@ -2868,28 +3177,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 case "visualize_path": {
-                        ServerAction action = new ServerAction();
-                        action.action = "VisualizePath";
-                        action.objectId = "0";
-
-                        // pass in a min range, max range, delay
-                        if (splitcommand.Length > 1) {
-                            // ID of spawner
-                            action.objectId = splitcommand[1];
-
-                            if (splitcommand.Length == 5) {
-                                action.position = new Vector3(
-                                    float.Parse(splitcommand[2]),
-                                    float.Parse(splitcommand[3]),
-                                    float.Parse(splitcommand[4])
-                                );
-                            } else {
-                                action.positions = new List<Vector3>() {
-                                    new Vector3( 4.258f, 1.0f, -1.69f),
-                                    new Vector3(6.3f, 1.0f, -3.452f)
-                                };
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "VisualizePath",
+                            ["positions"] = new List<Vector3>() {
+                                new Vector3(4.258f, 1.0f, -1.69f),
+                                new Vector3(6.3f, 1.0f, -3.452f)
                             }
-                        }
+                        };
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                case "visualize_path2": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "VisualizePath",
+                            ["positions"] = new List<Vector3>() {
+                                new Vector3(4.258f, 1.0f, -1.69f),
+                                new Vector3(8.3f, 1.0f, 3.452f)
+                            }
+                        };
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                case "hide_path": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "HideVisualizedPath"
+                        };
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -3271,6 +3585,380 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                         CurrentActiveController().ProcessControlCommand(action);
 
+                        break;
+                    }
+                case "cr": {
+
+                        // dynamic action = new JObject();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "CreateRoom";
+                        TextAsset text = Resources.Load<TextAsset>("rooms/" + "4.json");
+                        var ROOM_BASE_PATH = "/Resources/rooms/";
+                        path = "";
+                        if (splitcommand.Length == 1) {
+                            // opens up a file explorer in the background
+                            path = EditorUtility.OpenFilePanel(title: "Open JSON actions file.", directory: "Resources", extension: "json");
+                        } else if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + ROOM_BASE_PATH + file;
+                        }
+                        //var json = text.text;
+
+                        // var json = text.text;
+
+                        // var json = "{\r\n  \"walls\": [\r\n    {\r\n      \"p0\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 2.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 3.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 10.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 4.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 9.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 7.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 8.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 4.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 0.5,\r\n        \"y\": 0,\r\n        \"z\": 5.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 7.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 8.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 1.5,\r\n        \"y\": 0,\r\n        \"z\": 9.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 6.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 5.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 3.5\r\n      }\r\n    },\r\n    {\r\n      \"p0\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 1.5\r\n      },\r\n      \"p1\": {\r\n        \"x\": 6.5,\r\n        \"y\": 0,\r\n        \"z\": 2.5\r\n      }\r\n    }\r\n  ]\r\n}";
+                        // var walls = Newtonsoft.Json.JsonConvert.DeserializeObject<TestRoom>(json);
+
+                        // Debug.Log($"App path {Application.dataPath}");
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+
+                        // var k = JObject.Parse(jsonStr);
+                        // JArray wallsJson = k["walls"];
+
+
+                        // foreach (JObject wall in wallsJson) {
+                        // 	while (PhysicsController.IsProcessing) {
+                        // 		yield return new WaitForEndOfFrame();
+                        // 	}
+
+                        // 	CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        // }
+
+                        // var r = k.ToObject<Thor.Procedural.Data.TestRoom>();
+
+                        // var l = new List<Thor.Procedural.Data.Wall>();
+                        // foreach (var wall in wallsJson) {
+                        // 	l.Add(wall.ToObject<Thor.Procedural.Data.Wall>());
+                        // }
+                        action["walls"] = obj["walls"];
+                        action["wallHeight"] = 2.0f;
+                        action["wallMaterialId"] = "DrywallOrange";
+                        action["floorMaterialId"] = "DarkWoodFloors";
+                        action["ceilingMaterialId"] = "";
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+
+                        // CurrentActiveController().CreateRoom(
+                        // 	new Wall[] {
+                        // 		new Wall() {
+                        // 			p0 = new Vector3(0, 0, 0),
+                        // 			p1 = new Vector3(10, 0, 0),
+                        // 			height = 2.0f,
+                        // 			materialId = "DrywallOrange"
+                        // 		},
+                        // 		new Wall() {
+                        // 			p0 = new Vector3(0, 0, 10),
+                        // 			p1 = new Vector3(10, 0, 10),
+                        // 			height = 2.0f,
+                        // 			materialId = "DrywallOrange"
+                        // 		},
+                        // 		new Wall() {
+                        // 			p0 = new Vector3(10, 0, 10),
+                        // 			p1 = new Vector3(10, 0, 0),
+                        // 			height = 2.0f,
+                        // 			materialId = "DrywallOrange"
+                        // 		},
+                        // 		new Wall() {
+                        // 			p0 = new Vector3(0, 0, 10),
+                        // 			p1 = new Vector3(0, 0, 0),
+                        // 			height = 2.0f,
+                        // 			materialId = "DrywallOrange"
+                        // 		}
+                        // 	},
+                        // 	2.0f,
+                        // 	"DrywallOrange",
+                        // 	"DarkWoodFloors"
+                        // );
+                        break;
+
+                        // public void CreateRoom(Wall[] walls, float wallHeight, string wallMaterialId, string floorMaterialId, string ceilingMaterialId, float wallThickness = 0.0f, string namePostFix = "") {
+
+                    }
+                case "ch": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "CreateHouse";
+
+                        var jsonStr = System.IO.File.ReadAllText(Application.dataPath + "/Resources/rooms/house.json");
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+                        action["house"] = obj;
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+                        // CurrentActiveController().CreateHouse(
+                        // 	new House() {
+                        // 		ceilingMaterialId = "DrywallOrange",
+                        // 		rooms = new RectangleRoom[] {
+                        // 			new RectangleRoom() {
+                        // 				walls =
+                        // 				new Wall[] {
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(0, 0, 0),
+                        // 						p1 = new Vector3(10, 0, 0),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					},
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(0, 0, 10),
+                        // 						p1 = new Vector3(10, 0, 10),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					},
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(10, 0, 10),
+                        // 						p1 = new Vector3(10, 0, 0),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					},
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(0, 0, 10),
+                        // 						p1 = new Vector3(0, 0, 0),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					}
+                        // 				},
+                        // 				rectangleFloor = new RectangleFloor() {
+                        // 					materialId = "DarkWoodFloors"
+                        // 				}
+                        // 			},
+                        // 			new RectangleRoom() {
+                        // 				walls =
+                        // 				new Wall[] {
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(2.5f, 0, 0),
+                        // 						p1 = new Vector3(5, 0, 0),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					},
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(2.5f, 0, 5),
+                        // 						p1 = new Vector3(5, 0, 5),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					},
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(5, 0, 5),
+                        // 						p1 = new Vector3(5, 0, 0),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					},
+                        // 					new Wall() {
+                        // 						p0 = new Vector3(2.5f, 0, 5),
+                        // 						p1 = new Vector3(2.5f, 0, 0),
+                        // 						height = 2.0f,
+                        // 						materialId = "DrywallOrange"
+                        // 					}
+                        // 				},
+                        // 				rectangleFloor = new RectangleFloor() {
+                        // 					materialId = "DarkWoodFloors"
+                        // 				}
+                        // 			},
+                        // 		}
+                        // 	}
+                        // );
+
+                        break;
+                    }
+
+                case "chp": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "CreateHouse";
+                        var ROOM_BASE_PATH = "/Resources/rooms/";
+
+                        path = Application.dataPath + "/Resources/rooms/house_full.json";
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + ROOM_BASE_PATH + file;
+                        }
+
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+                        action["house"] = obj;
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+                        // try teleporting the agent
+                        // Might fail if ["metadata"]["agent"] key is not in the json
+                        try {
+                            Dictionary<string, object> teleA = new Dictionary<string, object>() {
+                                ["action"] = "Teleport",
+                                ["position"] = obj["metadata"]["agent"]["position"],
+                                ["rotation"] =  obj["metadata"]["agent"]["rotation"],
+                                ["horizon"] = obj["metadata"]["agent"]["horizon"],
+                                ["forceAction"] = true
+                            };
+                            CurrentActiveController().ProcessControlCommand(new DynamicServerAction(teleA));
+                        } catch {}
+
+                        break;
+                    }
+                case "gad": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "GetAssetDatabase";
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        // var assetMetadata = (List<AssetMetadata>)CurrentActiveController().actionReturn as List<AssetMetadata>;
+                        // Debug.Log($"assetDb: {string.Join("\n", assetMetadata.Select(m => $"{m.id}|{m.type}|box: {m.boundingBox.min}, {m.boundingBox.max}, {m.primaryProperty}"))}");
+                        break;
+                    }
+                case "soirr": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SpawnObjectInReceptacleRandomly";
+                        action["prefabName"] = "Coffee_Table_211_1";
+                        action["objectId"] = "THISISATABLE";
+                        action["targetReceptacle"] = "Floor|+00.00|+00.00|+00.00";
+                        action["rotation"] = new FlexibleRotation() { axis = new Vector3(0, 1, 0), degrees = 45 };
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
+                case "soir": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SpawnObjectInReceptacle";
+                        action["prefabName"] = "Dining_Table_16_1";
+                        action["objectId"] = "THISISATABLE";
+                        action["targetReceptacle"] = "Floor|+00.00|+00.00|+00.00";
+                        action["position"] = new Vector3(5f, 0.0006076097f, 8.15f);
+                        action["rotation"] = new FlexibleRotation() { axis = new Vector3(0, 1, 0), degrees = 45 };
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
+                case "bnm": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "BakeNavMesh";
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
+                case "va": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SpawnAsset";
+                        action["assetId"] = "Dining_Table_16_1";
+                        action["generatedId"] = "asset_0";
+                        // action["skyboxColor"] = new Color(0, 0, 0, 1);
+
+                        if (splitcommand.Length == 2) {
+                            action["assetId"] = splitcommand[1];
+                        }
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
+
+                case "ra": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RotateObject";
+                        action["objectId"] = "asset_0";
+
+                        if (splitcommand.Length > 4) {
+                            action["angleAxisRotation"] = new FlexibleRotation() {
+                                axis = new Vector3(float.Parse(splitcommand[1]), float.Parse(splitcommand[2]), float.Parse(splitcommand[3])),
+                                degrees = float.Parse(splitcommand[4])
+                            };
+                        }
+                        if (splitcommand.Length == 6) {
+
+                            action["absolute"] = bool.Parse(splitcommand[5]);
+
+                        }
+
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
+                case "laoc": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "LookAtObjectCenter";
+                        action["objectId"] = "asset_0";
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
+                case "sky": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SetSkybox";
+                        action["color"] = new Color(0, 0, 0, 1);
+                        if (splitcommand.Length == 5) {
+                            action["color"] = new Color(
+                                float.Parse(splitcommand[1]),
+                                float.Parse(splitcommand[2]),
+                                float.Parse(splitcommand[3]),
+                                float.Parse(splitcommand[4])
+                            );
+
+                        }
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
+
+                case "g3d": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetAsset3DGeometry";
+                        if (splitcommand.Length == 2) {
+                            action["assetId"] = splitcommand[1];
+
+                        }
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        var geos = (List<Geometry3D>)CurrentActiveController().actionReturn as List<Geometry3D>;
+                        Debug.Log($"Geo count: {geos.Count}");
+                        var geo = geos.First();
+                        Debug.Log($"Geometry. vertexCount: {geo.vertices.Length}, triangleCount: {geo.triangleIndices.Length / 3}, some: {string.Join(", ", geo.triangleIndices.Take(12))}");
+                        break;
+                    }
+
+                case "proc_mats": {
+                        var mats = ProceduralTools.GetMaterials();
+                        var matString = string.Join("\n", mats.Keys());
+                        Debug.Log(matString);
+
+                        //string destination = Application.persistentDataPath + "/save.dat";
+                        // FileStream f;
+
+                        StreamWriter f = new StreamWriter("mats.txt", append: false);
+
+                        f.WriteLine(matString);
+                        break;
+                    }
+                case "proc_prefabs": {
+                        var prefabs = ProceduralTools.GetPrefabs();
+                        var prefabsStr = string.Join("\n", prefabs.Keys());
+                        Debug.Log(prefabsStr);
+
+                        //string destination = Application.persistentDataPath + "/save.dat";
+                        // FileStream f;
+
+                        StreamWriter f = new StreamWriter("prefabs.txt", append: false);
+
+                        f.WriteLine(prefabsStr);
                         break;
                     }
             }

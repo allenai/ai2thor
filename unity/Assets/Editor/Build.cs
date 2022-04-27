@@ -4,15 +4,29 @@ using System.IO;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.Rendering;
+using UnityEngine.Rendering;
+using UnityEditor.Build.Reporting;
 
 public class Build {
+
+    // Since CloudRendering uses a different version of Unity (2020.2) vs production (2019.4), GraphicsSettings and ProjectSettings
+    // must be copied over from the Standalone platform.  As well, continuing to use this ensures that settings made for 
+    // the Standalone platform get used for CloudRendering
+    static void InitializeCloudRendering() {
+        PlayerSettings.SetApiCompatibilityLevel(BuildTargetGroup.CloudRendering, PlayerSettings.GetApiCompatibilityLevel(BuildTargetGroup.Standalone));
+        var graphicsTiers = new List<GraphicsTier>(){GraphicsTier.Tier1, GraphicsTier.Tier2, GraphicsTier.Tier3};
+        foreach (var graphicsTier in graphicsTiers) {
+            EditorGraphicsSettings.SetTierSettings(
+                BuildTargetGroup.CloudRendering,
+                graphicsTier,
+                EditorGraphicsSettings.GetTierSettings(BuildTargetGroup.Standalone, graphicsTier)
+            );
+        }
+    }
+
     static void OSXIntel64() {
-#if UNITY_2017_3_OR_NEWER
-        var buildTarget = BuildTarget.StandaloneOSX;
-#else
-		var buildTarget = BuildTarget.StandaloneOSXIntel64;
-#endif
-        build(GetBuildName(), buildTarget);
+        build(GetBuildName(),  BuildTargetGroup.Standalone, BuildTarget.StandaloneOSX);
     }
 
     static string GetBuildName() {
@@ -20,11 +34,19 @@ public class Build {
     }
 
     static void Linux64() {
-        build(GetBuildName(), BuildTarget.StandaloneLinux64);
+        build(GetBuildName(), BuildTargetGroup.Standalone, BuildTarget.StandaloneLinux64);
+    }
+
+    static void CloudRendering() {
+        InitializeCloudRendering();
+        build(GetBuildName(), BuildTargetGroup.CloudRendering, BuildTarget.CloudRendering);
     }
 
     static void WebGL() {
-        build(GetBuildName(), BuildTarget.WebGL);
+        // USIM_USE_... scripting defines are required
+        // to disable the native PNG and JPEG encoders present in the simulation capture package
+        // if these defines are not provide the WebGL build will fail
+        build(GetBuildName(), BuildTargetGroup.WebGL, BuildTarget.WebGL, new string[]{"USIM_USE_BUILTIN_JPG_ENCODER", "USIM_USE_BUILTIN_PNG_ENCODER"});
     }
 
     static void buildResourceAssetJson() {
@@ -32,15 +54,13 @@ public class Build {
         manager.BuildCatalog();
     }
 
-    static void build(string buildName, BuildTarget target) {
+    static void build(string buildName, BuildTargetGroup targetGroup, BuildTarget target, string[] extraScriptingDefines=null) {
         buildResourceAssetJson();
 
         var defines = GetDefineSymbolsFromEnv();
         if (defines != "") {
-            var targetGroup = BuildPipeline.GetBuildTargetGroup(target);
             PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, GetDefineSymbolsFromEnv());
         }
-
         List<string> scenes = GetScenes();
         foreach (string scene in scenes) {
             Debug.Log("Adding Scene " + scene);
@@ -54,10 +74,19 @@ public class Build {
         if (ScriptsOnly()) {
             options |= BuildOptions.Development | BuildOptions.BuildScriptsOnly;
         }
-
         Debug.Log("Build options " + options);
+        BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
+        if (extraScriptingDefines != null) {
+            buildPlayerOptions.extraScriptingDefines = extraScriptingDefines;
+        }
+        buildPlayerOptions.scenes = scenes.ToArray();
+        buildPlayerOptions.locationPathName = buildName;
+        buildPlayerOptions.target = target;
+        buildPlayerOptions.options = options;
+        EditorUserBuildSettings.SwitchActiveBuildTarget(targetGroup, target);
+        BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+        BuildSummary summary = report.summary;
 
-        BuildPipeline.BuildPlayer(scenes.ToArray(), buildName, target, options);
     }
 
     private static List<string> GetScenes() {
@@ -78,6 +107,8 @@ public class Build {
             files.AddRange(Directory.GetFiles("Assets/Private/Scenes/"));
         }
 
+        files.AddRange(Directory.GetFiles("Assets/Scenes/Procedural"));
+
         foreach (string f in files) {
             // ignore entryway scenes in build since these are not yet complete
             if (f.Contains("FloorPlan5") && !f.EndsWith("FloorPlan5_physics.unity")) {
@@ -90,7 +121,7 @@ public class Build {
         }
 
         // uncomment for faster builds for testing
-        return scenes;//.Where(x => x.Contains("FloorPlan1_")).ToList();
+        return scenes; //.Where(x => x.Contains("FloorPlan1_") || x.Contains("Procedural")).ToList();
     }
 
     private static List<string> GetScenesFromEnv() {

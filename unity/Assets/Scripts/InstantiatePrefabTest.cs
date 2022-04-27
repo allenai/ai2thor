@@ -12,11 +12,12 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
 #if UNITY_EDITOR
     private bool m_Started = false;
-#endif
-
     Vector3 gizmopos;
     Vector3 gizmoscale;
     Quaternion gizmoquaternion;
+#endif
+
+
     private float yoffset = 0.005f; // y axis offset of placing objects, useful to allow objects to fall just a tiny bit to allow physics to resolve consistently
 
     private List<Vector3> SpawnCorners = new List<Vector3>();
@@ -234,7 +235,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
             rotation = r;
         }
     }
-    
+
 
     public bool PlaceObject(
         SimObjPhysics sop,
@@ -346,7 +347,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
         foreach (RotationAndDistanceValues quat in ToCheck) {
             // if spawn area is clear, spawn it and return true that we spawned it
             if (CheckSpawnArea(sop, rsp.Point + rsp.ParentSimObjPhys.transform.up * (quat.distance + yoffset), quat.rotation, false)) {
-                
+
                 // translate position of the target sim object to the rsp.Point and offset in local y up
                 sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset);// rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
                 sop.transform.rotation = quat.rotation;
@@ -485,10 +486,10 @@ public class InstantiatePrefabTest : MonoBehaviour {
 
         // if spawning in the agent's hand, ignore collisions with the Agent
         if (spawningInHand) {
-            layermask = 1 << 8;
+            layermask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
         } else {
-            // oh we are spawning it somehwere in the environment, we do need to make sure not to spawn inside the agent or the environment
-            layermask = (1 << 8) | (1 << 10);
+            // oh we are spawning it somewhere in the environment, we do need to make sure not to spawn inside the agent or the environment
+            layermask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent");
         }
 
         // get list of all active colliders of sim object, then toggle them off for now
@@ -587,7 +588,9 @@ public class InstantiatePrefabTest : MonoBehaviour {
     public bool CheckSpawnArea(
         SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand
     ) {
-        return null == ColliderHitByObjectInSpawnArea(simObj, position, rotation, spawningInHand);
+        var hitColliders = ColliderHitByObjectInSpawnArea(simObj, position, rotation, spawningInHand);
+        // Debug.Log("Colliders " + hitColliders.gameObject.name);
+        return null == hitColliders;
     }
 
 #if UNITY_EDITOR

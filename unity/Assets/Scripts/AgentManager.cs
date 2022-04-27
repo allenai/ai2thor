@@ -15,6 +15,13 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
+using UnityEngine.Rendering;
+using UnityEngine.Experimental.Rendering;
+#if PLATFORM_CLOUD_RENDERING
+using Unity.Simulation;
+using UnityEditor;
+using UnityEngine.CloudRendering;
+#endif
 using UnityEngine.Networking;
 using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
@@ -106,7 +113,6 @@ public class AgentManager : MonoBehaviour {
 
         }
 
-
         bool trainPhase = true;
         trainPhase = LoadBoolVariable(trainPhase, "TRAIN_PHASE");
 
@@ -121,6 +127,14 @@ public class AgentManager : MonoBehaviour {
     void Start() {
         // default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
         initializePrimaryAgent();
+        #if PLATFORM_CLOUD_RENDERING    
+        // must wrap this in PLATFORM_CLOUDRENDERING
+        // needed to ensure that the com.unity.simulation.capture package
+        // gets initialized
+        var instance = Manager.Instance;
+        Camera camera = this.primaryAgent.gameObject.GetComponentInChildren<Camera>();
+        camera.targetTexture = createRenderTexture(Screen.width, Screen.height);
+        #endif
 
         primaryAgent.actionDuration = this.actionDuration;
         // this.agents.Add (primaryAgent);
@@ -130,6 +144,10 @@ public class AgentManager : MonoBehaviour {
 #if UNITY_WEBGL
         physicsSceneManager.UnpausePhysicsAutoSim();
         primaryAgent.InitializeBody();
+        JavaScriptInterface jsInterface = primaryAgent.GetComponent<JavaScriptInterface>();
+        if (jsInterface != null) {
+            jsInterface.enabled = true;
+        }
 #endif
 
         StartCoroutine(EmitFrame());
@@ -163,24 +181,39 @@ public class AgentManager : MonoBehaviour {
             else if (action.agentControllerType.ToLower() == "stochastic") {
                 // set up stochastic controller
                 primaryAgent.actionFinished(success: false, errorMessage: "Invalid combination of agentControllerType=stochastic and agentMode=default. In order to use agentControllerType=stochastic, agentMode must be set to stochastic");
-		return;
+                return;
             }
         } else if (action.agentMode.ToLower() == "locobot") {
             // if not stochastic, default to stochastic
             if (action.agentControllerType.ToLower() != "stochastic") {
                 Debug.Log("'bot' mode only fully supports the 'stochastic' controller type at the moment. Forcing agentControllerType to 'stochastic'");
                 action.agentControllerType = "stochastic";
-            } 
+            }
             // LocobotController is a subclass of Stochastic which just the agentMode (VisibilityCapsule) changed
             SetUpLocobotController(action);
-            
+
         } else if (action.agentMode.ToLower() == "drone") {
             if (action.agentControllerType.ToLower() != "drone") {
                 Debug.Log("'drone' agentMode is only compatible with 'drone' agentControllerType, forcing agentControllerType to 'drone'");
                 action.agentControllerType = "drone";
-            } 
+            }
             SetUpDroneController(action);
+        } else if (action.agentMode.ToLower() == "stretch") {
+                SetUpStretchController(action);
 
+                action.autoSimulation = false;
+                physicsSceneManager.MakeAllObjectsMoveable();
+
+                if (action.massThreshold.HasValue) {
+                    if (action.massThreshold.Value > 0.0) {
+                        SetUpMassThreshold(action.massThreshold.Value);
+                    } else {
+                        var error = "massThreshold must have nonzero value - invalid value: " + action.massThreshold.Value;
+                        Debug.Log(error);
+                        primaryAgent.actionFinished(false, error);
+                        return;
+                    }
+                }
         } else if (action.agentMode.ToLower() == "arm") {
 
             if (action.agentControllerType == "") {
@@ -211,6 +244,7 @@ public class AgentManager : MonoBehaviour {
                         return;
                     }
                 }
+
             } else {
                 var error = "unsupported";
                 Debug.Log(error);
@@ -242,11 +276,18 @@ public class AgentManager : MonoBehaviour {
         if (action.alwaysReturnVisibleRange) {
             ((PhysicsRemoteFPSAgentController)primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
         }
-        print("start addAgents");
-        StartCoroutine(addAgents(action));
-
+        //if multi agent requested, add duplicates of primary agent now
+        //note: for Houses, adding multiple agents in will need to be done differently as currently
+        //initializing additional agents assumes the scene is already setup, and Houses initialize the 
+        //primary agent floating in space, then generates the house, then teleports the primary agent.
+        //this will need a rework to make multi agent work as GetReachablePositions is used to position additional
+        //agents, which won't work if we initialize the agent(s) before the scene exists
+        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        if (!sceneName.StartsWith("Procedural")) {
+            StartCoroutine(addAgents(action));
+        }
     }
-    
+
     private void SetUpLocobotController(ServerAction action) {
         this.agents.Clear();
         // force snapToGrid to be false since we are stochastic
@@ -263,6 +304,14 @@ public class AgentManager : MonoBehaviour {
         primaryAgent = createAgentType(typeof(DroneFPSAgentController), baseAgentComponent);
     }
 
+    private void SetUpStretchController(ServerAction action) {
+        this.agents.Clear();
+        // force snapToGrid to be false
+        action.snapToGrid = false;
+        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
+        primaryAgent = createAgentType(typeof(StretchAgentController), baseAgentComponent);
+    }
+
     // note: this doesn't take a ServerAction because we don't have to force the snpToGrid bool
     // to be false like in other controller types.
     public void SetUpPhysicsController() {
@@ -272,7 +321,7 @@ public class AgentManager : MonoBehaviour {
     }
 
     private BaseFPSAgentController createAgentType(Type agentType, BaseAgentComponent agentComponent) {
-        BaseFPSAgentController agent = Activator.CreateInstance(agentType, new object[]{agentComponent, this}) as BaseFPSAgentController;
+        BaseFPSAgentController agent = Activator.CreateInstance(agentType, new object[] { agentComponent, this }) as BaseFPSAgentController;
         this.agents.Add(agent);
         return agent;
     }
@@ -376,13 +425,13 @@ public class AgentManager : MonoBehaviour {
         return (fov <= min || fov > max) ? defaultVal : fov;
     }
 
-    private void updateImageSynthesis(bool status) {
+    public void updateImageSynthesis(bool status) {
         foreach (var agent in this.agents) {
             agent.updateImageSynthesis(status);
         }
     }
 
-    private void updateThirdPartyCameraImageSynthesis(bool status) {
+    public void updateThirdPartyCameraImageSynthesis(bool status) {
         if (status) {
             foreach (var camera in this.thirdPartyCameras) {
                 GameObject gameObject = camera.gameObject;
@@ -490,10 +539,14 @@ public class AgentManager : MonoBehaviour {
         Camera camera = gameObject.GetComponentInChildren<Camera>();
 
         // set up returned image
-        camera.cullingMask = ~(1 << 11);
+        camera.cullingMask = ~LayerMask.GetMask("PlaceableSurface");
         if (renderDepthImage || renderSemanticSegmentation || renderInstanceSegmentation || renderNormalsImage || renderFlowImage) {
             gameObject.AddComponent(typeof(ImageSynthesis));
         }
+        
+        #if PLATFORM_CLOUD_RENDERING
+        camera.targetTexture = createRenderTexture(this.primaryAgent.m_Camera.pixelWidth, this.primaryAgent.m_Camera.targetTexture.height);
+        #endif
 
         antiAliasing = antiAliasing.ToLower();
         PostProcessLayer postProcessLayer = gameObject.GetComponentInChildren<PostProcessLayer>();
@@ -610,6 +663,10 @@ public class AgentManager : MonoBehaviour {
         // clone.m_Camera.targetDisplay = this.agents.Count;
         componentClone.transform.position = clonePosition;
         UpdateAgentColor(agent, agentColors[this.agents.Count]);
+        
+#if PLATFORM_CLOUD_RENDERING
+        agent.m_Camera.targetTexture = createRenderTexture(this.primaryAgent.m_Camera.targetTexture.width, this.primaryAgent.m_Camera.targetTexture.height);
+#endif 
         agent.ProcessControlCommand(action.dynamicServerAction);
     }
 
@@ -710,6 +767,23 @@ public class AgentManager : MonoBehaviour {
     }
 
 
+    private void captureScreenAsync(List<KeyValuePair<string, byte[]>> payload, string key, Camera camera) {
+        RenderTexture tt = camera.targetTexture;
+        RenderTexture.active = tt;
+        camera.Render();
+        AsyncGPUReadback.Request(tt, 0, (request) =>
+        {
+            if (!request.hasError) {
+                var data = request.GetData<byte>().ToArray();
+                payload.Add(new KeyValuePair<string, byte[]>(key, data));
+            }
+            else
+            {
+                Debug.Log("Request error: " + request.hasError);
+            }
+        });
+    }
+
     private byte[] captureScreen() {
         if (tex.height != UnityEngine.Screen.height ||
             tex.width != UnityEngine.Screen.width) {
@@ -723,19 +797,28 @@ public class AgentManager : MonoBehaviour {
 
 
     private void addThirdPartyCameraImage(List<KeyValuePair<string, byte[]>> payload, Camera camera) {
+#if PLATFORM_CLOUD_RENDERING
+        captureScreenAsync(payload, "image-thirdParty-camera", camera);
+#else
         RenderTexture.active = camera.activeTexture;
         camera.Render();
         payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreen()));
+#endif
     }
 
     private void addImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent) {
         if (this.renderImage) {
 
+#if PLATFORM_CLOUD_RENDERING
+            captureScreenAsync(payload, "image", agent.m_Camera);
+#else
+            // XXX may not need this since we call render in captureScreenAsync
             if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
                 RenderTexture.active = agent.m_Camera.activeTexture;
                 agent.m_Camera.Render();
             }
             payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
+#endif
         }
     }
 
@@ -773,19 +856,29 @@ public class AgentManager : MonoBehaviour {
                 break;
             }
         }
-
-        ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
-        if (quality == "Low" || quality == "Very Low") {
-            script.enabled = false;
-        } else {
-            script.enabled = true;
-        }
+        
         this.primaryAgent.actionFinished(true);
     }
 
 
     public void ChangeResolution(int x, int y) {
         Screen.SetResolution(width: x, height: y, false);
+        Debug.Log("current screen resolution pre change: " + Screen.width + " height" + Screen.height);
+#if PLATFORM_CLOUD_RENDERING
+        foreach (var agent in this.agents) {
+            var rt = agent.m_Camera.targetTexture;
+            rt.Release();
+            Destroy(rt);
+           agent.m_Camera.targetTexture = createRenderTexture(x, y); 
+        }
+        
+        foreach (var camera in this.thirdPartyCameras) {
+            var rt = camera.targetTexture;
+            rt.Release();
+            Destroy(rt);
+           camera.targetTexture = createRenderTexture(x, y); 
+        }
+#endif
         StartCoroutine(WaitOnResolutionChange(width: x, height: y));
     }
 
@@ -875,9 +968,14 @@ public class AgentManager : MonoBehaviour {
         for (int i = 0; i < this.agents.Count; i++) {
             BaseFPSAgentController agent = this.agents[i];
             MetadataWrapper metadata = agent.generateMetadataWrapper();
+            // This value may never change, but the purpose is to provide a way
+            //  to be backwards compatible in the future by knowing the output format
+            //  so that it can be converted if necessary on the Python side
+            metadata.depthFormat = DepthFormat.Meters.ToString();
             metadata.agentId = i;
 
             // we don't need to render the agent's camera for the first agent
+            
             if (shouldRender) {
                 addImage(renderPayload, agent);
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
@@ -885,9 +983,9 @@ public class AgentManager : MonoBehaviour {
                 addObjectImage(renderPayload, agent, ref metadata);
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderSemanticSegmentation, "_class", "image_classes");
                 addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
-
                 metadata.thirdPartyCameras = cameraMetadata;
             }
+
             multiMeta.agents[i] = metadata;
         }
 
@@ -922,6 +1020,19 @@ public class AgentManager : MonoBehaviour {
         return this.agentManagerState == AgentState.Emit && emit;
     }
 
+    private RenderTexture createRenderTexture(int width, int height) {
+        RenderTexture rt = new RenderTexture(width: width, height: height,depth:0, GraphicsFormat.R8G8B8A8_UNorm);
+        rt.antiAliasing = 4;
+        if (rt.Create()) {
+            Debug.Log(" created render texture with width= " + width + " height=" + height);
+            return rt;
+        } else {
+            // throw exception ?
+            Debug.LogError("Could not create a renderTexture");
+            return null;
+        }
+
+    }
 
     public IEnumerator EmitFrame() {
         while (true) {
@@ -943,7 +1054,6 @@ public class AgentManager : MonoBehaviour {
                 continue;
             }
 
-            Physics.SyncTransforms();
             MultiAgentMetadata multiMeta = new MultiAgentMetadata();
 
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
@@ -962,10 +1072,11 @@ public class AgentManager : MonoBehaviour {
 #if !UNITY_WEBGL
             if (serverType == serverTypes.WSGI) {
                 WWWForm form = new WWWForm();
+                form.AddField("metadata", serializeMetadataJson(multiMeta));
+                AsyncGPUReadback.WaitAllRequests();
                 foreach (var item in renderPayload) {
                     form.AddBinaryData(item.Key, item.Value);
                 }
-                form.AddField("metadata", serializeMetadataJson(multiMeta));
                 form.AddField("token", robosimsClientToken);
 
 
@@ -1051,11 +1162,11 @@ public class AgentManager : MonoBehaviour {
                 }
             } else if (serverType == serverTypes.FIFO) {
 
-
                 byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(multiMeta,
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
 
                 this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
+                AsyncGPUReadback.WaitAllRequests();
                 foreach (var item in renderPayload) {
                     this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
                 }
@@ -1217,10 +1328,6 @@ public class MetadataPatch {
     public string errorCode;
     public bool lastActionSuccess;
     public int agentId;
-    // must remove this when running generate-msgpack-resolver
-#if ENABLE_IL2CPP
-    [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
-#endif
     public object actionReturn;
 }
 
@@ -1247,7 +1354,7 @@ public class AgentMetadata {
 public class DroneAgentMetadata : AgentMetadata {
     // why is the launcher position even attached to the agent's metadata
     // and not the generic metdata?
-    public Vector3 LauncherPosition;
+    public Vector3 launcherPosition;
 }
 
 // additional metadata for drone objects (only use with Drone controller)
@@ -1259,7 +1366,7 @@ public class DroneObjectMetadata : ObjectMetadata {
     public int numFloorHits;
     public int numStructureHits;
     public float lastVelocity;
-    public Vector3 LauncherPosition;
+    public Vector3 launcherPosition;
     public bool isCaught;
     public DroneObjectMetadata() { }
 }
@@ -1377,7 +1484,7 @@ public class ObjectMetadata {
     // what type of object is this?
     public string objectType;
 
-    // uuid of the object
+    // uuid of the object in scene
     public string objectId;
 
     //name of this game object's prefab asset if it has one
@@ -1565,6 +1672,7 @@ public struct MetadataWrapper {
     public int screenWidth;
     public int screenHeight;
     public int agentId;
+    public string depthFormat;
     public ColorId[] colors;
 
     // Extras
@@ -1585,10 +1693,6 @@ public struct MetadataWrapper {
     public float currentTime;
     public SceneBounds sceneBounds;// return coordinates of the scene's bounds (center, size, extents)
 
-    // must remove this when running generate-msgpack-resolver
-#if ENABLE_IL2CPP
-    [MessagePackFormatter(typeof(MessagePack.Formatters.ActionReturnFormatter))]
-#endif
     public object actionReturn;
 
 }
@@ -1748,6 +1852,8 @@ public class ServerAction {
     public int thirdPartyCameraId;
     public float y;
     public float fieldOfView;
+    public float cameraNearPlane;
+    public float cameraFarPlane;
     public float x;
     public float z;
     public float pushAngle;
@@ -1926,6 +2032,23 @@ public class InitializeReturn {
     public float cameraFarPlane;
 }
 
+[Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
+public class Geometry3D {
+    public Vector3[] vertices;
+    public int[] triangleIndices;
+    public Vector2[] uvs;
+    public Vector3[] normals;
+}
+
+[Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
+public class ObjectSphereBounds {
+    public string id;
+    public Vector3 worldSpaceCenter;
+    public float radius;
+}
+
 public enum ServerActionErrorCode {
     Undefined,
     ReceptacleNotVisible,
@@ -2009,6 +2132,12 @@ public class ShouldSerializeContractResolver : DefaultContractResolver {
             return base.CreateProperty(member, memberSerialization);
         }
     }
+}
+
+public enum DepthFormat {
+    Normalized,
+    Meters,
+    Millimeters
 }
 
 public enum AgentState {

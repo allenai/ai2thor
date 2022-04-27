@@ -93,7 +93,7 @@ public static class UtilityFunctions {
             }
         }
 
-        int layerMask = 1 << 8 | 1 << 10;
+        int layerMask = LayerMask.GetMask("Agent", "SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
         foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
             if (cc.isTrigger || !cc.enabled) {
                 continue;
@@ -145,7 +145,7 @@ public static class UtilityFunctions {
         }
 
         HashSet<Collider> collidersSet = new HashSet<Collider>();
-        int layerMask = 1 << 8 | 1 << 10;
+        int layerMask = LayerMask.GetMask("SimObjVisible", "Agent");
         foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
             foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
                 if (!ignoreColliders.Contains(c)) {
@@ -268,9 +268,8 @@ public static class UtilityFunctions {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
             var meshes = UnityEngine.Object.FindObjectsOfType<MeshRenderer>();
 
-            foreach (MeshRenderer m in meshes)
-            {
-                if(m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)"){
+            foreach (MeshRenderer m in meshes) {
+                if (m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)") {
                     m.enabled = false;
                 }
             }
@@ -284,9 +283,8 @@ public static class UtilityFunctions {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
             var meshes = UnityEngine.Object.FindObjectsOfType<MeshRenderer>();
 
-            foreach (MeshRenderer m in meshes)
-            {
-                if(m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)"){
+            foreach (MeshRenderer m in meshes) {
+                if (m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)") {
                     m.enabled = true;
                 }
             }

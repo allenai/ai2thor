@@ -1,4 +1,8 @@
-﻿// Copyright (c) All contributors. All rights reserved.
+﻿#if PLATFORM_CLOUD_RENDERING
+#undef ENABLE_IL2CPP
+#endif
+// CloudRendering does not set ENABLE_IL2CPP correctly when using Mono
+// Copyright (c) All contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq;

@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
-    public class BaseAgentComponent : MonoBehaviour{
+    public class BaseAgentComponent : MonoBehaviour {
         // debug draw bounds of objects in editor
 #if UNITY_EDITOR
         protected List<Bounds> gizmobounds = new List<Bounds>();
@@ -15,22 +15,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject DebugTargetPointPrefab;
         public GameObject VisibilityCapsule = null;// used to keep track of currently active VisCap: see different vis caps for modes below
         public GameObject TallVisCap;// meshes used for Tall mode
+        public GameObject IKArm; // reference to the IK_Robot_Arm_Controller arm
         public GameObject BotVisCap;// meshes used for Bot mode
         public GameObject DroneVisCap;// meshes used for Drone mode
         public GameObject DroneBasket;// reference to the drone's basket object
-        public GameObject IKArm; // reference to the IK_Robot_Arm_Controller arm
+        public GameObject StretchVisCap; // meshes used for Stretch mode
+        public GameObject StretchArm; // reference to the Stretch_Arm_Controller arm
         public GameObject CrackedCameraCanvas = null;
 
         public GameObject[] ToSetActive = null;
         public Material[] ScreenFaces; // 0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
         public GameObject[] TargetCircles = null;
-        
+
         [HideInInspector]
         public BaseFPSAgentController agent;
-        
+
         public DroneObjectLauncher DroneObjectLauncher;
-        
+
         void LateUpdate() {
             if (this.agent == null) {
                 return;

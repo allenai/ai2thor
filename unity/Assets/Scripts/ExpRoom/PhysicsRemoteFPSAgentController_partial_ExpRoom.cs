@@ -443,7 +443,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Camera camera = thirdPartyCameraIndex.HasValue ? agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value] : m_Camera;
                 foreach (Transform point in visPoints) {
                     // if this particular point is in view...
-                    
+
                     if (CheckIfVisibilityPointInViewport(target, point, camera, false).visible) {
                         visPointCount++;
                     }
@@ -560,7 +560,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             toReturn["normal"] = planeGo.transform.up;
             if (!(bool)toReturn["enabled"]) {
                 errorMessage = (
-                    "Clipping plane was placed on object but is disabled as the"+
+                    "Clipping plane was placed on object but is disabled as the" +
                     " input bounding box contained no points on the object's mesh."
                 );
                 actionFinished(false, toReturn);

@@ -9,7 +9,7 @@ import logging
 from ai2thor.util.lock import LockSh, LockEx
 from ai2thor.util import atomic_write
 import io
-from ai2thor.platform import STR_PLATFORM_MAP, OSXIntel64, Linux64
+from ai2thor.platform import STR_PLATFORM_MAP, OSXIntel64, Linux64, CloudRendering
 import platform
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ PRIVATE_S3_BUCKET = "ai2-thor-private"
 PYPI_S3_BUCKET = "ai2-thor-pypi"
 
 LOCAL_BUILD_COMMIT_ID = "local"
-AUTO_BUILD_PLATFORMS = [OSXIntel64, Linux64]
+AUTO_BUILD_PLATFORMS = [OSXIntel64, Linux64, CloudRendering]
 
 COMMIT_ID = None
 try:
@@ -30,9 +30,6 @@ try:
 except ImportError:
     pass
 
-# Since CloudRendering is manually built, this will act as a fallback
-# until the process is automated
-DEFAULT_CLOUDRENDERING_COMMIT_ID = "22d62af5da45708e7bc40bf07a861e7397f9d2f9"
 
 def build_name(arch, commit_id, include_private_scenes=False):
     if include_private_scenes:

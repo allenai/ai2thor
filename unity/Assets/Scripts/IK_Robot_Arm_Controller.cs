@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
 public partial class IK_Robot_Arm_Controller : MonoBehaviour {
-    private Transform armTarget;
-    private Transform handCameraTransform;
+    [SerializeField]
+    private Transform armBase, armTarget, handCameraTransform, FirstJoint, FinalJoint;
 
     [SerializeField]
     private SphereCollider magnetSphere = null;
@@ -18,13 +18,6 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
     private GameObject MagnetRenderer = null;
 
     private PhysicsRemoteFPSAgentController PhysicsController;
-
-    // references to the joints of the mid level arm
-    [SerializeField]
-    private Transform FirstJoint = null;
-
-    [SerializeField]
-    private Transform FourthJoint = null;
 
     // dict to track which picked up object has which set of trigger colliders
     // which we have to parent and reparent in order for arm collision to detect
@@ -50,14 +43,6 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
     public CollisionListener collisionListener;
 
     void Start() {
-        armTarget = this.transform
-            .Find("robot_arm_FK_IK_rig")
-            .Find("IK_rig")
-            .Find("IK_pos_rot_manipulator");
-
-        // FirstJoint = this.transform.Find("robot_arm_1_jnt"); this is now set via serialize field, along with the other joints
-        handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
-
         // calculating based on distance from origin of arm to the 2nd joint, which will always be constant
         this.originToShoulderLength = Vector3.Distance(
             this.transform.FirstChildOrDefault(
@@ -189,7 +174,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
                 point0: point0,
                 point1: point1,
                 radius: radius,
-                layerMask: LayerMask.GetMask("SimObjVisible"),
+                layerMask: LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
             foreach (Collider col in cols) {
@@ -203,7 +188,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
                 center: b.transform.TransformPoint(b.center),
                 halfExtents: b.size / 2.0f,
                 orientation: b.transform.rotation,
-                layerMask: LayerMask.GetMask("SimObjVisible"),
+                layerMask: LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
             foreach (Collider col in cols) {
@@ -322,7 +307,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
                 break;
             case "armBase":
                 // space relative to the root of the arm, joint 1
-                targetWorldPos = arm.transform.TransformPoint(target);
+                targetWorldPos = arm.transform.Find("robot_arm_FK_IK_rig").transform.TransformPoint(target);
                 break;
             default:
                 throw new ArgumentException("Invalid coordinateSpace: " + coordinateSpace);
@@ -652,7 +637,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
                     original: c,
                     position: c.transform.position,
                     rotation: c.transform.rotation,
-                    parent: FourthJoint
+                    parent: FinalJoint
                 );
                 clone.transform.localScale = gameObjectToMultipliedScale[c.gameObject];
 
@@ -665,7 +650,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
                     original: c,
                     position: c.transform.position,
                     rotation: c.transform.rotation,
-                    parent: FourthJoint
+                    parent: FinalJoint
                 );
                 clone.transform.localScale = gameObjectToMultipliedScale[c.gameObject];
                 cols.Add(clone);
@@ -761,6 +746,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         List<JointMetadata> joints = new List<JointMetadata>();
 
         // Declare variables used for processing metadata
+        GameObject surrogateChild = new GameObject();
         Transform parentJoint;
         float angleRot;
         Vector3 vectorRot;
@@ -775,6 +761,8 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             // JOINT NAME
             jointMeta.name = joint.name;
 
+            // POSITIONS //
+
             // WORLD RELATIVE POSITION
             jointMeta.position = joint.position;
 
@@ -782,33 +770,34 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             // Parent-relative position of joint is meaningless because it never changes relative to its parent joint, so we use rootRelative instead
             jointMeta.rootRelativePosition = FirstJoint.InverseTransformPoint(joint.position);
 
-            // WORLD RELATIVE ROTATION
+            // ROTATIONS //
             // GetChild grabs angler since that is what actually changes the geometry angle
-            currentRotation = joint.GetChild(0).rotation;
+            surrogateChild.transform.rotation = joint.GetChild(0).rotation;
+
+            // WORLD RELATIVE ROTATION
+            currentRotation = surrogateChild.transform.rotation;
 
             // Check that world-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
 
-                // Debug.Log(joint.name + "'s euler-angles of " + joint.GetChild(0).eulerAngles + " resulted in Quaternion " + Quaternion.Euler(joint.GetChild(0).eulerAngles) + " which should either be the same as or a corrected version of " + joint.GetChild(0).rotation);
                 jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
             } else {
-                // Debug.Log(joint.name + "'s world-rotation of " + currentRotation + " is EVILLLLL!");
                 jointMeta.rotation = new Vector4(1, 0, 0, 0);
             }
 
             // ROOT-JOINT RELATIVE ROTATION
             // Root-forward and agent-forward are always the same
 
-            // GetChild grabs angler since that is what actually changes the geometry angle
-            currentRotation = Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.GetChild(0).eulerAngles));
+            //Grab rotation of current joint's angler relative to root joint
+            surrogateChild.transform.SetParent(armBase);
+            currentRotation = surrogateChild.transform.localRotation;
 
             // Check that root-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                 jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
             } else {
-                // Debug.Log(joint.name + "'s root-rotation of " + currentRotation + " is EVILLLLL!");
                 jointMeta.rootRelativeRotation = new Vector4(1, 0, 0, 0);
             }
 
@@ -816,20 +805,15 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             if (i != 1) {
                 parentJoint = joint.parent;
 
-                // Grab rotation of current joint's angler relative to parent joint's angler, and convert it to a quaternion
-                currentRotation = Quaternion.Euler(
-                    parentJoint.GetChild(0).InverseTransformDirection(
-                        joint.GetChild(0).eulerAngles
-                    )
-                );
-
+                // Grab rotation of current joint's angler relative to parent joint's angler
+                surrogateChild.transform.SetParent(parentJoint.GetChild(0));
+                currentRotation = surrogateChild.transform.localRotation;
+                
                 // Check that parent-relative rotation is angle-axis-notation-compatible
                 if (currentRotation != new Quaternion(0, 0, 0, -1)) {
-                    // Convert parent-relative rotation to angle-axis notation
                     currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                     jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
                 } else {
-                    // Debug.Log(joint.name + "'s parent-rotation of " + currentRotation + " is EVILLLLL!");
                     jointMeta.localRotation = new Vector4(1, 0, 0, 0);
                 }
             } else {
@@ -840,6 +824,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             joints.Add(jointMeta);
         }
 
+        Destroy(surrogateChild);
         meta.joints = joints.ToArray();
 
         // metadata for any objects currently held by the hand on the arm
