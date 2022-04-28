@@ -4856,6 +4856,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void ToggleHabitatMesh(bool active) {
+            
+            Transform objects = GameObject.Find("Objects").transform;
+            Transform structures = GameObject.Find("Structure").transform;
+
+            EnableRenderersRecursive(objects, !active);
+            EnableRenderersRecursive(structures, !active);
+
+            GameObject habScan = GameObject.Find("HabitatScan");
+            foreach (Transform child in habScan.transform) {
+                child.gameObject.SetActive(active);
+            }
+
+            actionFinished(true);
+        }
+
+        public void EnableRenderersRecursive(Transform root, bool enable) {
+            if (root.GetComponent<Renderer>())
+                root.GetComponent<Renderer>().enabled = enable;
+
+            foreach (Transform child in root) {
+                EnableRenderersRecursive(child, enable);
+            }
+        }
+
         public void BakeNavMesh() {
             var navmesh = GameObject.FindObjectOfType<NavMeshSurface>();
             if (navmesh == null) {

@@ -967,6 +967,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "thab": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "ToggleHabitatMesh"
+                        };
+
+                        if (splitcommand.Length > 1) {
+                            if(splitcommand[1] == "t")
+                            action["active"] = true;
+
+                            if(splitcommand[1] == "f")
+                            action["active"] = false;
+                        }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
                 // move ahead stochastic
                 case "mas": {
                         ServerAction action = new ServerAction();
