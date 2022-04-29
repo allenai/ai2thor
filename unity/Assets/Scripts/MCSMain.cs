@@ -338,7 +338,11 @@ public class MCSMain : MonoBehaviour {
             }
         }
 
-        agentController.m_Camera.nearClipPlane = 0.011f;
+        // Update the camera properties to "reset" the camera and fix a weird rendering issue.
+        // Please note it's important to avoid arbitrarily changing the clipping plane values.
+        // We use them on the Python side for depth map data conversions, and AIs also use them.
+        agentController.m_Camera.nearClipPlane = 0.01f;
+        agentController.m_Camera.farClipPlane = 150f;
         
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
