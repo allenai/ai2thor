@@ -31,7 +31,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override void InitializeBody() {
-            Debug.Log("--- Base init body");
             VisibilityCapsule = TallVisCap;
             m_CharacterController.center = new Vector3(0, 0, 0);
             m_CharacterController.radius = 0.2f;
