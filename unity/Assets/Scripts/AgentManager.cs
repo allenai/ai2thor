@@ -164,7 +164,6 @@ public class AgentManager : MonoBehaviour {
         //"default" agentMode can use either default or "stochastic" agentControllerType
         //"locobot" agentMode can use either default or "stochastic" agentControllerType
         //"drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
-        Debug.Log(" --- Initialize log " + action.agentMode.ToLower());
         if (action.agentMode.ToLower() == "default") {
             if (action.agentControllerType.ToLower() != "physics" && action.agentControllerType.ToLower() != "stochastic") {
                 Debug.Log("default mode must use either physics or stochastic controller. Defaulting to physics");
