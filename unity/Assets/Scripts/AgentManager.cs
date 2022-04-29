@@ -94,7 +94,7 @@ public class AgentManager : MonoBehaviour {
         // https://forum.unity.com/threads/rendering-without-using-requestanimationframe-for-the-main-loop.373331/
         Application.targetFrameRate = 3000;
 #else
-            Debug.unityLogger.logEnabled = false;
+            Debug.unityLogger.logEnabled = Debug.isDebugBuild;
 #endif
 
         QualitySettings.vSyncCount = 0;
@@ -164,6 +164,7 @@ public class AgentManager : MonoBehaviour {
         //"default" agentMode can use either default or "stochastic" agentControllerType
         //"locobot" agentMode can use either default or "stochastic" agentControllerType
         //"drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
+        Debug.Log(" --- Initialize log " + action.agentMode.ToLower());
         if (action.agentMode.ToLower() == "default") {
             if (action.agentControllerType.ToLower() != "physics" && action.agentControllerType.ToLower() != "stochastic") {
                 Debug.Log("default mode must use either physics or stochastic controller. Defaulting to physics");

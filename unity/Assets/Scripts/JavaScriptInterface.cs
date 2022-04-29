@@ -9,8 +9,7 @@ public class JavaScriptInterface : MonoBehaviour {
     // IL2CPP throws exceptions about SendMetadata and Init not existing
     // so the body is only used for WebGL
 #if UNITY_WEBGL
-
-    private PhysicsRemoteFPSAgentController PhysicsController;
+    private AgentManager agentManager;
     // private DebugInputField inputField; // inputField.setControlMode no longer used in SetController
 
     [DllImport("__Internal")]
@@ -29,9 +28,8 @@ public class JavaScriptInterface : MonoBehaviour {
 
     void Start()
     {
-        AgentManager agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-        agentManager.SetUpPhysicsController();
-        PhysicsController = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
+        this.agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+        this.agentManager.SetUpPhysicsController();
         
 
 
@@ -54,7 +52,7 @@ public class JavaScriptInterface : MonoBehaviour {
 
         Type componentType;
         var success = PlayerControllers.controlModeToComponent.TryGetValue(controlMode, out componentType);
-        var Agent = PhysicsController.gameObject;
+        var Agent = CurrentActiveController().gameObject;
         if (success) {
             var previousComponent = Agent.GetComponent(componentType) as MonoBehaviour;
             if (previousComponent == null) {
@@ -66,7 +64,12 @@ public class JavaScriptInterface : MonoBehaviour {
 
     public void Step(string jsonAction)
     {
-        PhysicsController.ProcessControlCommand(new DynamicServerAction(jsonAction));
+        this.agentManager.ProcessControlCommand(new DynamicServerAction(jsonAction));
     }
+
+    private BaseFPSAgentController CurrentActiveController() {
+        return this.agentManager.PrimaryAgent;
+    }
+
 #endif
 }
