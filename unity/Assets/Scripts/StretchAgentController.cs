@@ -26,9 +26,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void InitializeBody() {
             VisibilityCapsule = StretchVisCap;
-            m_CharacterController.center = new Vector3(0, -0.1821353f, -0.1092373f);
-            m_CharacterController.radius = 0.1854628f;
-            m_CharacterController.height = 1.435714f;
+            m_CharacterController.center = new Vector3(0, -0.1934924f, -0.1247f);
+            m_CharacterController.radius = 0.17f;
+            m_CharacterController.height = 1.413f;
 
             CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
             cc.center = m_CharacterController.center;
