@@ -4857,7 +4857,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ToggleHabitatMesh(bool active) {
-            
             Transform objects = GameObject.Find("Objects").transform;
             Transform structures = GameObject.Find("Structure").transform;
 
