@@ -4190,7 +4190,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
                 VisualizePath(startHit.position, path);
 #endif
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 return true;
             } else {
                 errorMessage = $"Could not find path between {startHit.position.ToString("F3")}" +
