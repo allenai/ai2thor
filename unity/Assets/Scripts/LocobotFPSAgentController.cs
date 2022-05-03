@@ -54,7 +54,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // limit camera from looking too far down
             this.maxDownwardLookAngle = 30f;
-            this.maxUpwardLookAngle = 29f;
+            this.maxUpwardLookAngle = 30f + 1e-6f; // Adding 1e-6f in case of floating point issues.
             // this.horizonAngles = new float[] { 30.0f, 0.0f, 330.0f };
         }
 
