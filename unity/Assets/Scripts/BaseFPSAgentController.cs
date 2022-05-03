@@ -4429,7 +4429,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
                 startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
             );
-
             if (path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 throw new InvalidOperationException(
