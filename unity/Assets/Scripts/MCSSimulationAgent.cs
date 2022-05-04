@@ -784,9 +784,7 @@ public class MCSSimulationAgent : MonoBehaviour {
         if (facelessHead != null) {
             this.SetMaterial(facelessHead, skinIndex);
         }
-        else {
-            this.SetSkinMaterial(new SkinObjectMaterialOption[]{this.head}, skinOptions, this.skin);
-        }
+        this.SetSkinMaterial(new SkinObjectMaterialOption[]{this.head}, skinOptions, this.skin);
         this.SetSkinMaterial(this.chestOptions, skinOptions, this.skin);
         this.SetSkinMaterial(this.feetOptions, skinOptions, this.skin);
         this.SetSkinMaterial(this.legsOptions, skinOptions, this.skin);
