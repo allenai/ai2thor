@@ -19,6 +19,7 @@ class LocalActionRunner(object):
         self.interactive_prompt = NavigationPrompt(
             default_actions=[DefaultActions[a] for a in enabled_actions]
         )
+        self.target_object_type = ""
 
     def ObjectNavHumanAction(self, action, controller):
         img = controller.last_event.cv2img[:, :, :]
@@ -54,6 +55,14 @@ class LocalActionRunner(object):
 
         if len(controller.last_event.third_party_camera_frames) > 0 and len(controller.last_event.third_party_camera_frames[0]):
             # [...,::-1]
+
+            print("instance mask")
+
+            id = [x['objectId'] for x in controller.last_event.metadata["objects"] if x['objectType']]
+
+            print(id)
+            print(controller.last_event.object_id_to_color[id[0]])
+            
             # im = Image.fromarray(controller.last_event.third_party_camera_frames[0][:, :, :])
             im = controller.last_event.third_party_camera_frames[0][...,::-1][:, :, :]
             cv2.namedWindow("top_down")
@@ -62,12 +71,23 @@ class LocalActionRunner(object):
 
 
         print("Segmentation available")
-        print(event.instance_segmentation_frame is not None)
-        if event.instance_segmentation_frame is not None:
-            im2 = event.instance_segmentation_frame[...,::-1][:, :, :]
-            cv2.namedWindow("seg")
-            cv2.setWindowProperty("seg", cv2.WND_PROP_TOPMOST, 1)
-            cv2.imshow("seg", im2)
+        print( controller.last_event.instance_segmentation_frame is not None)
+        # if  controller.last_event.instance_segmentation_frame is not None:
+        #     im2 =  controller.last_event.instance_segmentation_frame[...,::-1][:, :, :]
+        #     cv2.namedWindow("seg")
+        #     cv2.setWindowProperty("seg", cv2.WND_PROP_TOPMOST, 1)
+        #     cv2.imshow("seg", im2)
+
+        # third_party_instance_segmentation_frames
+
+        print("third party seg")
+        print(len(controller.last_event.third_party_instance_segmentation_frames))
+
+        if  len(controller.last_event.third_party_instance_segmentation_frames) > 0:
+            im3 =  controller.last_event.third_party_instance_segmentation_frames[0][...,::-1][:, :, :]
+            cv2.namedWindow("seg2")
+            cv2.setWindowProperty("seg2", cv2.WND_PROP_TOPMOST, 1)
+            cv2.imshow("seg2", im3)
 
 
         # TODO  perhaps opencv not needed, just a good resolution for THOR

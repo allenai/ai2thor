@@ -40,7 +40,7 @@ from ai2thor.util import makedirs, atomic_write
 from ai2thor.util.lock import LockEx
 import ai2thor.platform
 
-from ai2thor.local_actions import INTERCEPT_ACTIONS, LocalActionRunner
+from ai2thor.local_actions import LocalActionRunner
 
 import warnings
 
@@ -396,18 +396,19 @@ class Controller(object):
         server_class=None,
         gpu_device=None,
         platform=None,
-        local_action_runner_class=LocalActionRunner,
-        local_action_runner_params={
-            "enabled_actions":
-            [
-                "MoveAhead",
-                "RotateLeft",
-                "RotateRight",
-                "LookUp",
-                "LookDown",
-                "End"
-            ]
-        },
+        local_action_runner=None,
+        # local_action_runner_class=LocalActionRunner,
+        # local_action_runner_params={
+        #     "enabled_actions":
+        #     [
+        #         "MoveAhead",
+        #         "RotateLeft",
+        #         "RotateRight",
+        #         "LookUp",
+        #         "LookDown",
+        #         "End"
+        #     ]
+        # },
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -417,8 +418,9 @@ class Controller(object):
         self.width = width
         self.height = height
 
-        self.local_action_runner = local_action_runner_class(**local_action_runner_params) if local_action_runner_class is not None else None
-        self.intercept_actions =  {func for func in dir(local_action_runner_class) if callable(getattr(local_action_runner_class, func))} if self.local_action_runner is not None else None
+        # self.local_action_runner = local_action_runner_class(**local_action_runner_params) if local_action_runner_class is not None else None
+        self.local_action_runner = local_action_runner
+        self.intercept_actions =  {func for func in dir(local_action_runner) if callable(getattr(local_action_runner, func))} if self.local_action_runner is not None else None
 
         self.last_event = None
         self.scene = None
@@ -1013,8 +1015,12 @@ class Controller(object):
                 % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
             )
         
-        if self.gpu_device:
-            command += " -force-device-index %d" % self.gpu_device
+        if self.gpu_device is not None:
+            # This parameter only applies to the CloudRendering platform.
+            # Vulkan maps the passed in parameter to device-index - 1 when compared
+            # to the nvidia-smi device ids
+            device_index = self.gpu_device if self.gpu_device < 1 else self.gpu_device + 1
+            command += " -force-device-index %d" % device_index
 
         return shlex.split(command)
 

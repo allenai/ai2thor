@@ -456,7 +456,7 @@ def webgl_build(
     """
     from functools import reduce
 
-    def file_to_content_addressable(file_path, json_metadata_file_path, json_key):
+    def file_to_content_addressable(file_path):
         # name_split = os.path.splitext(file_path)
         path_split = os.path.split(file_path)
         directory = path_split[0]
@@ -469,16 +469,6 @@ def webgl_build(
             md5_id = h.hexdigest()
         new_file_name = "{}_{}".format(md5_id, file_name)
         os.rename(file_path, os.path.join(directory, new_file_name))
-
-        with open(json_metadata_file_path, "r+") as f:
-            unity_json = json.load(f)
-            print("UNITY json {}".format(unity_json))
-            unity_json[json_key] = new_file_name
-
-            print("UNITY L {}".format(unity_json))
-
-            f.seek(0)
-            json.dump(unity_json, f, indent=4)
 
     arch = "WebGL"
     build_name = local_build_name(prefix, arch)
@@ -503,6 +493,10 @@ def webgl_build(
         print(scenes)
 
     env = dict(BUILD_SCENES=scenes)
+
+    # https://forum.unity.com/threads/cannot-build-for-webgl-in-unity-system-dllnotfoundexception.1254429/
+    # without setting this environment variable the error mentioned in the thread will get thrown
+    os.environ["EMSDK_PYTHON"] = "/usr/bin/python3"
 
     if crowdsource_build:
         env["DEFINES"] = "CROWDSOURCE_TASK"
@@ -555,12 +549,11 @@ def webgl_build(
         ("{}.wasm".format(build_name), "wasmCodeUrl"),
         ("{}.framework.js".format(build_name), "wasmFrameworkUrl"),
     ]
-    for file_name, key in to_content_addressable:
-        file_to_content_addressable(
-            os.path.join(build_path, "Build/{}".format(file_name)),
-            os.path.join(build_path, "Build/{}.json".format(build_name)),
-            key,
-        )
+    if content_addressable:
+        for file_name, key in to_content_addressable:
+            file_to_content_addressable(
+                os.path.join(build_path, "Build/{}".format(file_name)),
+            )
 
     with open(os.path.join(build_path, "scenes.json"), "w") as f:
         f.write(json.dumps(scene_metadata, sort_keys=False, indent=4))
@@ -1076,16 +1069,18 @@ def ci_build(context):
 
                 # its possible that the cache doesn't get linked if the builds
                 # succeeded during an earlier run
-                link_build_cache(os.getcwd(), "OSXIntel64", build["branch"])
+                link_build_cache(arch_temp_dirs["OSXIntel64"], "OSXIntel64", build["branch"])
 
                 # link builds directory so pytest can run
                 logger.info("current directory pre-symlink %s" % os.getcwd())
                 os.symlink(os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"), "unity/builds")
                 os.makedirs('tmp', exist_ok=True)
-                utf_proc = multiprocessing.Process(target=ci_test_utf, args=(build["branch"], build["commit_id"]))
+                # using threading here instead of multiprocessing since we must use the start_method of spawn, which 
+                # causes the tasks.py to get reloaded, which may be different on a branch from main
+                utf_proc = threading.Thread(target=ci_test_utf, args=(build["branch"], build["commit_id"], arch_temp_dirs["OSXIntel64"]))
                 utf_proc.start()
                 procs.append(utf_proc)
-                pytest_proc = multiprocessing.Process(target=ci_pytest, args=(build["branch"], build["commit_id"]))
+                pytest_proc = threading.Thread(target=ci_pytest, args=(build["branch"], build["commit_id"]))
                 pytest_proc.start()
                 procs.append(pytest_proc)
 
@@ -1102,7 +1097,7 @@ def ci_build(context):
                 if p:
                     logger.info(
                         "joining proc %s for %s %s"
-                        % (p.pid, build["branch"], build["commit_id"])
+                        % (p, build["branch"], build["commit_id"])
                     )
                     p.join()
 
@@ -1173,7 +1168,7 @@ def ci_build_webgl(context, commit_id):
     arch = "WebGL"
     set_gi_cache_folder(arch)
     link_build_cache(os.getcwd(), arch, branch)
-    webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
+    webgl_build_deploy_demo(context, verbose=True, content_addressable=False, force=True)
     logger.info("finished webgl build deploy %s %s" % (branch, commit_id))
     update_webgl_autodeploy_commit_id(commit_id)
 
@@ -1218,12 +1213,14 @@ def ci_build_arch(root_dir, arch, commit_id, include_private_scenes=False):
 def poll_ci_build(context):
     import requests.exceptions
     import requests
+    import datetime
 
     commit_id = git_commit_id()
+    start_datetime = datetime.datetime.utcnow()
 
     last_emit_time = 0
     for i in range(360):
-        missing = False
+        log_exist_count = 0
         # must emit something at least once every 10 minutes
         # otherwise travis will time out the build
         if (time.time() - last_emit_time) > 120:
@@ -1235,14 +1232,20 @@ def poll_ci_build(context):
         for plat in check_platforms:
             commit_build = ai2thor.build.Build(plat, commit_id, False)
             try:
-                if not commit_build.log_exists():
-                    missing = True
+                res = requests.head(commit_build.log_url)    
+                if res.status_code == 200:
+                    last_modified = datetime.datetime.strptime(res.headers['Last-Modified'], '%a, %d %b %Y %H:%M:%S GMT')
+                    # if a build is restarted, a log from a previous build will exist
+                    # but its last-modified date will precede the start datetime
+                    if last_modified > start_datetime or commit_build.exists():
+                        log_exist_count += 1
+
             # we observe errors when polling AWS periodically - we don't want these to stop
             # the build
             except requests.exceptions.ConnectionError as e:
                 print("Caught exception %s" % e)
 
-        if not missing:
+        if log_exist_count == len(check_platforms):
             break
         sys.stdout.flush()
         time.sleep(10)
@@ -1991,6 +1994,8 @@ def webgl_deploy(
         ".png": "image/png",
         ".txt": "text/plain",
         ".jpg": "image/jpeg",
+        ".wasm": "application/wasm",
+        ".data": "application/octet-stream",
         ".unityweb": "application/octet-stream",
         ".json": "application/json",
     }
@@ -3390,13 +3395,13 @@ def generate_pypi_index(context):
     )
 
 
-def ci_test_utf(branch, commit_id):
+def ci_test_utf(branch, commit_id, base_dir):
     logger.info(
-        "running Unity Test framework testRunner for %s %s"
-        % (branch, commit_id)
+        "running Unity Test framework testRunner for %s %s %s"
+        % (branch, commit_id, base_dir)
     )
 
-    results_path, results_logfile = test_utf()
+    results_path, results_logfile = test_utf(base_dir)
 
     class_data = generate_pytest_utf(results_path)
 
@@ -3577,22 +3582,26 @@ def activate_unity_license(context, ulf_path):
 
     subprocess.run('%s -batchmode -manualLicenseFile "%s"' % (_unity_path(), ulf_path), shell=True)
 
-def test_utf():
+def test_utf(base_dir=None):
     """
     Generates a module named ai2thor/tests/test_utf.py with test_XYZ style methods
     that include failures (if any) extracted from the xml output
     of the Unity Test Runner
     """
-    project_path = os.path.join(os.getcwd(), "unity")
+    if base_dir is None:
+        base_dir = os.getcwd()
+
+    project_path = os.path.join(base_dir, "unity")
     commit_id = git_commit_id()
     test_results_path = os.path.join(project_path, "utf_testResults-%s.xml" % commit_id)
-    logfile_path = os.path.join(os.getcwd(), "thor-testResults-%s.log" % commit_id)
+    logfile_path = os.path.join(base_dir, "thor-testResults-%s.log" % commit_id)
 
     command = (
         "%s -runTests -testResults %s -logFile %s -testPlatform PlayMode -projectpath %s "
         % (_unity_path(), test_results_path, logfile_path, project_path)
     )
-    subprocess.call(command, shell=True)
+
+    subprocess.call(command, shell=True, cwd=base_dir)
 
     return test_results_path, logfile_path
 
