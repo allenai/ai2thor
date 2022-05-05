@@ -68,10 +68,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             get => this.baseAgentComponent.TallVisCap;
         }
 
-        public GameObject IKArm {
-            get => this.baseAgentComponent.IKArm;
-        }
-
         public GameObject BotVisCap {
             get => this.baseAgentComponent.BotVisCap;
         }
@@ -95,6 +91,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject DroneBasket {
             get => this.baseAgentComponent.DroneBasket;
         }
+
+        public GameObject IKArm {
+            get => this.baseAgentComponent.IKArm;
+        }
+
         // reference to prefab for activiting the cracked camera effect via CameraCrack()
         public GameObject CrackedCameraCanvas {
             get => this.baseAgentComponent.CrackedCameraCanvas;
@@ -4391,7 +4392,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             if (!startWasHit || !targetWasHit) {
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 if (!startWasHit) {
                     throw new InvalidOperationException(
                         $"No point on NavMesh near startPosition {startPosition}."
@@ -4413,7 +4414,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 new Vector3(targetPosition.x, targetHit.position.y, targetPosition.z)
             );
             if (startOffset > allowedError && targetOffset > allowedError) {
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 throw new InvalidOperationException(
                     $"Closest point on NavMesh was too far from the agent: " +
                     $" (startPosition={startPosition.ToString("F3")}," +
@@ -4430,13 +4431,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
             );
             if (path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 throw new InvalidOperationException(
                     $"Could not find path between {startHit.position.ToString("F3")}" +
                     $" and {targetHit.position.ToString("F3")} using the NavMesh."
                 );
             }
-
 #if UNITY_EDITOR
             VisualizePath(startHit.position, path);
 #endif
