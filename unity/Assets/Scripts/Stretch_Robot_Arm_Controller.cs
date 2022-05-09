@@ -43,6 +43,8 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
     //private const float extendedArmLength = 0.8065f;
 
+    private GameObject surrogateChild = null;
+
     public CollisionListener collisionListener;
 
     void Start() {
@@ -644,7 +646,9 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         List<JointMetadata> joints = new List<JointMetadata>();
 
         // Declare variables used for processing metadata
-        GameObject surrogateChild = new GameObject();
+        if (surrogateChild == null) {
+            surrogateChild = new GameObject();
+        }
         Transform parentJoint;
         float angleRot;
         Vector3 vectorRot;
@@ -726,7 +730,10 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             joints.Add(jointMeta);
         }
 
-        Destroy(surrogateChild);
+        surrogateChild.transform.SetParent(null);
+        surrogateChild.transform.position = Vector3.zero;
+        surrogateChild.transform.rotation = Quaternion.identity;
+
         meta.joints = joints.ToArray();
 
         // metadata for any objects currently held by the hand on the arm
