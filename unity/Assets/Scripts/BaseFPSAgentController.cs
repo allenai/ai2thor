@@ -786,23 +786,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             HashSet<string> validRoomTypes = new HashSet<string>() {
                 "bedroom", "bathroom", "kitchen", "livingroom", "robothor"
             };
-            ColorChanger colorChangeComponent;
-            if (scene.StartsWith("Procedural")) {
-                colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
-                colorChangeComponent.RandomizeMaterials(
-                    useTrainMaterials: true,
-                    useValMaterials: true,
-                    useTestMaterials: true,
-                    useExternalMaterials: true,
-                    inRoomTypes: validRoomTypes
-                );
-
-                // Keep it here to make sure the action succeeds first
-                agentManager.doResetMaterials = true;
-
-                actionFinished(success: true);
-                return;
-            }
 
             HashSet<string> chosenRoomTypes = new HashSet<string>();
             if (inRoomTypes != null) {
@@ -819,6 +802,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     };
                     chosenRoomTypes.Add(roomType.ToLower());
                 }
+            }
+
+            ColorChanger colorChangeComponent;
+            if (scene.StartsWith("Procedural")) {
+                colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
+                colorChangeComponent.RandomizeMaterials(
+                    useTrainMaterials: useTrainMaterials.HasValue ? useTrainMaterials.Value : true,
+                    useValMaterials: useValMaterials.HasValue ? useValMaterials.Value : true,
+                    useTestMaterials: useTestMaterials.HasValue ? useTestMaterials.Value : true,
+                    useExternalMaterials: useExternalMaterials.HasValue ? useExternalMaterials.Value : true,
+                    inRoomTypes: inRoomTypes != null ? chosenRoomTypes : validRoomTypes
+                );
+
+                // Keep it here to make sure the action succeeds first
+                agentManager.doResetMaterials = true;
+
+                actionFinished(success: true);
+                return;
             }
 
             string sceneType;
