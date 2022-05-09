@@ -4659,10 +4659,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // TODO: asset scene is in procedural.
             GameObject go = GameObject.Find("Objects");
             foreach (Transform child in go.transform) {
-                Destroy(child.gameObject);
+                DestroyImmediate(child.gameObject);
             }
-            Destroy(GameObject.Find("Structure"));
-            Destroy(GameObject.Find("ProceduralLighting"));
+            DestroyImmediate(GameObject.Find("Structure"));
+            DestroyImmediate(GameObject.Find("ProceduralLighting"));
 
             // puts the agent below the scene to its starting position
             GameObject.Find("FPSController").transform.position = new Vector3(-0.5f, -38.86f, 0.5f);
