@@ -94,7 +94,7 @@ public class AgentManager : MonoBehaviour {
         // https://forum.unity.com/threads/rendering-without-using-requestanimationframe-for-the-main-loop.373331/
         Application.targetFrameRate = 3000;
 #else
-            Debug.unityLogger.logEnabled = false;
+            Debug.unityLogger.logEnabled = Debug.isDebugBuild;
 #endif
 
         QualitySettings.vSyncCount = 0;
