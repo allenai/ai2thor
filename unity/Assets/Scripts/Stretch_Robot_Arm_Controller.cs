@@ -43,6 +43,8 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
     //private const float extendedArmLength = 0.8065f;
 
+    private GameObject surrogateChild = null;
+
     public CollisionListener collisionListener;
 
     void Start() {
@@ -644,6 +646,9 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         List<JointMetadata> joints = new List<JointMetadata>();
 
         // Declare variables used for processing metadata
+        if (surrogateChild == null) {
+            surrogateChild = new GameObject();
+        }
         Transform parentJoint;
         float angleRot;
         Vector3 vectorRot;
@@ -676,9 +681,10 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             jointMeta.rootRelativePosition = armBase.InverseTransformPoint(joint.position);
 
             // ROTATIONS //
+            surrogateChild.transform.rotation = joint.rotation;
 
             // WORLD RELATIVE ROTATION
-            currentRotation = joint.rotation;
+            currentRotation = surrogateChild.transform.rotation;
 
             // Check that world-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -690,7 +696,8 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
             // ROOT-JOINT RELATIVE ROTATION
             //Grab rotation of current joint's angler relative to root joint
-            currentRotation = Quaternion.Inverse(armBase.rotation) * joint.rotation;
+            surrogateChild.transform.SetParent(armBase);
+            currentRotation = surrogateChild.transform.localRotation;
 
             // Check that root-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -705,7 +712,8 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 parentJoint = joint.parent;
 
                 // Grab rotation of current joint's angler relative to parent joint's angler
-                currentRotation = Quaternion.Inverse(parentJoint.rotation) * joint.rotation;
+                surrogateChild.transform.SetParent(parentJoint);
+                currentRotation = surrogateChild.transform.localRotation;
 
                 // Check that parent-relative rotation is angle-axis-notation-compatible
                 if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -721,6 +729,10 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
             joints.Add(jointMeta);
         }
+
+        surrogateChild.transform.SetParent(null);
+        surrogateChild.transform.position = Vector3.zero;
+        surrogateChild.transform.rotation = Quaternion.identity;
 
         meta.joints = joints.ToArray();
 
