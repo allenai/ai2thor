@@ -746,7 +746,6 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         List<JointMetadata> joints = new List<JointMetadata>();
 
         // Declare variables used for processing metadata
-        GameObject surrogateChild = new GameObject();
         Transform parentJoint;
         float angleRot;
         Vector3 vectorRot;
@@ -771,11 +770,10 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             jointMeta.rootRelativePosition = FirstJoint.InverseTransformPoint(joint.position);
 
             // ROTATIONS //
-            // GetChild grabs angler since that is what actually changes the geometry angle
-            surrogateChild.transform.rotation = joint.GetChild(0).rotation;
 
             // WORLD RELATIVE ROTATION
-            currentRotation = surrogateChild.transform.rotation;
+            // Angler is grabbed since that is what actually changes the geometry angle
+            currentRotation = joint.GetChild(0).rotation;
 
             // Check that world-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -790,8 +788,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             // Root-forward and agent-forward are always the same
 
             //Grab rotation of current joint's angler relative to root joint
-            surrogateChild.transform.SetParent(armBase);
-            currentRotation = surrogateChild.transform.localRotation;
+            currentRotation = Quaternion.Inverse(armBase.rotation) * joint.GetChild(0).rotation;
 
             // Check that root-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -806,9 +803,8 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
                 parentJoint = joint.parent;
 
                 // Grab rotation of current joint's angler relative to parent joint's angler
-                surrogateChild.transform.SetParent(parentJoint.GetChild(0));
-                currentRotation = surrogateChild.transform.localRotation;
-                
+                currentRotation = Quaternion.Inverse(parentJoint.GetChild(0).rotation) * joint.GetChild(0).rotation;
+
                 // Check that parent-relative rotation is angle-axis-notation-compatible
                 if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                     currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
@@ -824,7 +820,6 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             joints.Add(jointMeta);
         }
 
-        Destroy(surrogateChild);
         meta.joints = joints.ToArray();
 
         // metadata for any objects currently held by the hand on the arm
