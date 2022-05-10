@@ -18,11 +18,11 @@ public class MCSMain : MonoBehaviour {
     private static float AUTO_GRID_CELL_MIN = 2f;
     private static float AUTO_GRID_CELL_SPACING = 0.25f;
     private static float AUTO_GRID_HALF_SCALE = 0.5f;
-    private static float FLOOR_SCALE_X = 11f;
     private static float FLOOR_SCALE_Y = 0.5f;
-    private static float FLOOR_SCALE_Z = 11f;
     private static float INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Y = 1.5f;
     private static float INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Z = -4.5f;
+    private static float INTUITIVE_PHYSICS_SPOT_LIGHT_RANGE = 15f;
+    private static float INTUITIVE_PHYSICS_SPOT_LIGHT_RANGE_OLD = 10f;
     private static float ISOMETRIC_FLOOR_SCALE_XZ = 9f;
     private static float ISOMETRIC_PERFORMER_START_POSITION_X = 4f;
     private static float ISOMETRIC_PERFORMER_START_POSITION_Y = 3f;
@@ -58,7 +58,6 @@ public class MCSMain : MonoBehaviour {
     private static float RIGIDBODY_ANGULAR_DRAG_DEFAULT = 0.5f;
     private static float WALL_BACK_FRONT_POSITION_X = 0;
     private static float WALL_LEFT_RIGHT_POSITION_Z = 0;
-    private static float WALL_LEFT_RIGHT_SCALE_Z = 11.0f;
     private static float WALL_WIDTH = 0.5f;
     private static Vector3 DEFAULT_ROOM_DIMENSIONS = new Vector3(10, 3, 10);
     private static Vector3 DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS_OLD = new Vector3(15, 6, 10);
@@ -821,6 +820,9 @@ public class MCSMain : MonoBehaviour {
         this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
 
         this.currentScene.wallProperties = null;
+
+        this.light2.GetComponent<Light>().range = oldScene ? INTUITIVE_PHYSICS_SPOT_LIGHT_RANGE_OLD :
+            INTUITIVE_PHYSICS_SPOT_LIGHT_RANGE;
     }
 
     private void SetupIsometric() {
