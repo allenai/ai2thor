@@ -43,8 +43,6 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
     //private const float extendedArmLength = 0.8065f;
 
-    private GameObject surrogateChild = null;
-
     public CollisionListener collisionListener;
 
     void Start() {
@@ -171,7 +169,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 point0: point0,
                 point1: point1,
                 radius: radius,
-                layerMask: LayerMask.GetMask("SimObjVisible"),
+                layerMask: LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
             foreach (Collider col in cols) {
@@ -185,7 +183,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 center: b.transform.TransformPoint(b.center),
                 halfExtents: b.size / 2.0f,
                 orientation: b.transform.rotation,
-                layerMask: LayerMask.GetMask("SimObjVisible"),
+                layerMask: LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
             foreach (Collider col in cols) {
@@ -646,9 +644,6 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         List<JointMetadata> joints = new List<JointMetadata>();
 
         // Declare variables used for processing metadata
-        if (surrogateChild == null) {
-            surrogateChild = new GameObject();
-        }
         Transform parentJoint;
         float angleRot;
         Vector3 vectorRot;
@@ -681,10 +676,9 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             jointMeta.rootRelativePosition = armBase.InverseTransformPoint(joint.position);
 
             // ROTATIONS //
-            surrogateChild.transform.rotation = joint.rotation;
 
             // WORLD RELATIVE ROTATION
-            currentRotation = surrogateChild.transform.rotation;
+            currentRotation = joint.rotation;
 
             // Check that world-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -696,8 +690,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
             // ROOT-JOINT RELATIVE ROTATION
             //Grab rotation of current joint's angler relative to root joint
-            surrogateChild.transform.SetParent(armBase);
-            currentRotation = surrogateChild.transform.localRotation;
+            currentRotation = Quaternion.Inverse(armBase.rotation) * joint.rotation;
 
             // Check that root-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -712,8 +705,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 parentJoint = joint.parent;
 
                 // Grab rotation of current joint's angler relative to parent joint's angler
-                surrogateChild.transform.SetParent(parentJoint);
-                currentRotation = surrogateChild.transform.localRotation;
+                currentRotation = Quaternion.Inverse(parentJoint.rotation) * joint.rotation;
 
                 // Check that parent-relative rotation is angle-axis-notation-compatible
                 if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -729,10 +721,6 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
             joints.Add(jointMeta);
         }
-
-        surrogateChild.transform.SetParent(null);
-        surrogateChild.transform.position = Vector3.zero;
-        surrogateChild.transform.rotation = Quaternion.identity;
 
         meta.joints = joints.ToArray();
 
