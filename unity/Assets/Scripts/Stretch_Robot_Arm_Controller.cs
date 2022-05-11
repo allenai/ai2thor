@@ -644,7 +644,6 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         List<JointMetadata> joints = new List<JointMetadata>();
 
         // Declare variables used for processing metadata
-        GameObject surrogateChild = new GameObject();
         Transform parentJoint;
         float angleRot;
         Vector3 vectorRot;
@@ -677,10 +676,9 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             jointMeta.rootRelativePosition = armBase.InverseTransformPoint(joint.position);
 
             // ROTATIONS //
-            surrogateChild.transform.rotation = joint.rotation;
 
             // WORLD RELATIVE ROTATION
-            currentRotation = surrogateChild.transform.rotation;
+            currentRotation = joint.rotation;
 
             // Check that world-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -692,8 +690,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
             // ROOT-JOINT RELATIVE ROTATION
             //Grab rotation of current joint's angler relative to root joint
-            surrogateChild.transform.SetParent(armBase);
-            currentRotation = surrogateChild.transform.localRotation;
+            currentRotation = Quaternion.Inverse(armBase.rotation) * joint.rotation;
 
             // Check that root-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -708,8 +705,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 parentJoint = joint.parent;
 
                 // Grab rotation of current joint's angler relative to parent joint's angler
-                surrogateChild.transform.SetParent(parentJoint);
-                currentRotation = surrogateChild.transform.localRotation;
+                currentRotation = Quaternion.Inverse(parentJoint.rotation) * joint.rotation;
 
                 // Check that parent-relative rotation is angle-axis-notation-compatible
                 if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -726,7 +722,6 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             joints.Add(jointMeta);
         }
 
-        Destroy(surrogateChild);
         meta.joints = joints.ToArray();
 
         // metadata for any objects currently held by the hand on the arm
