@@ -21,8 +21,6 @@ public class MCSMain : MonoBehaviour {
     private static float FLOOR_SCALE_Y = 0.5f;
     private static float INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Y = 1.5f;
     private static float INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Z = -4.5f;
-    private static float INTUITIVE_PHYSICS_SPOT_LIGHT_RANGE = 15f;
-    private static float INTUITIVE_PHYSICS_SPOT_LIGHT_RANGE_OLD = 10f;
     private static float ISOMETRIC_FLOOR_SCALE_XZ = 9f;
     private static float ISOMETRIC_PERFORMER_START_POSITION_X = 4f;
     private static float ISOMETRIC_PERFORMER_START_POSITION_Y = 3f;
@@ -382,6 +380,9 @@ public class MCSMain : MonoBehaviour {
             this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
         }
 
+        // Reset the secondary light used in old passive physics scenes.
+        this.light2.SetActive(false);
+
         // Expand the walls of the room in all intuitive physics scenes and set a specific performer start.
         if (this.currentScene.intuitivePhysics || this.currentScene.observation) {
             SetupIntuitivePhysics();
@@ -408,8 +409,6 @@ public class MCSMain : MonoBehaviour {
         SimObjPhysics wallFrontSimObjPhysics = this.wallFront.GetComponent<SimObjPhysics>();
         SimObjPhysics wallBackSimObjPhysics = this.wallBack.GetComponent<SimObjPhysics>();
 
-        this.light2.SetActive(false);
-
         if (this.currentScene.screenshot) {
             this.floor.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
             this.wallLeft.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
@@ -434,11 +433,6 @@ public class MCSMain : MonoBehaviour {
             this.light.GetComponent<Light>().range = MCSMain.LIGHT_RANGE;
             this.light.transform.position = new Vector3(0, MCSMain.LIGHT_Y_POSITION,
                 MCSMain.LIGHT_Z_POSITION);
-
-            // Intuitive physics scenes have a second light source.
-            if (this.currentScene.intuitivePhysics || this.currentScene.observation) {
-                this.light2.SetActive(true);
-            }
         }
 
         if (this.currentScene.wallProperties != null && this.currentScene.wallProperties.enable) {
@@ -498,9 +492,14 @@ public class MCSMain : MonoBehaviour {
         foreach (Light light in this.sceneLights)
             Destroy(light.gameObject);
         this.sceneLights.Clear();
-        if((this.currentScene.roomDimensions.x >= MCSMain.MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS || this.currentScene.roomDimensions.z >= MCSMain.MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS)
-            && (!this.currentScene.intuitivePhysics && !this.currentScene.isometric))
+        // Only generate additional ceiling lights in big rooms.
+        bool bigRoom = (this.currentScene.roomDimensions.x >= MCSMain.MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS ||
+                this.currentScene.roomDimensions.z >= MCSMain.MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS);
+        // Generate additional ceiling lights in all new passive physics scenes.
+        bool newPassivePhysicsScenes = (this.currentScene.intuitivePhysics && this.currentScene.version >= 3);
+        if ((bigRoom && !this.isPassiveScene) || newPassivePhysicsScenes) {
             AddLightsToBigRoom((int) this.currentScene.roomDimensions.x, (int) this.currentScene.roomDimensions.z);
+        }
 
         agentController.agentManager.ResetSceneBounds();
         this.lastStep = -1;
@@ -797,9 +796,9 @@ public class MCSMain : MonoBehaviour {
         // Override the default or configured roomDimensions for all intuitivePhysics scenes.
         // Please note that the ceiling is deactivated elsewhere.
         // New scenes are intentionally deeper than old scenes.
-        Vector3 roomDimensions = oldScene ? MCSMain.DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS_OLD :
+        this.currentScene.roomDimensions = oldScene ? MCSMain.DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS_OLD :
             MCSMain.DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS;
-        SetRoomInternalSize(roomDimensions, WALL_WIDTH);
+        SetRoomInternalSize(this.currentScene.roomDimensions, WALL_WIDTH);
 
         // Override the default or configured performerStart for all intuitivePhysics scenes.
         // The performer agent's position is intentionally higher than floor-level.
@@ -821,8 +820,8 @@ public class MCSMain : MonoBehaviour {
 
         this.currentScene.wallProperties = null;
 
-        this.light2.GetComponent<Light>().range = oldScene ? INTUITIVE_PHYSICS_SPOT_LIGHT_RANGE_OLD :
-            INTUITIVE_PHYSICS_SPOT_LIGHT_RANGE;
+        // Old passive physics scenes have a secondary light.
+        this.light2.SetActive(oldScene);
     }
 
     private void SetupIsometric() {
