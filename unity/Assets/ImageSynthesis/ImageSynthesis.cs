@@ -301,15 +301,45 @@ public class ImageSynthesis : MonoBehaviour {
         }
 	}
 
-	private string EnsureFloorTexturesAndHolesHaveIdenticalTags(string objTag, Renderer r) {
+	private string EnsureFloorTexturesAndHolesHaveIdenticalTags(string objTag, Renderer r, List<MCSConfigGrid> holes) {
 		bool floor = objTag.Length > "floor".Length && objTag.Substring(0, "floor".Length) == "floor";
 		bool hole = floor && r.transform.position.y == -MCSMain.GetFloorDepth();
-		objTag = floor ? "floor" + r.material.name + (hole ? "hole" : "") : objTag;
+		bool isAdjacentToHole = false;
+
+		// Need to verify that floor section isn't adjacent to a hole -- if it is, classify
+		// it as such so the segmentation masks can be colored correctly.
+		if(floor && (!hole) && holes != null) {
+			float origX = r.transform.position.x;
+			float origZ = r.transform.position.z;
+
+			foreach(MCSConfigGrid sceneHoleToCheck in holes) {
+				// Check floor section directly in front and directly behind this one, as well as directly right/left
+				bool matchFrontBack = (origX + 1 == sceneHoleToCheck.x || origX - 1 == sceneHoleToCheck.x) && origZ == sceneHoleToCheck.z;
+				bool matchRightLeft = origX == sceneHoleToCheck.x && (origZ + 1 == sceneHoleToCheck.z || origZ - 1 == sceneHoleToCheck.z);
+
+				if(matchFrontBack || matchRightLeft) {
+					isAdjacentToHole = true;
+					break;
+				}
+			}
+		}
+
+		objTag = floor ? "floor" + r.material.name + (hole ? "hole" : "") + (isAdjacentToHole ? "nextToHole" : "") : objTag;
+
 		return objTag;
 	}
 
 	public void OnSceneChange()
 	{
+		List<MCSConfigGrid> holes = new List<MCSConfigGrid>();
+		MCSMain mcsMain = FindObjectOfType<MCSMain>();
+
+		if(mcsMain != null && mcsMain.currentScene != null) {
+			holes = mcsMain.currentScene.holes;
+		} else {
+			Debug.Log("No holes found - missing MCSMain or currentScene.");
+		}
+
 		sentColorCorrespondence = false;
 		var renderers = UnityEngine.Object.FindObjectsOfType<Renderer>();
 		colorIds = new Dictionary<Color, string> ();
@@ -347,7 +377,7 @@ public class ImageSynthesis : MonoBehaviour {
                 objTag = "fuse_wall";
             }
 
-			objTag = EnsureFloorTexturesAndHolesHaveIdenticalTags(objTag, r);
+			objTag = EnsureFloorTexturesAndHolesHaveIdenticalTags(objTag, r, holes);
 			Color classColor = ColorEncoding.EncodeTagAsColor (classTag);
 			Color objColor = ColorEncoding.EncodeTagAsColor(objTag + guidForColors);
 
