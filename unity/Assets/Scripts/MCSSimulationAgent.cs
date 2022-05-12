@@ -136,7 +136,10 @@ public class MCSSimulationAgent : MonoBehaviour {
         this.animator = this.gameObject.GetComponent<Animator>();
         animator.speed = 0;
         foreach (AnimationClip clip in animator.runtimeAnimatorController.animationClips) {
-            clipNamesAndDurations.Add(clip.name, clip.length);
+            try {
+                clipNamesAndDurations.Add(clip.name, clip.length);
+            }
+            catch {}
         }
         mcsController = FindObjectOfType<MCSController>();
         mcsController.simulationAgents.Add(this);
