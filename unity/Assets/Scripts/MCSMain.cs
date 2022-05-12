@@ -18,17 +18,9 @@ public class MCSMain : MonoBehaviour {
     private static float AUTO_GRID_CELL_MIN = 2f;
     private static float AUTO_GRID_CELL_SPACING = 0.25f;
     private static float AUTO_GRID_HALF_SCALE = 0.5f;
-    private static float FLOOR_SCALE_X = 11f;
     private static float FLOOR_SCALE_Y = 0.5f;
-    private static float FLOOR_SCALE_Z = 11f;
-    private static float INTUITIVE_PHYSICS_FLOOR_SCALE_X = 15f;
     private static float INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Y = 1.5f;
     private static float INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Z = -4.5f;
-    private static float INTUITIVE_PHYSICS_WALL_BACK_FRONT_SCALE_X = 15f;
-    private static float INTUITIVE_PHYSICS_WALL_FRONT_POSITION_Y = 3f;
-    private static float INTUITIVE_PHYSICS_WALL_FRONT_SCALE_Y = 6f;
-    private static float INTUITIVE_PHYSICS_WALL_LEFT_POSITION_X = -7.5f;
-    private static float INTUITIVE_PHYSICS_WALL_RIGHT_POSITION_X = 7.5f;
     private static float ISOMETRIC_FLOOR_SCALE_XZ = 9f;
     private static float ISOMETRIC_PERFORMER_START_POSITION_X = 4f;
     private static float ISOMETRIC_PERFORMER_START_POSITION_Y = 3f;
@@ -56,27 +48,19 @@ public class MCSMain : MonoBehaviour {
     private static Color LIGHT_DEFAULT_COLOR = Color.white;
     private static int MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS = 12;
     private static float PHYSICS_FRICTION_DYNAMIC_DEFAULT = 0.6f;
-    private static float PHYSICS_FRICTION_DYNAMIC_PASSIVE = 0.1f;
+    private static float PHYSICS_FRICTION_DYNAMIC_INTUITIVE_PHYSICS = 0.1f;
     private static float PHYSICS_FRICTION_STATIC_DEFAULT = 0.6f;
-    private static float PHYSICS_FRICTION_STATIC_PASSIVE = 0.1f;
+    private static float PHYSICS_FRICTION_STATIC_INTUITIVE_PHYSICS = 0.1f;
     private static float PHYSICS_BOUNCINESS_DEFAULT = 0;
     private static float RIGIDBODY_DRAG_DEFAULT = 0;
     private static float RIGIDBODY_ANGULAR_DRAG_DEFAULT = 0.5f;
     private static float WALL_BACK_FRONT_POSITION_X = 0;
-    private static float WALL_BACK_FRONT_SCALE_X = 11.0f;
-    private static float WALL_BACK_FRONT_SCALE_Z = 0.5f;
-    private static float WALL_BACK_POSITION_Z = -5.25f;
-    private static float WALL_FRONT_POSITION_Z = 5.25f;
-    private static float WALL_LEFT_POSITION_X = -5.25f;
     private static float WALL_LEFT_RIGHT_POSITION_Z = 0;
-    private static float WALL_LEFT_RIGHT_SCALE_X = 0.5f;
-    private static float WALL_LEFT_RIGHT_SCALE_Z = 11.0f;
-    private static float WALL_POSITION_Y = 1.5f;
-    private static float WALL_RIGHT_POSITION_X = 5.25f;
-    private static float WALL_SCALE_Y = 3.0f;
+    private static float WALL_WIDTH = 0.5f;
     private static Vector3 DEFAULT_ROOM_DIMENSIONS = new Vector3(10, 3, 10);
+    private static Vector3 DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS_OLD = new Vector3(15, 6, 10);
+    private static Vector3 DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS = new Vector3(20, 10, 20);
     private static Vector3 DEFAULT_FLOOR_POSITION = new Vector3(0, -0.25f, 0);
-    private static float WALL_WIDTH = .5f;
     private static int FLOOR_DEPTH = 6;
     private static int FLOOR_DIMENSIONS = 1;
     private static int FLOOR_LOWERED_HEIGHT = -100;
@@ -385,7 +369,6 @@ public class MCSMain : MonoBehaviour {
         // Remove the ceiling from all intuitive physics and isometric scenes.
         this.ceiling.SetActive(!this.isPassiveScene);
 
-
         // Reset the floorProperties in case the previous scene was intuitivePhysics.
         if (this.currentScene.floorProperties == null || !this.currentScene.floorProperties.enable) {
             this.currentScene.floorProperties = new MCSConfigPhysicsProperties();
@@ -397,45 +380,12 @@ public class MCSMain : MonoBehaviour {
             this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
         }
 
+        // Reset the secondary light used in old passive physics scenes.
+        this.light2.SetActive(false);
+
         // Expand the walls of the room in all intuitive physics scenes and set a specific performer start.
         if (this.currentScene.intuitivePhysics || this.currentScene.observation) {
-            this.wallLeft.transform.position = new Vector3(MCSMain.INTUITIVE_PHYSICS_WALL_LEFT_POSITION_X,
-                MCSMain.WALL_POSITION_Y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
-            this.wallLeft.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
-                MCSMain.WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
-
-            this.wallRight.transform.position = new Vector3(MCSMain.INTUITIVE_PHYSICS_WALL_RIGHT_POSITION_X,
-                MCSMain.WALL_POSITION_Y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
-            this.wallRight.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
-                MCSMain.WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
-
-            this.wallFront.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
-                MCSMain.INTUITIVE_PHYSICS_WALL_FRONT_POSITION_Y, MCSMain.WALL_FRONT_POSITION_Z);
-            this.wallFront.transform.localScale = new Vector3(MCSMain.INTUITIVE_PHYSICS_WALL_BACK_FRONT_SCALE_X,
-                MCSMain.INTUITIVE_PHYSICS_WALL_FRONT_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
-
-            this.wallBack.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
-                MCSMain.WALL_POSITION_Y, MCSMain.WALL_BACK_POSITION_Z);
-            this.wallBack.transform.localScale = new Vector3(MCSMain.INTUITIVE_PHYSICS_WALL_BACK_FRONT_SCALE_X,
-                MCSMain.WALL_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
-
-            this.floor.transform.localScale = new Vector3(MCSMain.INTUITIVE_PHYSICS_FLOOR_SCALE_X,
-                MCSMain.FLOOR_SCALE_Y, MCSMain.FLOOR_SCALE_Z);
-
-            this.currentScene.performerStart = new MCSConfigTransform();
-            this.currentScene.performerStart.position = new MCSConfigVector();
-            this.currentScene.performerStart.position.y = MCSMain.INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Y;
-            this.currentScene.performerStart.position.z = MCSMain.INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Z;
-            this.currentScene.performerStart.rotation = new MCSConfigVector();
-
-            // Override the default or configured floorProperties for all intuitivePhysics scenes.
-            this.currentScene.floorProperties = new MCSConfigPhysicsProperties();
-            this.currentScene.floorProperties.enable = true;
-            this.currentScene.floorProperties.dynamicFriction = MCSMain.PHYSICS_FRICTION_DYNAMIC_PASSIVE;
-            this.currentScene.floorProperties.staticFriction = MCSMain.PHYSICS_FRICTION_STATIC_PASSIVE;
-            this.currentScene.floorProperties.bounciness = MCSMain.PHYSICS_BOUNCINESS_DEFAULT;
-            this.currentScene.floorProperties.drag = MCSMain.RIGIDBODY_DRAG_DEFAULT;
-            this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
+            SetupIntuitivePhysics();
         } else if (this.currentScene.isometric) {
             SetupIsometric();
         } else {
@@ -458,8 +408,6 @@ public class MCSMain : MonoBehaviour {
         SimObjPhysics wallRightSimObjPhysics = this.wallRight.GetComponent<SimObjPhysics>();
         SimObjPhysics wallFrontSimObjPhysics = this.wallFront.GetComponent<SimObjPhysics>();
         SimObjPhysics wallBackSimObjPhysics = this.wallBack.GetComponent<SimObjPhysics>();
-
-        this.light2.SetActive(false);
 
         if (this.currentScene.screenshot) {
             this.floor.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
@@ -485,11 +433,6 @@ public class MCSMain : MonoBehaviour {
             this.light.GetComponent<Light>().range = MCSMain.LIGHT_RANGE;
             this.light.transform.position = new Vector3(0, MCSMain.LIGHT_Y_POSITION,
                 MCSMain.LIGHT_Z_POSITION);
-
-            // Intuitive physics scenes have a second light source.
-            if (this.currentScene.intuitivePhysics || this.currentScene.observation) {
-                this.light2.SetActive(true);
-            }
         }
 
         if (this.currentScene.wallProperties != null && this.currentScene.wallProperties.enable) {
@@ -549,9 +492,14 @@ public class MCSMain : MonoBehaviour {
         foreach (Light light in this.sceneLights)
             Destroy(light.gameObject);
         this.sceneLights.Clear();
-        if((this.currentScene.roomDimensions.x >= MCSMain.MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS || this.currentScene.roomDimensions.z >= MCSMain.MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS)
-            && (!this.currentScene.intuitivePhysics && !this.currentScene.isometric))
+        // Only generate additional ceiling lights in big rooms.
+        bool bigRoom = (this.currentScene.roomDimensions.x >= MCSMain.MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS ||
+                this.currentScene.roomDimensions.z >= MCSMain.MIN_ROOM_DIMENSIONS_FOR_ADDITIONAL_LIGHTS);
+        // Generate additional ceiling lights in all new passive physics scenes.
+        bool newPassivePhysicsScenes = (this.currentScene.intuitivePhysics && this.currentScene.version >= 3);
+        if ((bigRoom && !this.isPassiveScene) || newPassivePhysicsScenes) {
             AddLightsToBigRoom((int) this.currentScene.roomDimensions.x, (int) this.currentScene.roomDimensions.z);
+        }
 
         agentController.agentManager.ResetSceneBounds();
         this.lastStep = -1;
@@ -840,6 +788,40 @@ public class MCSMain : MonoBehaviour {
         }
 
         this.CleanupFloorAfterCloning();
+    }
+
+    private void SetupIntuitivePhysics() {
+        bool oldScene = this.currentScene.version < 3;
+
+        // Override the default or configured roomDimensions for all intuitivePhysics scenes.
+        // Please note that the ceiling is deactivated elsewhere.
+        // New scenes are intentionally deeper than old scenes.
+        this.currentScene.roomDimensions = oldScene ? MCSMain.DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS_OLD :
+            MCSMain.DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS;
+        SetRoomInternalSize(this.currentScene.roomDimensions, WALL_WIDTH);
+
+        // Override the default or configured performerStart for all intuitivePhysics scenes.
+        // The performer agent's position is intentionally higher than floor-level.
+        this.currentScene.performerStart = new MCSConfigTransform();
+        this.currentScene.performerStart.position = new MCSConfigVector();
+        this.currentScene.performerStart.position.y = MCSMain.INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Y;
+        this.currentScene.performerStart.position.z = MCSMain.INTUITIVE_PHYSICS_PERFORMER_START_POSITION_Z;
+        this.currentScene.performerStart.rotation = new MCSConfigVector();
+
+        // Override the default or configured floorProperties for all intuitivePhysics scenes.
+        // The floor intentionally has lower friction than the default floor.
+        this.currentScene.floorProperties = new MCSConfigPhysicsProperties();
+        this.currentScene.floorProperties.enable = true;
+        this.currentScene.floorProperties.dynamicFriction = MCSMain.PHYSICS_FRICTION_DYNAMIC_INTUITIVE_PHYSICS;
+        this.currentScene.floorProperties.staticFriction = MCSMain.PHYSICS_FRICTION_STATIC_INTUITIVE_PHYSICS;
+        this.currentScene.floorProperties.bounciness = MCSMain.PHYSICS_BOUNCINESS_DEFAULT;
+        this.currentScene.floorProperties.drag = MCSMain.RIGIDBODY_DRAG_DEFAULT;
+        this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
+
+        this.currentScene.wallProperties = null;
+
+        // Old passive physics scenes have a secondary light.
+        this.light2.SetActive(oldScene);
     }
 
     private void SetupIsometric() {
