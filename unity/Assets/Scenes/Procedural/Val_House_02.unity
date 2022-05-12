@@ -11189,16 +11189,16 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 400529714796307433}
   - {fileID: 5603764925890379233}
-  - {fileID: 1377300705320918085}
-  - {fileID: 7679129365146306476}
-  - {fileID: 1161194558456757024}
   - {fileID: 4651379559390567757}
   - {fileID: 723272520125786831}
   - {fileID: 6130947112096614027}
   - {fileID: 1360420681}
   - {fileID: 4630691707397045134}
+  - {fileID: 400529714796307433}
+  - {fileID: 1377300705320918085}
+  - {fileID: 7679129365146306476}
+  - {fileID: 1161194558456757024}
   - {fileID: 1879193368}
   - {fileID: 190098389}
   - {fileID: 1066713675}
@@ -33283,6 +33283,7 @@ GameObject:
   - component: {fileID: 1360420684}
   - component: {fileID: 1360420683}
   - component: {fileID: 1360420682}
+  - component: {fileID: 1360420685}
   m_Layer: 8
   m_Name: val_house_02_backsplash_3
   m_TagString: Structure
@@ -33302,7 +33303,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 467025510}
-  m_RootOrder: 8
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!64 &1360420682
 MeshCollider:
@@ -33367,6 +33368,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1360420680}
   m_Mesh: {fileID: 3505938011564834658, guid: 572852be3bfc95a40b2f8df968f30589, type: 3}
+--- !u!114 &1360420685
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1360420680}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 1
 --- !u!1 &1360471745
 GameObject:
   m_ObjectHideFlags: 0
@@ -52051,7 +52065,7 @@ Transform:
   - {fileID: 400529714746250452}
   - {fileID: 1252893374638066233}
   m_Father: {fileID: 467025510}
-  m_RootOrder: 0
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &400529714796307436
 GameObject:
@@ -52308,7 +52322,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 467025510}
-  m_RootOrder: 6
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &819805743635302315
 GameObject:
@@ -52474,6 +52488,7 @@ GameObject:
   - component: {fileID: 7837794776985718825}
   - component: {fileID: 949689908480316511}
   - component: {fileID: 1138493803658757311}
+  - component: {fileID: 1138493803658757312}
   m_Layer: 8
   m_Name: val_house_02_walls
   m_TagString: Structure
@@ -52495,6 +52510,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4675124192774937052, guid: 572852be3bfc95a40b2f8df968f30589, type: 3}
+--- !u!114 &1138493803658757312
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1138493803658757310}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 1
 --- !u!4 &1161194558456757024
 Transform:
   m_ObjectHideFlags: 0
@@ -52507,7 +52535,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 467025510}
-  m_RootOrder: 4
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1180634061901013320
 MeshRenderer:
@@ -52662,7 +52690,7 @@ Transform:
   - {fileID: 556710741451631783}
   - {fileID: 6218490370153864563}
   m_Father: {fileID: 467025510}
-  m_RootOrder: 2
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1434889969239080440
 MeshRenderer:
@@ -52806,6 +52834,7 @@ GameObject:
   - component: {fileID: 229170004592867714}
   - component: {fileID: 7567465705706158761}
   - component: {fileID: 1848441181814550687}
+  - component: {fileID: 1848441181814550688}
   m_Layer: 8
   m_Name: val_house_02_backsplash_4
   m_TagString: Structure
@@ -52827,6 +52856,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 954484366379969604, guid: 572852be3bfc95a40b2f8df968f30589, type: 3}
+--- !u!114 &1848441181814550688
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1848441181814550686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 1
 --- !u!23 &2034434532234838501
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -53109,6 +53151,7 @@ GameObject:
   - component: {fileID: 2244272965983475504}
   - component: {fileID: 2641248965966841723}
   - component: {fileID: 2896586191186123838}
+  - component: {fileID: 2896586191186123839}
   m_Layer: 8
   m_Name: val_house_02_oven
   m_TagString: Structure
@@ -53130,6 +53173,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 5547112548588870147, guid: 572852be3bfc95a40b2f8df968f30589, type: 3}
+--- !u!114 &2896586191186123839
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2896586191186123837}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 6
 --- !u!23 &2974864663763908328
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -53445,6 +53501,7 @@ GameObject:
   - component: {fileID: 969901951461313233}
   - component: {fileID: 23538157773629507}
   - component: {fileID: 3782387209788740467}
+  - component: {fileID: 3782387209788740468}
   m_Layer: 8
   m_Name: val_house_02_backsplash_2
   m_TagString: Structure
@@ -53466,6 +53523,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -4293280180076145308, guid: 572852be3bfc95a40b2f8df968f30589, type: 3}
+--- !u!114 &3782387209788740468
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3782387209788740466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 1
 --- !u!4 &3855971602844261855
 Transform:
   m_ObjectHideFlags: 0
@@ -53725,6 +53795,7 @@ GameObject:
   - component: {fileID: 4924298329663263055}
   - component: {fileID: 1221972920129680136}
   - component: {fileID: 4497002654999523659}
+  - component: {fileID: 4497002654999523660}
   m_Layer: 8
   m_Name: val_house_02_ceiling
   m_TagString: Structure
@@ -53746,6 +53817,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4438973604769735514, guid: 572852be3bfc95a40b2f8df968f30589, type: 3}
+--- !u!114 &4497002654999523660
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4497002654999523658}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 3
 --- !u!1 &4511561532332743552
 GameObject:
   m_ObjectHideFlags: 0
@@ -53847,7 +53931,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 467025510}
-  m_RootOrder: 9
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4645721871048704512
 GameObject:
@@ -53894,7 +53978,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 467025510}
-  m_RootOrder: 5
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4693312750072679143
 Transform:
@@ -54350,7 +54434,7 @@ Transform:
   m_Children:
   - {fileID: 5473924454347574847}
   m_Father: {fileID: 467025510}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &5638358239689437213
 MeshFilter:
@@ -54414,6 +54498,7 @@ GameObject:
   - component: {fileID: 3021015177037027635}
   - component: {fileID: 8337464628703867609}
   - component: {fileID: 5707474098252317953}
+  - component: {fileID: 5707474098252317954}
   m_Layer: 8
   m_Name: val_house_02_shower_stall
   m_TagString: Structure
@@ -54435,6 +54520,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -3999353293820621510, guid: 572852be3bfc95a40b2f8df968f30589, type: 3}
+--- !u!114 &5707474098252317954
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5707474098252317952}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 1
 --- !u!4 &5812842150730178415
 Transform:
   m_ObjectHideFlags: 0
@@ -54682,7 +54780,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 467025510}
-  m_RootOrder: 7
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &6218490370153864563
 Transform:
@@ -54888,6 +54986,7 @@ GameObject:
   - component: {fileID: 132531739193512133}
   - component: {fileID: 1434889969239080440}
   - component: {fileID: 6479757678734549544}
+  - component: {fileID: 6479757678734549545}
   m_Layer: 8
   m_Name: val_house_02_cupboard_1
   m_TagString: Structure
@@ -54909,6 +55008,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -178478709482648709, guid: 572852be3bfc95a40b2f8df968f30589, type: 3}
+--- !u!114 &6479757678734549545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6479757678734549543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 10
 --- !u!4 &6527089340822302432
 Transform:
   m_ObjectHideFlags: 0
@@ -54942,6 +55054,7 @@ GameObject:
   - component: {fileID: 1252893374638066233}
   - component: {fileID: 3034957846566109049}
   - component: {fileID: 3459968984901963023}
+  - component: {fileID: 6643492506008601980}
   m_Layer: 0
   m_Name: mesh
   m_TagString: Untagged
@@ -54949,6 +55062,19 @@ GameObject:
   m_NavMeshLayer: 1
   m_StaticEditorFlags: 8
   m_IsActive: 1
+--- !u!114 &6643492506008601980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6643492506008601979}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 1
 --- !u!23 &6691691687874124867
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -55173,6 +55299,7 @@ GameObject:
   - component: {fileID: 6262957530014140841}
   - component: {fileID: 3414310148787192012}
   - component: {fileID: 6991621672898090478}
+  - component: {fileID: 6991621672898090479}
   m_Layer: 8
   m_Name: val_house_02_backsplash_1
   m_TagString: Structure
@@ -55193,6 +55320,19 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1.8210543, y: 0.105999984, z: 0.01}
   m_Center: {x: 0.000000059604645, y: 0.052999992, z: 0.005}
+--- !u!114 &6991621672898090479
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6991621672898090477}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 1
 --- !u!33 &6998442789606910359
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -55537,7 +55677,7 @@ Transform:
   - {fileID: 2880426916836145227}
   - {fileID: 2494363318877509853}
   m_Father: {fileID: 467025510}
-  m_RootOrder: 3
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &7747272158227965945
 MeshRenderer:
