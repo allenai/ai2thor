@@ -10,16 +10,41 @@ class NavigationPrompt(StdinPrompt):
         self.default_actions = default_actions
         self.counter = 0
 
+        # prompt_character_map = {
+        #     "MoveRight": "\u2192",
+        #     "MoveLeft": "\u2190",
+        #     "MoveAhead": "\u2191",
+        #     "MoveBack": "\u2193",
+        #     "LookUp": "\u2191",
+        #     "LookDown": "\u2193",
+        #     "RotateRight": "\u2192",
+        #     "RotateLeft": "\u2190"
+        # }
+
         prompt_character_map = {
-            "MoveRight": "\u2192",
-            "MoveLeft": "\u2190",
-            "MoveAhead": "\u2191",
-            "MoveBack": "\u2193",
+            "MoveRight": "D",
+            "MoveLeft": "A",
+            # "MoveAhead": ["Space", "W"],
+            "MoveAhead": "W",
+            "MoveBack": "S",
             "LookUp": "\u2191",
             "LookDown": "\u2193",
             "RotateRight": "\u2192",
-            "RotateLeft": "\u2190"
+            "RotateLeft": "\u2190",
+            "End": "E"
         }
+
+        default_interact_commands = {
+            " ": dict(action="MoveAhead", moveMagnitude=0.25),
+            "w": dict(action="MoveAhead", moveMagnitude=0.25),
+            "s": dict(action="MoveBack", moveMagnitude=0.25),
+            "\x1b[A": dict(action="LookUp"),
+            "\x1b[B": dict(action="LookDown"),
+            "\x1b[C": dict(action="RotateRight"),
+            "\x1b[D": dict(action="RotateLeft"),
+            "e": dict(action="End")
+        }
+
         #
         # default_interact_commands = {
         #     "\x1b[C": dict(action="MoveRight", moveMagnitude=0.25),
@@ -36,14 +61,14 @@ class NavigationPrompt(StdinPrompt):
         #     "\x1b[1;2D": dict(action="RotateLeft"),
         # }
 
-        default_interact_commands = {
-            "1": dict(action="MoveAhead", moveMagnitude=0.25),
-            "2": dict(action="RotateLeft"),
-            "3": dict(action="RotateRight"),
-            "4": dict(action="LookUp"),
-            "5": dict(action="LookDown"),
-            "6": dict(action="End")
-        }
+        # default_interact_commands = {
+        #     "1": dict(action="MoveAhead", moveMagnitude=0.25),
+        #     "2": dict(action="RotateLeft"),
+        #     "3": dict(action="RotateRight"),
+        #     "4": dict(action="LookUp"),
+        #     "5": dict(action="LookDown"),
+        #     "6": dict(action="End")
+        # }
 
         action_set = {a.name for a in default_actions}
 
@@ -70,7 +95,7 @@ class NavigationPrompt(StdinPrompt):
             action_map = {v["action"]:k for (k, v) in default_interact_commands.items()}
             self.command_message = u"Enter a Command with a Number Key:\n{}\nQuit 'q' or Ctrl-C""".format(
                 "\n".join(
-                    ["({}) {}".format(action_map[a.name], a.name) for a in default_actions]
+                    ["({}) {}".format(" | ".join(prompt_character_map[a.name]) if hasattr(prompt_character_map, "__len__") else prompt_character_map[a.name], a.name) for a in default_actions]
                 )
             )
 

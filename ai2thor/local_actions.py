@@ -62,9 +62,10 @@ class LocalActionRunner(object):
 
             print(id)
             print(controller.last_event.object_id_to_color[id[0]])
-            
+
             # im = Image.fromarray(controller.last_event.third_party_camera_frames[0][:, :, :])
             im = controller.last_event.third_party_camera_frames[0][...,::-1][:, :, :]
+
             cv2.namedWindow("top_down")
             cv2.setWindowProperty("top_down", cv2.WND_PROP_TOPMOST, 1)
             cv2.imshow("top_down", im)
