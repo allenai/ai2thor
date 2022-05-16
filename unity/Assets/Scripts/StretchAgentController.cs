@@ -26,9 +26,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void InitializeBody() {
             VisibilityCapsule = StretchVisCap;
-            m_CharacterController.center = new Vector3(0, -0.1934924f, -0.1247f);
-            m_CharacterController.radius = 0.17f;
-            m_CharacterController.height = 1.413f;
+            m_CharacterController.center = new Vector3(0, -0.1821353f, -0.1092373f);
+            m_CharacterController.radius = 0.1854628f;
+            m_CharacterController.height = 1.435714f;
 
             CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
             cc.center = m_CharacterController.center;
@@ -42,7 +42,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera.transform.localPosition = new Vector3(0, 0.378f, 0.0453f);
 
             // camera FOV
-            m_Camera.fieldOfView = 60f;
+            m_Camera.fieldOfView = 69f;
 
             // set camera stand/crouch local positions for Tall mode
             standingLocalCameraPosition = m_Camera.transform.localPosition;
@@ -53,7 +53,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             fp_camera_2.gameObject.SetActive(true);
             fp_camera_2.transform.localPosition = new Vector3(0.0353f, 0.5088f, -0.076f);
             fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
-            fp_camera_2.fieldOfView = 60f;
+             fp_camera_2.fieldOfView = 90f;
+//            fp_camera_2.fieldOfView = 75f;
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
             // limit camera from looking too far down
