@@ -1194,11 +1194,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Vector3 direction = p - transform.position;
             if (Physics.Raycast(transform.position, direction, out hit, Vector3.Distance(p, transform.position), 1 << 8))
             {
-                //Debug.DrawRay(transform.position, direction, Color.yellow, 10f);
-                Debug.DrawLine(transform.position, hit.point, Color.red, 10f);
+                //Debug red lines to show lines that dont hit the target, debug green for the raycast that does
+                
+                //Debug.DrawLine(transform.position, hit.point, Color.red, 10f);
                 if (hit.transform.name == retrievalTargetGameObject.name) {
+                    //Debug.DrawLine(transform.position, hit.point, Color.green, 10f);
                     this.targetIsVisibleAtStart = true;
-                    Debug.DrawLine(transform.position, hit.point, Color.green, 10f);
                     return;
                 }
             }
