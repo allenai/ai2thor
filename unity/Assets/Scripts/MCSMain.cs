@@ -61,7 +61,7 @@ public class MCSMain : MonoBehaviour {
     private static Vector3 DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS_OLD = new Vector3(15, 6, 10);
     private static Vector3 DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS = new Vector3(20, 10, 20);
     private static Vector3 DEFAULT_FLOOR_POSITION = new Vector3(0, -0.25f, 0);
-    private static float FLOOR_TOP_DEPTH = 0.002f;
+    private static float FLOOR_TOP_DEPTH = 0.06f;
     private static int FLOOR_WALL_DEPTH = 6;
     private static int FLOOR_DIMENSIONS = 1;
     private static int FLOOR_LOWERED_HEIGHT = -100;
