@@ -697,22 +697,22 @@ public class MCSMain : MonoBehaviour {
         float xRightPosition = (xHalf - (xRightScale / 2.0f));
         float xCenterScale = roomDimensions.x - (xLeftScale + xRightScale);
         float xCenterPosition = xRightPosition - (xRightScale / 2.0f) - (xCenterScale / 2.0f);
-        float yPosition = -MCSMain.FLOOR_DEPTH / 2;
+        float yPosition = -MCSMain.FLOOR_TOPS_DEPTH / 2;
 
         GameObject floors = this.PrepareFloorForCloning();
 
-        GameObject floorSectionLeft = this.CreateClonedFloorSection(floors, "floorLeft", xLeftPosition, yPosition, 0f, xLeftScale, MCSMain.FLOOR_DEPTH, 
+        GameObject floorSectionLeft = this.CreateClonedFloorSection(floors, "floorLeft", xLeftPosition, yPosition, 0f, xLeftScale, MCSMain.FLOOR_TOPS_DEPTH, 
                 roomDimensions.z);
         Renderer[] renderersLeft = AssignMaterialFromConfig(floorSectionLeft, lavaMaterial);
         this.TileMaterialsInRenderers(renderersLeft, xLeftScale, roomDimensions.z);
 
         if(xCenterScale > 0) {
             GameObject floorSectionCenter = this.CreateClonedFloorSection(floors, "floorCenter", xCenterPosition, yPosition, 0f,
-                    xCenterScale, MCSMain.FLOOR_DEPTH, roomDimensions.z);
+                    xCenterScale, MCSMain.FLOOR_TOPS_DEPTH, roomDimensions.z);
             AssignMaterials(floorSectionCenter, floorMaterial, null);
         }
 
-        GameObject floorSectionRight = this.CreateClonedFloorSection(floors, "floorRight", xRightPosition, yPosition, 0f, xRightScale, MCSMain.FLOOR_DEPTH,
+        GameObject floorSectionRight = this.CreateClonedFloorSection(floors, "floorRight", xRightPosition, yPosition, 0f, xRightScale, MCSMain.FLOOR_TOPS_DEPTH,
                 roomDimensions.z);
         Renderer[] renderersRight = AssignMaterialFromConfig(floorSectionRight, lavaMaterial);
         this.TileMaterialsInRenderers(renderersRight, xRightScale, roomDimensions.z);
@@ -811,8 +811,8 @@ public class MCSMain : MonoBehaviour {
                 }
 
             } else {
-                GameObject floorSection = this.CreateClonedFloorSection(floors, "floor" + i, posX, holeDrop ? posY*2 : posY, posZ,
-                        MCSMain.FLOOR_DIMENSIONS, MCSMain.FLOOR_DEPTH, MCSMain.FLOOR_DIMENSIONS);
+                GameObject floorSection = this.CreateClonedFloorSection(floors, "floor" + i, posX, holeDrop ? posY + posYFloorTops : posYFloorTops, posZ,
+                        MCSMain.FLOOR_DIMENSIONS, MCSMain.FLOOR_TOPS_DEPTH, MCSMain.FLOOR_DIMENSIONS);
                 if(changeFloorMaterial) {
                     AssignMaterialFromConfig(floorSection, material);
                 }
@@ -2293,8 +2293,8 @@ public class MCSMain : MonoBehaviour {
         return this.lastStep;
     }
 
-    public static int GetFloorDepth() {
-        return MCSMain.FLOOR_DEPTH;
+    public static float GetFloorDepthForImageSynthesis() {
+        return MCSMain.FLOOR_DEPTH - MCSMain.FLOOR_TOPS_DEPTH;
     }
 }
 
