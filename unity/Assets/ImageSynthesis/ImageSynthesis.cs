@@ -305,8 +305,7 @@ public class ImageSynthesis : MonoBehaviour {
 	private string EnsureFloorTexturesAndHolesHaveIdenticalTags(string objTag, Renderer r) {
 		bool floor = objTag.Length > "floor".Length && objTag.Substring(0, "floor".Length) == "floor";
 		bool isAdjacentToHole = objTag.Length > "floorWall".Length && objTag.Substring(0, "floorWall".Length) == "floorWall";
-		bool hole = floor && r.transform.position.y == -MCSMain.GetFloorWallDepth();
-
+		bool hole = floor && r.transform.position.y == -MCSMain.GetFloorDepth();
 
 		objTag = floor ? "floor" + r.material.name + (hole ? "hole" : "") + (isAdjacentToHole ? "floorWall" : "") : objTag;
 
