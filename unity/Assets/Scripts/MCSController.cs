@@ -73,7 +73,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public List<MCSSimulationAgent> simulationAgents = new List<MCSSimulationAgent>();
     public static int SIMULATION_AGENT_ANIMATION_FRAMES_PER_PHYSICS_STEPS = 1;
     public Dictionary<string, SimObjPhysics> agentObjectAssociations = new Dictionary<string, SimObjPhysics>();
+    public bool targetIsVisibleAtStart = false;
+    public GameObject retrievalTargetGameObject = null;
     private MCSMain mcsMain;
+
 
     public override void Awake() {
         mcsMain = FindObjectOfType<MCSMain>();
@@ -245,6 +248,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         metadata.hapticFeedback = this.hapticFeedback;
         metadata.resolvedObject = this.resolvedObject;
         metadata.resolvedReceptacle = this.resolvedReceptacle;
+        metadata.targetIsVisibleAtStart = this.targetIsVisibleAtStart;
         metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
             // The object may be null if it is being held.
@@ -1171,6 +1175,35 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             return false;
         }
         return true;
+    }
+
+    public void CheckIfTargetIsVisibleAtStart()
+    {
+        Renderer r = retrievalTargetGameObject.GetComponent<Renderer>();
+        Vector3 center = r.bounds.center;
+        Vector3 right = new Vector3(r.bounds.max.x, r.bounds.center.y, r.bounds.center.z);
+        Vector3 left = new Vector3(r.bounds.min.x, r.bounds.center.y, r.bounds.center.z);
+        Vector3 front = new Vector3(r.bounds.center.x, r.bounds.center.y, r.bounds.max.z);
+        Vector3 back = new Vector3(r.bounds.center.x, r.bounds.center.y, r.bounds.min.z);
+        Vector3 top = new Vector3(r.bounds.center.x, r.bounds.max.y, r.bounds.center.z);
+        Vector3 bottom = new Vector3(r.bounds.center.x, r.bounds.min.y, r.bounds.center.z);
+
+        RaycastHit hit;
+        List<Vector3> points = new List<Vector3>{center,right,left,front,back,top,bottom};
+        foreach (Vector3 p in points) {
+            Vector3 direction = p - transform.position;
+            if (Physics.Raycast(transform.position, direction, out hit, Vector3.Distance(p, transform.position), 1 << 8))
+            {
+                //Debug.DrawRay(transform.position, direction, Color.yellow, 10f);
+                Debug.DrawLine(transform.position, hit.point, Color.red, 10f);
+                if (hit.transform.name == retrievalTargetGameObject.name) {
+                    this.targetIsVisibleAtStart = true;
+                    Debug.DrawLine(transform.position, hit.point, Color.green, 10f);
+                    return;
+                }
+            }
+        }
+        this.targetIsVisibleAtStart = false;
     }
 }
 
