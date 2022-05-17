@@ -2293,8 +2293,8 @@ public class MCSMain : MonoBehaviour {
         return this.lastStep;
     }
 
-    public static float GetFloorDepthForImageSynthesis() {
-        return MCSMain.FLOOR_DEPTH - MCSMain.FLOOR_TOPS_DEPTH;
+    public static float GetHoleDepth() {
+        return (MCSMain.FLOOR_DEPTH + MCSMain.FLOOR_TOPS_DEPTH) / 2;
     }
 }
 
