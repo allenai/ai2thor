@@ -274,6 +274,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // am.Initialize(action);
                         break;
                     }
+
+                case "proctoggle": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ToggleObjectOn";
+                        action["forceAction"] = true;
+                        action["objectId"] = "small|4|7";
+
+                        CurrentActiveController().ProcessControlCommand(action);
+
+                        break;
+                    }
+
+                case "procbreak": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "BreakObject";
+                        action["forceAction"] = true;
+                        action["objectId"] = "small|4|12";
+
+                        CurrentActiveController().ProcessControlCommand(action);
+
+                        break;
+                }
+
+                case "procclean": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "CleanObject";
+                        action["forceAction"] = true;
+                        action["objectId"] = "4|0";
+
+                        CurrentActiveController().ProcessControlCommand(action);
+
+                        break;
+                }
+
+                case "procclose": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "CloseObject";
+                        action["forceAction"] = true;
+                        action["objectId"] = "small|4|9";
+
+                        CurrentActiveController().ProcessControlCommand(action);
+
+                        break;
+                }
+
                 case "initb": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         // if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
@@ -2850,6 +2895,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+
+
+                    
 
                 case "toggleoff": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
