@@ -61,6 +61,8 @@ public class MCSMain : MonoBehaviour {
     private static Vector3 DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS_OLD = new Vector3(15, 6, 10);
     private static Vector3 DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS = new Vector3(20, 10, 20);
     private static Vector3 DEFAULT_FLOOR_POSITION = new Vector3(0, -0.25f, 0);
+    // Depth of top level floor objects chosen since it was the minimum value
+    // needed to get CheckIfInLava working correctly
     private static float FLOOR_TOPS_DEPTH = 0.06f;
     private static int FLOOR_DEPTH = 6;
     private static int FLOOR_DIMENSIONS = 1;
@@ -793,7 +795,6 @@ public class MCSMain : MonoBehaviour {
 
             // For hole adjacent floor sections, need to have two floor parts - the top part and the floor "walls"
             if(isHoleAdjacent) {
-
                 GameObject floorSectionTop = this.CreateClonedFloorSection(floors, "floor" + i, posX, posYFloorTops, posZ,
                  MCSMain.FLOOR_DIMENSIONS, MCSMain.FLOOR_TOPS_DEPTH, MCSMain.FLOOR_DIMENSIONS);
 
@@ -802,8 +803,14 @@ public class MCSMain : MonoBehaviour {
                         MCSMain.FLOOR_DIMENSIONS, yScale, MCSMain.FLOOR_DIMENSIONS);
 
                 if(changeFloorMaterial) {
+                    // only assign lava to top level sections of floors
+                    string materialKey = material.Split('/').Last();
+                    if(MCSConfig.LAVA_MATERIAL_REGISTRY.Any(key=>key.Key.Contains(materialKey))) {
+                        AssignMaterials(floorSectionWall, floorMaterial, null);
+                    } else {
+                        AssignMaterialFromConfig(floorSectionWall, material);
+                    }
                     AssignMaterialFromConfig(floorSectionTop, material);
-                    AssignMaterialFromConfig(floorSectionWall, material);
                 }
                 else {
                     AssignMaterials(floorSectionTop, floorMaterial, null);
