@@ -653,9 +653,6 @@ public class MCSMain : MonoBehaviour {
 
     private GameObject CreateClonedFloorSection(GameObject floors, string name, float xPosition, float yPosition, float zPosition,
             float xScale, float yScale, float zScale) {
-
-
-
         GameObject floorSection = AddressablesUtil.Instance.InstantiateAddressablesGameObject(MCSMain.FLOOR_ADDRESSABLE_PATH_PREFIX);
         floorSection.transform.position = new Vector3(xPosition, yPosition, zPosition);
         floorSection.transform.localScale = new Vector3(xScale, yScale, zScale);
@@ -796,7 +793,7 @@ public class MCSMain : MonoBehaviour {
             // For hole adjacent floor sections, need to have two floor parts - the top part and the floor "walls"
             if(isHoleAdjacent) {
                 GameObject floorSectionTop = this.CreateClonedFloorSection(floors, "floor" + i, posX, posYFloorTops, posZ,
-                 MCSMain.FLOOR_DIMENSIONS, MCSMain.FLOOR_TOPS_DEPTH, MCSMain.FLOOR_DIMENSIONS);
+                        MCSMain.FLOOR_DIMENSIONS, MCSMain.FLOOR_TOPS_DEPTH, MCSMain.FLOOR_DIMENSIONS);
 
                 float yScale = MCSMain.FLOOR_DEPTH - MCSMain.FLOOR_TOPS_DEPTH;
                 GameObject floorSectionWall = this.CreateClonedFloorSection(floors, "floorWall" + i, posX, posYFloorWall, posZ,
