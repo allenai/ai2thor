@@ -328,6 +328,9 @@ public class MCSMain : MonoBehaviour {
             }
         }
 
+        agentController.targetIsVisibleAtStart = false;
+        if (CheckIfGoalTargetExists())
+            StartCoroutine(CheckIfTargetIsVisible());
         // Update the camera properties to "reset" the camera and fix a weird rendering issue.
         // Please note it's important to avoid arbitrarily changing the clipping plane values.
         // We use them on the Python side for depth map data conversions, and AIs also use them.
@@ -336,9 +339,27 @@ public class MCSMain : MonoBehaviour {
         
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
+        agentController.targetIsVisibleAtStart = false;
     }
 
+
     // Custom Private Methods
+    private IEnumerator CheckIfTargetIsVisible()
+    {
+        // Wait 2 frames for the object to spawn
+        yield return new WaitForEndOfFrame();
+        yield return new WaitForEndOfFrame();
+        string targetId = this.currentScene.goal.metadata.target.id;
+        this.agentController.CheckIfTargetIsVisibleAtStart();
+    }
+
+    private bool CheckIfGoalTargetExists()
+    {
+        return (this.currentScene.goal != null && 
+                this.currentScene.goal.metadata != null && 
+                this.currentScene.goal.metadata.target != null && 
+                this.currentScene.goal.metadata.target.id != null);
+    }
 
     private void AdjustRoomStructuralObjects() {
         String ceilingMaterial = (this.currentScene.ceilingMaterial != null &&
@@ -1185,6 +1206,8 @@ public class MCSMain : MonoBehaviour {
         // NOTE: The objectConfig applies to THIS object and the objectDefinition applies to ALL objects of this type.
 
         gameObject.name = objectConfig.id;
+        if (CheckIfGoalTargetExists() && gameObject.name == this.currentScene.goal.metadata.target.id)
+            agentController.retrievalTargetGameObject = gameObject;
         gameObject.tag = "SimObj"; // AI2-THOR Tag
         gameObject.layer = 8; // AI2-THOR Layer SimObjVisible
         // Add all new objects to the "Objects" object because the AI2-THOR SceneManager seems to care.
@@ -2660,6 +2683,17 @@ public class MCSConfigTeleport : MCSConfigStepBegin {
 [Serializable]
 public class MCSConfigGoal {
     public string description;
+    public MCSConfigGoalMetadata metadata;
+}
+
+[Serializable]
+public class MCSConfigGoalMetadata {
+    public MCSConfigGoalTarget target;
+}
+
+[Serializable]
+public class MCSConfigGoalTarget {
+    public string id;
 }
 
 [Serializable]

@@ -1348,6 +1348,7 @@ public struct MetadataWrapper
 	public Dictionary<string, bool> hapticFeedback;
 	public string resolvedObject;
 	public string resolvedReceptacle;
+	public bool targetIsVisibleAtStart;
 }
 
 [Serializable]
