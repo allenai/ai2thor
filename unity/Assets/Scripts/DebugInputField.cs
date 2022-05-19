@@ -403,6 +403,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "Initialize";
                         action["agentMode"] = "stretch";
                         action["agentControllerType"] = "stretch";
+                        action["renderInstanceSegmentation"] = true;
+
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
 
