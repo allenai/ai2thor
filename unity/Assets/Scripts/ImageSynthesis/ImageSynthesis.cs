@@ -200,7 +200,7 @@ public class ImageSynthesis : MonoBehaviour {
         }
         var mainCamera = GetComponent<Camera>();
 
-        // Not needed add tests
+        // TODO: add tests, not needed when target display is different
         // mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
 
         foreach (var pass in capturePasses) {
