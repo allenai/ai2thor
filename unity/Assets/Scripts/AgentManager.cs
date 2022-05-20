@@ -61,7 +61,7 @@ public class AgentManager : MonoBehaviour {
     private bool fastActionEmit = true;
 
     // it is public to be accessible from the debug input field.
-    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera", "ChangeQuality" };
+    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "ResetBlocking", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera", "ChangeQuality" };
 
     public bool doResetMaterials = false;
     public bool doResetColors = false;
@@ -742,6 +742,23 @@ public class AgentManager : MonoBehaviour {
             resetColors();
         }
         StartCoroutine(ResetCoroutine(response));
+    }
+
+    public void ResetBlocking(ServerAction response) {
+        if (doResetMaterials) {
+            resetMaterials();
+        } else if (doResetColors) {
+            resetColors();
+        }
+        for (int i = 0; i < agents.Count; i++) {
+            Destroy(agents[i].baseAgentComponent);
+        }
+
+        if (string.IsNullOrEmpty(response.sceneName)) {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+        } else {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(response.sceneName);
+        }
     }
 
     public bool SwitchScene(string sceneName) {
@@ -1721,7 +1738,7 @@ public class DynamicServerAction {
 
     public int sequenceId {
         get {
-            return (int)this.jObject["sequenceId"];
+            return (int)this.GetValue("sequenceId", 0);
         }
     }
 
