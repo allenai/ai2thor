@@ -200,6 +200,7 @@ public class ImageSynthesis : MonoBehaviour {
             tex = null;
         }
         var mainCamera = GetComponent<Camera>();
+        // Possibly not needed
         mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
 
         foreach (var pass in capturePasses) {
@@ -222,9 +223,11 @@ public class ImageSynthesis : MonoBehaviour {
         }
 
         // set the display corresponding to which capturePass this is
-        for (int i = 0; i < capturePasses.Length; i++) {
-            capturePasses[i].camera.targetDisplay = i;
-        }
+        // var depthValue = 10;
+        // for (int i = 0; i < capturePasses.Length; i++) {
+        //     capturePasses[i].camera.targetDisplay = i;
+        //     capturePasses[i].camera.depthTextureMode = DepthTextureMode.None;
+        // }
 
         // cache materials and setup material properties
         if (!opticalFlowMaterial || opticalFlowMaterial.shader != opticalFlowShader) {
