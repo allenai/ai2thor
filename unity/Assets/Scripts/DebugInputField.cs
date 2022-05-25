@@ -3961,6 +3961,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         f.WriteLine(prefabsStr);
                         break;
                     }
+                case "proc_arr": {
+                    var arr = new int[][] {
+                        new int[]{0, 0, 0},
+                        new int[]{0, 1, 0},
+                        new int[]{0, 0, 0},
+                    };
+                    ProceduralTools.roomFromWallIndexDictionary(
+                        "house", 
+                        ProceduralTools.createRoomsFromGenerationArray(arr, 0), 
+                        arr.Length, 
+                        arr.Max(a => a.Length), 
+                        0.5f, 
+                        2.0f, 
+                        0.1f, 
+                        new Dictionary<int, (string wallMaterial, string floorMaterial)>() {
+                            {1, ("WallDrywallWhite3", "DarkWoodFloors")}
+                        },
+                        ProceduralTools.GetMaterials()
+                        
+                        );
+                    break;
+                }
             }
 
             // StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));

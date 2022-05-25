@@ -2566,6 +2566,167 @@ namespace Thor.Procedural {
                 }
             }
         }
+        public class DefaultDictionary<TKey, TValue> : Dictionary<TKey, TValue> where TValue : new()
+        {
+            public new TValue this[TKey key]
+            {
+                get
+                {
+                    TValue val;
+                    if (!TryGetValue(key, out val))
+                    {
+                        val = new TValue();
+                        Add(key, val);
+                    }
+                    return val;
+                }
+                set { base[key] = value; }
+            }
+        }
+
+        private static Dictionary<(int, int), List<((int row, int col), (int row, int col))>> findWalls(int[][] floorplan) {
+            // var walls = new Dictionary<(int, int), IEnumerable<(int row, int col)>>();
+
+            var walls = new DefaultDictionary<(int, int), List<((int row, int col), (int row, int col))>>();
+            // for (var i = 0; i < floorplan.Length)
+            for(var row = 0; row < floorplan.Length - 1; row++) {
+                for(var col = 0; col < floorplan[row].Length - 1; col++) {
+                    var a = floorplan[row][col];
+                    var b = floorplan[row][col + 1];
+                    if (a != b) {
+                        // if (!walls.ContainsKey((Math.Min(a, b), Math.Max(a,b)))) {
+                        //     walls[(Math.Min(a, b), Math.Max(a,b))] = new 
+                        // }
+                        walls[(Math.Min(a, b), Math.Max(a,b))].Add(((row-1, col), (row, col)));
+                    }
+                    b = floorplan[row+1][col];
+                    if (a != b) {
+                        walls[(Math.Min(a, b), Math.Max(a,b))].Add(((row, col-1), (row, col)));
+                    }
+                }
+            }
+
+            return walls;
+        }
+
+
+        public static Dictionary<(int, int), HashSet<((int row, int col), (int row, int col))>> consolidateWalls(Dictionary<(int, int), List<((int row, int col), (int row, int col))>> walls) {
+            var output = new Dictionary<(int, int), HashSet<((int row, int col), (int row, int col))>>();
+            foreach (var item in walls) {
+                var wall_group_id = item.Key;
+                var wall_pairs = item.Value;
+                var wall_map = new Dictionary<(int, int), HashSet<(int, int)>>();
+
+                foreach (var wall in wall_pairs) {
+                    if (!wall_map.ContainsKey(wall.Item1)) {
+                        wall_map[wall.Item1] = new HashSet<(int, int)>();
+                    }
+                    wall_map[wall.Item1].Add(wall.Item2);
+                }
+                var did_update = true;
+                while (did_update) {
+                    did_update = false;
+                    var wall_map_copy = wall_map.Keys.ToDictionary(_ => _, _ => wall_map[_]);
+                    foreach (var w1_1 in wall_map_copy.Keys) {
+                        if (!wall_map.ContainsKey(w1_1)) {
+                            continue;
+                        }
+                        var break_outer = false;
+                        // (int ,int) w1_2;
+                        foreach (var w1_2 in wall_map[w1_1]) {
+                            // w1_2 = iter;
+                            if (wall_map.ContainsKey(w1_2)) {
+                                var w2_1 = w1_2;
+                                foreach (var w2_2 in wall_map[w2_1]) {
+                                        if (
+                                    (w1_1.Item1 == w1_2.Item1 && w1_2.Item1 == w2_1.Item1 && w2_1.Item1  == w2_2.Item1)
+                                    ||  (w1_1.Item2 == w1_2.Item2 &&  w1_2.Item2 == w2_1.Item2 && w2_1.Item2 == w2_2.Item2) {
+                                        wall_map[w2_1].Remove(w2_2);
+                                        if (wall_map.ContainsKey(w2_1) && (wall_map[w2_1] == null || wall_map[w2_1].Count == 0)) {
+                                            wall_map.Remove(w2_1);
+                                        }
+                                        wall_map[w1_1].Remove(w2_1);
+                                        wall_map[w1_1].Add(w2_2);
+                                        did_update = true;
+                                        break_outer = true;
+                                        break;
+                                    }
+
+
+                                }
+                                if (break_outer) {
+                                    break;
+                                }
+                            }
+                            if (break_outer) {
+                                break;
+                            }
+                            
+                        }
+                        
+                    }
+                    
+                }
+                output[wall_group_id] = new HashSet<((int row, int col), (int row, int col))>();
+                foreach (var w1 in wall_map.Keys) {
+                    foreach (var w2 in wall_map[w1]) {
+                        output[wall_group_id].Add((w1, w2));
+                    }
+                }
+
+            }
+            
+            return output;
+        }
+
+        public static Dictionary<(int, int), HashSet<((double row, double col), (double row, double col))>> scale_boundary_groups(
+    Dictionary<(int, int), HashSet<((int row, int col), (int row, int col))>> boundary_groups, float scale, int precision) {
+        return boundary_groups.ToDictionary(bg => 
+            bg.Key, bg => new HashSet<((double, double),(double, double))>(bg.Value.Select(pair => 
+            (
+                (Math.Round(pair.Item1.row * scale, precision), Math.Round(pair.Item1.col * scale, precision)),
+                (Math.Round(pair.Item2.row * scale, precision), Math.Round(pair.Item2.col * scale, precision))
+            )))
+        );
+    }
+
+    private static bool TupleContains((int, int) t, int id) {
+        return t.Item1 == id || t.Item2 == id;
+    }
+
+    // public static void get_xz_poly_map(Dictionary<(int, int), HashSet<((double row, double col), (double row, double col))>> boundary_groups, List<int> room_ids) {
+    //     foreach (var room_id in room_ids) {
+    //         var room_walls = new List<((double row, double col), (double row, double col))>();
+    //         foreach (var k in boundary_groups.Keys.Where(k => TupleContains(k, room_id))) {
+    //             room_walls.AddRange(boundary_groups[k]);
+    //         }
+    //         var room_wall_loop = get_wall_loop()
+    //     }
+    // } 
+
+    // def get_xz_poly_map(boundary_groups, room_ids: Set[int]) -> Dict[int, XZPoly]:
+    // out = dict()
+    // for room_id in room_ids:
+    //     room_walls = []
+    //     for k in [k for k in boundary_groups.keys() if room_id in k]:
+    //         room_walls.extend(boundary_groups[k])
+
+    //     room_wall_loop = get_wall_loop(room_walls)
+
+    //     # determines if the loop is counter-clockwise, flips if it is
+    //     edge_sum = 0
+    //     for (x0, z0), (x1, z1) in room_wall_loop:
+    //         dist = x0 * z1 - x1 * z0
+    //         edge_sum += dist
+    //     if edge_sum > 0:
+    //         room_wall_loop = [(p1, p0) for p0, p1 in reversed(room_wall_loop)]
+
+    //     out[room_id] = room_wall_loop
+    // return out
+
+
+    // (round(x0 * scale, precision), round(z0 * scale, precision)),
+                    // (round(x1 * scale, precision), round(z1 * scale, precision)),
 
 
         public static Dictionary<int, IEnumerable<(int row, int col)>> createRoomsFromGenerationArray(int[][] roomArray, int emptyValue = 1, Vector2? scale = null) {
@@ -2606,6 +2767,8 @@ namespace Thor.Procedural {
         ) {
             var scaleVec = scale.GetValueOrDefault(Vector2.one);
 
+            // roomWallIndexMap.Values.Select(x => x.First)
+
             var rooms = roomWallIndexMap.Select(entry => {
                 (string wallMaterial, string floorMaterial) materialId;
                 materialsPerRoom.TryGetValue(entry.Key, out materialId);
@@ -2618,6 +2781,8 @@ namespace Thor.Procedural {
                 var rowNumPresent = rowNum - startOffsetZ;
 
                 Debug.Log($"Room: {entry.Key} walls: {string.Join(",", entry.Value)}");
+            
+
 
                 return RectangleRoom.roomFromWallPoints(
                     entry.Value.Select(
@@ -2631,6 +2796,7 @@ namespace Thor.Procedural {
                     );
             }
             );
+            Debug.Log("room: " + rooms.First().rectangleFloor.center + " width: " +  rooms.First().rectangleFloor.width);
 
             // return ProceduralTools.createMultiRoomFloorGameObject(
             //     name,
@@ -2640,8 +2806,28 @@ namespace Thor.Procedural {
             //     receptacleHeight,
             //     floorColliderThickness
             // );
+            // CreateHouse()
             return new GameObject();
         }
+
+        // public static ProceduralHouse houseFromRoom(
+
+    //     def find_walls(floorplan: np.array):
+    // walls = defaultdict(list)
+    // for row in range(len(floorplan) - 1):
+    //     for col in range(len(floorplan[0]) - 1):
+    //         a = floorplan[row, col]
+    //         b = floorplan[row, col + 1]
+    //         if a != b:
+    //             walls[(int(min(a, b)), int(max(a, b)))].append(
+    //                 ((row - 1, col), (row, col))
+    //             )
+    //         b = floorplan[row + 1, col]
+    //         if a != b:
+    //             walls[(int(min(a, b)), int(max(a, b)))].append(
+    //                 ((row, col - 1), (row, col))
+    //             )
+    // return walls
 
         public static AssetMap<Material> GetMaterials() {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
