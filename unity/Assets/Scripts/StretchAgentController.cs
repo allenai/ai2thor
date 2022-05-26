@@ -42,7 +42,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera.transform.localPosition = new Vector3(0, 0.378f, 0.0453f);
 
             // camera FOV
-            m_Camera.fieldOfView = 60f;
+            m_Camera.fieldOfView = 69f;
 
             // set camera stand/crouch local positions for Tall mode
             standingLocalCameraPosition = m_Camera.transform.localPosition;
@@ -53,7 +53,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             fp_camera_2.gameObject.SetActive(true);
             fp_camera_2.transform.localPosition = new Vector3(0.0353f, 0.5088f, -0.076f);
             fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
-            fp_camera_2.fieldOfView = 60f;
+            fp_camera_2.fieldOfView = 90f;
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
             // limit camera from looking too far down
