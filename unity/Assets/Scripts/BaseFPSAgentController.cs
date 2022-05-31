@@ -3486,6 +3486,266 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        protected IEnumerable<Vector3> pointsOnSurfaceOfBoxCollider(BoxCollider bc, int divisions) {
+            if (divisions < 2) {
+                throw new ArgumentException($"divisions must be >= 2 (currently equals {divisions}).");
+            }
+            Vector3 halfSize = 0.5f * bc.size;
+
+            List<float> xMinMax = new List<float> {-halfSize.x, halfSize.x};
+            List<float> yMinMax = new List<float> {-halfSize.y, halfSize.y};
+            List<float> zMinMax = new List<float> {-halfSize.z, halfSize.z};
+
+            List<float> xCenterVals = new List<float>();
+            List<float> yCenterVals = new List<float>();
+            List<float> zCenterVals = new List<float>();
+            for (int i = 1; i < divisions - 1; i++) {
+                float alpha = (2f * i / (divisions - 1f));
+                xCenterVals.Add(-halfSize.x + halfSize.x * alpha);
+                yCenterVals.Add(-halfSize.y + halfSize.y * alpha);
+                zCenterVals.Add(-halfSize.z + halfSize.z * alpha);
+            }
+
+            List<Vector3> pointsOnSurface = new List<Vector3>();
+            for (int whichX = 0; whichX < 2; whichX++) {
+                List<float> xVals = whichX == 1 ? xMinMax : xCenterVals;
+                
+                for (int whichY = 0; whichY < 2; whichY++) {
+                    List<float> yVals = whichY == 1 ? yMinMax : yCenterVals;
+
+                    for (int whichZ = 0; whichZ < 2; whichZ++) {
+                        List<float> zVals = whichZ == 1 ? zMinMax : zCenterVals;
+
+                        if (whichX + whichY + whichZ == 0) {
+                            continue;
+                        }
+
+                        # if UNITY_EDITOR
+                        Vector3? lastPoint = null;
+                        # endif
+                        foreach (float x in xVals) {
+                            foreach (float y in yVals) {
+                                foreach (float z in zVals) {
+                                    Vector3 worldPoint = bc.transform.TransformPoint(bc.center + new Vector3(x, y, z));
+                                    /*
+                                    # if UNITY_EDITOR
+                                    if (lastPoint.HasValue) {
+                                        Debug.DrawLine(lastPoint.Value, worldPoint, Color.red, 10.0f);
+                                    } else {
+                                        lastPoint = worldPoint;
+                                    }
+                                    # endif
+                                    */
+                                    yield return worldPoint;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void BBoxDistance(string objectId0, string objectId1, int divisions=3) {
+            SimObjPhysics sop0 = getSimObjectFromId(objectId0);
+            SimObjPhysics sop1 = getSimObjectFromId(objectId1);
+            if (sop0 == null || sop1 == null) {
+                actionFinishedEmit(false); // Error message set already by getSimObjectFromId
+                return;
+            }
+            sop0.syncBoundingBoxes(forceCreateObjectOrientedBoundingBox: true); // Ensures the sop has an object oriented bounding box attached
+            sop1.syncBoundingBoxes(forceCreateObjectOrientedBoundingBox: true);
+
+            BoxCollider c0 = sop0.BoundingBox.GetComponent<BoxCollider>();
+            BoxCollider c1 = sop1.BoundingBox.GetComponent<BoxCollider>();
+
+            float dist = float.PositiveInfinity;
+
+            c1.enabled = true;
+            foreach (Vector3 p in pointsOnSurfaceOfBoxCollider(c0, divisions)) {
+                Vector3 pLocal = c1.transform.InverseTransformPoint(p) - c1.center;
+                Vector3 size = c1.size;
+                if (
+                    (-0.5f * size.x < pLocal.x && pLocal.x < 0.5f * size.x) &&
+                    (-0.5f * size.y < pLocal.y && pLocal.y < 0.5f * size.y) &&
+                    (-0.5f * size.z < pLocal.z && pLocal.z < 0.5f * size.z)
+                ) {
+# if UNITY_EDITOR
+                    Debug.Log($"{objectId0} is inside {objectId1}, distance is 0");
+# endif
+                    c1.enabled = false;
+                    actionFinishedEmit(true, actionReturn: 0f);
+                    return;
+                }
+                Vector3 closestP = c1.ClosestPoint(p);
+# if UNITY_EDITOR
+                Debug.DrawLine(p, closestP, Color.red, 10.0f);
+# endif
+                dist = Mathf.Min(dist, Vector3.Distance(p, closestP));
+            }
+            c1.enabled = false;
+
+            c0.enabled = true;
+            foreach (Vector3 p in pointsOnSurfaceOfBoxCollider(c1, divisions)) {
+                Vector3 pLocal = c0.transform.InverseTransformPoint(p) - c0.center;
+                Vector3 size = c0.size;
+                if (
+                    (-0.5f * size.x < pLocal.x && pLocal.x < 0.5f * size.x) &&
+                    (-0.5f * size.y < pLocal.y && pLocal.y < 0.5f * size.y) &&
+                    (-0.5f * size.z < pLocal.z && pLocal.z < 0.5f * size.z)
+                ) {
+# if UNITY_EDITOR
+                    Debug.Log($"{objectId1} is inside {objectId0}, distance is 0");
+# endif
+                    c0.enabled = false;
+                    actionFinishedEmit(true, actionReturn: 0f);
+                    return;
+                }
+                Vector3 closestP = c0.ClosestPoint(p);
+# if UNITY_EDITOR
+                Debug.DrawLine(p, closestP, Color.green, 10.0f);
+# endif
+                dist = Mathf.Min(dist, Vector3.Distance(p, closestP));
+            }
+            c0.enabled = false;
+
+# if UNITY_EDITOR
+            Debug.Log($"Distance between {objectId0} and {objectId1} is {dist}");
+# endif
+            actionFinishedEmit(true, actionReturn: dist);
+        }
+
+        public void CheckUnobstructedPathBetweenObjectCenters(string objectId0, string objectId1) {
+            SimObjPhysics sop0 = getSimObjectFromId(objectId0);
+            SimObjPhysics sop1 = getSimObjectFromId(objectId1);
+            if (sop0 == null || sop1 == null) {
+                actionFinishedEmit(false); // Error message set already by getSimObjectFromId
+                return;
+            }
+
+            sop0.syncBoundingBoxes(forceCreateObjectOrientedBoundingBox: true); // Ensures the sop has an object oriented bounding box attached
+            sop1.syncBoundingBoxes(forceCreateObjectOrientedBoundingBox: true);
+
+            BoxCollider c0 = sop0.BoundingBox.GetComponent<BoxCollider>();
+            BoxCollider c1 = sop1.BoundingBox.GetComponent<BoxCollider>();
+
+            Vector3 p0 = c0.transform.TransformPoint(c0.center);
+            Vector3 p1 = c1.transform.TransformPoint(c1.center);
+
+            HashSet<Collider> okColliders = new HashSet<Collider>();
+            foreach (Collider c in sop0.GetComponentsInChildren<Collider>()) {
+                okColliders.Add(c);
+            }
+            foreach (Collider c in sop1.GetComponentsInChildren<Collider>()) {
+                okColliders.Add(c);
+            }
+
+            Dictionary<string, object> toReturn = new Dictionary<String, object>();
+            List<string> objectsInWay = new List<string>();
+#if UNITY_EDITOR
+            Debug.DrawLine(p0, p1, Color.cyan, 10f);
+#endif
+
+            foreach (
+                RaycastHit hit in Physics.RaycastAll(
+                    p0,
+                    p1 - p0,
+                    Vector3.Distance(p0, p1),
+                    LayerMask.GetMask("SimObjVisible"),
+                    QueryTriggerInteraction.Ignore
+                )
+            ) {
+                if (!okColliders.Contains(hit.collider)) {
+                    SimObjPhysics hitSop = ancestorSimObjPhysics(hit.collider.gameObject);
+                    string hitId = (hitSop != null) ? hitSop.ObjectID : hit.collider.gameObject.name;
+                    objectsInWay.Add(hitId);
+                }
+            }
+
+            toReturn["adjacent"] = objectsInWay.Count == 0;
+#if UNITY_EDITOR
+            string are_arent = (bool) toReturn["adjacent"] ? "are" : "aren't";
+            Debug.Log($"Objects {are_arent} adjacent ({String.Join(", ", objectsInWay)}).");
+#endif
+            toReturn["objectInWay"] = objectsInWay;
+            actionFinishedEmit(true, toReturn);
+        }
+
+        protected string whatObjectOn(SimObjPhysics sop, int divisions, float belowDistance) {
+            sop.syncBoundingBoxes(forceCreateObjectOrientedBoundingBox: true); // Ensures the sop has an object oriented bounding box attached
+
+            List<Vector3> points = pointsOnSurfaceOfBoxCollider(
+                sop.BoundingBox.GetComponent<BoxCollider>(),
+                divisions
+            ).ToList();
+            points.Sort((v0, v1) => v0.y.CompareTo(v1.y));
+
+            HashSet<string> onObjectIds = new HashSet<string>();
+            List<Collider> collidersToDisable = sop.GetComponentsInChildren<Collider>().Where(c => c.enabled).ToList();
+            try {
+                foreach (Collider c in collidersToDisable) {
+                    c.enabled = false;
+                }
+
+                for (int i = 0; i < divisions * divisions; i++) { // divisions**2 as this is the number of points on a single face
+                    Vector3 point = points[i];
+
+# if UNITY_EDITOR
+                    Debug.DrawLine(point + transform.up * 1e-3f, point - transform.up * belowDistance, Color.red, 10.0f);
+# endif
+                    RaycastHit hit;
+                    if (Physics.Raycast(point + transform.up * 1e-3f, -transform.up, out hit, belowDistance + 1e-3f, LayerMask.GetMask("SimObjVisible"))) {
+                        SimObjPhysics onSop = ancestorSimObjPhysics(hit.collider.gameObject);
+                        if (onSop != null) {
+# if UNITY_EDITOR
+                            if (!onObjectIds.Contains(onSop.ObjectID)) {
+                                Debug.Log($"{sop.ObjectID} is on {onSop.ObjectID}");
+                            }
+# endif
+
+                            onObjectIds.Add(onSop.ObjectID);
+# if !UNITY_EDITOR
+                            break;
+# endif
+                        }
+                    }
+                }
+            } finally {
+                foreach (Collider c in collidersToDisable) {
+                    c.enabled = true;
+                }
+            }
+            return (onObjectIds.Count != 0 ? onObjectIds.ToList()[0] : null);
+        }
+
+        public void CheckWhatObjectOn(string objectId, int divisions=3, float belowDistance=1e-2f) {
+            SimObjPhysics sop = getSimObjectFromId(objectId);
+            if (sop == null) {
+                actionFinishedEmit(false); // Error message set already by getSimObjectFromId
+                return;
+            }
+            actionFinishedEmit(
+                true,
+                whatObjectOn(sop: sop, divisions: divisions, belowDistance: belowDistance)
+            );
+        }
+
+        public void CheckWhatObjectsOn(List<string> objectIds, int divisions=3, float belowDistance=1e-2f) {
+            Dictionary<string, string> objectIdToOnObjectId = new Dictionary<string, string>();
+            foreach (string objectId in objectIds) {
+                SimObjPhysics sop = getSimObjectFromId(objectId);
+                if (sop == null) {
+                    actionFinishedEmit(false); // Error message set already by getSimObjectFromId
+                    return;
+                }
+                objectIdToOnObjectId[objectId] = whatObjectOn(sop: sop, divisions: divisions, belowDistance: belowDistance);
+            }
+            actionFinishedEmit(
+                true,
+                objectIdToOnObjectId
+            );
+        }
+
+
         /*
         Get the 2D (x, z) convex hull of a GameObject. See the Get2DSemanticHulls
         function for more information.

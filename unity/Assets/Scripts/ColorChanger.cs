@@ -167,8 +167,9 @@ public class ColorChanger : MonoBehaviour {
         foreach (var renderer in GameObject.FindObjectsOfType<Renderer>()) {
             foreach (var mat in renderer.sharedMaterials) {
                 if (mat != null && mat.name != null) {
-                    Debug.Log("a");
+#if UNITY_EDITOR
                     Debug.Log("Found material: " + mat.name);
+#endif
                     activeMaterialNames.Add(mat.name);
                 }
             }
