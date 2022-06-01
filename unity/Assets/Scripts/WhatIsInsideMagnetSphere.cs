@@ -40,7 +40,9 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour {
             }
         }
         List<SimObjPhysics> toReturn = currentlyContainedObjects.ToList();
-        toReturn.Sort();
+        toReturn.Sort(
+            (a, b) => a.ObjectID.CompareTo(b.ObjectID)
+        );
         return toReturn;
     }
 
