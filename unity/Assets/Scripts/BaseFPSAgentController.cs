@@ -960,15 +960,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 return true;
                             }
 
-                            //The performer sometimes gets stuck on simulation agent colliders so if the performer is moving in a direction
-                            //where it should clear the simulation agent, let the performer move.
+                            //The performer sometimes gets stuck on a simulation agent's collider if the simulation agent is moving, 
+                            //so if the performer is moving in a direction where it should clear the simulation agent, 
+                            //like moving backward if the simulation agent is in front of the performer, let the performer move.
                             MCSSimulationAgent simulationAgent = res.transform.GetComponent<MCSSimulationAgent>();
                             if (simulationAgent != null) {
                                 Vector3 directionTowardAgent = simulationAgent.transform.position - transform.position;
                                 float angle = Vector2.Angle(new Vector2(directionTowardAgent.x, directionTowardAgent.z), new Vector2(dir.x, dir.z));
-                                if (angle >= 45) {
+                                float minimumAngleDifferenceNeccesaryForMovement = 45f;
+                                if (angle >= minimumAngleDifferenceNeccesaryForMovement)
                                     continue;
-                                }
                             }
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
