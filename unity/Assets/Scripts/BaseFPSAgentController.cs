@@ -897,7 +897,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             CapsuleCastInfoByShootingRayToFloor(out p1, out p2, out radius);
             RaycastHit[] hits = Physics.CapsuleCastAll(p1, p2, radius, dir, moveMagnitude, 1<<8, QueryTriggerInteraction.Ignore);
 
-            bool hasNoBlockingObjectsInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, hits);
+            bool hasNoBlockingObjectsInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, hits, dir);
             return hasNoBlockingObjectsInWay;
         }
 
@@ -905,7 +905,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return rigidbody.mass <= this.GetComponent<Rigidbody>().mass;
         }
 
-        private bool AgentCanMoveRayCastSweep(ref float moveMagnitude, int orientation, RaycastHit[] sweepResults)
+        private bool AgentCanMoveRayCastSweep(ref float moveMagnitude, int orientation, RaycastHit[] sweepResults, Vector3 dir)
         {
             if (sweepResults.Length > 0)
             {
@@ -958,7 +958,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             if(ShootRay45DegreesUp(this.inputDirection, moveMagnitude) && structureObject != null) 
                             {
                                 return true;
-                            }     
+                            }
+
+                            //The performer sometimes gets stuck on a simulation agent's collider if the simulation agent is moving, 
+                            //so if the performer is moving in a direction where it should clear the simulation agent, 
+                            //like moving backward if the simulation agent is in front of the performer, let the performer move.
+                            MCSSimulationAgent simulationAgent = res.transform.GetComponent<MCSSimulationAgent>();
+                            if (simulationAgent != null) {
+                                Vector3 directionTowardAgent = simulationAgent.transform.position - transform.position;
+                                float angle = Vector2.Angle(new Vector2(directionTowardAgent.x, directionTowardAgent.z), new Vector2(dir.x, dir.z));
+                                float minimumAngleDifferenceNeccesaryForMovement = 45f;
+                                if (angle >= minimumAngleDifferenceNeccesaryForMovement)
+                                    continue;
+                            }
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
                             //the moment we find a result that is blocking, return false here
