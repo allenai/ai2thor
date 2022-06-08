@@ -67,6 +67,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
   
     private Dictionary<string, bool> hapticFeedback = new Dictionary<string, bool>();
     private int stepsOnLava;
+    private TopDownPlotter topDownPlotter;
 
     [SerializeField] private string resolvedObject;
     [SerializeField] private string resolvedReceptacle;
@@ -77,6 +78,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public GameObject retrievalTargetGameObject = null;
     private MCSMain mcsMain;
 
+    // recordTopDown and topDownImagePath are assigned via python config, but are made public for ease of assigning and testing in the editor. 
+    public bool recordTopDown;
+    public string topDownImagePath;
 
     public override void Awake() {
         mcsMain = FindObjectOfType<MCSMain>();
@@ -296,6 +300,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         // Set consistentColors to randomize segmentation mask colors if required
         this.agentManager.consistentColors = action.consistentColors;
+        recordTopDown = action.recordTopDown;
+        topDownImagePath = action.topDownImagePath;
         base.Initialize(action);
 
         this.step = 0;
@@ -468,6 +474,15 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         if (!controlCommand.action.Equals("Initialize")) {
             this.step++;
+        }
+
+        if(recordTopDown)
+        {
+            if(topDownPlotter == null)
+            {
+                topDownPlotter = GameObject.Find("TopDownCamera").GetComponent<TopDownPlotter>();
+            }
+            topDownPlotter.TakeScreenshot(topDownImagePath);
         }
     }
 

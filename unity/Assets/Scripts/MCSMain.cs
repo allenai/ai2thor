@@ -57,6 +57,7 @@ public class MCSMain : MonoBehaviour {
     private static float WALL_BACK_FRONT_POSITION_X = 0;
     private static float WALL_LEFT_RIGHT_POSITION_Z = 0;
     private static float WALL_WIDTH = 0.5f;
+    private static float DEFAULT_ROOM_HEIGHT_PASSIVE = 8f;
     private static Vector3 DEFAULT_ROOM_DIMENSIONS = new Vector3(10, 3, 10);
     private static Vector3 DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS_OLD = new Vector3(15, 6, 10);
     private static Vector3 DEFAULT_ROOM_DIMENSIONS_INTUITIVE_PHYSICS = new Vector3(20, 10, 20);
@@ -498,8 +499,12 @@ public class MCSMain : MonoBehaviour {
         GameObject oldFloors = GameObject.Find("Floors");
         if(oldFloors!=null)
             Destroy(oldFloors);
-        if (this.currentScene.roomDimensions == null || this.currentScene.roomDimensions == Vector3.zero)
+        if (this.currentScene.roomDimensions == null || this.currentScene.roomDimensions == Vector3.zero) {
             this.currentScene.roomDimensions = DEFAULT_ROOM_DIMENSIONS;
+            if (this.isPassiveScene) {
+                this.currentScene.roomDimensions.y = DEFAULT_ROOM_HEIGHT_PASSIVE;
+            }
+        }
         this.floor.transform.localPosition = DEFAULT_FLOOR_POSITION; //resets the floor position to the default
 
         if(this.currentScene.partitionFloor != null && (this.currentScene.partitionFloor.leftHalf > 0 ||
@@ -971,8 +976,8 @@ public class MCSMain : MonoBehaviour {
         this.floor.transform.localScale = new Vector3(roomDimensions.x + wallWidths.x * 2,
             MCSMain.FLOOR_SCALE_Y, roomDimensions.z + wallWidths.z * 2);
         this.ceiling.transform.localScale = new Vector3(roomDimensions.x + wallWidths.x * 2,
-            MCSMain.FLOOR_SCALE_Y, roomDimensions.z + wallWidths.z * 2);
-        this.ceiling.transform.position = new Vector3(0, roomDimensions.y + wallHalfWidths.y, 0);
+            roomDimensions.z + wallWidths.z * 2, MCSMain.FLOOR_SCALE_Y);
+        this.ceiling.transform.position = new Vector3(0, roomDimensions.y, 0);    
     }
 
     private Collider AssignBoundingBox(

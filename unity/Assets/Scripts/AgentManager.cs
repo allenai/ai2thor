@@ -1483,6 +1483,8 @@ public class ServerAction
 	public int straight = 1;
 	public Transform agentTransform;
 	public bool restrictOpenDoors = false;
+	public string topDownImagePath;
+	public bool recordTopDown;
 
     public SimObjType ReceptableSimObjType()
 	{
