@@ -90,6 +90,7 @@ Light:
   m_UseColorTemperature: 0
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!1 &1676475023313110
@@ -104,6 +105,7 @@ GameObject:
   - component: {fileID: 33456317489401694}
   - component: {fileID: 23272073425681910}
   - component: {fileID: 65251471638618450}
+  - component: {fileID: 5276023024648296729}
   m_Layer: 8
   m_Name: CylinderLamp
   m_TagString: Structure
@@ -149,6 +151,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -175,6 +178,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!65 &65251471638618450
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -188,3 +192,16 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.7964999, y: 0.714549, z: 0.7964999}
   m_Center: {x: 0, y: -0.3572745, z: 0}
+--- !u!114 &5276023024648296729
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1676475023313110}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 5
