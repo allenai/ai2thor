@@ -4453,7 +4453,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
             VisualizePath(startHit.position, path);
 #endif
-            this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+            this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
         }
 
         public void GetShortestPathToPoint(
