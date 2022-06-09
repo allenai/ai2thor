@@ -584,6 +584,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public abstract void InitializeBody();
 
+         private bool ValidRotateStepDegreesWithSnapToGrid(float rotateDegrees) {
+            // float eps = 0.00001f;
+            return rotateDegrees == 90.0f || rotateDegrees == 180.0f || rotateDegrees == 270.0f || (rotateDegrees % 360.0f) == 0.0f;
+        }
+
         public void Initialize(ServerAction action) {
 
             this.InitializeBody();
@@ -632,6 +637,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // default is 90 defined in the ServerAction class, specify whatever you want the default to be
             if (action.rotateStepDegrees > 0.0) {
                 this.rotateStepDegrees = action.rotateStepDegrees;
+            }
+
+             if (action.snapToGrid && !ValidRotateStepDegreesWithSnapToGrid(action.rotateStepDegrees)) {
+                errorMessage = $"Invalid values 'rotateStepDegrees': ${action.rotateStepDegrees} and 'snapToGrid':${action.snapToGrid}. 'snapToGrid': 'True' is not supported when 'rotateStepDegrees' is different from grid rotation steps of 0, 90, 180, 270 or 360.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
             }
 
             this.snapToGrid = action.snapToGrid;
@@ -4441,7 +4453,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
             VisualizePath(startHit.position, path);
 #endif
-            this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+            this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
         }
 
         public void GetShortestPathToPoint(
@@ -4656,13 +4668,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void DestroyHouse() {
-            // TODO: asset scene is in procedural.
-            GameObject go = GameObject.Find("Objects");
-            foreach (Transform child in go.transform) {
-                GameObject.DestroyImmediate(child.gameObject);
-            }
-            GameObject.DestroyImmediate(GameObject.Find("Structure"));
-            GameObject.DestroyImmediate(GameObject.Find("ProceduralLighting"));
+            Destroy(GameObject.Find("Objects"));
+            Destroy(GameObject.Find("Structure"));
+            Destroy(GameObject.Find("ProceduralLighting"));
+
+            // create empty game object
+            GameObject house = new GameObject("Objects");
 
             // puts the agent below the scene to its starting position
             GameObject.Find("FPSController").transform.position = new Vector3(-0.5f, -38.86f, 0.5f);
