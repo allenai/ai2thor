@@ -283,9 +283,15 @@ public class AgentManager : MonoBehaviour {
         //this will need a rework to make multi agent work as GetReachablePositions is used to position additional
         //agents, which won't work if we initialize the agent(s) before the scene exists
         string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        if (!sceneName.StartsWith("Procedural")) {
-            StartCoroutine(addAgents(action));
+
+        addAgents(action);
+        this.agents[0].m_Camera.depth = 9999;
+        if (action.startAgentsRotatedBy != 0f) {
+            RotateAgentsByRotatingUniverse(action.startAgentsRotatedBy);
+        } else {
+            ResetSceneBounds();
         }
+        this.agentManagerState = AgentState.ActionComplete;
     }
 
     private void SetUpLocobotController(ServerAction action) {
@@ -348,28 +354,24 @@ public class AgentManager : MonoBehaviour {
         get => this.primaryAgent;
     }
 
-    private IEnumerator addAgents(ServerAction action) {
-        yield return null;
-        Vector3[] reachablePositions = primaryAgent.getReachablePositions(2.0f);
-        for (int i = 1; i < action.agentCount && this.agents.Count < Math.Min(agentColors.Length, action.agentCount); i++) {
-            action.x = reachablePositions[i + 4].x;
-            action.y = reachablePositions[i + 4].y;
-            action.z = reachablePositions[i + 4].z;
-            addAgent(action);
-            yield return null; // must do this so we wait a frame so that when we CapsuleCast we see the most recently added agent
+    private void addAgents(ServerAction action) {
+        if (action.agentCount > 1) {
+            if (sceneName.StartsWith("Procedural")) {
+                throw new NotImplementedException($"Procedural scenes only support a single agent currently.");
+            }
+            Physics.SyncTransforms();
+            Vector3[] reachablePositions = primaryAgent.getReachablePositions(2.0f);
+            for (int i = 1; i < action.agentCount && this.agents.Count < Math.Min(agentColors.Length, action.agentCount); i++) {
+                action.x = reachablePositions[i + 4].x;
+                action.y = reachablePositions[i + 4].y;
+                action.z = reachablePositions[i + 4].z;
+                addAgent(action);
+                Physics.SyncTransforms(); // must do this so that when we CapsuleCast we see the most recently added agent
+            }
+            for (int i = 1; i < this.agents.Count; i++) {
+                this.agents[i].m_Camera.depth = 1;
+            }
         }
-        for (int i = 0; i < this.agents.Count; i++) {
-            this.agents[i].m_Camera.depth = 1;
-        }
-        this.agents[0].m_Camera.depth = 9999;
-
-        if (action.startAgentsRotatedBy != 0f) {
-            RotateAgentsByRotatingUniverse(action.startAgentsRotatedBy);
-        } else {
-            ResetSceneBounds();
-        }
-
-        this.agentManagerState = AgentState.ActionComplete;
     }
 
     public void ResetSceneBounds() {
