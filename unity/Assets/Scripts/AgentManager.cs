@@ -276,14 +276,8 @@ public class AgentManager : MonoBehaviour {
         if (action.alwaysReturnVisibleRange) {
             ((PhysicsRemoteFPSAgentController)primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
         }
-        //if multi agent requested, add duplicates of primary agent now
-        //note: for Houses, adding multiple agents in will need to be done differently as currently
-        //initializing additional agents assumes the scene is already setup, and Houses initialize the 
-        //primary agent floating in space, then generates the house, then teleports the primary agent.
-        //this will need a rework to make multi agent work as GetReachablePositions is used to position additional
-        //agents, which won't work if we initialize the agent(s) before the scene exists
-        string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
+        //if multi agent requested, add duplicates of primary agent now
         addAgents(action);
         this.agents[0].m_Camera.depth = 9999;
         if (action.startAgentsRotatedBy != 0f) {
@@ -356,9 +350,15 @@ public class AgentManager : MonoBehaviour {
 
     private void addAgents(ServerAction action) {
         if (action.agentCount > 1) {
-            if (sceneName.StartsWith("Procedural")) {
+            // note: for procedural scenes, adding multiple agents in will need to be done differently as currently
+            // initializing additional agents assumes the scene is already setup, and Houses initialize the
+            // primary agent floating in space, then generates the house, then teleports the primary agent.
+            // this will need a rework to make multi agent work as GetReachablePositions is used to position additional
+            // agents, which won't work if we initialize the agent(s) before the scene exists
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name.StartsWith("Procedural")) {
                 throw new NotImplementedException($"Procedural scenes only support a single agent currently.");
             }
+
             Physics.SyncTransforms();
             Vector3[] reachablePositions = primaryAgent.getReachablePositions(2.0f);
             for (int i = 1; i < action.agentCount && this.agents.Count < Math.Min(agentColors.Length, action.agentCount); i++) {
