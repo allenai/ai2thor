@@ -1844,8 +1844,6 @@ namespace Thor.Procedural {
                     //var rotY = getWallDegreesRotation(wall.wall0);
                     var rotation = Quaternion.AngleAxis(rotY, Vector3.up);
 
-
-
                     var go = spawnSimObjPrefab(
                         prefab: coverPrefab,
                         id: holeCover.id,
@@ -1855,18 +1853,12 @@ namespace Thor.Procedural {
                         rotation: rotation,
                         kinematic: true,
                         color: holeCover.color,
+                        openness: holeCover.openness,
+                        opennessByParts: holeCover.opennessByParts,
                         positionBoundingBoxCenter: false
                     );
 
                     setConnectionProperties(go, holeCover);
-
-                    // if (holeCover.open) {
-                        var canOpen = go.GetComponentInChildren<CanOpen_Object>();
-                        if (canOpen != null) {
-                            Debug.Log("OPENNESS --- " + holeCover.openness);
-                            canOpen.SetOpennessImmediate(holeCover.openness);
-                        }
-                    // }
 
                     count++;
                     tagObjectNavmesh(go, "Not Walkable");
@@ -2117,6 +2109,7 @@ namespace Thor.Procedural {
             bool unlit = false,
             MaterialProperties materialProperties = null,
             float? openness = null,
+            Dictionary<string, float> opennessByParts = null,
             bool? isOn = null,
             bool? isDirty = null,
             string layer = null
@@ -2129,10 +2122,16 @@ namespace Thor.Procedural {
                 SetLayer<MeshRenderer>(spawned, LayerMask.NameToLayer(layer));
             }
 
-            if (openness.HasValue) {
+            if (openness.HasValue && opennessByParts != null) {
+                throw new Exception("Cannot specify openness and opennessByParts at the same time");
+            } else if (openness.HasValue || opennessByParts != null) {
                 var canOpen = spawned.GetComponentInChildren<CanOpen_Object>();
                 if (canOpen != null) {
-                    canOpen.SetOpennessImmediate(openness.Value);
+                    if (openness.HasValue) {
+                        canOpen.SetOpennessImmediate(openness.Value);
+                    } else {
+                        canOpen.SetOpennessImmediate(opennessByParts);
+                    }
                 }
             }
 

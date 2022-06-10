@@ -144,6 +144,21 @@ public class CanOpen_Object : MonoBehaviour {
         setIsOpen(openness: openness);
     }
 
+    public void SetOpennessImmediate(Dictionary<string, float> opennessByParts) {
+        for (int i = 0; i < MovingParts.Length; i++) {
+            if (opennessByParts.ContainsKey(MovingParts[i].name)) {
+                Vector3 newRot = new Vector3(openPositions[i].x, openPositions[i].y, openPositions[i].z) * opennessByParts[MovingParts[i].name];
+                MovingParts[i].transform.localRotation = Quaternion.Euler(newRot);
+            }
+
+            // TODO: This is effectively a bug.
+            // It sets openness to the latest value in the dictionary.
+            // But openness doesn't really make sense as a scalar
+            // for objects with multiple possible open parts.
+            setIsOpen(openness: opennessByParts[MovingParts[i].name]);
+        }
+    }
+
     public void Interact(float openness = 1.0f) {
         // if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         // before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
