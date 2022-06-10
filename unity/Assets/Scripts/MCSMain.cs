@@ -206,8 +206,30 @@ public class MCSMain : MonoBehaviour {
         // If the player made a step, update the scene based on the current configuration.
         if (this.lastStep < this.agentController.step) {
             this.lastStep++;
+
             Debug.Log("MCS: Run Step " + this.lastStep + " at Frame " + Time.frameCount);
             if (this.currentScene != null && this.currentScene.objects != null) {
+                
+                // Check if lights should be disabled or enabled at specific steps
+                if(this.currentScene.toggleLights != null && this.currentScene.toggleLights.Count > 0) {
+                    foreach(MCSConfigStepBeginEnd configStep in this.currentScene.toggleLights)
+                    {
+                        if(configStep.stepBegin == this.lastStep) {
+                            this.light.GetComponent<Light>().enabled = false;
+                            foreach(Light light in this.sceneLights) {
+                                light.enabled = false;
+                            }
+                        }
+
+                        if(configStep.stepEnd == this.lastStep) {
+                            this.light.GetComponent<Light>().enabled = true;
+                            foreach(Light light in this.sceneLights) {
+                                light.enabled = true;
+                            }
+                        }
+                    }
+                }
+                
                 // update segmentation mask colors
                 ImageSynthesis imageSynthesis = GameObject.Find("FPSController").GetComponentInChildren<ImageSynthesis>();
                 if (imageSynthesis != null && imageSynthesis.enabled) {
@@ -2634,6 +2656,7 @@ public class MCSConfigScene {
     public List<MCSConfigGrid> lava;
     public List<MCSConfigFloorTextures> floorTextures;
     public bool restrictOpenDoors;
+    public List<MCSConfigStepBeginEnd> toggleLights;
 }
 
 [Serializable]
