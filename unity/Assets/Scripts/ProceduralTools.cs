@@ -2221,6 +2221,11 @@ namespace Thor.Procedural {
                 childSimObjects[i].objectID = $"{id}___{childNumber++}";
             }
 
+            if (toSpawn.GetComponent<SimObjPhysics>() != null) {
+                // set not active
+                toSpawn.GetComponent<SimObjPhysics>().enabled = false;
+            }
+
             return toSpawn.transform.gameObject;
         }
 
