@@ -105,8 +105,7 @@ namespace Thor.Procedural.Data {
         public List<VectorXZ> axesXZ { get; set; }
         public string type { get; set; }
         public bool openable { get; set; }
-        public float? openness { get; set; } = null;
-        public Dictionary<string, float> opennessByParts { get; set; } = null;
+        public float openness { get; set; } = 0.0f;
         public string assetId { get; set; }
 
         public SerializableColor color { get; set; } = null;
@@ -230,8 +229,7 @@ namespace Thor.Procedural.Data {
         public string wall0 { get; set; }
         public string wall1 { get; set; }
         public bool openable { get; set; }
-        public float? openness { get; set; } = null;
-        public Dictionary<string, float> opennessByParts { get; set; } = null;
+        public float openness { get; set; } = 0.0f;
         public List<VectorXZ> axesXZ { get; set; }
         public string type { get; set; }
         public string assetId { get; set; }
@@ -393,8 +391,7 @@ namespace Thor.Procedural.Data {
 
         Vector3 assetOffset { get; set; }
 
-        float? openness { get; set; }
-        Dictionary<string, float> opennessByParts { get; set; }
+        float openness { get; set; }
 
         SerializableColor color { get; set; }
     }

@@ -53,7 +53,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             fp_camera_2.gameObject.SetActive(true);
             fp_camera_2.transform.localPosition = new Vector3(0.0353f, 0.5088f, -0.076f);
             fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
-            fp_camera_2.fieldOfView = 90f;
+             fp_camera_2.fieldOfView = 90f;
 //            fp_camera_2.fieldOfView = 75f;
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 

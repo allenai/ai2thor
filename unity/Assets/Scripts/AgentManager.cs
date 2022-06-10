@@ -1728,7 +1728,7 @@ public class DynamicServerAction {
 
     public int sequenceId {
         get {
-            return (int)this.GetValue("sequenceId", 0);
+            return (int)this.jObject["sequenceId"];
         }
     }
 
