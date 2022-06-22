@@ -26,7 +26,7 @@ using UnityEngine.Networking;
 using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
 using UnityStandardAssets.ImageEffects;
-
+//using Unity.XR.CoreUtils;
 
 public class AgentManager : MonoBehaviour {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
@@ -251,6 +251,8 @@ public class AgentManager : MonoBehaviour {
                 primaryAgent.actionFinished(success: false, errorMessage: error);
                 return;
             }
+        } else if (action.agentMode.ToLower() == "vr") {
+            SetUpVRController();
         }
 
         primaryAgent.ProcessControlCommand(action.dynamicServerAction);
@@ -311,6 +313,16 @@ public class AgentManager : MonoBehaviour {
         this.agents.Clear();
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(PhysicsRemoteFPSAgentController), baseAgentComponent);
+    }
+
+    public void SetUpVRController() {
+        this.agents.Clear();
+        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
+        primaryAgent = createAgentType(typeof(PhysicsRemoteFPSAgentController), baseAgentComponent);
+        //var xrOrigin = primaryAgent.gameObject.GetComponent<XROrigin>();
+        //xrOrigin.enabled = true;
+        var xrInteractionManager = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "XR Interaction Manager" );
+        xrInteractionManager.gameObject.SetActive(true);
     }
 
     private BaseFPSAgentController createAgentType(Type agentType, BaseAgentComponent agentComponent) {

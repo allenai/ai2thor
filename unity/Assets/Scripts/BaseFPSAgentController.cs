@@ -177,7 +177,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.m_WalkSpeed = 2;
             this.m_RunSpeed = 10;
             this.m_GravityMultiplier = 2;
-            this.m_Camera = FindRecursive(this.transform, "FirstPersonCharacter").GetComponent<Camera>();
+            this.m_Camera = this.transform.FirstChildOrDefault((x) => x.name == "FirstPersonCharacter").GetComponent<Camera>(); /*FindRecursive(this.transform, "FirstPersonCharacter").GetComponent<Camera>();*/
             this.m_CharacterController = GetComponent<CharacterController>();
             collidedObjects = new string[0];
             collisionsInAction = new List<string>();
