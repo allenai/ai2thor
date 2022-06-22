@@ -4567,8 +4567,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // syntactic sugar for open object with openness = 0.
-        public void CloseObject(string objectId, bool forceAction = false) {
-            OpenObject(objectId: objectId, forceAction: forceAction, openness: 0);
+        public void CloseObject(string objectId, bool forceAction = false, float? physicsInterval = null) {
+            OpenObject(objectId: objectId, forceAction: forceAction, openness: 0, physicsInterval: physicsInterval);
         }
 
         // syntactic sugar for open object with openness = 0.
@@ -4713,6 +4713,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool markActionFinished,
             bool freezeContained = false,
             float openness = 1.0f,
+            float? physicsInterval = null,
             bool ignoreAgentInTransition = true
         ) {
             if (openableObject == null) {
@@ -4752,7 +4753,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float startOpenness = openableObject.currentOpenness;
 
             // open the object to openness
-            openableObject.Interact(openness);
+            openableObject.Interact(openness: openness, physicsInterval: physicsInterval);
+            // Wait until all iTweening is done
             yield return new WaitUntil(() => (openableObject.GetiTweenCount() == 0));
             yield return null;
             bool succeeded = true;
@@ -4766,7 +4768,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     succeeded = false;
 
                     // failure: reset the openness!
-                    openableObject.Interact(openness: startOpenness);
+                    openableObject.Interact(openness: startOpenness, physicsInterval: physicsInterval);
                     yield return new WaitUntil(() => (openableObject.GetiTweenCount() == 0));
                     yield return null;
                 }
@@ -5088,6 +5090,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float openness,
             bool forceAction,
             bool markActionFinished,
+            float? physicsInterval = null,
             bool simplifyPhysics = false,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
@@ -5145,6 +5148,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 openableObject: codd,
                 freezeContained: simplifyPhysics,
                 openness: openness,
+                physicsInterval: physicsInterval,
                 markActionFinished: markActionFinished
             ));
         }
@@ -5163,12 +5167,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectId,
             bool forceAction = false,
             float openness = 1,
+            float? physicsInterval = null,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
             SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
             openObject(
                 target: target,
                 openness: openness,
+                physicsInterval: physicsInterval,
                 forceAction: forceAction,
                 moveMagnitude: moveMagnitude,
                 markActionFinished: true

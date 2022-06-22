@@ -4878,8 +4878,8 @@ public class iTween : MonoBehaviour
 			target.transform.eulerAngles=vector3s[3];
 		}
 		
-		// need physics?
-		if(target.GetComponent<Rigidbody>() != null){
+		// need physics? (EDITED BY AI2 TO EXCLUDE KINEMATIC RIGIDBODIES)
+		if(target.GetComponent<Rigidbody>() != null && target.GetComponent<Rigidbody>().isKinematic == false){
 			Vector3 postUpdate=target.transform.eulerAngles;
 			target.transform.eulerAngles=preUpdate;
 			target.GetComponent<Rigidbody>().MoveRotation(Quaternion.Euler(postUpdate));
@@ -5087,8 +5087,8 @@ public class iTween : MonoBehaviour
 			target.transform.position=vector3s[3];	
 		}	
 		
-		// need physics?
-		if(target.GetComponent<Rigidbody>() != null){
+		// need physics? (EDITED BY AI2 TO EXCLUDE KINEMATIC RIGIDBODIES)
+		if(target.GetComponent<Rigidbody>() != null && target.GetComponent<Rigidbody>().isKinematic == false){
 			Vector3 postUpdate=target.transform.position;
 			target.transform.position=preUpdate;
 			target.GetComponent<Rigidbody>().MovePosition(postUpdate);
@@ -6512,8 +6512,8 @@ public class iTween : MonoBehaviour
 			time=Defaults.time;
 		}
 			
-		// do we need to use physics, is there a rigidbody?
-		if(GetComponent<Rigidbody>() != null){
+		// do we need to use physics, is there a rigidbody? (EDITED BY AI2 TO EXCLUDE KINEMATIC RIGIDBODIES)
+		if(GetComponent<Rigidbody>() != null && GetComponent<Rigidbody>().isKinematic == false){
 			physics=true;
 		}
                

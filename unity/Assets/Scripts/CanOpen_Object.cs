@@ -23,7 +23,10 @@ public class CanOpen_Object : MonoBehaviour {
 
     [SerializeField]
     public float currentOpenness = 1.0f; // 0.0 to 1.0 - percent of openPosition the object opens. 
-    private float startOpenness; // used to reset on failure
+    
+    // used to reset on failure
+    private float startOpenness;
+    private float? startFixedDeltaTime;
 
     [Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
     // these are objects to ignore collision with. This is in case the fridge doors touch each other or something that might
@@ -144,20 +147,26 @@ public class CanOpen_Object : MonoBehaviour {
         setIsOpen(openness: openness);
     }
 
-    public void Interact(float openness = 1.0f) {
+    public void Interact(float openness = 1.0f, float? physicsInterval = null) {
         // if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         // before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
         if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup && sop.isInAgentHand == false) {
             gameObject.GetComponent<Rigidbody>().isKinematic = false;
         }
-
+    
         startOpenness = currentOpenness;
+        startFixedDeltaTime = physicsInterval;
+        // For every moving part (some doors are doubles, for example...)
         for (int i = 0; i < MovingParts.Length; i++) {
+            // simple parameters used as input for  iTween logic; local means local-space, animationTime means the number of seconds lerping should take, and linear means linear animation handles instead of, say, bezier
             Hashtable args = new Hashtable() {
                 {"islocal", true},
                 {"time", animationTime},
-                {"easetype", "linear"}
+                {"easetype", "linear"},
+                {"onupdate", "StepPhysics"},
+                {"onupdatetarget", this.GetComponent<SimObjPhysics>().GetSceneManager()},
+                {"onupdateparams", physicsInterval.GetValueOrDefault(Time.fixedDeltaTime)}
             };
 
             // we are on the last moving part here
@@ -176,13 +185,13 @@ public class CanOpen_Object : MonoBehaviour {
 
                 // some x, y, z components don't change when sliding open
                 // only apply openness modifier to components of vector3 that actually change
-                if (openPositions[i].x - closedPositions[i].x != Mathf.Epsilon) {
+                if (Mathf.Abs(openPositions[i].x - closedPositions[i].x) > Mathf.Epsilon) {
                     lerpToPosition.x = ((openPositions[i].x - closedPositions[i].x) * openness) + closedPositions[i].x;
                 }
-                if (openPositions[i].y - closedPositions[i].y != Mathf.Epsilon) {
+                if (Mathf.Abs(openPositions[i].y - closedPositions[i].y) > Mathf.Epsilon) {
                     lerpToPosition.y = ((openPositions[i].y - closedPositions[i].y) * openness) + closedPositions[i].y;
                 }
-                if (openPositions[i].z - closedPositions[i].z != Mathf.Epsilon) {
+                if (Mathf.Abs(openPositions[i].z - closedPositions[i].z) > Mathf.Epsilon) {
                     lerpToPosition.z = ((openPositions[i].z - closedPositions[i].z) * openness) + closedPositions[i].z;
                 }
                 args["position"] = lerpToPosition;
@@ -252,7 +261,7 @@ public class CanOpen_Object : MonoBehaviour {
     // it will start a new set of tweens before onComplete is called from Interact()... it seems
     public void Reset() {
         if (!isCurrentlyResetting) {
-            Interact(openness: startOpenness);
+            Interact(openness: startOpenness, physicsInterval: startFixedDeltaTime);
             StartCoroutine("updateReset");
         }
     }

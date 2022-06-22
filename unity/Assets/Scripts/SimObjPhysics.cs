@@ -121,6 +121,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
 
+    public GameObject GetSceneManager() {
+        return sceneManager.gameObject;
+    }
+
     public float GetTimerResetValue() {
         return TimerResetValue;
     }
