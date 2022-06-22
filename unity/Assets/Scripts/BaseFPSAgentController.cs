@@ -177,7 +177,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.m_WalkSpeed = 2;
             this.m_RunSpeed = 10;
             this.m_GravityMultiplier = 2;
-            this.m_Camera = this.transform.Find("FirstPersonCharacter").GetComponent<Camera>();
+            this.m_Camera = FindRecursive(this.transform, "FirstPersonCharacter").GetComponent<Camera>();
             this.m_CharacterController = GetComponent<CharacterController>();
             collidedObjects = new string[0];
             collisionsInAction = new List<string>();
@@ -1934,10 +1934,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        private Transform FindRecursive(Transform self, string name) {
+            foreach (Transform child in self) {
+                if (child.name.Equals(name)) {
+                    return child;
+                }
 
-        // Helper method that parses objectId parameter to return the sim object that it target.
-        // The action is halted if the objectId does not appear in the scene.
-        protected SimObjPhysics getInteractableSimObjectFromId(string objectId, bool forceAction = false) {
+                var finding = FindRecursive(child, name);
+
+                if (finding != null) {
+                    return finding;
+                }
+            }
+
+            return null;
+        }
+
+
+    // Helper method that parses objectId parameter to return the sim object that it target.
+    // The action is halted if the objectId does not appear in the scene.
+    protected SimObjPhysics getInteractableSimObjectFromId(string objectId, bool forceAction = false) {
             // an objectId was given, so find that target in the scene if it exists
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 throw new ArgumentException($"objectId: {objectId} is not the objectId on any object in the scene!");
