@@ -2874,6 +2874,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "close": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "CloseObject";
+                        action["forceAction"] = true;
 
                         if (splitcommand.Length > 1) {
                             action["objectId"] = splitcommand[1];

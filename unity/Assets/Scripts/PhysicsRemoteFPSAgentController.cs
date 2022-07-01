@@ -9,6 +9,7 @@ using System.Linq;
 using Priority_Queue;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Animations;
 using UnityEngine.SceneManagement;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
@@ -4567,8 +4568,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // syntactic sugar for open object with openness = 0.
-        public void CloseObject(string objectId, bool forceAction = false, float? physicsInterval = null) {
-            OpenObject(objectId: objectId, forceAction: forceAction, openness: 0, physicsInterval: physicsInterval);
+        public void CloseObject(string objectId, bool forceAction = false, bool useGripper = false, float? physicsInterval = null) {
+            OpenObject(objectId: objectId, forceAction: forceAction, openness: 0, useGripper: useGripper, physicsInterval: physicsInterval);
         }
 
         // syntactic sugar for open object with openness = 0.
@@ -4714,7 +4715,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool freezeContained = false,
             float openness = 1.0f,
             float? physicsInterval = null,
-            bool ignoreAgentInTransition = true
+            bool ignoreAgentInTransition = false
         ) {
             if (openableObject == null) {
                 if (markActionFinished) {
@@ -4724,7 +4725,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 yield break;
             }
 
-            // disables all colliders in the scene
+            // disables all colliders on the agent, and any held object
             List<Collider> collidersDisabled = new List<Collider>();
             if (ignoreAgentInTransition) {
                 foreach (Collider c in GetComponentsInChildren<Collider>()) {
@@ -4759,10 +4760,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             yield return null;
             bool succeeded = true;
 
-            if (ignoreAgentInTransition) {
+            if (!ignoreAgentInTransition) {
                 GameObject openableGameObj = openableObject.GetComponentInParent<SimObjPhysics>().gameObject;
 
-                // check for collision failure
+                // check for collision failure with agent, and any held object
                 if (isAgentCapsuleCollidingWith(openableGameObj) || isHandObjectCollidingWith(openableGameObj)) {
                     errorMessage = "Object failed to open/close successfully.";
                     succeeded = false;
@@ -4790,6 +4791,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     rb.isKinematic = false;
                 }
             }
+
+            // Remove parent constraint from ArmTarget
+            UnityEngine.Object.Destroy(this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmTarget().GetComponent<ParentConstraint>());
 
             if (markActionFinished) {
                 actionFinished(succeeded);
@@ -5090,6 +5094,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float openness,
             bool forceAction,
             bool markActionFinished,
+            bool useGripper = false,
             float? physicsInterval = null,
             bool simplifyPhysics = false,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
@@ -5144,6 +5149,42 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
+            if (useGripper == true) {
+                // Opening objects with the arm only works with the IK-Arm
+                // (it'd be preferable to reference the agentMode directly, but no such universal metadata exists)
+                if (this.GetComponent<BaseAgentComponent>().IKArm.activeInHierarchy == false) {
+                    errorMessage = "IK-Arm is required to open objects with gripper";
+                    if (markActionFinished) {
+                        actionFinished(false);
+                    }
+                    return;
+                }
+
+                GameObject parentMovingPart = FindOverlappingMovingPart(codd);
+                // Using the gripper to open objects currently requires the gripper-sphere to have some overlap with the moving parts' collision geometry
+                if (parentMovingPart == null) {
+                    errorMessage = "Gripper must be making contact with a moving part's surface!";
+                    if (markActionFinished) {
+                        actionFinished(false);
+                    }
+                    return;
+                }
+
+                else {
+                    GameObject armTarget = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmTarget();
+                    Vector3[] PCTranslationOffsets = new Vector3[] {parentMovingPart.transform.InverseTransformPoint(armTarget.transform.position)};
+                    Vector3[] PCRotationOffsets = new Vector3[] {(Quaternion.Inverse(parentMovingPart.transform.rotation) * armTarget.transform.rotation).eulerAngles};
+                    ParentConstraint movingPartPC = armTarget.AddComponent<ParentConstraint>();
+                    ConstraintSource PCSource = new ConstraintSource();
+                    PCSource.sourceTransform = parentMovingPart.transform;
+                    PCSource.weight = 1;
+                    movingPartPC.AddSource(PCSource);
+                    movingPartPC.translationOffsets = PCTranslationOffsets;
+                    movingPartPC.rotationOffsets = PCRotationOffsets;
+                    movingPartPC.constraintActive = true;
+                }
+            }
+
             StartCoroutine(openAnimation(
                 openableObject: codd,
                 freezeContained: simplifyPhysics,
@@ -5162,10 +5203,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.GetComponent<CanOpen_Object>().SetOpennessImmediate(openness);
             actionFinished(true);
         }
+        
+        //helper function to confirm if GripperSphere overlaps with openable object's moving part(s), and which one
+        public GameObject FindOverlappingMovingPart(CanOpen_Object codd)
+        {
+            GameObject magnetSphere = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetMagnetSphere();
+            foreach (GameObject movingPart in codd.GetComponent<CanOpen_Object>().MovingParts) {
+                        foreach(Collider col in movingPart.GetComponentsInChildren<Collider>()) {
+                            // Checking for matches between moving parts' colliders and colliders inside of gripper-sphere
+                            foreach(Collider containedCol in Physics.OverlapSphere(
+                                magnetSphere.transform.TransformPoint(magnetSphere.GetComponent<SphereCollider>().center),
+                                magnetSphere.transform.GetComponent<SphereCollider>().radius)) {
+                                    if (col == containedCol)
+                                    {
+                                        Debug.Log("Grippersphere overlaps with " + movingPart + "!");
+                                        return movingPart;
+                                    }
+                                }
+                            }
+                        }
+            return null;
+        }
 
         public void OpenObject(
             string objectId,
             bool forceAction = false,
+            bool useGripper = false,
             float openness = 1,
             float? physicsInterval = null,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
@@ -5176,6 +5239,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 openness: openness,
                 physicsInterval: physicsInterval,
                 forceAction: forceAction,
+                useGripper: useGripper,
                 moveMagnitude: moveMagnitude,
                 markActionFinished: true
             );

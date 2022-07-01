@@ -166,13 +166,11 @@ public class CanOpen_Object : MonoBehaviour {
                 {"easetype", "linear"},
                 {"onupdate", "StepPhysics"},
                 {"onupdatetarget", this.GetComponent<SimObjPhysics>().GetSceneManager()},
-                {"onupdateparams", physicsInterval.GetValueOrDefault(Time.fixedDeltaTime)}
+                {"onupdateparams", physicsInterval.GetValueOrDefault(Time.fixedDeltaTime)},
+                {"oncomplete", "StepPhysics"},
+                {"oncompletetarget", this.GetComponent<SimObjPhysics>().GetSceneManager()},
+                {"oncompleteparams", physicsInterval.GetValueOrDefault(Time.fixedDeltaTime)}
             };
-
-            // we are on the last moving part here
-            if (i == MovingParts.Length - 1) {
-                args["onCompleteTarget"] = gameObject;
-            }
 
             // let's open the object!
             if (movementType == MovementType.Rotate) {
