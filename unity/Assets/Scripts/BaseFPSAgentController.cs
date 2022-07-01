@@ -3917,6 +3917,63 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return true;
         }
 
+        public bool TeleportCheck(Vector3 position, Vector3 rotation, bool forceAction, float? horizon = null) {
+            if (forceAction) {
+                return true;
+            }
+
+            position.y = transform.position.y;
+            horizon = horizon == null ? m_Camera.transform.localEulerAngles.x : (float)horizon;
+
+            // Note: using Mathf.Approximately uses Mathf.Epsilon, which is significantly
+            // smaller than 1e-2f. I'm not confident that will work in many cases.
+            if ((Mathf.Abs(rotation.x) >= 1e-2f || Mathf.Abs(rotation.z) >= 1e-2f)) {
+                return false;
+            }
+
+            // recall that horizon = 60 is look down 60 degrees and horizon = -30 is look up 30 degrees
+            if ((horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle)) {
+                return false;
+            }
+
+            if (!agentManager.SceneBounds.Contains(position)) {
+                return false;
+            }
+
+            //if (!isPositionOnGrid(position)) {
+            //    return false;
+            //}
+
+            if (CheckCapsuleCollidingInPosition(position, true)) {
+                return false;
+            }
+
+            return true;
+        }
+
+        protected bool CheckCapsuleCollidingInPosition(
+            Vector3 position,
+            bool includeErrorMessage = false
+        ) {
+            int layerMask = 1 << 8;
+            var capsuleCollider = GetComponent<CapsuleCollider>();
+            var skinWidth = GetComponent<CharacterController>().skinWidth;
+            float radius = capsuleCollider.radius + skinWidth;
+            float innerHeight = capsuleCollider.height / 2.0f - radius;
+
+            Vector3 point1 = new Vector3(position.x, position.y + innerHeight, position.z);
+            Vector3 point2 = new Vector3(position.x, position.y + -innerHeight + skinWidth, position.z);
+
+            if (Physics.CheckCapsule(point1, point2, radius, layerMask, QueryTriggerInteraction.Ignore)) {
+                if (includeErrorMessage) {
+                    errorMessage = $"Collided.";
+                }
+                return true;
+            }
+
+            return false;
+        }
+
         // cast a capsule the same size as the agent
         // used to check for collisions
         public RaycastHit[] capsuleCastAllForAgent(

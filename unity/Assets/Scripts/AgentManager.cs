@@ -251,8 +251,6 @@ public class AgentManager : MonoBehaviour {
                 primaryAgent.actionFinished(success: false, errorMessage: error);
                 return;
             }
-        } else if (action.agentMode.ToLower() == "vr") {
-            SetUpVRController();
         }
 
         primaryAgent.ProcessControlCommand(action.dynamicServerAction);
@@ -313,25 +311,6 @@ public class AgentManager : MonoBehaviour {
         this.agents.Clear();
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(PhysicsRemoteFPSAgentController), baseAgentComponent);
-    }
-
-    public void SetUpVRController() {
-        this.agents.Clear();
-        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
-        primaryAgent = createAgentType(typeof(VR_FPSAgentController), baseAgentComponent);
-        var xrOrigin = primaryAgent.gameObject.GetComponent<XROrigin>();
-        xrOrigin.enabled = true;
-        var xrInteractionManager = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "XR Interaction + Locomotion System");
-        xrInteractionManager.gameObject.SetActive(true);
-        xrInteractionManager.gameObject.GetComponent<TeleportationProviderWithFade>().Agent = (VR_FPSAgentController)primaryAgent;
-        var rightHand = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "RightHand");
-        var leftHand = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "LeftHand");
-        var tpController = rightHand.transform.FirstChildOrDefault((x) => x.name == "Teleportation Controller").GetComponent<Teleporting_XRInteractorLineVisual>();
-        tpController.Agent = (VR_FPSAgentController)primaryAgent;
-        tpController = leftHand.transform.FirstChildOrDefault((x) => x.name == "Teleportation Controller").GetComponent<Teleporting_XRInteractorLineVisual>();
-        tpController.Agent = (VR_FPSAgentController)primaryAgent;
-        rightHand.gameObject.SetActive(true);
-        leftHand.gameObject.SetActive(true);
     }
 
     private BaseFPSAgentController createAgentType(Type agentType, BaseAgentComponent agentComponent) {

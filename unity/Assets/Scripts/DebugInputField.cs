@@ -389,48 +389,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                case "initvr": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        // if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
-                        // by default the gridsize is 0.25, so only moving in increments of .25 will work
-                        // so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
-                        // grid size!
-                        if (splitcommand.Length == 2) {
-                            action["gridSize"] = float.Parse(splitcommand[1]);
-                        } else if (splitcommand.Length == 3) {
-                            action["gridSize"] = float.Parse(splitcommand[1]);
-                            action["agentCount"] = int.Parse(splitcommand[2]);
-                        } else if (splitcommand.Length == 4) {
-                            action["gridSize"] = float.Parse(splitcommand[1]);
-                            action["agentCount"] = int.Parse(splitcommand[2]);
-                            action["makeAgentsVisible"] = int.Parse(splitcommand[3]) == 1;
-                        }
-                        // action.renderNormalsImage = true;
-                        // action.renderDepthImage = true;
-                        // action.renderSemanticSegmentation = true;
-                        // action.renderInstanceSegmentation = true;
-                        // action.renderFlowImage = true;
-                        // action.rotateStepDegrees = 30;
-                        // action.ssao = "default";
-                        // action.snapToGrid = true;
-                        // action.makeAgentsVisible = false;
-                        // action.agentMode = "locobot";
-                        action["fieldOfView"] = 90f;
-                        // action.cameraY = 2.0f;
-                        action["snapToGrid"] = true;
-                        // action.rotateStepDegrees = 45;
-                        action["action"] = "Initialize";
-                        action["agentMode"] = "vr";
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
-                        // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
-                        // Debug.Log("Physics scene manager = ...");
-                        // Debug.Log(physicsSceneManager);
-                        // AgentManager am = physicsSceneManager.GetComponent<AgentManager>();
-                        // Debug.Log(am);
-                        // am.Initialize(action);
-                        break;
-                    }
-
                 case "sim": {
                         var collisionListener = this.CurrentActiveController().GetComponent<CollisionListener>();
                         Physics.Simulate(0.02f);

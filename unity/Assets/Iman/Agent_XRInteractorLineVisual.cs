@@ -5,13 +5,13 @@ using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public class Teleporting_XRInteractorLineVisual : MonoBehaviour, IXRCustomReticleProvider {
+public class Agent_XRInteractorLineVisual : MonoBehaviour, IXRCustomReticleProvider {
     const float k_MinLineWidth = 0.0001f;
     const float k_MaxLineWidth = 0.05f;
 
-    private VR_FPSAgentController agent;
+    private BaseFPSAgentController agent;
 
-    public VR_FPSAgentController Agent {
+    public BaseFPSAgentController Agent {
         get => this.agent;
         set => this.agent = value;
     }
@@ -182,6 +182,7 @@ public class Teleporting_XRInteractorLineVisual : MonoBehaviour, IXRCustomReticl
 
     GameObject m_CustomReticle;
     bool m_CustomReticleAttached;
+    AgentManager AManager = null;
 
     /// <summary>
     /// See <see cref="MonoBehaviour"/>.
@@ -210,6 +211,11 @@ public class Teleporting_XRInteractorLineVisual : MonoBehaviour, IXRCustomReticl
         ClearLineRenderer();
         UpdateSettings();
     }
+
+    void Start() {
+        AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+    }
+
 
     /// <summary>
     /// See <see cref="MonoBehaviour"/>.
@@ -305,7 +311,9 @@ public class Teleporting_XRInteractorLineVisual : MonoBehaviour, IXRCustomReticl
         // If the line hits, insert reticle position into the list for smoothing.
         // Remove the last point in the list to keep the number of points consistent.
         if (m_LineRenderable.TryGetHitInfo(out m_ReticlePos, out m_ReticleNormal, out m_EndPositionInLine, out var isValidTarget)) {
-            if (!agent.TeleportCheck(m_ReticlePos, agent.transform.rotation.eulerAngles, false)) {
+            BaseFPSAgentController agent = AManager.PrimaryAgent;
+            // Check if can teleport there
+            if (agent != null && !agent.TeleportCheck(m_ReticlePos, agent.transform.rotation.eulerAngles, false)) {
                 isValidTarget = false;
             }
             // End the line at the current hit point.
