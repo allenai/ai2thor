@@ -179,23 +179,27 @@
 
 ## 💻 Installation
 
-#### With pip
+### With Google Colab
+
+[AI2-THOR Colab](https://github.com/allenai/ai2thor-colab) can be used to run AI2-THOR freely in the cloud with Google Colab. Running AI2-THOR in Google Colab makes it extremely easy to explore functionality without having to set AI2-THOR up locally.
+
+### With pip
 
 ```bash
 pip install ai2thor
 ```
 
-#### With conda
+### With conda
 
 ```bash
 conda install -c conda-forge ai2thor
 ```
 
-#### With Docker
+### With Docker
 
 [🐳 AI2-THOR Docker](https://github.com/allenai/ai2thor-docker) can be used, which adds the configuration for running a X server to be used by Unity 3D to render scenes.
 
-#### Minimal Example
+### Minimal Example
 
 Once you've installed AI2-THOR, you can verify that everything is working correctly by running the following minimal example:
 
@@ -207,7 +211,7 @@ metadata = event.metadata
 print(event, event.metadata.keys())
 ```
 
-#### Requirements
+### Requirements
 
 | Component | Requirement |
 | :-- | :-- |
@@ -238,7 +242,7 @@ print(event, event.metadata.keys())
 
 ## 📒 Citation
 
-If you use iTHOR, please cite the original AI2-THOR paper:
+If you use AI2-THOR or iTHOR scenes, please cite the original AI2-THOR paper:
 
 ```bibtex
 @article{ai2thor,
@@ -252,7 +256,21 @@ If you use iTHOR, please cite the original AI2-THOR paper:
 }
 ```
 
-If you use ManipulaTHOR, please cite the following paper:
+If you use 🏘️ ProcTHOR or procedurally generated scenes, please cite the following paper:
+
+```bibtex
+@article{procthor,
+  author={Matt Deitke and Eli VanderBilt and Alvaro Herrasti and
+          Luca Weihs and Jordi Salvador and Kiana Ehsani and
+          Winson Han and Eric Kolve and Ali Farhadi and
+          Aniruddha Kembhavi and Roozbeh Mottaghi},
+  title={{ProcTHOR: Large-Scale Embodied AI Using Procedural Generation}},
+  journal={arXiv},
+  year={2022}
+}
+```
+
+If you use ManipulaTHOR agent, please cite the following paper:
 
 ```bibtex
 @inproceedings{manipulathor,
@@ -265,7 +283,7 @@ If you use ManipulaTHOR, please cite the following paper:
 }
 ```
   
-If you use RoboTHOR, please cite the following paper:
+If you use RoboTHOR scenes, please cite the following paper:
 
 ```bibtex
 @inproceedings{robothor,
