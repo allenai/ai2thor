@@ -46,13 +46,19 @@ public class ControllerToggle : MonoBehaviour {
         _leftUserXRController.enableInputActions = true;
         _leftAgentXRRayInteractor.enabled = false;
         _leftUserXRRayInteractor.enabled = true;
-        _leftUserXRController.model?.gameObject.SetActive(true);
+        if (_leftUserXRController.model != null) {
+            _leftUserXRController.model.gameObject.SetActive(true);
+        }
+
 
         _rightAgentXRController.enableInputActions = false;
         _rightUserXRController.enableInputActions = true;
         _rightAgentXRRayInteractor.enabled = false;
         _rightUserXRRayInteractor.enabled = true;
-        _rightUserXRController.model?.gameObject.SetActive(true);
+        if (_rightUserXRController.model != null) {
+            _rightUserXRController.model.gameObject.SetActive(true);
+        }
+
 
         _onUserControllerEvent?.Invoke();
     }
@@ -86,6 +92,18 @@ public class ControllerToggle : MonoBehaviour {
         _rightAgentXRRayInteractor.enabled = value;
         _rightUserXRRayInteractor.enabled = !value;
         _rightUserXRController.model?.gameObject.SetActive(!value);
+    }
 
+    public void AddListenerToUserEvent(UnityAction action) {
+        _onUserControllerEvent.AddListener(action);
+    }
+    public void RemoveListenerToUserEvent(UnityAction action) {
+        _onUserControllerEvent.RemoveListener(action);
+    }
+    public void AddListenerToAgentEvent(UnityAction action) {
+        _onAgentControllerEvent.AddListener(action);
+    }
+    public void RemoveListenerToAgentEvent(UnityAction action) {
+        _onAgentControllerEvent.RemoveListener(action);
     }
 }

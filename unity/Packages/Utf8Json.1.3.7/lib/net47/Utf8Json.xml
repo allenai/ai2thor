@@ -1,0 +1,431 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Utf8Json</name>
+    </assembly>
+    <members>
+        <member name="M:Utf8Json.Formatters.EnumFormatter`1.#ctor(Utf8Json.JsonSerializeAction{`0},Utf8Json.JsonDeserializeFunc{`0})">
+            <summary>
+            If can not use dynamic code-generation environment and want to avoid boxing, you can set func manually.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.Emit.ExpressionUtility.GetMethodInfo``1(System.Linq.Expressions.Expression{System.Func{``0}})">
+            <summary>
+            Get MethodInfo from Expression for Static(with result) method.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.Emit.ExpressionUtility.GetMethodInfo(System.Linq.Expressions.Expression{System.Action})">
+            <summary>
+            Get MethodInfo from Expression for Static(void) method.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.Emit.ExpressionUtility.GetMethodInfo``2(System.Linq.Expressions.Expression{System.Func{``0,``1}})">
+            <summary>
+            Get MethodInfo from Expression for Instance(with result) method.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.Emit.ExpressionUtility.GetMethodInfo``1(System.Linq.Expressions.Expression{System.Action{``0}})">
+            <summary>
+            Get MethodInfo from Expression for Instance(void) method.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.Emit.ExpressionUtility.GetMethodInfo``2(System.Linq.Expressions.Expression{System.Action{``0,``1}})">
+            <summary>
+            Get MethodInfo from Expression for Instance(void) method.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.Emit.ExpressionUtility.GetMethodInfo``3(System.Linq.Expressions.Expression{System.Func{``0,``1,``2}})">
+            <summary>
+            Get MethodInfo from Expression for Instance(with result) method.
+            </summary>
+        </member>
+        <member name="T:Utf8Json.Internal.Emit.ILGeneratorExtensions">
+            <summary>
+            Provides optimized generation code and helpers.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.Emit.ILGeneratorExtensions.EmitLdloc(System.Reflection.Emit.ILGenerator,System.Int32)">
+            <summary>
+            Loads the local variable at a specific index onto the evaluation stack.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.Emit.ILGeneratorExtensions.EmitStloc(System.Reflection.Emit.ILGenerator,System.Int32)">
+            <summary>
+            Pops the current value from the top of the evaluation stack and stores it in a the local variable list at a specified index.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.Emit.ILGeneratorExtensions.EmitLdloca(System.Reflection.Emit.ILGenerator,System.Int32)">
+            <summary>
+            Loads the address of the local variable at a specific index onto the evaluation statck.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.Emit.ILGeneratorExtensions.EmitLdc_I4(System.Reflection.Emit.ILGenerator,System.Int32)">
+            <summary>
+            Pushes a supplied value of type int32 onto the evaluation stack as an int32.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.Emit.ILGeneratorExtensions.EmitPop(System.Reflection.Emit.ILGenerator,System.Int32)">
+            <summary>
+            Helper for Pop op.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.Emit.ILGeneratorExtensions.EmitIncrementFor(System.Reflection.Emit.ILGenerator,System.Reflection.Emit.LocalBuilder,System.Action{System.Reflection.Emit.LocalBuilder})">
+            <summary>for  var i = 0, i ..., i++ </summary>
+        </member>
+        <member name="T:Utf8Json.Internal.NumberConverter">
+            <summary>
+            zero-allocate itoa, dtoa, atoi, atod converters.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.NumberConverter.IsNumber(System.Byte)">
+            <summary>
+            0 ~ 9
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.NumberConverter.IsNumberRepresentation(System.Byte)">
+            <summary>
+            Is 0 ~ 9, '.', '+', '-'?
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.StringMutator.Original(System.String)">
+            <summary>
+            MyProperty -> MyProperty
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.StringMutator.ToCamelCase(System.String)">
+            <summary>
+            MyProperty -> myProperty
+            </summary>
+        </member>
+        <member name="M:Utf8Json.Internal.StringMutator.ToSnakeCase(System.String)">
+            <summary>
+            MyProperty -> my_property
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonReader.ReadIsInArray(System.Int32@)">
+            <summary>
+            Convinient pattern of ReadIsBeginArrayWithVerify + while(!ReadIsEndArrayWithSkipValueSeparator)
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonReader.ReadIsInObject(System.Int32@)">
+            <summary>
+            Convinient pattern of ReadIsBeginObjectWithVerify + while(!ReadIsEndObjectWithSkipValueSeparator)
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonReader.ReadPropertyName">
+            <summary>ReadString + ReadIsNameSeparatorWithVerify</summary>
+        </member>
+        <member name="M:Utf8Json.JsonReader.ReadStringSegmentRaw">
+            <summary>Get raw string-span(do not unescape)</summary>
+        </member>
+        <member name="M:Utf8Json.JsonReader.ReadPropertyNameSegmentRaw">
+            <summary>Get raw string-span(do not unescape) + ReadIsNameSeparatorWithVerify</summary>
+        </member>
+        <member name="M:Utf8Json.JsonParsingException.GetUnderlyingByteArrayUnsafe">
+            <summary>
+            Underlying bytes is may be a pooling buffer, be careful to use it. If lost reference or can not handled byte[], return null.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonParsingException.GetUnderlyingStringUnsafe">
+            <summary>
+            Underlying bytes is may be a pooling buffer, be careful to use it. If lost reference or can not handled byte[], return null.
+            </summary>
+        </member>
+        <member name="T:Utf8Json.JsonSerializer">
+            <summary>
+            High-Level API of Utf8Json.
+            </summary>
+        </member>
+        <member name="P:Utf8Json.JsonSerializer.DefaultResolver">
+            <summary>
+            FormatterResolver that used resolver less overloads. If does not set it, used StandardResolver.Default.
+            </summary>
+        </member>
+        <member name="P:Utf8Json.JsonSerializer.IsInitialized">
+            <summary>
+            Is resolver decided?
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.SetDefaultResolver(Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Set default resolver of Utf8Json APIs.
+            </summary>
+            <param name="resolver"></param>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.Serialize``1(``0)">
+            <summary>
+            Serialize to binary with default resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.Serialize``1(``0,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to binary with specified resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.Serialize``1(System.IO.Stream,``0)">
+            <summary>
+            Serialize to stream.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.Serialize``1(System.IO.Stream,``0,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to stream with specified resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.SerializeAsync``1(System.IO.Stream,``0)">
+            <summary>
+            Serialize to stream(write async).
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.SerializeAsync``1(System.IO.Stream,``0,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to stream(write async) with specified resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.SerializeUnsafe``1(``0)">
+            <summary>
+            Serialize to binary. Get the raw memory pool byte[]. The result can not share across thread and can not hold, so use quickly.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.SerializeUnsafe``1(``0,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to binary with specified resolver. Get the raw memory pool byte[]. The result can not share across thread and can not hold, so use quickly.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.ToJsonString``1(``0)">
+            <summary>
+            Serialize to JsonString.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.ToJsonString``1(``0,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to JsonString with specified resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.Serialize(System.Object)">
+            <summary>
+            Serialize to binary with default resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.Serialize(System.Type,System.Object)">
+            <summary>
+            Serialize to binary with default resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.Serialize(System.Object,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to binary with specified resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.Serialize(System.Type,System.Object,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to binary with specified resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.Serialize(System.IO.Stream,System.Object)">
+            <summary>
+            Serialize to stream.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.Serialize(System.Type,System.IO.Stream,System.Object)">
+            <summary>
+            Serialize to stream.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.Serialize(System.IO.Stream,System.Object,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to stream with specified resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.Serialize(System.Type,System.IO.Stream,System.Object,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to stream with specified resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.SerializeAsync(System.IO.Stream,System.Object)">
+            <summary>
+            Serialize to stream.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.SerializeAsync(System.Type,System.IO.Stream,System.Object)">
+            <summary>
+            Serialize to stream.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.SerializeAsync(System.IO.Stream,System.Object,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to stream with specified resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.SerializeAsync(System.Type,System.IO.Stream,System.Object,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to stream with specified resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.SerializeUnsafe(System.Object)">
+            <summary>
+            Serialize to binary. Get the raw memory pool byte[]. The result can not share across thread and can not hold, so use quickly.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.SerializeUnsafe(System.Type,System.Object)">
+            <summary>
+            Serialize to binary. Get the raw memory pool byte[]. The result can not share across thread and can not hold, so use quickly.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.SerializeUnsafe(System.Object,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to binary with specified resolver. Get the raw memory pool byte[]. The result can not share across thread and can not hold, so use quickly.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.SerializeUnsafe(System.Type,System.Object,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to binary with specified resolver. Get the raw memory pool byte[]. The result can not share across thread and can not hold, so use quickly.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.ToJsonString(System.Object)">
+            <summary>
+            Serialize to JsonString.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.ToJsonString(System.Type,System.Object)">
+            <summary>
+            Serialize to JsonString.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.ToJsonString(System.Object,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to JsonString with specified resolver.
+            </summary>
+        </member>
+        <member name="M:Utf8Json.JsonSerializer.NonGeneric.ToJsonString(System.Type,System.Object,Utf8Json.IJsonFormatterResolver)">
+            <summary>
+            Serialize to JsonString with specified resolver.
+            </summary>
+        </member>
+        <member name="F:Utf8Json.JsonToken.BeginObject">
+            <summary>{</summary>
+        </member>
+        <member name="F:Utf8Json.JsonToken.EndObject">
+            <summary>}</summary>
+        </member>
+        <member name="F:Utf8Json.JsonToken.BeginArray">
+            <summary>[</summary>
+        </member>
+        <member name="F:Utf8Json.JsonToken.EndArray">
+            <summary>]</summary>
+        </member>
+        <member name="F:Utf8Json.JsonToken.Number">
+            <summary>0~9, -</summary>
+        </member>
+        <member name="F:Utf8Json.JsonToken.String">
+            <summary>"</summary>
+        </member>
+        <member name="F:Utf8Json.JsonToken.True">
+            <summary>t</summary>
+        </member>
+        <member name="F:Utf8Json.JsonToken.False">
+            <summary>f</summary>
+        </member>
+        <member name="F:Utf8Json.JsonToken.Null">
+            <summary>n</summary>
+        </member>
+        <member name="F:Utf8Json.JsonToken.ValueSeparator">
+            <summary>,</summary>
+        </member>
+        <member name="F:Utf8Json.JsonToken.NameSeparator">
+            <summary>:</summary>
+        </member>
+        <member name="M:Utf8Json.JsonWriter.WriteNameSeparator">
+            <summary>:</summary>
+        </member>
+        <member name="M:Utf8Json.JsonWriter.WritePropertyName(System.String)">
+            <summary>WriteString + WriteNameSeparator</summary>
+        </member>
+        <member name="T:Utf8Json.Resolvers.AttributeFormatterResolver">
+            <summary>
+            Get formatter from [JsonFormatter] attribute.
+            </summary>
+        </member>
+        <member name="T:Utf8Json.Resolvers.DynamicObjectResolver">
+            <summary>
+            ObjectResolver by dynamic code generation.
+            </summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.DynamicObjectResolver.Default">
+            <summary>AllowPrivate:False, ExcludeNull:False, NameMutate:Original</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.DynamicObjectResolver.CamelCase">
+            <summary>AllowPrivate:False, ExcludeNull:False, NameMutate:CamelCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.DynamicObjectResolver.SnakeCase">
+            <summary>AllowPrivate:False, ExcludeNull:False, NameMutate:SnakeCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.DynamicObjectResolver.ExcludeNull">
+            <summary>AllowPrivate:False, ExcludeNull:True,  NameMutate:Original</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.DynamicObjectResolver.ExcludeNullCamelCase">
+            <summary>AllowPrivate:False, ExcludeNull:True,  NameMutate:CamelCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.DynamicObjectResolver.ExcludeNullSnakeCase">
+            <summary>AllowPrivate:False, ExcludeNull:True,  NameMutate:SnakeCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.DynamicObjectResolver.AllowPrivate">
+            <summary>AllowPrivate:True,  ExcludeNull:False, NameMutate:Original</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.DynamicObjectResolver.AllowPrivateCamelCase">
+            <summary>AllowPrivate:True,  ExcludeNull:False, NameMutate:CamelCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.DynamicObjectResolver.AllowPrivateSnakeCase">
+            <summary>AllowPrivate:True,  ExcludeNull:False, NameMutate:SnakeCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.DynamicObjectResolver.AllowPrivateExcludeNull">
+            <summary>AllowPrivate:True,  ExcludeNull:True,  NameMutate:Original</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.DynamicObjectResolver.AllowPrivateExcludeNullCamelCase">
+            <summary>AllowPrivate:True,  ExcludeNull:True,  NameMutate:CamelCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.DynamicObjectResolver.AllowPrivateExcludeNullSnakeCase">
+            <summary>AllowPrivate:True,  ExcludeNull:True,  NameMutate:SnakeCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.EnumResolver.Default">
+            <summary>Serialize as Name.</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.EnumResolver.UnderlyingValue">
+            <summary>Serialize as Value.</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.StandardResolver.Default">
+            <summary>AllowPrivate:False, ExcludeNull:False, NameMutate:Original</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.StandardResolver.CamelCase">
+            <summary>AllowPrivate:False, ExcludeNull:False, NameMutate:CamelCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.StandardResolver.SnakeCase">
+            <summary>AllowPrivate:False, ExcludeNull:False, NameMutate:SnakeCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.StandardResolver.ExcludeNull">
+            <summary>AllowPrivate:False, ExcludeNull:True,  NameMutate:Original</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.StandardResolver.ExcludeNullCamelCase">
+            <summary>AllowPrivate:False, ExcludeNull:True,  NameMutate:CamelCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.StandardResolver.ExcludeNullSnakeCase">
+            <summary>AllowPrivate:False, ExcludeNull:True,  NameMutate:SnakeCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.StandardResolver.AllowPrivate">
+            <summary>AllowPrivate:True,  ExcludeNull:False, NameMutate:Original</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.StandardResolver.AllowPrivateCamelCase">
+            <summary>AllowPrivate:True,  ExcludeNull:False, NameMutate:CamelCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.StandardResolver.AllowPrivateSnakeCase">
+            <summary>AllowPrivate:True,  ExcludeNull:False, NameMutate:SnakeCase</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.StandardResolver.AllowPrivateExcludeNull">
+            <summary>AllowPrivate:True,  ExcludeNull:True,  NameMutate:Original</summary>
+        </member>
+        <member name="F:Utf8Json.Resolvers.StandardResolver.AllowPrivateExcludeNullCamelCase">
+            <summary>AllowPrivate:True,  ExcludeNull:True,  NameMutate:CamelCase</summary>
+        </member>
+        <!-- 正しくない形式の XML コメントがメンバー "F:Utf8Json.Resolvers.StandardResolver.AllowPrivateExcludeNullSnakeCase" で無視されました -->
+    </members>
+</doc>
