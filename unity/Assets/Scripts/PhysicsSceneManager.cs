@@ -78,13 +78,6 @@ public class PhysicsSceneManager : MonoBehaviour {
         PhysicsSceneManager.PhysicsSimulateCallCount++;
     }
 
-    public void StepPhysics(float physicsInterval) {
-        if (Physics.autoSimulation != true) {
-            PhysicsSimulateTHOR(physicsInterval);
-            Physics.SyncTransforms();
-        }
-    }
-
     private void GatherAllRBsInScene() {
         // cache all rigidbodies that are in the scene by default
         // NOTE: any rigidbodies created from actions such as Slice/Break or spawned in should be added to this!

@@ -42,12 +42,18 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
 
     public CollisionListener collisionListener;
 
+    public GameObject GetArmBase() {
+        return armBase.gameObject;
+    }
+
     public GameObject GetArmTarget() {
         return armTarget.gameObject;
     }
+
     public GameObject GetMagnetSphere() {
         return magnetSphere.gameObject;
     }
+
     void Start() {
         // calculating based on distance from origin of arm to the 2nd joint, which will always be constant
         this.originToShoulderLength = Vector3.Distance(

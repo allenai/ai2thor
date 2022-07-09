@@ -27,6 +27,12 @@ public class CanOpen_Object : MonoBehaviour {
     // used to reset on failure
     private float startOpenness;
     private float? startFixedDeltaTime;
+    private bool startUseGripper;
+
+    // used to report back reason for failure
+    public enum failState {none, collision, hyperextension};
+    private failState failure = failState.none;
+    private GameObject failureCollision;
 
     [Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
     // these are objects to ignore collision with. This is in case the fridge doors touch each other or something that might
@@ -39,7 +45,7 @@ public class CanOpen_Object : MonoBehaviour {
     public bool isOpen = false;
 
     [SerializeField]
-    public bool isCurrentlyResetting = true;
+    public bool isCurrentlyResetting = false;
 
     protected enum MovementType { Slide, Rotate, ScaleX, ScaleY, ScaleZ };
 
@@ -147,29 +153,49 @@ public class CanOpen_Object : MonoBehaviour {
         setIsOpen(openness: openness);
     }
 
-    public void Interact(float openness = 1.0f, float? physicsInterval = null) {
+    public void Interact(float openness = 1.0f, float? physicsInterval = null, bool useGripper = false) {
         // if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         // before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
         if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup && sop.isInAgentHand == false) {
             gameObject.GetComponent<Rigidbody>().isKinematic = false;
         }
-    
-        startOpenness = currentOpenness;
-        startFixedDeltaTime = physicsInterval;
+
+        // There is no need for these precautionary steps during a reset,
+        // since the object has already initiated an iTween operation successfully
+        if (isCurrentlyResetting == false) {
+            // set physicsInterval to default of 0.02 if no value has yet been given
+            physicsInterval = physicsInterval.GetValueOrDefault(0.02f);
+
+            startOpenness = currentOpenness;
+            startFixedDeltaTime = physicsInterval;
+            startUseGripper = useGripper;
+        }
+
         // For every moving part (some doors are doubles, for example...)
         for (int i = 0; i < MovingParts.Length; i++) {
-            // simple parameters used as input for  iTween logic; local means local-space, animationTime means the number of seconds lerping should take, and linear means linear animation handles instead of, say, bezier
+
+            // parameters for onUpdate and onComplete methods
+            Hashtable parameters = new Hashtable() {
+                {"useGripper", useGripper},
+                {"physicsInterval", physicsInterval},
+                {"armBase", GameObject.Find("FPSController").GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmBase().GetComponent<FK_IK_Solver>()}
+            };
+
+            // simple parameters used as input for iTween logic;
+            // local means local-space,
+            // animationTime means the number of seconds lerping should take,
+            // and linear means linear animation handles instead of, say, bezier
             Hashtable args = new Hashtable() {
                 {"islocal", true},
                 {"time", animationTime},
                 {"easetype", "linear"},
-                {"onupdate", "StepPhysics"},
-                {"onupdatetarget", this.GetComponent<SimObjPhysics>().GetSceneManager()},
-                {"onupdateparams", physicsInterval.GetValueOrDefault(Time.fixedDeltaTime)},
-                {"oncomplete", "StepPhysics"},
-                {"oncompletetarget", this.GetComponent<SimObjPhysics>().GetSceneManager()},
-                {"oncompleteparams", physicsInterval.GetValueOrDefault(Time.fixedDeltaTime)}
+                {"onupdate", "stepArm"},
+                {"onupdatetarget", this.gameObject},
+                {"onupdateparams", parameters},
+                {"oncomplete", "stepArm"},
+                {"oncompletetarget", this.gameObject},
+                {"oncompleteparams", parameters}
             };
 
             // let's open the object!
@@ -213,37 +239,92 @@ public class CanOpen_Object : MonoBehaviour {
     private void setIsOpen(float openness) {
         isOpen = openness != 0;
         currentOpenness = openness;
-        // SwitchActiveBoundingBox();
     }
-
-    //// private void SwitchActiveBoundingBox() {
-    //    // some things that open and close don't need to switch bounding boxes- drawers for example, only things like
-    //    // cabinets that are not self contained need to switch between open/close bounding box references (ie: books, cabinets, microwave, etc)
-    //    if (OpenBoundingBox == null || ClosedBoundingBox == null) {
-    //        return;
-    //    }
-
-    //    SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
-    //    sop.BoundingBox = isOpen ? OpenBoundingBox : ClosedBoundingBox;
-    //}
 
     public bool GetisOpen() {
         return isOpen;
     }
 
-    // for use in OnTriggerEnter ignore check
-    // return true if it should ignore the object hit. Return false to cause this object to reset to the original position
-    public bool IsInIgnoreArray(Collider other, GameObject[] arrayOfCol) {
-        for (int i = 0; i < arrayOfCol.Length; i++) {
-            if (other.GetComponentInParent<CanOpen_Object>().transform) {
-                if (other.GetComponentInParent<CanOpen_Object>().transform == arrayOfCol[i].transform) {
-                    return true;
-                }
-            } else {
-                return true;
+    public void stepArm(Hashtable parameters) {
+        if (Physics.autoSimulation != true) {
+            PhysicsSceneManager.PhysicsSimulateTHOR((float)parameters["physicsInterval"]);
+            Physics.SyncTransforms();
+        }
+
+        // arm hyperextension check
+        if ((bool)parameters["useGripper"] == true && isCurrentlyResetting == false) {
+            FK_IK_Solver armBase = (FK_IK_Solver)parameters["armBase"];
+            if ((armBase.IKTarget.position - armBase.armShoulder.position).sqrMagnitude >= Mathf.Pow(armBase.bone2Length + armBase.bone3Length - 1e-5f, 2)) {
+                failure = failState.hyperextension;
+                isCurrentlyResetting = true;
+                StopAndReset();
+                // errorMessage = "Agent-arm hyperextended while opening object";
+                // succeeded = false;
             }
         }
-        return false;
+    }
+
+    public void OnTriggerEnter(Collider other) {
+        // If the openable object is meant to ignore trigger collisions entirely, then ignore
+        if (!triggerEnabled) {
+            return;
+        }
+
+        // If the openable object is not opening or closing, then ignore
+        if (GetiTweenCount() == 0) {
+            return;
+        }
+
+        // If the overlapping collider is in the array of gameobjects to explicitly disregard, then ignore
+        if (IsInIgnoreArray(other, IgnoreTheseObjects)) {
+            return;
+        }
+
+        // If the collider is a BoundingBox or ReceptacleTriggerBox, then ignore
+        if (other.CompareTag("Untagged") || other.CompareTag("Receptacle")) {
+            return;
+        }
+
+        // If the overlapping collider is a descendant of the openable GameObject itself, then ignore
+        if (hasAncestor(other.transform.gameObject, gameObject)) {
+            return;
+        }
+
+        // If the overlapping collider belongs to a non-static SimObject, then ignore 
+        if (ancestorSimObjPhysics(other.gameObject) != null &&
+        ancestorSimObjPhysics(other.gameObject).PrimaryProperty != SimObjPrimaryProperty.Static)
+        {
+            return;
+        }
+
+        // All right, so it was a legit collision? RESET!
+        else {
+            failure = failState.collision;
+            if (ancestorSimObjPhysics(other.gameObject) != null) {
+                failureCollision = other.GetComponentInParent<SimObjPhysics>().gameObject;
+            }
+            else {
+                failureCollision = other.gameObject;
+            }
+#if UNITY_EDITOR
+            Debug.Log(gameObject.name + " hit " + failureCollision + ". Resetting openness.");
+#endif
+            isCurrentlyResetting = true;
+            StopAndReset();
+            return;
+        }
+    }
+
+    // for use in OnTriggerEnter ignore check
+    // return true if it should ignore the object hit. Return false to cause this object to reset to the original position
+    public bool IsInIgnoreArray(Collider other, GameObject[] ignoredObjects) {
+        foreach (GameObject ignoredObject in ignoredObjects) {
+            foreach (Collider ignoredCollider in ignoredObject.GetComponentsInChildren<Collider>())
+                if (other == ignoredCollider) {
+                    return true;
+                }
+        }
+    return false;
     }
 
     public int GetiTweenCount() {
@@ -252,16 +333,18 @@ public class CanOpen_Object : MonoBehaviour {
         foreach (GameObject go in MovingParts) {
             count += iTween.Count(go);
         }
-        return count; // iTween.Count(this.transform.gameObject);
+        return count; // iTween.Count(this.gameObject);
     }
 
     // note: reset can interrupt the Interact() itween call because
     // it will start a new set of tweens before onComplete is called from Interact()... it seems
-    public void Reset() {
-        if (!isCurrentlyResetting) {
-            Interact(openness: startOpenness, physicsInterval: startFixedDeltaTime);
-            StartCoroutine("updateReset");
+    public void StopAndReset() {
+        if (isCurrentlyResetting == true) {
+            iTween.Stop(gameObject, true);
+            Interact(openness: startOpenness, physicsInterval: startFixedDeltaTime, useGripper: startUseGripper);
+            StartCoroutine(updateReset());
         }
+        return;
     }
 
     private bool hasAncestor(GameObject child, GameObject potentialAncestor) {
@@ -274,66 +357,31 @@ public class CanOpen_Object : MonoBehaviour {
         }
     }
 
-    public void OnTriggerEnter(Collider other) {
-        if (other.CompareTag("Receptacle")) {
-            return;
+    private static SimObjPhysics ancestorSimObjPhysics(GameObject go) {
+        if (go == null) {
+            return null;
         }
-        if (!triggerEnabled) {
-            return;
-        }
-        // note: Normally rigidbodies set to Kinematic will never call the OnTriggerX events
-        // when colliding with another rigidbody that is kinematic. For some reason, if the other object
-        // has a trigger collider even though THIS object only has a kinematic rigidbody, this
-        // function is still called so we'll use that here:
-
-        // The Agent has a trigger Capsule collider, and other cabinets/drawers have
-        // a trigger collider, so this is used to reset the position if the agent or another
-        // cabinet or drawer is in the way of this object opening/closing
-
-        // if hitting the Agent AND not being currently held by the Agent(so things like Laptops don't constantly reset if the agent is holding them)
-        // ..., reset position and report failed action
-        // NOTE: hitting the agent and resetting is now handled by the OpenAnimation coroutine in PhysicsRemote
-
-        //// If the thing your colliding with is one of your (grand)-children then don't worry about it
-        if (hasAncestor(other.transform.gameObject, gameObject)) {
-            return;
-        }
-
-        // if hitting another object that has double doors, do some checks 
-        if (other.GetComponentInParent<CanOpen_Object>() && isCurrentlyResetting == true) {
-            if (IsInIgnoreArray(other, IgnoreTheseObjects)) {
-                // don't reset, it's cool to ignore these since some cabinets literally clip into each other if they are double doors
-                return;
-            }
-
-            // oh it was something else RESET! DO IT!
-            else {
-                // check the collider hit's parent for itween instances
-                // if 0, then it is not actively animating so check against it. This is needed so openable objects don't reset unless they are the active
-                // object moving. Otherwise, an open cabinet hit by a drawer would cause the Drawer AND the cabinet to try and reset.
-                // this should be fine since only one cabinet/drawer will be moving at a time given the Agent's action only opening on object at a time
-                if (other.transform.GetComponentInParent<CanOpen_Object>().GetiTweenCount() == 0
-                    && other.GetComponentInParent<SimObjPhysics>().PrimaryProperty == SimObjPrimaryProperty.Static)// check this so that objects that are openable & pickupable don't prevent drawers/cabinets from animating
-                {
-#if UNITY_EDITOR
-                    Debug.Log(gameObject.name + " hit " + other.name + " on " + other.GetComponentInParent<SimObjPhysics>().transform.name + " Resetting position");
-#endif
-                    isCurrentlyResetting = false;
-                    Reset();
-                }
-            }
+        SimObjPhysics so = go.GetComponent<SimObjPhysics>();
+        if (so != null) {
+            return so;
+        } else if (go.transform.parent != null) {
+            return ancestorSimObjPhysics(go.transform.parent.gameObject);
+        } else {
+            return null;
         }
     }
 
     // resets the isCurrentlyResetting boolean once the reset tween is done. This checks for iTween instances, once there are none this object can be used again
     private IEnumerator updateReset() {
-        while (true) {
-            if (GetiTweenCount() != 0) {
-                yield return new WaitForEndOfFrame();
-            } else {
-                isCurrentlyResetting = true;
-                yield break;
-            }
-        }
+        yield return new WaitUntil(() => GetiTweenCount() == 0);
+        isCurrentlyResetting = false;
+        yield break;
+    }
+    public failState GetFailState() {
+        return failure;
+    }
+
+    public GameObject GetFailureCollision() {
+        return failureCollision;
     }
 }
