@@ -57,7 +57,6 @@ def build_controller(**args):
 
 _wsgi_controller = build_controller(server_class=WsgiServer)
 _fifo_controller = build_controller(server_class=FifoServer)
-_stochastic_controller = build_controller(agentControllerType="stochastic", agentMode="stochastic")
 
 
 def skip_reset(controller):
@@ -85,18 +84,12 @@ def wsgi_controller():
 
 
 @pytest.fixture
-def stochastic_controller():
-    return reset_controller(_stochastic_controller)
-
-
-@pytest.fixture
 def fifo_controller():
     return reset_controller(_fifo_controller)
 
 
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 fifo = [_fifo_controller]
-fifo_wsgi_stoch = [_fifo_controller, _wsgi_controller, _stochastic_controller]
 
 BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
 BASE_FP28_LOCATION = dict(
@@ -109,16 +102,6 @@ def teleport_to_base_location(controller: Controller):
 
     controller.step("TeleportFull", **BASE_FP28_LOCATION)
     assert controller.last_event.metadata["lastActionSuccess"]
-
-
-def setup_function(function):
-    for c in fifo_wsgi_stoch:
-        reset_controller(c)
-
-
-def teardown_module(module):
-    for c in fifo_wsgi_stoch:
-        c.stop()
 
 
 def assert_near(point1, point2, error_message=""):
@@ -135,18 +118,6 @@ def assert_images_near(image1, image2, max_mean_pixel_diff=1):
 
 def assert_images_far(image1, image2, min_mean_pixel_diff=10):
     return np.mean(np.abs(image1 - image2).flatten()) >= min_mean_pixel_diff
-
-
-def test_stochastic_controller(stochastic_controller):
-    stochastic_controller.reset(TEST_SCENE)
-    assert stochastic_controller.last_event.metadata["lastActionSuccess"]
-
-def test_stochastic_mismatch(fifo_controller):
-    try:
-        c = fifo_controller.reset(agentControllerType="stochastic", agentMode="default")
-    except RuntimeError as e:
-        error_message = str(e)
-    assert error_message and error_message.startswith("Invalid combination of agentControllerType=stochastic and agentMode=default")
 
 
 # Issue #514 found that the thirdPartyCamera image code was causing multi-agents to end
@@ -336,21 +307,6 @@ def test_target_invocation_exception(controller):
     assert event.metadata[
         "errorMessage"
     ], "errorMessage should not be empty when OpenObject(x > 1)."
-
-
-@pytest.mark.parametrize("controller", fifo_wsgi_stoch)
-def test_lookup(controller):
-
-    e = controller.step(dict(action="RotateLook", rotation=0, horizon=0))
-    position = controller.last_event.metadata["agent"]["position"]
-    horizon = controller.last_event.metadata["agent"]["cameraHorizon"]
-    assert horizon == 0.0
-    e = controller.step(dict(action="LookUp"))
-    assert e.metadata["agent"]["position"] == position
-    assert e.metadata["agent"]["cameraHorizon"] == -30.0
-    assert e.metadata["agent"]["rotation"] == dict(x=0, y=0, z=0)
-    e = controller.step(dict(action="LookUp"))
-    assert e.metadata["agent"]["cameraHorizon"] == -30.0
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
