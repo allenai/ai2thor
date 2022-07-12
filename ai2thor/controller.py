@@ -1312,8 +1312,13 @@ class Controller(object):
             unity_params = self.server.unity_params()
             self._start_unity_thread(env, width, height, unity_params, image_name)
 
-        # receive the first request
-        self.last_event = self.server.receive()
+        # receive the first request, give unity at least 5 minutes to start
+        self.last_event = self.server.receive(
+            timeout=max(
+                60.0 * 5,
+                self.server_timeout * 5 if self.server_timeout is not None else 0.0
+            )
+        )
 
         # we should be able to get rid of this since we check the resolution in .reset()
         if self.server.unity_proc is not None and (height < 300 or width < 300):

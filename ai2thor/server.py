@@ -840,5 +840,5 @@ class Server(abc.ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def receive(self):
+    def receive(self, timeout: Optional[float] = None):
         raise NotImplementedError

@@ -134,7 +134,7 @@ class FifoServer(ai2thor.server.Server):
 
         return message
 
-    def _recv_message(self):
+    def _recv_message(self, timeout: Optional[float]):
         if self.server_pipe is None:
             self.server_pipe = open(self.server_pipe_path, "rb")
 
@@ -144,7 +144,7 @@ class FifoServer(ai2thor.server.Server):
             header = self._read_with_timeout(
                 server_pipe=self.server_pipe,
                 message_size=self.header_size,
-                timeout=self.timeout
+                timeout=self.timeout if timeout is None else timeout
             )  # message type + length
             if len(header) == 0:
                 self.unity_proc.wait(timeout=5)
@@ -175,7 +175,7 @@ class FifoServer(ai2thor.server.Server):
             body = self._read_with_timeout(
                 server_pipe=self.server_pipe,
                 message_size=message_length,
-                timeout=self.timeout
+                timeout=self.timeout if timeout is None else timeout
             )
 
             # print("field type")
@@ -223,9 +223,11 @@ class FifoServer(ai2thor.server.Server):
         self.client_pipe.write(header + body + self.eom_header)
         self.client_pipe.flush()
 
-    def receive(self):
+    def receive(self, timeout: Optional[float] = None):
 
-        metadata, files = self._recv_message()
+        metadata, files = self._recv_message(
+            timeout=self.timeout if timeout is None else timeout
+        )
 
         if metadata is None:
             raise ValueError("no metadata received from recv_message")

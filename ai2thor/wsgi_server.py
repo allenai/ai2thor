@@ -271,8 +271,12 @@ class WsgiServer(ai2thor.server.Server):
         self.server_thread.daemon = True
         self.server_thread.start()
 
-    def receive(self):
-        return queue_get(self.request_queue, unity_proc=self.unity_proc, timeout=self.timeout)
+    def receive(self, timeout: Optional[float] = None):
+        return queue_get(
+            self.request_queue,
+            unity_proc=self.unity_proc,
+            timeout=self.timeout if timeout is None else timeout
+        )
 
     def send(self, action):
         assert self.request_queue.empty()
