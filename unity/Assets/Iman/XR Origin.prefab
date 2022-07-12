@@ -395,12 +395,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1739010285744223307}
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 1.5, y: 1, z: 1.5}
+  m_LocalPosition: {x: 1.5, y: 0.9, z: 1.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1739010285320374846}
   - {fileID: 1065887985}
   - {fileID: 373500770}
+  - {fileID: 4598738853323451681}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
@@ -479,9 +480,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06ab27b111c32eb45ad0b950d5908841, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _leftToggleControllerActivationReference: {fileID: 1263111715868034790, guid: c348712bda248c246b8c49b3db54643f,
+  _leftToggleControllerActivationReference: {fileID: -296895544016717847, guid: c348712bda248c246b8c49b3db54643f,
     type: 3}
-  _rightToggleControllerActivationReference: {fileID: -8061240218431744966, guid: c348712bda248c246b8c49b3db54643f,
+  _rightToggleControllerActivationReference: {fileID: -5316579075591564463, guid: c348712bda248c246b8c49b3db54643f,
     type: 3}
   _leftAgentXRController: {fileID: 8514709057159408262}
   _leftAgentXRRayInteractor: {fileID: 2050796350368724197}
@@ -506,6 +507,30 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 1
         m_CallState: 2
+      - m_Target: {fileID: 5884601444743144566}
+        m_TargetAssemblyTypeName: XRInputManager, AI2-THOR-Base
+        m_MethodName: Deactivate
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 5911902359379316684}
+        m_TargetAssemblyTypeName: XRInputManager, AI2-THOR-Base
+        m_MethodName: Activate
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
   _onAgentControllerEvent:
     m_PersistentCalls:
       m_Calls:
@@ -513,6 +538,30 @@ MonoBehaviour:
         m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
         m_MethodName: set_enabled
         m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 5884601444743144566}
+        m_TargetAssemblyTypeName: XRInputManager, AI2-THOR-Base
+        m_MethodName: Activate
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 5911902359379316684}
+        m_TargetAssemblyTypeName: XRInputManager, AI2-THOR-Base
+        m_MethodName: Deactivate
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -1049,6 +1098,110 @@ MonoBehaviour:
   m_SnapThresholdDistance: 10
   m_Reticle: {fileID: 0}
   m_StopLineAtFirstRaycastHit: 1
+--- !u!1 &7780312889792877721
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4598738853323451681}
+  - component: {fileID: 5884601444743144566}
+  - component: {fileID: 5911902359379316684}
+  m_Layer: 0
+  m_Name: XRInputManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4598738853323451681
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7780312889792877721}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1739010285744223305}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5884601444743144566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7780312889792877721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c860ede6643df3e408d3d84102495d02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rightPrimaryButtonReference: {fileID: 0}
+  rightSecondaryButtonReference: {fileID: 0}
+  rightJoystickReference: {fileID: 0}
+  leftPrimaryButtonReference: {fileID: 0}
+  leftSecondaryButtonReference: {fileID: 0}
+  leftJoystickReference: {fileID: 0}
+  rightPrimaryButton:
+    m_PersistentCalls:
+      m_Calls: []
+  rightSecondaryButton:
+    m_PersistentCalls:
+      m_Calls: []
+  rightJoystick:
+    m_PersistentCalls:
+      m_Calls: []
+  leftPrimaryButton:
+    m_PersistentCalls:
+      m_Calls: []
+  leftSecondaryButton:
+    m_PersistentCalls:
+      m_Calls: []
+  leftJoystick:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &5911902359379316684
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7780312889792877721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80ad85c9957cfe145a4e7be9cc7259d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rightPrimaryButtonReference: {fileID: 0}
+  rightSecondaryButtonReference: {fileID: 0}
+  rightJoystickReference: {fileID: 0}
+  leftPrimaryButtonReference: {fileID: 0}
+  leftSecondaryButtonReference: {fileID: 0}
+  leftJoystickReference: {fileID: 0}
+  rightPrimaryButton:
+    m_PersistentCalls:
+      m_Calls: []
+  rightSecondaryButton:
+    m_PersistentCalls:
+      m_Calls: []
+  rightJoystick:
+    m_PersistentCalls:
+      m_Calls: []
+  leftPrimaryButton:
+    m_PersistentCalls:
+      m_Calls: []
+  leftSecondaryButton:
+    m_PersistentCalls:
+      m_Calls: []
+  leftJoystick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &8040333953398068108
 GameObject:
   m_ObjectHideFlags: 0

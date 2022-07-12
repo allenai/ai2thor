@@ -415,7 +415,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.ssao = "default";
                         // action.snapToGrid = true;
                         // action.makeAgentsVisible = false;
-                        // action.agentMode = "locobot";
+                        action["agentMode"] = "vr";
                         action["fieldOfView"] = 90f;
                         // action.cameraY = 2.0f;
                         action["snapToGrid"] = true;

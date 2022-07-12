@@ -244,7 +244,6 @@ public class AgentManager : MonoBehaviour {
                         return;
                     }
                 }
-
             } else {
                 var error = "unsupported";
                 Debug.Log(error);
@@ -252,8 +251,11 @@ public class AgentManager : MonoBehaviour {
                 return;
             }
         }
+        else if (action.agentMode.ToLower() == "vr") {
+            SetUpVRController();
+        }
 
-        primaryAgent.ProcessControlCommand(action.dynamicServerAction);
+primaryAgent.ProcessControlCommand(action.dynamicServerAction);
         Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         if (action.targetFrameRate > 0) {
             Application.targetFrameRate = action.targetFrameRate;
@@ -311,6 +313,13 @@ public class AgentManager : MonoBehaviour {
         this.agents.Clear();
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(PhysicsRemoteFPSAgentController), baseAgentComponent);
+    }
+
+    public void SetUpVRController() {
+        this.agents.Clear();
+        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
+        primaryAgent = createAgentType(typeof(PhysicsRemoteFPSAgentController), baseAgentComponent);
+        primaryAgent.m_Camera.enabled = false;
     }
 
     private BaseFPSAgentController createAgentType(Type agentType, BaseAgentComponent agentComponent) {
@@ -985,8 +994,6 @@ public class AgentManager : MonoBehaviour {
         if (shouldRender) {
             RenderTexture.active = currentTexture;
         }
-
-
     }
 
     private string serializeMetadataJson(MultiAgentMetadata multiMeta) {
@@ -1191,10 +1198,6 @@ public class AgentManager : MonoBehaviour {
             //}
 
 #endif
-
-
-
-
         }
 
 
