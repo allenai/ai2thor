@@ -154,7 +154,7 @@ class WsgiServer(ai2thor.server.Server):
     def __init__(
         self,
         host,
-        timeout: Optional[float],
+        timeout: Optional[float] = 100.0,
         port=0,
         threaded=False,
         depth_format=ai2thor.server.DepthFormat.Meters,

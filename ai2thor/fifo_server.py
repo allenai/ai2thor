@@ -53,7 +53,7 @@ class FifoServer(ai2thor.server.Server):
         self,
         width,
         height,
-        timeout: Optional[float],
+        timeout: Optional[float] = 100.0,
         depth_format=ai2thor.server.DepthFormat.Meters,
         add_depth_noise=False,
     ):
