@@ -265,5 +265,5 @@ class FifoServer(ai2thor.server.Server):
     def stop(self):
         self.client_pipe.close()
         self.server_pipe.close()
-        if self.unity_proc is not None and self.unity_proc.poll():
+        if self.unity_proc is not None and self.unity_proc.poll() is None:
             self.unity_proc.kill()
