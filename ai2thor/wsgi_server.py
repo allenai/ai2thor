@@ -154,6 +154,7 @@ class WsgiServer(ai2thor.server.Server):
     def __init__(
         self,
         host,
+        timeout: Optional[float],
         port=0,
         threaded=False,
         depth_format=ai2thor.server.DepthFormat.Meters,
@@ -190,7 +191,13 @@ class WsgiServer(ai2thor.server.Server):
             request_handler=ThorRequestHandler,
         )
         # used to ensure that we are receiving frames for the action we sent
-        super().__init__(width, height, depth_format, add_depth_noise)
+        super().__init__(
+            width=width,
+            height=height,
+            timeout=timeout,
+            depth_format=depth_format,
+            add_depth_noise=add_depth_noise
+        )
 
         @app.route("/ping", methods=["get"])
         def ping():

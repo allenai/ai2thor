@@ -53,6 +53,7 @@ class FifoServer(ai2thor.server.Server):
         self,
         width,
         height,
+        timeout: Optional[float],
         depth_format=ai2thor.server.DepthFormat.Meters,
         add_depth_noise=False,
     ):
@@ -99,7 +100,13 @@ class FifoServer(ai2thor.server.Server):
         }
 
         self.eom_header = self._create_header(FieldType.END_OF_MESSAGE, b"")
-        super().__init__(width, height, depth_format, add_depth_noise)
+        super().__init__(
+            width=width,
+            height=height,
+            timeout=timeout,
+            depth_format=depth_format,
+            add_depth_noise=add_depth_noise
+        )
 
     def _create_header(self, message_type, body):
         return struct.pack(self.header_format, message_type, len(body))

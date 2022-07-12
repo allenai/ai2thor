@@ -26,7 +26,7 @@ from platform import system  as platform_system
 from platform import architecture  as platform_architecture
 import uuid
 from functools import lru_cache
-
+from typing import Optional, Dict, Any, Union
 
 import numpy as np
 import ai2thor.wsgi_server
@@ -394,6 +394,7 @@ class Controller(object):
         server_class=None,
         gpu_device=None,
         platform=None,
+        server_timeout=100.0,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -402,6 +403,9 @@ class Controller(object):
         self.container_id = None
         self.width = width
         self.height = height
+
+        self.server_timeout = server_timeout
+        assert self.server_timeout is None or 0 < self.server_timeout
 
         self.last_event = None
         self.scene = None
@@ -561,7 +565,7 @@ class Controller(object):
             init_return = event.metadata["actionReturn"]
             if init_return:
                 self.server.set_init_params(init_return)
-                logging.info("Initialize return: {}".format(init_return))
+                logging.info(f"Initialize return: {init_return}")
 
     def _build_server(self, host, port, width, height):
 
@@ -577,20 +581,22 @@ class Controller(object):
 
         if self.server_class == ai2thor.wsgi_server.WsgiServer:
             self.server = ai2thor.wsgi_server.WsgiServer(
-                host,
+                host=host,
+                timeout=self.server_timeout,
                 port=port,
-                depth_format=self.depth_format,
-                add_depth_noise=self.add_depth_noise,
                 width=width,
                 height=height,
+                depth_format=self.depth_format,
+                add_depth_noise=self.add_depth_noise,
             )
 
         elif self.server_class == ai2thor.fifo_server.FifoServer:
             self.server = ai2thor.fifo_server.FifoServer(
-                depth_format=self.depth_format,
-                add_depth_noise=self.add_depth_noise,
                 width=width,
                 height=height,
+                timeout=self.server_timeout,
+                depth_format=self.depth_format,
+                add_depth_noise=self.add_depth_noise,
             )
 
     def __enter__(self):
@@ -890,9 +896,9 @@ class Controller(object):
 
         return events
 
-    def step(self, action=None, **action_args):
+    def step(self, action: Union[str, Dict[str, Any]]=None, **action_args):
 
-        if type(action) is dict:
+        if isinstance(action, Dict):
             action = copy.deepcopy(action)  # prevent changes from leaking
         else:
             action = dict(action=action)

@@ -741,9 +741,9 @@ class Server(abc.ABC):
         self,
         width,
         height,
+        timeout: Optional[float],
         depth_format=DepthFormat.Meters,
         add_depth_noise=False,
-        timeout: Optional[float] = 100,
     ):
         self.depth_format = depth_format
         self.add_depth_noise = add_depth_noise
