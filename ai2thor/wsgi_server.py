@@ -5,6 +5,9 @@ ai2thor.server
 Handles all communication with Unity through a Flask service.  Messages
 are sent to the controller using a pair of request/response queues.
 """
+import math
+from typing import Optional
+
 import ai2thor.server
 import json
 import logging
@@ -27,11 +30,12 @@ logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 werkzeug.serving.WSGIRequestHandler.protocol_version = "HTTP/1.1"
 
+
 # get with timeout to allow quit
-def queue_get(que, unity_proc=None):
+def queue_get(que, unity_proc=None, timeout: Optional[float] = 100.0):
     res = None
     attempts = 0
-    max_attempts = 200
+    max_attempts = float("inf") if timeout is None else max(int(math.ceil(timeout / 0.5)), 1)
     while True:
         try:
             res = que.get(block=True, timeout=0.5)
@@ -261,7 +265,7 @@ class WsgiServer(ai2thor.server.Server):
         self.server_thread.start()
 
     def receive(self):
-        return queue_get(self.request_queue, unity_proc=self.unity_proc)
+        return queue_get(self.request_queue, unity_proc=self.unity_proc, timeout=self.timeout)
 
     def send(self, action):
         assert self.request_queue.empty()
@@ -277,3 +281,5 @@ class WsgiServer(ai2thor.server.Server):
     def stop(self):
         self.send({})
         self.wsgi_server.shutdown()
+        if self.unity_proc is not None and self.unity_proc.poll():
+            self.unity_proc.kill()

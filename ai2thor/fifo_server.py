@@ -5,15 +5,21 @@ ai2thor.server
 Handles all communication with Unity through a Flask service.  Messages
 are sent to the controller using a pair of request/response queues.
 """
-import ai2thor.server
 import json
-import msgpack
 import os
-import tempfile
-from ai2thor.exceptions import UnityCrashException
-from enum import IntEnum, unique
-from collections import defaultdict
+import select
 import struct
+import tempfile
+import time
+from collections import defaultdict
+from enum import IntEnum, unique
+from typing import Optional
+
+import msgpack
+
+import ai2thor.server
+from ai2thor.exceptions import UnityCrashException
+
 
 # FifoFields
 @unique
@@ -98,6 +104,29 @@ class FifoServer(ai2thor.server.Server):
     def _create_header(self, message_type, body):
         return struct.pack(self.header_format, message_type, len(body))
 
+    def _read_with_timeout(self, server_pipe, message_size: int, timeout: Optional[float]):
+        if timeout is None:
+            return server_pipe.read(message_size)
+
+        start_t = time.time()
+        message = b""
+        while message_size > 0:
+            r, w, e = select.select([server_pipe], [], [], timeout)
+            if server_pipe in r:
+                part = os.read(server_pipe.fileno(), message_size)
+                message_size -= len(part)
+                message = message + part
+            else:
+                continue
+
+            if time.time() - start_t > timeout:
+                break
+
+        if message_size != 0:
+            raise TimeoutError(f"Reading from AI2-THOR backend timed out (using {timeout}s) timeout.")
+
+        return message
+
     def _recv_message(self):
         if self.server_pipe is None:
             self.server_pipe = open(self.server_pipe_path, "rb")
@@ -105,7 +134,11 @@ class FifoServer(ai2thor.server.Server):
         metadata = None
         files = defaultdict(list)
         while True:
-            header = self.server_pipe.read(self.header_size)  # message type + length
+            header = self._read_with_timeout(
+                server_pipe=self.server_pipe,
+                message_size=self.header_size,
+                timeout=self.timeout
+            )  # message type + length
             if len(header) == 0:
                 self.unity_proc.wait(timeout=5)
                 returncode = self.unity_proc.returncode
@@ -131,7 +164,13 @@ class FifoServer(ai2thor.server.Server):
             # print("got header %s" % header)
             field_type_int, message_length = struct.unpack(self.header_format, header)
             field_type = self.field_types[field_type_int]
-            body = self.server_pipe.read(message_length)
+
+            body = self._read_with_timeout(
+                server_pipe=self.server_pipe,
+                message_size=message_length,
+                timeout=self.timeout
+            )
+
             # print("field type")
             # print(field_type)
             if field_type is FieldType.METADATA:
@@ -217,3 +256,5 @@ class FifoServer(ai2thor.server.Server):
     def stop(self):
         self.client_pipe.close()
         self.server_pipe.close()
+        if self.unity_proc is not None and self.unity_proc.poll():
+            self.unity_proc.kill()

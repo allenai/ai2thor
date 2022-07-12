@@ -7,6 +7,7 @@ needed to control the in-game agent through ai2thor.server.
 
 """
 import atexit
+import traceback
 from collections import deque, defaultdict
 from itertools import product
 import json
@@ -936,18 +937,28 @@ class Controller(object):
         self.server.send(action)
         try:
             self.last_event = self.server.receive()
-        except UnityCrashException as e:
+        except UnityCrashException:
             self.server.stop()
             self.server = None
             # we don't need to pass port or host, since this Exception
             # is only thrown from the FifoServer, start_unity is also
             # not passed since Unity would have to have been started
             # for this to be thrown
-            message = "Restarting unity due to crash: %s" % e
+            message = (
+                f"Restarting unity due to crash when when running action {action}"
+                f" in scene {self.last_event.metadata['sceneName']}:\n{traceback.format_exc()}"
+            )
             warnings.warn(message)
             self.start(width=self.width, height=self.height, x_display=self.x_display)
             self.reset()
             raise RestartError(message)
+        except Exception:
+            self.server.stop()
+            warnings.warn(
+                f"Error encountered when running action {action}"
+                f" in scene {self.last_event.metadata['sceneName']}."
+            )
+            raise
 
         if not self.last_event.metadata["lastActionSuccess"]:
             if self.last_event.metadata["errorCode"] in [
