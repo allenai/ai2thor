@@ -4712,11 +4712,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private protected IEnumerator openAnimation(
             CanOpen_Object openableObject,
             bool markActionFinished,
-            bool freezeContained = false,
             float openness = 1.0f,
+            bool ignoreAgentInTransition = false,
+            bool stopAtNonStaticCol = false,
             bool useGripper = false,
             float? physicsInterval = null,
-            bool ignoreAgentInTransition = false
+            bool freezeContained = false
         ) {
             if (openableObject == null) {
                 if (markActionFinished) {
@@ -4750,12 +4751,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     toReParent.GetComponent<Rigidbody>().isKinematic = true;
                 }
             }
-
-            // // just incase there's a failure, we can undo it
-            // float startOpenness = openableObject.currentOpenness;
+            
+            // set moving parts to treat non-static SimObjects as obstacles or not
+            // (must be stored on CanOpen_Object component for OnTriggerEnter event to work)
+            openableObject.setStopsAtNonStaticCol(stopAtNonStaticCol);
 
             // open the object to openness
-            openableObject.Interact(openness: openness, physicsInterval: physicsInterval, useGripper: useGripper);
+            openableObject.Interact(
+                openness: openness,
+                useGripper: useGripper,
+                physicsInterval: physicsInterval);
             // Wait until all iTweening is done
             yield return new WaitUntil(() => (openableObject.GetiTweenCount() == 0 && !openableObject.isCurrentlyResetting));
             yield return null;
@@ -4764,7 +4769,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // report back failure if one occurred
             if (openableObject.GetFailState() != CanOpen_Object.failState.none) {
                 succeeded = false;
-
                 if (openableObject.GetFailState() == CanOpen_Object.failState.collision) {
                     errorMessage = "Openable object collided with " + openableObject.GetFailureCollision().name;
                 }
@@ -4772,30 +4776,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     errorMessage = "Openable object animation hyperextended arm";
                 }
             }
-
-            // // check for collision and hyperextension failures, in descending order of likelihood
-            // GameObject openableGameObj = openableObject.GetComponentInParent<SimObjPhysics>().gameObject;
-
-            // // does openable object collide with agent?
-            // if (ignoreAgentInTransition) {
-            //     // re-enables all previously disabled colliders
-            //     foreach (Collider c in collidersDisabled) {
-            //         c.enabled = true;
-            //     }
-            // }
-            // else {
-            //     // agent collision check
-            //     if (isAgentCapsuleCollidingWith(openableGameObj)) {
-            //         errorMessage = "Openable object collided with agent";
-            //         succeeded = false;
-            //     }
-
-            //     // held object collision check (unnecessary with gripper since opening objects requires an empty hand in that case)
-            //     else if (useGripper == false && isHandObjectCollidingWith(openableGameObj)) {
-            //         errorMessage = "Openable object collided with agent's held object";
-            //         succeeded = false;
-            //     }
-            // }
 
             // stops any object located within this openableObject from moving
             if (freezeContained) {
@@ -4808,6 +4788,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     rb.isKinematic = false;
                 }
             }
+
+            // Reset non-static simobject collision condition
+            openableObject.setStopsAtNonStaticCol(false);
 
             // Remove parent constraint from ArmTarget
             UnityEngine.Object.Destroy(this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmTarget().GetComponent<ParentConstraint>());
@@ -5111,6 +5094,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float openness,
             bool forceAction,
             bool markActionFinished,
+            bool ignoreAgentInTransition = false,
+            bool stopAtNonStaticCol = false,
             bool useGripper = false,
             float? physicsInterval = null,
             bool simplifyPhysics = false,
@@ -5213,11 +5198,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             StartCoroutine(openAnimation(
                 openableObject: codd,
-                freezeContained: simplifyPhysics,
+                markActionFinished: markActionFinished,
                 openness: openness,
+                ignoreAgentInTransition: ignoreAgentInTransition,
+                stopAtNonStaticCol: stopAtNonStaticCol,
                 useGripper: useGripper,
                 physicsInterval: physicsInterval,
-                markActionFinished: markActionFinished
+                freezeContained: simplifyPhysics
             ));
         }
 
@@ -5259,6 +5246,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceAction = false,
             bool useGripper = false,
             float openness = 1,
+            bool ignoreAgentInTransition = false,
+            bool stopAtNonStaticCol = false,
             float? physicsInterval = null,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {

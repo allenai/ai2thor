@@ -33,6 +33,9 @@ public class CanOpen_Object : MonoBehaviour {
     public enum failState {none, collision, hyperextension};
     private failState failure = failState.none;
     private GameObject failureCollision;
+    
+    // used to store whether moving parts should treat non-static SimObjects as barriers
+    private bool stopsAtNonStaticCol = false;
 
     [Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
     // these are objects to ignore collision with. This is in case the fridge doors touch each other or something that might
@@ -153,7 +156,12 @@ public class CanOpen_Object : MonoBehaviour {
         setIsOpen(openness: openness);
     }
 
-    public void Interact(float openness = 1.0f, float? physicsInterval = null, bool useGripper = false) {
+    public void Interact(
+        float openness = 1.0f,
+        float? physicsInterval = null,
+        bool useGripper = false
+        ) {
+
         // if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         // before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
@@ -161,8 +169,9 @@ public class CanOpen_Object : MonoBehaviour {
             gameObject.GetComponent<Rigidbody>().isKinematic = false;
         }
 
-        // There is no need for these precautionary steps during a reset,
-        // since the object has already initiated an iTween operation successfully
+        // Just in case there's a failure, we can undo it
+        // (There is no need for these precautionary setups during a reset,
+        // since the object has already initiated an iTween operation successfully)
         if (isCurrentlyResetting == false) {
             // set physicsInterval to default of 0.02 if no value has yet been given
             physicsInterval = physicsInterval.GetValueOrDefault(0.02f);
@@ -183,22 +192,21 @@ public class CanOpen_Object : MonoBehaviour {
             };
 
             // simple parameters used as input for iTween logic;
-            // local means local-space,
+            // local means local-space instead of world-space,
             // animationTime means the number of seconds lerping should take,
             // and linear means linear animation handles instead of, say, bezier
             Hashtable args = new Hashtable() {
                 {"islocal", true},
                 {"time", animationTime},
                 {"easetype", "linear"},
-                {"onupdate", "stepArm"},
+                {"onupdate", "stepOpen"},
                 {"onupdatetarget", this.gameObject},
                 {"onupdateparams", parameters},
-                {"oncomplete", "stepArm"},
+                {"oncomplete", "stepOpen"},
                 {"oncompletetarget", this.gameObject},
                 {"oncompleteparams", parameters}
             };
-
-            // let's open the object!
+            // let's open / reset the object!
             if (movementType == MovementType.Rotate) {
                 args["rotation"] = openPositions[i] * openness;
                 iTween.RotateTo(MovingParts[i], args);
@@ -232,7 +240,6 @@ public class CanOpen_Object : MonoBehaviour {
                 iTween.ScaleTo(MovingParts[i], args);
             }
         }
-
         setIsOpen(openness: openness);
     }
 
@@ -245,13 +252,13 @@ public class CanOpen_Object : MonoBehaviour {
         return isOpen;
     }
 
-    public void stepArm(Hashtable parameters) {
+    public void stepOpen(Hashtable parameters) {
         if (Physics.autoSimulation != true) {
             PhysicsSceneManager.PhysicsSimulateTHOR((float)parameters["physicsInterval"]);
             Physics.SyncTransforms();
         }
 
-        // arm hyperextension check
+        // arm hyperextension check (unnecessary if arm is already resetting back to its start-state)
         if ((bool)parameters["useGripper"] == true && isCurrentlyResetting == false) {
             FK_IK_Solver armBase = (FK_IK_Solver)parameters["armBase"];
             if ((armBase.IKTarget.position - armBase.armShoulder.position).sqrMagnitude >= Mathf.Pow(armBase.bone2Length + armBase.bone3Length - 1e-5f, 2)) {
@@ -290,29 +297,27 @@ public class CanOpen_Object : MonoBehaviour {
             return;
         }
 
-        // If the overlapping collider belongs to a non-static SimObject, then ignore 
-        if (ancestorSimObjPhysics(other.gameObject) != null &&
-        ancestorSimObjPhysics(other.gameObject).PrimaryProperty != SimObjPrimaryProperty.Static)
-        {
+        // If the overlapping collider belongs to a non-static SimObject, then ignore
+        // (Unless we explicitly tell the action to treat non-static SimObjects as barriers)
+        if (stopsAtNonStaticCol == false &&
+        ancestorSimObjPhysics(other.gameObject) != null &&
+        ancestorSimObjPhysics(other.gameObject).PrimaryProperty != SimObjPrimaryProperty.Static) {
             return;
         }
 
         // All right, so it was a legit collision? RESET!
-        else {
-            failure = failState.collision;
-            if (ancestorSimObjPhysics(other.gameObject) != null) {
-                failureCollision = other.GetComponentInParent<SimObjPhysics>().gameObject;
-            }
-            else {
-                failureCollision = other.gameObject;
-            }
-#if UNITY_EDITOR
-            Debug.Log(gameObject.name + " hit " + failureCollision + ". Resetting openness.");
-#endif
-            isCurrentlyResetting = true;
-            StopAndReset();
-            return;
+        failure = failState.collision;
+        if (ancestorSimObjPhysics(other.gameObject) != null) {
+            failureCollision = other.GetComponentInParent<SimObjPhysics>().gameObject;
         }
+        else {
+            failureCollision = other.gameObject;
+        }
+#if UNITY_EDITOR
+        Debug.Log(gameObject.name + " hit " + failureCollision + ". Resetting openness.");
+#endif
+        isCurrentlyResetting = true;
+        StopAndReset();
     }
 
     // for use in OnTriggerEnter ignore check
@@ -371,17 +376,23 @@ public class CanOpen_Object : MonoBehaviour {
         }
     }
 
-    // resets the isCurrentlyResetting boolean once the reset tween is done. This checks for iTween instances, once there are none this object can be used again
+    // Resets the isCurrentlyResetting boolean once the reset tween is done.
+    // This checks for iTween instances, once there are none this object can be used again
     private IEnumerator updateReset() {
         yield return new WaitUntil(() => GetiTweenCount() == 0);
         isCurrentlyResetting = false;
         yield break;
     }
+
     public failState GetFailState() {
         return failure;
     }
 
     public GameObject GetFailureCollision() {
         return failureCollision;
+    }
+
+    public void setStopsAtNonStaticCol(bool stopAtNonStaticCol) {
+        stopsAtNonStaticCol = stopAtNonStaticCol;
     }
 }
