@@ -13,6 +13,7 @@ import tempfile
 import time
 from collections import defaultdict
 from enum import IntEnum, unique
+from io import TextIOWrapper
 from typing import Optional
 
 import msgpack
@@ -51,18 +52,18 @@ class FifoServer(ai2thor.server.Server):
 
     def __init__(
         self,
-        width,
-        height,
+        width: int,
+        height: int,
         timeout: Optional[float] = 100.0,
         depth_format=ai2thor.server.DepthFormat.Meters,
-        add_depth_noise=False,
+        add_depth_noise: bool = False,
     ):
 
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.server_pipe_path = os.path.join(self.tmp_dir.name, "server.pipe")
         self.client_pipe_path = os.path.join(self.tmp_dir.name, "client.pipe")
-        self.server_pipe = None
-        self.client_pipe = None
+        self.server_pipe: Optional[TextIOWrapper] = None
+        self.client_pipe: Optional[TextIOWrapper] = None
         self.raw_metadata = None
         self.raw_files = None
         self._last_action_message = None
