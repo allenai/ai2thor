@@ -15,6 +15,8 @@ import logging
 import threading
 import os
 
+from ai2thor.exceptions import UnityCrashException
+
 try:
     from queue import Queue, Empty
 except ImportError:
@@ -36,7 +38,11 @@ werkzeug.serving.WSGIRequestHandler.protocol_version = "HTTP/1.1"
 def queue_get(que, unity_proc=None, timeout: Optional[float] = 100.0):
     res = None
     attempts = 0
-    max_attempts = float("inf") if timeout is None else max(int(math.ceil(timeout / 0.5)), 1)
+    max_attempts = (
+        float("inf")
+        if timeout is None or timeout == float("inf") else
+        max(int(math.ceil(timeout / 0.5)), 1)
+    )
     while True:
         try:
             res = que.get(block=True, timeout=0.5)
@@ -48,18 +54,14 @@ def queue_get(que, unity_proc=None, timeout: Optional[float] = 100.0):
             # exited otherwise we would wait indefinetly for the queue
             if unity_proc:
                 if unity_proc.poll() is not None:
-                    raise Exception("Unity process exited %s" % unity_proc.returncode)
+                    raise UnityCrashException(f"Unity process exited {unity_proc.returncode}")
 
-                # no Action should take > 100s to complete, so we assume that
-                # something has gone wrong within Unity
-                # max_attempts can also be triggered if an Exception is thrown from
-                # within the thread used to run the wsgi server, in which case
-                # Unity will receive a corrupted response
-                if attempts >= max_attempts:
-                    raise Exception(
-                        "Could not get a message from the queue after %s attempts "
-                        % attempts
-                    )
+            # Quit if action takes more than `timeout` time to complete. Note that this
+            # will result in the controller being in an unrecoverable state.
+            if attempts >= max_attempts:
+                raise TimeoutError(
+                    f"Could not get a message from the queue after {attempts} attempts "
+                )
     return res
 
 
@@ -191,6 +193,8 @@ class WsgiServer(ai2thor.server.Server):
             threaded=threaded,
             request_handler=ThorRequestHandler,
         )
+        self.stopped = False
+
         # used to ensure that we are receiving frames for the action we sent
         super().__init__(
             width=width,
@@ -250,7 +254,7 @@ class WsgiServer(ai2thor.server.Server):
 
             self.frame_counter += 1
 
-            next_action = queue_get(self.response_queue)
+            next_action = queue_get(self.response_queue, timeout=float("inf"))
             if "sequenceId" not in next_action:
                 self.sequence_id += 1
                 next_action["sequenceId"] = self.sequence_id
@@ -267,6 +271,7 @@ class WsgiServer(ai2thor.server.Server):
         self.wsgi_server.serve_forever()
 
     def start(self):
+        assert not self.stopped
         self.started = True
         self.server_thread = threading.Thread(target=self._start_server_thread)
         self.server_thread.daemon = True
@@ -291,12 +296,11 @@ class WsgiServer(ai2thor.server.Server):
         return params
 
     def stop(self):
-        try:
+        if self.started and not self.stopped:
             self.send({})
-        except (AssertionError, queue.Full):
-            # Happens if .stop() has already been called.
-            pass
+            self.wsgi_server.__shutdown_request = True
 
-        self.wsgi_server.shutdown()
+        self.stopped = True
+
         if self.unity_proc is not None and self.unity_proc.poll() is None:
             self.unity_proc.kill()

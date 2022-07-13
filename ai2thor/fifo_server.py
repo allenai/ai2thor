@@ -118,16 +118,16 @@ class FifoServer(ai2thor.server.Server):
 
         start_t = time.time()
         message = b""
+
         while message_size > 0:
             r, w, e = select.select([server_pipe], [], [], timeout)
             if server_pipe in r:
                 part = os.read(server_pipe.fileno(), message_size)
                 message_size -= len(part)
                 message = message + part
-            else:
-                continue
 
-            if time.time() - start_t > timeout:
+            cur_t = time.time()
+            if timeout is not None and cur_t - start_t > timeout:
                 break
 
         if message_size != 0:
@@ -269,6 +269,6 @@ class FifoServer(ai2thor.server.Server):
 
         if self.server_pipe is not None:
             self.server_pipe.close()
-            
+
         if self.unity_proc is not None and self.unity_proc.poll() is None:
             self.unity_proc.kill()
