@@ -1047,7 +1047,7 @@ class Controller(object):
             pass
 
         self.unity_pid = proc.pid
-        atexit.register(lambda: proc.poll() is None and proc.kill())
+        atexit.register(lambda: self.server.stop())
 
     @property
     def tmp_dir(self):

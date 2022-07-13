@@ -6,16 +6,17 @@ Handles all communication with Unity through a Flask service.  Messages
 are sent to the controller using a pair of request/response queues.
 """
 import abc
-import atexit
+import json
 import subprocess
 import warnings
-import numpy as np
-from enum import Enum
-from ai2thor.util.depth import apply_real_noise, generate_noise_indices
-import json
-from collections.abc import Mapping
 from abc import abstractmethod
+from collections.abc import Mapping
+from enum import Enum
 from typing import Optional, Tuple, Dict, cast, List, Set
+
+import numpy as np
+
+from ai2thor.util.depth import apply_real_noise, generate_noise_indices
 
 
 class NumpyAwareEncoder(json.JSONEncoder):
@@ -761,8 +762,6 @@ class Server(abc.ABC):
         if add_depth_noise:
             assert width == height, "Noise supported with square dimension images only."
             self.noise_indices = generate_noise_indices(width)
-
-        atexit.register(lambda: self.stop())
 
     def set_init_params(self, init_params):
         self.camera_near_plane = init_params["cameraNearPlane"]

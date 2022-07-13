@@ -6,6 +6,7 @@ Handles all communication with Unity through a Flask service.  Messages
 are sent to the controller using a pair of request/response queues.
 """
 import math
+import queue
 from typing import Optional
 
 import ai2thor.server
@@ -292,7 +293,7 @@ class WsgiServer(ai2thor.server.Server):
     def stop(self):
         try:
             self.send({})
-        except AssertionError:
+        except (AssertionError, queue.Full):
             # Happens if .stop() has already been called.
             pass
 
