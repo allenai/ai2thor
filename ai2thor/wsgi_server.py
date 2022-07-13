@@ -290,7 +290,12 @@ class WsgiServer(ai2thor.server.Server):
         return params
 
     def stop(self):
-        self.send({})
+        try:
+            self.send({})
+        except AssertionError:
+            # Happens if .stop() has already been called.
+            pass
+
         self.wsgi_server.shutdown()
         if self.unity_proc is not None and self.unity_proc.poll() is None:
             self.unity_proc.kill()
