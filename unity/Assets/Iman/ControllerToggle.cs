@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
+using TMPro;
+using System.Collections;
 
 public class ControllerToggle : MonoBehaviour {
     /// <summary>
@@ -13,6 +15,9 @@ public class ControllerToggle : MonoBehaviour {
 
     [SerializeField] private InputActionReference _leftToggleControllerActivationReference;
     [SerializeField] private InputActionReference _rightToggleControllerActivationReference;
+
+    [SerializeField] private TMP_Text _controllerTypeText;
+    [SerializeField] private float _fadeTime = 1.0f;
 
     [Header("Left Hand")]
     [SerializeField] private ActionBasedController _leftAgentXRController;
@@ -73,11 +78,19 @@ public class ControllerToggle : MonoBehaviour {
         _controllerType = ~_controllerType;
         bool value = Convert.ToBoolean((int)_controllerType);
 
+        StopAllCoroutines();
+
         if (value) {
             _onAgentControllerEvent?.Invoke();
+            _controllerTypeText.text = "Agent Mode";
+            _controllerTypeText.color = Color.blue;
+            StartCoroutine(FadeControllerTypeText());
         }
         else {
             _onUserControllerEvent?.Invoke();
+            _controllerTypeText.text = "User Mode";
+            _controllerTypeText.color = Color.red;
+            StartCoroutine(FadeControllerTypeText());
         }
 
         
@@ -105,5 +118,25 @@ public class ControllerToggle : MonoBehaviour {
     }
     public void RemoveListenerToAgentEvent(UnityAction action) {
         _onAgentControllerEvent.RemoveListener(action);
+    }
+
+    private IEnumerator FadeControllerTypeText() {
+        float timer = 0;
+        while (timer < _fadeTime) {
+            timer += Time.deltaTime;
+            _controllerTypeText.color = new Color(_controllerTypeText.color.r, _controllerTypeText.color.g, _controllerTypeText.color.b, timer / _fadeTime);
+            yield return null;
+        }
+        _controllerTypeText.color = new Color(_controllerTypeText.color.r, _controllerTypeText.color.g, _controllerTypeText.color.b, 1);
+
+        yield return new WaitForSeconds(_fadeTime);
+
+        timer = _fadeTime;
+        while (timer > 0) {
+            timer -= Time.deltaTime;
+            _controllerTypeText.color = new Color(_controllerTypeText.color.r, _controllerTypeText.color.g, _controllerTypeText.color.b, timer / _fadeTime);
+            yield return null;
+        }
+        _controllerTypeText.color *= new Color(_controllerTypeText.color.r, _controllerTypeText.color.g, _controllerTypeText.color.b, 0);
     }
 }

@@ -1088,6 +1088,24 @@
                     "initialStateCheck": true
                 },
                 {
+                    "name": "AgentTurn",
+                    "type": "Value",
+                    "id": "bb3838fe-7324-4033-a02b-11224aa79be6",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "AgentMove",
+                    "type": "Value",
+                    "id": "7718e437-c343-4918-b9a4-c84cc609434a",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
                     "name": "ToggleControllerTypeLeft",
                     "type": "Button",
                     "id": "e1b74adc-a7f7-4e99-9a44-02b62447b900",
@@ -1117,6 +1135,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "ToggleControllerTypeLeft",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "677bdfe3-dd24-4cc4-a945-7369280f27e6",
+                    "path": "<XRController>{LeftHand}/Primary2DAxis",
+                    "interactions": "Sector(directions=-1,sweepBehavior=2)",
+                    "processors": "",
+                    "groups": "Noncontinuous Move",
+                    "action": "AgentTurn",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ff74fa8d-e409-40c1-a84e-3cc7453bd5a9",
+                    "path": "<XRController>{RightHand}/primary2DAxis",
+                    "interactions": "Sector(directions=-1,sweepBehavior=2)",
+                    "processors": "",
+                    "groups": "Noncontinuous Move",
+                    "action": "AgentMove",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
