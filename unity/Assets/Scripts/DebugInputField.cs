@@ -4145,62 +4145,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ContractResolver = jsonResolver
                         }
                     );
-
-                    // var houseString = JsonUtility.ToJson(house);
-
                     Debug.Log("#######   HOUSE\n" + houseString);
 
-
-                    // Dictionary<string, object> action = new Dictionary<string, object>();
-                    // action["action"] = "CreateHouse";
-                    // action["house"] = house;
-
-                    // CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                     ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
 
-
-
                     Debug.Log("#######   HOUSE Created \n");
-
-
-
-
-                    
-                    // var k = ProceduralTools.createRoomsFromGenerationArray(arr, 0);
-                    // Debug.Log($"Result current {string.Join("\n", k.Select(m => $"{m.Key}: [ " + string.Join(",", m.Value.Select(x => $"({x.Item1}, {x.Item2})")) + " ]"))}");
-
-                    // var interior_boundary = ProceduralTools.findWalls(arr);
-                    // Debug.Log($" interior bound: {string.Join("\n", interior_boundary.Select(x => $"{x.Key}: {string.Join(", ", x.Value.Select(x => $"({x.Item1}, {x.Item2})"))}"))}" );
-                    // var boundary_groups = ProceduralTools.consolidateWalls(interior_boundary);
-                    // Debug.Log($" bound g 1: {string.Join("\n", interior_boundary.Select(x => $"{x.Key}: {string.Join(", ", x.Value.Select(x => $"({x.Item1}, {x.Item2})"))}"))}" );
-                    // var bg_floating = ProceduralTools.scale_boundary_groups(boundary_groups, 1.0f, 3);
-
-                    // Debug.Log($" bound g 2: {string.Join("\n", bg_floating.Select(x => $"{x.Key}: {string.Join(", ", x.Value.Select(x => $"({x.Item1}, {x.Item2})"))}"))}" );
-                    
-                    // // var m = arr.SelectMany(x => x.Distinct()).Distinct();
-                    // var ids = arr.SelectMany(x => x.Distinct()).Distinct();
-                    // print("ids "+ string.Join(", ", ids));
-                    // var xz_poly_map = ProceduralTools.get_xz_poly_map(bg_floating, ids);
-
-                    //  Debug.Log($"Result {string.Join("\n", xz_poly_map.Select(x => $"{x.Key}: {string.Join(", ", x.Value.Select(x => $"({x.Item1}, {x.Item2})"))}"))}");
-
-                    
-                    
-
-                    // ProceduralTools.roomFromWallIndexDictionary(
-                    //     "house", 
-                    //     ProceduralTools.createRoomsFromGenerationArray(arr, 0), 
-                    //     arr.Length, 
-                    //     arr.Max(a => a.Length), 
-                    //     0.5f, 
-                    //     2.0f, 
-                    //     0.1f, 
-                    //     new Dictionary<int, (string wallMaterial, string floorMaterial)>() {
-                    //         {1, ("WallDrywallWhite3", "DarkWoodFloors")}
-                    //     },
-                    //     ProceduralTools.GetMaterials()
-                        
-                    //     );
                     break;
                 }
             }
