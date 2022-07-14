@@ -2195,9 +2195,8 @@ def test_timeout():
         c.step("Sleep", seconds=1)
         assert c.last_event.metadata["lastActionSuccess"]
 
-        with pytest.warns():
-            with pytest.raises(TimeoutError):
-                c.step("Sleep", seconds=4)
+        with pytest.raises(TimeoutError):
+            c.step("Sleep", seconds=4)
 
         # Above crash should kill the unity process
         time.sleep(1.0)

@@ -960,11 +960,10 @@ class Controller(object):
             raise RestartError(message)
         except Exception:
             self.server.stop()
-            warnings.warn(
+            raise RuntimeError(
                 f"Error encountered when running action {action}"
                 f" in scene {self.last_event.metadata['sceneName']}."
             )
-            raise
 
         if not self.last_event.metadata["lastActionSuccess"]:
             if self.last_event.metadata["errorCode"] in [
