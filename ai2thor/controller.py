@@ -958,9 +958,9 @@ class Controller(object):
             self.start(width=self.width, height=self.height, x_display=self.x_display)
             self.reset()
             raise RestartError(message)
-        except Exception:
+        except Exception as e:
             self.server.stop()
-            raise RuntimeError(
+            raise (TimeoutError if isinstance(e, TimeoutError) else RuntimeError)(
                 f"Error encountered when running action {action}"
                 f" in scene {self.last_event.metadata['sceneName']}."
             )
