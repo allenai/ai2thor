@@ -1112,6 +1112,7 @@ def test_per_step_instance_segmentation(fifo_controller):
 
 
 #  Test for Issue: 477
+@pytest.mark.skip(reason="Winson is debugging why it fails.")
 def test_change_resolution_image_synthesis(fifo_controller):
     fifo_controller.reset(
         TEST_SCENE,

@@ -59,7 +59,6 @@ public class ImageSynthesis : MonoBehaviour {
     private Shader depthShader;
     // public Shader positionShader;
 
-
     public Dictionary<Color, string> colorIds;
 
     public float opticalFlowSensitivity;
@@ -200,8 +199,9 @@ public class ImageSynthesis : MonoBehaviour {
             tex = null;
         }
         var mainCamera = GetComponent<Camera>();
-        // Possibly not needed
-        mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
+
+        // TODO: add tests, not needed when target display is different
+        // mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
 
         foreach (var pass in capturePasses) {
             if (pass.camera == mainCamera) {
@@ -251,6 +251,7 @@ public class ImageSynthesis : MonoBehaviour {
 
 #if UNITY_EDITOR
         for (int i = 0; i < capturePasses.Length; i++) {
+            // Debug.Log("Setting camera " + capturePasses[i].camera.gameObject.name + " to display " + i);
             capturePasses[i].camera.targetDisplay = i;
         }
 #endif

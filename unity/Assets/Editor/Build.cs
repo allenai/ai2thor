@@ -108,6 +108,7 @@ public class Build {
         }
 
         files.AddRange(Directory.GetFiles("Assets/Scenes/Procedural"));
+        files.AddRange(Directory.GetFiles("Assets/Scenes/Procedural/ArchitecTHOR"));
 
         foreach (string f in files) {
             // ignore entryway scenes in build since these are not yet complete
@@ -121,7 +122,7 @@ public class Build {
         }
 
         // uncomment for faster builds for testing
-        return scenes; //.Where(x => x.Contains("FloorPlan1_") || x.Contains("Procedural")).ToList();
+        return scenes; //.Where(x => x.Contains("FloorPlan") || x.Contains("Procedural.unity")).ToList(); //.Where(x => x.Contains("FloorPlan1_") || x.Contains("Procedural")).ToList();
     }
 
     private static List<string> GetScenesFromEnv() {
