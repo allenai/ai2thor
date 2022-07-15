@@ -2959,10 +2959,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // now cast a ray out toward the point, if anything occludes this point, that point is not visible
             RaycastHit hit;
 
-            float distFromPointToCamera = Vector3.Distance(point.position, camera.transform.position);
-
-            // adding slight buffer to this distance to ensure the ray goes all the way to the collider of the object being cast to
-            float raycastDistance = distFromPointToCamera + 0.5f;
+            float raycastDistance = Vector3.Distance(point.position, camera.transform.position);
 
             LayerMask mask = (1 << 8) | (1 << 9) | (1 << 10);
 
@@ -2977,18 +2974,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
             // ignored by the other raycast
             if (includeInvisible) {
+
+                //if the raycast hit something, see if we hit the sop we are checking visiblility for or something else
                 if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, mask)) {
                     if (
                         hit.transform == sop.transform
-                        || ( isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
+                        || (isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))))
                     ) {
                         visCheck.visible = true;
                         visCheck.interactable = true;
 #if UNITY_EDITOR
                         Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
 #endif
-                    } 
+                    } else {
+                        //raycast hit somethign else that is occluding this visibility point
+                        visCheck.visible = false;
+                        visCheck.interactable = false;
+                    }
+                } else {
+                    //if the raycast didn't hit anything, then the raycast to the vis point was unobstructed
+                    visCheck.visible = true;
+                    visCheck.interactable = true;
                 }
+
             }
 
             // only check against the visible layer, ignore the invisible layer
@@ -2999,8 +3007,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         hit.transform == sop.transform
                         || ( isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
                     ) {
-                        // if this line is drawn, then this visibility point is in camera frame and not occluded
-                        // might want to use this for a targeting check as well at some point....
                         visCheck.visible = true;
                         visCheck.interactable = true;
                     } else {
@@ -3055,6 +3061,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
                     }
 #endif
+                } else {
+                    //if the raycast didn't hit anything, then the raycast to the vis point was unobstructed so it should be visible
+                    visCheck.visible = true;
+                    visCheck.interactable = true;
                 }
             }
 
