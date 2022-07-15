@@ -60,6 +60,8 @@ public class AgentManager : MonoBehaviour {
     private AgentState agentManagerState = AgentState.Emit;
     private bool fastActionEmit = true;
 
+    private MultiAgentMetadata lastActionMetadata = null;
+
     // it is public to be accessible from the debug input field.
     public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera", "ChangeQuality" };
 
@@ -884,6 +886,10 @@ public class AgentManager : MonoBehaviour {
         StartCoroutine(WaitOnResolutionChange(width: x, height: y));
     }
 
+    public MetadataWrapper getLastActionMetadata() {
+        return lastActionMetadata.agents[lastActionMetadata.activeAgentId];
+    }
+
     private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
         if (this.renderInstanceSegmentation || this.renderSemanticSegmentation) {
             if (!agent.imageSynthesis.hasCapturePass("_id")) {
@@ -1060,6 +1066,7 @@ public class AgentManager : MonoBehaviour {
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
             List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
             createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
+            this.lastActionMetadata = multiMeta;
 
 #if UNITY_WEBGL
                 JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
