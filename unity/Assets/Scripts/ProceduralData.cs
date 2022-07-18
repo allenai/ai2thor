@@ -356,6 +356,22 @@ namespace Thor.Procedural.Data {
         public List<Window> windows { get; set; } = new List<Window>();
         public List<HouseObject> objects { get; set; } = new List<HouseObject>();
         public Roof roof { get; set; }
+        public HouseMetadata metadata { get; set; }
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class HouseMetadata {
+        public Dictionary<string, AgentPose> agentPoses { get; set; }
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class AgentPose {
+        public float horizon;
+        public Vector3 position;
+        public Vector3 rotation;
+        public bool? standing = null;
     }
 
     [Serializable]
