@@ -168,6 +168,8 @@ public class CanOpen_Object : MonoBehaviour {
         // set physicsInterval to default of 0.02 if no value has yet been given
         physicsInterval = physicsInterval.GetValueOrDefault(Time.fixedDeltaTime);
         
+        Debug.Log("Starting Interact action with failState = " + failure);
+
         if (failure == failState.none) {
             // storing initial opennness-state case there's a failure, and we want to revert back to it
             startOpenness = currentOpenness;
@@ -417,35 +419,41 @@ public class CanOpen_Object : MonoBehaviour {
     public void OnTriggerEnter(Collider other) {
         // If the openable object is meant to ignore trigger collisions entirely, then ignore
         if (!triggerEnabled) {
+//            Debug.Log("I'm supposed to ignore triggers!, Bye, " + other);
             return;
         }
 
         // If the openable object is not opening or closing, then ignore
         if (!isCurrentlyLerping) {
+//            Debug.Log("I'm not currently lerping! Bye, " + other);
             return;
         }
 
         // If the overlapping collider is a child of one of the gameobjects in the array of them
         // that it's been told to explicitly disregard, then ignore
         if (IsInIgnoreArray(other, IgnoreTheseObjects)) {
+//            Debug.Log(other + " is in ignore array");
             return;
         }
 
         // If the collider is a BoundingBox or ReceptacleTriggerBox, then ignore
         if (other.CompareTag("Untagged") || other.CompareTag("Receptacle")) {
+//            Debug.Log(other + " is bounding box or receptacle trigger box");
             return;
         }
 
-        // If the overlapping collider is a descendant of the openable GameObject itself, then ignore
+        // If the overlapping collider is a descendant of the openable GameObject itself (or its parent), then ignore
         if (hasAncestor(other.transform.gameObject, gameObject)) {
+            Debug.Log(other + " belongs to me!");
             return;
         }
 
         // If the overlapping collider belongs to a non-static SimObject, then ignore
         // (Unless we explicitly tell the action to treat non-static SimObjects as barriers)
-        if (stopsAtNonStaticCol == false &&
-        ancestorSimObjPhysics(other.gameObject) != null &&
-        ancestorSimObjPhysics(other.gameObject).PrimaryProperty != SimObjPrimaryProperty.Static) {
+        if (ancestorSimObjPhysics(other.gameObject) != null &&
+            ancestorSimObjPhysics(other.gameObject).PrimaryProperty != SimObjPrimaryProperty.Static &&
+            stopsAtNonStaticCol == false) {
+//            Debug.Log("Ignore nonstatics" + other);
             return;
         }
 
@@ -513,8 +521,14 @@ public class CanOpen_Object : MonoBehaviour {
     public float GetStartOpenness() {
         return startOpenness;
     }
+    public void SetFailState(failState failState) {
+        failure = failState;
+    }
     public failState GetFailState() {
         return failure;
+    }
+    public void SetFailureCollision(GameObject collision) {
+        failureCollision = collision;
     }
     public GameObject GetFailureCollision() {
         return failureCollision;
