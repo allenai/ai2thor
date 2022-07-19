@@ -186,7 +186,7 @@ public class Agent_TeleportationArea : XRBaseInteractable {
                     action["rotation"] = agent.transform.rotation.eulerAngles;
                     action["horizon"] = agent.m_Camera.transform.localEulerAngles.x;
                     action["standing"] = agent.isStanding();
-                    action["forceAction"] = true;
+                    action["forceAction"] = false;
                     agent.ProcessControlCommand(action);
 
                     if (m_Teleporting != null) {

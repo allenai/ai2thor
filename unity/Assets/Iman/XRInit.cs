@@ -24,17 +24,6 @@ public class XRInit : MonoBehaviour
         _agentFloorCol.AddComponent<Agent_TeleportationArea>();
         _userFloorCol.AddComponent<TeleportationArea>();
         _agentFloorCol.SetActive(false);
-
-        _controllerToggle.AddListenerToUserEvent(() => _agentFloorCol.SetActive(false));
-        _controllerToggle.AddListenerToUserEvent(() => _userFloorCol.SetActive(true));
-        _controllerToggle.AddListenerToAgentEvent(() => _agentFloorCol.SetActive(true));
-        _controllerToggle.AddListenerToAgentEvent(() => _userFloorCol.SetActive(false));
     }
 
-    private void OnDestroy() {
-        _controllerToggle.RemoveListenerToUserEvent(() => _agentFloorCol.SetActive(false));
-        _controllerToggle.RemoveListenerToUserEvent(() => _userFloorCol.SetActive(true));
-        _controllerToggle.RemoveListenerToAgentEvent(() => _agentFloorCol.SetActive(true));
-        _controllerToggle.RemoveListenerToAgentEvent(() => _userFloorCol.SetActive(false));
-    }
 }

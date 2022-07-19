@@ -214,7 +214,7 @@ public class AgentManager : MonoBehaviour {
                         return;
                     }
                 }
-        } else if (action.agentMode.ToLower() == "arm") {
+        } else if (action.agentMode.ToLower() == "arm" || action.agentMode.ToLower() == "vr") {
 
             if (action.agentControllerType == "") {
                 action.agentControllerType = "mid-level";
@@ -228,7 +228,11 @@ public class AgentManager : MonoBehaviour {
                 return;
             } else if (action.agentControllerType.ToLower() == "mid-level") {
                 // set up physics controller
-                SetUpArmController(true);
+                if (action.agentMode.ToLower() == "vr") {
+                    SetUpVRController();
+                } else {
+                    SetUpArmController(true);
+                }
                 // the arm should currently be used only with autoSimulation off
                 // as we manually control Physics during its movement
                 action.autoSimulation = false;
@@ -250,9 +254,6 @@ public class AgentManager : MonoBehaviour {
                 primaryAgent.actionFinished(success: false, errorMessage: error);
                 return;
             }
-        }
-        else if (action.agentMode.ToLower() == "vr") {
-            SetUpVRController();
         }
 
 primaryAgent.ProcessControlCommand(action.dynamicServerAction);
@@ -318,7 +319,9 @@ primaryAgent.ProcessControlCommand(action.dynamicServerAction);
     public void SetUpVRController() {
         this.agents.Clear();
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
-        primaryAgent = createAgentType(typeof(PhysicsRemoteFPSAgentController), baseAgentComponent);
+        primaryAgent = createAgentType(typeof(ArmAgentController), baseAgentComponent);
+        var handObj = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "robot_arm_rig_gripper");
+        handObj.gameObject.SetActive(true);
         primaryAgent.m_Camera.enabled = false;
     }
 
@@ -1088,7 +1091,7 @@ primaryAgent.ProcessControlCommand(action.dynamicServerAction);
                         this.sock.Connect(hostep);
                     } catch (SocketException e) {
                         var msg = e.ToString();
-#if UNITY_EDITOR
+#if UNITY_EDITOR && UNITY_ANDROID
                         break;
 #endif
                         // wrapping the message in !UNITY_EDITOR to avoid unreachable code warning

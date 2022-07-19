@@ -147,6 +147,21 @@ MonoBehaviour:
   m_TurnAmount: 25
   m_DebounceTime: 0.5
   m_EnableTurnLeftRight: 1
+  _onTurnEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 4619730143222921591}
+        m_TargetAssemblyTypeName: POVToggle, AI2-THOR-Base
+        m_MethodName: SetFPSCameraTransform
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &4104965280798860477
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -186,6 +201,21 @@ MonoBehaviour:
       type: 3}
   m_DebounceTime: 0.5
   m_MoveAmount: 0.25
+  _onMoveEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 4619730143222921591}
+        m_TargetAssemblyTypeName: POVToggle, AI2-THOR-Base
+        m_MethodName: SetFPSCameraTransform
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &1065887983
 GameObject:
   m_ObjectHideFlags: 0
@@ -340,6 +370,7 @@ GameObject:
   - component: {fileID: 1739010285301109735}
   - component: {fileID: 1739010285301109733}
   - component: {fileID: 1213167349}
+  - component: {fileID: 8182351268069384465}
   m_Layer: 0
   m_Name: Camera
   m_TagString: MainCamera
@@ -503,6 +534,20 @@ MonoBehaviour:
   _alpha: 0
   _color: {r: 0, g: 0, b: 0, a: 1}
   _fadeMaterial: {fileID: 2100000, guid: 7634de4c19193b74d827046aa6f901c3, type: 2}
+--- !u!114 &8182351268069384465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739010285301109753}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 181cb022eb181f047b9a3b6c23af0e80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  RenderersToHide: []
+  FPSController: {fileID: 0}
 --- !u!1 &1739010285320374847
 GameObject:
   m_ObjectHideFlags: 0
@@ -512,6 +557,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1739010285320374846}
+  - component: {fileID: 4619730143222921591}
   m_Layer: 0
   m_Name: Camera Offset
   m_TagString: Untagged
@@ -535,6 +581,24 @@ Transform:
   m_Father: {fileID: 1739010285744223305}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4619730143222921591
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739010285320374847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b3d4d1f00bcbb34499c527333f406e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _xrOrigin: {fileID: 1739010285744223306}
+  _cameraOffset: {fileID: 1739010285320374846}
+  _trackedPoseDriver: {fileID: 1739010285301109733}
+  _camera: {fileID: 1739010285301109752}
+  _screenFader: {fileID: 1213167349}
+  _firstPersonCharacterCull: {fileID: 8182351268069384465}
 --- !u!1 &1739010285744223307
 GameObject:
   m_ObjectHideFlags: 0
@@ -545,7 +609,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1739010285744223305}
   - component: {fileID: 1739010285744223306}
-  - component: {fileID: 6648578248878238885}
+  - component: {fileID: 1912378701748670270}
   m_Layer: 0
   m_Name: XR Origin
   m_TagString: Untagged
@@ -561,7 +625,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1739010285744223307}
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 1.5, y: 0.9, z: 1.5}
+  m_LocalPosition: {x: 1.5, y: 1.6, z: 1.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1739010285320374846}
@@ -585,9 +649,9 @@ MonoBehaviour:
   m_Camera: {fileID: 1739010285301109734}
   m_OriginBaseGameObject: {fileID: 1739010285744223307}
   m_CameraFloorOffsetObject: {fileID: 1739010285320374847}
-  m_RequestedTrackingOriginMode: 0
-  m_CameraYOffset: 1.1176
---- !u!114 &6648578248878238885
+  m_RequestedTrackingOriginMode: 1
+  m_CameraYOffset: 0
+--- !u!114 &1912378701748670270
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -596,10 +660,136 @@ MonoBehaviour:
   m_GameObject: {fileID: 1739010285744223307}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6ee5e58bbce56d442b0553061f091eb7, type: 3}
+  m_Script: {fileID: 11500000, guid: 513f02b6e7c63c74e852491948788635, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _controllerToggle: {fileID: 9079065482835462681}
+  _modeText: {fileID: 926097210849976497}
+  _fadeTime: 1
+  _rightThumbstickPressReference: {fileID: -5316579075591564463, guid: c348712bda248c246b8c49b3db54643f,
+    type: 3}
+  _rightPrimaryPressReference: {fileID: 785012700415253953, guid: c348712bda248c246b8c49b3db54643f,
+    type: 3}
+  _leftThumbstickPressReference: {fileID: -296895544016717847, guid: c348712bda248c246b8c49b3db54643f,
+    type: 3}
+  _leftPrimaryPressReference: {fileID: -1804031175358737900, guid: c348712bda248c246b8c49b3db54643f,
+    type: 3}
+  _onUserControllerEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 7796611945346531968}
+        m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
+        m_MethodName: set_enabled
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 4104965280798860477}
+        m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
+        m_MethodName: set_enabled
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 373500767}
+        m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
+        m_MethodName: set_enabled
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 9079065482835462681}
+        m_TargetAssemblyTypeName: ControllerToggle, AI2-THOR-Base
+        m_MethodName: ToggleController
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  _onAgentControllerEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 7796611945346531968}
+        m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
+        m_MethodName: set_enabled
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 4104965280798860477}
+        m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
+        m_MethodName: set_enabled
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 373500767}
+        m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
+        m_MethodName: set_enabled
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 9079065482835462681}
+        m_TargetAssemblyTypeName: ControllerToggle, AI2-THOR-Base
+        m_MethodName: ToggleController
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+  _onTogglePOVEvent:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 4619730143222921591}
+        m_TargetAssemblyTypeName: POVToggle, AI2-THOR-Base
+        m_MethodName: TogglePOV
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &2207387610743123945
 GameObject:
   m_ObjectHideFlags: 0
@@ -612,7 +802,7 @@ GameObject:
   - component: {fileID: 2771187496992755992}
   - component: {fileID: 926097210849976497}
   m_Layer: 5
-  m_Name: Text - Controller Type
+  m_Name: Text - Mode
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -626,7 +816,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2207387610743123945}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.6}
+  m_LocalPosition: {x: 0, y: 0, z: 0.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2441521901515429574}
@@ -779,12 +969,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06ab27b111c32eb45ad0b950d5908841, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _leftToggleControllerActivationReference: {fileID: -296895544016717847, guid: c348712bda248c246b8c49b3db54643f,
-    type: 3}
-  _rightToggleControllerActivationReference: {fileID: -5316579075591564463, guid: c348712bda248c246b8c49b3db54643f,
-    type: 3}
-  _controllerTypeText: {fileID: 926097210849976497}
-  _fadeTime: 1
   _leftAgentXRController: {fileID: 8514709057159408262}
   _leftAgentXRRayInteractor: {fileID: 2050796350368724197}
   _leftUserXRController: {fileID: 7961992119163413746}
@@ -793,84 +977,6 @@ MonoBehaviour:
   _rightAgentXRRayInteractor: {fileID: 6092084372551182095}
   _rightUserXRController: {fileID: 2670592137485050860}
   _rightUserXRRayInteractor: {fileID: 1899246280735463613}
-  _onUserControllerEvent:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 373500767}
-        m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
-        m_MethodName: set_enabled
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
-      - m_Target: {fileID: 7796611945346531968}
-        m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
-        m_MethodName: set_enabled
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 4104965280798860477}
-        m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
-        m_MethodName: set_enabled
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  _onAgentControllerEvent:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 373500767}
-        m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
-        m_MethodName: set_enabled
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-      - m_Target: {fileID: 7796611945346531968}
-        m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
-        m_MethodName: set_enabled
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
-      - m_Target: {fileID: 4104965280798860477}
-        m_TargetAssemblyTypeName: UnityEngine.Behaviour, UnityEngine
-        m_MethodName: set_enabled
-        m_Mode: 6
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 1
-        m_CallState: 2
 --- !u!1 &4323148969550215574
 GameObject:
   m_ObjectHideFlags: 0
@@ -919,7 +1025,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_UpdateTrackingType: 0
   m_EnableInputTracking: 1
-  m_EnableInputActions: 1
+  m_EnableInputActions: 0
   m_ModelPrefab: {fileID: 0}
   m_ModelParent: {fileID: 0}
   m_Model: {fileID: 0}
@@ -1479,7 +1585,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_UpdateTrackingType: 0
   m_EnableInputTracking: 1
-  m_EnableInputActions: 1
+  m_EnableInputActions: 0
   m_ModelPrefab: {fileID: 0}
   m_ModelParent: {fileID: 0}
   m_Model: {fileID: 0}
@@ -2599,7 +2705,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
 --- !u!114 &9160301141069987096
 MonoBehaviour:
   m_ObjectHideFlags: 0

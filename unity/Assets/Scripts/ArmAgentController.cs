@@ -573,6 +573,87 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public override bool TeleportCheck(Vector3 position, Vector3 rotation, bool forceAction, float? horizon = null) {
+            if (!base.TeleportCheck(position, rotation, forceAction, horizon)) {
+                return false;
+            }
+
+            return true;
+            //var arm = this.getArm();
+
+            //foreach (CapsuleCollider c in arm.ArmCapsuleColliders) {
+            //    Vector3 center = c.transform.TransformPoint(c.center);
+            //    float radius = c.radius;
+
+            //    // direction of CapsuleCollider's orientation in local space
+            //    Vector3 dir = new Vector3();
+
+            //    switch (c.direction) {
+            //        // x just in case
+            //        case 0:
+            //            // get world space direction of this capsule's local right vector
+            //            dir = c.transform.right;
+            //            break;
+            //        // y just in case
+            //        case 1:
+            //            // get world space direction of this capsule's local up vector
+            //            dir = c.transform.up;
+            //            break;
+            //        // z because all arm colliders have direction z by default
+            //        case 2:
+            //            // get world space direction of this capsule's local forward vector
+            //            dir = c.transform.forward;
+
+            //            // this doesn't work because transform.right is in world space already,
+            //            // how to get transform.localRight?
+            //            break;
+            //    }
+
+            //    // debug draw forward of each joint
+            //    // #if UNITY_EDITOR
+            //    // // debug draw
+            //    // Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
+            //    // #endif
+
+            //    // center in world space + direction with magnitude (1/2 height - radius)
+            //    Vector3 point0 = center + dir * (c.height / 2 - radius);
+
+            //    // point 1
+            //    // center in world space - direction with magnitude (1/2 height - radius)
+            //    Vector3 point1 = center - dir * (c.height / 2 - radius);
+
+            //    // debug draw ends of each capsule of each joint
+            //    // #if UNITY_EDITOR
+            //    // GizmoDrawCapsule gdc = new GizmoDrawCapsule();
+            //    // gdc.p0 = point0;
+            //    // gdc.p1 = point1;
+            //    // gdc.radius = radius;
+            //    // debugCapsules.Add(gdc);
+            //    // #endif
+
+            //    // ok now finally let's make some overlap capsules
+            //    Collider[] cols = Physics.OverlapCapsule(
+            //        point0: point0,
+            //        point1: point1,
+            //        radius: radius,
+            //        layerMask: LayerMask.GetMask("SimObjVisible"),
+            //        queryTriggerInteraction: QueryTriggerInteraction.Ignore
+            //    );
+            //}
+
+            //// also check if the couple of box colliders are colliding
+            //foreach (BoxCollider b in arm.ArmBoxColliders) {
+            //    Collider[] cols = Physics.OverlapBox(
+            //        center: b.transform.TransformPoint(b.center),
+            //        halfExtents: b.size / 2.0f,
+            //        orientation: b.transform.rotation,
+            //        layerMask: LayerMask.GetMask("SimObjVisible"),
+            //        queryTriggerInteraction: QueryTriggerInteraction.Ignore
+            //    );
+
+            //}
+        }
+
 #if UNITY_EDITOR
         // debug for static arm collisions from collision listener
         public void GetMidLevelArmCollisions() {

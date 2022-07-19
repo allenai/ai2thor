@@ -1113,6 +1113,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "TogglePOVLeft",
+                    "type": "Button",
+                    "id": "986ecc8f-3eb7-42fb-9d52-7f6f06adfadb",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "TogglePOVRight",
+                    "type": "Button",
+                    "id": "f82f88ee-31bc-41b6-a6e2-e27faf76b157",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -1157,6 +1175,28 @@
                     "processors": "",
                     "groups": "Noncontinuous Move",
                     "action": "AgentMove",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "38d9a53c-77cf-40a3-96a0-4b42108749ac",
+                    "path": "<XRController>{LeftHand}/primaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "TogglePOVLeft",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "d80d8130-8a87-4902-be75-7c6bb5b201d4",
+                    "path": "<XRController>{RightHand}/primaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "TogglePOVRight",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

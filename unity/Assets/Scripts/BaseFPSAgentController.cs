@@ -3917,7 +3917,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return true;
         }
 
-        public bool TeleportCheck(Vector3 position, Vector3 rotation, bool forceAction, float? horizon = null) {
+        public virtual bool TeleportCheck(Vector3 position, Vector3 rotation, bool forceAction, float? horizon = null) {
             if (forceAction) {
                 return true;
             }
@@ -3955,7 +3955,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 position,
             bool includeErrorMessage = false
         ) {
-            int layerMask = 1 << 8;
+            int layerMask = LayerMask.GetMask("SimObjVisible");
             var capsuleCollider = GetComponent<CapsuleCollider>();
             var skinWidth = GetComponent<CharacterController>().skinWidth;
             float radius = capsuleCollider.radius + skinWidth;

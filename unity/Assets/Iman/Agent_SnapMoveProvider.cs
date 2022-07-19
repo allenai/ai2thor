@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit.Inputs;
 using UnityStandardAssets.Characters.FirstPerson;
@@ -61,6 +62,8 @@ public class Agent_SnapMoveProvider : MonoBehaviour
         set => m_MoveAmount = value;
     }
 
+    [SerializeField] private UnityEvent _onMoveEvent = new UnityEvent();
+
     float m_TimeStarted;
 
     private AgentManager AManager = null;
@@ -73,14 +76,7 @@ public class Agent_SnapMoveProvider : MonoBehaviour
     /// See <see cref="MonoBehaviour"/>.
     /// </summary>
     protected void Update() {
-        // Wait for a certain amount of time before allowing another turn.
-        if (m_TimeStarted > 0f && (m_TimeStarted + m_DebounceTime < Time.time)) {
-            m_TimeStarted = 0f;
-            return;
-        }
-
-        var input = ReadInput();
-        Move(input);
+        Move();
 
     }
 
@@ -96,7 +92,14 @@ public class Agent_SnapMoveProvider : MonoBehaviour
     /// </summary>
     /// <param name="input">Input vector, such as from a thumbstick.</param>
     /// <returns>Returns the turn amount in degrees for the given <paramref name="input"/> vector.</returns>
-    protected void Move(Vector2 input) {
+    protected void Move() {
+        // Wait for a certain amount of time before allowing another turn.
+        if (m_TimeStarted > 0f && (m_TimeStarted + m_DebounceTime < Time.time)) {
+            m_TimeStarted = 0f;
+            return;
+        }
+
+        var input = ReadInput();
         if (input == Vector2.zero)
             return;
 
@@ -126,7 +129,9 @@ public class Agent_SnapMoveProvider : MonoBehaviour
                 break;
         }
 
-        if (action["action"] != null)
+        if (action["action"] != null) {
             agent.ProcessControlCommand(action);
+            _onMoveEvent?.Invoke();
+        }
     }
 }
