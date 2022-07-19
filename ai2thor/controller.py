@@ -635,18 +635,15 @@ class Controller(object):
             scene = scene + "_physics"
         return scene
 
-    def _procedural_reset(self, scene):
-        self.server.send(dict(action="Reset", sceneName="Procedural", sequenceId=0))
-        self.last_event = self.server.receive()
-        self.step(action="CreateHouse", house=scene)
-
     def reset(self, scene=None, **init_params):
         if scene is None:
             scene = self.scene
 
-        if isinstance(scene, dict):
+        is_procedural = isinstance(scene, dict)
+        if is_procedural:
             # ProcTHOR scene
-            self._procedural_reset(scene)
+            self.server.send(dict(action="Reset", sceneName="Procedural", sequenceId=0))
+            self.last_event = self.server.receive()
         else:
             scene = Controller.normalize_scene(scene)
 
@@ -719,6 +716,9 @@ class Controller(object):
             raise_for_failure=True,
             **self.initialization_parameters,
         )
+
+        if is_procedural:
+            self.last_event = self.step(action="CreateHouse", house=scene)
 
         self.scene = scene
         return self.last_event
