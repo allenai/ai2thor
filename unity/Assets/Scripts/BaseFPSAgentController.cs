@@ -132,7 +132,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected bool m_IsWalking;
         protected float m_WalkSpeed;
         protected float m_RunSpeed;
-        protected float m_GravityMultiplier;
+        public float m_GravityMultiplier = 2f;
         protected static float gridSize = 0.25f;
         // time the checkIfObjectHasStoppedMoving coroutine waits for objects to stop moving
         protected float TimeToWaitForObjectsToComeToRest = 0.0f;
