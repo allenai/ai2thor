@@ -2580,6 +2580,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //helper function to check a game object's heirarchy to see if it contains a SimObjPhysics component as an ancestor
         protected static SimObjPhysics ancestorSimObjPhysics(GameObject go) {
             if (go == null) {
                 return null;
@@ -2625,6 +2626,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
+        //return an updated VisibilityCheck without using planes.
         public VisibilityCheck isSimObjVisible(Camera camera, SimObjPhysics sop, float maxDistance) {
             VisibilityCheck visCheck = new VisibilityCheck();
             // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
@@ -2654,14 +2656,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         continue;
                     }
 
-                    // if this particular point is in view...
-                    visCheck |= CheckIfVisibilityPointInViewport(sop, point, camera, sop.IsReceptacle);
-                    if (visCheck.visible && visCheck.interactable){
-#if !UNITY_EDITOR
-                        // If we're in the unity editor then don't break on finding a visible
-                        // point as we want to draw lines to each visible point.
+                    // check against both visible and "invisible" colliders to see if object is visible
+                    //visCheck |= CheckIfVisibilityPointInViewport(sop, point, camera, sop.IsReceptacle);
+                    visCheck |= (CheckIfVisibilityPointRaycast(sop, point, camera, false) | CheckIfVisibilityPointRaycast(sop, point, camera, true));
+                    if (visCheck.visible && visCheck.interactable) {
+
+                        //#if !UNITY_EDITOR
+                        // uncomment the defines if you want to view debug lines in-editor.
                         break;
-#endif
+                        //#endif
                     }
                 }
 
@@ -2676,6 +2679,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return visCheck;
         }
 
+        //return an updated VisibilityCheck, using planes to filter out if a vispoint is outside of viewport, and also checking against maxDistance
         public VisibilityCheck isSimObjVisible(Camera camera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
             // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
             VisibilityCheck visCheck = new VisibilityCheck();
@@ -2719,13 +2723,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     // if this particular point is in view...
                     visCheck |= (CheckIfVisibilityPointRaycast(sop, point, camera, false) | CheckIfVisibilityPointRaycast(sop, point, camera, true));
-                    if (visCheck.visible && visCheck.interactable){
-                        
-#if !UNITY_EDITOR
-                        // If we're in the unity editor then don't break on finding a visible
-                        // point as we want to draw lines to each visible point.
+                    if (visCheck.visible && visCheck.interactable) {
+
+                        //#if !UNITY_EDITOR
+                        // uncomment the defines if you want to view debug lines in-editor.
                         break;
-#endif
+                        //#endif
                     }
                 }
 
@@ -2785,8 +2788,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Camera camera, float maxDistance, IEnumerable<SimObjPhysics> filterSimObjs, out SimObjPhysics[] interactable
         ) {
             if (filterSimObjs == null) {
+                //get a reference to all sim objects in scene (or the ones we care about if filter used)
                 filterSimObjs = physicsSceneManager.ObjectIdToSimObjPhysics.Values;
             }
+
+            print("using DISTANCE");
 
             List<SimObjPhysics> visible = new List<SimObjPhysics>();
             List<SimObjPhysics> interactableItems = new List<SimObjPhysics>();
@@ -2807,30 +2813,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera camera, float maxDistance, IEnumerable<SimObjPhysics> filterSimObjs, out SimObjPhysics[] interactable) {
-            HashSet<SimObjPhysics> currentlyVisibleItems = new HashSet<SimObjPhysics>();
-            HashSet<SimObjPhysics> interactableItems = new HashSet<SimObjPhysics>();
+            print("using COLLIDER");
 
-#if UNITY_EDITOR
-            foreach (KeyValuePair<string, SimObjPhysics> pair in physicsSceneManager.ObjectIdToSimObjPhysics) {
-                // Set all objects to not be visible
-                pair.Value.debugIsVisible = false;
-                pair.Value.debugIsInteractable = false;
-            }
-#endif
-
-            HashSet<SimObjPhysics> filter = null;
-            if (filterSimObjs != null) {
-                filter = new HashSet<SimObjPhysics>(filterSimObjs);
-                if (filter.Count == 0) {
-                    interactable = interactableItems.ToArray();
-                    return currentlyVisibleItems.ToArray();
-                }
+            if (filterSimObjs == null) {
+                filterSimObjs = physicsSceneManager.ObjectIdToSimObjPhysics.Values;
             }
 
-            Vector3 agentCameraPos = camera.transform.position;
+            // HashSet<SimObjPhysics> filter = null;
+            // if (filterSimObjs != null) {
+            //     filter = new HashSet<SimObjPhysics>(filterSimObjs);
+            //     if (filter.Count == 0) {
+            //         interactable = interactableItems.ToArray();
+            //         return currentlyVisibleItems.ToArray();
+            //     }
+            // }
 
-            // get all sim objects in range around us that have colliders in layer 8 (visible), ignoring objects in the SimObjInvisible layer
-            // this will make it so the receptacle trigger boxes don't occlude the objects within them.
+            //Vector3 agentCameraPos = camera.transform.position;
+
+
+            // Turn off the colliders corresponding to this agent
+            // and any invisible agents.
+            updateAllAgentCollidersForVisibilityCheck(false);
+
+            // use agent capsule collider to generate values for OverlapCapsule
             CapsuleCollider agentCapsuleCollider = GetComponent<CapsuleCollider>();
             Vector3 point0, point1;
             float radius;
@@ -2841,110 +2846,143 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 point0.y += maxDistance;
             }
 
-            // Turn off the colliders corresponding to this agent
-            // and any invisible agents.
-            updateAllAgentCollidersForVisibilityCheck(false);
-
-            HashSet<(SimObjPhysics, bool)> sopAndIncInvisibleTuples = new HashSet<(SimObjPhysics, bool)>();
-
-            // Find all nearby colliders corresponding to visible components and grab
-            // their corresponding SimObjPhysics component
-            Collider[] collidersInView = Physics.OverlapCapsule(
-                point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide
+            //use overlap capsule with mask 8, 9, and trigger collide to check if the collider has a simobjphysics component?
+            Collider[] collidersInRange = Physics.OverlapCapsule( 
+                point0, point1, maxDistance, 1 << 8 | 1 << 9, QueryTriggerInteraction.Collide 
             );
-            if (collidersInView != null) {
-                foreach (Collider c in collidersInView) {
+
+            List<SimObjPhysics> simObjsInRange = new List<SimObjPhysics>();
+
+            if(collidersInRange != null) {
+                foreach (Collider c in collidersInRange) {
                     SimObjPhysics sop = ancestorSimObjPhysics(c.gameObject);
-                    if (sop != null) {
-                        sopAndIncInvisibleTuples.Add((sop, false));
+                    if(sop != null && !simObjsInRange.Contains(sop)) {
+                        simObjsInRange.Add(sop);
                     }
                 }
             }
 
-            // Check against anything in the invisible layers that we actually want to have occlude things in this round.
-            // normally receptacle trigger boxes must be ignored from the visibility check otherwise objects inside them will be occluded, but
-            // this additional check will allow us to see inside of receptacle objects like cabinets/fridges by checking for that interior
-            // receptacle trigger box. Oh boy!
-            Collider[] invisibleCollidersInView = Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 9, QueryTriggerInteraction.Collide);
-            if (invisibleCollidersInView != null) {
-                foreach (Collider c in invisibleCollidersInView) {
-                    if (c.tag == "Receptacle") {
-                        SimObjPhysics sop = c.GetComponentInParent<SimObjPhysics>();
-                        if (sop != null) {
-                            sopAndIncInvisibleTuples.Add((sop, true));
+            List<SimObjPhysics> visible = new List<SimObjPhysics>();
+            List<SimObjPhysics> interactableItems = new List<SimObjPhysics>();
+            Plane[] planes = GeometryUtility.CalculateFrustumPlanes(camera);
+
+            //now go through all sim objects in range, check their vis points
+            if (simObjsInRange.Count != 0) {
+                foreach (SimObjPhysics sop in simObjsInRange) {
+                    if (sop != null && (filterSimObjs == null || filterSimObjs.Contains(sop))) {
+                        VisibilityCheck visCheck = isSimObjVisible(camera, sop, this.maxVisibleDistance, planes);
+
+                        if (visCheck.visible) {
+                            visible.Add(sop);
+                        }
+
+                        if (visCheck.interactable) {
+                            interactableItems.Add(sop);
                         }
                     }
                 }
             }
+
+            // HashSet<(SimObjPhysics, bool)> sopAndIncInvisibleTuples = new HashSet<(SimObjPhysics, bool)>();
+
+            // // Find all nearby colliders corresponding to visible components and grab
+            // // their corresponding SimObjPhysics component
+            // Collider[] collidersInView = Physics.OverlapCapsule(
+            //     point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide
+            // );
+            // if (collidersInView != null) {
+            //     foreach (Collider c in collidersInView) {
+            //         SimObjPhysics sop = ancestorSimObjPhysics(c.gameObject);
+            //         if (sop != null) {
+            //             sopAndIncInvisibleTuples.Add((sop, false));
+            //         }
+            //     }
+            // }
+
+            // // Check against anything in the invisible layers that we actually want to have occlude things in this round.
+            // // normally receptacle trigger boxes must be ignored from the visibility check otherwise objects inside them will be occluded, but
+            // // this additional check will allow us to see inside of receptacle objects like cabinets/fridges by checking for that interior
+            // // receptacle trigger box. Oh boy!
+            // Collider[] invisibleCollidersInView = Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 9, QueryTriggerInteraction.Collide);
+            // if (invisibleCollidersInView != null) {
+            //     foreach (Collider c in invisibleCollidersInView) {
+            //         if (c.tag == "Receptacle") {
+            //             SimObjPhysics sop = c.GetComponentInParent<SimObjPhysics>();
+            //             if (sop != null) {
+            //                 sopAndIncInvisibleTuples.Add((sop, true));
+            //             }
+            //         }
+            //     }
+            // }
 
             // We have to explicitly add the items held by the arm as their
             // rigidbodies are set to not detect collisions
-            if (Arm != null && Arm.gameObject.activeSelf) {
-                foreach (SimObjPhysics sop in Arm.heldObjects.Keys) {
-                    sopAndIncInvisibleTuples.Add((sop, false));
-                }
-            }
-            else if (SArm != null && SArm.gameObject.activeSelf) {
-                foreach (SimObjPhysics sop in SArm.heldObjects.Keys) {
-                    sopAndIncInvisibleTuples.Add((sop, false));
-                }
-            }
+            // if (Arm != null && Arm.gameObject.activeSelf) {
+            //     foreach (SimObjPhysics sop in Arm.heldObjects.Keys) {
+            //         sopAndIncInvisibleTuples.Add((sop, false));
+            //     }
+            // }
+            // else if (SArm != null && SArm.gameObject.activeSelf) {
+            //     foreach (SimObjPhysics sop in SArm.heldObjects.Keys) {
+            //         sopAndIncInvisibleTuples.Add((sop, false));
+            //     }
+            // }
 
-            if (sopAndIncInvisibleTuples.Count != 0) {
-                foreach ((SimObjPhysics, bool) sopAndIncInvisible in sopAndIncInvisibleTuples) {
-                    SimObjPhysics sop = sopAndIncInvisible.Item1;
-                    bool includeInvisible = sopAndIncInvisible.Item2;
+//             if (sopAndIncInvisibleTuples.Count != 0) {
+//                 foreach ((SimObjPhysics, bool) sopAndIncInvisible in sopAndIncInvisibleTuples) {
+//                     SimObjPhysics sop = sopAndIncInvisible.Item1;
+//                     bool includeInvisible = sopAndIncInvisible.Item2;
 
-                    // now we have a reference to our sim object
-                    if (sop != null && (filter == null || filter.Contains(sop))) {
-                        // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
-                        if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
-                            Transform[] visPoints = sop.VisibilityPoints;
-                            VisibilityCheck visCheck = new VisibilityCheck();
+//                     // now we have a reference to our sim object
+//                     if (sop != null && (filterSimObjs == null || filterSimObjs.Contains(sop))) {
+//                         // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
+//                         if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
+//                             Transform[] visPoints = sop.VisibilityPoints;
+//                             VisibilityCheck visCheck = new VisibilityCheck();
 
-                            foreach (Transform point in visPoints) {
-                                // if this particular point is in view...
-                                // if we see at least one vis point, the object is "visible"
-                                visCheck |= CheckIfVisibilityPointInViewport(sop, point, camera, includeInvisible);
-                                if (visCheck.visible && visCheck.interactable) {
-#if !UNITY_EDITOR
-                                    // If we're in the unity editor then don't break on finding a visible
-                                    // point as we want to draw lines to each visible point.
-                                    break;
-#endif
-                                }
-                            }
+//                             foreach (Transform point in visPoints) {
+//                                 // if this particular point is in view...
+//                                 // if we see at least one vis point, the object is "visible"
+//                                 visCheck |= CheckIfVisibilityPointInViewport(sop, point, camera, includeInvisible);
+//                                 if (visCheck.visible && visCheck.interactable) {
+// #if !UNITY_EDITOR
+//                                     // If we're in the unity editor then don't break on finding a visible
+//                                     // point as we want to draw lines to each visible point.
+//                                     break;
+// #endif
+//                                 }
+//                             }
 
-#if UNITY_EDITOR
-                            sop.debugIsVisible = visCheck.visible;
-                            sop.debugIsInteractable = visCheck.interactable;
-#endif                
-                            if (visCheck.visible && !currentlyVisibleItems.Contains(sop)) {
-                                currentlyVisibleItems.Add(sop);
-                            }
+// #if UNITY_EDITOR
+//                             sop.debugIsVisible = visCheck.visible;
+//                             sop.debugIsInteractable = visCheck.interactable;
+// #endif                
+//                             if (visCheck.visible && !currentlyVisibleItems.Contains(sop)) {
+//                                 currentlyVisibleItems.Add(sop);
+//                             }
 
-                            if (visCheck.interactable && !interactableItems.Contains(sop)) {
-                                interactableItems.Add(sop);
-                            }
-                        } else {
-                            Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
-                        }
-                    }
-                }
-            }
+//                             if (visCheck.interactable && !interactableItems.Contains(sop)) {
+//                                 interactableItems.Add(sop);
+//                             }
+//                         } else {
+//                             Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
+//                         }
+//                     }
+//                 }
+//             }
 
             // Turn back on the colliders corresponding to this agent and invisible agents.
             updateAllAgentCollidersForVisibilityCheck(true);
 
             // populate array of visible items in order by distance
-            List<SimObjPhysics> currentlyVisibleItemsToList = currentlyVisibleItems.ToList();
-            List<SimObjPhysics> interactableItemsToList = interactableItems.ToList();
+            //List<SimObjPhysics> currentlyVisibleItemsToList = currentlyVisibleItems.ToList();
+            //List<SimObjPhysics> interactableItemsToList = interactableItems.ToList();
 
-            interactableItemsToList.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
-            currentlyVisibleItemsToList.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
+            //interactableItemsToList.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
+            //currentlyVisibleItemsToList.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
             
-            interactable = interactableItemsToList.ToArray();
-            return currentlyVisibleItemsToList.ToArray();
+            interactable = interactableItems.ToArray();
+            return visible.ToArray();
         }
 
         // check if the visibility point on a sim object, sop, is within the viewport
