@@ -24,7 +24,7 @@ public class POVToggle : MonoBehaviour
         _agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
         _firstPersonCharacterCull.FPSController = _agentManager.PrimaryAgent.baseAgentComponent;
-        _firstPersonCharacterCull.SwitchRenderersToHide(_agentManager.PrimaryAgent.VisibilityCapsule);
+        _firstPersonCharacterCull.SwitchRenderersToHide(_agentManager.PrimaryAgent.baseAgentComponent.HeadVisCap);
         _firstPersonCharacterCull.enabled = false;
     }
 

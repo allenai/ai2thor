@@ -313,7 +313,9 @@ public class Agent_XRInteractorLineVisual : MonoBehaviour, IXRCustomReticleProvi
         if (m_LineRenderable.TryGetHitInfo(out m_ReticlePos, out m_ReticleNormal, out m_EndPositionInLine, out var isValidTarget)) {
             BaseFPSAgentController agent = AManager.PrimaryAgent;
             // Check if can teleport there
-            if (agent != null && !agent.TeleportCheck(m_ReticlePos, agent.transform.rotation.eulerAngles, false)) {
+            var pos = m_ReticlePos;
+            pos.y = agent.transform.position.y; ;
+            if (agent != null && !agent.TeleportCheck(pos, agent.transform.rotation.eulerAngles, false)) {
                 isValidTarget = false;
             }
             // End the line at the current hit point.

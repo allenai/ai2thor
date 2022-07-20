@@ -14,6 +14,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject GridRenderer = null;
         public GameObject DebugTargetPointPrefab;
         public GameObject VisibilityCapsule = null;// used to keep track of currently active VisCap: see different vis caps for modes below
+        public GameObject HeadVisCap = null; // meshes used for head
         public GameObject TallVisCap;// meshes used for Tall mode
         public GameObject IKArm; // reference to the IK_Robot_Arm_Controller arm
         public GameObject BotVisCap;// meshes used for Bot mode
