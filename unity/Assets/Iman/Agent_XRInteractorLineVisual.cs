@@ -153,6 +153,8 @@ public class Agent_XRInteractorLineVisual : MonoBehaviour, IXRCustomReticleProvi
         set => m_StopLineAtFirstRaycastHit = value;
     }
 
+    [SerializeField] private XRRayInteractor _rayInteractor;
+
     Vector3 m_ReticlePos;
     Vector3 m_ReticleNormal;
     int m_EndPositionInLine;
@@ -314,8 +316,23 @@ public class Agent_XRInteractorLineVisual : MonoBehaviour, IXRCustomReticleProvi
             BaseFPSAgentController agent = AManager.PrimaryAgent;
             // Check if can teleport there
             var pos = m_ReticlePos;
-            pos.y = agent.transform.position.y; ;
-            if (agent != null && !agent.TeleportCheck(pos, agent.transform.rotation.eulerAngles, false)) {
+            pos.y = agent.transform.position.y;
+            _rayInteractor.TryGetCurrentRaycast(out var raycastHit,
+                out var raycastHitIndex,
+                out var raycastResult,
+                out var raycastResultIndex,
+                out var isUIHitClosest);
+
+            SimObjPhysics simObject = null;
+            if (raycastHit.HasValue && raycastHit.Value.rigidbody != null)
+                raycastHit.Value.rigidbody.TryGetComponent<SimObjPhysics>(out simObject);
+
+
+            if (agent != null &&
+                simObject != null &&
+                simObject.ObjType == SimObjType.Floor &&
+                !agent.TeleportCheck(pos, agent.transform.rotation.eulerAngles, false)) 
+            {
                 isValidTarget = false;
             }
             // End the line at the current hit point.

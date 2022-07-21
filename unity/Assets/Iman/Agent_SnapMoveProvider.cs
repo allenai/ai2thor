@@ -62,8 +62,6 @@ public class Agent_SnapMoveProvider : MonoBehaviour
         set => m_MoveAmount = value;
     }
 
-    [SerializeField] private UnityEvent _onMoveEvent = new UnityEvent();
-
     float m_TimeStarted;
 
     private AgentManager AManager = null;
@@ -131,7 +129,6 @@ public class Agent_SnapMoveProvider : MonoBehaviour
 
         if (action["action"] != null) {
             agent.ProcessControlCommand(action);
-            _onMoveEvent?.Invoke();
         }
     }
 }

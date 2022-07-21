@@ -33,21 +33,39 @@ public class XRManager : MonoBehaviour
 
     [SerializeField] private UnityEvent<bool> _onTogglePOVEvent = new UnityEvent<bool>();
 
-    private enum ControllerType {
+    private enum ControllerMode {
         user = 0,
         agent = 1
     }
 
     private AgentManager _agentManager = null;
-    private ControllerType _controllerType = ControllerType.user;
+    private ControllerMode _controllerType = ControllerMode.user;
     private bool _isFPSMode = false;
 
+    public bool IsFPSMode{
+        get { return _isFPSMode; }
+    }
+
+    public TMP_Text ModeText {
+        get { return _modeText; }
+    }
+
+    public static XRManager Instance { get; private set; }
+
     private void Awake() {
+        // If there is an instance, and it's not me, delete myself.
+
+        if (Instance != null && Instance != this) {
+            Destroy(this);
+        } else {
+            Instance = this;
+        }
+
         //Initialize
         _agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
-        _rightThumbstickPressReference.action.performed += ToggleControllerMode;
-        _leftThumbstickPressReference.action.performed += ToggleControllerMode;
+        _rightThumbstickPressReference.action.performed += ToggleLocomotionMode;
+        _leftThumbstickPressReference.action.performed += ToggleLocomotionMode;
 
         _rightPrimaryPressReference.action.performed += TogglePOV;
         _leftPrimaryPressReference.action.performed += TogglePOV;
@@ -68,7 +86,7 @@ public class XRManager : MonoBehaviour
     }
 
     // Called when you want to toggle controller mode
-    private void ToggleControllerMode(InputAction.CallbackContext context) {
+    private void ToggleLocomotionMode(InputAction.CallbackContext context) {
         _controllerType = ~_controllerType;
         bool value = Convert.ToBoolean((int)_controllerType);
 
@@ -76,12 +94,12 @@ public class XRManager : MonoBehaviour
 
         if (value) {
             _onAgentControllerEvent?.Invoke();
-            _modeText.text = "Locomotion Mode: Agent";
+            _modeText.text = "Locomotion: Agent";
             _modeText.color = Color.blue;
             StartCoroutine("FadeText");
         } else {
             _onUserControllerEvent?.Invoke();
-            _modeText.text = "Locomotion Mode: User";
+            _modeText.text = "Locomotion: User";
             _modeText.color = Color.red;
             StartCoroutine("FadeText");
         }
@@ -105,7 +123,12 @@ public class XRManager : MonoBehaviour
         _onTogglePOVEvent?.Invoke(_isFPSMode);
     }
 
-    private IEnumerator FadeText() {
+    public void FadeText() {
+        StopCoroutine("FadeTextCoroutine");
+        StartCoroutine("FadeTextCoroutine");
+    }
+
+    private IEnumerator FadeTextCoroutine() {
         float timer = 0;
         while (timer < _fadeTime) {
             timer += Time.deltaTime;

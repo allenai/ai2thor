@@ -177,17 +177,7 @@ public class Agent_TeleportationArea : XRBaseInteractable {
             teleportRequest.destinationPosition.y = agent.transform.position.y;
             if (agent != null) {
                 if (agent.TeleportCheck(teleportRequest.destinationPosition, teleportRequest.destinationRotation.eulerAngles, false)) {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
-                    action["action"] = "TeleportFull";
-                    action["x"] = teleportRequest.destinationPosition.x;
-                    action["y"] = teleportRequest.destinationPosition.y;
-                    action["z"] = teleportRequest.destinationPosition.z;
-                    Vector3 rotation = teleportRequest.destinationRotation.eulerAngles;
-                    action["rotation"] = agent.transform.rotation.eulerAngles;
-                    action["horizon"] = agent.m_Camera.transform.localEulerAngles.x;
-                    action["standing"] = agent.isStanding();
-                    action["forceAction"] = true;
-                    agent.ProcessControlCommand(action);
+                    StartCoroutine(TeleportCoroutine(agent, teleportRequest));
 
                     if (m_Teleporting != null) {
                         using (m_TeleportingEventArgs.Get(out var args)) {
@@ -199,6 +189,29 @@ public class Agent_TeleportationArea : XRBaseInteractable {
                     }
                 }
             }
+        }
+    }
+
+    private IEnumerator TeleportCoroutine(PhysicsRemoteFPSAgentController agent, TeleportRequest teleportRequest) {
+        Dictionary<string, object> action = new Dictionary<string, object>();
+        action["action"] = "TeleportFull";
+        action["x"] = teleportRequest.destinationPosition.x;
+        action["y"] = teleportRequest.destinationPosition.y;
+        action["z"] = teleportRequest.destinationPosition.z;
+        Vector3 rotation = teleportRequest.destinationRotation.eulerAngles;
+        action["rotation"] = agent.transform.rotation.eulerAngles;
+        action["horizon"] = agent.m_Camera.transform.localEulerAngles.x;
+        action["standing"] = agent.isStanding();
+        action["forceAction"] = true;
+
+        if (ScreenFader.Instance != null && XRManager.Instance.IsFPSMode) {
+            yield return ScreenFader.Instance.StartFadeOut();
+
+            agent.ProcessControlCommand(action);
+
+            yield return ScreenFader.Instance.StartFadeIn();
+        } else {
+            agent.ProcessControlCommand(action);
         }
     }
 

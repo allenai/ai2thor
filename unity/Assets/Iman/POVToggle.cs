@@ -18,6 +18,8 @@ public class POVToggle : MonoBehaviour
     private Quaternion _orignalCameraOffsetRot = Quaternion.identity;
     private Vector3 _orignalXROriginPos = Vector3.zero;
     private Quaternion _orignalXROriginRot = Quaternion.identity;
+    private Vector3 _lastAgentCameraPos = Vector3.zero;
+    private Quaternion _lastAgentCameratRot = Quaternion.identity;
     private bool _isFPSMode = false;
 
     private void Start() {
@@ -42,9 +44,9 @@ public class POVToggle : MonoBehaviour
             _orignalXROriginRot = _xrOrigin.transform.rotation;
 
             yield return _screenFader.StartFadeOut();
-            
 
             SetFPSCameraTransform();
+            StartCoroutine("UpdateFPSCamera");
 
             if (_firstPersonCharacterCull != null) {
                 _firstPersonCharacterCull.enabled = true;
@@ -53,11 +55,12 @@ public class POVToggle : MonoBehaviour
             yield return _screenFader.StartFadeIn();
         } else {
             yield return _screenFader.StartFadeOut();
+            StopCoroutine("UpdateFPSCamera");
             var angleDegrees = _xrOrigin.transform.rotation.eulerAngles.y - _orignalXROriginRot.eulerAngles.y;
-            _cameraOffset.localPosition = _orignalCameraOffsetPos;
-            _cameraOffset.localRotation = _orignalCameraOffsetRot;
             _xrOrigin.transform.position = _orignalXROriginPos;
             _xrOrigin.transform.rotation = _orignalXROriginRot;
+            _cameraOffset.localPosition = _orignalCameraOffsetPos;
+            _cameraOffset.localRotation = _orignalCameraOffsetRot;
 
             _xrOrigin.RotateAroundCameraUsingOriginUp(angleDegrees);
             if (_firstPersonCharacterCull != null) {
@@ -68,11 +71,27 @@ public class POVToggle : MonoBehaviour
         }
     }
 
-    public void SetFPSCameraTransform() {
+    private IEnumerator UpdateFPSCamera() {
+        while (_isFPSMode) {
+            var agent = _agentManager.PrimaryAgent;
+            var agentCamera = agent.m_Camera;
+            if (!agentCamera.transform.position.Equals(_lastAgentCameraPos) ||
+                !agentCamera.transform.rotation.Equals(_lastAgentCameratRot)) {
+                SetFPSCameraTransform();
+            }
+
+            yield return null;
+        }
+    }
+
+    private void SetFPSCameraTransform() {
         if (_isFPSMode) {
             _trackedPoseDriver.enabled = false;
             var agent = _agentManager.PrimaryAgent;
             var agentCamera = agent.m_Camera;
+
+            _lastAgentCameraPos = agentCamera.transform.position;
+            _lastAgentCameratRot = agentCamera.transform.rotation;
 
             // Reset cameraOffset transfrom
             _cameraOffset.localPosition = _orignalCameraOffsetPos;

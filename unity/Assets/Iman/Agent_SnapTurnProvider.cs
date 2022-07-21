@@ -70,8 +70,6 @@ public class Agent_SnapTurnProvider : MonoBehaviour
         set => m_EnableTurnLeftRight = value;
     }
 
-    [SerializeField] private UnityEvent _onTurnEvent = new UnityEvent();
-
     float m_CurrentTurnAmount;
     float m_TimeStarted;
 
@@ -158,7 +156,6 @@ public class Agent_SnapTurnProvider : MonoBehaviour
         }
         if (action["action"] != null) {
             agent.ProcessControlCommand(action);
-            _onTurnEvent?.Invoke();
         }
 
     }

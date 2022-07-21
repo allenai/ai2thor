@@ -9,6 +9,17 @@ public class ScreenFader : MonoBehaviour {
     [SerializeField] private Color _color = Color.black;
     [SerializeField] private Material _fadeMaterial = null;
 
+    public static ScreenFader Instance { get; private set; }
+
+    private void Awake() {
+        // If there is an instance, and it's not me, delete myself.
+        if (Instance != null && Instance != this) {
+            Destroy(this);
+        } else {
+            Instance = this;
+        }
+    }
+
     private void OnRenderImage(RenderTexture source, RenderTexture destination) {
         _fadeMaterial.SetFloat("_Alpha", _alpha);
         _fadeMaterial.SetColor("_FadeColor", _color);
