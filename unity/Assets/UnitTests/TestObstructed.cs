@@ -23,6 +23,7 @@ namespace Tests {
             action["action"] = "Initialize";
             action["fieldOfView"] = 90f;
             action["snapToGrid"] = true;
+            action["visibilityScheme"] = "Distance";
             //action["scene"] = "FloorPlan402_physics";
             yield return step(action);
 
