@@ -1957,6 +1957,7 @@ namespace Thor.Procedural {
                 bool? newStanding = house.metadata.agentPoses[agentManager.agentMode].standing;
                 if (newPosition != null) {
                     bfps.transform.position = newPosition;
+                    bfps.autoSyncTransforms();//make sure to sync transforms after teleporting to ensure rigidbody/transforms are all updated even if a frame hasn't passed
 
                     Vector3 target = new Vector3(
                         newPosition.x,
