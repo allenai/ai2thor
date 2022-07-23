@@ -4,15 +4,15 @@ using NUnit.Framework;
 using System;
 using UnityEngine;
 using UnityEngine.TestTools;
-using UnityStandardAssets.Characters.FirstPerson;
 using Thor.Procedural;
 using Thor.Procedural.Data;
 using System.Linq;
+using System.IO;
+using System.Media;
 
 namespace Tests {
     public class TestRendering : TestBaseProcedural
     {
-
         protected HouseTemplate houseTemplate = new HouseTemplate() {
                     id = "house_0",
                     // TODO, some assumptions can be done to place doors and objects in `layout`
@@ -31,16 +31,7 @@ namespace Tests {
                             0 2 2 2 2 0
                             0 2 2 2 = 0
                             0 1 1 1 = 0
-                            0 1 * 1 + 0
-                            0 0 0 0 0 0
-                        "
-                        ,
-                        $@"
-                            0 0 0 0 0 0
-                            0 2 2 2 2 0
-                            0 2 2 2 2 0
                             0 1 1 1 1 0
-                            0 1 1 1 $ 0
                             0 0 0 0 0 0
                         "
                     },
@@ -68,25 +59,12 @@ namespace Tests {
                             wallHeight = 3.0f
                         }}
                     },
-                    holes = new Dictionary<string, WallRectangularHole>() {
+                    doors = new Dictionary<string, WallRectangularHole>() {
                         {"=", new Thor.Procedural.Data.Door(){ 
                             openness = 1.0f,
                             assetId = "Doorway_1",
                             room0 = "1"
 
-                        }}
-                    },
-                    objects = new Dictionary<string, HouseObject>() {
-                        {"*", new HouseObject(){ 
-                            assetId = "Dining_Table_16_2",
-                            rotation = new FlexibleRotation() { axis = new Vector3(0, 1, 0), degrees = 90}
-                        }},
-                        {"+", new HouseObject(){ 
-                            assetId = "Chair_007_1"
-                        }},
-                        {"$", new HouseObject(){ 
-                            assetId = "Apple_4",
-                            position = new Vector3(0, 2, 0)
                         }}
                     },
                     proceduralParameters = new ProceduralParameters() {
@@ -98,7 +76,7 @@ namespace Tests {
                 };
 
         [UnityTest]
-        public IEnumerator TestRgbImage() {
+        public IEnumerator TestUnlitRgbImage() {
             // $@"
             // 0 0 0 0 0 0
             // 0 2 2 2 2 0
@@ -109,47 +87,189 @@ namespace Tests {
             // ",
             var house = createTestHouse();
 
-            Dictionary<string, object> action = new Dictionary<string, object>();
+            yield return Initialize();
 
-            action["action"] = "Initialize";
-            action["fieldOfView"] = 90f;
-            action["snapToGrid"] = true;
-            action["procedural"] = true;
-            yield return step(action);
-
-
-            Debug.Log("Pre Agent pos " + this.agentManager.getLastActionMetadata().agent.position);
-
-            action.Clear();
+            Debug.Log("Pre Agent pos " + this.getLastActionMetadata().agent.position);
 
             ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
 
-            
-            action["action"] = "TeleportFull";
-            action["position"] = new Vector3(4.0f, 2.0f, 2.0f);
-            action["rotation"] = new Vector3(0, 0, 0);
-            action["horizon"] = 0.0f;
-            action["standing"] = true;
-            action["forceAction"] = true;
+            yield return step(
+                new Dictionary<string, object>() {
+                    { "position", new Vector3(3.0f, 1.0f, 1.0f)},
+                    { "rotation", new Vector3(0, 180, 0)},
+                    { "horizon", 0.0f},
+                    { "standing", true},
+                    { "forceAction", true},
+                    { "action", "TeleportFull"}
+            });
 
+            var rgbBytes = this.renderPayload.Find(e => e.Key == "image").Value;
 
-            yield return step(action);
-
-            Debug.Log("Agent pos " + this.agentManager.getLastActionMetadata().agent.position);
-
-
-
-           
-           
-            yield return true;
+            // Unlit red wall
+            Assert.True(
+                rgbBytes.Select((pixel, index) => (pixel, index))
+                .All(
+                    e => e.index % 3 == 0 && e.pixel == 255 || e.index % 3 != 0 && e.pixel == 0)
+            );
         }
+
+        [UnityTest]
+        public IEnumerator TestLitRgbImage() {
+            // $@" // A is agent
+            // 0 0 0 0 0 0
+            // 0 2 2 2 2 0
+            // 0 2 2 2 2 0
+            // 0 A 1 1 1 0
+            // 0 1 1 1 1 0
+            // 0 0 0 0 0 0
+            // ",
+            foreach (var room in houseTemplate.rooms.Values) {
+                room.wallTemplate.unlit = false;
+            }
+            houseTemplate.objectsLayouts = houseTemplate.objectsLayouts.Concat(
+                new List<string>() {
+                        $@"
+                            0 0 0 0 0 0
+                            0 2 2 2 2 0
+                            0 2 2 2 2 0
+                            0 1 1 1 1 0
+                            0 1 1 1 + 0
+                            0 0 0 0 0 0
+                        "
+                    }
+            ).ToList();
+            houseTemplate.objects = new Dictionary<string, HouseObject>() {
+                {"+", new HouseObject(){ 
+                    assetId = "Chair_007_1",
+                    kinematic = true
+                }}
+            };
+            
+            var house = createTestHouse();
+
+            yield return Initialize();
+            
+            ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
+
+            Debug.Log($"Window width {Screen.width} height {Screen.height}");
+            // Does not work in editor
+            Screen.SetResolution(600, 600, false);
+            Debug.Log($"After Window width {Screen.width} height {Screen.height}");
+
+            yield return step(
+                new Dictionary<string, object>() {
+                    { "position", new Vector3(3.0f, 1.0f, 1.0f)},
+                    { "rotation", new Vector3(0, 0, 0)},
+                    { "horizon", 0.0f},
+                    { "standing", true},
+                    { "forceAction", true},
+                    { "action", "TeleportFull"}
+            });
+
+            var rgbBytes = this.renderPayload.Find(e => e.Key == "image").Value;
+
+            Debug.Log($" path  {getTestResourcesPath("img")}");
+
+            savePng(rgbBytes, getTestResourcesPath("test.png", false));
+
+            var tex = Resources.Load<Texture2D>(getTestResourcesPath("img"));
+
+            var t = duplicateTexture(tex);
+            // t.EncodeToPNG()
+
+            t.ReadPixels(agentManager.readPixelsRect, 0 , 0);
+            t.Apply();
+
+            var compareToPixels = t.GetRawTextureData();;
+
+            savePng(compareToPixels, getTestResourcesPath("test_comp.png", false));
+
+            // Debug.Log("render " + render + " null " + (render == null));
+            Debug.Log("render size "+ rgbBytes.Count() + " compare size  " + compareToPixels.Count());
+            
+             Debug.Log("template: " + this.serializeObject(houseTemplate));
+            // TODO, assertion not working on build machine due to unity's lack of support for determining
+            // player screen width in editor and UTF reliance on editor for testing
+
+            // Assert.True(
+            //     rgbBytes.Zip(compareToPixels, (pixel, comp) => (pixel, comp))
+            //             .All(e => e.pixel == e.comp)
+            // );
+        
+        }
+
+             Texture2D duplicateTexture(Texture2D source)
+     {
+         RenderTexture renderTex = RenderTexture.GetTemporary(
+                     source.width,
+                     source.height,
+                     0,
+                     RenderTextureFormat.Default,
+                     RenderTextureReadWrite.Linear);
+     
+         Graphics.Blit(source, renderTex);
+         RenderTexture previous = RenderTexture.active;
+         RenderTexture.active = renderTex;
+         Texture2D readableText = new Texture2D(source.width, source.height);
+         readableText.ReadPixels(new Rect(0, 0, renderTex.width, renderTex.height), 0, 0);
+         readableText.Apply();
+         RenderTexture.active = previous;
+         RenderTexture.ReleaseTemporary(renderTex);
+         return readableText;
+     }
+
+     [UnityTest]
+
+     public IEnumerator TestDepth() {
+         // $@" // A is agent
+            // 0 0 0 0 0 0
+            // 0 2 2 2 2 0
+            // 0 2 2 2 2 0
+            // 0 A 1 1 1 0
+            // 0 1 1 1 1 0
+            // 0 0 0 0 0 0
+            // ",
+        yield return step(new Dictionary<string, object>() {
+                { "gridSize", 0.25f},
+                { "agentCount", 1},
+                { "fieldOfView", 90f},
+                { "snapToGrid", false},
+                { "procedural", true},
+                { "renderDepthImage", true},
+                { "action", "Initialize"}
+        });
+        var house = createTestHouse();
+        ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
+
+        yield return step(
+            new Dictionary<string, object>() {
+                { "position", new Vector3(3.0f, 1.0f, 4.0f)},
+                { "rotation", new Vector3(0, 180, 0)},
+                { "horizon", 0.0f},
+                { "standing", true},
+                { "forceAction", true},
+                { "action", "TeleportFull"}
+        });
+
+        var depth = this.renderPayload.Find(e => e.Key == "image_depth").Value;
+
+        var itemSize = depth.Length /( Screen.width * Screen.height);
+
+        var centerIndex = (Screen.height/2) + ((Screen.width/2) * Screen.height);
+
+       
+        
+        Debug.Log($"Screen width: {Screen.width} height: {Screen.height}, Depth Element size: {itemSize}");
+        // TODO: Convert byte array into floats
+        Debug.Log($"r {depth[centerIndex]} g {depth[centerIndex+1]} b {depth[centerIndex+2]} a {depth[centerIndex+3]} r1 {depth[centerIndex+4]}");
+
+     }
 
          protected virtual ProceduralHouse createTestHouse() {
             var house = Templates.createHouseFromTemplate(
                 this.houseTemplate
             );
-
-            Debug.Log($"#######   TEST HOUSE:\n {serializeHouse(house)}");
+            Debug.Log($"####### TEST HOUSE:\n {serializeHouse(house)}");
             return house;
         }
 

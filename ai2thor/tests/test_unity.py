@@ -15,6 +15,7 @@ from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
 from PIL import ImageChops, ImageFilter, Image
 import glob
+import cv2
 
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
@@ -31,8 +32,8 @@ class ThirdPartyCameraMetadata:
     rotation = "rotation"
     fieldOfView = "fieldOfView"
 
-class TestController(Controller):
 
+class TestController(Controller):
     def unity_command(self, width, height, headless):
         command = super().unity_command(width, height, headless)
         # force OpenGLCore to get used so that the tests run in a consistent way
@@ -48,12 +49,13 @@ def build_controller(**args):
     # build instead of 'local'
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
+        print("args test controller")
+        print(default_args)
         c = TestController(**default_args)
 
     # used for resetting
     c._original_initialization_parameters = c.initialization_parameters
     return c
-
 
 _wsgi_controller = build_controller(server_class=WsgiServer)
 _fifo_controller = build_controller(server_class=FifoServer)
@@ -78,6 +80,15 @@ def reset_controller(controller):
 
     return controller
 
+
+def save_image(file_path, image, flip_br=False):
+    img = image
+    if flip_br:
+        img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    cv2.imwrite(file_path, img)
+
+def depth_to_gray_rgb(data):
+    return (255.0 / data.max() * (data - data.min())).astype(np.uint8)
 
 @pytest.fixture
 def wsgi_controller():
@@ -129,8 +140,38 @@ def assert_near(point1, point2, error_message=""):
         )
 
 
-def assert_images_near(image1, image2, max_mean_pixel_diff=1):
-    return np.mean(np.abs(image1 - image2).flatten()) <= max_mean_pixel_diff
+def assert_images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, filepath=""):
+    result = np.mean(np.abs(image1 - image2).flatten()) <= max_mean_pixel_diff
+    if not result and debug_save:
+        # TODO put images somewhere accessible
+        dx = np.where(~np.all(image1 == image2, axis=-1))
+        img_copy = image1.copy()
+        img_copy[dx] = (255, 0, 255)
+        test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
+        save_image(f'{test_name}_diff.png', img_copy)
+        save_image(f'{test_name}_fail.png', image1)
+        print(f'Saved failed test images in "{os.path.join(os.getcwd())}"')
+
+    return result
+
+def assert_depth_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath=""):
+    result = np.allclose(depth1, depth2, atol=epsilon)
+    if not result and debug_save:
+        depth1_gray = depth_to_gray_rgb(depth1)
+        depth_copy = cv2.cvtColor(depth1_gray, cv2.COLOR_GRAY2RGB)
+        dx = np.where(~np.all(depth1 == depth2, axis=-1))
+        print(depth_copy.shape)
+        depth_copy[dx] = (255, 0, 255)
+        test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
+        save_image(f'{test_name}_diff.png', depth_copy)
+        save_image(f'{test_name}_fail.png', depth1_gray)
+        np.save(
+            f'{test_name}_fail_raw.npy',
+            depth1.astype(np.float32),
+        ),
+        print(f'Saved failed test images in "{os.path.join(os.getcwd())}"')
+    return result
+
 
 
 def assert_images_far(image1, image2, min_mean_pixel_diff=10):

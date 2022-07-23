@@ -2068,7 +2068,7 @@ namespace Thor.Procedural {
             if (goDb.ContainsKey(ho.assetId)) {
 
                 var go = goDb.getAsset(ho.assetId);
-                Debug.Log($" Obj id = {ho.id} asset {ho.assetId} rot {ho.rotation} null {ho.rotation == null}");
+               
                 return spawnSimObjPrefab(
                     prefab: go,
                     id: ho.id,

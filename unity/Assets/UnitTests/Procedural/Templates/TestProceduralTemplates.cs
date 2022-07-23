@@ -68,7 +68,7 @@ namespace Tests {
                             wallHeight = 3.0f
                         }}
                     },
-                    holes = new Dictionary<string, WallRectangularHole>() {
+                    doors = new Dictionary<string, WallRectangularHole>() {
                         {"=", new Thor.Procedural.Data.Door(){ 
                             openness = 1.0f,
                             assetId = "Doorway_1",
@@ -118,7 +118,7 @@ namespace Tests {
                 new Vector3(2.0f, 0.0f, 4.0f),
                 new Vector3(2.0f, 0.0f, 0.0f)
             };
-            Assert.IsTrue(house.rooms.Find(r => r.id == "2").floorPolygon.Select((p, i) => (point: p, index: i)).ToList().TrueForAll(e => room2Poly.ElementAt(e.index) == e.point));
+            Assert.IsTrue(house.rooms.Find(r => r.id == "2").floorPolygon.Select((p, i) => (point: p, index: i)).All(e => room2Poly.ElementAt(e.index) == e.point));
 
             var room1Poly = new List<Vector3>() {
                 new Vector3(2.0f, 0.0f, 0.0f),
@@ -126,7 +126,7 @@ namespace Tests {
                 new Vector3(4.0f, 0.0f, 4.0f),
                 new Vector3(4.0f, 0.0f, 0.0f)
             };
-            Assert.IsTrue(house.rooms.Find(r => r.id == "1").floorPolygon.Select((p, i) => (point: p, index: i)).ToList().TrueForAll(e => room1Poly.ElementAt(e.index) == e.point));
+            Assert.IsTrue(house.rooms.Find(r => r.id == "1").floorPolygon.Select((p, i) => (point: p, index: i)).All(e => room1Poly.ElementAt(e.index) == e.point));
             yield return true;
         }
 
@@ -145,7 +145,7 @@ namespace Tests {
            
             Assert.AreEqual(house.walls.Count, 8);
 
-            Assert.IsTrue(house.walls.TrueForAll(w => w.polygon.Max(p => p.y) == houseTemplate.rooms[w.roomId].wallHeight));
+            Assert.IsTrue(house.walls.All(w => w.polygon.Max(p => p.y) == houseTemplate.rooms[w.roomId].wallHeight));
             
             var room2WallPoints = new List<(Vector3, Vector3)>() {
                 (new Vector3(0.0f, 0.0f, 0.0f), new Vector3(0.0f, 0.0f, 4.0f)),
@@ -153,7 +153,7 @@ namespace Tests {
                 (new Vector3(2.0f, 0.0f, 4.0f), new Vector3(2.0f, 0.0f, 0.0f)),
                 (new Vector3(2.0f, 0.0f, 0.0f), new Vector3(0.0f, 0.0f, 0.0f))
             };
-            Assert.IsTrue(house.walls.Where(w => w.roomId == "2").Select((wall, index) => (wall, index)).ToList().TrueForAll(e => room2WallPoints.ElementAt(e.index) == (e.wall.polygon[0], e.wall.polygon[1])));
+            Assert.IsTrue(house.walls.Where(w => w.roomId == "2").Select((wall, index) => (wall, index)).All(e => room2WallPoints.ElementAt(e.index) == (e.wall.polygon[0], e.wall.polygon[1])));
 
             var room1WallPoints = new List<(Vector3, Vector3)>() {
                 (new Vector3(2.0f, 0.0f, 0.0f), new Vector3(2.0f, 0.0f, 4.0f)),
@@ -161,7 +161,7 @@ namespace Tests {
                 (new Vector3(4.0f, 0.0f, 4.0f), new Vector3(4.0f, 0.0f, 0.0f)),
                 (new Vector3(4.0f, 0.0f, 0.0f), new Vector3(2.0f, 0.0f, 0.0f))
             };
-            Assert.IsTrue(house.walls.Where(w => w.roomId == "1").Select((wall, index) => (wall, index)).ToList().TrueForAll(e => room1WallPoints.ElementAt(e.index) == (e.wall.polygon[0], e.wall.polygon[1])));
+            Assert.IsTrue(house.walls.Where(w => w.roomId == "1").Select((wall, index) => (wall, index)).All(e => room1WallPoints.ElementAt(e.index) == (e.wall.polygon[0], e.wall.polygon[1])));
         
             yield return true;
         }
@@ -187,11 +187,22 @@ namespace Tests {
             var apple = house.objects.Find(x => x.id == "$");
 
             // TODO add y position of floor to house Template object
-            Assert.IsTrue(table.position == new Vector3(4.0f, 0.0f, 2.0f));
+            Debug.Log(table.position);
+            // Without bounding box center offset
+            // Assert.IsTrue(table.position == new Vector3(4.0f, 0.0f, 2.0f));
+            var delta = 1e-1;
+            Assert.That(Vector3.Distance(table.position, new Vector3(3.7f, 0.8f, 1.7f)), Is.LessThanOrEqualTo(delta));
             Assert.IsTrue(table.assetId == "Dining_Table_16_2");
-            Assert.IsTrue(chair.position == new Vector3(4.0f, 0.0f, 4.0f));
+            Debug.Log(chair.position);
+            // Assert.IsTrue(chair.position == new Vector3(4.0f, 0.0f, 4.0f));
+
+            Assert.That(Vector3.Distance(chair.position, new Vector3(3.2f, 1.0f, 3.2f)), Is.LessThanOrEqualTo(delta));
             Assert.IsTrue(chair.assetId == "Chair_007_1");
-            Assert.IsTrue(apple.position == new Vector3(4.0f, 2.0f, 4.0f));
+            Debug.Log(apple.position);
+            // Assert.IsTrue(apple.position == new Vector3(4.0f, 2.0f, 4.0f));
+
+            Assert.That(Vector3.Distance(apple.position, new Vector3(3.1f, 2.1f, 3.1f)), Is.LessThanOrEqualTo(delta));
+            
             Assert.IsTrue(apple.assetId == "Apple_4");
             Assert.AreEqual(table.room, "1");
             Assert.AreEqual(chair.room, "1");
@@ -266,7 +277,7 @@ namespace Tests {
             var room2 = house.rooms.Find(r => r.id == "2");
             Assert.IsTrue(room2.ceilings.Count == 1);
             Assert.IsTrue(room2.ceilings[0].material == houseTemplate.proceduralParameters.ceilingMaterial);
-            Assert.IsTrue(room2.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).ToList().TrueForAll(e => room2Poly.ElementAt(e.index) == e.point));
+            Assert.IsTrue(room2.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).All(e => room2Poly.ElementAt(e.index) == e.point));
 
             var room1Poly = new List<Vector3>() {
                 new Vector3(2.0f, 0.0f, 0.0f),
@@ -278,7 +289,7 @@ namespace Tests {
             var room1 = house.rooms.Find(r => r.id == "1");
             Assert.IsTrue(room1.ceilings.Count == 1);
             Assert.IsTrue(room1.ceilings[0].material == houseTemplate.proceduralParameters.ceilingMaterial);
-            Assert.IsTrue(room1.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).ToList().TrueForAll(e => room1Poly.ElementAt(e.index) == e.point));
+            Assert.IsTrue(room1.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).All(e => room1Poly.ElementAt(e.index) == e.point));
             yield return true;
         }
 

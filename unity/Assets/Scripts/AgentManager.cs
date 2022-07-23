@@ -36,8 +36,8 @@ public class AgentManager : MonoBehaviour {
     protected int robosimsPort = 8200;
     protected string robosimsHost = "127.0.0.1";
     protected string ENVIRONMENT_PREFIX = "AI2THOR_";
-    private Texture2D tex;
-    private Rect readPixelsRect;
+    public Texture2D tex;
+    public Rect readPixelsRect;
     private int currentSequenceId;
     private int activeAgentId;
     private bool renderImage = true;
@@ -59,8 +59,6 @@ public class AgentManager : MonoBehaviour {
     private serverTypes serverType;
     private AgentState agentManagerState = AgentState.Emit;
     private bool fastActionEmit = true;
-
-    private MultiAgentMetadata lastActionMetadata = null;
 
     // it is public to be accessible from the debug input field.
     public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera", "ChangeQuality" };
@@ -886,10 +884,6 @@ public class AgentManager : MonoBehaviour {
         StartCoroutine(WaitOnResolutionChange(width: x, height: y));
     }
 
-    public MetadataWrapper getLastActionMetadata() {
-        return lastActionMetadata.agents[lastActionMetadata.activeAgentId];
-    }
-
     private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
         if (this.renderInstanceSegmentation || this.renderSemanticSegmentation) {
             if (!agent.imageSynthesis.hasCapturePass("_id")) {
@@ -946,15 +940,14 @@ public class AgentManager : MonoBehaviour {
         ProcessControlCommand(msg);
     }
 
-    private void createPayload(MultiAgentMetadata multiMeta, ThirdPartyCameraMetadata[] cameraMetadata, List<KeyValuePair<string, byte[]>> renderPayload, bool shouldRender) {
-
+    public void createPayload(MultiAgentMetadata multiMeta, ThirdPartyCameraMetadata[] cameraMetadata, List<KeyValuePair<string, byte[]>> renderPayload, bool shouldRender) {
         multiMeta.agents = new MetadataWrapper[this.agents.Count];
         multiMeta.activeAgentId = this.activeAgentId;
         multiMeta.sequenceId = this.currentSequenceId;
 
         RenderTexture currentTexture = null;
 
-        if (shouldRender) {
+        if (shouldRender && RenderTexture.active != null) {
             currentTexture = RenderTexture.active;
             for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
                 ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
@@ -1018,6 +1011,7 @@ public class AgentManager : MonoBehaviour {
 
     private bool canEmit() {
         bool emit = true;
+        // this.agents.TrueForAll(a => a.agentState == AgentState.Emit);
         foreach (BaseFPSAgentController agent in this.agents) {
             if (agent.agentState != AgentState.Emit) {
                 emit = false;
@@ -1057,7 +1051,7 @@ public class AgentManager : MonoBehaviour {
                     agent.agentState = AgentState.Emit;
                 }
             }
-
+                        
             if (!this.canEmit()) {
                 continue;
             }
@@ -1066,7 +1060,6 @@ public class AgentManager : MonoBehaviour {
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
             List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
             createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
-            this.lastActionMetadata = multiMeta;
 
 #if UNITY_WEBGL
                 JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
@@ -1097,12 +1090,9 @@ public class AgentManager : MonoBehaviour {
                         this.sock.Connect(hostep);
                     } catch (SocketException e) {
                         var msg = e.ToString();
-#if UNITY_EDITOR
-                        break;
-#endif
-                        // wrapping the message in !UNITY_EDITOR to avoid unreachable code warning
-#if !UNITY_EDITOR
                         Debug.Log("Socket exception: " + msg);
+#if UNITY_EDITOR        
+                        break;
 #endif
                     }
                 }
@@ -1258,6 +1248,14 @@ public class AgentManager : MonoBehaviour {
 
     public BaseFPSAgentController GetActiveAgent() {
         return this.agents[activeAgentId];
+    }
+
+    public int getActiveAgentId() {
+        return this.activeAgentId;
+    }
+
+    public int getThirdPartyCameraCount() {
+        return this.thirdPartyCameras.Count;
     }
 
     private int parseContentLength(string header) {

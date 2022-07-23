@@ -26,9 +26,20 @@ namespace Thor.Procedural {
 
         public IEnumerable<string> objectsLayouts;
         public Dictionary<string, RoomTemplate> rooms;
-        public Dictionary<string, WallRectangularHole> holes;
+        public Dictionary<string, WallRectangularHole> doors;
+        public Dictionary<string, WallRectangularHole> windows;
         public Dictionary<string, HouseObject> objects;
         public ProceduralParameters proceduralParameters;
+
+        // Creates problems with json serialization
+        // public Dictionary<string, WallRectangularHole> holes {
+        //     get { return 
+        //         doors
+        //             .Select(x => (x.Key, x.Value as WallRectangularHole))
+        //             .Concat(windows.Select(x => (x.Key, x.Value as WallRectangularHole))
+        //         ).ToDictionary(e => e.Key, e => e.Item2);
+        //     }
+        // }
 
     }
 
@@ -66,7 +77,22 @@ namespace Thor.Procedural {
             var layoutStringArray = toStringArray(layout);
             var objectArray = objects.Select(toStringArray).ToArray();
 
-            var doorIds = new HashSet<string>(houseTemplate.holes.Keys.Distinct());
+            IEnumerable<KeyValuePair<string, WallRectangularHole>> holePairs = new List<KeyValuePair<string, WallRectangularHole>>();
+
+            if (houseTemplate.doors != null) {
+                holePairs = holePairs.Concat(houseTemplate.doors);
+            }
+            if (houseTemplate.windows != null) {
+                holePairs = holePairs.Concat(houseTemplate.windows);
+            }
+
+            // var holeTemplates = houseTemplate.doors
+            //         .Select(x => (x.Key, x.Value as WallRectangularHole))
+            //         .Concat(houseTemplate.windows?.Select(x => (x.Key, x.Value as WallRectangularHole))
+            //     ).ToDictionary(e => e.Key, e => e.Item2);
+            var holeTemplates = holePairs.ToDictionary(e => e.Key, e => e.Value);;
+
+            var doorIds = new HashSet<string>(holeTemplates.Keys.Distinct());
             Func<int, int, (int row, int column)[]> manhattanNeighbors = (int row, int column) => new (int row, int column)[]{
                 (row - 1, column),
                 (row, column - 1),
@@ -87,7 +113,7 @@ namespace Thor.Procedural {
                             objectRow.Select(
                                 (id, column) => {
                                     // ignore no door ones
-                                     var isHole = houseTemplate.holes.Keys.Contains(id);
+                                     var isHole = holeTemplates.Keys.Contains(id);
                                     if (isHole) {
 
                                         var neighborIndices = new List<(int row, int column)>() { (row, column) }.Concat(manhattanNeighbors(row, column));
@@ -236,12 +262,16 @@ namespace Thor.Procedural {
             doorDict = doorDict.GroupBy(d => d.Value, new CustomHashSetEqualityComparer<(int, int)>()).ToDictionary(p => p.First().Key, p => p.Key);// .SelectMany(d => d.Select(x => x)).ToDictionary(p => p.Key, p => p.Value);
             var objectIdCounter = new Dictionary<string, int>();
 
+            // TODO -1 be a padding value as the distance between the first room and the zero padding at the
+            // begining of the array in x, z
+            var distToZeros = new Vector3(1.0f, 0.0f, 1.0f);
+
             var holes = doorDict.SelectMany((d, i) => {
                 var holeTemplateId = d.Key.id;
                 var holeStart = d.Key.index; // d.Value.Min();
                 var holeEnd = d.Value.Max();
                 WallRectangularHole hole;
-                var inDict = houseTemplate.holes.TryGetValue(holeTemplateId, out hole);
+                var inDict = holeTemplates.TryGetValue(holeTemplateId, out hole);
 
                 var isDoor = hole is Data.Door;
                 var isWindow = hole is Data.Window;
@@ -361,7 +391,7 @@ namespace Thor.Procedural {
 
                 // TODO -1 be a padding value as the distance between the first room and the zero padding at the
                 // begining of the array in x, z
-                var minVector = new Vector3((float)(holeStartCoords.column - 1), (float)floorTemplate.floorYPosition, 0.0f);
+                var minVector = new Vector3((float)(holeStartCoords.column - distToZeros.x), (float)floorTemplate.floorYPosition, 0.0f);
                 var maxVector = minVector + holeOffset.max;
 
                 hole.boundingBox = new BoundingBox(){
@@ -393,13 +423,27 @@ namespace Thor.Procedural {
                     var roomId = layoutIntArray[coord.row][coord.column];
                     var floorTemplate = houseTemplate.rooms[roomId.ToString()];
                     obj.room = roomIntToId(roomId, floorTemplate.floorTemplate);
-                    obj.position = new Vector3((float)coord.row + obj.position.x, floorTemplate.floorYPosition + obj.position.y, (float)coord.column + obj.position.z);
 
                     if ( string.IsNullOrEmpty(obj.assetId) || !assetMap.ContainsKey(obj.assetId)) {
                         return result;
                     }
 
                     var asset = assetMap.getAsset(obj.assetId);
+
+                    var simObj = asset.GetComponent<SimObjPhysics>();
+                    var bb = simObj.AxisAlignedBoundingBox;
+
+                    var centerOffset =  bb.center + bb.size / 2.0f;
+
+                    // TODO use bounding box to center
+                    obj.position = new Vector3((float)coord.row - distToZeros.x + obj.position.x, floorTemplate.floorYPosition + obj.position.y, (float)coord.column - distToZeros.z + obj.position.z) + centerOffset;// - new Vector3(centerOffset.x, -centerOffset.y, centerOffset.z);
+                    obj.rotation = obj.rotation == null ? new FlexibleRotation() { axis = new Vector3(0.0f, 1.0f, 0.0f), degrees = 0} : obj.rotation;
+
+                    // if ( string.IsNullOrEmpty(obj.assetId) || !assetMap.ContainsKey(obj.assetId)) {
+                    //     return result;
+                    // }
+
+                    // var asset = assetMap.getAsset(obj.assetId);
 
                     // var holeOffset = getHoleAssetBoundingBox(obj.assetId);
                     if (asset != null) {

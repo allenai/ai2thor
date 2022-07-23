@@ -14,10 +14,10 @@ using Thor.Procedural.Data;
 using System.Linq;
 using System.IO;
 
-#if UNITY_EDITOR
 [ExecuteInEditMode]
 public class ProceduralRoomEditor : MonoBehaviour {
     private IEnumerable<NamedSimObj> namedSimObjects;
+    private List<(Vector3, Color)> spheres = new List<(Vector3, Color)>();
     public ProceduralHouse loadedHouse;
     protected class NamedSimObj {
         public string assetId;
@@ -28,6 +28,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
     [UnityEngine.Header("Loading")]
     public string LoadBasePath = "/Resources/rooms/";
     public string layoutJSONFilename;
+
+    #if UNITY_EDITOR
 
     private ProceduralHouse readHouseFromJson(string fileName) {
         var path = BuildLayoutPath(fileName);
@@ -695,8 +697,6 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //     return doorWalls;
     // }
 
-    private List<(Vector3, Color)> spheres = new List<(Vector3, Color)>();
-
     void OnDrawGizmosSelected() {
 
         foreach (var (c, color) in spheres) {
@@ -824,12 +824,10 @@ public class ProceduralRoomEditor : MonoBehaviour {
     }
 
     [Button]
-    public void ReloadScene() {
-#if UNITY_EDITOR        
+    public void ReloadScene() {       
         var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
 
-        UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scene.path);
-#endif        
+        UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scene.path);      
     }
 
     [Button(Expanded = true)]
@@ -1051,14 +1049,5 @@ public class ProceduralRoomEditor : MonoBehaviour {
         var path = Application.dataPath + LoadBasePath + layoutFilename;
         return path;
     }
-    // Start is called before the first frame update
-    void Start() {
-
-    }
-
-    // Update is called once per frame
-    void Update() {
-
-    }
+    #endif
 }
-#endif
