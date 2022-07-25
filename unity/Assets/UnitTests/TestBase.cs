@@ -46,7 +46,7 @@ namespace Tests {
 
         [SetUp]
         public virtual void Setup() {
-            UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan1_physics");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("iTHOR_Kitchen_Train_00");
         }
     }
 }

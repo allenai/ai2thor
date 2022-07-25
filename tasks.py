@@ -1,24 +1,26 @@
-import os
-import sys
-import fcntl
 import datetime
-import json
-import re
-import time
-import zipfile
-import threading
+import fcntl
 import hashlib
-import shutil
-import subprocess
+import io
+import json
+import logging
+import multiprocessing
+import os
 import pprint
 import random
-from invoke import task
+import re
+import shutil
+import subprocess
+import sys
+import threading
+import time
+import zipfile
+
 import boto3
 import botocore.exceptions
-import multiprocessing
-import io
+from invoke import task
+
 import ai2thor.build
-import logging
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -50,8 +52,9 @@ def add_files(zipf, start_dir, exclude_ext=()):
 
 def push_build(build_archive_name, zip_data, include_private_scenes):
     logger.info("start of push_build")
-    import boto3
     from base64 import b64encode
+
+    import boto3
 
     # subprocess.run("ls %s" % build_archive_name, shell=True)
     # subprocess.run("gsha256sum %s" % build_archive_name)
@@ -186,11 +189,13 @@ def generate_build_metadata(metadata_path):
 
 
 def class_dataset_images_for_scene(scene_name):
-    import ai2thor.controller
-    from itertools import product
     from collections import defaultdict
-    import numpy as np
+    from itertools import product
+
     import cv2
+    import numpy as np
+
+    import ai2thor.controller
 
     env = ai2thor.controller.Controller(quality="Low")
     player_size = 300
@@ -386,6 +391,7 @@ def class_dataset_images_for_scene(scene_name):
 @task
 def build_class_dataset(context):
     import concurrent.futures
+
     import ai2thor.controller
 
     multiprocessing.set_start_method("spawn")
@@ -668,6 +674,7 @@ def build_pip_commit(context):
 @task
 def build_pip(context, version):
     import xml.etree.ElementTree as ET
+
     import requests
 
     res = requests.get("https://pypi.org/rss/project/ai2thor/releases.xml")
@@ -1218,9 +1225,10 @@ def ci_build_arch(root_dir, arch, commit_id, include_private_scenes=False):
 
 @task
 def poll_ci_build(context):
-    import requests.exceptions
-    import requests
     import datetime
+
+    import requests
+    import requests.exceptions
 
     commit_id = git_commit_id()
     start_datetime = datetime.datetime.utcnow()
@@ -1545,9 +1553,10 @@ def get_depth(
 def inspect_depth(
     ctx, directory, all=False, indices=None, jet=False, under_score=False
 ):
-    import numpy as np
-    import cv2
     import glob
+
+    import cv2
+    import numpy as np
 
     under_prefix = "_" if under_score else ""
     regex_str = "depth{}(.*)\.png".format(under_prefix)
@@ -1616,8 +1625,9 @@ def inspect_depth(
 def real_2_sim(
     ctx, source_dir, index, scene, output_dir, rotation=0, local_build=False, jet=False
 ):
-    import numpy as np
     import cv2
+    import numpy as np
+
     from ai2thor.util.transforms import transform_real_2_sim
 
     depth_metadata_fn = os.path.join(source_dir, "metadata_{}.json".format(index))
@@ -1664,6 +1674,7 @@ def real_2_sim(
 @task
 def noise_depth(ctx, directory, show=False):
     import glob
+
     import cv2
     import numpy as np
 
@@ -1860,14 +1871,14 @@ def benchmark(
     distance_visibility_scheme=False,
     title=""
 ):
-    import ai2thor.controller
-    import random
+    import os
     import platform
+    import random
     import time
     from functools import reduce
     from pprint import pprint
 
-    import os
+    import ai2thor.controller
     curr = os.path.dirname(os.path.abspath(__file__))
 
     move_actions = ["MoveAhead", "MoveBack", "MoveLeft", "MoveRight"]
@@ -1998,16 +2009,15 @@ def benchmark(
         **args
     )
 
-    # Kitchens:       FloorPlan1 - FloorPlan30
-    # Living rooms:   FloorPlan201 - FloorPlan230
-    # Bedrooms:       FloorPlan301 - FloorPlan330
-    # Bathrooms:      FloorPLan401 - FloorPlan430
-
-    room_ranges = [(1, 30), (201, 230), (301, 330), (401, 430)]
     if scenes:
         scene_list = scenes.split(",")
     else:
-        scene_list = [["FloorPlan{}_physics".format(i) for i in range(room_range[0], room_range[1])] for room_range in room_ranges]
+        scene_list = [
+            f"iTHOR_{scene_type}_{scene_split}_{i:02}"
+            for scene_type in ["Kitchen", "LivingRoom", "Bedroom", "Bathroom"]
+            for scene_split in ["Train", "Val", "Test"]
+            for i in range(20 if scene_split == "Train" else 5)
+        ]
 
     procedural_json_filenames = None
     if house_json_path:
@@ -2024,49 +2034,48 @@ def benchmark(
     scene_count = 0
 
     for scene in scene_list:
-            scene_benchmark = {}
+        scene_benchmark = {}
+        if verbose:
+            print("Loading scene {}".format(scene))
+        if not procedural:
+                env.reset(scene)
+        else:
             if verbose:
-                print("Loading scene {}".format(scene))
-            if not procedural:
-                 env.reset(scene)
-            else:
-                if verbose:
-                    print("------ RESET")
-                env.reset("procedural")
+                print("------ RESET")
+            env.reset("procedural")
 
-            # env.step(dict(action="Initialize", gridSize=0.25))
+        # env.step(dict(action="Initialize", gridSize=0.25))
 
-            if verbose:
-                print("------ {}".format(scene))
+        if verbose:
+            print("------ {}".format(scene))
 
-            # initial_teleport(env)
-            sample_number = number_samples
-            action_tuples = [
-                ("move", move_actions, sample_number),
-                ("rotate", rotate_actions, sample_number),
-                ("look", look_actions, sample_number),
-                ("all", all_actions, sample_number),
-            ]
-            scene_average_fr = 0
-            procedural_house_path = scene if procedural else None
+        # initial_teleport(env)
+        sample_number = number_samples
+        action_tuples = [
+            ("move", move_actions, sample_number),
+            ("rotate", rotate_actions, sample_number),
+            ("look", look_actions, sample_number),
+            ("all", all_actions, sample_number),
+        ]
+        scene_average_fr = 0
+        procedural_house_path = scene if procedural else None
 
-            house = create_procedural_house(procedural_house_path) if procedural else None
+        house = create_procedural_house(procedural_house_path) if procedural else None
 
-            for action_name, actions, n in action_tuples:
+        for action_name, actions, n in action_tuples:
+            telerport_to_random_reachable(env, house)
+            ft = benchmark_actions(env, action_name, actions, n)
+            scene_benchmark[action_name] = ft
+            scene_average_fr += ft
 
-                telerport_to_random_reachable(env, house)
-                ft = benchmark_actions(env, action_name, actions, n)
-                scene_benchmark[action_name] = ft
-                scene_average_fr += ft
+        scene_average_fr = scene_average_fr / float(len(action_tuples))
+        total_average_ft += scene_average_fr
 
-            scene_average_fr = scene_average_fr / float(len(action_tuples))
-            total_average_ft += scene_average_fr
+        if verbose:
+            print("Total average frametime: {}".format(scene_average_fr))
 
-            if verbose:
-                print("Total average frametime: {}".format(scene_average_fr))
-
-            benchmark_map["scenes"][scene] = scene_benchmark
-            scene_count += 1
+        benchmark_map["scenes"][scene] = scene_benchmark
+        scene_count += 1
 
     benchmark_map["average_framerate_seconds"] = total_average_ft / scene_count
     with open(out, "w") as f:
@@ -2118,8 +2127,8 @@ def webgl_deploy(
     force=False,
     extensions_no_cache="",
 ):
+    from os.path import isdir, isfile, join
     from pathlib import Path
-    from os.path import isfile, join, isdir
 
     content_types = {
         ".js": "application/javascript; charset=utf-8",
@@ -2218,56 +2227,28 @@ def webgl_deploy(
 
 @task
 def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable=False):
-    # Main demo
-    demo_selected_scene_indices = [
-        1,
-        3,
-        7,
-        29,
-        30,
-        204,
-        209,
-        221,
-        224,
-        227,
-        301,
-        302,
-        308,
-        326,
-        330,
-        401,
-        403,
-        411,
-        422,
-        430,
-    ]
-    scenes = ["FloorPlan{}_physics".format(x) for x in demo_selected_scene_indices]
-    webgl_build(
-        ctx,
-        scenes=",".join(scenes),
-        directory="builds/demo",
-        content_addressable=content_addressable,
-    )
-
-    webgl_deploy(
-        ctx, source_dir="builds/demo", target_dir="demo", verbose=verbose, force=force
-    )
-
     if verbose:
         print("Deployed selected scenes to bucket's 'demo' directory")
 
     # Full framework demo
-    kitchens = [f"FloorPlan{i}_physics" for i in range(1, 31)]
-    living_rooms = [f"FloorPlan{200 + i}_physics" for i in range(1, 31)]
-    bedrooms = [f"FloorPlan{300 + i}_physics" for i in range(1, 31)]
-    bathrooms = [f"FloorPlan{400 + i}_physics" for i in range(1, 31)]
-    robothor_train = [
-        f"FloorPlan_Train{i}_{j}" for i in range(1, 13) for j in range(1, 6)
+    ithor_scenes = [
+        f"iTHOR_{scene_type}_{scene_split}_{i:02}"
+        for scene_type in ["Kitchen", "LivingRoom", "Bedroom", "Bathroom"]
+        for scene_split in ["Train", "Val", "Test"]
+        for i in range(20 if scene_split == "Train" else 5)
     ]
-    robothor_val = [f"FloorPlan_Val{i}_{j}" for i in range(1, 4) for j in range(1, 6)]
-    scenes = (
-        kitchens + living_rooms + bedrooms + bathrooms + robothor_train + robothor_val
-    )
+    robothor_scenes = [
+        f"RoboTHOR_{scene_split}_{wall_group_i:02}_{instance_i:02}"
+        for scene_split in ["Train", "Val"]
+        for wall_group_i in range(12 if scene_split == "Train" else 3)
+        for instance_i in range(5)
+    ]
+    architecthor_scenes = [
+        f"ArchitecTHOR_{scene_split}_{i:02}"
+        for scene_split in ["Val", "Test"]
+        for i in range(5)
+    ]
+    scenes = ithor_scenes + robothor_scenes + architecthor_scenes
 
     webgl_build(
         ctx,
@@ -2402,8 +2383,8 @@ def webgl_site_deploy(
     force=False,
     verbose=False,
 ):
+    from os.path import isdir, isfile, join
     from pathlib import Path
-    from os.path import isfile, join, isdir
 
     template_dir = Path("unity/Assets/WebGLTemplates/{}".format(template_name))
 
@@ -2435,10 +2416,10 @@ def webgl_site_deploy(
 
 @task
 def mock_client_request(context):
+    import cv2
     import msgpack
     import numpy as np
     import requests
-    import cv2
 
     r = requests.post(
         "http://127.0.0.1:9200/step", json=dict(action="MoveAhead", sequenceId=1)
@@ -3006,8 +2987,9 @@ def visualize_shortest_paths(
     object_types=None,
 ):
     angle = 45
-    import ai2thor.controller
     from PIL import Image
+
+    import ai2thor.controller
 
     controller = ai2thor.controller.Controller(
         width=width,
@@ -3131,6 +3113,7 @@ def fill_in_dataset(
     visibility_distance=1.0,
 ):
     import glob
+
     import ai2thor.controller
 
     dataset_path = os.path.join(dataset_dir, dataset_filename)
@@ -3228,8 +3211,9 @@ def fill_in_dataset(
 
 @task
 def test_teleport(ctx, editor_mode=False, local_build=False):
-    import ai2thor.controller
     import time
+
+    import ai2thor.controller
 
     controller = ai2thor.controller.Controller(
         rotateStepDegrees=30,
@@ -3355,8 +3339,8 @@ def remove_dataset_spaces(ctx, dataset_dir):
 
 @task
 def shortest_path_to_point(ctx, scene, x0, y0, z0, x1, y1, z1, editor_mode=False):
-    import ai2thor.util.metrics as metrics
     import ai2thor.controller
+    import ai2thor.util.metrics as metrics
 
     controller = ai2thor.controller.Controller(
         rotateStepDegrees=30,
@@ -3387,8 +3371,8 @@ def shortest_path_to_point(ctx, scene, x0, y0, z0, x1, y1, z1, editor_mode=False
 
 @task
 def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
-    import ai2thor.util.metrics as metrics
     import ai2thor.controller
+    import ai2thor.util.metrics as metrics
 
     gridSize = 0.25
     controller = ai2thor.controller.Controller(
@@ -3445,8 +3429,9 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
 def get_physics_determinism(
     ctx, scene="FloorPlan1_physics", agent_mode="arm", n=100, samples=100
 ):
-    import ai2thor.controller
     import random
+
+    import ai2thor.controller
 
     num_trials = n
     width = 300
@@ -3471,7 +3456,7 @@ def get_physics_determinism(
         visibilityScheme="Distance",
     )
 
-    from ai2thor.util.trials import trial_runner, ObjectPositionVarianceAverage
+    from ai2thor.util.trials import ObjectPositionVarianceAverage, trial_runner
 
     move_actions = ["MoveAhead", "MoveBack", "MoveLeft", "MoveRight"]
     rotate_actions = ["RotateRight", "RotateLeft"]
@@ -3606,8 +3591,9 @@ def install_dotnet_format(context, force=False):
 
 @task
 def install_dotnet(context, force=False):
-    import requests
     import stat
+
+    import requests
 
     base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
     if not force and os.path.isfile(os.path.join(base_dir, ".dotnet/dotnet")):
@@ -3643,6 +3629,7 @@ def format_py(context):
 @task
 def install_unity_hub(context, target_dir=os.path.join(os.path.expanduser("~"), "local/bin")):
     import stat
+
     import requests
 
     if not sys.platform.startswith("linux"):
@@ -3668,8 +3655,9 @@ def install_unity_hub(context, target_dir=os.path.join(os.path.expanduser("~"), 
 
 @task
 def install_unity_editor(context, version=None, changeset=None):
-    import yaml
     import re
+
+    import yaml
     unity_hub_path = None
     if sys.platform.startswith("linux"):
         unity_hub_path = os.path.join(os.path.expanduser("~"), "local/bin/UnityHub.AppImage")
@@ -3809,16 +3797,17 @@ class {encoded_class_name}:
 
 @task
 def create_room(ctx, file_path="unity/Assets/Resources/rooms/1.json", editor_mode=False, local_build=False):
-    import ai2thor.controller
-    import random
     import json
     import os
+    import random
+
+    import ai2thor.controller
     print(os.getcwd())
     width = 300
     height = 300
     fov = 100
     n = 20
-    import os;
+    import os
     controller = ai2thor.controller.Controller(
         local_executable_path=None,
         local_build=local_build,
@@ -3873,9 +3862,9 @@ def create_room(ctx, file_path="unity/Assets/Resources/rooms/1.json", editor_mod
 
 @task
 def create_json(ctx, file_path, output=None):
-    import json
     import functools
     import itertools
+    import json
     from pprint import pprint
 
     add = lambda x, y: x + y
@@ -3974,11 +3963,12 @@ def create_json(ctx, file_path, output=None):
 
 @task
 def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False):
-    import ai2thor.controller
-    import random
     import json
     import os
+    import random
     import time
+
+    import ai2thor.controller
 
     print(os.getcwd())
     width = 300
@@ -4077,8 +4067,9 @@ def plot(
         height=7.5,
         action_breakdown=False
 ):
-    import matplotlib.pyplot as plt
     from functools import reduce
+
+    import matplotlib.pyplot as plt
     from matplotlib.lines import Line2D
 
     filter = 'all'

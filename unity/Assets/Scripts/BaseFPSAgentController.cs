@@ -842,45 +842,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            string sceneType;
-            if (scene.EndsWith("_physics")) {
-                // iTHOR scene
-                int sceneNumber = Int32.Parse(
-                    scene.Substring(startIndex: "FloorPlan".Length, length: scene.Length - "FloorPlan_physics".Length)
-                ) % 100;
+            string sceneSplit;
+            if (scene.StartsWith("iTHOR")) {
+                string[] splitSceneName = scene.Split('_');
+                string sceneGroup = splitSceneName[1].ToLower();
+                sceneSplit = splitSceneName[2].ToLower();
+                int sceneNumber = int.Parse(splitSceneName[3]);
 
-                int sceneGroup = Int32.Parse(
-                    scene.Substring(startIndex: "FloorPlan".Length, length: scene.Length - "FloorPlan_physics".Length)
-                ) / 100;
-
-                if (inRoomTypes != null) {
-                    string sceneGroupName = new string[] { "kitchen", "livingroom", "bedroom", "bathroom" }[Math.Max(sceneGroup - 1, 0)];
-                    if (!chosenRoomTypes.Contains(sceneGroupName)) {
-                        throw new ArgumentException(
-                            $"inRoomTypes must include \"{sceneGroupName}\" inside of a {sceneGroupName} scene: {scene}."
-                        );
-                    }
+                if (inRoomTypes != null && !chosenRoomTypes.Contains(sceneGroup)) {
+                    throw new ArgumentException(
+                        $"inRoomTypes must include \"{sceneGroup}\" inside of a {sceneGroup} scene: {scene}."
+                    );
                 }
 
-                if (sceneNumber >= 1 && sceneNumber <= 20) {
-                    sceneType = "train";
-                } else if (sceneNumber <= 25) {
-                    sceneType = "val";
+                if (sceneNumber < 20) {
+                    sceneSplit = "train";
+                } else if (sceneNumber < 25) {
+                    sceneSplit = "val";
                 } else {
-                    sceneType = "test";
+                    sceneSplit = "test";
                 }
             } else {
                 // RoboTHOR scene
-                string chars = scene.Substring(startIndex: "FloorPlan_".Length, length: 2);
+                string chars = scene.Substring(startIndex: "RoboTHOR_".Length, length: 2);
                 switch (chars) {
                     case "Tr":
-                        sceneType = "train";
+                        sceneSplit = "train";
                         break;
                     case "Va":
-                        sceneType = "val";
+                        sceneSplit = "val";
                         break;
                     case "Te":
-                        sceneType = "test";
+                        sceneSplit = "test";
                         break;
                     default:
                         throw new Exception($"Unknown scene name: {scene}. Please open an issue on allenai/ai2thor.");
@@ -894,7 +887,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            switch (sceneType) {
+            switch (sceneSplit) {
                 case "train":
                     if (useTrainMaterials.GetValueOrDefault(true) == false) {
                         throw new ArgumentException("Inside of RandomizeMaterials, cannot set useTrainMaterials=false inside of a train scene.");
@@ -924,7 +917,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 default:
                     throw new InvalidOperationException(
-                        "RandomizeMaterials sceneType is not in {train/val/test}. Please open an issue at github.com/allenai/ai2thor!"
+                        "RandomizeMaterials sceneSplit is not in {train/val/test}. Please open an issue at github.com/allenai/ai2thor!"
                     );
             }
 
@@ -3487,7 +3480,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // solves an edge case where the lowest point of the ceiling
             // is actually below the floor :0
             var sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            if (sceneName == "FloorPlan309_physics") {
+            if (sceneName == "iTHOR_Bedroom_Train_08") {
                 yValue = 2f;
             }
 

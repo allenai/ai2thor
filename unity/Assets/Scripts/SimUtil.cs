@@ -572,62 +572,61 @@ public static class SimUtil {
         };
 
         // iTHOR scenes
-        foreach (int sceneType in new int[] { 0, 200, 300, 400 }) {
-            for (int i = 1; i <= 30; i++) {
-                string scenePath = $"Assets/Scenes/FloorPlan{sceneType + i}_physics.unity";
-                UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
+        foreach (string sceneType in new string[] {"Kitchen", "LivingRoom", "Bedroom", "Bathroom"}) {
+            foreach (string sceneSplit in new string[] {"Train", "Val", "Test"}) {
+                for (int i = 0; i < sceneSplit == "Train" ? 20 : 5; i++) {
+                    string scenePath = $"Assets/Scenes/iTHOR_{sceneType}_{sceneSplit}_{i}.unity";
+                    UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
 
-                HashSet<Material> materials = getMaterialsInScene();
+                    HashSet<Material> materials = getMaterialsInScene();
+                    switch (sceneType) {
+                        case "Kitchen":
+                            materialMetadata["RawKitchenMaterials"].UnionWith(materials);
+                            break;
+                        case "LivingRoom":
+                            materialMetadata["RawLivingRoomMaterials"].UnionWith(materials);
+                            break;
+                        case "Bedroom":
+                            materialMetadata["RawBedroomMaterials"].UnionWith(materials);
+                            break;
+                        case "Bathroom":
+                            materialMetadata["RawBathroomMaterials"].UnionWith(materials);
+                            break;
+                    }
 
-                switch (sceneType) {
-                    case 0:
-                        materialMetadata["RawKitchenMaterials"].UnionWith(materials);
-                        break;
-                    case 200:
-                        materialMetadata["RawLivingRoomMaterials"].UnionWith(materials);
-                        break;
-                    case 300:
-                        materialMetadata["RawBedroomMaterials"].UnionWith(materials);
-                        break;
-                    case 400:
-                        materialMetadata["RawBathroomMaterials"].UnionWith(materials);
-                        break;
-                }
-
-                if (i <= 20) {
-                    // train scene
-                    materialMetadata["RawTrainMaterials"].UnionWith(materials);
-                } else if (i <= 25) {
-                    // val scene
-                    materialMetadata["RawValMaterials"].UnionWith(materials);
-                } else {
-                    // test scene
-                    materialMetadata["RawTestMaterials"].UnionWith(materials);
+                    switch (sceneSplit) {
+                        case "Train":
+                            materialMetadata["RawTrainMaterials"].UnionWith(materials);
+                            break;
+                        case "Val":
+                            materialMetadata["RawValMaterials"].UnionWith(materials);
+                            break;
+                        case "Test":
+                            materialMetadata["RawTestMaterials"].UnionWith(materials);
+                            break;
+                    }
                 }
             }
         }
 
-        // RoboTHOR train
-        for (int i = 1; i <= 12; i++) {
-            for (int j = 1; j <= 5; j++) {
-                string scenePath = $"Assets/Scenes/FloorPlan_Train{i}_{j}.unity";
-                UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
+        // RoboTHOR
+        foreach (string sceneSplit in new string[] {"Train", "Val"}) {
+            for (int wallGroupI = 0; wallGroupI < sceneSplit == "Train" ? 12 : 3; wallGroupI++) {
+                for (int instanceI = 0; instanceI < 5; instanceI++) {
+                    string scenePath = $"Assets/Scenes/RoboTHOR_{sceneSplit}_{wallGroupI}_{instanceI}.unity";
+                    UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
 
-                HashSet<Material> materials = getMaterialsInScene();
-                materialMetadata["RawRobothorMaterials"].UnionWith(materials);
-                materialMetadata["RawTrainMaterials"].UnionWith(materials);
-            }
-        }
-
-        // RoboTHOR val
-        for (int i = 1; i <= 3; i++) {
-            for (int j = 1; j <= 5; j++) {
-                string scenePath = $"Assets/Scenes/FloorPlan_Val{i}_{j}.unity";
-                UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
-
-                HashSet<Material> materials = getMaterialsInScene();
-                materialMetadata["RawRobothorMaterials"].UnionWith(materials);
-                materialMetadata["RawValMaterials"].UnionWith(materials);
+                    HashSet<Material> materials = getMaterialsInScene();
+                    materialMetadata["RawRobothorMaterials"].UnionWith(materials);
+                    switch (sceneSplit) {
+                        case "Train":
+                            materialMetadata["RawTrainMaterials"].UnionWith(materials);
+                            break;
+                        case "Val":
+                            materialMetadata["RawValMaterials"].UnionWith(materials);
+                            break;
+                    }
+                }
             }
         }
 
@@ -646,7 +645,9 @@ public static class SimUtil {
         }
 
         // overrides the saved values on the prefab
-        UnityEditor.PrefabUtility.SaveAsPrefabAsset(instanceRoot: physicsSceneManager, assetPath: prefabPath);
+        UnityEditor.PrefabUtility.SaveAsPrefabAsset(
+            instanceRoot: physicsSceneManager, assetPath: prefabPath
+        );
     }
 
 

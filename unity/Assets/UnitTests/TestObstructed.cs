@@ -11,7 +11,7 @@ namespace Tests {
 
         [SetUp]
         public override void Setup() {
-            UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan402_physics");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("iTHOR_Bathroom_Train_01");
         }
 
         [UnityTest]
@@ -23,7 +23,6 @@ namespace Tests {
             action["action"] = "Initialize";
             action["fieldOfView"] = 90f;
             action["snapToGrid"] = true;
-            //action["scene"] = "FloorPlan402_physics";
             yield return step(action);
 
             action.Clear();
