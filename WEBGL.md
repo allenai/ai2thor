@@ -6,15 +6,15 @@ This can be useful for getting data from human interactions in AI2-THOR and for 
 
 ## Requirements
 
-* Tested on OS: Mac OS X 10.9+ and Windows 10
-* WebGL Build Bupport Module in your Unity Installation (Re-run the Unity installer to add this module or select a Unity installation through Unity Hub to add Modules to it)
+- Tested on OS: Mac OS X 10.9+ and Windows 10
+- WebGL Build Bupport Module in your Unity Installation (Re-run the Unity installer to add this module or select a Unity installation through Unity Hub to add Modules to it)
 
 ## Build
 
 To create a WebGL build, close Unity and simply run the invoke task:
 
 ```
-inv webgl-build -s=FloorPlan8_physics
+inv webgl-build -s=RoboTHOR_Train_04_00
 ```
 
 The build should be written under `unity/builds/thor-local-WebGL`.
@@ -27,7 +27,7 @@ You can customize some of the build details with other invoke task parameters. R
 
 ## WebGL Templates
 
-We include a demo template used for a crowdsourcing task, which is a great start if you want to build your own AI2-THOR interface. 
+We include a demo template used for a crowdsourcing task, which is a great start if you want to build your own AI2-THOR interface.
 
 ### Runing the demo Hide N Seek template
 
@@ -41,8 +41,8 @@ From the build menu in Unity switch the target platform to WebGL/HTML5 and build
 
 The `object` parameter can be `Tomato`, `Bread`, `Plunger`, `Cup`, or `Knife` with the same casing, and leave `variation` to be 0.
 
-* After the template is selected, you can close Unity and call the `webgl-build` command to make builds of different scenes that use the template.
-* You can create your own template under `unity/Assets/WebGLTemplates`.
+- After the template is selected, you can close Unity and call the `webgl-build` command to make builds of different scenes that use the template.
+- You can create your own template under `unity/Assets/WebGLTemplates`.
 
 ## Custom Interface
 
@@ -85,10 +85,9 @@ gameInstance.SendMessage ('FPSController', 'Step', JSON.stringify({
 
 Call on your `gameInstance` in javascript.
 
-
 ### Custom Controller
 
-The easiest way to do this is to write a new Unity component `MonoBehaviour` that acts as a controller for the agent and handles user input through Unity's functions. See [DiscretePointClickAgentController.cs](unity/Assets/Scripts/DiscretePointClickAgentController.cs) as an example. This has the convenience of developing and testing this input system within Unity. 
+The easiest way to do this is to write a new Unity component `MonoBehaviour` that acts as a controller for the agent and handles user input through Unity's functions. See [DiscretePointClickAgentController.cs](unity/Assets/Scripts/DiscretePointClickAgentController.cs) as an example. This has the convenience of developing and testing this input system within Unity.
 When you're done register your component in the script [PlayerControllers.cs](https://github.com/allenai/ai2thor/blob/main/unity/Assets/Scripts/PlayerControllers.cs), adding it both to the `ControlMode` Enum and the `PlayerControllers` class dictionary; with the Enum value as key and your Script type as the value.
 
 #### Activating Controller
@@ -116,4 +115,3 @@ inv webgl-s3-deploy -b=<s3_bucket> -t=<target_dir_in_s3> -s=8 -v
 The `-s` or `--scene` parameter is a comma separated list of numbers representing the scenes to build, `-v` is just to have verbose output.
 
 This task, builds and deploys your interface to s3 (make sure you have your WebGL template selected as the one to use in Unity).
-
