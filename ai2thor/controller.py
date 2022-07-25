@@ -639,7 +639,7 @@ class Controller(object):
             self.server.send(dict(action="Reset", sceneName="Procedural", sequenceId=0))
             self.last_event = self.server.receive()
         else:
-            # TODO: check based on scenes in build
+            # NOTE: Check if the scene name should be updated
             if "FloorPlan28_physics" not in self.scenes_in_build:
                 if scene.endswith("_physics"):
                     scene = scene[:-len("_physics")]
