@@ -4790,6 +4790,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             yield return new WaitUntil(() => (openableObject.GetIsCurrentlyLerping() == false));
             yield return null;
             bool succeeded = true;
+            
             // if failure occurred, revert back to backup state (either start or lastSuccessful), and then report failure
             if (openableObject.GetFailState() != CanOpen_Object.failState.none) {
                 succeeded = false;
@@ -4825,7 +4826,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            // Reset non-static simobject collision condition
+            // Reset conditions for next interaction
+            openableObject.SetFailState(CanOpen_Object.failState.none);
+            openableObject.SetFailureCollision(null);
             openableObject.SetStopsAtNonStaticCol(false);
 
             // Remove PosRotRef from MovingPart
@@ -5140,6 +5143,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool simplifyPhysics = false,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
+            Debug.Log("(1) I got to openObject...");
             // backwards compatibility support
             if (moveMagnitude != null) {
                 // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.

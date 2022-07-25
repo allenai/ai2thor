@@ -12,7 +12,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     public class DebugInputField : MonoBehaviour {
         public GameObject Agent = null;
         public AgentManager AManager = null;
-
         private ControlMode controlMode;
 
 #if UNITY_EDITOR
