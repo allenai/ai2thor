@@ -436,9 +436,7 @@ def local_build(
         env["BUILD_SCRIPTS_ONLY"] = "true"
 
     if scenes:
-        env["BUILD_SCENES"] = ",".join(
-            map(ai2thor.controller.Controller.normalize_scene, scenes)
-        )
+        env["BUILD_SCENES"] = ",".join(scenes)
 
     if _build("unity", arch, build_dir, build.name, env=env):
         print("Build Successful")
