@@ -574,8 +574,8 @@ public static class SimUtil {
         // iTHOR scenes
         foreach (string sceneType in new string[] {"Kitchen", "LivingRoom", "Bedroom", "Bathroom"}) {
             foreach (string sceneSplit in new string[] {"Train", "Val", "Test"}) {
-                for (int i = 0; i < sceneSplit == "Train" ? 20 : 5; i++) {
-                    string scenePath = $"Assets/Scenes/iTHOR_{sceneType}_{sceneSplit}_{i}.unity";
+                for (int i = 0; i < (sceneSplit == "Train" ? 20 : 5); i++) {
+                    string scenePath = $"Assets/Scenes/iTHOR_{sceneType}_{sceneSplit}_{i.ToString("00")}.unity";
                     UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
 
                     HashSet<Material> materials = getMaterialsInScene();
@@ -611,9 +611,9 @@ public static class SimUtil {
 
         // RoboTHOR
         foreach (string sceneSplit in new string[] {"Train", "Val"}) {
-            for (int wallGroupI = 0; wallGroupI < sceneSplit == "Train" ? 12 : 3; wallGroupI++) {
+            for (int wallGroupI = 0; wallGroupI < (sceneSplit == "Train" ? 12 : 3); wallGroupI++) {
                 for (int instanceI = 0; instanceI < 5; instanceI++) {
-                    string scenePath = $"Assets/Scenes/RoboTHOR_{sceneSplit}_{wallGroupI}_{instanceI}.unity";
+                    string scenePath = $"Assets/Scenes/RoboTHOR_{sceneSplit}_{wallGroupI.ToString("00")}_{instanceI.ToString("00")}.unity";
                     UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
 
                     HashSet<Material> materials = getMaterialsInScene();
