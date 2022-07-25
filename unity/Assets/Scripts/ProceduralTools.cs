@@ -1941,13 +1941,55 @@ namespace Thor.Procedural {
             var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
             agentManager.ResetSceneBounds();
 
-
-            //floorGameObject.AddComponent<UnityEngine.AI.navmeshsur
-
-            //UnityEngine.AI.NavMEshSur
-            //NavMeshSurface[] surfaces;
+            setAgentPose(house: house, agentManager: agentManager);
 
             return floorGameObject;
+        }
+
+        private static void setAgentPose(ProceduralHouse house, AgentManager agentManager) {
+            // teleport the agent into the scene
+            if (
+                house.metadata != null
+                && house.metadata.agentPoses != null
+                && house.metadata.agentPoses.ContainsKey(agentManager.agentMode)
+            ) {
+                BaseFPSAgentController bfps = agentManager.primaryAgent;
+                Vector3 newPosition = house.metadata.agentPoses[agentManager.agentMode].position;
+                Vector3 newRotation = house.metadata.agentPoses[agentManager.agentMode].rotation;
+                float newHorizon = house.metadata.agentPoses[agentManager.agentMode].horizon;
+                bool? newStanding = house.metadata.agentPoses[agentManager.agentMode].standing;
+                if (newPosition != null) {
+                    bfps.transform.position = newPosition;
+                    bfps.autoSyncTransforms();//make sure to sync transforms after teleporting to ensure rigidbody/transforms are all updated even if a frame hasn't passed
+
+                    Vector3 target = new Vector3(
+                        newPosition.x,
+                        bfps.transform.position.y,
+                        newPosition.z
+                    );
+                    Vector3 dir = target - bfps.transform.position;
+                    Vector3 movement = dir.normalized * 100.0f;
+                    if (movement.magnitude > dir.magnitude) {
+                        movement = dir;
+                    }
+                    movement.y = Physics.gravity.y * bfps.m_GravityMultiplier;
+                    bfps.GetComponent<CharacterController>().Move(movement);
+                }
+                if (newRotation != null) {
+                    bfps.transform.rotation = Quaternion.Euler(newRotation);
+                }
+                if (newHorizon != null) {
+                    bfps.m_Camera.transform.localEulerAngles = new Vector3(newHorizon, 0, 0);
+                }
+                if (agentManager.agentMode != "locobot" && newStanding != null) {
+                    PhysicsRemoteFPSAgentController pfps = bfps as PhysicsRemoteFPSAgentController;
+                    if (newStanding == true) {
+                        pfps.stand();
+                    } else {
+                        pfps.crouch();
+                    }
+                }
+            }
         }
 
         public static void spawnObjectHierarchy(HouseObject houseObject) {

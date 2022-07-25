@@ -5780,7 +5780,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////////////////////////
         ///// Crouch and Stand /////
         ////////////////////////////
-        protected void crouch() {
+        public void crouch() {
             m_Camera.transform.localPosition = new Vector3(
                 standingLocalCameraPosition.x,
                 crouchingLocalCameraPosition.y,
@@ -5788,7 +5788,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        protected void stand() {
+        public void stand() {
             m_Camera.transform.localPosition = standingLocalCameraPosition;
         }
 
