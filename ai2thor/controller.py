@@ -629,12 +629,6 @@ class Controller(object):
 
         return self._scenes_in_build
 
-    @staticmethod
-    def normalize_scene(scene):
-        if re.match(r"^FloorPlan[0-9]+$", scene):
-            scene = scene + "_physics"
-        return scene
-
     def reset(self, scene=None, **init_params):
         if scene is None:
             scene = self.scene
@@ -645,7 +639,30 @@ class Controller(object):
             self.server.send(dict(action="Reset", sceneName="Procedural", sequenceId=0))
             self.last_event = self.server.receive()
         else:
-            scene = Controller.normalize_scene(scene)
+            # TODO: check based on scenes in build
+            if "FloorPlan28_physics" not in self.scenes_in_build:
+                if scene.endswith("_physics"):
+                    scene = scene[:-len("_physics")]
+                if scene.startswith("FloorPlan"):
+                    if scene.startswith("FloorPlan_Train"):
+                        # RoboTHOR Train
+                        wall_i, instance_i = scene[len("FloorPlan_Train"):].split("_")
+                        scene = f"RoboTHOR_Train_{wall_i - 1:02}_{instance_i - 1:02}"
+                    elif scene.startswith("FloorPlan_Val"):
+                        # RoboTHOR Validation
+                        wall_i, instance_i = scene[len("FloorPlan_Val"):].split("_")
+                        scene = f"RoboTHOR_Val_{wall_i - 1:02}_{instance_i - 1:02}"
+                    else:
+                        scene_number = int(scene[len("FloorPlan"):])
+                        scene_group = ["Kitchen", "LivingRoom", "Bedroom", "Bathroom"][max(0, scene_number % 100 - 1)]
+                        scene_i = scene_number // 100 - 1
+                        if scene_i < 20:
+                            split = "Train"
+                        elif scene_i < 25:
+                            split = "Val"
+                        else:
+                            split = "Test"
+                        scene = f"iTHOR_{scene_group}_{split}_{scene_i:02}"
 
             # scenes in build can be an empty set when GetScenesInBuild doesn't exist as an action
             # for old builds
@@ -745,47 +762,40 @@ class Controller(object):
         include_bedrooms=True,
         include_bathrooms=True,
     ):
-        types = []
+        scene_types = []
         if include_kitchens:
-            types.append((1, 31))
+            scene_types.append("Kitchen")
         if include_living_rooms:
-            types.append((201, 231))
+            scene_types.append("LivingRoom")
         if include_bedrooms:
-            types.append((301, 331))
+            scene_types.append("Bedroom")
         if include_bathrooms:
-            types.append((401, 431))
+            scene_types.append("Bathroom")
 
-        # keep this as a list because the order may look weird otherwise
-        scenes = []
-        for low, high in types:
-            for i in range(low, high):
-                scenes.append("FloorPlan%s_physics" % i)
-        return scenes
+        out = [
+            f"iTHOR_{scene_type}_{scene_split}_{i:02}"
+            for scene_type in scene_types
+            for scene_split in ["Train", "Val", "Test"]
+            for i in range(20 if scene_split == "Train" else 5)
+        ]
+        return out
 
     @lru_cache()
     def robothor_scenes(self, include_train=True, include_val=True):
-        # keep this as a list because the order may look weird otherwise
-        scenes = []
-        stages = dict()
-
-        # from FloorPlan_Train[1:12]_[1:5]
+        stages = []
         if include_train:
-            stages["Train"] = range(1, 13)
+            stages.append("Train")
         if include_val:
-            # from FloorPlan_Val[1:12]_[1:5]
-            stages["Val"] = range(1, 4)
+            stages.append("Val")
 
-        for stage, wall_configs in stages.items():
-            for wall_config_i in wall_configs:
-                for object_config_i in range(1, 6):
-                    scenes.append(
-                        "FloorPlan_{stage}{wall_config}_{object_config}".format(
-                            stage=stage,
-                            wall_config=wall_config_i,
-                            object_config=object_config_i,
-                        )
-                    )
-        return scenes
+        # keep this as a list because the order may look weird otherwise
+        out = [
+            f"RoboTHOR_{scene_split}_{wall_group_i:02}_{instance_i:02}"
+            for scene_split in stages
+            for wall_group_i in range(12 if scene_split == "Train" else 3)
+            for instance_i in range(5)
+        ]
+        return out
 
     @lru_cache()
     def scene_names(self):
