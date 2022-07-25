@@ -141,18 +141,6 @@ namespace Thor.Procedural {
                                                 var k = holeContinuation.SelectMany(c => doorDict[(id, layer, c)]);
                                                 connected = connected.Concat(k);
                                             }
-                                            else {
-                                                // foreach (var connect in holeContinuation.SelectMany(c => {
-                                                //     HashSet<(int, int)> val;
-                                                //     var isInDict = doorDict.TryGetValue((id, layer, c), out val);
-                                                //     return isInDict ? val : new HashSet<(int, int)>();
-                                                // })) {
-                                                //     
-                                                //     if ((id, layer, connect) != key) {
-                                                //         doorDict.Remove((id, layer, connect));
-                                                //     }
-                                                // } 
-                                            }
 
                                             var union = doorDict[key].Union(connected);
                                             doorDict[key] = new HashSet<(int, int)>(doorDict[key].Union(connected));

@@ -667,40 +667,30 @@ namespace Thor.Procedural.Data {
     public static class ExtensionMethods {
         public static T DeepClone<T>(this T obj)
         {
-            // using (var ms = new MemoryStream())
-            // {
-            //     //// Does not Work with Unity's Vector3
-            //     // var formatter = new BinaryFormatter();
-            //     // formatter.Serialize(ms, obj);
-            //     // ms.Position = 0;
+            // Don't serialize a null object, simply return the default for that object
+            if (ReferenceEquals(obj, null)) {
+                return default;
+            } 
 
-            //     // return (T) formatter.Deserialize(ms);
+            // initialize inner objects individually
+            // for example in default constructor some list property initialized with some values,
+            // but in 'source' these items are cleaned -
+            // without ObjectCreationHandling.Replace default constructor values will be added to result
+            var deserializeSettings = new JsonSerializerSettings {ObjectCreationHandling = ObjectCreationHandling.Replace};
 
-            // }
+            var jsonResolver = new ShouldSerializeContractResolver();
+            var str = Newtonsoft.Json.JsonConvert.SerializeObject(
+                obj,
+                Newtonsoft.Json.Formatting.None,
+                new Newtonsoft.Json.JsonSerializerSettings() {
+                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                    ContractResolver = jsonResolver
+                }
+            );
 
+            var jObj = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(str);
 
-                // Don't serialize a null object, simply return the default for that object
-                if (ReferenceEquals(obj, null)) return default;
-
-                // initialize inner objects individually
-                // for example in default constructor some list property initialized with some values,
-                // but in 'source' these items are cleaned -
-                // without ObjectCreationHandling.Replace default constructor values will be added to result
-                var deserializeSettings = new JsonSerializerSettings {ObjectCreationHandling = ObjectCreationHandling.Replace};
-
-                var jsonResolver = new ShouldSerializeContractResolver();
-                var str = Newtonsoft.Json.JsonConvert.SerializeObject(
-                    obj,
-                    Newtonsoft.Json.Formatting.None,
-                    new Newtonsoft.Json.JsonSerializerSettings() {
-                        ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                        ContractResolver = jsonResolver
-                    }
-                );
-
-                var jObj = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(str);
-
-                return jObj.ToObject<T>();
+            return jObj.ToObject<T>();
         }
 
         public static TValue GetValueOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue = default(TValue))
@@ -712,7 +702,7 @@ namespace Thor.Procedural.Data {
         public static int AddCount<TKey>(this Dictionary<TKey, int> dictionary, TKey key, int count = 1)
         {
             int value;
-            var inDict = dictionary.TryGetValue(key, out value);
+            dictionary.TryGetValue(key, out value);
             if (dictionary.ContainsKey(key)) {
                 dictionary[key] = dictionary[key] + count;
             }

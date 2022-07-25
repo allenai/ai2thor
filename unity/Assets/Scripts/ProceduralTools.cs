@@ -2675,8 +2675,6 @@ namespace Thor.Procedural {
         ) {
             var scaleVec = scale.GetValueOrDefault(Vector2.one);
 
-            // roomWallIndexMap.Values.Select(x => x.First)
-
             var rooms = roomWallIndexMap.Select(entry => {
                 (string wallMaterial, string floorMaterial) materialId;
                 materialsPerRoom.TryGetValue(entry.Key, out materialId);
