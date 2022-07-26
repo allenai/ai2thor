@@ -3783,8 +3783,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 while (numStillGoing > 0) {
                     foreach (SimObjPhysics sop in animating) {
                         if (animatingType.ContainsKey(sop) &&
-                            (animatingType[sop] == "toggleable" && sop.GetComponent<CanToggleOnOff>().GetiTweenCount() == 0 || animatingType[sop] == "openable") &&
-                            sop.GetComponent<CanOpen_Object>().GetiTweenCount() == 0
+                            (animatingType[sop] == "toggleable" && sop.GetComponent<CanToggleOnOff>().GetIsCurrentlyLerping() == false || animatingType[sop] == "openable") &&
+                            sop.GetComponent<CanOpen_Object>().GetIsCurrentlyLerping() == false
                         ) {
                             numStillGoing--;
                         }
@@ -3799,7 +3799,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            // ok none of the objects that were actively toggling have any itweens going, so we are done!
+            // ok none of the objects that were actively toggling have any lerps going, so we are done!
             actionFinished(true);
         }
 
@@ -5117,7 +5117,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool success = false;
 
 
-            yield return new WaitUntil(() => (ctof != null && ctof.GetiTweenCount() == 0 && ctof.isOn == !ctofInitialState));
+            yield return new WaitUntil(() => (ctof != null && ctof.GetIsCurrentlyLerping() == false && ctof.isOn == !ctofInitialState));
             success = true;
 
             if (!success) {

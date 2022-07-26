@@ -358,14 +358,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
             DestroyImmediate(clone);
 
-            // iTween adds references to the iTween.tweens List
-            for (int i = 0; i < iTween.tweens.Count; i++) {
-                if (((GameObject)iTween.tweens[i]["target"]) == null) {
-                   iTween.tweens.RemoveAt(i);
-                }
-            }
-
-
             // Get corner points of SimObject's new BoundingBox, in its correct transformation
             List<Vector3> points = new List<Vector3>();
             points.Add(this.transform.TransformPoint(newBB.center + new Vector3(newBB.size.x, -newBB.size.y, newBB.size.z) * 0.5f));

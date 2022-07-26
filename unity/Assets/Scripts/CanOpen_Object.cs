@@ -71,21 +71,6 @@ public class CanOpen_Object : MonoBehaviour {
         return MustBeOffToOpen;
     }
 
-    void Awake() {
-        if (MovingParts != null) {
-            // init Itween in all doors to prep for animation
-            foreach (GameObject go in MovingParts) {
-                // Init is getting called in Awake() vs Start() so that cloned gameobjects can add MovingParts
-                // before iTween.Awake() gets called which would throw an error if this was done in Start()
-                iTween.Init(go);
-
-                // check to make sure all doors have a Fridge_Door.cs script on them, if not throw a warning
-                // if (!go.GetComponent<Fridge_Door>())
-                // Debug.Log("Fridge Door is missing Fridge_Door.cs component! OH NO!");
-            }
-        }
-    }
-
     // Use this for initialization
     void Start() {
 
@@ -480,15 +465,6 @@ public class CanOpen_Object : MonoBehaviour {
                 }
         }
     return false;
-    }
-
-    public int GetiTweenCount() {
-        // the number of iTween instances running on all doors managed by this fridge
-        int count = 0;
-        foreach (GameObject go in MovingParts) {
-            count += iTween.Count(go);
-        }
-        return count; // iTween.Count(this.gameObject);
     }
 
     private bool hasAncestor(GameObject child, GameObject potentialAncestor) {
