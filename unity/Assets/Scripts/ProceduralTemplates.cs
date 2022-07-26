@@ -21,15 +21,12 @@ namespace Thor.Procedural {
     [Serializable]
     public class HouseTemplate {
         public string id;
-
         public string layout;
-
         public IEnumerable<string> objectsLayouts;
         public Dictionary<string, RoomTemplate> rooms;
         public Dictionary<string, WallRectangularHole> holes;
         public Dictionary<string, HouseObject> objects;
         public ProceduralParameters proceduralParameters;
-
     }
 
     [Serializable]
@@ -176,16 +173,9 @@ namespace Thor.Procedural {
                     var room = template.floorTemplate.DeepClone();
                 
                     room.id = roomIntToId(intId, template.floorTemplate);
-                    // room.floorPolygon;
-                    // room.ceilings
 
                     var polygon = template.wallTemplate.polygon;
                     var wallHeight = template.wallHeight;
-                    // if (polygon != null) {
-                    //     polygon = defaultRoomTemplate.wallHeight
-                    // }
-
-                    // var wallHeight =  template.wallTemplate.polygon.DefaultIfEmpty(new Vector3(0.0f, template.wallHeight, 0.0f)).Max(p => p.y);
                     var walls2D = roomToWallsXZ[intId];
                     room.floorPolygon = walls2D.Select(p => new Vector3((float)p.Item1.row, template.floorYPosition, (float)p.Item1.column)).ToList();
                     string ceilingMat = "";
@@ -306,7 +296,6 @@ namespace Thor.Procedural {
 
                     var doorDirVec = new Vector2((float)doorDir.column, (float)doorDir.row).normalized;
                     var dot = Vector2.Dot(wallDir, doorDirVec);
-                    // return true;
                     // TODO add eps
                     return ((xDiff == 0.0 && xDiff1 == 0.0) || (zDiff == 0.0 && zDiff1 == 0.0)) && Math.Abs(dot) < 1e-4;
                 });
@@ -377,7 +366,6 @@ namespace Thor.Procedural {
 
                     var count = objectIdCounter.AddCount(item.id);
                     obj.id = objectToId(item.id, count - 1,  obj.id);
-                    // obj.id =  count - 1 == 0 ? string.IsNullOrEmpty(obj.id) ? objectToId(item.id, count - 1,  obj.id) : $"{obj.id}" : string.IsNullOrEmpty(obj.id) ? $"{item.id}{count - 1}" : ;
                     var roomId = layoutIntArray[coord.row][coord.column];
                     var floorTemplate = houseTemplate.rooms[roomId.ToString()];
                     obj.room = roomIntToId(roomId, floorTemplate.floorTemplate);
@@ -389,7 +377,6 @@ namespace Thor.Procedural {
 
                     var asset = assetMap.getAsset(obj.assetId);
 
-                    // var holeOffset = getHoleAssetBoundingBox(obj.assetId);
                     if (asset != null) {
                         result.Add(obj);
                     }
@@ -421,24 +408,16 @@ namespace Thor.Procedural {
         }
 
         public static WallRectangularHole getDefaultHoleTemplate() {
-            return new Data.Door() {
-                
-            };
+            return new Data.Door();
         }
 
         public static Dictionary<(int, int), List<((int row, int col), (int row, int col))>> findWalls(int[][] floorplan) {
-            // var walls = new Dictionary<(int, int), IEnumerable<(int row, int col)>>();
-
             var walls = new DefaultDictionary<(int, int), List<((int row, int col), (int row, int col))>>();
-            // for (var i = 0; i < floorplan.Length)
             for(var row = 0; row < floorplan.Length - 1; row++) {
                 for(var col = 0; col < floorplan[row].Length - 1; col++) {
                     var a = floorplan[row][col];
                     var b = floorplan[row][col + 1];
                     if (a != b) {
-                        // if (!walls.ContainsKey((Math.Min(a, b), Math.Max(a,b)))) {
-                        //     walls[(Math.Min(a, b), Math.Max(a,b))] = new 
-                        // }
                         walls[(Math.Min(a, b), Math.Max(a,b))].Add(((row-1, col), (row, col)));
                     }
                     b = floorplan[row+1][col];
@@ -474,9 +453,7 @@ namespace Thor.Procedural {
                             continue;
                         }
                         var breakLoop = false;
-                        // (int ,int) w1_2;
                         foreach (var w1_2 in wallMap[w1_1]) {
-                            // w1_2 = iter;
                             if (wallMap.ContainsKey(w1_2)) {
                                 var w2_1 = w1_2;
                                 foreach (var w2_2 in wallMap[w2_1]) {

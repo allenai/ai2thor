@@ -2132,22 +2132,6 @@ namespace Thor.Procedural {
                 Debug.LogError("Asset not in Database " + ho.assetId);
                 return null;
             }
-            // var spawned = GameObject.Instantiate(go, ho.position, Quaternion.identity);
-            // Vector3 toRot = ho.rotation.axis * ho.rotation.degrees;
-            // spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);
-
-            // var toSpawn = spawned.GetComponent<SimObjPhysics>();
-            // Rigidbody rb = spawned.GetComponent<Rigidbody>();
-            // rb.isKinematic = ho.kinematic;
-
-            // toSpawn.objectID = ho.id;
-            // toSpawn.name = ho.id;
-
-            // var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
-            // sceneManager.AddToObjectsInScene(toSpawn);
-            // toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
-
-            // return toSpawn.transform.gameObject;
         }
 
         public static GameObject spawnSimObjPrefab(
@@ -2214,15 +2198,6 @@ namespace Thor.Procedural {
                 spawned.transform.position = position;
                 spawned.transform.rotation = rotation;
             }
-
-            // spawned.transform.localPosition = centerObjectSpace;
-            // spawned.transform.Rotate(rotation.axis, rotation.degrees);
-            // spawned.transform.position += position;
-
-            //var spawned = GameObject.Instantiate(go, position, Quaternion.AngleAxis(rotation.degrees, rotation.axis));
-            // spa
-            //spawned.transform.position = 
-
 
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
@@ -2702,38 +2677,8 @@ namespace Thor.Procedural {
                     );
             }
             );
-            
-
-            // return ProceduralTools.createMultiRoomFloorGameObject(
-            //     name,
-            //     rooms,
-            //     materialMap,
-            //     $"room_{name}",
-            //     receptacleHeight,
-            //     floorColliderThickness
-            // );
-            // CreateHouse()
             return new GameObject();
         }
-
-        // public static ProceduralHouse houseFromRoom(
-
-    //     def find_walls(floorplan: np.array):
-    // walls = defaultdict(list)
-    // for row in range(len(floorplan) - 1):
-    //     for col in range(len(floorplan[0]) - 1):
-    //         a = floorplan[row, col]
-    //         b = floorplan[row, col + 1]
-    //         if a != b:
-    //             walls[(int(min(a, b)), int(max(a, b)))].append(
-    //                 ((row - 1, col), (row, col))
-    //             )
-    //         b = floorplan[row + 1, col]
-    //         if a != b:
-    //             walls[(int(min(a, b)), int(max(a, b)))].append(
-    //                 ((row, col - 1), (row, col))
-    //             )
-    // return walls
 
         public static AssetMap<Material> GetMaterials() {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
