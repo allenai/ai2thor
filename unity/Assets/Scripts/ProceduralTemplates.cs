@@ -138,8 +138,6 @@ namespace Thor.Procedural {
                                                 var k = holeContinuation.SelectMany(c => doorDict[(id, layer, c)]);
                                                 connected = connected.Concat(k);
                                             }
-
-                                            var union = doorDict[key].Union(connected);
                                             doorDict[key] = new HashSet<(int, int)>(doorDict[key].Union(connected));
                     
                                         }
@@ -161,9 +159,7 @@ namespace Thor.Procedural {
             var roomIds = layoutIntArray.SelectMany(x => x.Distinct()).Distinct();
             var roomToWallsXZ = getXZRoomToWallDict(floatingPointBoundaryGroups, roomIds);
 
-            var strIds = layoutStringArray.SelectMany(x => x.Distinct()).Distinct();
-            var defaultRoomTemplate = getDefaultRoomTemplate(); 
-            var wallId = 0;
+            var defaultRoomTemplate = getDefaultRoomTemplate();
             var wallCoordinatesToId = new Dictionary<((double, double), (double, double)), string>();
             var roomsWithWalls = roomIds.Where(id => id != outsideBoundaryId).Select(intId => {
                     var id = intId.ToString();
@@ -174,7 +170,6 @@ namespace Thor.Procedural {
                 
                     room.id = roomIntToId(intId, template.floorTemplate);
 
-                    var polygon = template.wallTemplate.polygon;
                     var wallHeight = template.wallHeight;
                     var walls2D = roomToWallsXZ[intId];
                     room.floorPolygon = walls2D.Select(p => new Vector3((float)p.Item1.row, template.floorYPosition, (float)p.Item1.column)).ToList();
