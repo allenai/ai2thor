@@ -1634,7 +1634,6 @@ namespace Thor.Procedural {
                 var meshRenderer = subFloorGO.GetComponent<MeshRenderer>();
 
                 var dimensions = getAxisAlignedWidthDepth(room.floorPolygon);
-                Debug.Log("--- Material " + room.floorMaterial);
                 meshRenderer.material = generatePolygonMaterial(
                     materialDb.getAsset(room.floorMaterial),
                     room.floorColor, 
@@ -2098,7 +2097,6 @@ namespace Thor.Procedural {
         //not sure if this is needed, a helper function like this might exist somewhere already?
         public static AssetMap<GameObject> getAssetMap() {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
-            Debug.Log("----- is assetDb null " + (assetDB == null) + " prefabs " + (assetDB.prefabs == null));
             return new AssetMap<GameObject>(assetDB.prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
         }
 

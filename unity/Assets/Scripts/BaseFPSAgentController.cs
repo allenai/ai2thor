@@ -4613,7 +4613,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
 
-            GameObject asset = assetMap.getAsset(assetId);
+            // GameObject asset = assetMap.getAsset(assetId);
 
             var result = ProceduralTools.getHoleAssetBoundingBox(assetId);
 
