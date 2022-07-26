@@ -5,6 +5,8 @@ import random
 import re
 import copy
 import json
+import time
+
 import pytest
 import warnings
 import jsonschema
@@ -2137,7 +2139,7 @@ def test_settle_physics(fifo_controller):
     for object_id, object_metadata in first_objs.items():
         for d in (diff(object_metadata, last_objs.get(object_id, {}), tolerance=0.00001, ignore=set(["receptacleObjectIds"]))):
             diffs.append((object_id, d))
- 
+
     assert diffs == []
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
@@ -2180,4 +2182,23 @@ def test_fill_liquid(controller):
         assert pot["fillLiquid"] is None
         assert not pot["isFilledWithLiquid"]
         assert pot["canFillWithLiquid"]
+
+
+def test_timeout():
+    kwargs = {
+        "server_timeout": 2.0
+    }
+    for c in [
+        build_controller(server_class=WsgiServer, **kwargs),
+        build_controller(server_class=FifoServer, **kwargs)
+    ]:
+        c.step("Sleep", seconds=1)
+        assert c.last_event.metadata["lastActionSuccess"]
+
+        with pytest.raises(TimeoutError):
+            c.step("Sleep", seconds=4)
+
+        # Above crash should kill the unity process
+        time.sleep(1.0)
+        assert c.server.unity_proc.poll() is not None
 
