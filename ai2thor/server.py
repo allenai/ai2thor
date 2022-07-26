@@ -5,11 +5,10 @@ ai2thor.server
 Handles all communication with Unity through a Flask service.  Messages
 are sent to the controller using a pair of request/response queues.
 """
-import abc
 import json
 import subprocess
 import warnings
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from collections.abc import Mapping
 from enum import Enum
 from typing import Optional, Tuple, Dict, cast, List, Set
@@ -738,7 +737,7 @@ class DepthFormat(Enum):
     Millimeters = 2
 
 
-class Server(abc.ABC):
+class Server(ABC):
     def __init__(
         self,
         width,

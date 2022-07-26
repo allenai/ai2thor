@@ -5,16 +5,14 @@ ai2thor.server
 Handles all communication with Unity through a Flask service.  Messages
 are sent to the controller using a pair of request/response queues.
 """
+import json
+import logging
 import math
-import queue
+import os
+import threading
 from typing import Optional
 
 import ai2thor.server
-import json
-import logging
-import threading
-import os
-
 from ai2thor.exceptions import UnityCrashException
 
 try:
@@ -38,14 +36,16 @@ werkzeug.serving.WSGIRequestHandler.protocol_version = "HTTP/1.1"
 def queue_get(que, unity_proc=None, timeout: Optional[float] = 100.0):
     res = None
     attempts = 0
+    queue_get_timeout_per_try = 0.5
+
     max_attempts = (
         float("inf")
         if timeout is None or timeout == float("inf") else
-        max(int(math.ceil(timeout / 0.5)), 1)
+        max(int(math.ceil(timeout / queue_get_timeout_per_try)), 1)
     )
     while True:
         try:
-            res = que.get(block=True, timeout=0.5)
+            res = que.get(block=True, timeout=queue_get_timeout_per_try)
             break
         except Empty:
             attempts += 1

@@ -27,7 +27,7 @@ from functools import lru_cache
 from itertools import product
 from platform import architecture as platform_architecture
 from platform import system as platform_system
-from typing import Dict, Any, Union
+from typing import Dict, Any, Union, Optional
 
 import numpy as np
 
@@ -394,7 +394,8 @@ class Controller(object):
         server_class=None,
         gpu_device=None,
         platform=None,
-        server_timeout=100.0,
+        server_timeout: Optional[float] = 100.0,
+        server_start_timeout: float = 300.0,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -405,7 +406,9 @@ class Controller(object):
         self.height = height
 
         self.server_timeout = server_timeout
+        self.server_start_timeout = server_start_timeout
         assert self.server_timeout is None or 0 < self.server_timeout
+        assert 0 < self.server_start_timeout
 
         self.last_event = None
         self.scene = None
@@ -1352,13 +1355,8 @@ class Controller(object):
             unity_params = self.server.unity_params()
             self._start_unity_thread(env, width, height, unity_params, image_name)
 
-        # receive the first request, give unity at least 5 minutes to start
-        self.last_event = self.server.receive(
-            timeout=max(
-                60.0 * 5,
-                self.server_timeout * 5 if self.server_timeout is not None else 0.0
-            )
-        )
+        # receive the first request
+        self.last_event = self.server.receive(timeout=self.server_start_timeout)
 
         # we should be able to get rid of this since we check the resolution in .reset()
         if self.server.unity_proc is not None and (height < 300 or width < 300):
