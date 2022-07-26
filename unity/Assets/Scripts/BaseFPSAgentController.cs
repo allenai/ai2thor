@@ -4623,10 +4623,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
 
-            GameObject asset = assetMap.getAsset(assetId);
+            // GameObject asset = assetMap.getAsset(assetId);
 
-            var holeMetadata = asset.GetComponentInChildren<HoleMetadata>();
-             if (holeMetadata == null) {
+            var result = ProceduralTools.getHoleAssetBoundingBox(assetId);
+
+            if (result == null) {
                 actionFinished(
                     success: false,
                     errorMessage: $"Asset '{assetId}' does not have a HoleMetadata component, it's probably not a connector like a door or window or component has to be added in the prefab."
@@ -4634,15 +4635,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
             }
             else {
-                var diff = holeMetadata.Max - holeMetadata.Min;
-
-                diff = new Vector3(Math.Abs(diff.x), Math.Abs(diff.y), Math.Abs(diff.z));// - holeMetadata.Margin;
-                // inverse offset for the asset
-                var min = new Vector3(holeMetadata.Min.x, -holeMetadata.Min.y, -holeMetadata.Min.z);
-                // var max = new Vector3(-holeMetadata.Max.x, holeMetadata.Max.y, holeMetadata.Max.z);
                 actionFinished(
                     success: false,
-                    actionReturn: new BoundingBoxWithOffset() { min=Vector3.zero, max=diff, offset=min}
+                    actionReturn: result
                 );
             }
         }

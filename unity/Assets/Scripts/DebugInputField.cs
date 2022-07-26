@@ -3951,6 +3951,197 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         f.WriteLine(prefabsStr);
                         break;
                     }
+                case "proc_arr": {
+                    var arr = new int[][] {
+                        new int[]{2, 2, 2, 2},
+                        new int[]{2, 1, 1, 2},
+                        new int[]{2, 1, 1, 2},
+                        new int[]{2, 1, 1, 2},
+                        new int[]{2, 2, 2, 2},
+                    };
+
+                                                
+
+                   
+                    var layout = $@"
+                        2 2 2 2
+                        2 1 1 2
+                        2 1 1 2
+                        2 2 2 2
+                    ";
+
+
+                    var doors = @"
+                        2 = 2 2
+                        2 = 1 2
+                        2 1 1 2
+                        2 2 2 2";
+
+                    var objects = @"
+                        2 2 2 2
+                        2 1 1 2
+                        2 * 1 2
+                        2 2 2 +";
+                    // var arr = new int[][] {
+                    //     new int[]{0, 0, 0},
+                    //     new int[]{0, 1, 0},
+                    //     new int[]{0, 0, 0}
+                    // };
+
+                    // 2: [ (0, 0),(0, 1),(0, 2),(0, 3),(1, 3),(2, 3),(3, 3) ]
+                    // 1: [ (1, 1),(1, 2),(2, 2),(3, 2),(3, 1),(2, 1) ]
+
+                    // 1: [ ((0, 0), (1, 1)),((1, 1), (1, 2)),((0, 0), (1, 2)),((1, 2), (2, 2)),((0, 0), (2, 2)),((2, 2), (2, 1)),((0, 0), (2, 1)),((2, 1), (1, 1)) ]
+
+                    var house = Templates.createHouseFromTemplate(
+                        new HouseTemplate() {
+                            id = "house_0",
+                            layout = $@"
+                                0 0 0 0 0 0
+                                0 2 2 2 2 0
+                                0 2 2 2 2 0
+                                0 1 1 1 1 0
+                                0 1 1 1 1 0
+                                0 0 0 0 0 0
+                            ",
+                            objectsLayouts = new List<string>() {
+                                $@"
+                                    0 0 0 0 0 0
+                                    0 2 2 2 2 0
+                                    0 2 2 2 = 0
+                                    0 1 1 1 = 0
+                                    0 1 * 1 + 0
+                                    0 0 0 0 0 0
+                                "
+                                ,
+                                $@"
+                                    0 0 0 0 0 0
+                                    0 2 2 2 2 0
+                                    0 2 2 2 2 0
+                                    0 1 1 1 1 0
+                                    0 1 1 1 $ 0
+                                    0 0 0 0 0 0
+                                "
+                            },
+                            // layout = $@"
+                            //    2 2 2 2 2
+                            //    2 2 2 2 2
+                            //    2 2 1 1 2
+                            //    2 2 1 1 2
+                            //    2 2 2 2 2
+                            // ",
+                            // objectsLayouts = new List<string>() {
+                            //     $@"
+                            //       2 2 2 2 2
+                            //       2 2 = 2 2
+                            //       2 2 = 1 2
+                            //       2 2 * 1 2
+                            //       2 2 2 2 +
+                            //     "
+                            //     ,
+                            //     $@"
+                            //       2 2 2 2 2
+                            //       2 2 2 2 2
+                            //       2 2 1 1 2
+                            //       2 2 1 1 2
+                            //       2 2 2 2 $
+                            //     "
+                            // },
+                            rooms =  new Dictionary<string, RoomTemplate>() {
+                                {"1", new RoomTemplate(){ 
+                                    wallTemplate = new Thor.Procedural.Data.PolygonWall() {
+                                        color = SerializableColor.fromUnityColor(Color.red),
+                                        unlit = true
+                                    },
+                                    floorTemplate = new Thor.Procedural.Data.RoomHierarchy() {
+                                        floorMaterial = "DarkWoodFloors",
+                                        roomType = "Bedroom"
+                                    },
+                                    wallHeight = 3.0f
+                                }},
+                                {"2", new RoomTemplate(){ 
+                                    wallTemplate = new Thor.Procedural.Data.PolygonWall() {
+                                        color = SerializableColor.fromUnityColor(Color.blue),
+                                        unlit = true
+                                    },
+                                    floorTemplate = new Thor.Procedural.Data.RoomHierarchy() {
+                                        floorMaterial = "RedBrick",
+                                        roomType = "LivingRoom"
+                                    },
+                                    wallHeight = 3.0f
+                                }}
+                            },
+                            holes = new Dictionary<string, Thor.Procedural.Data.WallRectangularHole>() {
+                                {"=", new Thor.Procedural.Data.Door(){ 
+                                    openness = 1.0f,
+                                    assetId = "Doorway_1",
+                                    room0 = "1"
+
+                                }}
+                            },
+                            objects = new Dictionary<string, Thor.Procedural.Data.HouseObject>() {
+                                {"*", new Thor.Procedural.Data.HouseObject(){ 
+                                    assetId = "Dining_Table_16_2",
+                                    rotation = new FlexibleRotation() { axis = new Vector3(0, 1, 0), degrees = 90}
+                                }},
+                                {"+", new Thor.Procedural.Data.HouseObject(){ 
+                                    assetId = "Chair_007_1"
+                                }},
+                                {"$", new Thor.Procedural.Data.HouseObject(){ 
+                                    assetId = "Apple_4",
+                                    position = new Vector3(0, 2, 0)
+                                }}
+                            },
+                            proceduralParameters = new ProceduralParameters() {
+                                ceilingMaterial = "ps_mat",
+                                floorColliderThickness = 1.0f,
+                                receptacleHeight = 0.7f,
+                                skyboxId = "Sky1",
+                            }
+                        }
+                        
+                    );
+
+                    var temp = @"
+                        {
+                            'rooms': {
+                                '1': {
+                                    'walls': {
+                                        'color': {
+                                            'r': 255,
+                                            'g': 0,
+                                            'b': 0 
+                                        }
+                                    },
+                                    'floor': {
+                                        'floorMaterial': 'WoodGrain_Brown',
+                                        'roomType': 'LivingRoom'
+
+                                    }
+                                }
+                            }
+
+                        }
+                    ";
+
+
+
+                    var jsonResolver = new ShouldSerializeContractResolver();
+                    var houseString = Newtonsoft.Json.JsonConvert.SerializeObject(
+                        house,
+                        Newtonsoft.Json.Formatting.None,
+                        new Newtonsoft.Json.JsonSerializerSettings() {
+                            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                            ContractResolver = jsonResolver
+                        }
+                    );
+                    Debug.Log("#######   HOUSE\n" + houseString);
+
+                    ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
+
+                    Debug.Log("#######   HOUSE Created \n");
+                    break;
+                }
             }
 
             // StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));

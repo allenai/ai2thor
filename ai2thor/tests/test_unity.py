@@ -1124,6 +1124,17 @@ def test_change_resolution_image_synthesis(fifo_controller):
         renderDepthImage=True,
         renderSemanticSegmentation=True,
     )
+    def depth_to_gray_rgb(data):
+        return (255.0 / data.max() * (data - data.min())).astype(np.uint8)
+
+    def save_image(name, image, flip_br=False):
+        import cv2
+        img = image
+        print("is none? {0} is none".format(img is None))
+        if flip_br:
+            img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        cv2.imwrite("{}.png".format(name), img)
+
     fifo_controller.step("RotateRight")
     fifo_controller.step("RotateLeft")
     fifo_controller.step("RotateRight")
@@ -1139,6 +1150,10 @@ def test_change_resolution_image_synthesis(fifo_controller):
     assert event.depth_frame.shape == (300, 300)
     assert event.instance_segmentation_frame.shape == (300, 300, 3)
     assert event.semantic_segmentation_frame.shape == (300, 300, 3)
+    print("is none? {0} is none other {1} ".format( event.depth_frame is None, first_depth_frame is None))
+    save_image("depth_after_resolution_change_300_300.png", depth_to_gray_rgb(event.depth_frame))
+    save_image("before_after_resolution_change_300_300.png", depth_to_gray_rgb(first_depth_frame))
+
     assert np.allclose(event.depth_frame, first_depth_frame, atol=0.001)
     assert np.array_equal(event.instance_segmentation_frame, first_instance_frame)
     assert np.array_equal(event.semantic_segmentation_frame, first_sem_frame)
