@@ -52,7 +52,7 @@ public class AgentManager : MonoBehaviour {
     public List<Camera> thirdPartyCameras = new List<Camera>();
     private Color[] agentColors = new Color[] { Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey };
     public int actionDuration = 3;
-    private BaseFPSAgentController primaryAgent;
+    public BaseFPSAgentController primaryAgent;
     private PhysicsSceneManager physicsSceneManager;
     private FifoServer.Client fifoClient = null;
     private enum serverTypes { WSGI, FIFO };
@@ -69,6 +69,7 @@ public class AgentManager : MonoBehaviour {
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
     public const float MIN_FOV = 0;
+    public string agentMode;
 
 
     public Bounds sceneBounds = UtilityFunctions.CreateEmptyBounds();
@@ -160,6 +161,7 @@ public class AgentManager : MonoBehaviour {
     }
 
     public void Initialize(ServerAction action) {
+        this.agentMode = action.agentMode.ToLower();
         // first parse agentMode and agentControllerType
         //"default" agentMode can use either default or "stochastic" agentControllerType
         //"locobot" agentMode can use either default or "stochastic" agentControllerType

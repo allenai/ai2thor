@@ -7,39 +7,38 @@ needed to control the in-game agent through ai2thor.server.
 
 """
 import atexit
-from collections import deque, defaultdict
-from itertools import product
-import json
 import copy
+import json
 import logging
 import math
 import numbers
-import time
-import random
-import shlex
-import subprocess
-import shutil
-import re
 import os
-from platform import system  as platform_system
-from platform import architecture  as platform_architecture
+import random
+import re
+import shlex
+import shutil
+import subprocess
+import time
 import uuid
+import warnings
+from collections import defaultdict, deque
 from functools import lru_cache
-
+from itertools import product
+from platform import architecture as platform_architecture
+from platform import system as platform_system
 
 import numpy as np
-import ai2thor.wsgi_server
-import ai2thor.fifo_server
-from ai2thor.exceptions import UnityCrashException, RestartError
-from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
-from ai2thor.server import DepthFormat
-import ai2thor.build
-from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
-from ai2thor.util import makedirs, atomic_write
-from ai2thor.util.lock import LockEx
-import ai2thor.platform
 
-import warnings
+import ai2thor.build
+import ai2thor.fifo_server
+import ai2thor.platform
+import ai2thor.wsgi_server
+from ai2thor._quality_settings import DEFAULT_QUALITY, QUALITY_SETTINGS
+from ai2thor.exceptions import RestartError, UnityCrashException
+from ai2thor.interact import DefaultActions, InteractiveControllerPrompt
+from ai2thor.server import DepthFormat
+from ai2thor.util import atomic_write, makedirs
+from ai2thor.util.lock import LockEx
 
 logger = logging.getLogger(__name__)
 
@@ -416,18 +415,32 @@ class Controller(object):
         self.x_display = None
         self.gpu_device = gpu_device
         cuda_visible_devices = list(
-            map(int, filter(lambda y: y.isdigit(),
-            map(lambda x: x.strip(),
-                os.environ.get('CUDA_VISIBLE_DEVICES', '').split(',')))))
+            map(
+                int,
+                filter(
+                    lambda y: y.isdigit(),
+                    map(
+                        lambda x: x.strip(),
+                        os.environ.get("CUDA_VISIBLE_DEVICES", "").split(","),
+                    ),
+                ),
+            )
+        )
 
         if self.gpu_device is not None:
 
             # numbers.Integral works for numpy.int32/64 and Python int
-            if (not isinstance(self.gpu_device, numbers.Integral) or self.gpu_device < 0):
-                raise ValueError("Invalid gpu_device: '%s'. gpu_device must be >= 0" % self.gpu_device)
+            if not isinstance(self.gpu_device, numbers.Integral) or self.gpu_device < 0:
+                raise ValueError(
+                    "Invalid gpu_device: '%s'. gpu_device must be >= 0"
+                    % self.gpu_device
+                )
             elif cuda_visible_devices:
                 if self.gpu_device >= len(cuda_visible_devices):
-                    raise ValueError("Invalid gpu_device: '%s'. gpu_device must less than number of CUDA_VISIBLE_DEVICES: %s" % (self.gpu_device, cuda_visible_devices))
+                    raise ValueError(
+                        "Invalid gpu_device: '%s'. gpu_device must less than number of CUDA_VISIBLE_DEVICES: %s"
+                        % (self.gpu_device, cuda_visible_devices)
+                    )
                 else:
                     self.gpu_device = cuda_visible_devices[self.gpu_device]
         elif cuda_visible_devices:
@@ -442,7 +455,11 @@ class Controller(object):
             self.x_display = ":" + self.x_display
 
         if quality not in QUALITY_SETTINGS:
-            valid_qualities = [q for q, v in sorted(QUALITY_SETTINGS.items(), key=lambda qv: qv[1]) if v > 0]
+            valid_qualities = [
+                q
+                for q, v in sorted(QUALITY_SETTINGS.items(), key=lambda qv: qv[1])
+                if v > 0
+            ]
 
             raise ValueError(
                 "Quality {} is invalid, please select from one of the following settings: ".format(
@@ -614,31 +631,45 @@ class Controller(object):
 
     @staticmethod
     def normalize_scene(scene):
-
         if re.match(r"^FloorPlan[0-9]+$", scene):
             scene = scene + "_physics"
-
         return scene
 
     def reset(self, scene=None, **init_params):
         if scene is None:
             scene = self.scene
 
-        scene = Controller.normalize_scene(scene)
+        is_procedural = isinstance(scene, dict)
+        if is_procedural:
+            # ProcTHOR scene
+            self.server.send(dict(action="Reset", sceneName="Procedural", sequenceId=0))
+            self.last_event = self.server.receive()
+        else:
+            scene = Controller.normalize_scene(scene)
 
-        # scenes in build can be an empty set when GetScenesInBuild doesn't exist as an action
-        # for old builds
-        if self.scenes_in_build and scene not in self.scenes_in_build:
-            raise ValueError(
-                "\nScene '{}' not contained in build (scene names are case sensitive)."
-                "\nPlease choose one of the following scene names:\n\n{}".format(
-                    scene,
-                    ", ".join(sorted(list(self.scenes_in_build))),
+            # scenes in build can be an empty set when GetScenesInBuild doesn't exist as an action
+            # for old builds
+            if self.scenes_in_build and scene not in self.scenes_in_build:
+                raise ValueError(
+                    "\nScene '{}' not contained in build (scene names are case sensitive)."
+                    "\nPlease choose one of the following scene names:\n\n{}".format(
+                        scene,
+                        ", ".join(sorted(list(self.scenes_in_build))),
+                    )
                 )
-            )
 
-        self.server.send(dict(action="Reset", sceneName=scene, sequenceId=0))
-        self.last_event = self.server.receive()
+            self.server.send(dict(action="Reset", sceneName=scene, sequenceId=0))
+            self.last_event = self.server.receive()
+
+            if (
+                scene in self.robothor_scenes()
+                and self.initialization_parameters.get("agentMode", "default").lower()
+                != "locobot"
+            ):
+                warnings.warn(
+                    "You are using a RoboTHOR scene without using the standard LoCoBot.\n"
+                    + "Did you mean to mean to set agentMode='locobot' upon initialization or within controller.reset(...)?"
+                )
 
         # update the initialization parameters
         init_params = init_params.copy()
@@ -680,21 +711,14 @@ class Controller(object):
                 "On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'."
             )
 
-        if (
-            scene in self.robothor_scenes()
-            and self.initialization_parameters.get("agentMode", "default").lower()
-            != "locobot"
-        ):
-            warnings.warn(
-                "You are using a RoboTHOR scene without using the standard LoCoBot.\n"
-                + "Did you mean to mean to set agentMode='locobot' upon initialization or within controller.reset(...)?"
-            )
-
         self.last_event = self.step(
             action="Initialize",
             raise_for_failure=True,
             **self.initialization_parameters,
         )
+
+        if is_procedural:
+            self.last_event = self.step(action="CreateHouse", house=scene)
 
         self.scene = scene
         return self.last_event
@@ -976,12 +1000,14 @@ class Controller(object):
                 " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s"
                 % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
             )
-        
+
         if self.gpu_device is not None:
             # This parameter only applies to the CloudRendering platform.
             # Vulkan maps the passed in parameter to device-index - 1 when compared
             # to the nvidia-smi device ids
-            device_index = self.gpu_device if self.gpu_device < 1 else self.gpu_device + 1
+            device_index = (
+                self.gpu_device if self.gpu_device < 1 else self.gpu_device + 1
+            )
             command += " -force-device-index %d" % device_index
 
         return shlex.split(command)
@@ -1080,19 +1106,20 @@ class Controller(object):
         import requests
 
         payload = []
-        makedirs(self.commits_cache_dir) # must make directory for lock to succeed
+        makedirs(self.commits_cache_dir)  # must make directory for lock to succeed
         # must lock to handle case when multiple procs are started
         # and all fetch from api.github.com
         with LockEx(self._cache_commit_filename(branch)):
             cache_payload, cache_mtime = self._get_cache_commit_history(branch)
-            # we need to limit how often we hit api.github.com since 
+            # we need to limit how often we hit api.github.com since
             # there is a rate limit of 60 per hour per IP
             if cache_payload and (time.time() - cache_mtime) < 300:
                 payload = cache_payload
             else:
                 try:
                     res = requests.get(
-                        "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s" % branch
+                        "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s"
+                        % branch
                     )
                     if res.status_code == 404:
                         raise ValueError("Invalid branch name: %s" % branch)
@@ -1165,13 +1192,14 @@ class Controller(object):
             platform_system(), self.width, self.height, self.x_display, self.headless
         )
 
-
         if platform is None:
             candidate_platforms = ai2thor.platform.select_platforms(request)
         else:
             candidate_platforms = [platform]
 
-        builds = self.find_platform_builds(candidate_platforms, request, commits, releases_dir, local_build)
+        builds = self.find_platform_builds(
+            candidate_platforms, request, commits, releases_dir, local_build
+        )
         if not builds:
             platforms_message = ",".join(map(lambda p: p.name(), candidate_platforms))
             if commit_id:
@@ -1182,7 +1210,11 @@ class Controller(object):
             else:
                 raise Exception(
                     "No build exists for arch=%s platforms=%s and commits: %s"
-                    % (platform_system(), platforms_message, ", ".join(map(lambda x: x[:8], commits)))
+                    % (
+                        platform_system(),
+                        platforms_message,
+                        ", ".join(map(lambda x: x[:8], commits)),
+                    )
                 )
 
         # select the first build + platform that succeeds
@@ -1191,7 +1223,10 @@ class Controller(object):
         for build in builds:
             if build.platform.is_valid(request):
                 # don't emit warnings for CloudRendering since we allow it to fallback to a default
-                if build.commit_id != commits[0] and build.platform != ai2thor.platform.CloudRendering:
+                if (
+                    build.commit_id != commits[0]
+                    and build.platform != ai2thor.platform.CloudRendering
+                ):
                     warnings.warn(
                         "Build for the most recent commit: %s is not available.  Using commit build %s"
                         % (commits[0], build.commit_id)
@@ -1203,9 +1238,12 @@ class Controller(object):
         ]
         for build in builds:
             errors = build.platform.validate(request)
-            message = "Platform %s failed validation with the following errors: %s\n  " % (
-                build.platform.name(),
-                "\t\n".join(errors),
+            message = (
+                "Platform %s failed validation with the following errors: %s\n  "
+                % (
+                    build.platform.name(),
+                    "\t\n".join(errors),
+                )
             )
             instructions = build.platform.dependency_instructions(request)
             if instructions:
@@ -1213,7 +1251,9 @@ class Controller(object):
             error_messages.append(message)
         raise Exception("\n".join(error_messages))
 
-    def find_platform_builds(self, candidate_platforms, request, commits, releases_dir, local_build):
+    def find_platform_builds(
+        self, candidate_platforms, request, commits, releases_dir, local_build
+    ):
         builds = []
         for plat in candidate_platforms:
             for commit_id in commits:

@@ -21,26 +21,13 @@ namespace Thor.Procedural {
     [Serializable]
     public class HouseTemplate {
         public string id;
-
         public string layout;
-
         public IEnumerable<string> objectsLayouts;
         public Dictionary<string, RoomTemplate> rooms;
         public Dictionary<string, WallRectangularHole> doors;
         public Dictionary<string, WallRectangularHole> windows;
         public Dictionary<string, HouseObject> objects;
         public ProceduralParameters proceduralParameters;
-
-        // Creates problems with json serialization
-        // public Dictionary<string, WallRectangularHole> holes {
-        //     get { return 
-        //         doors
-        //             .Select(x => (x.Key, x.Value as WallRectangularHole))
-        //             .Concat(windows.Select(x => (x.Key, x.Value as WallRectangularHole))
-        //         ).ToDictionary(e => e.Key, e => e.Item2);
-        //     }
-        // }
-
     }
 
     [Serializable]
@@ -167,18 +154,6 @@ namespace Thor.Procedural {
                                                 var k = holeContinuation.SelectMany(c => doorDict[(id, layer, c)]);
                                                 connected = connected.Concat(k);
                                             }
-                                            else {
-                                                // foreach (var connect in holeContinuation.SelectMany(c => {
-                                                //     HashSet<(int, int)> val;
-                                                //     var isInDict = doorDict.TryGetValue((id, layer, c), out val);
-                                                //     return isInDict ? val : new HashSet<(int, int)>();
-                                                // })) {
-                                                //     
-                                                //     if ((id, layer, connect) != key) {
-                                                //         doorDict.Remove((id, layer, connect));
-                                                //     }
-                                                // } 
-                                            }
 
                                             var union = doorDict[key].Union(connected);
                                             doorDict[key] = new HashSet<(int, int)>(doorDict[key].Union(connected));
@@ -214,16 +189,9 @@ namespace Thor.Procedural {
                     var room = template.floorTemplate.DeepClone();
                 
                     room.id = roomIntToId(intId, template.floorTemplate);
-                    // room.floorPolygon;
-                    // room.ceilings
 
                     var polygon = template.wallTemplate.polygon;
                     var wallHeight = template.wallHeight;
-                    // if (polygon != null) {
-                    //     polygon = defaultRoomTemplate.wallHeight
-                    // }
-
-                    // var wallHeight =  template.wallTemplate.polygon.DefaultIfEmpty(new Vector3(0.0f, template.wallHeight, 0.0f)).Max(p => p.y);
                     var walls2D = roomToWallsXZ[intId];
                     room.floorPolygon = walls2D.Select(p => new Vector3((float)p.Item1.row, template.floorYPosition, (float)p.Item1.column)).ToList();
                     string ceilingMat = "";
@@ -348,7 +316,6 @@ namespace Thor.Procedural {
 
                     var doorDirVec = new Vector2((float)doorDir.column, (float)doorDir.row).normalized;
                     var dot = Vector2.Dot(wallDir, doorDirVec);
-                    // return true;
                     // TODO add eps
                     return ((xDiff == 0.0 && xDiff1 == 0.0) || (zDiff == 0.0 && zDiff1 == 0.0)) && Math.Abs(dot) < 1e-4;
                 });
@@ -419,7 +386,6 @@ namespace Thor.Procedural {
 
                     var count = objectIdCounter.AddCount(item.id);
                     obj.id = objectToId(item.id, count - 1,  obj.id);
-                    // obj.id =  count - 1 == 0 ? string.IsNullOrEmpty(obj.id) ? objectToId(item.id, count - 1,  obj.id) : $"{obj.id}" : string.IsNullOrEmpty(obj.id) ? $"{item.id}{count - 1}" : ;
                     var roomId = layoutIntArray[coord.row][coord.column];
                     var floorTemplate = houseTemplate.rooms[roomId.ToString()];
                     obj.room = roomIntToId(roomId, floorTemplate.floorTemplate);
@@ -429,7 +395,6 @@ namespace Thor.Procedural {
                     }
 
                     var asset = assetMap.getAsset(obj.assetId);
-
                     var simObj = asset.GetComponent<SimObjPhysics>();
                     var bb = simObj.AxisAlignedBoundingBox;
 
@@ -438,14 +403,6 @@ namespace Thor.Procedural {
                     // TODO use bounding box to center
                     obj.position = new Vector3((float)coord.row - distToZeros.x + obj.position.x, floorTemplate.floorYPosition + obj.position.y, (float)coord.column - distToZeros.z + obj.position.z) + centerOffset;// - new Vector3(centerOffset.x, -centerOffset.y, centerOffset.z);
                     obj.rotation = obj.rotation == null ? new FlexibleRotation() { axis = new Vector3(0.0f, 1.0f, 0.0f), degrees = 0} : obj.rotation;
-
-                    // if ( string.IsNullOrEmpty(obj.assetId) || !assetMap.ContainsKey(obj.assetId)) {
-                    //     return result;
-                    // }
-
-                    // var asset = assetMap.getAsset(obj.assetId);
-
-                    // var holeOffset = getHoleAssetBoundingBox(obj.assetId);
                     if (asset != null) {
                         result.Add(obj);
                     }
@@ -477,24 +434,16 @@ namespace Thor.Procedural {
         }
 
         public static WallRectangularHole getDefaultHoleTemplate() {
-            return new Data.Door() {
-                
-            };
+            return new Data.Door();
         }
 
         public static Dictionary<(int, int), List<((int row, int col), (int row, int col))>> findWalls(int[][] floorplan) {
-            // var walls = new Dictionary<(int, int), IEnumerable<(int row, int col)>>();
-
             var walls = new DefaultDictionary<(int, int), List<((int row, int col), (int row, int col))>>();
-            // for (var i = 0; i < floorplan.Length)
             for(var row = 0; row < floorplan.Length - 1; row++) {
                 for(var col = 0; col < floorplan[row].Length - 1; col++) {
                     var a = floorplan[row][col];
                     var b = floorplan[row][col + 1];
                     if (a != b) {
-                        // if (!walls.ContainsKey((Math.Min(a, b), Math.Max(a,b)))) {
-                        //     walls[(Math.Min(a, b), Math.Max(a,b))] = new 
-                        // }
                         walls[(Math.Min(a, b), Math.Max(a,b))].Add(((row-1, col), (row, col)));
                     }
                     b = floorplan[row+1][col];
@@ -530,9 +479,7 @@ namespace Thor.Procedural {
                             continue;
                         }
                         var breakLoop = false;
-                        // (int ,int) w1_2;
                         foreach (var w1_2 in wallMap[w1_1]) {
-                            // w1_2 = iter;
                             if (wallMap.ContainsKey(w1_2)) {
                                 var w2_1 = w1_2;
                                 foreach (var w2_2 in wallMap[w2_1]) {
@@ -550,7 +497,6 @@ namespace Thor.Procedural {
                                         breakLoop = true;
                                         break;
                                     }
-
 
                                 }
                                 if (breakLoop) {

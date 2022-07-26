@@ -1941,13 +1941,55 @@ namespace Thor.Procedural {
             var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
             agentManager.ResetSceneBounds();
 
-
-            //floorGameObject.AddComponent<UnityEngine.AI.navmeshsur
-
-            //UnityEngine.AI.NavMEshSur
-            //NavMeshSurface[] surfaces;
+            setAgentPose(house: house, agentManager: agentManager);
 
             return floorGameObject;
+        }
+
+        private static void setAgentPose(ProceduralHouse house, AgentManager agentManager) {
+            // teleport the agent into the scene
+            if (
+                house.metadata != null
+                && house.metadata.agentPoses != null
+                && house.metadata.agentPoses.ContainsKey(agentManager.agentMode)
+            ) {
+                BaseFPSAgentController bfps = agentManager.primaryAgent;
+                Vector3 newPosition = house.metadata.agentPoses[agentManager.agentMode].position;
+                Vector3 newRotation = house.metadata.agentPoses[agentManager.agentMode].rotation;
+                float newHorizon = house.metadata.agentPoses[agentManager.agentMode].horizon;
+                bool? newStanding = house.metadata.agentPoses[agentManager.agentMode].standing;
+                if (newPosition != null) {
+                    bfps.transform.position = newPosition;
+                    bfps.autoSyncTransforms();//make sure to sync transforms after teleporting to ensure rigidbody/transforms are all updated even if a frame hasn't passed
+
+                    Vector3 target = new Vector3(
+                        newPosition.x,
+                        bfps.transform.position.y,
+                        newPosition.z
+                    );
+                    Vector3 dir = target - bfps.transform.position;
+                    Vector3 movement = dir.normalized * 100.0f;
+                    if (movement.magnitude > dir.magnitude) {
+                        movement = dir;
+                    }
+                    movement.y = Physics.gravity.y * bfps.m_GravityMultiplier;
+                    bfps.GetComponent<CharacterController>().Move(movement);
+                }
+                if (newRotation != null) {
+                    bfps.transform.rotation = Quaternion.Euler(newRotation);
+                }
+                if (newHorizon != null) {
+                    bfps.m_Camera.transform.localEulerAngles = new Vector3(newHorizon, 0, 0);
+                }
+                if (agentManager.agentMode != "locobot" && newStanding != null) {
+                    PhysicsRemoteFPSAgentController pfps = bfps as PhysicsRemoteFPSAgentController;
+                    if (newStanding == true) {
+                        pfps.stand();
+                    } else {
+                        pfps.crouch();
+                    }
+                }
+            }
         }
 
         public static void spawnObjectHierarchy(HouseObject houseObject) {
@@ -2091,22 +2133,6 @@ namespace Thor.Procedural {
                 Debug.LogError("Asset not in Database " + ho.assetId);
                 return null;
             }
-            // var spawned = GameObject.Instantiate(go, ho.position, Quaternion.identity);
-            // Vector3 toRot = ho.rotation.axis * ho.rotation.degrees;
-            // spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);
-
-            // var toSpawn = spawned.GetComponent<SimObjPhysics>();
-            // Rigidbody rb = spawned.GetComponent<Rigidbody>();
-            // rb.isKinematic = ho.kinematic;
-
-            // toSpawn.objectID = ho.id;
-            // toSpawn.name = ho.id;
-
-            // var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
-            // sceneManager.AddToObjectsInScene(toSpawn);
-            // toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
-
-            // return toSpawn.transform.gameObject;
         }
 
         public static GameObject spawnSimObjPrefab(
@@ -2173,15 +2199,6 @@ namespace Thor.Procedural {
                 spawned.transform.position = position;
                 spawned.transform.rotation = rotation;
             }
-
-            // spawned.transform.localPosition = centerObjectSpace;
-            // spawned.transform.Rotate(rotation.axis, rotation.degrees);
-            // spawned.transform.position += position;
-
-            //var spawned = GameObject.Instantiate(go, position, Quaternion.AngleAxis(rotation.degrees, rotation.axis));
-            // spa
-            //spawned.transform.position = 
-
 
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
@@ -2634,8 +2651,6 @@ namespace Thor.Procedural {
         ) {
             var scaleVec = scale.GetValueOrDefault(Vector2.one);
 
-            // roomWallIndexMap.Values.Select(x => x.First)
-
             var rooms = roomWallIndexMap.Select(entry => {
                 (string wallMaterial, string floorMaterial) materialId;
                 materialsPerRoom.TryGetValue(entry.Key, out materialId);
@@ -2663,38 +2678,8 @@ namespace Thor.Procedural {
                     );
             }
             );
-            
-
-            // return ProceduralTools.createMultiRoomFloorGameObject(
-            //     name,
-            //     rooms,
-            //     materialMap,
-            //     $"room_{name}",
-            //     receptacleHeight,
-            //     floorColliderThickness
-            // );
-            // CreateHouse()
             return new GameObject();
         }
-
-        // public static ProceduralHouse houseFromRoom(
-
-    //     def find_walls(floorplan: np.array):
-    // walls = defaultdict(list)
-    // for row in range(len(floorplan) - 1):
-    //     for col in range(len(floorplan[0]) - 1):
-    //         a = floorplan[row, col]
-    //         b = floorplan[row, col + 1]
-    //         if a != b:
-    //             walls[(int(min(a, b)), int(max(a, b)))].append(
-    //                 ((row - 1, col), (row, col))
-    //             )
-    //         b = floorplan[row + 1, col]
-    //         if a != b:
-    //             walls[(int(min(a, b)), int(max(a, b)))].append(
-    //                 ((row, col - 1), (row, col))
-    //             )
-    // return walls
 
         public static AssetMap<Material> GetMaterials() {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();

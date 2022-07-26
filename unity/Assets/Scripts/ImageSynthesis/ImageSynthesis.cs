@@ -222,13 +222,6 @@ public class ImageSynthesis : MonoBehaviour {
             pass.camera.depth = 0; // This ensures the new camera does not get rendered on screen
         }
 
-        // set the display corresponding to which capturePass this is
-        // var depthValue = 10;
-        // for (int i = 0; i < capturePasses.Length; i++) {
-        //     capturePasses[i].camera.targetDisplay = i;
-        //     capturePasses[i].camera.depthTextureMode = DepthTextureMode.None;
-        // }
-
         // cache materials and setup material properties
         if (!opticalFlowMaterial || opticalFlowMaterial.shader != opticalFlowShader) {
             opticalFlowMaterial = new Material(opticalFlowShader);

@@ -132,7 +132,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected bool m_IsWalking;
         protected float m_WalkSpeed;
         protected float m_RunSpeed;
-        protected float m_GravityMultiplier;
+        public float m_GravityMultiplier = 2f;
         protected static float gridSize = 0.25f;
         // time the checkIfObjectHasStoppedMoving coroutine waits for objects to stop moving
         protected float TimeToWaitForObjectsToComeToRest = 0.0f;
@@ -417,9 +417,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool visualize = false,
             Color? gridColor = null,
             float gridWidth = 0.045f,
-            bool directionsRelativeAgent = false
+            bool directionsRelativeAgent = false,
+            float? gridSize = null
         ) { // max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
+
+            if (!gridSize.HasValue) {
+                gridSize = BaseFPSAgentController.gridSize;
+            }
 
             float sw = m_CharacterController.skinWidth;
             Queue<(int, int)> rightForwardQueue = new Queue<(int, int)>();
@@ -449,7 +454,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // guarantees that floating point errors won't result in slight differences
                 // between the same points.
                 (int, int) rightForward = rightForwardQueue.Dequeue();
-                Vector3 p = startPosition + gridSize * gridMultiplier * (
+                Vector3 p = startPosition + gridSize.Value * gridMultiplier * (
                     right * rightForward.Item1 + forward * rightForward.Item2
                 );
                 if (!goodPoints.Contains(p)) {
@@ -461,7 +466,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             rightForward.Item1 + rightForwardOffset.Item1,
                             rightForward.Item2 + rightForwardOffset.Item2
                         );
-                        Vector3 newPosition = startPosition + gridSize * gridMultiplier * (
+                        Vector3 newPosition = startPosition + gridSize.Value * gridMultiplier * (
                             right * newRightForward.Item1 +
                             forward * newRightForward.Item2
                         );
@@ -475,7 +480,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             skinWidth: sw,
                             startPosition: p,
                             dir: right * rightForwardOffset.Item1 + forward * rightForwardOffset.Item2,
-                            moveMagnitude: gridSize * gridMultiplier,
+                            moveMagnitude: gridSize.Value * gridMultiplier,
                             layerMask: layerMask
                         );
 
@@ -537,7 +542,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
                 // default maxStepCount to scale based on gridSize
-                if (stepsTaken > Math.Floor(maxStepCount / (gridSize * gridSize))) {
+                if (stepsTaken > Math.Floor(maxStepCount / (gridSize.Value * gridSize.Value))) {
                     throw new InvalidOperationException("Too many steps taken in GetReachablePositions.");
                 }
             }
@@ -562,17 +567,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void GetReachablePositions(
             int? maxStepCount = null,
-            bool directionsRelativeAgent = false
+            bool directionsRelativeAgent = false,
+            float? gridSize = null
         ) {
             Vector3[] reachablePositions;
             if (maxStepCount.HasValue) {
                 reachablePositions = getReachablePositions(
                     maxStepCount: maxStepCount.Value,
-                    directionsRelativeAgent: directionsRelativeAgent
+                    directionsRelativeAgent: directionsRelativeAgent,
+                    gridSize: gridSize
                 );
             } else {
                 reachablePositions = getReachablePositions(
-                    directionsRelativeAgent: directionsRelativeAgent
+                    directionsRelativeAgent: directionsRelativeAgent,
+                    gridSize: gridSize
                 );
             }
 
