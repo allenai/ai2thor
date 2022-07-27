@@ -3881,8 +3881,6 @@ def test_render(ctx, editor_mode=False, local_build=False):
     height = 300
     fov = 45
     n = 20
-    import os
-    import json
     controller = ai2thor.controller.Controller(
         local_executable_path=None,
         local_build=local_build,

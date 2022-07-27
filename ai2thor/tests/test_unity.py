@@ -142,7 +142,7 @@ def assert_near(point1, point2, error_message=""):
         )
 
 
-def assert_images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, filepath=""):
+def images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, filepath=""):
     result = np.mean(np.abs(image1 - image2).flatten()) <= max_mean_pixel_diff
     if not result and debug_save:
         # TODO put images somewhere accessible
@@ -156,7 +156,7 @@ def assert_images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, 
 
     return result
 
-def assert_depth_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath=""):
+def depth_images_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath=""):
     result = np.allclose(depth1, depth2, atol=epsilon)
     if not result and debug_save:
         depth1_gray = depth_to_gray_rgb(depth1)
@@ -174,9 +174,7 @@ def assert_depth_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath="
         print(f'Saved failed test images in "{os.path.join(os.getcwd())}"')
     return result
 
-
-
-def assert_images_far(image1, image2, min_mean_pixel_diff=10):
+def images_far(image1, image2, min_mean_pixel_diff=10):
     return np.mean(np.abs(image1 - image2).flatten()) >= min_mean_pixel_diff
 
 
@@ -1165,17 +1163,6 @@ def test_change_resolution_image_synthesis(fifo_controller):
         renderDepthImage=True,
         renderSemanticSegmentation=True,
     )
-    def depth_to_gray_rgb(data):
-        return (255.0 / data.max() * (data - data.min())).astype(np.uint8)
-
-    def save_image(name, image, flip_br=False):
-        import cv2
-        img = image
-        print("is none? {0} is none".format(img is None))
-        if flip_br:
-            img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        cv2.imwrite("{}.png".format(name), img)
-
     fifo_controller.step("RotateRight")
     fifo_controller.step("RotateLeft")
     fifo_controller.step("RotateRight")
@@ -1808,9 +1795,9 @@ def test_set_random_seed(controller):
     controller.step(action="SetRandomSeed", seed=42)
     s42_frame = controller.step(action="RandomizeMaterials").frame
 
-    assert_images_far(s42_frame, s41_frame)
-    assert_images_far(s42_frame, orig_frame)
-    assert_images_far(s41_frame, orig_frame)
+    images_far(s42_frame, s41_frame)
+    images_far(s42_frame, orig_frame)
+    images_far(s41_frame, orig_frame)
 
     f1_1 = controller.reset().frame
     f1_2 = controller.step(action="SetRandomSeed", seed=42).frame
@@ -1820,12 +1807,12 @@ def test_set_random_seed(controller):
     f2_2 = controller.step(action="SetRandomSeed", seed=42).frame
     f2_3 = controller.step(action="RandomizeMaterials").frame
 
-    assert_images_near(f1_1, f2_1)
-    assert_images_near(f1_1, f1_2)
-    assert_images_near(f2_1, f2_2)
-    assert_images_near(f1_3, f2_3)
-    assert_images_far(f2_1, f2_3)
-    assert_images_far(f1_1, f1_3)
+    images_near(f1_1, f2_1)
+    images_near(f1_1, f1_2)
+    images_near(f2_1, f2_2)
+    images_near(f1_3, f2_3)
+    images_far(f2_1, f2_3)
+    images_far(f1_1, f1_3)
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)

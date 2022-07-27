@@ -13,7 +13,7 @@ from ai2thor.tests.constants import TESTS_DATA_DIR, TEST_SCENE
 from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
 from PIL import ImageChops, ImageFilter, Image
-from .test_unity import TestController, build_controller, assert_images_near, assert_depth_near, reset_controller
+from .test_unity import TestController, build_controller, images_near, depth_images_near, reset_controller
 import ai2thor.controller
 import cv2
 
@@ -154,7 +154,7 @@ def test_render_lit(controller_args):
 
     controller.stop()
 
-    assert assert_images_near(evt.cv2img, ground_truth, debug_save=True)
+    assert images_near(evt.cv2img, ground_truth, debug_save=True)
 
 
 @pytest.mark.parametrize("controller_args", fifo_wsgi)
@@ -188,4 +188,4 @@ def test_depth(controller_args):
         horizon=0, standing=True, forceAction=True
     )
 
-    assert assert_depth_near(evt.depth_frame, raw_depth, debug_save=True)
+    assert depth_images_near(evt.depth_frame, raw_depth, debug_save=True)

@@ -170,6 +170,7 @@ namespace Thor.Procedural {
             
             var interiorBoundary = findWalls(layoutIntArray);
             var boundaryGroups = consolidateWalls(interiorBoundary);
+            // TODO: do global scaling on everything after room creation
             var floatingPointBoundaryGroups = scaleBoundaryGroups(boundaryGroups, 1.0f, 3);
 
             var roomIds = layoutIntArray.SelectMany(x => x.Distinct()).Distinct();
@@ -582,12 +583,6 @@ namespace Thor.Procedural {
             }
             return output;
         }
-        
-        // TODO: do global scaling on everything
-        // public static string scalePoints() {
-        //     (Math.Round(pair.Item1.row * scale, precision), Math.Round(pair.Item1.col * scale, precision)),
-        //         (Math.Round(pair.Item2.row * scale, precision), Math.Round(pair.Item2.col * scale, precision))
-        // }
 
         public static string roomIntToId(int id, RoomHierarchy room) {
             return $"{room.id}{id}";
