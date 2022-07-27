@@ -194,9 +194,9 @@ namespace Thor.Procedural {
                     var wallHeight = template.wallHeight;
                     var walls2D = roomToWallsXZ[intId];
                     room.floorPolygon = walls2D.Select(p => new Vector3((float)p.Item1.row, template.floorYPosition, (float)p.Item1.column)).ToList();
-                    string ceilingMat = "";
+                    MaterialProperties ceilingMat = new MaterialProperties();
 
-                    if (room.ceilings == null || room.ceilings.Count < 1 ||  string.IsNullOrEmpty(room.ceilings[0].material)) {
+                    if (room.ceilings == null || room.ceilings.Count < 1 || room.ceilings[0].material == null) {
                         ceilingMat = houseTemplate.proceduralParameters.ceilingMaterial;
                     }
                     else {

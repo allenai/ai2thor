@@ -4050,22 +4050,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             rooms =  new Dictionary<string, RoomTemplate>() {
                                 {"1", new RoomTemplate(){ 
                                     wallTemplate = new Thor.Procedural.Data.PolygonWall() {
-                                        color = SerializableColor.fromUnityColor(Color.red),
-                                        unlit = true
+                                        material = new MaterialProperties() {
+                                            color = SerializableColor.fromUnityColor(Color.red),
+                                            unlit = true
+                                        }
                                     },
                                     floorTemplate = new Thor.Procedural.Data.RoomHierarchy() {
-                                        floorMaterial = "DarkWoodFloors",
+                                        floorMaterial = new MaterialProperties() { name = "DarkWoodFloors"},
                                         roomType = "Bedroom"
                                     },
                                     wallHeight = 3.0f
                                 }},
                                 {"2", new RoomTemplate(){ 
                                     wallTemplate = new Thor.Procedural.Data.PolygonWall() {
-                                        color = SerializableColor.fromUnityColor(Color.blue),
-                                        unlit = true
+                                        material = new MaterialProperties() {
+                                            color = SerializableColor.fromUnityColor(Color.blue),
+                                            unlit = true
+                                        }
                                     },
                                     floorTemplate = new Thor.Procedural.Data.RoomHierarchy() {
-                                        floorMaterial = "RedBrick",
+                                        floorMaterial = new MaterialProperties() { name ="RedBrick" },
                                         roomType = "LivingRoom"
                                     },
                                     wallHeight = 3.0f
@@ -4093,7 +4097,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 }}
                             },
                             proceduralParameters = new ProceduralParameters() {
-                                ceilingMaterial = "ps_mat",
+                                ceilingMaterial = new MaterialProperties() { name = "ps_mat" },
                                 floorColliderThickness = 1.0f,
                                 receptacleHeight = 0.7f,
                                 skyboxId = "Sky1",

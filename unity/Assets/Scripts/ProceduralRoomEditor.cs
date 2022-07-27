@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using Newtonsoft.Json.Linq;
 #if UNITY_EDITOR
 using EasyButtons.Editor;
+using UnityEditor.SceneManagement;
 #endif
 using EasyButtons;
 using System;
@@ -484,10 +485,11 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 // polygon = getPolygonFromWallPoints(p0, p1, backWallClosestRight.height),
                 // TODO get material somehow
                 // material = connectionProps?.openFromWallMaterial?.name
-                material = material.name,
-
-                materialTilingXDivisor = lenn / material.mainTextureScale.x,
-                materialTilingYDivisor = backWallClosestRight.height / material.mainTextureScale.y
+                material = new MaterialProperties() { 
+                    name = material.name, 
+                    tilingDivisorX = lenn / material.mainTextureScale.x,  
+                    tilingDivisorY = backWallClosestRight.height / material.mainTextureScale.y
+                },
             };
 
             // var wallRev = createNewWall(
@@ -713,10 +715,11 @@ public class ProceduralRoomEditor : MonoBehaviour {
             polygon = getPolygonFromWallPoints(p0, p1, height),
             // TODO get material somehow
             // material = connectionProps?.openFromWallMaterial?.name
-            material = material.name,
-
-            materialTilingXDivisor = len / material.mainTextureScale.x,
-            materialTilingYDivisor = height / material.mainTextureScale.y
+            material = new MaterialProperties() { 
+                name = material.name,
+                tilingDivisorX = len / material.mainTextureScale.x,
+                tilingDivisorY = height / material.mainTextureScale.y
+            }
         };
 
     }
@@ -741,9 +744,11 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 id = w.gameObject.name,
                 roomId = w.GetComponentInChildren<WallProperties>().RoomId,
                 polygon = poly,
-                material = material.name,
-                materialTilingXDivisor = box.size.x / material.mainTextureScale.x,
-                materialTilingYDivisor = box.size.y / material.mainTextureScale.y
+                material = new MaterialProperties() { 
+                    name = material.name,
+                    tilingDivisorX = box.size.x / material.mainTextureScale.x,
+                    tilingDivisorY = box.size.y / material.mainTextureScale.y
+                }
             };
         }
         ).ToList();
@@ -1022,7 +1027,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
 
 
-        house.proceduralParameters.ceilingMaterial = GameObject.Find(ProceduralTools.DefaultCeilingRootObjectName).GetComponentInChildren<MeshRenderer>().sharedMaterial.name;
+        house.proceduralParameters.ceilingMaterial = new MaterialProperties() { name = GameObject.Find(ProceduralTools.DefaultCeilingRootObjectName).GetComponentInChildren<MeshRenderer>().sharedMaterial.name };
         house.proceduralParameters.skyboxId = RenderSettings.skybox.name;
 
         Debug.Log("Lights " + house.proceduralParameters.lights.Count);
@@ -1048,6 +1053,18 @@ public class ProceduralRoomEditor : MonoBehaviour {
         }
         var path = Application.dataPath + LoadBasePath + layoutFilename;
         return path;
+    }
+
+    [UnityEditor.MenuItem("Procedural/Build Asset Database")]
+    public static void BuildAssetDB() {
+        var proceduralADB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+        // proceduralADB.prefabs = new AssetMap<GameObject>(ProceduralTools.FindPrefabsInAssets().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+        // proceduralADB.materials = new AssetMap<Material>(ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+
+        proceduralADB.prefabs = ProceduralTools.FindPrefabsInAssets();
+        proceduralADB.materials = ProceduralTools.FindAssetsByType<Material>();
+        proceduralADB.totalMats = proceduralADB.materials.Count();
+        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
     }
     #endif
 }

@@ -47,22 +47,26 @@ namespace Tests {
                     rooms =  new Dictionary<string, RoomTemplate>() {
                         {"1", new RoomTemplate(){ 
                             wallTemplate = new PolygonWall() {
-                                color = SerializableColor.fromUnityColor(Color.red),
-                                unlit = true
+                                material = new MaterialProperties() {
+                                    color = SerializableColor.fromUnityColor(Color.red),
+                                    unlit = true
+                                }
                             },
                             floorTemplate = new RoomHierarchy() {
-                                floorMaterial = "DarkWoodFloors",
+                                floorMaterial = new MaterialProperties() { name = "DarkWoodFloors" },
                                 roomType = "Bedroom"
                             },
                             wallHeight = 3.0f
                         }},
                         {"2", new RoomTemplate(){ 
                             wallTemplate = new PolygonWall() {
-                                color = SerializableColor.fromUnityColor(Color.blue),
-                                unlit = true
+                                material = new MaterialProperties() {
+                                    color = SerializableColor.fromUnityColor(Color.blue),
+                                    unlit = true
+                                }
                             },
                             floorTemplate = new RoomHierarchy() {
-                                floorMaterial = "RedBrick",
+                                floorMaterial = new MaterialProperties() { name = "RedBrick" },
                                 roomType = "LivingRoom"
                             },
                             wallHeight = 3.0f
@@ -90,7 +94,7 @@ namespace Tests {
                         }}
                     },
                     proceduralParameters = new ProceduralParameters() {
-                        ceilingMaterial = "ps_mat",
+                        ceilingMaterial = new MaterialProperties() { name = "ps_mat" },
                         floorColliderThickness = 1.0f,
                         receptacleHeight = 0.7f,
                         skyboxId = "Sky1",
@@ -276,7 +280,7 @@ namespace Tests {
 
             var room2 = house.rooms.Find(r => r.id == "2");
             Assert.IsTrue(room2.ceilings.Count == 1);
-            Assert.IsTrue(room2.ceilings[0].material == houseTemplate.proceduralParameters.ceilingMaterial);
+            Assert.IsTrue(room2.ceilings[0].material.name == houseTemplate.proceduralParameters.ceilingMaterial.name);
             Assert.IsTrue(room2.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).All(e => room2Poly.ElementAt(e.index) == e.point));
 
             var room1Poly = new List<Vector3>() {
@@ -288,7 +292,7 @@ namespace Tests {
 
             var room1 = house.rooms.Find(r => r.id == "1");
             Assert.IsTrue(room1.ceilings.Count == 1);
-            Assert.IsTrue(room1.ceilings[0].material == houseTemplate.proceduralParameters.ceilingMaterial);
+            Assert.IsTrue(room1.ceilings[0].material.name == houseTemplate.proceduralParameters.ceilingMaterial.name);
             Assert.IsTrue(room1.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).All(e => room1Poly.ElementAt(e.index) == e.point));
             yield return true;
         }

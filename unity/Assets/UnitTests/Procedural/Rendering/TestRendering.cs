@@ -38,22 +38,26 @@ namespace Tests {
                     rooms =  new Dictionary<string, RoomTemplate>() {
                         {"1", new RoomTemplate(){ 
                             wallTemplate = new PolygonWall() {
-                                color = SerializableColor.fromUnityColor(Color.red),
-                                unlit = true
+                                material = new MaterialProperties() {
+                                    color = SerializableColor.fromUnityColor(Color.red),
+                                    unlit = true
+                                }
                             },
                             floorTemplate = new RoomHierarchy() {
-                                floorMaterial = "DarkWoodFloors",
+                                floorMaterial = new MaterialProperties() { name ="DarkWoodFloors" },
                                 roomType = "Bedroom"
                             },
                             wallHeight = 3.0f
                         }},
                         {"2", new RoomTemplate(){ 
                             wallTemplate = new PolygonWall() {
-                                color = SerializableColor.fromUnityColor(Color.blue),
-                                unlit = true
+                                material = new MaterialProperties() {
+                                    color = SerializableColor.fromUnityColor(Color.blue),
+                                    unlit = true
+                                }
                             },
                             floorTemplate = new RoomHierarchy() {
-                                floorMaterial = "RedBrick",
+                                floorMaterial = new MaterialProperties() { name = "RedBrick" },
                                 roomType = "LivingRoom"
                             },
                             wallHeight = 3.0f
@@ -68,7 +72,7 @@ namespace Tests {
                         }}
                     },
                     proceduralParameters = new ProceduralParameters() {
-                        ceilingMaterial = "ps_mat",
+                        ceilingMaterial = new MaterialProperties() { name = "ps_mat" },
                         floorColliderThickness = 1.0f,
                         receptacleHeight = 0.7f,
                         skyboxId = "Sky1",
@@ -105,6 +109,7 @@ namespace Tests {
 
             var rgbBytes = this.renderPayload.Find(e => e.Key == "image").Value;
 
+            savePng(rgbBytes, getTestResourcesPath("test.png", false));
             // Unlit red wall
             Assert.True(
                 rgbBytes.Select((pixel, index) => (pixel, index))
