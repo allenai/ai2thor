@@ -182,6 +182,9 @@ public class AgentManager : MonoBehaviour {
                 // Should not be possible but being very defensive.
                 throw new ArgumentException($"Invalid agentMode {action.agentMode}");
             }
+
+            action.autoSimulation = false;
+            physicsSceneManager.MakeAllObjectsMoveable();
         } else {
             var error = $"Invalid agentMode {action.agentMode}";
             Debug.Log(error);
