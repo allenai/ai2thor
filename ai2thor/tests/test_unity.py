@@ -1,22 +1,24 @@
 # import pytest
+import copy
+import glob
+import json
 import os
-import string
 import random
 import re
-import copy
-import json
+import string
 import time
-
-import pytest
 import warnings
+
 import jsonschema
 import numpy as np
+import pytest
+from PIL import ImageChops, ImageFilter, Image
+
 from ai2thor.controller import Controller
+from ai2thor.fifo_server import FifoServer
 from ai2thor.tests.constants import TESTS_DATA_DIR, TEST_SCENE
 from ai2thor.wsgi_server import WsgiServer
-from ai2thor.fifo_server import FifoServer
-from PIL import ImageChops, ImageFilter, Image
-import glob
+
 
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
