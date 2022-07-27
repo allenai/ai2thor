@@ -426,9 +426,10 @@ namespace Thor.Procedural {
                 // var wallTransform = new Matrix4x4(rightNorm, topNorm, Vector3.Cross(rightNorm, topNorm), start);
                 // var holeMaxWorld = wallTransform.MultiplyPoint(hole.boundingBox.max);
                 // var holeMinWorld = wallTransform.MultiplyPoint(hole.boundingBox.min);
+                var boundingBox = getHoleBoundingBox(hole);
 
-                var holeMaxWorld = transform.TransformPoint(hole.boundingBox.max) - (right + top) / 2.0f;// - transform.TransformPoint((right + top) / 2.0f);
-                var holeMinWorld = transform.TransformPoint(hole.boundingBox.min - Vector3.forward * 0.1f) - (right + top) / 2.0f;// - transform.TransformPoint((right + top) / 2.0f);
+                var holeMaxWorld = transform.TransformPoint(boundingBox.max) - (right + top) / 2.0f;// - transform.TransformPoint((right + top) / 2.0f);
+                var holeMinWorld = transform.TransformPoint(boundingBox.min - Vector3.forward * 0.1f) - (right + top) / 2.0f;// - transform.TransformPoint((right + top) / 2.0f);
 
                 var dims = holeMaxWorld - holeMinWorld + transform.TransformVector(Vector3.forward) * 0.2f;
                 var originalDims = dims;
@@ -551,7 +552,8 @@ namespace Thor.Procedural {
                             String.IsNullOrEmpty(w0.layer)
                             ? LayerMask.NameToLayer("SimObjVisible")
                             : LayerMask.NameToLayer(w0.layer)
-                        )
+                        ), 
+                        backFaces: false // TODO param from json
                     );
 
                     wallGO.transform.parent = structure.transform;
@@ -716,7 +718,8 @@ namespace Thor.Procedural {
             float minimumBoxColliderThickness = 0.1f,
             bool globalVertexPositions = false,
             int layer = 8,
-            bool squareTiling = false
+            bool squareTiling = false,
+            bool backFaces = false
         ) {
             var wallGO = new GameObject(toCreate.id);
 
@@ -731,7 +734,7 @@ namespace Thor.Procedural {
             Vector3 boxSize = Vector3.zero;
 
             // boxC.convex = true;
-            var generateBackFaces = false;
+            var generateBackFaces = backFaces;
             const float zeroThicknessEpsilon = 1e-4f;
             var colliderThickness = toCreate.thickness < zeroThicknessEpsilon ? minimumBoxColliderThickness : toCreate.thickness;
 
@@ -786,23 +789,27 @@ namespace Thor.Procedural {
             var min = p0;
             var max = p1 + new Vector3(0.0f, toCreate.height, 0.0f);
 
-            // BoundingBox box0 = new BoundingBox();
-            // BoundingBox box1 = new BoundingBox();
-            // BoundingBox box2 = new BoundingBox();
-            // BoundingBox box3 = new BoundingBox();
-
             IEnumerable<BoundingBox> colliderBoundingBoxes = new List<BoundingBox>();
 
             if (toCreate.hole != null) {
-                var dims = toCreate.hole.boundingBox.max - toCreate.hole.boundingBox.min;
+   
+                if (toCreate.hole.holePolygon != null && toCreate.hole.holePolygon.Count != 2) {
+                    Debug.LogWarning($"Invalid `holePolygon` on object of id '{toCreate.hole.id}', only supported rectangle holes, 4 points in polygon. Using `boundingBox` instead.");
+                    if (toCreate.hole.holePolygon.Count < 2) {
+                        throw new ArgumentException("$Invalid `holePolygon` on object of id '{toCreate.hole.id}', only supported rectangle holes, 4 points in polygon, polygon has {toCreate.hole.holePolygon.Count}.");
+                    }
+                }
+
+                var holeBB = getHoleBoundingBox(toCreate.hole);
+
+                var dims = holeBB.max - holeBB.min;
                 var offset = new Vector2(
-                    toCreate.hole.boundingBox.min.x, toCreate.hole.boundingBox.min.y
+                    holeBB.min.x, holeBB.min.y
                 );
-                Debug.Log("offset " + offset + " dims " + dims);
 
                 if (toCreate.hole.wall1 == toCreate.id) {
                     offset = new Vector2(
-                        width - toCreate.hole.boundingBox.max.x, toCreate.hole.boundingBox.min.y
+                        width - holeBB.max.x, holeBB.min.y
                     );
                 }
 
@@ -907,6 +914,10 @@ namespace Thor.Procedural {
                 Debug.Log($"ToRemove for wall {toCreate.id} {string.Join(",", toRemove)}");
                 
                 triangles = triangles.Where((t, i) => !toRemoveSet.Contains(i)).ToList();
+
+                if (generateBackFaces) {
+                    triangles.AddRange(triangles.AsEnumerable().Reverse().ToList());
+                }
 
             } else {
 
@@ -1464,6 +1475,18 @@ namespace Thor.Procedural {
             return renderer.material.mainTextureOffset;
         }
 
+        private static BoundingBox getHoleBoundingBox(WallRectangularHole hole) {
+            if (hole.holePolygon != null && hole.holePolygon.Count >= 2) {
+                return new BoundingBox() {
+                    min = hole.holePolygon[0],
+                    max = hole.holePolygon[1]
+                };
+            }
+            else {
+                return hole.boundingBox;
+            }
+        }
+
         private static Material generatePolygonMaterial(Material sharedMaterial, SerializableColor color, Vector2 dimensions, float? tilingDivisorX = null, float? tilingDivisorY = null, float offsetX = 0.0f, float offsetY = 0.0f, bool useUnlitShader = false, bool squareTiling = false, MaterialProperties materialProperties = null) {
             // optimization do not copy when not needed
             if (color == null && !tilingDivisorX.HasValue && !tilingDivisorY.HasValue && offsetX == 0.0f && offsetY == 0.0f && !useUnlitShader && materialProperties == null) {
@@ -1828,7 +1851,6 @@ namespace Thor.Procedural {
                 var wallExists = doorsToWalls.TryGetValue(holeCover.id, out wall);
 
                 if (wallExists) {
-
                     // TODO Hack for inconsistent doors and windows
                     // if (holeCover.GetType().IsAssignableFrom(typeof(Thor.Procedural.Data.Door))) {
                     //     var tmp = wall.wall0;    
@@ -1837,16 +1859,29 @@ namespace Thor.Procedural {
                     // }
                     var p0p1 = wall.wall0.p1 - wall.wall0.p0;
 
-
                     var p0p1_norm = p0p1.normalized;
                     var normal = Vector3.Cross(Vector3.up, p0p1_norm);
-                    var pos = wall.wall0.p0 + (p0p1_norm * (holeCover.boundingBox.min.x + holeCover.assetOffset.x)) + Vector3.up * (holeCover.boundingBox.min.y + holeCover.assetOffset.y); //- normal * holeCover.boundingBox.min.z/2.0f;
+                    Vector3 pos;
+                    bool positionFromCenter = false;
+                    Vector3 assetOffset = holeCover.assetOffset;
+
+                    var holeBB = getHoleBoundingBox(holeCover);
+                    pos = wall.wall0.p0 + (p0p1_norm * (holeBB.min.x + assetOffset.x)) + Vector3.up * (holeBB.min.y + assetOffset.y); 
+
+                    if (holeCover.holePolygon != null && holeCover.holePolygon.Count == 2) {
+                        positionFromCenter = true;
+                        assetOffset = holeCover.assetPosition;
+
+
+                        pos = wall.wall0.p0 + (p0p1_norm * (assetOffset.x)) + Vector3.up * (assetOffset.y); 
+                    }
+
+                    
+                    // var pos = wall.wall0.p0 + (p0p1_norm * (holeCover.boundingBox.min.x + holeCover.assetOffset.x)) + Vector3.up * (holeCover.boundingBox.min.y + holeCover.assetOffset.y); //- normal * holeCover.boundingBox.min.z/2.0f;
                     Debug.Log($" ********* Spawn connection at {pos.ToString("F8")}");
                     var rotY = getWallDegreesRotation(new Wall { p0 = wall.wall0.p1, p1 = wall.wall0.p0 });
                     //var rotY = getWallDegreesRotation(wall.wall0);
                     var rotation = Quaternion.AngleAxis(rotY, Vector3.up);
-
-
 
                     var go = spawnSimObjPrefab(
                         prefab: coverPrefab,
@@ -1857,7 +1892,7 @@ namespace Thor.Procedural {
                         rotation: rotation,
                         kinematic: true,
                         color: holeCover.color,
-                        positionBoundingBoxCenter: false
+                        positionBoundingBoxCenter: positionFromCenter
                     );
 
                     setConnectionProperties(go, holeCover);

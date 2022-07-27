@@ -229,6 +229,7 @@ namespace Tests {
             // 0 1 1 1 1 0
             // 0 0 0 0 0 0
             // ",
+        Screen.SetResolution(600, 600, false);
         yield return step(new Dictionary<string, object>() {
                 { "gridSize", 0.25f},
                 { "agentCount", 1},
@@ -238,9 +239,9 @@ namespace Tests {
                 { "renderDepthImage", true},
                 { "action", "Initialize"}
         });
+        
         var house = createTestHouse();
         ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
-
         yield return step(
             new Dictionary<string, object>() {
                 { "position", new Vector3(3.0f, 1.0f, 4.0f)},
@@ -252,17 +253,11 @@ namespace Tests {
         });
 
         var depth = this.renderPayload.Find(e => e.Key == "image_depth").Value;
+        var floatPrecision = 4;
 
-        var itemSize = depth.Length /( Screen.width * Screen.height);
+        // TODO issue with resolution
 
-        var centerIndex = (Screen.height/2) + ((Screen.width/2) * Screen.height);
-
-       
-        
-        Debug.Log($"Screen width: {Screen.width} height: {Screen.height}, Depth Element size: {itemSize}");
-        // TODO: Convert byte array into floats
-        Debug.Log($"r {depth[centerIndex]} g {depth[centerIndex+1]} b {depth[centerIndex+2]} a {depth[centerIndex+3]} r1 {depth[centerIndex+4]}");
-
+        // Assert.True(depth.Length == 600 * 600 * floatPrecision);
      }
 
          protected virtual ProceduralHouse createTestHouse() {
