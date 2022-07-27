@@ -1995,6 +1995,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        protected IEnumerator waitForSecondsRealtime(int seconds) {
+            yield return null; // Necessary as counting happens at the end of the last frame
+            yield return new WaitForSecondsRealtime(seconds);
+            actionFinished(true);
+        }
+
+        public void Sleep(int seconds) {
+            StartCoroutine(waitForSecondsRealtime(seconds));
+        }
+
 #if UNITY_EDITOR
         // for use in Editor to test the Reset function.
         public void Reset(ServerAction action) {
@@ -4662,7 +4672,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
 
-            GameObject asset = assetMap.getAsset(assetId);
+            // GameObject asset = assetMap.getAsset(assetId);
 
             var result = ProceduralTools.getHoleAssetBoundingBox(assetId);
 
