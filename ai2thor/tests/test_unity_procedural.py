@@ -1,20 +1,10 @@
 # import pytest
 import os
-import string
-import random
-import re
-import copy
-import json
 import pytest
-import warnings
-import jsonschema
 import numpy as np
-from ai2thor.tests.constants import TESTS_DATA_DIR, TEST_SCENE
 from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
-from PIL import ImageChops, ImageFilter, Image
-from .test_unity import TestController, build_controller, images_near, depth_images_near, reset_controller
-import ai2thor.controller
+from .test_unity import build_controller, images_near, depth_images_near
 import cv2
 
 DATA_PATH = "ai2thor/tests/data/"

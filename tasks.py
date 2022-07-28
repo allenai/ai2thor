@@ -3871,16 +3871,12 @@ def create_room(ctx, file_path="unity/Assets/Resources/rooms/1.json", editor_mod
 @task
 def test_render(ctx, editor_mode=False, local_build=False):
     import ai2thor.controller
-    import random
-    import json
-    import os
     import cv2
     import numpy as np
     print(os.getcwd())
     width = 300
     height = 300
     fov = 45
-    n = 20
     controller = ai2thor.controller.Controller(
         local_executable_path=None,
         local_build=local_build,
