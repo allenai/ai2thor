@@ -8,6 +8,7 @@ using TMPro;
 using System;
 using UnityEngine.InputSystem.XR;
 using UnityStandardAssets.Characters.FirstPerson;
+using System.Collections.Generic;
 
 public class XRManager : MonoBehaviour
 {
@@ -18,20 +19,31 @@ public class XRManager : MonoBehaviour
 
     [SerializeField] private TMP_Text _modeText;
     [SerializeField] private float _fadeTime = 1.0f;
+    [SerializeField] private ArmToggle _armToggle;
+    [SerializeField] private POVToggle _povToggle;
+    [SerializeField] private LocomotionToggle _locomotionToggle;
 
     [Header("Right Input Action References")]
     [SerializeField] private InputActionReference _rightThumbstickPressReference = null;
-    [SerializeField] private InputActionReference _rightPrimaryPressReference = null;
+    [SerializeField] private InputActionReference _rightPrimaryTapReference = null;
+    [SerializeField] private InputActionReference _rightSecondaryTapReference = null;
+    [SerializeField] private InputActionReference _rightSecondaryHoldReference = null;
 
     [Header("Left Input Action References")]
     [SerializeField] private InputActionReference _leftThumbstickPressReference = null;
-    [SerializeField] private InputActionReference _leftPrimaryPressReference = null;
+    [SerializeField] private InputActionReference _leftPrimaryTapReference = null;
+    [SerializeField] private InputActionReference _leftSecondaryTapReference = null;
+    [SerializeField] private InputActionReference _leftSecondaryHoldReference = null;
 
     [Header("Events")]
     [SerializeField] private UnityEvent _onUserControllerEvent = new UnityEvent();
     [SerializeField] private UnityEvent _onAgentControllerEvent = new UnityEvent();
 
     [SerializeField] private UnityEvent<bool> _onTogglePOVEvent = new UnityEvent<bool>();
+
+    [SerializeField] private UnityEvent<bool> _onToggleArmEvent = new UnityEvent<bool>();
+
+    [SerializeField] private UnityEvent _onResetArmEvent = new UnityEvent();
 
     private enum ControllerMode {
         user = 0,
@@ -40,7 +52,9 @@ public class XRManager : MonoBehaviour
 
     private AgentManager _agentManager = null;
     private ControllerMode _controllerType = ControllerMode.user;
+    private bool _isInitialized = false;
     private bool _isFPSMode = false;
+    private bool _isArmMode = false;
 
     public bool IsFPSMode{
         get { return _isFPSMode; }
@@ -52,23 +66,60 @@ public class XRManager : MonoBehaviour
 
     public static XRManager Instance { get; private set; }
 
+    BaseFPSAgentController CurrentActiveController() {
+        return _agentManager.PrimaryAgent;
+    }
+
     private void Awake() {
         // If there is an instance, and it's not me, delete myself.
-
         if (Instance != null && Instance != this) {
-            Destroy(this);
+            Destroy(this.gameObject);
         } else {
             Instance = this;
         }
 
-        //Initialize
         _agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
         _rightThumbstickPressReference.action.performed += ToggleLocomotionMode;
         _leftThumbstickPressReference.action.performed += ToggleLocomotionMode;
 
-        _rightPrimaryPressReference.action.performed += TogglePOV;
-        _leftPrimaryPressReference.action.performed += TogglePOV;
+        _rightPrimaryTapReference.action.performed += TogglePOV;
+        _leftPrimaryTapReference.action.performed += TogglePOV;
+
+        _rightSecondaryTapReference.action.performed += ToggleArm;
+        _leftSecondaryTapReference.action.performed += ToggleArm;
+
+        _rightSecondaryHoldReference.action.performed += ResetArm;
+        _leftSecondaryHoldReference.action.performed += ResetArm;
+    }
+
+    public void Initialize() {
+        Dictionary<string, object> action = new Dictionary<string, object>();
+        // if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
+        // by default the gridsize is 0.25, so only moving in increments of .25 will work
+        // so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
+        // grid size!
+        // action.renderNormalsImage = true;
+        // action.renderDepthImage = true;
+        // action.renderSemanticSegmentation = true;
+        // action.renderInstanceSegmentation = true;
+        // action.renderFlowImage = true;
+        // action.rotateStepDegrees = 30;
+        // action.ssao = "default";
+        // action.snapToGrid = true;
+        // action.makeAgentsVisible = false;
+        action["agentMode"] = "vr";
+        action["fieldOfView"] = 90f;
+        // action.cameraY = 2.0f;
+        action["snapToGrid"] = true;
+        // action.rotateStepDegrees = 45;
+        action["action"] = "Initialize";
+        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), _agentManager);
+
+        _armToggle.enabled = true;
+        _povToggle.enabled = true;
+
+        _isInitialized = true;
     }
 
     private void Start() {
@@ -77,16 +128,17 @@ public class XRManager : MonoBehaviour
     }
 
     private void Update() {
-        //if (_isFPSMode) {
-        //    IK_Robot_Arm_Controller arm = _AManager.PrimaryAgent.baseAgentComponent.IKArm.GetComponent<IK_Robot_Arm_Controller>();
-        //    //arm.moveArmTarget((PhysicsRemoteFPSAgentController)agent, hand.position, float.PositiveInfinity, 0, false, "world");
-        //    arm.armTarget.position = hand.position;
-        //    arm.armTarget.rotation = hand.rotation;
-        //}
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            Initialize();
+        }
     }
 
     // Called when you want to toggle controller mode
     private void ToggleLocomotionMode(InputAction.CallbackContext context) {
+        if (!_isInitialized) {
+            return;
+        }
+
         _controllerType = ~_controllerType;
         bool value = Convert.ToBoolean((int)_controllerType);
 
@@ -106,6 +158,10 @@ public class XRManager : MonoBehaviour
     }
 
     private void TogglePOV(InputAction.CallbackContext context) {
+        if (!_isInitialized) {
+            return;
+        }
+
         _isFPSMode = !_isFPSMode;
 
         StopCoroutine("FadeText");
@@ -121,6 +177,41 @@ public class XRManager : MonoBehaviour
         }
 
         _onTogglePOVEvent?.Invoke(_isFPSMode);
+    }
+
+    private void ToggleArm(InputAction.CallbackContext context) {
+        if (!_isInitialized) {
+            return;
+        }
+        _isArmMode = !_isArmMode;
+
+        StopCoroutine("FadeText");
+
+        if (_isArmMode) {
+            _modeText.text = "Arm: On";
+            _modeText.color = Color.white;
+            StartCoroutine("FadeText");
+        } else {
+            _modeText.text = "Arm: Off";
+            _modeText.color = Color.white;
+            StartCoroutine("FadeText");
+        }
+
+        _onToggleArmEvent?.Invoke(_isArmMode);
+    }
+
+    private void ResetArm(InputAction.CallbackContext context) {
+        if (!_isArmMode || !_isInitialized) {
+            return;
+        }
+
+        StopCoroutine("FadeText");
+
+        _modeText.text = "Reset Arm";
+        _modeText.color = Color.white;
+        StartCoroutine("FadeText");
+
+        _onResetArmEvent?.Invoke();
     }
 
     public void FadeText() {

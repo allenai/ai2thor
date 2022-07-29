@@ -1,13 +1,9 @@
-using System;
 using UnityEngine;
-using UnityEngine.Events;
-using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
-using TMPro;
-using System.Collections;
 using System.Linq;
+using UnityEngine.SceneManagement;
 
-public class ControllerToggle : MonoBehaviour {
+public class LocomotionToggle : MonoBehaviour {
     /// <summary>
     /// The <c>TeleportController<c> class manages teleportation. 
     /// When the primary button is pressed down activates teleporation mode.
@@ -30,7 +26,15 @@ public class ControllerToggle : MonoBehaviour {
     private GameObject _agentFloorCol;
     private GameObject _userFloorCol;
 
-    void Awake() {
+    private void Awake() {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDestroy() {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode) { 
         var floor = GameObject.FindGameObjectsWithTag("SimObjPhysics").Single(i => i.GetComponent<SimObjPhysics>() != null && i.GetComponent<SimObjPhysics>().Type == SimObjType.Floor).GetComponent<SimObjPhysics>();
         if (floor != null) {
             _userFloorCol = floor.MyColliders[0].gameObject;
@@ -44,11 +48,10 @@ public class ControllerToggle : MonoBehaviour {
             _userFloorCol.AddComponent<TeleportationArea>();
             _agentFloorCol.SetActive(false);
         }
-
     }
 
     // Called when you want to activate teleport mode
-    public void ToggleController(bool value) {
+    public void ToggleLocomotion(bool value) {
         if (_agentFloorCol != null)
             _agentFloorCol.SetActive(value);
 

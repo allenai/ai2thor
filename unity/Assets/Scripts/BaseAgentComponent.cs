@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 namespace UnityStandardAssets.Characters.FirstPerson {
-    [RequireComponent(typeof(CharacterController))]
+    //[RequireComponent(typeof(CharacterController))]
     public class BaseAgentComponent : MonoBehaviour{
         // debug draw bounds of objects in editor
 #if UNITY_EDITOR
@@ -49,7 +49,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // editor
 #if UNITY_EDITOR
             if (this.agent.agentState == AgentState.ActionComplete) {
-                this.agent.VisibleSimObjPhysics = this.agent.VisibleSimObjs(false);
+                //this.agent.VisibleSimObjPhysics = this.agent.VisibleSimObjs(false);
             }
 #endif
 

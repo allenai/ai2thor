@@ -26,7 +26,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ikSolver.ManipulateArm();
         }
 
-        protected IK_Robot_Arm_Controller getArm() {
+        public IK_Robot_Arm_Controller getArm() {
             IK_Robot_Arm_Controller arm = GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm == null) {
                 throw new InvalidOperationException(

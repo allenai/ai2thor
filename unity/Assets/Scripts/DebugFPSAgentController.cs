@@ -13,7 +13,7 @@ using UnityEngine.UI;
 using Newtonsoft.Json.Linq;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-    [RequireComponent(typeof(CharacterController))]
+    //[RequireComponent(typeof(CharacterController))]
     public class DebugFPSAgentController : MonoBehaviour {
         // for use with mouse/keyboard input
         [SerializeField] protected bool m_IsWalking;

@@ -36,6 +36,7 @@ public class POVToggle : MonoBehaviour
 
     private IEnumerator TogglePOVCoroutine(bool isFPSMode) {
         this._isFPSMode = isFPSMode;
+        yield return _screenFader.StartFadeOut();
         if (isFPSMode) {
             // Save original position
             _orignalCameraOffsetPos = _cameraOffset.localPosition;
@@ -43,18 +44,13 @@ public class POVToggle : MonoBehaviour
             _orignalXROriginPos = _xrOrigin.transform.position;
             _orignalXROriginRot = _xrOrigin.transform.rotation;
 
-            yield return _screenFader.StartFadeOut();
-
             SetFPSCameraTransform();
             StartCoroutine("UpdateFPSCamera");
 
             if (_firstPersonCharacterCull != null) {
                 _firstPersonCharacterCull.enabled = true;
             }
-
-            yield return _screenFader.StartFadeIn();
         } else {
-            yield return _screenFader.StartFadeOut();
             StopCoroutine("UpdateFPSCamera");
             var angleDegrees = _xrOrigin.transform.rotation.eulerAngles.y - _orignalXROriginRot.eulerAngles.y;
             _xrOrigin.transform.position = _orignalXROriginPos;
@@ -66,9 +62,8 @@ public class POVToggle : MonoBehaviour
             if (_firstPersonCharacterCull != null) {
                 _firstPersonCharacterCull.enabled = false;
             }
-
-            yield return _screenFader.StartFadeIn();
         }
+        yield return _screenFader.StartFadeIn();
     }
 
     private IEnumerator UpdateFPSCamera() {

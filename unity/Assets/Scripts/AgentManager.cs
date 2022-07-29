@@ -69,6 +69,7 @@ public class AgentManager : MonoBehaviour {
     public const float DEFAULT_FOV = 90;
     public const float MAX_FOV = 180;
     public const float MIN_FOV = 0;
+    [SerializeField] private GameObject _xrPrefab;
 
 
     public Bounds sceneBounds = UtilityFunctions.CreateEmptyBounds();
@@ -323,6 +324,7 @@ primaryAgent.ProcessControlCommand(action.dynamicServerAction);
         var handObj = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "robot_arm_rig_gripper");
         handObj.gameObject.SetActive(true);
         primaryAgent.m_Camera.enabled = false;
+        GameObject.Instantiate(_xrPrefab);
     }
 
     private BaseFPSAgentController createAgentType(Type agentType, BaseAgentComponent agentComponent) {

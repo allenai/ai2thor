@@ -1079,7 +1079,7 @@
             "id": "cf064ff8-d39e-4dd7-b87b-524ca1d0331e",
             "actions": [
                 {
-                    "name": "ToggleControllerTypeRight",
+                    "name": "ToggleLocomotionRight",
                     "type": "Button",
                     "id": "074f5e55-819c-47d5-ba88-120f33b2a550",
                     "expectedControlType": "Button",
@@ -1106,7 +1106,7 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "ToggleControllerTypeLeft",
+                    "name": "ToggleLocomotionLeft",
                     "type": "Button",
                     "id": "e1b74adc-a7f7-4e99-9a44-02b62447b900",
                     "expectedControlType": "Button",
@@ -1131,6 +1131,42 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "ToggleArmLeft",
+                    "type": "Button",
+                    "id": "1905790f-79a5-4f21-b601-e7a05a31b866",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Tap",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ResetArmLeft",
+                    "type": "Button",
+                    "id": "bf8e73e6-7914-4060-80bd-80e4bd252635",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Hold",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ToggleArmRight",
+                    "type": "Button",
+                    "id": "856154d7-121e-4fad-9005-cac8409ee3d0",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Tap",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ResetArmRight",
+                    "type": "Button",
+                    "id": "49d53f52-9588-44ed-935a-57437c716f1d",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Hold",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -1141,7 +1177,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ToggleControllerTypeRight",
+                    "action": "ToggleLocomotionRight",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -1152,7 +1188,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ToggleControllerTypeLeft",
+                    "action": "ToggleLocomotionLeft",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -1197,6 +1233,50 @@
                     "processors": "",
                     "groups": "",
                     "action": "TogglePOVRight",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9f76201b-ffc5-4561-b6a9-fe1bbcad0327",
+                    "path": "<XRController>{LeftHand}/secondaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleArmLeft",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b7d0243c-3074-42af-a699-a91e82a93b39",
+                    "path": "<XRController>{RightHand}/secondaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleArmRight",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "083b58ad-c806-4858-9575-b2865eea4f68",
+                    "path": "<XRController>{RightHand}/secondaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ResetArmRight",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "78aca7d0-63b3-4b49-bcd4-dda9302a5cb8",
+                    "path": "<XRController>{LeftHand}/secondaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ResetArmLeft",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

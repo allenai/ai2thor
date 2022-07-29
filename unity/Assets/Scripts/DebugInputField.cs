@@ -12,7 +12,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     public class DebugInputField : MonoBehaviour {
         public GameObject Agent = null;
         public AgentManager AManager = null;
-        [SerializeField] private GameObject xrPrefab;
 
         private ControlMode controlMode;
 
@@ -428,7 +427,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // AgentManager am = physicsSceneManager.GetComponent<AgentManager>();
                         // Debug.Log(am);
                         // am.Initialize(action);
-                        GameObject xr = GameObject.Instantiate(xrPrefab);
                         break;
                     }
 
