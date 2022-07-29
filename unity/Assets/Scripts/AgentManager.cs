@@ -949,7 +949,7 @@ public class AgentManager : MonoBehaviour {
 
         RenderTexture currentTexture = null;
 
-        if (shouldRender && RenderTexture.active != null) {
+        if (shouldRender) {
             currentTexture = RenderTexture.active;
             for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
                 ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
@@ -1252,11 +1252,11 @@ public class AgentManager : MonoBehaviour {
         return this.agents[activeAgentId];
     }
 
-    public int getActiveAgentId() {
+    public int GetActiveAgentId() {
         return this.activeAgentId;
     }
 
-    public int getThirdPartyCameraCount() {
+    public int GetThirdPartyCameraCount() {
         return this.thirdPartyCameras.Count;
     }
 
