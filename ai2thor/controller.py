@@ -550,6 +550,12 @@ class Controller(object):
                     DeprecationWarning,
                 )
 
+            if "agentControllerType" in self.initialization_parameters:
+                raise ValueError(
+                    "`agentControllerType` is no longer an allowed initialization parameter."
+                    " Use `agentMode` instead."
+                )
+
             # Let's set the scene for them!
             if scene is None:
                 scenes_in_build = self.scenes_in_build
