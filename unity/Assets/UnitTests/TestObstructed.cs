@@ -66,10 +66,17 @@ namespace Tests {
             action["objectId"] = "ShowerDoor|-00.28|+01.23|+01.73";
             yield return step(action);
 
+            action.Clear();
+
+            // action["action"] = "Done";
+            // yield return step(action);
+
+            action.Clear();
+
             action["action"] = "PickupObject";
             action["objectId"] = bottle.GetComponent<SimObjPhysics>().objectID;
             yield return step(action);
-
+            
             Assert.AreEqual(lastActionSuccess, true);
         } 
     }
