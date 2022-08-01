@@ -6,6 +6,7 @@ import re
 import copy
 import json
 import time
+import shutil
 
 import pytest
 import warnings
@@ -150,9 +151,14 @@ def images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, filepat
         img_copy = image1.copy()
         img_copy[dx] = (255, 0, 255)
         test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
-        save_image(f'{test_name}_diff.png', img_copy)
-        save_image(f'{test_name}_fail.png', image1)
-        print(f'Saved failed test images in "{os.path.join(os.getcwd())}"')
+        debug_directory = os.path.join(os.path.join(os.getcwd(), "test_output"))
+        if os.path.exists(debug_directory):
+            shutil.rmtree(debug_directory)
+        os.makedirs(debug_directory)
+
+        save_image(os.path.join(debug_directory, f'{test_name}_diff.png'), img_copy)
+        save_image(os.path.join(debug_directory, f'{test_name}_fail.png'), image1)
+        print(f'Saved failed test images in "{debug_directory}"')
 
     return result
 
@@ -165,13 +171,18 @@ def depth_images_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath="
         print(depth_copy.shape)
         depth_copy[dx] = (255, 0, 255)
         test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
-        save_image(f'{test_name}_diff.png', depth_copy)
-        save_image(f'{test_name}_fail.png', depth1_gray)
+        debug_directory = os.path.join(os.path.join(os.getcwd(), "test_output"))
+        if os.path.exists(debug_directory):
+            shutil.rmtree(debug_directory)
+        os.makedirs(debug_directory)
+
+        save_image(os.path.join(debug_directory, f'{test_name}_diff.png'), depth_copy)
+        save_image(os.path.join(debug_directory, f'{test_name}_fail.png'), depth1_gray)
         np.save(
-            f'{test_name}_fail_raw.npy',
+            f'{test_name}_fail-raw.npy',
             depth1.astype(np.float32),
         ),
-        print(f'Saved failed test images in "{os.path.join(os.getcwd())}"')
+        print(f'Saved failed test images in "{debug_directory}"')
     return result
 
 def images_far(image1, image2, min_mean_pixel_diff=10):
@@ -227,6 +238,7 @@ def test_third_party_camera_with_image_synthesis(fifo_controller):
             position=dict(x=-1.0, z=-2.0, y=1.0),
         )
     )
+    print(len(event.third_party_depth_frames))
     assert len(event.third_party_depth_frames) == 1
     assert len(event.third_party_semantic_segmentation_frames) == 1
     assert len(event.third_party_camera_frames) == 1

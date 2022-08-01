@@ -31,6 +31,20 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+content_types = {
+    ".js": "application/javascript; charset=utf-8",
+    ".html": "text/html; charset=utf-8",
+    ".ico": "image/x-icon",
+    ".svg": "image/svg+xml; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".png": "image/png",
+    ".txt": "text/plain",
+    ".jpg": "image/jpeg",
+    ".wasm": "application/wasm",
+    ".data": "application/octet-stream",
+    ".unityweb": "application/octet-stream",
+    ".json": "application/json",
+}
 
 def add_files(zipf, start_dir, exclude_ext=()):
     for root, dirs, files in os.walk(start_dir):
@@ -927,6 +941,11 @@ def pytest_s3_object(commit_id):
 
     return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
 
+def pytest_s3_general_object(commit_id, filename):
+    s3 = boto3.resource("s3")
+    pytest_key = "test-output/%s-%s" % (commit_id, filename)
+    return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
+
 @task
 def ci_merge_push_pytest_results(context, commit_id):
 
@@ -948,6 +967,29 @@ def ci_merge_push_pytest_results(context, commit_id):
         merged_result["success"] &= result["success"]
         merged_result["stdout"] += result["stdout"] + "\n"
         merged_result["stderr"] += result["stderr"] + "\n"
+
+    test_outputfiles = sorted(
+        glob.glob("{}/*".format("test_output"))
+    )
+
+    logger.info("test output url: ")
+    for filename in test_outputfiles:
+        s3_test_out_obj = pytest_s3_general_object(commit_id, filename)
+
+        s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
+            s3_obj.bucket_name,
+            s3_obj.key,
+        )
+
+        _, ext = os.path.splitext(filename)
+
+        if ext in content_types:
+            s3_obj.put(
+                Body=s3_test_out_obj, ACL="public-read", ContentType=content_types[ext]
+            )
+            logger.info(s3_pytest_url)
+
+
 
     s3_obj.put(
         Body=json.dumps(merged_result), ACL="public-read", ContentType="application/json"
@@ -2120,21 +2162,6 @@ def webgl_deploy(
 ):
     from pathlib import Path
     from os.path import isfile, join, isdir
-
-    content_types = {
-        ".js": "application/javascript; charset=utf-8",
-        ".html": "text/html; charset=utf-8",
-        ".ico": "image/x-icon",
-        ".svg": "image/svg+xml; charset=utf-8",
-        ".css": "text/css; charset=utf-8",
-        ".png": "image/png",
-        ".txt": "text/plain",
-        ".jpg": "image/jpeg",
-        ".wasm": "application/wasm",
-        ".data": "application/octet-stream",
-        ".unityweb": "application/octet-stream",
-        ".json": "application/json",
-    }
 
     content_encoding = {".unityweb": "gzip"}
 

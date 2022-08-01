@@ -178,4 +178,5 @@ def test_depth(controller_args):
         horizon=0, standing=True, forceAction=True
     )
 
+    controller.stop()
     assert depth_images_near(evt.depth_frame, raw_depth, debug_save=True)
