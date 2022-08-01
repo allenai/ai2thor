@@ -20,6 +20,8 @@ import io
 import ai2thor.build
 import logging
 
+from ai2thor.build import TEST_OUTPUT_DIRECTORY
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
@@ -969,7 +971,7 @@ def ci_merge_push_pytest_results(context, commit_id):
         merged_result["stderr"] += result["stderr"] + "\n"
 
     test_outputfiles = sorted(
-        glob.glob("{}/*".format("test_output"))
+        glob.glob("{}/*".format(TEST_OUTPUT_DIRECTORY))
     )
 
     logger.info("test output url: ")

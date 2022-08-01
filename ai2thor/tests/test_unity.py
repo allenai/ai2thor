@@ -13,6 +13,7 @@ import warnings
 import jsonschema
 import numpy as np
 from ai2thor.controller import Controller
+from ai2thor.build import TEST_OUTPUT_DIRECTORY
 from ai2thor.tests.constants import TESTS_DATA_DIR, TEST_SCENE
 from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
@@ -151,7 +152,7 @@ def images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, filepat
         img_copy = image1.copy()
         img_copy[dx] = (255, 0, 255)
         test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
-        debug_directory = os.path.join(os.path.join(os.getcwd(), "test_output"))
+        debug_directory = os.path.join(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY))
         if os.path.exists(debug_directory):
             shutil.rmtree(debug_directory)
         os.makedirs(debug_directory)
@@ -171,7 +172,7 @@ def depth_images_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath="
         print(depth_copy.shape)
         depth_copy[dx] = (255, 0, 255)
         test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
-        debug_directory = os.path.join(os.path.join(os.getcwd(), "test_output"))
+        debug_directory = os.path.join(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY))
         if os.path.exists(debug_directory):
             shutil.rmtree(debug_directory)
         os.makedirs(debug_directory)
