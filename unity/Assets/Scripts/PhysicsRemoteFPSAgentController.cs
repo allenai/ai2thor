@@ -4730,6 +4730,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             CanOpen_Object openableObject,
             bool markActionFinished,
             float openness = 1.0f,
+            bool forceAction = false,
             bool returnToStart = true,
             bool ignoreAgentInTransition = false,
             bool stopAtNonStaticCol = false,
@@ -4747,17 +4748,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 yield break;
             }
 
-            // disables all colliders on the agent, and any held object
-            List<Collider> collidersDisabled = new List<Collider>();
-            if (ignoreAgentInTransition) {
-                foreach (Collider c in GetComponentsInChildren<Collider>()) {
-                    if (c.enabled) {
-                        collidersDisabled.Add(c);
-                        c.enabled = false;
-                    }
-                }
-            }
-
             // stores the object id of each object within this openableObject
             Dictionary<string, Transform> objectIdToOldParent = null;
             if (freezeContained) {
@@ -4772,9 +4762,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
             
-            // set moving parts to treat non-static SimObjects as obstacles or not
+            // set conditions for ignoring certain fail-conditions or not
             // (must be stored on CanOpen_Object component for OnTriggerEnter event to work)
-            openableObject.SetStopsAtNonStaticCol(stopAtNonStaticCol);
+            openableObject.SetForceAction(forceAction);
+            openableObject.SetIgnoreAgentInTransition(ignoreAgentInTransition);
+            openableObject.SetStopAtNonStaticCol(stopAtNonStaticCol);
 
             // open the object to openness
             openableObject.SetIsCurrentlyLerping(true);
@@ -4829,7 +4821,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Reset conditions for next interaction
             openableObject.SetFailState(CanOpen_Object.failState.none);
             openableObject.SetFailureCollision(null);
-            openableObject.SetStopsAtNonStaticCol(false);
+            
+            openableObject.SetForceAction(false);
+            openableObject.SetIgnoreAgentInTransition(false);
+            openableObject.SetStopAtNonStaticCol(false);
 
             // Remove PosRotRef from MovingPart
             if (posRotRef != null) {
@@ -4839,35 +4834,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (markActionFinished) {
                 actionFinished(succeeded);
             }
-        }
-
-        protected bool anyInteractionsStillRunning(List<CanOpen_Object> coos) {
-            bool anyStillRunning = false;
-            if (!anyStillRunning) {
-                foreach (CanOpen_Object coo in coos) {
-                    if (coo.GetIsCurrentlyLerping() == true) {
-                        anyStillRunning = true;
-                        break;
-                    }
-                }
-            }
-            return anyStillRunning;
-        }
-
-        protected IEnumerator InterpolateRotation(Quaternion targetRotation, float seconds) {
-            var time = Time.time;
-            var newTime = time;
-            while (newTime - time < seconds) {
-                yield return null;
-                newTime = Time.time;
-                var diffSeconds = newTime - time;
-                var alpha = Mathf.Min(diffSeconds / seconds, 1.0f);
-                this.transform.rotation = Quaternion.Lerp(this.transform.rotation, targetRotation, alpha);
-
-            }
-            Debug.Log("Rotate action finished! " + (newTime - time));
-            //  this.transform.rotation = targetRotation;
-            actionFinished(true);
         }
 
         // swap an object's materials out to the cooked version of the object
@@ -5143,7 +5109,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool simplifyPhysics = false,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
-            Debug.Log("(1) I got to openObject...");
             // backwards compatibility support
             if (moveMagnitude != null) {
                 // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
@@ -5194,7 +5159,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            
             if (useGripper == true) {
                 // Opening objects with the gripper only works with the IK-Arm
                 // (it'd be preferable to reference the agentMode directly, but no such universal metadata exists)
@@ -5225,55 +5189,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     return;
                 }
 
-                else {
-                    GameObject posRotManip = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmTarget();
-                    GameObject posRotRef = new GameObject("PosRotReference");
-                    posRotRef.transform.parent = parentMovingPart.transform;
-                    posRotRef.transform.position = posRotManip.transform.position;
-                    posRotRef.transform.rotation = posRotManip.transform.rotation;
-                    // Vector3[] PCTranslationOffsets = new Vector3[1];
-                    // Vector3[] PCRotationOffsets = new Vector3[1];
-                    // ParentConstraint movingPartPC = armTarget.AddComponent<ParentConstraint>();
-                    // ConstraintSource PCSource = new ConstraintSource();
-                    // if (codd.GetMovementType() != CanOpen_Object.MovementType.Scale)
-                    // {
-                    //     PCTranslationOffsets[0] = parentMovingPart.transform.InverseTransformPoint(armTarget.transform.position);
-                    //     PCRotationOffsets[0] = (Quaternion.Inverse(parentMovingPart.transform.rotation) * armTarget.transform.rotation).eulerAngles;
-                    //     PCSource.sourceTransform = parentMovingPart.transform;
-                    // } else {
-                    //     positionRef = new GameObject("Scale Motion Reference");
-                    //     positionRef.transform.parent = parentMovingPart.transform;
-                    //     positionRef.transform.position = armTarget.transform.position;
-                    //     PCTranslationOffsets[0] = positionRef.transform.InverseTransformPoint(armTarget.transform.position);
-                    //     PCRotationOffsets[0] = (Quaternion.Inverse(positionRef.transform.rotation) * armTarget.transform.rotation).eulerAngles;
-                    //     PCSource.sourceTransform = positionRef.transform;
-                    // }
-
-                    // PCSource.weight = 1;
-                    // movingPartPC.AddSource(PCSource);
-                    // movingPartPC.translationOffsets = PCTranslationOffsets;
-                    // movingPartPC.rotationOffsets = PCRotationOffsets;
-                    // movingPartPC.constraintActive = true;
-                    StartCoroutine(openAnimation(
-                        openableObject: codd,
-                        markActionFinished: markActionFinished,
-                        openness: openness,
-                        returnToStart: returnToStart,
-                        ignoreAgentInTransition: ignoreAgentInTransition,
-                        stopAtNonStaticCol: stopAtNonStaticCol,
-                        useGripper: useGripper,
-                        physicsInterval: physicsInterval,
-                        freezeContained: simplifyPhysics,
-                        posRotManip: posRotManip,
-                        posRotRef: posRotRef
-                    ));
-                    return;
-                }
+                GameObject posRotManip = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmTarget();
+                GameObject posRotRef = new GameObject("PosRotReference");
+                posRotRef.transform.parent = parentMovingPart.transform;
+                posRotRef.transform.position = posRotManip.transform.position;
+                posRotRef.transform.rotation = posRotManip.transform.rotation;
+                StartCoroutine(openAnimation(
+                    openableObject: codd,
+                    markActionFinished: markActionFinished,
+                    openness: openness,
+                    forceAction: forceAction,
+                    returnToStart: returnToStart,
+                    ignoreAgentInTransition: ignoreAgentInTransition,
+                    stopAtNonStaticCol: stopAtNonStaticCol,
+                    useGripper: useGripper,
+                    physicsInterval: physicsInterval,
+                    freezeContained: simplifyPhysics,
+                    posRotManip: posRotManip,
+                    posRotRef: posRotRef
+                ));
+                return;
             }
+
             StartCoroutine(openAnimation(
                 openableObject: codd,
                 markActionFinished: markActionFinished,
                 openness: openness,
+                forceAction: forceAction,
                 returnToStart: returnToStart,
                 ignoreAgentInTransition: ignoreAgentInTransition,
                 stopAtNonStaticCol: stopAtNonStaticCol,

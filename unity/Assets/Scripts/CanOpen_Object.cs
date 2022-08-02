@@ -32,7 +32,9 @@ public class CanOpen_Object : MonoBehaviour {
     private GameObject failureCollision;
     
     // used to store whether moving parts should treat non-static SimObjects as barriers
-    private bool stopsAtNonStaticCol = false;
+    private bool forceAction = false;
+    private bool ignoreAgentInTransition = false;
+    private bool stopAtNonStaticCol = false;
 
     [Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
     // these are objects to ignore collision with. This is in case the fridge doors touch each other or something that might
@@ -302,6 +304,9 @@ public class CanOpen_Object : MonoBehaviour {
             lastSuccessfulOpenness = currentOpenness;
             Debug.Log("lastSuccessfulOpenness just became " + lastSuccessfulOpenness + " after " + elapsedTime + " time elapsed");
             elapsedTime += physicsInterval;
+            if (failure == failState.none) {
+                Debug.Log("We went through as many cycles as this repeats!");
+            }
             currentOpenness = Mathf.Clamp(
                 initialOpenness + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
                 Mathf.Min(initialOpenness, desiredOpenness),
@@ -390,7 +395,7 @@ public class CanOpen_Object : MonoBehaviour {
 
         // failure check (The OnTriggerEnter collision check is listening at all times,
         // but this hyperextension check must be called manually)
-        if (useGripper == true) {
+        if (useGripper == true && forceAction == false) {
             FK_IK_Solver armBase = GameObject.Find("FPSController").GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmBase().GetComponent<FK_IK_Solver>();
             if ((armBase.IKTarget.position - armBase.armShoulder.position).magnitude + 1e-5 >= armBase.bone2Length + armBase.bone3Length) {
                 failure = failState.hyperextension;
@@ -414,6 +419,12 @@ public class CanOpen_Object : MonoBehaviour {
             return;
         }
 
+        // If forceAction is enabled, then ignore
+        if (forceAction == true) {
+//            Debug.Log("All checks are off when forceAction is true!");
+            return;
+        }
+
         // If the overlapping collider is a child of one of the gameobjects in the array of them
         // that it's been told to explicitly disregard, then ignore
         if (IsInIgnoreArray(other, IgnoreTheseObjects)) {
@@ -429,7 +440,13 @@ public class CanOpen_Object : MonoBehaviour {
 
         // If the overlapping collider is a descendant of the openable GameObject itself (or its parent), then ignore
         if (hasAncestor(other.transform.gameObject, gameObject)) {
-            Debug.Log(other + " belongs to me!");
+//            Debug.Log(other + " belongs to me!");
+            return;
+        }
+
+        // If the overlapping collider is a descendant of the agent when ignoreAgentInTransition is true, then ignore
+        if (ignoreAgentInTransition == true && hasAncestor(other.transform.gameObject, GameObject.Find("FPSController"))) {
+//            Debug.Log(other + " belongs to agent, and ignoreAgentInTransition is active!");
             return;
         }
 
@@ -437,7 +454,7 @@ public class CanOpen_Object : MonoBehaviour {
         // (Unless we explicitly tell the action to treat non-static SimObjects as barriers)
         if (ancestorSimObjPhysics(other.gameObject) != null &&
             ancestorSimObjPhysics(other.gameObject).PrimaryProperty != SimObjPrimaryProperty.Static &&
-            stopsAtNonStaticCol == false) {
+            stopAtNonStaticCol == false) {
 //            Debug.Log("Ignore nonstatics" + other);
             return;
         }
@@ -509,6 +526,15 @@ public class CanOpen_Object : MonoBehaviour {
     public GameObject GetFailureCollision() {
         return failureCollision;
     }
+    public void SetForceAction(bool forceAction) {
+        this.forceAction = forceAction;
+    }
+    public void SetIgnoreAgentInTransition(bool ignoreAgentInTransition) {
+        this.ignoreAgentInTransition = ignoreAgentInTransition;
+    }
+    public void SetStopAtNonStaticCol(bool stopAtNonStaticCol) {
+        this.stopAtNonStaticCol = stopAtNonStaticCol;
+    }
     public bool GetIsCurrentlyLerping() {
         if (this.isCurrentlyLerping) {
             return true;
@@ -519,9 +545,6 @@ public class CanOpen_Object : MonoBehaviour {
     }
     public void SetIsCurrentlyLerping(bool isCurrentlyLerping) {
         this.isCurrentlyLerping = isCurrentlyLerping;
-    }
-    public void SetStopsAtNonStaticCol(bool stopAtNonStaticCol) {
-        this.stopsAtNonStaticCol = stopAtNonStaticCol;
     }
     public void SyncPosRot(GameObject child, GameObject parent) {
             child.transform.position = parent.transform.position;
