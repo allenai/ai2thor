@@ -418,8 +418,14 @@ public class CanOpen_Object : MonoBehaviour {
             return;
         }
 
-        // If the overlapping collider is a child of one of the gameobjects in the array of them
-        // that it's been told to explicitly disregard, then ignore
+        // If the overlapping collider is a (non-physical) trigger collider, then ignore
+        if (other.isTrigger == true) {
+            // Debug.Log(other + "is a trigger, so bye!");
+            return;
+        }
+
+        // If the overlapping collider is a child of one of the gameobjects
+        // that it's been explicitly told to disregard, then ignore
         if (IsInIgnoreArray(other, IgnoreTheseObjects)) {
             // Debug.Log(other + " is in ignore array");
             return;
