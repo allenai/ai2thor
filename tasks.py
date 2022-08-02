@@ -976,6 +976,7 @@ def ci_merge_push_pytest_results(context, commit_id):
     )
 
     logger.info("test output url: ")
+    test_data_urls = []
     for filename in test_outputfiles:
         s3_test_out_obj = pytest_s3_general_object(commit_id, filename)
 
@@ -992,7 +993,9 @@ def ci_merge_push_pytest_results(context, commit_id):
             )
             logger.info(s3_pytest_url)
             merged_result["stdout"] += "--- test output urls: ".format(", ".join(s3_pytest_url))
+        test_data_urls.append(s3_pytest_url)
 
+    merged_result["test_data"] = test_data_urls
 
     s3_obj.put(
         Body=json.dumps(merged_result), ACL="public-read", ContentType="application/json"
@@ -1325,6 +1328,7 @@ def poll_ci_build(context):
             print("pytest url %s" % s3_pytest_url)
             pytest_missing = False
             pytest_result = res.json()
+            print(", ".join(pytest_result["test_data"]))
             print(pytest_result["stdout"])  # print so that it appears in travis log
             print(pytest_result["stderr"])
             if not pytest_result["success"]:
