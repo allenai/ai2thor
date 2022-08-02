@@ -153,9 +153,9 @@ def images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, filepat
         img_copy[dx] = (255, 0, 255)
         test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
         debug_directory = os.path.join(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY))
-        if os.path.exists(debug_directory):
-            shutil.rmtree(debug_directory)
-        os.makedirs(debug_directory)
+        # if os.path.exists(debug_directory):
+        #     shutil.rmtree(debug_directory)
+        # os.makedirs(debug_directory)
 
         save_image(os.path.join(debug_directory, f'{test_name}_diff.png'), img_copy)
         save_image(os.path.join(debug_directory, f'{test_name}_fail.png'), image1)
@@ -173,9 +173,9 @@ def depth_images_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath="
         depth_copy[dx] = (255, 0, 255)
         test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
         debug_directory = os.path.join(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY))
-        if os.path.exists(debug_directory):
-            shutil.rmtree(debug_directory)
-        os.makedirs(debug_directory)
+        # if os.path.exists(debug_directory):
+        #     shutil.rmtree(debug_directory)
+        # os.makedirs(debug_directory)
 
         save_image(os.path.join(debug_directory, f'{test_name}_diff.png'), depth_copy)
         save_image(os.path.join(debug_directory, f'{test_name}_fail.png'), depth1_gray)

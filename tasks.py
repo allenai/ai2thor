@@ -958,6 +958,7 @@ def ci_merge_push_pytest_results(context, commit_id):
         s3_obj.key,
     )
     logger.info("pytest url %s" % s3_pytest_url)
+    logger.info("test output url: ")
 
     merged_result = dict(success=True, stdout="", stderr="")
     result_files = ["tmp/pytest_results.json", "tmp/test_utf_results.json"]
