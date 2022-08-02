@@ -154,12 +154,6 @@ public class CanToggleOnOff : MonoBehaviour {
                             initialOpenness: 0,
                             desiredOpenness: 1,
                             animationTime: animationTime
-                        // INVOLVES THIS SHIT
-                        //         iTween.MoveTo(MovingParts[i], iTween.Hash(
-                        //         "position", OffPositions[i],
-                        //         "islocal", true,
-                        //         "time", animationTime,
-                        //         "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
                         ));
                     }
 
@@ -188,12 +182,6 @@ public class CanToggleOnOff : MonoBehaviour {
                             initialOpenness: 1,
                             desiredOpenness: 0,
                             animationTime: animationTime
-                        // INVOLVES THIS SHIT
-                        //         iTween.MoveTo(MovingParts[i], iTween.Hash(
-                        //         "position", OffPositions[i],
-                        //         "islocal", true,
-                        //         "time", animationTime,
-                        //         "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
                         ));
                     }
 
