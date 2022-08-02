@@ -948,6 +948,8 @@ def pytest_s3_general_object(commit_id, filename):
     pytest_key = "test-output/%s-%s" % (commit_id, filename)
     return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
 
+# def pytest_get_data_urls():
+
 @task
 def ci_merge_push_pytest_results(context, commit_id):
 
@@ -957,6 +959,7 @@ def ci_merge_push_pytest_results(context, commit_id):
         s3_obj.bucket_name,
         s3_obj.key,
     )
+    logger.info("ci_merge_push_pytest_results pytest before url check code change logging works")
     logger.info("pytest url %s" % s3_pytest_url)
     logger.info("test output url: ")
 
