@@ -994,7 +994,6 @@ def ci_merge_push_pytest_results(context, commit_id):
             merged_result["stdout"] += "--- test output urls: ".format(", ".join(s3_pytest_url))
 
 
-
     s3_obj.put(
         Body=json.dumps(merged_result), ACL="public-read", ContentType="application/json"
     )
@@ -1322,6 +1321,7 @@ def poll_ci_build(context):
         )
         res = requests.get(s3_pytest_url)
         if res.status_code == 200:
+            print("bef pytest url")
             print("pytest url %s" % s3_pytest_url)
             pytest_missing = False
             pytest_result = res.json()
