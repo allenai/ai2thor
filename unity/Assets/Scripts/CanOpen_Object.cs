@@ -154,8 +154,6 @@ public class CanOpen_Object : MonoBehaviour {
 
         // set physicsInterval to default of 0.02 if no value has yet been given
         physicsInterval = physicsInterval.GetValueOrDefault(Time.fixedDeltaTime);
-        
-        Debug.Log("Starting Interact action with failState = " + failure);
 
         if (failure == failState.none) {
             // storing initial opennness-state case there's a failure, and we want to revert back to it
@@ -302,11 +300,7 @@ public class CanOpen_Object : MonoBehaviour {
         while (elapsedTime < animationTime && (failure == failState.none || returnToStartMode == true))
         {
             lastSuccessfulOpenness = currentOpenness;
-            Debug.Log("lastSuccessfulOpenness just became " + lastSuccessfulOpenness + " after " + elapsedTime + " time elapsed");
             elapsedTime += physicsInterval;
-            if (failure == failState.none) {
-                Debug.Log("We went through as many cycles as this repeats!");
-            }
             currentOpenness = Mathf.Clamp(
                 initialOpenness + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
                 Mathf.Min(initialOpenness, desiredOpenness),
@@ -327,7 +321,6 @@ public class CanOpen_Object : MonoBehaviour {
         }
 
         setIsOpen(currentOpenness);
-        Debug.Log("Final lastSuccessfulOpenness was " + lastSuccessfulOpenness);
         isCurrentlyLerping = false;
         yield break;
     }
@@ -409,44 +402,44 @@ public class CanOpen_Object : MonoBehaviour {
     public void OnTriggerEnter(Collider other) {
         // If the openable object is meant to ignore trigger collisions entirely, then ignore
         if (!triggerEnabled) {
-//            Debug.Log("I'm supposed to ignore triggers!, Bye, " + other);
+            // Debug.Log("I'm supposed to ignore triggers!, Bye, " + other);
             return;
         }
 
         // If the openable object is not opening or closing, then ignore
         if (!isCurrentlyLerping) {
-//            Debug.Log("I'm not currently lerping! Bye, " + other);
+            // Debug.Log("I'm not currently lerping! Bye, " + other);
             return;
         }
 
         // If forceAction is enabled, then ignore
         if (forceAction == true) {
-//            Debug.Log("All checks are off when forceAction is true!");
+            // Debug.Log("All checks are off when forceAction is true!");
             return;
         }
 
         // If the overlapping collider is a child of one of the gameobjects in the array of them
         // that it's been told to explicitly disregard, then ignore
         if (IsInIgnoreArray(other, IgnoreTheseObjects)) {
-//            Debug.Log(other + " is in ignore array");
+            // Debug.Log(other + " is in ignore array");
             return;
         }
 
         // If the collider is a BoundingBox or ReceptacleTriggerBox, then ignore
         if (other.CompareTag("Untagged") || other.CompareTag("Receptacle")) {
-//            Debug.Log(other + " is bounding box or receptacle trigger box");
+            // Debug.Log(other + " is bounding box or receptacle trigger box");
             return;
         }
 
         // If the overlapping collider is a descendant of the openable GameObject itself (or its parent), then ignore
         if (hasAncestor(other.transform.gameObject, gameObject)) {
-//            Debug.Log(other + " belongs to me!");
+            // Debug.Log(other + " belongs to me!");
             return;
         }
 
         // If the overlapping collider is a descendant of the agent when ignoreAgentInTransition is true, then ignore
         if (ignoreAgentInTransition == true && hasAncestor(other.transform.gameObject, GameObject.Find("FPSController"))) {
-//            Debug.Log(other + " belongs to agent, and ignoreAgentInTransition is active!");
+            // Debug.Log(other + " belongs to agent, and ignoreAgentInTransition is active!");
             return;
         }
 
@@ -455,7 +448,7 @@ public class CanOpen_Object : MonoBehaviour {
         if (ancestorSimObjPhysics(other.gameObject) != null &&
             ancestorSimObjPhysics(other.gameObject).PrimaryProperty != SimObjPrimaryProperty.Static &&
             stopAtNonStaticCol == false) {
-//            Debug.Log("Ignore nonstatics" + other);
+            // Debug.Log("Ignore nonstatics" + other);
             return;
         }
 
