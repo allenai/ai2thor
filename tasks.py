@@ -991,7 +991,7 @@ def ci_merge_push_pytest_results(context, commit_id):
                 Body=s3_test_out_obj, ACL="public-read", ContentType=content_types[ext]
             )
             logger.info(s3_pytest_url)
-            merged_result["stderr"] += "--- test output urls: ".format(", ".join(s3_pytest_url))
+            merged_result["stdout"] += "--- test output urls: ".format(", ".join(s3_pytest_url))
 
 
 

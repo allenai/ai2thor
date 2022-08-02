@@ -180,7 +180,7 @@ def depth_images_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath="
         save_image(os.path.join(debug_directory, f'{test_name}_diff.png'), depth_copy)
         save_image(os.path.join(debug_directory, f'{test_name}_fail.png'), depth1_gray)
         np.save(
-            f'{test_name}_fail-raw.npy',
+            os.path.join(debug_directory, f'{test_name}_fail-raw.npy'),
             depth1.astype(np.float32),
         ),
         print(f'Saved failed test images in "{debug_directory}"')
