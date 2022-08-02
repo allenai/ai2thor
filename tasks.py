@@ -960,7 +960,7 @@ def ci_merge_push_pytest_results(context, commit_id):
     logger.info("pytest url %s" % s3_pytest_url)
     logger.info("test output url: ")
 
-    merged_result = dict(success=True, stdout="", stderr="")
+    merged_result = dict(success=True, stdout="", stderr="", test_data=[])
     result_files = ["tmp/pytest_results.json", "tmp/test_utf_results.json"]
 
     for rf in result_files:
@@ -992,10 +992,14 @@ def ci_merge_push_pytest_results(context, commit_id):
                 Body=s3_test_out_obj, ACL="public-read", ContentType=content_types[ext]
             )
             logger.info(s3_pytest_url)
-            merged_result["stdout"] += "--- test output urls: ".format(", ".join(s3_pytest_url))
-        test_data_urls.append(s3_pytest_url)
+            merged_result["stdout"] += "--- test output url: {}".format(s3_pytest_url)
+            test_data_urls.append(s3_pytest_url)
 
     merged_result["test_data"] = test_data_urls
+    print("Data urls")
+    print(", ".join(test_data_urls))
+
+    logger.info(", ".join(test_data_urls))
 
     s3_obj.put(
         Body=json.dumps(merged_result), ACL="public-read", ContentType="application/json"
@@ -1328,7 +1332,10 @@ def poll_ci_build(context):
             print("pytest url %s" % s3_pytest_url)
             pytest_missing = False
             pytest_result = res.json()
-            print(", ".join(pytest_result["test_data"]))
+            if "test_data" in pytest_result:
+                print(", ".join(pytest_result["test_data"]))
+            else:
+                print("no test data url's in json '{}'".format(s3_pytest_url))
             print(pytest_result["stdout"])  # print so that it appears in travis log
             print(pytest_result["stderr"])
             if not pytest_result["success"]:
