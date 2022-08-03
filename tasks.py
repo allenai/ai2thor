@@ -19,6 +19,7 @@ import multiprocessing
 import io
 import ai2thor.build
 import logging
+import glob
 
 from ai2thor.build import TEST_OUTPUT_DIRECTORY
 
