@@ -1345,15 +1345,17 @@ def poll_ci_build(context):
             print("pytest url %s" % s3_pytest_url)
             pytest_missing = False
             pytest_result = res.json()
+
+            print(pytest_result["stdout"])  # print so that it appears in travis log
+            print(pytest_result["stderr"])
+
             if "test_data" in pytest_result:
                 print(", ".join(pytest_result["test_data"]))
             else:
                 print("no test data url's in json '{}'".format(s3_pytest_url))
-            test_data_urls = pytest_s3_data_urls(commit_id)
-            print("test data urls: ")
-            print(", ".join(test_data_urls))
-            print(pytest_result["stdout"])  # print so that it appears in travis log
-            print(pytest_result["stderr"])
+                test_data_urls = pytest_s3_data_urls(commit_id)
+                print("test data urls: ")
+                print(", ".join(test_data_urls))
             if not pytest_result["success"]:
                 raise Exception("pytest failure")
             break
