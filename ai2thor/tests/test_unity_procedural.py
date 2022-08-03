@@ -26,6 +26,7 @@ _fifo_controller = dict(server_class=FifoServer, **shared_args)
 
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 wsgi = [_wsgi_controller]
+fifo = [_fifo_controller]
 
 def create_pixel_diff_image(img, g_truth):
     dx = np.where(~np.all(g_truth == img, axis=-1))
@@ -144,10 +145,10 @@ def test_render_lit(controller_args):
 
     controller.stop()
 
-    assert images_near(evt.cv2img, ground_truth, debug_save=True)
+    assert images_near(evt.cv2img, ground_truth, max_mean_pixel_diff=8, debug_save=True)
 
 
-@pytest.mark.parametrize("controller_args", fifo_wsgi)
+@pytest.mark.parametrize("controller_args", fifo)
 def test_depth(controller_args):
     controller_args.update(
         renderDepthImage=True,
@@ -179,4 +180,4 @@ def test_depth(controller_args):
     )
 
     controller.stop()
-    assert depth_images_near(evt.depth_frame, raw_depth, debug_save=True)
+    assert depth_images_near(evt.depth_frame, raw_depth, epsilon=1e-1, debug_save=True)
