@@ -948,7 +948,30 @@ def pytest_s3_general_object(commit_id, filename):
     pytest_key = "test-output/%s-%s" % (commit_id, filename)
     return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
 
-# def pytest_get_data_urls():
+def pytest_s3_data_urls(commit_id):
+    test_outputfiles = sorted(
+        glob.glob("{}/*".format(TEST_OUTPUT_DIRECTORY))
+    )
+    logger.info("test output url: ")
+    test_data_urls = []
+    for filename in test_outputfiles:
+        s3_test_out_obj = pytest_s3_general_object(commit_id, filename)
+
+        s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
+            s3_obj.bucket_name,
+            s3_obj.key,
+        )
+
+        _, ext = os.path.splitext(filename)
+
+        if ext in content_types:
+            s3_obj.put(
+                Body=s3_test_out_obj, ACL="public-read", ContentType=content_types[ext]
+            )
+            logger.info(s3_pytest_url)
+            # merged_result["stdout"] += "--- test output url: {}".format(s3_pytest_url)
+            test_data_urls.append(s3_pytest_url)
+    return test_data_urls
 
 @task
 def ci_merge_push_pytest_results(context, commit_id):
@@ -979,26 +1002,8 @@ def ci_merge_push_pytest_results(context, commit_id):
     )
 
     logger.info("test output url: ")
-    test_data_urls = []
-    for filename in test_outputfiles:
-        s3_test_out_obj = pytest_s3_general_object(commit_id, filename)
 
-        s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
-            s3_obj.bucket_name,
-            s3_obj.key,
-        )
-
-        _, ext = os.path.splitext(filename)
-
-        if ext in content_types:
-            s3_obj.put(
-                Body=s3_test_out_obj, ACL="public-read", ContentType=content_types[ext]
-            )
-            logger.info(s3_pytest_url)
-            merged_result["stdout"] += "--- test output url: {}".format(s3_pytest_url)
-            test_data_urls.append(s3_pytest_url)
-
-    merged_result["test_data"] = test_data_urls
+    merged_result["test_data"] = pytest_s3_data_urls(commit_id)
     print("Data urls")
     print(", ".join(test_data_urls))
 
@@ -1339,6 +1344,9 @@ def poll_ci_build(context):
                 print(", ".join(pytest_result["test_data"]))
             else:
                 print("no test data url's in json '{}'".format(s3_pytest_url))
+            test_data_urls = pytest_s3_data_urls(commit_id)
+            print("test data urls: ")
+            print(", ".join(test_data_urls))
             print(pytest_result["stdout"])  # print so that it appears in travis log
             print(pytest_result["stderr"])
             if not pytest_result["success"]:
