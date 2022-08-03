@@ -945,7 +945,7 @@ def pytest_s3_object(commit_id):
 
 def pytest_s3_general_object(commit_id, filename):
     s3 = boto3.resource("s3")
-    pytest_key = "test-output/%s-%s" % (commit_id, filename)
+    pytest_key = "builds/%s-%s" % (commit_id, filename)
     return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
 
 def pytest_s3_data_urls(commit_id):
