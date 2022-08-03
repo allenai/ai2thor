@@ -954,6 +954,7 @@ def pytest_s3_data_urls(commit_id):
         glob.glob("{}/*".format(TEST_OUTPUT_DIRECTORY))
     )
     logger.info("test output url: ")
+    print("Test output files: {}".format(", ".join(test_outputfiles)))
     test_data_urls = []
     for filename in test_outputfiles:
         s3_test_out_obj = pytest_s3_general_object(commit_id, filename)
@@ -1170,6 +1171,9 @@ def ci_build(context):
                     p.join()
 
             if build["tag"] is None:
+                test_data_files = glob.glob("{}/*".format(TEST_OUTPUT_DIRECTORY))
+                logger.info("calling ci_merge_push_pytest_results")
+                logger.info(", ".join(test_data_files))
                 ci_merge_push_pytest_results(context, build["commit_id"])
 
             # must have this after all the procs are joined
