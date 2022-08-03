@@ -958,8 +958,8 @@ def pytest_s3_data_urls(commit_id):
         s3_test_out_obj = pytest_s3_general_object(commit_id, filename)
 
         s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
-            s3_obj.bucket_name,
-            s3_obj.key,
+            s3_test_out_obj.bucket_name,
+            s3_test_out_obj.key,
         )
 
         _, ext = os.path.splitext(filename)
