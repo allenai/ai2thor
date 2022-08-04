@@ -953,6 +953,7 @@ def pytest_s3_data_urls(commit_id):
     test_outputfiles = sorted(
         glob.glob("{}/*".format(TEST_OUTPUT_DIRECTORY))
     )
+    logger.info("Getting test data in directory {}".format(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY)))
     logger.info("test output url: ")
     print("Test output files: {}".format(", ".join(test_outputfiles)))
     test_data_urls = []
@@ -1356,6 +1357,8 @@ def poll_ci_build(context):
                 test_data_urls = pytest_s3_data_urls(commit_id)
                 print("test data urls: ")
                 print(", ".join(test_data_urls))
+
+                print("dir {}".format(os.listdir(TEST_OUTPUT_DIRECTORY)))
             if not pytest_result["success"]:
                 raise Exception("pytest failure")
             break
