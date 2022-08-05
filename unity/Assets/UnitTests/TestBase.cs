@@ -29,7 +29,7 @@ namespace Tests {
             sequenceId++;
         }
 
-        public IEnumerator initalizeDefaultDiscrete() {
+        public virtual IEnumerator Initialize() {
             Dictionary<string, object> action = new Dictionary<string, object>() {
                 { "gridSize", 0.25f},
                 { "agentCount", 1},

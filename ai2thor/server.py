@@ -5,15 +5,17 @@ ai2thor.server
 Handles all communication with Unity through a Flask service.  Messages
 are sent to the controller using a pair of request/response queues.
 """
-
-import warnings
-import numpy as np
-from enum import Enum
-from ai2thor.util.depth import apply_real_noise, generate_noise_indices
 import json
+import subprocess
+import warnings
+from abc import abstractmethod, ABC
 from collections.abc import Mapping
-from abc import abstractmethod
+from enum import Enum
 from typing import Optional, Tuple, Dict, cast, List, Set
+
+import numpy as np
+
+from ai2thor.util.depth import apply_real_noise, generate_noise_indices
 
 
 class NumpyAwareEncoder(json.JSONEncoder):
@@ -126,7 +128,7 @@ class LazyInstanceSegmentationMasks(LazyMask):
     def _integer_color_key(self, color: List[int]) -> np.uint32:
         a = np.array(color + [self._alpha_channel_value], dtype=np.uint8)
         # mypy complains, but it is safe to modify the dtype on an ndarray
-        a.dtype = np.uint32 # type: ignore 
+        a.dtype = np.uint32 # type: ignore
         return a[0]
 
     def _load_all(self):
@@ -137,7 +139,7 @@ class LazyInstanceSegmentationMasks(LazyMask):
                     self.__getitem__(color_name)
 
         self._loaded = True
-    
+
 
     def mask(self, key: str, default: Optional[np.ndarray]=None) -> Optional[np.ndarray]:
         if key not in self.instance_colors:
@@ -178,7 +180,7 @@ class LazyClassSegmentationMasks(LazyMask):
 
         class_mask = np.zeros(self.instance_masks.instance_segmentation_frame_uint32.shape, dtype=bool)
 
-        if key == "background": 
+        if key == "background":
             # "background" is a special name for any color that wasn't included in the metadata
             # this is mainly done for backwards compatibility since we only have a handful of instances
             # of this across all scenes (e.g. FloorPlan412 - thin strip above the doorway)
@@ -208,7 +210,7 @@ class LazyDetections2D(Mapping):
     def __init__(self, instance_masks: LazyInstanceSegmentationMasks):
 
         self.instance_masks = instance_masks
-    
+
     def mask_bounding_box(self, mask: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
         rows = np.any(mask, axis=1)
         cols = np.any(mask, axis=0)
@@ -231,7 +233,7 @@ class LazyDetections2D(Mapping):
             return False
 
 class LazyInstanceDetections2D(LazyDetections2D):
-    
+
     def __init__(self, instance_masks: LazyInstanceSegmentationMasks):
         super().__init__(instance_masks)
         self._detections2d : Dict[str, Optional[Tuple[int, int, int, int]]] = {}
@@ -735,19 +737,26 @@ class DepthFormat(Enum):
     Millimeters = 2
 
 
-class Server(object):
+class Server(ABC):
     def __init__(
-        self, width, height, depth_format=DepthFormat.Meters, add_depth_noise=False
+        self,
+        width,
+        height,
+        timeout: Optional[float],
+        depth_format=DepthFormat.Meters,
+        add_depth_noise=False,
     ):
         self.depth_format = depth_format
         self.add_depth_noise = add_depth_noise
+        self.timeout = timeout
+
         self.noise_indices = None
         self.camera_near_plane = 0.1
         self.camera_far_plane = 20.0
         self.sequence_id = 0
         self.started = False
         self.client_token = None
-        self.unity_proc = None
+        self.unity_proc: Optional[subprocess.Popen] = None
 
         if add_depth_noise:
             assert width == height, "Noise supported with square dimension images only."
@@ -818,3 +827,19 @@ class Server(object):
             self.last_event = events[0]
 
         return self.last_event
+
+    @abstractmethod
+    def start(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def stop(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def send(self, action):
+        raise NotImplementedError
+
+    @abstractmethod
+    def receive(self, timeout: Optional[float] = None):
+        raise NotImplementedError

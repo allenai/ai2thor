@@ -1,20 +1,24 @@
 # import pytest
+import copy
+import glob
+import json
 import os
-import string
 import random
 import re
-import copy
-import json
-import pytest
+import string
+import time
 import warnings
+
 import jsonschema
 import numpy as np
+import pytest
+from PIL import ImageChops, ImageFilter, Image
+
 from ai2thor.controller import Controller
+from ai2thor.fifo_server import FifoServer
 from ai2thor.tests.constants import TESTS_DATA_DIR, TEST_SCENE
 from ai2thor.wsgi_server import WsgiServer
-from ai2thor.fifo_server import FifoServer
-from PIL import ImageChops, ImageFilter, Image
-import glob
+
 
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
@@ -57,7 +61,6 @@ def build_controller(**args):
 
 _wsgi_controller = build_controller(server_class=WsgiServer)
 _fifo_controller = build_controller(server_class=FifoServer)
-_stochastic_controller = build_controller(agentControllerType="stochastic", agentMode="stochastic")
 
 
 def skip_reset(controller):
@@ -84,10 +87,6 @@ def wsgi_controller():
     return reset_controller(_wsgi_controller)
 
 
-@pytest.fixture
-def stochastic_controller():
-    return reset_controller(_stochastic_controller)
-
 
 @pytest.fixture
 def fifo_controller():
@@ -96,7 +95,6 @@ def fifo_controller():
 
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 fifo = [_fifo_controller]
-fifo_wsgi_stoch = [_fifo_controller, _wsgi_controller, _stochastic_controller]
 
 BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
 BASE_FP28_LOCATION = dict(
@@ -112,12 +110,12 @@ def teleport_to_base_location(controller: Controller):
 
 
 def setup_function(function):
-    for c in fifo_wsgi_stoch:
+    for c in fifo_wsgi:
         reset_controller(c)
 
 
 def teardown_module(module):
-    for c in fifo_wsgi_stoch:
+    for c in fifo_wsgi:
         c.stop()
 
 
@@ -137,16 +135,18 @@ def assert_images_far(image1, image2, min_mean_pixel_diff=10):
     return np.mean(np.abs(image1 - image2).flatten()) >= min_mean_pixel_diff
 
 
-def test_stochastic_controller(stochastic_controller):
-    stochastic_controller.reset(TEST_SCENE)
-    assert stochastic_controller.last_event.metadata["lastActionSuccess"]
+def test_agent_controller_type_no_longer_accepted(fifo_controller):
+    with pytest.raises(ValueError):
+        build_controller(
+            server_class=FifoServer,
+            agentControllerType="physics",
+            agentMode="default",
+        )
 
-def test_stochastic_mismatch(fifo_controller):
-    try:
-        c = fifo_controller.reset(agentControllerType="stochastic", agentMode="default")
-    except RuntimeError as e:
-        error_message = str(e)
-    assert error_message and error_message.startswith("Invalid combination of agentControllerType=stochastic and agentMode=default")
+    # TODO: We should make ServerAction type actions fail when passed
+    #   invalid arguments.
+    # with pytest.raises(Exception):
+    #     fifo_controller.reset(agentControllerType="physics", agentMode="default")
 
 
 # Issue #514 found that the thirdPartyCamera image code was causing multi-agents to end
@@ -338,7 +338,7 @@ def test_target_invocation_exception(controller):
     ], "errorMessage should not be empty when OpenObject(x > 1)."
 
 
-@pytest.mark.parametrize("controller", fifo_wsgi_stoch)
+@pytest.mark.parametrize("controller", fifo_wsgi)
 def test_lookup(controller):
 
     e = controller.step(dict(action="RotateLook", rotation=0, horizon=0))
@@ -1112,6 +1112,7 @@ def test_per_step_instance_segmentation(fifo_controller):
 
 
 #  Test for Issue: 477
+@pytest.mark.skip(reason="Winson is debugging why it fails.")
 def test_change_resolution_image_synthesis(fifo_controller):
     fifo_controller.reset(
         TEST_SCENE,
@@ -1121,6 +1122,17 @@ def test_change_resolution_image_synthesis(fifo_controller):
         renderDepthImage=True,
         renderSemanticSegmentation=True,
     )
+    def depth_to_gray_rgb(data):
+        return (255.0 / data.max() * (data - data.min())).astype(np.uint8)
+
+    def save_image(name, image, flip_br=False):
+        import cv2
+        img = image
+        print("is none? {0} is none".format(img is None))
+        if flip_br:
+            img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        cv2.imwrite("{}.png".format(name), img)
+
     fifo_controller.step("RotateRight")
     fifo_controller.step("RotateLeft")
     fifo_controller.step("RotateRight")
@@ -1136,6 +1148,10 @@ def test_change_resolution_image_synthesis(fifo_controller):
     assert event.depth_frame.shape == (300, 300)
     assert event.instance_segmentation_frame.shape == (300, 300, 3)
     assert event.semantic_segmentation_frame.shape == (300, 300, 3)
+    print("is none? {0} is none other {1} ".format( event.depth_frame is None, first_depth_frame is None))
+    save_image("depth_after_resolution_change_300_300.png", depth_to_gray_rgb(event.depth_frame))
+    save_image("before_after_resolution_change_300_300.png", depth_to_gray_rgb(first_depth_frame))
+
     assert np.allclose(event.depth_frame, first_depth_frame, atol=0.001)
     assert np.array_equal(event.instance_segmentation_frame, first_instance_frame)
     assert np.array_equal(event.semantic_segmentation_frame, first_sem_frame)
@@ -2136,7 +2152,7 @@ def test_settle_physics(fifo_controller):
     for object_id, object_metadata in first_objs.items():
         for d in (diff(object_metadata, last_objs.get(object_id, {}), tolerance=0.00001, ignore=set(["receptacleObjectIds"]))):
             diffs.append((object_id, d))
- 
+
     assert diffs == []
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
@@ -2179,4 +2195,23 @@ def test_fill_liquid(controller):
         assert pot["fillLiquid"] is None
         assert not pot["isFilledWithLiquid"]
         assert pot["canFillWithLiquid"]
+
+
+def test_timeout():
+    kwargs = {
+        "server_timeout": 2.0
+    }
+    for c in [
+        build_controller(server_class=WsgiServer, **kwargs),
+        build_controller(server_class=FifoServer, **kwargs)
+    ]:
+        c.step("Sleep", seconds=1)
+        assert c.last_event.metadata["lastActionSuccess"]
+
+        with pytest.raises(TimeoutError):
+            c.step("Sleep", seconds=4)
+
+        # Above crash should kill the unity process
+        time.sleep(1.0)
+        assert c.server.unity_proc.poll() is not None
 

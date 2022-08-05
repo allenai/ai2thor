@@ -132,7 +132,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected bool m_IsWalking;
         protected float m_WalkSpeed;
         protected float m_RunSpeed;
-        protected float m_GravityMultiplier;
+        public float m_GravityMultiplier = 2f;
         protected static float gridSize = 0.25f;
         // time the checkIfObjectHasStoppedMoving coroutine waits for objects to stop moving
         protected float TimeToWaitForObjectsToComeToRest = 0.0f;
@@ -417,9 +417,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool visualize = false,
             Color? gridColor = null,
             float gridWidth = 0.045f,
-            bool directionsRelativeAgent = false
+            bool directionsRelativeAgent = false,
+            float? gridSize = null
         ) { // max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
+
+            if (!gridSize.HasValue) {
+                gridSize = BaseFPSAgentController.gridSize;
+            }
 
             float sw = m_CharacterController.skinWidth;
             Queue<(int, int)> rightForwardQueue = new Queue<(int, int)>();
@@ -449,7 +454,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // guarantees that floating point errors won't result in slight differences
                 // between the same points.
                 (int, int) rightForward = rightForwardQueue.Dequeue();
-                Vector3 p = startPosition + gridSize * gridMultiplier * (
+                Vector3 p = startPosition + gridSize.Value * gridMultiplier * (
                     right * rightForward.Item1 + forward * rightForward.Item2
                 );
                 if (!goodPoints.Contains(p)) {
@@ -461,7 +466,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             rightForward.Item1 + rightForwardOffset.Item1,
                             rightForward.Item2 + rightForwardOffset.Item2
                         );
-                        Vector3 newPosition = startPosition + gridSize * gridMultiplier * (
+                        Vector3 newPosition = startPosition + gridSize.Value * gridMultiplier * (
                             right * newRightForward.Item1 +
                             forward * newRightForward.Item2
                         );
@@ -475,7 +480,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             skinWidth: sw,
                             startPosition: p,
                             dir: right * rightForwardOffset.Item1 + forward * rightForwardOffset.Item2,
-                            moveMagnitude: gridSize * gridMultiplier,
+                            moveMagnitude: gridSize.Value * gridMultiplier,
                             layerMask: layerMask
                         );
 
@@ -537,7 +542,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
                 // default maxStepCount to scale based on gridSize
-                if (stepsTaken > Math.Floor(maxStepCount / (gridSize * gridSize))) {
+                if (stepsTaken > Math.Floor(maxStepCount / (gridSize.Value * gridSize.Value))) {
                     throw new InvalidOperationException("Too many steps taken in GetReachablePositions.");
                 }
             }
@@ -562,17 +567,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void GetReachablePositions(
             int? maxStepCount = null,
-            bool directionsRelativeAgent = false
+            bool directionsRelativeAgent = false,
+            float? gridSize = null
         ) {
             Vector3[] reachablePositions;
             if (maxStepCount.HasValue) {
                 reachablePositions = getReachablePositions(
                     maxStepCount: maxStepCount.Value,
-                    directionsRelativeAgent: directionsRelativeAgent
+                    directionsRelativeAgent: directionsRelativeAgent,
+                    gridSize: gridSize
                 );
             } else {
                 reachablePositions = getReachablePositions(
-                    directionsRelativeAgent: directionsRelativeAgent
+                    directionsRelativeAgent: directionsRelativeAgent,
+                    gridSize: gridSize
                 );
             }
 
@@ -583,6 +591,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public abstract void InitializeBody();
+
+         private bool ValidRotateStepDegreesWithSnapToGrid(float rotateDegrees) {
+            // float eps = 0.00001f;
+            return rotateDegrees == 90.0f || rotateDegrees == 180.0f || rotateDegrees == 270.0f || (rotateDegrees % 360.0f) == 0.0f;
+        }
 
         public void Initialize(ServerAction action) {
 
@@ -632,6 +645,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // default is 90 defined in the ServerAction class, specify whatever you want the default to be
             if (action.rotateStepDegrees > 0.0) {
                 this.rotateStepDegrees = action.rotateStepDegrees;
+            }
+
+             if (action.snapToGrid && !ValidRotateStepDegreesWithSnapToGrid(action.rotateStepDegrees)) {
+                errorMessage = $"Invalid values 'rotateStepDegrees': ${action.rotateStepDegrees} and 'snapToGrid':${action.snapToGrid}. 'snapToGrid': 'True' is not supported when 'rotateStepDegrees' is different from grid rotation steps of 0, 90, 180, 270 or 360.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
             }
 
             this.snapToGrid = action.snapToGrid;
@@ -1973,6 +1993,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // no op action
         public void Pass() {
             actionFinished(true);
+        }
+
+        protected IEnumerator waitForSecondsRealtime(int seconds) {
+            yield return null; // Necessary as counting happens at the end of the last frame
+            yield return new WaitForSecondsRealtime(seconds);
+            actionFinished(true);
+        }
+
+        public void Sleep(int seconds) {
+            StartCoroutine(waitForSecondsRealtime(seconds));
         }
 
 #if UNITY_EDITOR
@@ -3835,7 +3865,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ObjectNavExpertAction(ServerAction action) {
             NavMeshPath path = new UnityEngine.AI.NavMeshPath();
             Func<bool> visibilityTest;
-            if (!String.IsNullOrEmpty(action.objectType) && String.IsNullOrEmpty(action.objectId)) {
+            if (!String.IsNullOrEmpty(action.objectType) || !String.IsNullOrEmpty(action.objectId)) {
                 SimObjPhysics sop = getSimObjectFromTypeOrId(action);
                 path = getShortestPath(sop, true);
                 visibilityTest = () => objectIsWithinViewport(sop);
@@ -4441,7 +4471,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
             VisualizePath(startHit.position, path);
 #endif
-            this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+            this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
         }
 
         public void GetShortestPathToPoint(
@@ -4593,10 +4623,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
 
-            GameObject asset = assetMap.getAsset(assetId);
+            // GameObject asset = assetMap.getAsset(assetId);
 
-            var holeMetadata = asset.GetComponentInChildren<HoleMetadata>();
-             if (holeMetadata == null) {
+            var result = ProceduralTools.getHoleAssetBoundingBox(assetId);
+
+            if (result == null) {
                 actionFinished(
                     success: false,
                     errorMessage: $"Asset '{assetId}' does not have a HoleMetadata component, it's probably not a connector like a door or window or component has to be added in the prefab."
@@ -4604,15 +4635,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
             }
             else {
-                var diff = holeMetadata.Max - holeMetadata.Min;
-
-                diff = new Vector3(Math.Abs(diff.x), Math.Abs(diff.y), Math.Abs(diff.z));// - holeMetadata.Margin;
-                // inverse offset for the asset
-                var min = new Vector3(holeMetadata.Min.x, -holeMetadata.Min.y, -holeMetadata.Min.z);
-                // var max = new Vector3(-holeMetadata.Max.x, holeMetadata.Max.y, holeMetadata.Max.z);
                 actionFinished(
                     success: false,
-                    actionReturn: new BoundingBoxWithOffset() { min=Vector3.zero, max=diff, offset=min}
+                    actionReturn: result
                 );
             }
         }

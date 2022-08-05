@@ -10,7 +10,7 @@ namespace Tests {
     public class TestDispatcher : TestBase {
         [UnityTest]
         public IEnumerator TestDispatchInvalidArguments() {
-            yield return initalizeDefaultDiscrete();
+            yield return Initialize();
             var args = new Dictionary<string, object>() {
                 {"action", "PutObject"},
                 {"x", 0.3f},
@@ -26,7 +26,7 @@ namespace Tests {
 
         [UnityTest]
         public IEnumerator TestStepInvalidArguments() {
-            yield return initalizeDefaultDiscrete();
+            yield return Initialize();
 
             var args = new Dictionary<string, object>() {
                 {"action", "PutObject"},
