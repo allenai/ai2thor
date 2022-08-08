@@ -1088,6 +1088,24 @@
                     "initialStateCheck": true
                 },
                 {
+                    "name": "ToggleMoveArmBasetRight",
+                    "type": "Button",
+                    "id": "ccb0a21a-4081-4d59-bd13-5d0d76a7ea45",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "MoveArmBaseRight",
+                    "type": "Value",
+                    "id": "ce7f4894-d850-49e0-a582-0ee021685e9f",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
                     "name": "AgentTurn",
                     "type": "Value",
                     "id": "bb3838fe-7324-4033-a02b-11224aa79be6",
@@ -1110,6 +1128,24 @@
                     "type": "Button",
                     "id": "e1b74adc-a7f7-4e99-9a44-02b62447b900",
                     "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "ToggleMoveArmBaseLeft",
+                    "type": "Button",
+                    "id": "77922cea-982a-4196-a6f0-ae0fe6b81e54",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "MoveArmBaseLeft",
+                    "type": "Value",
+                    "id": "563a9c36-2ae1-419b-88cb-9755d3cfa0b7",
+                    "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
@@ -1167,6 +1203,33 @@
                     "processors": "",
                     "interactions": "Hold",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "ToggleGraspRight",
+                    "type": "Button",
+                    "id": "9f47216d-495c-4b7e-a917-0c718db7c9c5",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ToggleGraspLeft",
+                    "type": "Button",
+                    "id": "1ccb8ecf-35b3-4c8a-b382-e1961de2b6a9",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ToggleMenu",
+                    "type": "Button",
+                    "id": "2ab26a5b-1fae-4955-924d-306837ea8b46",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
                 }
             ],
             "bindings": [
@@ -1277,6 +1340,83 @@
                     "processors": "",
                     "groups": "",
                     "action": "ResetArmLeft",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1f864063-21b2-479d-bcdd-eebd1ae7404d",
+                    "path": "<XRController>{RightHand}/gripPressed",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleGraspRight",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "7468bced-d72d-4597-b361-2880ec7276a4",
+                    "path": "<XRController>{LeftHand}/gripPressed",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleGraspLeft",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9377ca85-c488-4853-8e88-5f5a59aa53f0",
+                    "path": "<XRController>{LeftHand}/menuButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleMenu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4d82e5c6-db1e-4b4d-8eec-963135b744a0",
+                    "path": "<XRController>{RightHand}/primary2DAxis",
+                    "interactions": "Sector(directions=3,sweepBehavior=1)",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MoveArmBaseRight",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "359bf315-8115-4b45-9d5e-01265cffa87d",
+                    "path": "<XRController>{LeftHand}/primary2DAxis",
+                    "interactions": "Sector(directions=3,sweepBehavior=1)",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MoveArmBaseLeft",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f8bd3468-befb-4375-9bf2-e3fcc300eb12",
+                    "path": "<XRController>{RightHand}/thumbstickClicked",
+                    "interactions": "Press(behavior=2)",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleMoveArmBasetRight",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9b93dece-8f42-4afa-9043-41871aca1510",
+                    "path": "<XRController>{LeftHand}/thumbstickClicked",
+                    "interactions": "Press(behavior=2)",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ToggleMoveArmBaseLeft",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

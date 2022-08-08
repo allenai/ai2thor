@@ -18,32 +18,45 @@ public class XRManager : MonoBehaviour
     /// 
 
     [SerializeField] private TMP_Text _modeText;
+    [SerializeField] private Canvas _armMenu;
+    [SerializeField] private TMP_Text _locomotionText;
+    [SerializeField] private TMP_Text _armText;
+    [SerializeField] private TMP_Text _povText;
     [SerializeField] private float _fadeTime = 1.0f;
-    [SerializeField] private ArmToggle _armToggle;
-    [SerializeField] private POVToggle _povToggle;
-    [SerializeField] private LocomotionToggle _locomotionToggle;
 
     [Header("Right Input Action References")]
     [SerializeField] private InputActionReference _rightThumbstickPressReference = null;
     [SerializeField] private InputActionReference _rightPrimaryTapReference = null;
     [SerializeField] private InputActionReference _rightSecondaryTapReference = null;
     [SerializeField] private InputActionReference _rightSecondaryHoldReference = null;
+    [SerializeField] private InputActionReference _rightGripPressReference = null;
 
     [Header("Left Input Action References")]
+    [SerializeField] private InputActionReference _leftMenuPressReference = null;
     [SerializeField] private InputActionReference _leftThumbstickPressReference = null;
     [SerializeField] private InputActionReference _leftPrimaryTapReference = null;
     [SerializeField] private InputActionReference _leftSecondaryTapReference = null;
     [SerializeField] private InputActionReference _leftSecondaryHoldReference = null;
+    [SerializeField] private InputActionReference _leftGripPressReference = null;
 
     [Header("Events")]
-    [SerializeField] private UnityEvent _onUserControllerEvent = new UnityEvent();
-    [SerializeField] private UnityEvent _onAgentControllerEvent = new UnityEvent();
+    [SerializeField] private UnityEvent _onUserLocomotionEvent = new UnityEvent();
+    [SerializeField] private UnityEvent _onAgentLocomotionEvent = new UnityEvent();
 
     [SerializeField] private UnityEvent<bool> _onTogglePOVEvent = new UnityEvent<bool>();
 
-    [SerializeField] private UnityEvent<bool> _onToggleArmEvent = new UnityEvent<bool>();
+    [SerializeField] private UnityEvent<bool> _onArmOnEvent = new UnityEvent<bool>();
+    [SerializeField] private UnityEvent<bool> _onArmOffEvent = new UnityEvent<bool>();
+
+    [SerializeField] private UnityEvent<bool> _onEnableMoveArmBaseEvent = new UnityEvent<bool>();
+    [SerializeField] private UnityEvent<bool> _onDisableMoveArmBaseEvent = new UnityEvent<bool>();
 
     [SerializeField] private UnityEvent _onResetArmEvent = new UnityEvent();
+
+    [SerializeField] private UnityEvent _onPickUpObjectEvent = new UnityEvent();
+
+    [SerializeField] private UnityEvent _onInitializedEvent = new UnityEvent();
+
 
     private enum ControllerMode {
         user = 0,
@@ -55,6 +68,7 @@ public class XRManager : MonoBehaviour
     private bool _isInitialized = false;
     private bool _isFPSMode = false;
     private bool _isArmMode = false;
+    private bool _isMoveArmBaseMode = false;
 
     public bool IsFPSMode{
         get { return _isFPSMode; }
@@ -80,17 +94,41 @@ public class XRManager : MonoBehaviour
 
         _agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
-        _rightThumbstickPressReference.action.performed += ToggleLocomotionMode;
-        _leftThumbstickPressReference.action.performed += ToggleLocomotionMode;
+        _leftMenuPressReference.action.performed += (InputAction.CallbackContext context) => { ToggleArmMenu(); };
 
-        _rightPrimaryTapReference.action.performed += TogglePOV;
-        _leftPrimaryTapReference.action.performed += TogglePOV;
+        _rightThumbstickPressReference.action.performed += (InputAction.CallbackContext context) => { ToggleMoveArmBase(); };
+        _leftThumbstickPressReference.action.performed += (InputAction.CallbackContext context) => { ToggleMoveArmBase(); };
 
-        _rightSecondaryTapReference.action.performed += ToggleArm;
-        _leftSecondaryTapReference.action.performed += ToggleArm;
+        //_rightPrimaryTapReference.action.performed += (InputAction.CallbackContext context) => { TogglePOV(); };
+        //_leftPrimaryTapReference.action.performed += (InputAction.CallbackContext context) => { TogglePOV(); };
 
-        _rightSecondaryHoldReference.action.performed += ResetArm;
-        _leftSecondaryHoldReference.action.performed += ResetArm;
+        //_rightSecondaryTapReference.action.performed += (InputAction.CallbackContext context) => { ToggleArm(); };
+        //_leftSecondaryTapReference.action.performed += (InputAction.CallbackContext context) => { ToggleArm(); };
+
+        //_rightSecondaryHoldReference.action.performed += (InputAction.CallbackContext context) => { ResetArm(); };
+        //_leftSecondaryHoldReference.action.performed += (InputAction.CallbackContext context) => { ResetArm(); };
+
+        _rightGripPressReference.action.performed += (InputAction.CallbackContext context) => { ToggleGrasp(); };
+        _leftGripPressReference.action.performed += (InputAction.CallbackContext context) => { ToggleGrasp(); };
+    }
+
+    private void OnDestroy() {
+        _leftMenuPressReference.action.performed -= (InputAction.CallbackContext context) => { ToggleArmMenu(); };
+
+        _rightThumbstickPressReference.action.performed -= (InputAction.CallbackContext context) => { ToggleMoveArmBase(); };
+        _leftThumbstickPressReference.action.performed -= (InputAction.CallbackContext context) => { ToggleMoveArmBase(); };
+
+        //_rightPrimaryTapReference.action.performed -= (InputAction.CallbackContext context) => { TogglePOV(); };
+        //_leftPrimaryTapReference.action.performed -= (InputAction.CallbackContext context) => { TogglePOV(); };
+
+        //_rightSecondaryTapReference.action.performed -= (InputAction.CallbackContext context) => { ToggleArm(); };
+        //_leftSecondaryTapReference.action.performed -= (InputAction.CallbackContext context) => { ToggleArm(); };
+
+        //_rightSecondaryHoldReference.action.performed -= (InputAction.CallbackContext context) => { ResetArm(); };
+        //_leftSecondaryHoldReference.action.performed -= (InputAction.CallbackContext context) => { ResetArm(); };
+
+        _rightGripPressReference.action.performed -= (InputAction.CallbackContext context) => { ToggleGrasp(); };
+        _leftGripPressReference.action.performed -= (InputAction.CallbackContext context) => { ToggleGrasp(); };
     }
 
     public void Initialize() {
@@ -116,25 +154,18 @@ public class XRManager : MonoBehaviour
         action["action"] = "Initialize";
         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), _agentManager);
 
-        _armToggle.enabled = true;
-        _povToggle.enabled = true;
+        _onInitializedEvent?.Invoke();
 
         _isInitialized = true;
     }
 
     private void Start() {
         // Set as user mode
-        _onUserControllerEvent?.Invoke();
-    }
-
-    private void Update() {
-        if (Input.GetKeyDown(KeyCode.Space)) {
-            Initialize();
-        }
+        _onUserLocomotionEvent?.Invoke();
     }
 
     // Called when you want to toggle controller mode
-    private void ToggleLocomotionMode(InputAction.CallbackContext context) {
+    public void ToggleLocomotionMode() {
         if (!_isInitialized) {
             return;
         }
@@ -145,19 +176,21 @@ public class XRManager : MonoBehaviour
         StopCoroutine("FadeText");
 
         if (value) {
-            _onAgentControllerEvent?.Invoke();
+            _onAgentLocomotionEvent?.Invoke();
             _modeText.text = "Locomotion: Agent";
+            _locomotionText.text = _modeText.text;
             _modeText.color = Color.blue;
             StartCoroutine("FadeText");
         } else {
-            _onUserControllerEvent?.Invoke();
+            _onUserLocomotionEvent?.Invoke();
             _modeText.text = "Locomotion: User";
+            _locomotionText.text = _modeText.text;
             _modeText.color = Color.red;
             StartCoroutine("FadeText");
         }
     }
 
-    private void TogglePOV(InputAction.CallbackContext context) {
+    public void TogglePOV() {
         if (!_isInitialized) {
             return;
         }
@@ -168,10 +201,12 @@ public class XRManager : MonoBehaviour
 
         if (_isFPSMode) {
             _modeText.text = "POV: First";
+            _povText.text = _modeText.text;
             _modeText.color = Color.white;
             StartCoroutine("FadeText");
         } else {
             _modeText.text = "POV: Third";
+            _povText.text = _modeText.text;
             _modeText.color = Color.white;
             StartCoroutine("FadeText");
         }
@@ -179,8 +214,8 @@ public class XRManager : MonoBehaviour
         _onTogglePOVEvent?.Invoke(_isFPSMode);
     }
 
-    private void ToggleArm(InputAction.CallbackContext context) {
-        if (!_isInitialized) {
+    public void ToggleArm() {
+        if (!_isInitialized || _isMoveArmBaseMode) {
             return;
         }
         _isArmMode = !_isArmMode;
@@ -188,19 +223,44 @@ public class XRManager : MonoBehaviour
         StopCoroutine("FadeText");
 
         if (_isArmMode) {
+            _onArmOnEvent?.Invoke(_isArmMode);
             _modeText.text = "Arm: On";
+            _armText.text = _modeText.text;
             _modeText.color = Color.white;
             StartCoroutine("FadeText");
+
         } else {
+            _onArmOffEvent?.Invoke(_isArmMode);
             _modeText.text = "Arm: Off";
+            _armText.text = _modeText.text;
             _modeText.color = Color.white;
             StartCoroutine("FadeText");
         }
-
-        _onToggleArmEvent?.Invoke(_isArmMode);
     }
 
-    private void ResetArm(InputAction.CallbackContext context) {
+    private void ToggleMoveArmBase() {
+        if (!_isInitialized || !_isArmMode) {
+            return;
+        }
+
+        _isMoveArmBaseMode = !_isMoveArmBaseMode;
+
+        if (_isMoveArmBaseMode) {
+            _onEnableMoveArmBaseEvent?.Invoke(_isMoveArmBaseMode);
+        }else {
+            _onDisableMoveArmBaseEvent?.Invoke(_isMoveArmBaseMode);
+        }
+    }
+
+    private void ToggleGrasp() {
+        if (!_isInitialized || !_isArmMode) {
+            return;
+        }
+
+        _onPickUpObjectEvent?.Invoke();
+    }
+
+    private void ResetArm() {
         if (!_isArmMode || !_isInitialized) {
             return;
         }
@@ -212,6 +272,13 @@ public class XRManager : MonoBehaviour
         StartCoroutine("FadeText");
 
         _onResetArmEvent?.Invoke();
+    }
+
+    private void ToggleArmMenu() {
+        if (!_isInitialized) {
+            return;
+        }
+        _armMenu.gameObject.SetActive(!_armMenu.gameObject.activeSelf);
     }
 
     public void FadeText() {
@@ -245,16 +312,22 @@ public class XRManager : MonoBehaviour
      */
 
     public void AddListenerToUserEvent(UnityAction action) {
-        _onUserControllerEvent.AddListener(action);
+        _onUserLocomotionEvent.AddListener(action);
     }
     public void RemoveListenerToUserEvent(UnityAction action) {
-        _onUserControllerEvent.RemoveListener(action);
+        _onUserLocomotionEvent.RemoveListener(action);
     }
     public void AddListenerToAgentEvent(UnityAction action) {
-        _onAgentControllerEvent.AddListener(action);
+        _onAgentLocomotionEvent.AddListener(action);
     }
     public void RemoveListenerToAgentEvent(UnityAction action) {
-        _onAgentControllerEvent.RemoveListener(action);
+        _onAgentLocomotionEvent.RemoveListener(action);
+    }
+    public void AddListenerToInitializeEvent(UnityAction action) {
+        _onInitializedEvent.AddListener(action);
+    }
+    public void RemoveListenerToInitializeEvent(UnityAction action) {
+        _onInitializedEvent.RemoveListener(action);
     }
 
 }

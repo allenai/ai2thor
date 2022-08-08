@@ -21,13 +21,15 @@ public class POVToggle : MonoBehaviour
     private Vector3 _lastAgentCameraPos = Vector3.zero;
     private Quaternion _lastAgentCameratRot = Quaternion.identity;
     private bool _isFPSMode = false;
+    private bool _isInitialized = false;
 
-    private void Start() {
+    public void Initialize() {
         _agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
         _firstPersonCharacterCull.FPSController = _agentManager.PrimaryAgent.baseAgentComponent;
         _firstPersonCharacterCull.SwitchRenderersToHide(_agentManager.PrimaryAgent.baseAgentComponent.HeadVisCap);
         _firstPersonCharacterCull.enabled = false;
+        _isInitialized = true;
     }
 
     public void TogglePOV(bool isFPSMode) {
@@ -35,35 +37,37 @@ public class POVToggle : MonoBehaviour
     }
 
     private IEnumerator TogglePOVCoroutine(bool isFPSMode) {
-        this._isFPSMode = isFPSMode;
-        yield return _screenFader.StartFadeOut();
-        if (isFPSMode) {
-            // Save original position
-            _orignalCameraOffsetPos = _cameraOffset.localPosition;
-            _orignalCameraOffsetRot = _cameraOffset.localRotation;
-            _orignalXROriginPos = _xrOrigin.transform.position;
-            _orignalXROriginRot = _xrOrigin.transform.rotation;
+        if (_isInitialized) {
+            this._isFPSMode = isFPSMode;
+            yield return _screenFader.StartFadeOut();
+            if (isFPSMode) {
+                // Save original position
+                _orignalCameraOffsetPos = _cameraOffset.localPosition;
+                _orignalCameraOffsetRot = _cameraOffset.localRotation;
+                _orignalXROriginPos = _xrOrigin.transform.position;
+                _orignalXROriginRot = _xrOrigin.transform.rotation;
 
-            SetFPSCameraTransform();
-            StartCoroutine("UpdateFPSCamera");
+                SetFPSCameraTransform();
+                StartCoroutine("UpdateFPSCamera");
 
-            if (_firstPersonCharacterCull != null) {
-                _firstPersonCharacterCull.enabled = true;
+                if (_firstPersonCharacterCull != null) {
+                    _firstPersonCharacterCull.enabled = true;
+                }
+            } else {
+                StopCoroutine("UpdateFPSCamera");
+                var angleDegrees = _xrOrigin.transform.rotation.eulerAngles.y - _orignalXROriginRot.eulerAngles.y;
+                _xrOrigin.transform.position = _orignalXROriginPos;
+                _xrOrigin.transform.rotation = _orignalXROriginRot;
+                _cameraOffset.localPosition = _orignalCameraOffsetPos;
+                _cameraOffset.localRotation = _orignalCameraOffsetRot;
+
+                _xrOrigin.RotateAroundCameraUsingOriginUp(angleDegrees);
+                if (_firstPersonCharacterCull != null) {
+                    _firstPersonCharacterCull.enabled = false;
+                }
             }
-        } else {
-            StopCoroutine("UpdateFPSCamera");
-            var angleDegrees = _xrOrigin.transform.rotation.eulerAngles.y - _orignalXROriginRot.eulerAngles.y;
-            _xrOrigin.transform.position = _orignalXROriginPos;
-            _xrOrigin.transform.rotation = _orignalXROriginRot;
-            _cameraOffset.localPosition = _orignalCameraOffsetPos;
-            _cameraOffset.localRotation = _orignalCameraOffsetRot;
-
-            _xrOrigin.RotateAroundCameraUsingOriginUp(angleDegrees);
-            if (_firstPersonCharacterCull != null) {
-                _firstPersonCharacterCull.enabled = false;
-            }
+            yield return _screenFader.StartFadeIn();
         }
-        yield return _screenFader.StartFadeIn();
     }
 
     private IEnumerator UpdateFPSCamera() {
@@ -71,7 +75,7 @@ public class POVToggle : MonoBehaviour
             var agent = _agentManager.PrimaryAgent;
             var agentCamera = agent.m_Camera;
             if (!agentCamera.transform.position.Equals(_lastAgentCameraPos) ||
-                !agentCamera.transform.rotation.Equals(_lastAgentCameratRot)) {
+                agentCamera.transform.eulerAngles.y != _lastAgentCameratRot.y) {
                 SetFPSCameraTransform();
             }
 
@@ -94,7 +98,10 @@ public class POVToggle : MonoBehaviour
 
             _cameraOffset.localPosition = _cameraOffset.InverseTransformPoint(agentCamera.transform.position);
 
-            _cameraOffset.localRotation = Quaternion.Inverse(_cameraOffset.rotation) * agentCamera.transform.rotation;
+            // Remove other rotations besides y
+            Vector3 rot = new Vector3(0, agentCamera.transform.eulerAngles.y, 0);
+
+            _cameraOffset.localRotation = Quaternion.Inverse(_cameraOffset.rotation) * Quaternion.Euler(rot);
 
             // Remove offset from camera to cameraOffset
             _cameraOffset.position += _cameraOffset.position - _camera.position;

@@ -37,11 +37,13 @@ public class LocomotionToggle : MonoBehaviour {
     void OnSceneLoaded(Scene scene, LoadSceneMode mode) { 
         var floor = GameObject.FindGameObjectsWithTag("SimObjPhysics").Single(i => i.GetComponent<SimObjPhysics>() != null && i.GetComponent<SimObjPhysics>().Type == SimObjType.Floor).GetComponent<SimObjPhysics>();
         if (floor != null) {
-            _userFloorCol = floor.MyColliders[0].gameObject;
+            var floorCollider = floor.MyColliders[0].gameObject;
 
             // Dupilcate Collider
-            _agentFloorCol = GameObject.Instantiate(_userFloorCol);
-            _agentFloorCol.transform.parent = _userFloorCol.transform.parent;
+            _agentFloorCol = GameObject.Instantiate(floorCollider);
+            _userFloorCol = GameObject.Instantiate(floorCollider);
+            _agentFloorCol.transform.parent = floorCollider.transform.parent;
+            _userFloorCol.transform.parent = floorCollider.transform.parent;
 
             // Add Teleportation Area
             _agentFloorCol.AddComponent<Agent_TeleportationArea>();
@@ -73,5 +75,11 @@ public class LocomotionToggle : MonoBehaviour {
         _rightUserXRRayInteractor.enabled = !value;
         if (_rightUserXRController.model != null)
             _rightUserXRController.model.gameObject.SetActive(!value);
+    }
+
+    public void DisableLocomotion() {
+        _agentFloorCol.SetActive(false);
+
+        _userFloorCol.SetActive(false);
     }
 }

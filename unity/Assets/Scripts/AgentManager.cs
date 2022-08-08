@@ -324,6 +324,7 @@ primaryAgent.ProcessControlCommand(action.dynamicServerAction);
         var handObj = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "robot_arm_rig_gripper");
         handObj.gameObject.SetActive(true);
         primaryAgent.m_Camera.enabled = false;
+        primaryAgent.m_Camera.tag = "Untagged";
         GameObject.Instantiate(_xrPrefab);
     }
 
