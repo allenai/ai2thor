@@ -32,6 +32,10 @@ public class POVToggle : MonoBehaviour
         _isInitialized = true;
     }
 
+    private void OnDestroy() {
+        StopAllCoroutines();
+    }
+
     public void TogglePOV(bool isFPSMode) {
         StartCoroutine(TogglePOVCoroutine(isFPSMode));
     }

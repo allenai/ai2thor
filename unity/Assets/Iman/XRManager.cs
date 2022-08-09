@@ -1,14 +1,13 @@
 
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 using UnityEngine.Events;
 using System.Collections;
 using TMPro;
 using System;
-using UnityEngine.InputSystem.XR;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public class XRManager : MonoBehaviour
 {
@@ -87,7 +86,8 @@ public class XRManager : MonoBehaviour
     private void Awake() {
         // If there is an instance, and it's not me, delete myself.
         if (Instance != null && Instance != this) {
-            Destroy(this.gameObject);
+            Destroy(Instance.gameObject);
+            Instance = this;
         } else {
             Instance = this;
         }
@@ -113,6 +113,8 @@ public class XRManager : MonoBehaviour
     }
 
     private void OnDestroy() {
+        StopAllCoroutines();
+
         _leftMenuPressReference.action.performed -= (InputAction.CallbackContext context) => { ToggleArmMenu(); };
 
         _rightThumbstickPressReference.action.performed -= (InputAction.CallbackContext context) => { ToggleMoveArmBase(); };
@@ -130,6 +132,7 @@ public class XRManager : MonoBehaviour
         _rightGripPressReference.action.performed -= (InputAction.CallbackContext context) => { ToggleGrasp(); };
         _leftGripPressReference.action.performed -= (InputAction.CallbackContext context) => { ToggleGrasp(); };
     }
+        
 
     public void Initialize() {
         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -177,12 +180,12 @@ public class XRManager : MonoBehaviour
 
         if (value) {
             _onAgentLocomotionEvent?.Invoke();
-            _modeText.text = "Locomotion: Agent";
+            _modeText.text = "Locomotion: <color=#0000FF>Agent</color>";
             _locomotionText.text = _modeText.text;
             StartCoroutine("FadeText");
         } else {
             _onUserLocomotionEvent?.Invoke();
-            _modeText.text = "Locomotion: User";
+            _modeText.text = "Locomotion: <color=#FF0000>User</color>";
             _locomotionText.text = _modeText.text;
             StartCoroutine("FadeText");
         }
@@ -198,11 +201,11 @@ public class XRManager : MonoBehaviour
         StopCoroutine("FadeText");
 
         if (_isFPSMode) {
-            _modeText.text = "POV: First";
+            _modeText.text = "POV: <color=#0000FF>First</color>";
             _povText.text = _modeText.text;
             StartCoroutine("FadeText");
         } else {
-            _modeText.text = "POV: Third";
+            _modeText.text = "POV: <color=#FF0000>Third</color>";
             _povText.text = _modeText.text;
             StartCoroutine("FadeText");
         }
@@ -220,13 +223,13 @@ public class XRManager : MonoBehaviour
 
         if (_isArmMode) {
             _onArmOnEvent?.Invoke(_isArmMode);
-            _modeText.text = "Arm: On";
+            _modeText.text = "Arm: <color=#0000FF>On</color>";
             _armText.text = _modeText.text;
             StartCoroutine("FadeText");
 
         } else {
             _onArmOffEvent?.Invoke(_isArmMode);
-            _modeText.text = "Arm: Off";
+            _modeText.text = "Arm: <color=#FF0000>Off</color>";
             _armText.text = _modeText.text;
             StartCoroutine("FadeText");
         }
@@ -299,6 +302,7 @@ public class XRManager : MonoBehaviour
         }
         _modeText.color *= new Color(_modeText.color.r, _modeText.color.g, _modeText.color.b, 0);
     }
+
 
 
     /*

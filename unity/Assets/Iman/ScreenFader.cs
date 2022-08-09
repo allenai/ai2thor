@@ -11,10 +11,16 @@ public class ScreenFader : MonoBehaviour {
 
     public static ScreenFader Instance { get; private set; }
 
+    public float Alpha {
+        get { return _alpha; }
+        set { _alpha = value; }
+    }
+
     private void Awake() {
         // If there is an instance, and it's not me, delete myself.
         if (Instance != null && Instance != this) {
-            Destroy(this);
+            Destroy(Instance);
+            Instance = this;
         } else {
             Instance = this;
         }

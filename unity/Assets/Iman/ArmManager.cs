@@ -93,6 +93,10 @@ public class ArmManager : MonoBehaviour
         _isInitialized = true;
     }
 
+    private void OnDestroy() {
+        StopAllCoroutines();
+    }
+
     public void ToggleArm(bool isArmMode) {
         if (!_isInitialized) {
             return;
@@ -122,7 +126,7 @@ public class ArmManager : MonoBehaviour
 
         while (true) {
             arm.armTarget.localPosition = _xrController.transform.localPosition - _originPos + _armOffset;
-            arm.armTarget.eulerAngles = _xrController.transform.eulerAngles;
+            arm.armTarget.localEulerAngles = _xrController.transform.localEulerAngles;
 
             if (_readMoveArmBaseInput) {
                 var input = ReadInput();
@@ -150,7 +154,7 @@ public class ArmManager : MonoBehaviour
                 // Set arm position to last valid position and remove from valid reset lists
                 arm.armTarget.localPosition = _validResetPositions.Last();
                 _validResetPositions.RemoveLast();
-                arm.armTarget.eulerAngles = _validResetRotations.Last();
+                arm.armTarget.localEulerAngles = _validResetRotations.Last();
                 _validResetRotations.RemoveLast();
 
                 // Set originPos and armOffset to new  track hand position
@@ -166,7 +170,7 @@ public class ArmManager : MonoBehaviour
                     }
 
                     _validResetPositions.AddLast(arm.armTarget.localPosition);
-                    _validResetRotations.AddLast(arm.armTarget.eulerAngles);
+                    _validResetRotations.AddLast(arm.armTarget.localEulerAngles);
                 }
             }
             yield return null;
