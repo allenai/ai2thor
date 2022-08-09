@@ -37,13 +37,11 @@ public class LocomotionToggle : MonoBehaviour {
     void OnSceneLoaded(Scene scene, LoadSceneMode mode) { 
         var floor = GameObject.FindGameObjectsWithTag("SimObjPhysics").Single(i => i.GetComponent<SimObjPhysics>() != null && i.GetComponent<SimObjPhysics>().Type == SimObjType.Floor).GetComponent<SimObjPhysics>();
         if (floor != null) {
-            var floorCollider = floor.MyColliders[0].gameObject;
+            _userFloorCol = floor.MyColliders[0].gameObject;
 
             // Dupilcate Collider
-            _agentFloorCol = GameObject.Instantiate(floorCollider);
-            _userFloorCol = GameObject.Instantiate(floorCollider);
-            _agentFloorCol.transform.parent = floorCollider.transform.parent;
-            _userFloorCol.transform.parent = floorCollider.transform.parent;
+            _agentFloorCol = GameObject.Instantiate(_userFloorCol);
+            _agentFloorCol.transform.parent = _userFloorCol.transform.parent;
 
             // Add Teleportation Area
             _agentFloorCol.AddComponent<Agent_TeleportationArea>();

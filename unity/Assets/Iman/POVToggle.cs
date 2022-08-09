@@ -75,7 +75,7 @@ public class POVToggle : MonoBehaviour
             var agent = _agentManager.PrimaryAgent;
             var agentCamera = agent.m_Camera;
             if (!agentCamera.transform.position.Equals(_lastAgentCameraPos) ||
-                agentCamera.transform.eulerAngles.y != _lastAgentCameratRot.y) {
+                agentCamera.transform.eulerAngles.y != _lastAgentCameratRot.eulerAngles.y) {
                 SetFPSCameraTransform();
             }
 

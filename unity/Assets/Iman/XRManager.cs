@@ -105,8 +105,8 @@ public class XRManager : MonoBehaviour
         //_rightSecondaryTapReference.action.performed += (InputAction.CallbackContext context) => { ToggleArm(); };
         //_leftSecondaryTapReference.action.performed += (InputAction.CallbackContext context) => { ToggleArm(); };
 
-        //_rightSecondaryHoldReference.action.performed += (InputAction.CallbackContext context) => { ResetArm(); };
-        //_leftSecondaryHoldReference.action.performed += (InputAction.CallbackContext context) => { ResetArm(); };
+        _rightSecondaryHoldReference.action.performed += (InputAction.CallbackContext context) => { ResetArm(); };
+        _leftSecondaryHoldReference.action.performed += (InputAction.CallbackContext context) => { ResetArm(); };
 
         _rightGripPressReference.action.performed += (InputAction.CallbackContext context) => { ToggleGrasp(); };
         _leftGripPressReference.action.performed += (InputAction.CallbackContext context) => { ToggleGrasp(); };
@@ -124,8 +124,8 @@ public class XRManager : MonoBehaviour
         //_rightSecondaryTapReference.action.performed -= (InputAction.CallbackContext context) => { ToggleArm(); };
         //_leftSecondaryTapReference.action.performed -= (InputAction.CallbackContext context) => { ToggleArm(); };
 
-        //_rightSecondaryHoldReference.action.performed -= (InputAction.CallbackContext context) => { ResetArm(); };
-        //_leftSecondaryHoldReference.action.performed -= (InputAction.CallbackContext context) => { ResetArm(); };
+        _rightSecondaryHoldReference.action.performed -= (InputAction.CallbackContext context) => { ResetArm(); };
+        _leftSecondaryHoldReference.action.performed -= (InputAction.CallbackContext context) => { ResetArm(); };
 
         _rightGripPressReference.action.performed -= (InputAction.CallbackContext context) => { ToggleGrasp(); };
         _leftGripPressReference.action.performed -= (InputAction.CallbackContext context) => { ToggleGrasp(); };
@@ -179,13 +179,11 @@ public class XRManager : MonoBehaviour
             _onAgentLocomotionEvent?.Invoke();
             _modeText.text = "Locomotion: Agent";
             _locomotionText.text = _modeText.text;
-            _modeText.color = Color.blue;
             StartCoroutine("FadeText");
         } else {
             _onUserLocomotionEvent?.Invoke();
             _modeText.text = "Locomotion: User";
             _locomotionText.text = _modeText.text;
-            _modeText.color = Color.red;
             StartCoroutine("FadeText");
         }
     }
@@ -202,12 +200,10 @@ public class XRManager : MonoBehaviour
         if (_isFPSMode) {
             _modeText.text = "POV: First";
             _povText.text = _modeText.text;
-            _modeText.color = Color.white;
             StartCoroutine("FadeText");
         } else {
             _modeText.text = "POV: Third";
             _povText.text = _modeText.text;
-            _modeText.color = Color.white;
             StartCoroutine("FadeText");
         }
 
@@ -226,14 +222,12 @@ public class XRManager : MonoBehaviour
             _onArmOnEvent?.Invoke(_isArmMode);
             _modeText.text = "Arm: On";
             _armText.text = _modeText.text;
-            _modeText.color = Color.white;
             StartCoroutine("FadeText");
 
         } else {
             _onArmOffEvent?.Invoke(_isArmMode);
             _modeText.text = "Arm: Off";
             _armText.text = _modeText.text;
-            _modeText.color = Color.white;
             StartCoroutine("FadeText");
         }
     }

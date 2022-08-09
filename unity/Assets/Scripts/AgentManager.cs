@@ -151,7 +151,7 @@ public class AgentManager : MonoBehaviour {
         }
 #endif
 
-        StartCoroutine(EmitFrame());
+        //StartCoroutine(EmitFrame());
     }
 
     private void initializePrimaryAgent() {
@@ -325,7 +325,7 @@ primaryAgent.ProcessControlCommand(action.dynamicServerAction);
         handObj.gameObject.SetActive(true);
         primaryAgent.m_Camera.enabled = false;
         primaryAgent.m_Camera.tag = "Untagged";
-        GameObject.Instantiate(_xrPrefab);
+        //GameObject.Instantiate(_xrPrefab);
     }
 
     private BaseFPSAgentController createAgentType(Type agentType, BaseAgentComponent agentComponent) {
@@ -1094,7 +1094,7 @@ primaryAgent.ProcessControlCommand(action.dynamicServerAction);
                         this.sock.Connect(hostep);
                     } catch (SocketException e) {
                         var msg = e.ToString();
-#if UNITY_EDITOR && UNITY_ANDROID
+#if UNITY_EDITOR
                         break;
 #endif
                         // wrapping the message in !UNITY_EDITOR to avoid unreachable code warning
