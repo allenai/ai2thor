@@ -14,6 +14,9 @@ public class SceneLoader : MonoBehaviour
     private bool _isSwitchingScene = false;
 
     private void Awake() {
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex == 0) {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(1, LoadSceneMode.Additive);
+        }
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += SetActiveScene;
     }
 
