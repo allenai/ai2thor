@@ -6,16 +6,23 @@ using UnityEditor;
 using UnityEngine;
 using System.Security.Cryptography;
 using Newtonsoft.Json.Linq;
+using Siccity.GLTFUtility;
 
 
 public class AutoSimObject : EditorWindow {
+  [MenuItem("AI2-THOR/Load GLB")]
+  static void LoadGLB() {
+    GameObject result = Importer.LoadFromFile("Assets/Prefabs/GoogleScannedObjects/obj2.glb");
+    Debug.Log(result);
+  }
+
   [MenuItem("AI2-THOR/Make Sim Object")]
   static void MakeSimObject() {
-    string basePath = "Assets/Prefabs/GoogleScannedObjects/";
+    string basePath = "Assets/Prefabs/ycb/";
 
     // get all folders in the basePath
     string[] folders = System.IO.Directory.GetDirectories(basePath);
-    
+
     // create a prefab of each model in the folders
     foreach (string folder in folders) {
       string modelId = folder.Substring(folder.LastIndexOf("/") + 1);
@@ -32,9 +39,12 @@ public class AutoSimObject : EditorWindow {
       // add a SimObjPhysics component
       SimObjPhysics simObj = obj.AddComponent<SimObjPhysics>();
       simObj.assetID = modelId;
-      simObj.PrimaryProperty = (SimObjPrimaryProperty)Enum.Parse(
-        typeof(SimObjPrimaryProperty), annotations["primaryProperty"].ToString()
-      );
+      string primaryProperty = annotations["primaryProperty"].ToString();
+      if (primaryProperty != "") {
+        simObj.PrimaryProperty = (SimObjPrimaryProperty)Enum.Parse(
+          typeof(SimObjPrimaryProperty), annotations["primaryProperty"].ToString()
+        );
+      }
 
       // add the visibility points
       GameObject visPoints = new GameObject("visibilityPoints");
@@ -54,25 +64,23 @@ public class AutoSimObject : EditorWindow {
 
       GameObject meshColliders = new GameObject("colliders");
       meshColliders.transform.parent = obj.transform;
-      MeshCollider meshCollider = meshColliders.AddComponent<MeshCollider>();
-      meshCollider.sharedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(
-        basePath + modelId + "/collider.obj"
-      );
-      meshCollider.convex = true;
 
-      Collider[] colliders = new Collider[1];
-      colliders[0] = meshCollider;
+      // get all the colliders
+      string collidersPath = basePath + modelId + "/colliders/";
+      string[] colliderPaths = System.IO.Directory.GetFiles(collidersPath);
 
-      // add the 4 mesh colliders
-      // Collider[] colliders = new Collider[NUM_COLLIDERS];
-      // for (int i = 0; i < NUM_COLLIDERS; i++) {
-      //   MeshCollider meshCollider = meshColliders.AddComponent<MeshCollider>();
-      //   meshCollider.sharedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(
-      //     basePath + modelId + "/decomp_" + i + ".obj"
-      //   );
-      //   meshCollider.convex = true;
-      //   colliders[i] = meshCollider;
-      // }
+      // add the colliders
+      Collider[] colliders = new Collider[colliderPaths.Length];
+      for (int i = 0; i < colliderPaths.Length; i++) {
+        // skip meta files
+        if (!colliderPaths[i].EndsWith(".obj")) {
+          continue;
+        }
+        MeshCollider meshCollider = meshColliders.AddComponent<MeshCollider>();
+        meshCollider.sharedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(colliderPaths[i]);
+        meshCollider.convex = true;
+        colliders[i] = meshCollider;
+      }
       simObj.MyColliders = colliders;
 
       // add a RigidBody component
@@ -97,6 +105,7 @@ public class AutoSimObject : EditorWindow {
 
       // delete the obj
       GameObject.DestroyImmediate(obj);
+      Debug.Log("Saved " + modelId + " as a prefab");
     }
   }
 }
