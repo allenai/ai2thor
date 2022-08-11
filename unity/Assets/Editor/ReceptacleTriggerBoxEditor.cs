@@ -7,16 +7,14 @@ using System.Linq;
 public class ReceptacleTriggerBoxEditor : EditorWindow {
 
     [MenuItem("Receptacles/Try create receptacle trigger box for object")]
-    static void TryToAddReceptacleTriggerBoxFromSelected() {
+    public static void TryToAddReceptacleTriggerBoxFromSelected() {
         GameObject obj = Selection.activeGameObject;
         SimObjPhysics sop = obj.GetComponent<SimObjPhysics>();
         TryToAddReceptacleTriggerBox(sop);
     }
 
 
-    static void TryToAddReceptacleTriggerBox(SimObjPhysics sop, yThres = 0.05f) {
-        float yThres = 0.05f;
-
+    public static void TryToAddReceptacleTriggerBox(SimObjPhysics sop, float yThres = 0.05f, float worldOffset=-100f) {
         if (sop == null) {
             throw new NotImplementedException(
                 $"Adding receptacle trigger box is only possible the active game object, has an associated SimObjPhysics script."
@@ -27,7 +25,6 @@ public class ReceptacleTriggerBoxEditor : EditorWindow {
         Vector3 oldPos = sop.transform.position;
 
         try {
-            float worldOffset = -100f;
             sop.transform.rotation = Quaternion.identity;
             sop.transform.position = new Vector3(worldOffset, worldOffset, worldOffset);
             Physics.SyncTransforms();

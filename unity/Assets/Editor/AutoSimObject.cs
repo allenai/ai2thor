@@ -19,6 +19,7 @@ public class AutoSimObject : EditorWindow {
   [MenuItem("AI2-THOR/Make Sim Object")]
   static void MakeSimObject() {
     string basePath = "Assets/Prefabs/ycb/";
+    // string basePath = "Assets/Prefabs/GoogleScannedObjects/";
 
     // get all folders in the basePath
     string[] folders = System.IO.Directory.GetDirectories(basePath);
@@ -34,6 +35,7 @@ public class AutoSimObject : EditorWindow {
       // instantiate the prefab
       var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(basePath + modelId + "/model.obj");
       GameObject obj = GameObject.Instantiate(prefab);
+      obj.transform.rotation = Quaternion.identity;
       obj.name = modelId;
 
       // add a SimObjPhysics component
@@ -59,10 +61,12 @@ public class AutoSimObject : EditorWindow {
           (float)annotations["visibilityPoints"][i]["z"]
         );
         visPointsTransforms[i] = visPoint.transform;
+        visPoint.layer = LayerMask.NameToLayer("SimObjVisible");
       }
       simObj.VisibilityPoints = visPointsTransforms;
 
       GameObject meshColliders = new GameObject("colliders");
+      meshColliders.layer = LayerMask.NameToLayer("SimObjVisible");
       meshColliders.transform.parent = obj.transform;
 
       // get all the colliders
@@ -86,12 +90,16 @@ public class AutoSimObject : EditorWindow {
       // add a RigidBody component
       Rigidbody rigidBody = obj.AddComponent<Rigidbody>();
 
-      // set the transform rotation
-      obj.transform.rotation = Quaternion.Euler(
+      // rotate the internal components of the model. Note that you do not want to do this
+      // at `obj` level as it should be at its cannonical orientation when at rotation 0,0,0.
+      Quaternion rot = Quaternion.Euler(
         (float)annotations["transform"]["rotation"]["x"],
         (float)annotations["transform"]["rotation"]["y"],
         (float)annotations["transform"]["rotation"]["z"]
       );
+      simObj.transform.Find("default").rotation = rot;
+      visPoints.transform.rotation = rot;
+      meshColliders.transform.rotation = rot;
 
       // set the transform scale
       obj.transform.localScale = new Vector3(
@@ -99,6 +107,9 @@ public class AutoSimObject : EditorWindow {
         (float)annotations["transform"]["scale"]["y"],
         (float)annotations["transform"]["scale"]["z"]
       );
+
+      // Generate receptacle trigger boxes
+      ReceptacleTriggerBoxEditor.TryToAddReceptacleTriggerBox(sop: simObj);
 
       // save obj as a prefab
       PrefabUtility.SaveAsPrefabAsset(obj, basePath + modelId + "/" + modelId + ".prefab");
