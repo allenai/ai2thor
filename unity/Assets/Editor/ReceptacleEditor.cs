@@ -2,6 +2,7 @@
 using UnityEditor;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 [CustomEditor(typeof(Receptacle))]
 public class ReceptacleEditor : Editor {
@@ -336,5 +337,5 @@ public class ReceptacleEditor : Editor {
         // we made it this far, the pivot must be legit
         Array.Resize(ref r.Pivots, r.Pivots.Length + 1);
         r.Pivots[r.Pivots.Length - 1] = pivot.transform;
-    }
+    }    
 }

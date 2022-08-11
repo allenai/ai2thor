@@ -18,8 +18,8 @@ public class AutoSimObject : EditorWindow {
 
   [MenuItem("AI2-THOR/Make Sim Object")]
   static void MakeSimObject() {
-    string basePath = "Assets/Prefabs/ycb/";
-    // string basePath = "Assets/Prefabs/GoogleScannedObjects/";
+    // string basePath = "Assets/Prefabs/ycb/";
+    string basePath = "Assets/Prefabs/GoogleScannedObjects/";
 
     // get all folders in the basePath
     string[] folders = System.IO.Directory.GetDirectories(basePath);
@@ -40,6 +40,7 @@ public class AutoSimObject : EditorWindow {
 
       // add a SimObjPhysics component
       SimObjPhysics simObj = obj.AddComponent<SimObjPhysics>();
+      simObj.gameObject.layer = LayerMask.NameToLayer("SimObjVisible");
       simObj.assetID = modelId;
       string primaryProperty = annotations["primaryProperty"].ToString();
       if (primaryProperty != "") {
@@ -74,7 +75,7 @@ public class AutoSimObject : EditorWindow {
       string[] colliderPaths = System.IO.Directory.GetFiles(collidersPath);
 
       // add the colliders
-      Collider[] colliders = new Collider[colliderPaths.Length];
+      List<Collider> colliders = new List<Collider>();
       for (int i = 0; i < colliderPaths.Length; i++) {
         // skip meta files
         if (!colliderPaths[i].EndsWith(".obj")) {
@@ -83,9 +84,9 @@ public class AutoSimObject : EditorWindow {
         MeshCollider meshCollider = meshColliders.AddComponent<MeshCollider>();
         meshCollider.sharedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(colliderPaths[i]);
         meshCollider.convex = true;
-        colliders[i] = meshCollider;
+        colliders.Add(meshCollider);
       }
-      simObj.MyColliders = colliders;
+      simObj.MyColliders = colliders.ToArray();
 
       // add a RigidBody component
       Rigidbody rigidBody = obj.AddComponent<Rigidbody>();
@@ -110,6 +111,7 @@ public class AutoSimObject : EditorWindow {
 
       // Generate receptacle trigger boxes
       ReceptacleTriggerBoxEditor.TryToAddReceptacleTriggerBox(sop: simObj);
+      simObj.SecondaryProperties = new SimObjSecondaryProperty[] { SimObjSecondaryProperty.Receptacle };
 
       // save obj as a prefab
       PrefabUtility.SaveAsPrefabAsset(obj, basePath + modelId + "/" + modelId + ".prefab");
