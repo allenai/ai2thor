@@ -57,9 +57,12 @@ public class AutoSimObject : EditorWindow {
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(basePath + modelId + "/model.obj");
         obj = GameObject.Instantiate(prefab);
       }
+      obj.transform.rotation = Quaternion.identity;
 
       // add the name
       obj.name = modelId;
+      obj.layer = LayerMask.NameToLayer("SimObjVisible");
+      obj.tag = "SimObjPhysics";
 
       // add a SimObjPhysics component
       SimObjPhysics simObj = obj.AddComponent<SimObjPhysics>();
@@ -84,46 +87,47 @@ public class AutoSimObject : EditorWindow {
           (float)annotations["visibilityPoints"][i]["z"]
         );
         visPointsTransforms[i] = visPoint.transform;
+        visPoint.layer = LayerMask.NameToLayer("SimObjVisible");
       }
       simObj.VisibilityPoints = visPointsTransforms;
       visPoints.transform.localScale = new Vector3(1, 1, 1);
       visPoints.transform.localPosition = new Vector3(0, 0, 0);
 
       GameObject meshColliders = new GameObject("colliders");
+      meshColliders.layer = LayerMask.NameToLayer("SimObjVisible");
       meshColliders.transform.parent = obj.transform;
 
       // get all the colliders
       string collidersPath = basePath + modelId + "/colliders/";
       string[] colliderPaths = System.IO.Directory.GetFiles(collidersPath);
 
-      // filter over colliders that end with obj
-      List<string> colliderPathsFiltered = new List<string>();
-      foreach (string colliderPath in colliderPaths) {
-        if (colliderPath.EndsWith(".obj")) {
-          colliderPathsFiltered.Add(colliderPath);
-        }
-      }
-
       // add the colliders
-      Collider[] colliders = new Collider[colliderPathsFiltered.Count()];
-      for (int i = 0; i < colliderPathsFiltered.Count(); i++) {
+      List<Collider> colliders = new List<Collider>();
+      for (int i = 0; i < colliderPaths.Length; i++) {
         // skip meta files
+        if (!colliderPaths[i].EndsWith(".obj")) {
+          continue;
+        }
         MeshCollider meshCollider = meshColliders.AddComponent<MeshCollider>();
         meshCollider.sharedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(colliderPaths[i]);
         meshCollider.convex = true;
-        colliders[i] = meshCollider;
+        colliders.Add(meshCollider);
       }
-      simObj.MyColliders = colliders;
+      simObj.MyColliders = colliders.ToArray();
 
       // add a RigidBody component
       Rigidbody rigidBody = obj.AddComponent<Rigidbody>();
 
-      // set the transform rotation
-      obj.transform.rotation = Quaternion.Euler(
+      // rotate the internal components of the model. Note that you do not want to do this
+      // at `obj` level as it should be at its cannonical orientation when at rotation 0,0,0.
+      Quaternion rot = Quaternion.Euler(
         (float)annotations["transform"]["rotation"]["x"],
         (float)annotations["transform"]["rotation"]["y"],
         (float)annotations["transform"]["rotation"]["z"]
       );
+      simObj.transform.Find("default").rotation = rot;
+      visPoints.transform.rotation = rot;
+      meshColliders.transform.rotation = rot;
 
       // set the transform scale
       obj.transform.localScale = new Vector3(
@@ -132,11 +136,9 @@ public class AutoSimObject : EditorWindow {
         (float)annotations["transform"]["scale"]["z"]
       );
 
-      // set the layer to SimObjPhysics
-      obj.layer = LayerMask.NameToLayer("SimObjVisible");
-
-      // set the tag to SimObjPhysics
-      obj.tag = "SimObjPhysics";
+      // Generate receptacle trigger boxes
+      ReceptacleTriggerBoxEditor.TryToAddReceptacleTriggerBox(sop: simObj);
+      simObj.SecondaryProperties = new SimObjSecondaryProperty[] { SimObjSecondaryProperty.Receptacle };
 
       // save obj as a prefab
       PrefabUtility.SaveAsPrefabAsset(obj, basePath + modelId + "/" + modelId + ".prefab");
