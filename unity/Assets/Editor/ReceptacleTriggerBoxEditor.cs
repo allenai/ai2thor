@@ -99,7 +99,6 @@ public class ReceptacleTriggerBoxEditor : EditorWindow {
 
                         if (Vector3.Angle(hit.normal, Vector3.up) < 30f) {
                             yVals.Add(hit.point.y);
-                            Debug.Log(hit.point.y);
                         } else {
                             yVals.Add(dummyY);
                         }
