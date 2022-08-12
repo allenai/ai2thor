@@ -10,15 +10,32 @@ using Siccity.GLTFUtility;
 
 
 public class AutoSimObject : EditorWindow {
-  [MenuItem("AI2-THOR/Load GLB")]
+  [MenuItem("AI2-THOR/Load GLB Prefab")]
   static void LoadGLB() {
-    GameObject result = Importer.LoadFromFile("Assets/Prefabs/GoogleScannedObjects/obj2.glb");
-    Debug.Log(result);
+    string modelId = "B07B4MJZN1";
+    string prefabPath = "Assets/Prefabs/abo/" + modelId + "/" + modelId + ".prefab";
+    string glbModel = "Assets/Prefabs/abo/" + modelId + "/model.glb";
+
+    // instantiate the prefab
+    GameObject obj = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+    obj = Instantiate(obj);
+    obj.name = modelId;
+
+    // load the glb model
+    GameObject result = Importer.LoadFromFile(glbModel);
+    result.name = "mesh";
+    result.transform.parent = obj.transform;
+    result.transform.position = obj.transform.position;
+    result.transform.rotation = obj.transform.rotation;
+
+    // TODO: may have to mess with scale. Figure out why some glbs
+    // aren't scaled to (1, 1, 1) by default.
+    result.transform.localScale = new Vector3(1, 1, 1);
   }
 
   [MenuItem("AI2-THOR/Make Sim Object")]
   static void MakeSimObject() {
-    string basePath = "Assets/Prefabs/ycb/";
+    string basePath = "Assets/Prefabs/abo/";
 
     // get all folders in the basePath
     string[] folders = System.IO.Directory.GetDirectories(basePath);
@@ -31,9 +48,17 @@ public class AutoSimObject : EditorWindow {
       var annotationsStr = System.IO.File.ReadAllText(basePath + modelId + "/annotations.json");
       JObject annotations = JObject.Parse(annotationsStr);
 
-      // instantiate the prefab
-      var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(basePath + modelId + "/model.obj");
-      GameObject obj = GameObject.Instantiate(prefab);
+      GameObject obj;
+      if (System.IO.File.Exists(basePath + modelId + "/model.glb")) {
+        // load the glb file -- used with abo
+        obj = Importer.LoadFromFile(basePath + modelId + "/model.glb");
+      } else {
+        // instantiate the obj file -- used with google scanned objects
+        var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(basePath + modelId + "/model.obj");
+        obj = GameObject.Instantiate(prefab);
+      }
+
+      // add the name
       obj.name = modelId;
 
       // add a SimObjPhysics component
@@ -61,6 +86,8 @@ public class AutoSimObject : EditorWindow {
         visPointsTransforms[i] = visPoint.transform;
       }
       simObj.VisibilityPoints = visPointsTransforms;
+      visPoints.transform.localScale = new Vector3(1, 1, 1);
+      visPoints.transform.localPosition = new Vector3(0, 0, 0);
 
       GameObject meshColliders = new GameObject("colliders");
       meshColliders.transform.parent = obj.transform;
@@ -69,13 +96,18 @@ public class AutoSimObject : EditorWindow {
       string collidersPath = basePath + modelId + "/colliders/";
       string[] colliderPaths = System.IO.Directory.GetFiles(collidersPath);
 
-      // add the colliders
-      Collider[] colliders = new Collider[colliderPaths.Length];
-      for (int i = 0; i < colliderPaths.Length; i++) {
-        // skip meta files
-        if (!colliderPaths[i].EndsWith(".obj")) {
-          continue;
+      // filter over colliders that end with obj
+      List<string> colliderPathsFiltered = new List<string>();
+      foreach (string colliderPath in colliderPaths) {
+        if (colliderPath.EndsWith(".obj")) {
+          colliderPathsFiltered.Add(colliderPath);
         }
+      }
+
+      // add the colliders
+      Collider[] colliders = new Collider[colliderPathsFiltered.Count()];
+      for (int i = 0; i < colliderPathsFiltered.Count(); i++) {
+        // skip meta files
         MeshCollider meshCollider = meshColliders.AddComponent<MeshCollider>();
         meshCollider.sharedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(colliderPaths[i]);
         meshCollider.convex = true;
@@ -100,11 +132,17 @@ public class AutoSimObject : EditorWindow {
         (float)annotations["transform"]["scale"]["z"]
       );
 
+      // set the layer to SimObjPhysics
+      obj.layer = LayerMask.NameToLayer("SimObjVisible");
+
+      // set the tag to SimObjPhysics
+      obj.tag = "SimObjPhysics";
+
       // save obj as a prefab
       PrefabUtility.SaveAsPrefabAsset(obj, basePath + modelId + "/" + modelId + ".prefab");
 
       // delete the obj
-      GameObject.DestroyImmediate(obj);
+      // GameObject.DestroyImmediate(obj);
       Debug.Log("Saved " + modelId + " as a prefab");
     }
   }
