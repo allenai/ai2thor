@@ -125,7 +125,8 @@ public class AutoSimObject : EditorWindow {
         (float)annotations["transform"]["rotation"]["y"],
         (float)annotations["transform"]["rotation"]["z"]
       );
-      simObj.transform.Find("default").rotation = rot;
+      // TODO: This is buggy - Find("default") doesn't work for some objects!
+      // simObj.transform.Find("default").rotation = rot;
       visPoints.transform.rotation = rot;
       meshColliders.transform.rotation = rot;
 
