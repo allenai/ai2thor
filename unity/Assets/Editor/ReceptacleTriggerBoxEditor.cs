@@ -13,8 +13,7 @@ public class ReceptacleTriggerBoxEditor : EditorWindow {
         TryToAddReceptacleTriggerBox(sop);
     }
 
-
-    public static void TryToAddReceptacleTriggerBox(SimObjPhysics sop, float yThres = 0.05f, float worldOffset=-100f) {
+    public static void TryToAddReceptacleTriggerBox(SimObjPhysics sop, float yThresMax = 0.075f, float worldOffset=-100f) {
         if (sop == null) {
             throw new NotImplementedException(
                 $"Adding receptacle trigger box is only possible the active game object, has an associated SimObjPhysics script."
@@ -24,16 +23,45 @@ public class ReceptacleTriggerBoxEditor : EditorWindow {
         Quaternion oldRot = sop.transform.rotation;
         Vector3 oldPos = sop.transform.position;
 
+        List<MeshCollider> tmpMeshColliders = new List<MeshCollider>();
+        List<Collider> enabledColliders = new List<Collider>();
+        foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
+            if (c.enabled) {
+                enabledColliders.Add(c);
+                c.enabled = false;
+            }
+        }
+
         try {
             sop.transform.rotation = Quaternion.identity;
             sop.transform.position = new Vector3(worldOffset, worldOffset, worldOffset);
+            sop.GetComponent<Rigidbody>().isKinematic = true;
+
+            foreach (MeshFilter mf in sop.GetComponentsInChildren<MeshFilter>()) {
+                GameObject tmpGo = new GameObject();
+                tmpGo.layer = LayerMask.NameToLayer("SimObjVisible");
+                tmpGo.transform.position = mf.gameObject.transform.position;
+                tmpGo.transform.rotation = mf.gameObject.transform.rotation;
+                tmpGo.transform.parent = sop.transform;
+
+                MeshCollider mc = tmpGo.AddComponent<MeshCollider>();
+                mc.sharedMesh = mf.sharedMesh;
+
+                Rigidbody rb = tmpGo.AddComponent<Rigidbody>();
+                rb.isKinematic = true;
+
+                tmpMeshColliders.Add(mc);
+            }
+
             Physics.SyncTransforms();
             
             AxisAlignedBoundingBox aabb = sop.AxisAlignedBoundingBox;
 
             Vector3 center = aabb.center;
             Vector3 size = aabb.size;
-            float rtbYSize = Mathf.Min(0.25f, aabb.size.y);
+            float rtbYSize = Mathf.Min(0.25f, Mathf.Max(aabb.size.x, aabb.size.y, aabb.size.z));
+
+            float yThres = Mathf.Min(yThresMax, size.y * 0.15f);
 
             float xMin = center.x - 0.95f * aabb.size.x / 2f;
             float xMax = center.x + 0.95f * aabb.size.x / 2f;
@@ -68,7 +96,13 @@ public class ReceptacleTriggerBoxEditor : EditorWindow {
                     )) {
                         // Debug.Log($"HITS {hit.point.y}");
                         // Debug.DrawLine(hit.point, hit.point + new Vector3(0f, 0.1f, 0f), Color.cyan, 15f);
-                        yVals.Add(hit.point.y);
+
+                        if (Vector3.Angle(hit.normal, Vector3.up) < 30f) {
+                            yVals.Add(hit.point.y);
+                            Debug.Log(hit.point.y);
+                        } else {
+                            yVals.Add(dummyY);
+                        }
                     } else {
                         yVals.Add(dummyY);
                     }
@@ -244,6 +278,7 @@ public class ReceptacleTriggerBoxEditor : EditorWindow {
 
                 GameObject rtb = new GameObject($"ReceptacleTriggerBox{cornerListInd++}");
                 boxGos.Add(rtb);
+                rtb.transform.position = sop.transform.position;
                 rtb.transform.parent = go.transform;
                 rtb.layer = LayerMask.NameToLayer("SimObjInvisible");
                 BoxCollider bc = rtb.AddComponent<BoxCollider>();
@@ -255,6 +290,14 @@ public class ReceptacleTriggerBoxEditor : EditorWindow {
         } finally {
             sop.transform.position = oldPos;
             sop.transform.rotation = oldRot;
+            sop.GetComponent<Rigidbody>().isKinematic = false;
+
+            foreach (MeshCollider tmc in tmpMeshColliders) {
+                DestroyImmediate(tmc.gameObject);
+            }
+            foreach (Collider c in enabledColliders) {
+                c.enabled = true;
+            }
             Physics.SyncTransforms();
         }
     }
