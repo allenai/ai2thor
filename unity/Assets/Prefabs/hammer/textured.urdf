@@ -1,0 +1,30 @@
+<robot name="048_hammer">
+  <link name="048_hammer_link">
+    <contact>
+      <lateral_friction value="1.0" />
+      <contact_cfm value="0.0" />
+      <contact_erp value="1.0" />
+    </contact>
+    <inertial>
+      <origin rpy="0 0 0" xyz="-0.142854 -0.063363 0.078267" />
+      <mass value="1.0" />
+      <inertia ixx="0.008245" ixy="0.002997" ixz="0.000022" iyy="0.001445" iyz="-0.000039" izz="0.009618" />
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="./textured_big.obj" scale="1 1 1" />
+      </geometry>
+      <material name="white">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="./textured_bigconvex.obj" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+</robot>
+
