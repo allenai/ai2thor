@@ -8,7 +8,9 @@ using System;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
+using Unity.XR.CoreUtils;
 
+[RequireComponent(typeof(XROrigin))]
 public class XRManager : MonoBehaviour
 {
     /// <summary>

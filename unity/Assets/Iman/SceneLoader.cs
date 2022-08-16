@@ -1,8 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
+using Unity.XR.CoreUtils;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class SceneLoader : MonoBehaviour
 {
@@ -10,14 +13,28 @@ public class SceneLoader : MonoBehaviour
     [SerializeField] private XRManager _xrManager;
     [SerializeField] private GameObject _xrPrefab;
     [SerializeField] private float _waitingTime = 2.5f;
+    [SerializeField] private Canvas _sceneMenu;
+    [SerializeField] private GameObject _sceneButtonPrefab;
+    [SerializeField] private Transform _sceneButtonContainer;
 
     private bool _isSwitchingScene = false;
 
     private void Awake() {
-        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex == 0) {
+        if (UnityEngine.SceneManagement.SceneManager.sceneCount == 1 && UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex == 0) {
             UnityEngine.SceneManagement.SceneManager.LoadScene(1, LoadSceneMode.Additive);
         }
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += SetActiveScene;
+
+        // Loop through all thescens and create a scene switch button
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
+            if (i != _persistentSceneIndex) {
+                string name = System.IO.Path.GetFileNameWithoutExtension(SceneUtility.GetScenePathByBuildIndex(i));
+                Button sceneButton = GameObject.Instantiate(_sceneButtonPrefab, _sceneButtonContainer).GetComponent<Button>();
+                sceneButton.onClick.AddListener(() => { SwitchScene(name); });
+                sceneButton.GetComponentInChildren<TMP_Text>().text = name;
+            }
+
+        }
     }
 
     private void OnDestroy() {
@@ -84,6 +101,8 @@ public class SceneLoader : MonoBehaviour
                 _xrManager.transform.SetParent(this.transform);
                 _xrManager.transform.SetParent(null);
             }
+
+            _sceneMenu.worldCamera = _xrManager.GetComponent<XROrigin>().Camera;
 
         }
     }
