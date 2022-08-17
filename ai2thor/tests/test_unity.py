@@ -20,6 +20,8 @@ from ai2thor.fifo_server import FifoServer
 from PIL import ImageChops, ImageFilter, Image
 import glob
 import cv2
+import functools
+import ctypes
 
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
@@ -145,12 +147,22 @@ def assert_near(point1, point2, error_message=""):
 
 
 def images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, filepath=""):
+    print("mean diff {}".format(np.mean(np.abs(image1 - image2).flatten())))
     result = np.mean(np.abs(image1 - image2).flatten()) <= max_mean_pixel_diff
     if not result and debug_save:
         # TODO put images somewhere accessible
         dx = np.where(~np.all(image1 == image2, axis=-1))
         img_copy = image1.copy()
+        diff = (image1 - image2)
+        max = np.max(diff)
+        norm_diff = diff / max
         img_copy[dx] = (255, 0, 255)
+
+        # for i in range(np.shape(dx)[1]):
+        #     value = img_copy[dx[0][i], dx[0][i]]
+        #     img_copy[dx[0][i] : dx[0][i]] = (255.0, 255.0, 255.0)
+        # img_copy[dx] +=  ((255.0, 255.0, 255.0) * norm_diff[dx])+ img_copy[dx]
+
         test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
         debug_directory = os.path.join(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY))
         # if os.path.exists(debug_directory):
@@ -164,13 +176,17 @@ def images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, filepat
     return result
 
 def depth_images_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath=""):
-    result = np.allclose(depth1, depth2, atol=epsilon)
+    # result = np.allclose(depth1, depth2, atol=epsilon)
+    result = np.mean(np.abs(depth1 - depth2).flatten()) <= epsilon
+    print("max diff {}".format(np.max((depth1 - depth2).flatten())))
     if not result and debug_save:
         depth1_gray = depth_to_gray_rgb(depth1)
         depth_copy = cv2.cvtColor(depth1_gray, cv2.COLOR_GRAY2RGB)
-        dx = np.where(~np.all(depth1 == depth2, axis=-1))
-        print(depth_copy.shape)
-        depth_copy[dx] = (255, 0, 255)
+        diff = np.abs(depth1 - depth2)
+        max = np.max(diff)
+        norm_diff = diff / max
+        dx = np.where(np.abs(depth1 - depth2) >= epsilon)
+        depth_copy[dx] = norm_diff[dx] * (255, 0, 255)
         test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
         debug_directory = os.path.join(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY))
         # if os.path.exists(debug_directory):

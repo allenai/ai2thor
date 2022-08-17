@@ -113,7 +113,7 @@ house_template = {
 }
 
 # TODO rendering is different for fifo and wsgi server
-@pytest.mark.parametrize("controller_args", wsgi)
+@pytest.mark.parametrize("controller_args", fifo)
 def test_render_lit(controller_args):
     print("Args")
     print(controller_args)
@@ -121,7 +121,7 @@ def test_render_lit(controller_args):
         **controller_args
     )
 
-    rgb_filename = "proc_rgb_lit.png"
+    rgb_filename = "proc_rgb_lit_fifo.png"
     ground_truth = cv2.imread(os.path.join(IMAGE_FOLDER_PATH, rgb_filename))
 
     evt = controller.step(
@@ -145,7 +145,27 @@ def test_render_lit(controller_args):
 
     controller.stop()
 
-    assert images_near(evt.cv2img, ground_truth, max_mean_pixel_diff=8, debug_save=True)
+    assert images_near(evt.cv2img, ground_truth, max_mean_pixel_diff=50, debug_save=True)
+
+#
+# @pytest.mark.parametrize("controller_args", wsgi)
+# def test_render_lit_2(controller_args):
+#     rgb_filename = "proc_rgb_lit.png"
+#     ground_truth = cv2.imread(os.path.join(IMAGE_FOLDER_PATH, rgb_filename))
+#     rgb_filename = "proc_rgb_lit_server.png"
+#     server_image = cv2.imread(os.path.join(IMAGE_FOLDER_PATH, rgb_filename))
+#     assert images_near(server_image, ground_truth, max_mean_pixel_diff=8, debug_save=True)
+#
+#
+# @pytest.mark.parametrize("controller_args", wsgi)
+# def test_render_depth_2(controller_args):
+#     depth_filename = "proc_depth.npy"
+#     raw_depth = np.load(os.path.join(IMAGE_FOLDER_PATH, depth_filename))
+#     depth_filename = "proc_depth_server.npy"
+#     server_image = np.load(os.path.join(IMAGE_FOLDER_PATH, depth_filename))
+#     print("HIIII")
+#     assert depth_images_near(server_image, raw_depth, epsilon=2e-1, debug_save=True)
+
 
 
 @pytest.mark.parametrize("controller_args", fifo)
