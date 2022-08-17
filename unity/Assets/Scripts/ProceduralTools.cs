@@ -881,7 +881,7 @@ namespace Thor.Procedural {
 
                     };
                 //
-                Debug.Log($"-------- Cut holes vertices  center {center} transformed {String.Join(", ", vertices.Select(v => wallGO.transform.TransformPoint(v).ToString("F8")))}");
+                Debug.Log($"-------- Cut holes vertices for wall {toCreate.id} center {center} transformed {String.Join(", ", vertices.Select(v => wallGO.transform.TransformPoint(v).ToString("F8")))}");
 
                 // triangles = new List<int>() {
                 //      1, 0, 2, 1, 2, 3, 1, 3, 4, 4, 5, 3, 4, 5, 6, 0, 6, 7, 0, 7, 2 };
@@ -1075,7 +1075,8 @@ namespace Thor.Procedural {
             var offsetX = (prev_p0p1.magnitude / previous.materialTilingXDivisor) - Mathf.Floor(prev_p0p1.magnitude / previous.materialTilingXDivisor) + prevOffset.x;
 
             // TODO Offset Y would require to get joining walls from above and below 
-            meshRenderer.material = generatePolygonMaterial(materialDb.getAsset(toCreate.materialId), toCreate.color, dimensions, toCreate.materialTilingXDivisor, toCreate.materialTilingYDivisor, offsetX, 0.0f, toCreate.unlit, 
+            var mat = string.IsNullOrEmpty(toCreate.materialId) ? new Material(Shader.Find("Standard")) : materialDb.getAsset(toCreate.materialId);
+            meshRenderer.material = generatePolygonMaterial(mat, toCreate.color, dimensions, toCreate.materialTilingXDivisor, toCreate.materialTilingYDivisor, offsetX, 0.0f, toCreate.unlit, 
                         squareTiling: squareTiling, materialProperties: toCreate.materialProperties);
 
             meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.TwoSided;
@@ -1874,36 +1875,37 @@ namespace Thor.Procedural {
             }
 
             var lightingRoot = new GameObject(DefaultLightingRootName);
-
-            foreach (var lightParams in house.proceduralParameters.lights) {
-                var go = new GameObject(lightParams.id);
-                go.transform.position = lightParams.position;
-                if (lightParams.rotation != null) {
-                    go.transform.rotation = lightParams.rotation.toQuaternion();
-                }
-                var light = go.AddComponent<Light>();
-                //light.lightmapBakeType = LightmapBakeType.Realtime; //removed because this is editor only, and probably not needed since the light should default to Realtime Light Mode anyway?
-                light.type = (LightType)Enum.Parse(typeof(LightType), lightParams.type, ignoreCase: true);
-                light.color = new Color(lightParams.rgb.r, lightParams.rgb.g, lightParams.rgb.b, lightParams.rgb.a);
-                light.intensity = lightParams.intensity;
-                light.bounceIntensity = lightParams.indirectMultiplier;
-                light.range = lightParams.range;
-                if (lightParams.cullingMaskOff != null) {
-                    foreach (var layer in lightParams.cullingMaskOff) {
-                        light.cullingMask &= ~(1 << LayerMask.NameToLayer(layer));
+            if (house.proceduralParameters.lights != null) {
+                foreach (var lightParams in house.proceduralParameters.lights) {
+                    var go = new GameObject(lightParams.id);
+                    go.transform.position = lightParams.position;
+                    if (lightParams.rotation != null) {
+                        go.transform.rotation = lightParams.rotation.toQuaternion();
                     }
-                }
+                    var light = go.AddComponent<Light>();
+                    //light.lightmapBakeType = LightmapBakeType.Realtime; //removed because this is editor only, and probably not needed since the light should default to Realtime Light Mode anyway?
+                    light.type = (LightType)Enum.Parse(typeof(LightType), lightParams.type, ignoreCase: true);
+                    light.color = new Color(lightParams.rgb.r, lightParams.rgb.g, lightParams.rgb.b, lightParams.rgb.a);
+                    light.intensity = lightParams.intensity;
+                    light.bounceIntensity = lightParams.indirectMultiplier;
+                    light.range = lightParams.range;
+                    if (lightParams.cullingMaskOff != null) {
+                        foreach (var layer in lightParams.cullingMaskOff) {
+                            light.cullingMask &= ~(1 << LayerMask.NameToLayer(layer));
+                        }
+                    }
 
-                if (lightParams.shadow != null) {
-                    light.shadowStrength = lightParams.shadow.strength;
-                    light.shadows = (LightShadows)Enum.Parse(typeof(LightShadows), lightParams.shadow.type, ignoreCase: true);
-                    light.shadowBias = lightParams.shadow.bias;
-                    light.shadowNormalBias = lightParams.shadow.normalBias;
-                    light.shadowNearPlane = lightParams.shadow.nearPlane;
-                    light.shadowResolution = (UnityEngine.Rendering.LightShadowResolution)Enum.Parse(typeof(UnityEngine.Rendering.LightShadowResolution), lightParams.shadow.resolution, ignoreCase: true);
-                }
-                go.transform.parent = lightingRoot.transform;
+                    if (lightParams.shadow != null) {
+                        light.shadowStrength = lightParams.shadow.strength;
+                        light.shadows = (LightShadows)Enum.Parse(typeof(LightShadows), lightParams.shadow.type, ignoreCase: true);
+                        light.shadowBias = lightParams.shadow.bias;
+                        light.shadowNormalBias = lightParams.shadow.normalBias;
+                        light.shadowNearPlane = lightParams.shadow.nearPlane;
+                        light.shadowResolution = (UnityEngine.Rendering.LightShadowResolution)Enum.Parse(typeof(UnityEngine.Rendering.LightShadowResolution), lightParams.shadow.resolution, ignoreCase: true);
+                    }
+                    go.transform.parent = lightingRoot.transform;
 
+                }
             }
 
             if (house.proceduralParameters.reflections != null) {
@@ -1938,13 +1940,55 @@ namespace Thor.Procedural {
             var agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
             agentManager.ResetSceneBounds();
 
-
-            //floorGameObject.AddComponent<UnityEngine.AI.navmeshsur
-
-            //UnityEngine.AI.NavMEshSur
-            //NavMeshSurface[] surfaces;
+            setAgentPose(house: house, agentManager: agentManager);
 
             return floorGameObject;
+        }
+
+        private static void setAgentPose(ProceduralHouse house, AgentManager agentManager) {
+            // teleport the agent into the scene
+            if (
+                house.metadata != null
+                && house.metadata.agentPoses != null
+                && house.metadata.agentPoses.ContainsKey(agentManager.agentMode)
+            ) {
+                BaseFPSAgentController bfps = agentManager.primaryAgent;
+                Vector3 newPosition = house.metadata.agentPoses[agentManager.agentMode].position;
+                Vector3 newRotation = house.metadata.agentPoses[agentManager.agentMode].rotation;
+                float newHorizon = house.metadata.agentPoses[agentManager.agentMode].horizon;
+                bool? newStanding = house.metadata.agentPoses[agentManager.agentMode].standing;
+                if (newPosition != null) {
+                    bfps.transform.position = newPosition;
+                    bfps.autoSyncTransforms();//make sure to sync transforms after teleporting to ensure rigidbody/transforms are all updated even if a frame hasn't passed
+
+                    Vector3 target = new Vector3(
+                        newPosition.x,
+                        bfps.transform.position.y,
+                        newPosition.z
+                    );
+                    Vector3 dir = target - bfps.transform.position;
+                    Vector3 movement = dir.normalized * 100.0f;
+                    if (movement.magnitude > dir.magnitude) {
+                        movement = dir;
+                    }
+                    movement.y = Physics.gravity.y * bfps.m_GravityMultiplier;
+                    bfps.GetComponent<CharacterController>().Move(movement);
+                }
+                if (newRotation != null) {
+                    bfps.transform.rotation = Quaternion.Euler(newRotation);
+                }
+                if (newHorizon != null) {
+                    bfps.m_Camera.transform.localEulerAngles = new Vector3(newHorizon, 0, 0);
+                }
+                if (agentManager.agentMode != "locobot" && newStanding != null) {
+                    PhysicsRemoteFPSAgentController pfps = bfps as PhysicsRemoteFPSAgentController;
+                    if (newStanding == true) {
+                        pfps.stand();
+                    } else {
+                        pfps.crouch();
+                    }
+                }
+            }
         }
 
         public static void spawnObjectHierarchy(HouseObject houseObject) {
@@ -2086,22 +2130,6 @@ namespace Thor.Procedural {
                 Debug.LogError("Asset not in Database " + ho.assetId);
                 return null;
             }
-            // var spawned = GameObject.Instantiate(go, ho.position, Quaternion.identity);
-            // Vector3 toRot = ho.rotation.axis * ho.rotation.degrees;
-            // spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);
-
-            // var toSpawn = spawned.GetComponent<SimObjPhysics>();
-            // Rigidbody rb = spawned.GetComponent<Rigidbody>();
-            // rb.isKinematic = ho.kinematic;
-
-            // toSpawn.objectID = ho.id;
-            // toSpawn.name = ho.id;
-
-            // var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
-            // sceneManager.AddToObjectsInScene(toSpawn);
-            // toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
-
-            // return toSpawn.transform.gameObject;
         }
 
         public static GameObject spawnSimObjPrefab(
@@ -2168,15 +2196,6 @@ namespace Thor.Procedural {
                 spawned.transform.position = position;
                 spawned.transform.rotation = rotation;
             }
-
-            // spawned.transform.localPosition = centerObjectSpace;
-            // spawned.transform.Rotate(rotation.axis, rotation.degrees);
-            // spawned.transform.position += position;
-
-            //var spawned = GameObject.Instantiate(go, position, Quaternion.AngleAxis(rotation.degrees, rotation.axis));
-            // spa
-            //spawned.transform.position = 
-
 
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
@@ -2470,7 +2489,7 @@ namespace Thor.Procedural {
             return isBoundary;
         }
 
-        private static bool withinArrayBoundary((int row, int col) current, int rows, int columns) {
+        public static bool withinArrayBoundary((int row, int col) current, int rows, int columns) {
             return current.row >= 0 && current.row < rows && current.col >= 0 && current.col < columns;
         }
 
@@ -2505,7 +2524,6 @@ namespace Thor.Procedural {
                         target == roomArray[current.row][current.col] &&
                         isWall(roomArray, current, emptyValue)
                     ) {
-
                         result.Add((current.row, current.col));
                         previous = current;
                         current = (row: current.row + neighborDelta.row, col: current.col + neighborDelta.col);
@@ -2567,6 +2585,30 @@ namespace Thor.Procedural {
             }
         }
 
+        public static BoundingBoxWithOffset getHoleAssetBoundingBox(string holeAssetId) {
+            var assetMap = ProceduralTools.getAssetMap();
+
+            if (!assetMap.ContainsKey(holeAssetId)) {
+                return null;
+            }
+
+            GameObject asset = assetMap.getAsset(holeAssetId);
+
+            var holeMetadata = asset.GetComponentInChildren<HoleMetadata>();
+            if (holeMetadata == null) {
+                return null;
+            
+            }
+            else {
+                var diff = holeMetadata.Max - holeMetadata.Min;
+
+                diff = new Vector3(Math.Abs(diff.x), Math.Abs(diff.y), Math.Abs(diff.z));// - holeMetadata.Margin;
+                // inverse offset for the asset
+                var min = new Vector3(holeMetadata.Min.x, -holeMetadata.Min.y, -holeMetadata.Min.z);
+                // var max = new Vector3(-holeMetadata.Max.x, holeMetadata.Max.y, holeMetadata.Max.z);
+                return  new BoundingBoxWithOffset() { min=Vector3.zero, max=diff, offset=min};
+            }
+        }
 
         public static Dictionary<int, IEnumerable<(int row, int col)>> createRoomsFromGenerationArray(int[][] roomArray, int emptyValue = 1, Vector2? scale = null) {
             var distinct = roomArray.SelectMany(row => row.Distinct()).Distinct().Where(r => r != emptyValue);
@@ -2617,7 +2659,9 @@ namespace Thor.Procedural {
                 var colNumPresent = colNum - startOffsetX;
                 var rowNumPresent = rowNum - startOffsetZ;
 
-                Debug.Log($"Room: {entry.Key} walls: {string.Join(",", entry.Value)}");
+                
+            
+
 
                 return RectangleRoom.roomFromWallPoints(
                     entry.Value.Select(
@@ -2631,15 +2675,6 @@ namespace Thor.Procedural {
                     );
             }
             );
-
-            // return ProceduralTools.createMultiRoomFloorGameObject(
-            //     name,
-            //     rooms,
-            //     materialMap,
-            //     $"room_{name}",
-            //     receptacleHeight,
-            //     floorColliderThickness
-            // );
             return new GameObject();
         }
 

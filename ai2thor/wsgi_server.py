@@ -5,11 +5,15 @@ ai2thor.server
 Handles all communication with Unity through a Flask service.  Messages
 are sent to the controller using a pair of request/response queues.
 """
-import ai2thor.server
 import json
 import logging
-import threading
+import math
 import os
+import threading
+from typing import Optional
+
+import ai2thor.server
+from ai2thor.exceptions import UnityCrashException
 
 try:
     from queue import Queue, Empty
@@ -27,14 +31,21 @@ logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 werkzeug.serving.WSGIRequestHandler.protocol_version = "HTTP/1.1"
 
+
 # get with timeout to allow quit
-def queue_get(que, unity_proc=None):
+def queue_get(que, unity_proc=None, timeout: Optional[float] = 100.0):
     res = None
     attempts = 0
-    max_attempts = 200
+    queue_get_timeout_per_try = 0.5
+
+    max_attempts = (
+        float("inf")
+        if timeout is None or timeout == float("inf") else
+        max(int(math.ceil(timeout / queue_get_timeout_per_try)), 1)
+    )
     while True:
         try:
-            res = que.get(block=True, timeout=0.5)
+            res = que.get(block=True, timeout=queue_get_timeout_per_try)
             break
         except Empty:
             attempts += 1
@@ -43,18 +54,14 @@ def queue_get(que, unity_proc=None):
             # exited otherwise we would wait indefinetly for the queue
             if unity_proc:
                 if unity_proc.poll() is not None:
-                    raise Exception("Unity process exited %s" % unity_proc.returncode)
+                    raise UnityCrashException(f"Unity process exited {unity_proc.returncode}")
 
-                # no Action should take > 100s to complete, so we assume that
-                # something has gone wrong within Unity
-                # max_attempts can also be triggered if an Exception is thrown from
-                # within the thread used to run the wsgi server, in which case
-                # Unity will receive a corrupted response
-                if attempts >= max_attempts:
-                    raise Exception(
-                        "Could not get a message from the queue after %s attempts "
-                        % attempts
-                    )
+            # Quit if action takes more than `timeout` time to complete. Note that this
+            # will result in the controller being in an unrecoverable state.
+            if attempts >= max_attempts:
+                raise TimeoutError(
+                    f"Could not get a message from the queue after {attempts} attempts "
+                )
     return res
 
 
@@ -150,6 +157,7 @@ class WsgiServer(ai2thor.server.Server):
     def __init__(
         self,
         host,
+        timeout: Optional[float] = 100.0,
         port=0,
         threaded=False,
         depth_format=ai2thor.server.DepthFormat.Meters,
@@ -185,8 +193,16 @@ class WsgiServer(ai2thor.server.Server):
             threaded=threaded,
             request_handler=ThorRequestHandler,
         )
+        self.stopped = False
+
         # used to ensure that we are receiving frames for the action we sent
-        super().__init__(width, height, depth_format, add_depth_noise)
+        super().__init__(
+            width=width,
+            height=height,
+            timeout=timeout,
+            depth_format=depth_format,
+            add_depth_noise=add_depth_noise
+        )
 
         @app.route("/ping", methods=["get"])
         def ping():
@@ -238,7 +254,7 @@ class WsgiServer(ai2thor.server.Server):
 
             self.frame_counter += 1
 
-            next_action = queue_get(self.response_queue)
+            next_action = queue_get(self.response_queue, timeout=float("inf"))
             if "sequenceId" not in next_action:
                 self.sequence_id += 1
                 next_action["sequenceId"] = self.sequence_id
@@ -255,13 +271,18 @@ class WsgiServer(ai2thor.server.Server):
         self.wsgi_server.serve_forever()
 
     def start(self):
+        assert not self.stopped
         self.started = True
         self.server_thread = threading.Thread(target=self._start_server_thread)
         self.server_thread.daemon = True
         self.server_thread.start()
 
-    def receive(self):
-        return queue_get(self.request_queue, unity_proc=self.unity_proc)
+    def receive(self, timeout: Optional[float] = None):
+        return queue_get(
+            self.request_queue,
+            unity_proc=self.unity_proc,
+            timeout=self.timeout if timeout is None else timeout
+        )
 
     def send(self, action):
         assert self.request_queue.empty()
@@ -275,5 +296,11 @@ class WsgiServer(ai2thor.server.Server):
         return params
 
     def stop(self):
-        self.send({})
-        self.wsgi_server.shutdown()
+        if self.started and not self.stopped:
+            self.send({})
+            self.wsgi_server.__shutdown_request = True
+
+        self.stopped = True
+
+        if self.unity_proc is not None and self.unity_proc.poll() is None:
+            self.unity_proc.kill()
