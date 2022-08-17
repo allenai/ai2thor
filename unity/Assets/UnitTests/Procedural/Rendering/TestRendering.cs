@@ -103,7 +103,7 @@ namespace Tests {
             });
 
             var rgbBytes = this.renderPayload.Find(e => e.Key == "image").Value;
-            var eps = 20;
+            var eps = 60;
             // Unlit red wall
             Assert.True(
                 rgbBytes.Select((pixel, index) => (pixel, index))

@@ -145,7 +145,7 @@ def test_render_lit(controller_args):
 
     controller.stop()
 
-    assert images_near(evt.cv2img, ground_truth, max_mean_pixel_diff=50, debug_save=True)
+    assert images_near(evt.cv2img, ground_truth, max_mean_pixel_diff=52, debug_save=True)
 
 #
 # @pytest.mark.parametrize("controller_args", wsgi)
