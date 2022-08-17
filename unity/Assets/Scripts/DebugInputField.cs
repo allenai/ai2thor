@@ -810,7 +810,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else {
                             action.objectVariation = 0;
                         }
-
                         action.y = 0f;// UnityEngine.Random.Range(0, 360);
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
