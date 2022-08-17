@@ -156,6 +156,7 @@ public class XRManager : MonoBehaviour
         // action.cameraY = 2.0f;
         action["snapToGrid"] = true;
         // action.rotateStepDegrees = 45;
+        action["autoSimulation"] = true;
         action["action"] = "Initialize";
         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), _agentManager);
 

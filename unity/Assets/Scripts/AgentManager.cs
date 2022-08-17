@@ -231,12 +231,14 @@ public class AgentManager : MonoBehaviour {
                 // set up physics controller
                 if (action.agentMode.ToLower() == "vr") {
                     SetUpVRController();
+                    action.autoSimulation = true;
                 } else {
                     SetUpArmController(true);
+                    action.autoSimulation = false;
                 }
                 // the arm should currently be used only with autoSimulation off
                 // as we manually control Physics during its movement
-                action.autoSimulation = false;
+                
                 physicsSceneManager.MakeAllObjectsMoveable();
 
                 if (action.massThreshold.HasValue) {
