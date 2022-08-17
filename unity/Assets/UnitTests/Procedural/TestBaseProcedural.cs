@@ -10,6 +10,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using System.IO;
 
 namespace Tests {
     public class TestBaseProcedural : TestBase 
@@ -43,6 +44,17 @@ namespace Tests {
             var prefix = !resourcesRelative ? "Assets/Resources/" : "";
             var path = prefix + string.Join("/", NUnit.Framework.TestContext.CurrentContext.Test.FullName.Split('.'));
             return string.IsNullOrEmpty(filename) ? path : $"{path}/{filename}";
+        }
+
+        protected string getBuildMachineTestOutputPath(string filename = "", bool resourcesRelative = true) {
+            var directory = !resourcesRelative ? "Assets/../../../../images-debug/" : "";
+            // if (Directory.Exists(prefix)) {
+
+            // }
+            var filenamePrefix = string.Join("_", NUnit.Framework.TestContext.CurrentContext.Test.FullName.Split('.'));
+            var finalFileName = string.IsNullOrEmpty(filename) ? filenamePrefix : $"{filenamePrefix}{filename}";
+            Directory.CreateDirectory(directory);
+            return $"{directory}/{finalFileName}";
         }
 
     }

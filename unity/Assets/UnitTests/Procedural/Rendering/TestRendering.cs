@@ -103,12 +103,22 @@ namespace Tests {
             });
 
             var rgbBytes = this.renderPayload.Find(e => e.Key == "image").Value;
+            
             var eps = 60;
+            var assertResult = rgbBytes.Select((pixel, index) => (pixel, index))
+                .All(
+                    e => 
+                    (e.index % 3 == 0 && 255 - e.pixel < eps) || 
+                    (e.index % 3 != 0 && e.pixel < eps)
+                );
+
+            if (!assertResult) {
+                savePng(rgbBytes, getBuildMachineTestOutputPath("test_comp.png", false));
+            }
+            
             // Unlit red wall
             Assert.True(
-                rgbBytes.Select((pixel, index) => (pixel, index))
-                .All(
-                    e => e.index % 3 == 0 && e.pixel - 255 < eps || e.index % 3 != 0 && e.pixel < eps)
+               assertResult
             );
         }
 
