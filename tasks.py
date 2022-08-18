@@ -946,6 +946,7 @@ def pytest_s3_object(commit_id):
 
 def pytest_s3_general_object(commit_id, filename):
     s3 = boto3.resource("s3")
+    # TODO: Create a new bucket directory for test artifacts
     pytest_key = "builds/%s-%s" % (commit_id, filename)
     return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
 
@@ -954,8 +955,7 @@ def pytest_s3_data_urls(commit_id):
         glob.glob("{}/*".format(TEST_OUTPUT_DIRECTORY))
     )
     logger.info("Getting test data in directory {}".format(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY)))
-    logger.info("test output url: ")
-    print("Test output files: {}".format(", ".join(test_outputfiles)))
+    logger.info("Test output files: {}".format(", ".join(test_outputfiles)))
     test_data_urls = []
     for filename in test_outputfiles:
         s3_test_out_obj = pytest_s3_general_object(commit_id, filename)
@@ -1000,17 +1000,7 @@ def ci_merge_push_pytest_results(context, commit_id):
         merged_result["stdout"] += result["stdout"] + "\n"
         merged_result["stderr"] += result["stderr"] + "\n"
 
-    test_outputfiles = sorted(
-        glob.glob("{}/*".format(TEST_OUTPUT_DIRECTORY))
-    )
-
-    logger.info("test output url: ")
-
     merged_result["test_data"] = pytest_s3_data_urls(commit_id)
-    print("Data urls")
-    print(", ".join(test_data_urls))
-
-    logger.info(", ".join(test_data_urls))
 
     s3_obj.put(
         Body=json.dumps(merged_result), ACL="public-read", ContentType="application/json"
@@ -1172,9 +1162,6 @@ def ci_build(context):
                     p.join()
 
             if build["tag"] is None:
-                test_data_files = glob.glob("{}/*".format(TEST_OUTPUT_DIRECTORY))
-                logger.info("calling ci_merge_push_pytest_results")
-                logger.info(", ".join(test_data_files))
                 ci_merge_push_pytest_results(context, build["commit_id"])
 
             # must have this after all the procs are joined
