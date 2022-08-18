@@ -121,6 +121,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
 
+    public GameObject GetSceneManager() {
+        return sceneManager.gameObject;
+    }
+
     public float GetTimerResetValue() {
         return TimerResetValue;
     }
@@ -353,14 +357,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             }
 
             DestroyImmediate(clone);
-
-            // iTween adds references to the iTween.tweens List
-            for (int i = 0; i < iTween.tweens.Count; i++) {
-                if (((GameObject)iTween.tweens[i]["target"]) == null) {
-                   iTween.tweens.RemoveAt(i);
-                }
-            }
-
 
             // Get corner points of SimObject's new BoundingBox, in its correct transformation
             List<Vector3> points = new List<Vector3>();

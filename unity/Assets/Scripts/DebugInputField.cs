@@ -12,7 +12,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     public class DebugInputField : MonoBehaviour {
         public GameObject Agent = null;
         public AgentManager AManager = null;
-
         private ControlMode controlMode;
 
 #if UNITY_EDITOR
@@ -2874,6 +2873,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "close": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "CloseObject";
+                        action["forceAction"] = true;
 
                         if (splitcommand.Length > 1) {
                             action["objectId"] = splitcommand[1];
