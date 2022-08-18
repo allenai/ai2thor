@@ -1072,6 +1072,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         return objs;
     }
 
+    public float MassIncludingSimObjectsInReceptacle() {
+        float mass = myRigidbody.mass;
+        foreach (SimObjPhysics sop in GetAllSimObjectsInReceptacleTriggers()) {
+            mass += sop.GetComponent<Rigidbody>().mass;
+        }
+        return mass;
+    }
+
     // return all sim objects by object ID contained by this object if it is a receptacle
     public List<string> GetAllSimObjectsInReceptacleTriggersByObjectID() {
         List<string> objs = new List<string>();

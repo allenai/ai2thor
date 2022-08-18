@@ -702,10 +702,11 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
                 currentScale: new Vector3(1f, 1f, 1f)
             );
             Rigidbody rb = sop.GetComponent<Rigidbody>();
-            if (rb.mass > remainingForce) {
+            float mass = sop.MassIncludingSimObjectsInReceptacle();
+            if (mass > remainingForce) {
                 // the error message is only useful if all objects are not picked up
                 // so the it compares weigth and force (== remainingForce)
-                notPickedUpMessage = String.Format("Object weight {0} is heavier than force {1}", rb.mass, force);
+                notPickedUpMessage = String.Format("Object weight {0} is heavier than force {1}", mass, force);
                 continue;
             }
             rb.isKinematic = true;
@@ -772,7 +773,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
 
             pickedUp = true;
             heldObjects.Add(sop, cols);
-            remainingForce -= rb.mass;
+            remainingForce -= mass;
         }
 
         if (!pickedUp) errorMessage = notPickedUpMessage;
@@ -788,9 +789,10 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         // grab all sim objects that are currently colliding with magnet sphere
         foreach (KeyValuePair<SimObjPhysics, HashSet<Collider>> sop in heldObjects) {
             Rigidbody rb = sop.Key.GetComponent<Rigidbody>();
-            if (rb.mass <= remainingForce) {
+            float mass = sop.Key.MassIncludingSimObjectsInReceptacle();
+            if (mass <= remainingForce) {
                 // the object is still within the grasp force
-                remainingForce -= rb.mass;
+                remainingForce -= mass;
                 newHeldObjects.Add(sop.Key, sop.Value);
                 continue;
             }
