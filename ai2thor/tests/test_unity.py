@@ -147,7 +147,10 @@ def assert_near(point1, point2, error_message=""):
 
 
 def images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, filepath=""):
-    print("mean diff {}".format(np.mean(np.abs(image1 - image2).flatten())))
+    print("Mean pixel difference: {}, Max pixel difference: {}.".format(
+        np.mean(np.abs(image1 - image2).flatten()),
+        np.max(np.abs(image1 - image2).flatten()))
+    )
     result = np.mean(np.abs(image1 - image2).flatten()) <= max_mean_pixel_diff
     if not result and debug_save:
         # TODO put images somewhere accessible
@@ -178,7 +181,10 @@ def images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, filepat
 def depth_images_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath=""):
     # result = np.allclose(depth1, depth2, atol=epsilon)
     result = np.mean(np.abs(depth1 - depth2).flatten()) <= epsilon
-    print("max diff {}".format(np.max((depth1 - depth2).flatten())))
+    print("Max pixel difference: {}, Mean pixel difference: {}".format(
+        np.max((depth1 - depth2).flatten()),
+        np.mean((depth1 - depth2).flatten()))
+    )
     if not result and debug_save:
         depth1_gray = depth_to_gray_rgb(depth1)
         depth_copy = cv2.cvtColor(depth1_gray, cv2.COLOR_GRAY2RGB)

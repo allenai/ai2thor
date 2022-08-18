@@ -1329,8 +1329,6 @@ def poll_ci_build(context):
         )
         res = requests.get(s3_pytest_url)
         if res.status_code == 200:
-            print("bef pytest url")
-            print("pytest url %s" % s3_pytest_url)
             pytest_missing = False
             pytest_result = res.json()
 
@@ -1338,14 +1336,12 @@ def poll_ci_build(context):
             print(pytest_result["stderr"])
 
             if "test_data" in pytest_result:
+                print("Pytest url: %s" % s3_pytest_url)
+                print("Data urls: ")
                 print(", ".join(pytest_result["test_data"]))
             else:
-                print("no test data url's in json '{}'".format(s3_pytest_url))
-                test_data_urls = pytest_s3_data_urls(commit_id)
-                print("test data urls: ")
-                print(", ".join(test_data_urls))
+                print("No test data url's in json '{}'.".format(s3_pytest_url))
 
-                print("dir {}".format(os.listdir(TEST_OUTPUT_DIRECTORY)))
             if not pytest_result["success"]:
                 raise Exception("pytest failure")
             break
