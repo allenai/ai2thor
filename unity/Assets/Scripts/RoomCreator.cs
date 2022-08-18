@@ -17,22 +17,6 @@ using UnityEditor.SceneManagement;
 using UnityEditor;
 #endif
 
-public static class IEnnumerableExtension {
-    public static IEnumerable<IEnumerable<T>> CartesianProduct<T>(this IEnumerable<IEnumerable<T>> sequences) {
-        IEnumerable<IEnumerable<T>> emptyProduct = new[] { Enumerable.Empty<T>() };
-        return sequences.Aggregate(
-            emptyProduct,
-            (accumulator, sequence) =>
-                from accseq in accumulator
-                from item in sequence
-                select accseq.Concat(new[] { item })
-            );
-    }
-
-    // public static IEnumerable<T> IndexOf() {
-
-    // }
-}
 namespace Thor.Procedural {
     using Data;
 

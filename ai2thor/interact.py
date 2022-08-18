@@ -323,7 +323,7 @@ class InteractiveControllerPrompt(object):
 
         for frame_filename, condition, frame_func, transform, save in frame_writes:
             frame = frame_func(event)
-            if frame is not None:
+            if frame is not None and condition:
                 frame = transform(frame)
                 image_name = os.path.join(
                     image_dir,
@@ -334,5 +334,5 @@ class InteractiveControllerPrompt(object):
                 print("Image {}, {}".format(image_name, image_dir))
                 save(image_name, frame)
 
-            else:
-                print("No frame present, call initialize with the right parameters")
+            elif condition:
+                print("No frame '{}' present, call initialize with the right parameters".format(frame_filename))

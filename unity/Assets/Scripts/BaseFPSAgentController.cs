@@ -274,7 +274,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public CollisionFlags m_CollisionFlags;
         protected Vector3 lastPosition;
 
-        protected string lastAction;
+        public string lastAction;
         public bool lastActionSuccess {
             get;
             protected set;
@@ -4564,6 +4564,56 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var floor = ProceduralTools.CreateHouse(house: house, materialDb: materials);
 
             actionFinished(true);
+        }
+
+        public void GetHouseFromTemplate(HouseTemplate template) {
+            var rooms = template.rooms.Select(room => room.Value);
+
+            // TODO: Bring back for validation and add tests when making this API public
+            // var materials = ProceduralTools.GetMaterials();
+            // var assetDb = ProceduralTools.getAssetMap();
+            // var materialIds = new HashSet<string>(
+            //     rooms.SelectMany(
+            //         r => new List<string>() {
+            //             r.floorTemplate.floorMaterial,
+            //             r.wallTemplate.material
+            //         }.Concat(
+            //             r.floorTemplate.ceilings.Select(c => c.material)
+            //         )
+            //     ).Concat(
+            //         new List<string>() { template.proceduralParameters.ceilingMaterial }
+            //     )
+            // );
+            // var missingIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
+            // if (missingIds.Count() > 0) {
+            //     actionFinished(
+            //         success: false,
+            //         errorMessage: (
+            //             $"Invalid materials: {string.Join(", ", missingIds.Select(id => $"'{id}'"))}. "
+            //             + "Not existing or not loaded to the ProceduralAssetDatabase component."
+            //         )
+            //     );
+            // }
+
+            // var missingObjectIds = template.objects
+            //     .Select(o => (o.Value.assetId, o.Value.id))
+            //     .Concat(template.doors.Select(a => (a.Value.assetId, a.Value.id)))
+            //     .Concat(template.windows.Select(a => (a.Value.assetId, a.Value.id)))
+            //     .Where(v => !assetDb.ContainsKey(v.assetId));
+
+            // if (missingObjectIds.Count() > 0) {
+            //     actionFinished(
+            //         success: false,
+            //         errorMessage: (
+            //             $"Invalid assetId: {string.Join(", ", missingObjectIds.Select(a => $"'{a.assetId}'"))}. For objects:  {string.Join(", ", missingObjectIds.Select(a => $"'{a.id}'"))}."
+            //             + "Not existing or not loaded to the ProceduralAssetDatabase component."
+            //         )
+            //     );
+            // }
+
+            var house = Templates.createHouseFromTemplate(template);
+
+            actionFinished(true, house);
         }
 
         public void GetAssetDatabase() {
