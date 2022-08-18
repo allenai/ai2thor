@@ -1476,6 +1476,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // freeze y-axis
             transform.rotation = Quaternion.Euler(eulerX, eulerY, 0);
+
         }
 
         // Check if agent is collided with other objects
