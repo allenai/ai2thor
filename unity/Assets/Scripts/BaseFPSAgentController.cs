@@ -2914,6 +2914,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return GetAllVisibleSimObjPhysicsDistance(camera, maxDistance, filterSimObjs, out interactable);
             }
         }
+
         protected SimObjPhysics[] GetAllVisibleSimObjPhysics(
             Camera camera,
             float maxDistance,
@@ -2926,6 +2927,45 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 return GetAllVisibleSimObjPhysicsDistance(camera, maxDistance, filterSimObjs, out interactable);
             }
+        }
+
+        public void GetVisibleObjects(float? maxDistance = null, string visibilityScheme = null) {
+            VisibilityScheme visSchemeEnum;;
+            if (visibilityScheme != null) {
+                visibilityScheme = visibilityScheme.ToLower();
+                if (visibilityScheme.ToLower() == "collider") {
+                    visSchemeEnum = VisibilityScheme.Collider;
+                } else if (visibilityScheme.ToLower() == "distance") {
+                    visSchemeEnum = VisibilityScheme.Distance;
+                } else {
+                    throw new System.NotImplementedException(
+                        $"Visibility scheme {visibilityScheme} is not implemented. Must be 'distance' or 'collider'."
+                    );
+                }
+            } else {
+                visSchemeEnum = this.visibilityScheme;
+            }
+
+            SimObjPhysics[] interactable;
+            SimObjPhysics[] visible;
+            if (visSchemeEnum == VisibilityScheme.Collider) {
+                visible = GetAllVisibleSimObjPhysicsCollider(
+                    camera: m_Camera,
+                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance),
+                    filterSimObjs: null,
+                    interactable: out interactable
+                );
+            } else {
+                visible = GetAllVisibleSimObjPhysicsDistance(
+                    camera: m_Camera,
+                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance),
+                    filterSimObjs: null,
+                    interactable: out interactable
+                );
+            }
+
+            // Return only the ObjectIds of the visible objects
+            actionFinishedEmit(true, visible.Select(sop => sop.ObjectID).ToList());
         }
 
         // this is a faster version of the visibility check, but is not entirely
