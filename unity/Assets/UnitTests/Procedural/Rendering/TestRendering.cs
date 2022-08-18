@@ -189,7 +189,7 @@ namespace Tests {
 
             Debug.Log($" path  {getTestResourcesPath("img")}");
 
-            // TODO when width height are fixed add back images and folder paths
+            // TODO: when width height are fixed add back images and folder paths
             // savePng(rgbBytes, getTestResourcesPath("test.png", false));
             // var tex = Resources.Load<Texture2D>(getTestResourcesPath("img"));
             // var t = duplicateTexture(tex);

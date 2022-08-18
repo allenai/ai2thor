@@ -1013,7 +1013,6 @@ public class AgentManager : MonoBehaviour {
 
     private bool canEmit() {
         bool emit = true;
-        // this.agents.TrueForAll(a => a.agentState == AgentState.Emit);
         foreach (BaseFPSAgentController agent in this.agents) {
             if (agent.agentState != AgentState.Emit) {
                 emit = false;

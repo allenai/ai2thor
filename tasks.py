@@ -3935,7 +3935,7 @@ def test_render(ctx, editor_mode=False, local_build=False):
         fieldOfView=fov,
         agentCount=1,
         renderDepthImage=True,
-        server_class=ai2thor.fifo_server.FifoServer,#ai2thor.fifo_server.FifoServer,
+        server_class=ai2thor.fifo_server.FifoServer
     )
 
     image_folder_path = "debug_img"

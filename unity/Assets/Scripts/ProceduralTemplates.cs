@@ -72,11 +72,7 @@ namespace Thor.Procedural {
             if (houseTemplate.windows != null) {
                 holePairs = holePairs.Concat(houseTemplate.windows);
             }
-
-            // var holeTemplates = houseTemplate.doors
-            //         .Select(x => (x.Key, x.Value as WallRectangularHole))
-            //         .Concat(houseTemplate.windows?.Select(x => (x.Key, x.Value as WallRectangularHole))
-            //     ).ToDictionary(e => e.Key, e => e.Item2);
+            
             var holeTemplates = holePairs.ToDictionary(e => e.Key, e => e.Value);;
 
             var doorIds = new HashSet<string>(holeTemplates.Keys.Distinct());

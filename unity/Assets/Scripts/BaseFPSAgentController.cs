@@ -4569,6 +4569,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetHouseFromTemplate(HouseTemplate template) {
             var rooms = template.rooms.Select(room => room.Value);
 
+            // TODO: Bring back for validation and add tests when making this API public
             // var materials = ProceduralTools.GetMaterials();
             // var assetDb = ProceduralTools.getAssetMap();
             // var materialIds = new HashSet<string>(
