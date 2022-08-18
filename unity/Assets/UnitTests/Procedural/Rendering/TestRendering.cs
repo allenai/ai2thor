@@ -86,7 +86,14 @@ namespace Tests {
             // ",
             var house = createTestHouse();
 
-            yield return Initialize();
+            yield return step(new Dictionary<string, object>() {
+                { "gridSize", 0.25f},
+                { "agentCount", 1},
+                { "fieldOfView", 45.0f},
+                { "snapToGrid", true},
+                { "procedural", true},
+                { "action", "Initialize"}
+            });
 
             Debug.Log("Pre Agent pos " + this.getLastActionMetadata().agent.position);
 
@@ -94,7 +101,7 @@ namespace Tests {
 
             yield return step(
                 new Dictionary<string, object>() {
-                    { "position", new Vector3(3.0f, 1.0f, 1.0f)},
+                    { "position", new Vector3(3.0f, 1.0f, 0.2f)},
                     { "rotation", new Vector3(0, 180, 0)},
                     { "horizon", 0.0f},
                     { "standing", true},
@@ -104,12 +111,12 @@ namespace Tests {
 
             var rgbBytes = this.renderPayload.Find(e => e.Key == "image").Value;
             
-            var eps = 60;
+            var eps = 40;
             var assertResult = rgbBytes.Select((pixel, index) => (pixel, index))
                 .All(
                     e => 
-                    (e.index % 3 == 0 && 255 - e.pixel < eps) || 
-                    (e.index % 3 != 0 && e.pixel < eps)
+                    (e.index % 3 == 0 && 255 - e.pixel <= eps) || 
+                    (e.index % 3 != 0 && e.pixel <= eps)
                 );
 
             if (!assertResult) {
