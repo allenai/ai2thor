@@ -3536,7 +3536,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 zCenterVals.Add(-halfSize.z + halfSize.z * alpha);
             }
 
-            List<Vector3> pointsOnSurface = new List<Vector3>();
             for (int whichX = 0; whichX < 2; whichX++) {
                 List<float> xVals = whichX == 1 ? xMinMax : xCenterVals;
                 
