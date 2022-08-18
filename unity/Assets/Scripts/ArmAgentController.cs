@@ -194,6 +194,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             IK_Robot_Arm_Controller arm = getArm();
             actionFinished(arm.PickupObject(objectIdCandidates, ref errorMessage), errorMessage);
         }
+        
+        public void PickupObject(float force) {
+            IK_Robot_Arm_Controller arm = getArm();
+            actionFinished(arm.PickupObject(objectId, ref errorMessage), errorMessage);
+        }
+        
+        public void ChangeGraspForce(float force) {
+            IkRobotArmController arm = getArm();
+            arm.ChangeGraspForce(force);
+            actionFinished(true);
+        }
 
         public override void PickupObject(float x, float y, bool forceAction = false, bool manualInteract = false) {
             throw new InvalidOperationException(
