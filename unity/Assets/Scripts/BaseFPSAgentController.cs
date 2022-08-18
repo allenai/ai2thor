@@ -3865,7 +3865,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ObjectNavExpertAction(ServerAction action) {
             NavMeshPath path = new UnityEngine.AI.NavMeshPath();
             Func<bool> visibilityTest;
-            if (!String.IsNullOrEmpty(action.objectType) && String.IsNullOrEmpty(action.objectId)) {
+            if (!String.IsNullOrEmpty(action.objectType) || !String.IsNullOrEmpty(action.objectId)) {
                 SimObjPhysics sop = getSimObjectFromTypeOrId(action);
                 path = getShortestPath(sop, true);
                 visibilityTest = () => objectIsWithinViewport(sop);
