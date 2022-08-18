@@ -197,11 +197,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         
         public void PickupObject(float force) {
             IK_Robot_Arm_Controller arm = getArm();
-            actionFinished(arm.PickupObject(objectId, ref errorMessage), errorMessage);
+            actionFinished(arm.PickupObject(force, ref errorMessage), errorMessage);
         }
         
         public void ChangeGraspForce(float force) {
-            IkRobotArmController arm = getArm();
+            IK_Robot_Arm_Controller arm = getArm();
             arm.ChangeGraspForce(force);
             actionFinished(true);
         }

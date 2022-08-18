@@ -784,7 +784,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
 
     public void ChangeGraspForce(float force) {
         float remainingForce = force;
-        public Dictionary<SimObjPhysics, HashSet<Collider>> newHeldObjects = new Dictionary<SimObjPhysics, HashSet<Collider>>();
+        Dictionary<SimObjPhysics, HashSet<Collider>> newHeldObjects = new Dictionary<SimObjPhysics, HashSet<Collider>>();
         // grab all sim objects that are currently colliding with magnet sphere
         foreach (KeyValuePair<SimObjPhysics, HashSet<Collider>> sop in heldObjects) {
             Rigidbody rb = sop.Key.GetComponent<Rigidbody>();
