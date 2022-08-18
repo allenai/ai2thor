@@ -26,6 +26,7 @@ public class SceneLoader : MonoBehaviour
 
     private bool _isSwitchingScene = false;
     private XROrigin _xrOrigin;
+    private CanvasGroup _canvasGroup;
 
     private void Awake() {
         if (UnityEngine.SceneManagement.SceneManager.sceneCount == 1 && UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex == 0) {
@@ -33,7 +34,7 @@ public class SceneLoader : MonoBehaviour
         }
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += SetActiveScene;
 
-        // Loop through all thescens and create a scene switch button
+        // Loop through all the scenes and create a scene switch button
         for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
             if (i != _persistentSceneIndex) {
                 string name = System.IO.Path.GetFileNameWithoutExtension(SceneUtility.GetScenePathByBuildIndex(i));
@@ -44,6 +45,8 @@ public class SceneLoader : MonoBehaviour
         }
 
         _leftMenuHoldReference.action.performed += (InputAction.CallbackContext context) => { ToggleSceneSwitchMenu(); };
+
+        _canvasGroup = _sceneSwitchMenu.GetComponent<CanvasGroup>();
     }
 
     private void OnDestroy() {
@@ -164,39 +167,41 @@ public class SceneLoader : MonoBehaviour
     }
 
     private void ToggleSceneSwitchMenu() {
-        _sceneSwitchMenu.gameObject.SetActive(!_sceneSwitchMenu.gameObject.activeSelf);
-
-        if (_sceneSwitchMenu.gameObject.activeSelf) {
-            // Set transform of canvas
+        if (!_sceneSwitchMenu.gameObject.activeSelf) {
+            StartCoroutine("FadeInMenu");
             StartCoroutine("SwitchSceneMenuCoroutine");
         } else {
+            StartCoroutine("FadeOutMenu");
             StopCoroutine("SwitchSceneMenuCoroutine");
         }
     }
 
-    private IEnumerator FadeInMenu(CanvasGroup canvasGroup) {
+    private IEnumerator FadeInMenu() {
+        _sceneSwitchMenu.gameObject.SetActive(true);
         float elapsedTime = 0f;
 
-        canvasGroup.interactable = true;
-        canvasGroup.blocksRaycasts = true;
+        _canvasGroup.interactable = true;
+        _canvasGroup.blocksRaycasts = true;
 
         while (elapsedTime < _fadeDuration) {
             elapsedTime += Time.deltaTime;
-            canvasGroup.alpha = Mathf.Clamp(elapsedTime / _fadeDuration, 0, 1);
+            _canvasGroup.alpha = Mathf.Clamp(elapsedTime / _fadeDuration, 0, 1);
             yield return null;
         }
     }
 
-    private IEnumerator FadeOutMenu(CanvasGroup canvasGroup) {
+    private IEnumerator FadeOutMenu() {
         float elapsedTime = 0f;
-        canvasGroup.interactable = false;
-        canvasGroup.blocksRaycasts = false;
+
+        _canvasGroup.interactable = false;
+        _canvasGroup.blocksRaycasts = false;
 
         while (elapsedTime < _fadeDuration) {
             elapsedTime += Time.deltaTime;
-            canvasGroup.alpha = Mathf.Clamp(1 - (elapsedTime / _fadeDuration), 0, 1);
+            _canvasGroup.alpha = Mathf.Clamp(1 - (elapsedTime / _fadeDuration), 0, 1);
 
             yield return null;
         }
+        _sceneSwitchMenu.gameObject.SetActive(false);
     }
 }
