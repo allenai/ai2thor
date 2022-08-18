@@ -1,20 +1,10 @@
 # import pytest
 import os
-import string
-import random
-import re
-import copy
-import json
 import pytest
-import warnings
-import jsonschema
 import numpy as np
-from ai2thor.tests.constants import TESTS_DATA_DIR, TEST_SCENE
 from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
-from PIL import ImageChops, ImageFilter, Image
-from .test_unity import TestController, build_controller, assert_images_near, assert_depth_near, reset_controller
-import ai2thor.controller
+from .test_unity import build_controller, images_near, depth_images_near
 import cv2
 
 DATA_PATH = "ai2thor/tests/data/"
@@ -36,6 +26,7 @@ _fifo_controller = dict(server_class=FifoServer, **shared_args)
 
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 wsgi = [_wsgi_controller]
+fifo = [_fifo_controller]
 
 def create_pixel_diff_image(img, g_truth):
     dx = np.where(~np.all(g_truth == img, axis=-1))
@@ -122,7 +113,7 @@ house_template = {
 }
 
 # TODO rendering is different for fifo and wsgi server
-@pytest.mark.parametrize("controller_args", wsgi)
+@pytest.mark.parametrize("controller_args", fifo)
 def test_render_lit(controller_args):
     print("Args")
     print(controller_args)
@@ -130,7 +121,7 @@ def test_render_lit(controller_args):
         **controller_args
     )
 
-    rgb_filename = "proc_rgb_lit.png"
+    rgb_filename = "proc_rgb_lit_fifo.png"
     ground_truth = cv2.imread(os.path.join(IMAGE_FOLDER_PATH, rgb_filename))
 
     evt = controller.step(
@@ -154,10 +145,30 @@ def test_render_lit(controller_args):
 
     controller.stop()
 
-    assert assert_images_near(evt.cv2img, ground_truth, debug_save=True)
+    assert images_near(evt.cv2img, ground_truth, max_mean_pixel_diff=52, debug_save=True)
+
+#
+# @pytest.mark.parametrize("controller_args", wsgi)
+# def test_render_lit_2(controller_args):
+#     rgb_filename = "proc_rgb_lit.png"
+#     ground_truth = cv2.imread(os.path.join(IMAGE_FOLDER_PATH, rgb_filename))
+#     rgb_filename = "proc_rgb_lit_server.png"
+#     server_image = cv2.imread(os.path.join(IMAGE_FOLDER_PATH, rgb_filename))
+#     assert images_near(server_image, ground_truth, max_mean_pixel_diff=8, debug_save=True)
+#
+#
+# @pytest.mark.parametrize("controller_args", wsgi)
+# def test_render_depth_2(controller_args):
+#     depth_filename = "proc_depth.npy"
+#     raw_depth = np.load(os.path.join(IMAGE_FOLDER_PATH, depth_filename))
+#     depth_filename = "proc_depth_server.npy"
+#     server_image = np.load(os.path.join(IMAGE_FOLDER_PATH, depth_filename))
+#     print("HIIII")
+#     assert depth_images_near(server_image, raw_depth, epsilon=2e-1, debug_save=True)
 
 
-@pytest.mark.parametrize("controller_args", fifo_wsgi)
+
+@pytest.mark.parametrize("controller_args", fifo)
 def test_depth(controller_args):
     controller_args.update(
         renderDepthImage=True,
@@ -188,4 +199,5 @@ def test_depth(controller_args):
         horizon=0, standing=True, forceAction=True
     )
 
-    assert assert_depth_near(evt.depth_frame, raw_depth, debug_save=True)
+    controller.stop()
+    assert depth_images_near(evt.depth_frame, raw_depth, epsilon=1e-1, debug_save=True)

@@ -17,7 +17,6 @@ using System.IO;
 
 [ExecuteInEditMode]
 public class ProceduralRoomEditor : MonoBehaviour {
-    private IEnumerable<NamedSimObj> namedSimObjects;
     private List<(Vector3, Color)> spheres = new List<(Vector3, Color)>();
     public ProceduralHouse loadedHouse;
     protected class NamedSimObj {

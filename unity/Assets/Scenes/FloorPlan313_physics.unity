@@ -38,12 +38,12 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.26360312, g: 0.62206274, b: 1.0090238, a: 1}
+  m_IndirectSpecularColor: {r: 0.4975387, g: 0.5876736, b: 0.7671069, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 11
+  serializedVersion: 12
   m_GIWorkflowMode: 0
   m_GISettings:
     serializedVersion: 2
@@ -98,7 +98,8 @@ LightmapSettings:
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
-  m_UseShadowmask: 0
+  m_LightingSettings: {fileID: 4890085278179872738, guid: 330c451e1098d104cacca86bfe3eae60,
+    type: 2}
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -118,6 +119,8 @@ NavMeshSettings:
     manualTileSize: 0
     tileSize: 256
     accuratePlacement: 0
+    maxJobWorkers: 0
+    preserveTilesOutsideBounds: 0
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 23800000, guid: ff0886051ee2e4a928a5382d0d266998, type: 2}
@@ -1246,6 +1249,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1270,6 +1274,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &328151654
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -2672,6 +2677,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2696,6 +2702,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &558978597
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -3920,6 +3927,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3944,6 +3952,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &682601420
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -4979,6 +4988,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -5003,6 +5013,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &952406818
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -6235,6 +6246,7 @@ Light:
   m_UseColorTemperature: 0
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &1217680664
@@ -6303,6 +6315,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -6327,6 +6340,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1218151533
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -6605,6 +6619,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -6631,6 +6646,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1243481883
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -7863,6 +7879,7 @@ Light:
   m_UseColorTemperature: 0
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!1001 &1490554155
@@ -9793,6 +9810,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -9817,6 +9835,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1822399648
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -9961,6 +9980,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -9985,6 +10005,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1843436684
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -10191,6 +10212,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -10216,6 +10238,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1917154549
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -10277,6 +10300,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -10302,6 +10326,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!33 &1920054239
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -10704,6 +10729,7 @@ Light:
   m_UseColorTemperature: 0
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &1998839471
@@ -12680,6 +12706,12 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4952508318758318109, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -6110359910433420765, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
     - target: {fileID: 4952508318821226434, guid: 365f7c54c598b4b0297faba260bbda79,
         type: 3}
       propertyPath: m_NavMeshLayer
@@ -12690,6 +12722,12 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4952508318821226439, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -7926727004548516235, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
     - target: {fileID: 4952508319122427808, guid: 365f7c54c598b4b0297faba260bbda79,
         type: 3}
       propertyPath: m_NavMeshLayer
@@ -12700,6 +12738,18 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4952508319122427813, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 5007945748015037502, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
+    - target: {fileID: 4952508319349245216, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 2391821600822521652, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
     - target: {fileID: 4952508319349245219, guid: 365f7c54c598b4b0297faba260bbda79,
         type: 3}
       propertyPath: m_NavMeshLayer
@@ -12710,6 +12760,12 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4952508319350020545, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -7731476631396945874, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
     - target: {fileID: 4952508319350020556, guid: 365f7c54c598b4b0297faba260bbda79,
         type: 3}
       propertyPath: m_NavMeshLayer
@@ -12730,6 +12786,12 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4952508319508750366, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 3018065418223130028, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
     - target: {fileID: 4952508319547808981, guid: 365f7c54c598b4b0297faba260bbda79,
         type: 3}
       propertyPath: m_NavMeshLayer
@@ -12740,6 +12802,18 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4952508319547809002, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -5043221938779487690, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
+    - target: {fileID: 4952508319672570121, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -7224228672349427675, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
     - target: {fileID: 4952508319672570228, guid: 365f7c54c598b4b0297faba260bbda79,
         type: 3}
       propertyPath: m_NavMeshLayer
@@ -12760,6 +12834,18 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4952508319763508667, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 4162208997039357889, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
+    - target: {fileID: 4952508319829842355, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -3050536707677161562, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
     - target: {fileID: 4952508319829842366, guid: 365f7c54c598b4b0297faba260bbda79,
         type: 3}
       propertyPath: m_NavMeshLayer
@@ -12770,6 +12856,12 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4952508319954022866, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -8745352065683451804, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
     - target: {fileID: 4952508319954022877, guid: 365f7c54c598b4b0297faba260bbda79,
         type: 3}
       propertyPath: m_NavMeshLayer
@@ -12790,6 +12882,18 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4952508320147564379, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -7211287004408584669, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
+    - target: {fileID: 4952508320265843505, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -2371630668259953377, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
     - target: {fileID: 4952508320265843516, guid: 365f7c54c598b4b0297faba260bbda79,
         type: 3}
       propertyPath: m_NavMeshLayer
@@ -12810,6 +12914,12 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4952508320490404081, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: -4657024027005635893, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
     - target: {fileID: 4952508320490404092, guid: 365f7c54c598b4b0297faba260bbda79,
         type: 3}
       propertyPath: m_NavMeshLayer
@@ -12820,6 +12930,12 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4952508320531853986, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 2122875647365882309, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
     - target: {fileID: 4952508320531853997, guid: 365f7c54c598b4b0297faba260bbda79,
         type: 3}
       propertyPath: m_NavMeshLayer
@@ -12840,6 +12956,12 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 4952508320657379024, guid: 365f7c54c598b4b0297faba260bbda79,
+        type: 3}
+      propertyPath: m_Mesh
+      value: 
+      objectReference: {fileID: 8758969955963608593, guid: 984d18bb7fab5ad42b80198075c89668,
+        type: 3}
     - target: {fileID: 4952508320657379027, guid: 365f7c54c598b4b0297faba260bbda79,
         type: 3}
       propertyPath: m_NavMeshLayer

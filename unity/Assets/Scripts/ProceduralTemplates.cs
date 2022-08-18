@@ -72,11 +72,7 @@ namespace Thor.Procedural {
             if (houseTemplate.windows != null) {
                 holePairs = holePairs.Concat(houseTemplate.windows);
             }
-
-            // var holeTemplates = houseTemplate.doors
-            //         .Select(x => (x.Key, x.Value as WallRectangularHole))
-            //         .Concat(houseTemplate.windows?.Select(x => (x.Key, x.Value as WallRectangularHole))
-            //     ).ToDictionary(e => e.Key, e => e.Item2);
+            
             var holeTemplates = holePairs.ToDictionary(e => e.Key, e => e.Value);;
 
             var doorIds = new HashSet<string>(holeTemplates.Keys.Distinct());
@@ -154,8 +150,6 @@ namespace Thor.Procedural {
                                                 var k = holeContinuation.SelectMany(c => doorDict[(id, layer, c)]);
                                                 connected = connected.Concat(k);
                                             }
-
-                                            var union = doorDict[key].Union(connected);
                                             doorDict[key] = new HashSet<(int, int)>(doorDict[key].Union(connected));
                     
                                         }
@@ -172,14 +166,13 @@ namespace Thor.Procedural {
             
             var interiorBoundary = findWalls(layoutIntArray);
             var boundaryGroups = consolidateWalls(interiorBoundary);
+            // TODO: do global scaling on everything after room creation
             var floatingPointBoundaryGroups = scaleBoundaryGroups(boundaryGroups, 1.0f, 3);
 
             var roomIds = layoutIntArray.SelectMany(x => x.Distinct()).Distinct();
             var roomToWallsXZ = getXZRoomToWallDict(floatingPointBoundaryGroups, roomIds);
 
-            var strIds = layoutStringArray.SelectMany(x => x.Distinct()).Distinct();
-            var defaultRoomTemplate = getDefaultRoomTemplate(); 
-            var wallId = 0;
+            var defaultRoomTemplate = getDefaultRoomTemplate();
             var wallCoordinatesToId = new Dictionary<((double, double), (double, double)), string>();
             var roomsWithWalls = roomIds.Where(id => id != outsideBoundaryId).Select(intId => {
                     var id = intId.ToString();
@@ -190,7 +183,6 @@ namespace Thor.Procedural {
                 
                     room.id = roomIntToId(intId, template.floorTemplate);
 
-                    var polygon = template.wallTemplate.polygon;
                     var wallHeight = template.wallHeight;
                     var walls2D = roomToWallsXZ[intId];
                     room.floorPolygon = walls2D.Select(p => new Vector3((float)p.Item1.row, template.floorYPosition, (float)p.Item1.column)).ToList();
@@ -587,12 +579,6 @@ namespace Thor.Procedural {
             }
             return output;
         }
-        
-        // TODO: do global scaling on everything
-        // public static string scalePoints() {
-        //     (Math.Round(pair.Item1.row * scale, precision), Math.Round(pair.Item1.col * scale, precision)),
-        //         (Math.Round(pair.Item2.row * scale, precision), Math.Round(pair.Item2.col * scale, precision))
-        // }
 
         public static string roomIntToId(int id, RoomHierarchy room) {
             return $"{room.id}{id}";

@@ -167,90 +167,38 @@ public class AgentManager : MonoBehaviour {
         //"locobot" agentMode can use either default or "stochastic" agentControllerType
         //"drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
         if (action.agentMode.ToLower() == "default") {
-            if (action.agentControllerType.ToLower() != "physics" && action.agentControllerType.ToLower() != "stochastic") {
-                Debug.Log("default mode must use either physics or stochastic controller. Defaulting to physics");
-                action.agentControllerType = "";
-                SetUpPhysicsController();
-            }
-
-            // if not stochastic, default to physics controller
-            if (action.agentControllerType.ToLower() == "physics") {
-                // set up physics controller
-                SetUpPhysicsController();
-            }
-
-            // if stochastic, set up stochastic controller
-            else if (action.agentControllerType.ToLower() == "stochastic") {
-                // set up stochastic controller
-                primaryAgent.actionFinished(success: false, errorMessage: "Invalid combination of agentControllerType=stochastic and agentMode=default. In order to use agentControllerType=stochastic, agentMode must be set to stochastic");
-                return;
-            }
+            SetUpPhysicsController();
         } else if (action.agentMode.ToLower() == "locobot") {
-            // if not stochastic, default to stochastic
-            if (action.agentControllerType.ToLower() != "stochastic") {
-                Debug.Log("'bot' mode only fully supports the 'stochastic' controller type at the moment. Forcing agentControllerType to 'stochastic'");
-                action.agentControllerType = "stochastic";
-            }
             // LocobotController is a subclass of Stochastic which just the agentMode (VisibilityCapsule) changed
             SetUpLocobotController(action);
-
         } else if (action.agentMode.ToLower() == "drone") {
-            if (action.agentControllerType.ToLower() != "drone") {
-                Debug.Log("'drone' agentMode is only compatible with 'drone' agentControllerType, forcing agentControllerType to 'drone'");
-                action.agentControllerType = "drone";
-            }
             SetUpDroneController(action);
-        } else if (action.agentMode.ToLower() == "stretch") {
+        } else if (agentMode == "stretch" || agentMode == "arm") {
+            if (agentMode == "stretch") {
                 SetUpStretchController(action);
-
-                action.autoSimulation = false;
-                physicsSceneManager.MakeAllObjectsMoveable();
-
-                if (action.massThreshold.HasValue) {
-                    if (action.massThreshold.Value > 0.0) {
-                        SetUpMassThreshold(action.massThreshold.Value);
-                    } else {
-                        var error = "massThreshold must have nonzero value - invalid value: " + action.massThreshold.Value;
-                        Debug.Log(error);
-                        primaryAgent.actionFinished(false, error);
-                        return;
-                    }
-                }
-        } else if (action.agentMode.ToLower() == "arm") {
-
-            if (action.agentControllerType == "") {
-                action.agentControllerType = "mid-level";
-                Debug.Log("Defaulting to mid-level.");
+            } else if (agentMode == "arm") {
+                SetUpArmController(true);
+            } else {
+                // Should not be possible but being very defensive.
+                throw new ArgumentException($"Invalid agentMode {action.agentMode}");
             }
 
-            if (action.agentControllerType.ToLower() != "low-level" && action.agentControllerType.ToLower() != "mid-level") {
-                var error = "'arm' mode must use either low-level or mid-level controller.";
-                Debug.Log(error);
-                primaryAgent.actionFinished(success: false, errorMessage: error);
-                return;
-            } else if (action.agentControllerType.ToLower() == "mid-level") {
-                // set up physics controller
-                SetUpArmController(true);
-                // the arm should currently be used only with autoSimulation off
-                // as we manually control Physics during its movement
-                action.autoSimulation = false;
-                physicsSceneManager.MakeAllObjectsMoveable();
+            action.autoSimulation = false;
+            physicsSceneManager.MakeAllObjectsMoveable();
+        } else {
+            var error = $"Invalid agentMode {action.agentMode}";
+            Debug.Log(error);
+            primaryAgent.actionFinished(success: false, errorMessage: error);
+            return;
+        }
 
-                if (action.massThreshold.HasValue) {
-                    if (action.massThreshold.Value > 0.0) {
-                        SetUpMassThreshold(action.massThreshold.Value);
-                    } else {
-                        var error = "massThreshold must have nonzero value - invalid value: " + action.massThreshold.Value;
-                        Debug.Log(error);
-                        primaryAgent.actionFinished(success: false, errorMessage: error);
-                        return;
-                    }
-                }
-
+        if (action.massThreshold.HasValue) {
+            if (action.massThreshold.Value > 0.0) {
+                SetUpMassThreshold(action.massThreshold.Value);
             } else {
-                var error = "unsupported";
+                var error = $"massThreshold must have nonzero value - invalid value: {action.massThreshold.Value}";
                 Debug.Log(error);
-                primaryAgent.actionFinished(success: false, errorMessage: error);
+                primaryAgent.actionFinished(false, error);
                 return;
             }
         }
@@ -949,7 +897,7 @@ public class AgentManager : MonoBehaviour {
 
         RenderTexture currentTexture = null;
 
-        if (shouldRender && RenderTexture.active != null) {
+        if (shouldRender) {
             currentTexture = RenderTexture.active;
             for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
                 ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
@@ -1013,7 +961,6 @@ public class AgentManager : MonoBehaviour {
 
     private bool canEmit() {
         bool emit = true;
-        // this.agents.TrueForAll(a => a.agentState == AgentState.Emit);
         foreach (BaseFPSAgentController agent in this.agents) {
             if (agent.agentState != AgentState.Emit) {
                 emit = false;
@@ -1252,11 +1199,11 @@ public class AgentManager : MonoBehaviour {
         return this.agents[activeAgentId];
     }
 
-    public int getActiveAgentId() {
+    public int GetActiveAgentId() {
         return this.activeAgentId;
     }
 
-    public int getThirdPartyCameraCount() {
+    public int GetThirdPartyCameraCount() {
         return this.thirdPartyCameras.Count;
     }
 
@@ -1913,7 +1860,6 @@ public class ServerAction {
     public float maxDistance;// used in target circle spawning function
     public float noise;
     public ControllerInitialization controllerInitialization = null;
-    public string agentControllerType = "";
     public string agentMode = "default"; // mode of Agent, valid values are "default" "locobot" "drone", note certain modes are only compatible with certain controller types
 
     public float agentRadius = 2.0f;

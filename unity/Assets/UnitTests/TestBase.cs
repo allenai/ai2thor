@@ -61,7 +61,7 @@ namespace Tests {
         }
 
         protected MetadataWrapper getLastActionMetadata(int agentId = -1) {
-            var id = agentId == -1 ? this.agentManager.getActiveAgentId() : agentId;
+            var id = agentId == -1 ? this.agentManager.GetActiveAgentId() : agentId;
             return this.metadata.agents[id];
         }
 
@@ -73,7 +73,7 @@ namespace Tests {
 
         private void generateMetadata() {
             MultiAgentMetadata multiMeta = new MultiAgentMetadata();
-            ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[agentManager.getThirdPartyCameraCount()];
+            ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[agentManager.GetThirdPartyCameraCount()];
             List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
             agentManager.createPayload(multiMeta, cameraMetadata, renderPayload, true);
             this.renderPayload = renderPayload;

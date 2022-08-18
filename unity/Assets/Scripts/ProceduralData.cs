@@ -441,8 +441,6 @@ namespace Thor.Procedural.Data {
             // for example in default constructor some list property initialized with some values,
             // but in 'source' these items are cleaned -
             // without ObjectCreationHandling.Replace default constructor values will be added to result
-            var deserializeSettings = new JsonSerializerSettings {ObjectCreationHandling = ObjectCreationHandling.Replace};
-
             var jsonResolver = new ShouldSerializeContractResolver();
             var str = Newtonsoft.Json.JsonConvert.SerializeObject(
                 obj,

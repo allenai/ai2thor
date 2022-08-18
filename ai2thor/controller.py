@@ -19,6 +19,7 @@ import shlex
 import shutil
 import subprocess
 import time
+import traceback
 import uuid
 import warnings
 from collections import defaultdict, deque
@@ -26,6 +27,7 @@ from functools import lru_cache
 from itertools import product
 from platform import architecture as platform_architecture
 from platform import system as platform_system
+from typing import Dict, Any, Union, Optional
 
 import numpy as np
 
@@ -392,6 +394,8 @@ class Controller(object):
         server_class=None,
         gpu_device=None,
         platform=None,
+        server_timeout: Optional[float] = 100.0,
+        server_start_timeout: float = 300.0,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -400,6 +404,11 @@ class Controller(object):
         self.container_id = None
         self.width = width
         self.height = height
+
+        self.server_timeout = server_timeout
+        self.server_start_timeout = server_start_timeout
+        assert self.server_timeout is None or 0 < self.server_timeout
+        assert 0 < self.server_start_timeout
 
         self.last_event = None
         self.scene = None
@@ -541,6 +550,12 @@ class Controller(object):
                     DeprecationWarning,
                 )
 
+            if "agentControllerType" in self.initialization_parameters:
+                raise ValueError(
+                    "`agentControllerType` is no longer an allowed initialization parameter."
+                    " Use `agentMode` instead."
+                )
+
             # Let's set the scene for them!
             if scene is None:
                 scenes_in_build = self.scenes_in_build
@@ -577,7 +592,7 @@ class Controller(object):
             init_return = event.metadata["actionReturn"]
             if init_return:
                 self.server.set_init_params(init_return)
-                logging.info("Initialize return: {}".format(init_return))
+                logging.info(f"Initialize return: {init_return}")
 
     def _build_server(self, host, port, width, height):
 
@@ -593,20 +608,22 @@ class Controller(object):
 
         if self.server_class == ai2thor.wsgi_server.WsgiServer:
             self.server = ai2thor.wsgi_server.WsgiServer(
-                host,
+                host=host,
+                timeout=self.server_timeout,
                 port=port,
-                depth_format=self.depth_format,
-                add_depth_noise=self.add_depth_noise,
                 width=width,
                 height=height,
+                depth_format=self.depth_format,
+                add_depth_noise=self.add_depth_noise,
             )
 
         elif self.server_class == ai2thor.fifo_server.FifoServer:
             self.server = ai2thor.fifo_server.FifoServer(
-                depth_format=self.depth_format,
-                add_depth_noise=self.add_depth_noise,
                 width=width,
                 height=height,
+                timeout=self.server_timeout,
+                depth_format=self.depth_format,
+                add_depth_noise=self.add_depth_noise,
             )
 
     def __enter__(self):
@@ -913,9 +930,9 @@ class Controller(object):
 
         return events
 
-    def step(self, action=None, **action_args):
+    def step(self, action: Union[str, Dict[str, Any]]=None, **action_args):
 
-        if type(action) is dict:
+        if isinstance(action, Dict):
             action = copy.deepcopy(action)  # prevent changes from leaking
         else:
             action = dict(action=action)
@@ -960,18 +977,27 @@ class Controller(object):
         self.server.send(action)
         try:
             self.last_event = self.server.receive()
-        except UnityCrashException as e:
+        except UnityCrashException:
             self.server.stop()
             self.server = None
             # we don't need to pass port or host, since this Exception
             # is only thrown from the FifoServer, start_unity is also
             # not passed since Unity would have to have been started
             # for this to be thrown
-            message = "Restarting unity due to crash: %s" % e
+            message = (
+                f"Restarting unity due to crash when when running action {action}"
+                f" in scene {self.last_event.metadata['sceneName']}:\n{traceback.format_exc()}"
+            )
             warnings.warn(message)
             self.start(width=self.width, height=self.height, x_display=self.x_display)
             self.reset()
             raise RestartError(message)
+        except Exception as e:
+            self.server.stop()
+            raise (TimeoutError if isinstance(e, TimeoutError) else RuntimeError)(
+                f"Error encountered when running action {action}"
+                f" in scene {self.last_event.metadata['sceneName']}."
+            )
 
         if not self.last_event.metadata["lastActionSuccess"]:
             if self.last_event.metadata["errorCode"] in [
@@ -1056,7 +1082,7 @@ class Controller(object):
             pass
 
         self.unity_pid = proc.pid
-        atexit.register(lambda: proc.poll() is None and proc.kill())
+        atexit.register(lambda: self.server.stop())
 
     @property
     def tmp_dir(self):
@@ -1336,7 +1362,7 @@ class Controller(object):
             self._start_unity_thread(env, width, height, unity_params, image_name)
 
         # receive the first request
-        self.last_event = self.server.receive()
+        self.last_event = self.server.receive(timeout=self.server_start_timeout)
 
         # we should be able to get rid of this since we check the resolution in .reset()
         if self.server.unity_proc is not None and (height < 300 or width < 300):

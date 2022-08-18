@@ -19,6 +19,9 @@ import multiprocessing
 import io
 import ai2thor.build
 import logging
+import glob
+
+from ai2thor.build import TEST_OUTPUT_DIRECTORY
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -31,6 +34,20 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+content_types = {
+    ".js": "application/javascript; charset=utf-8",
+    ".html": "text/html; charset=utf-8",
+    ".ico": "image/x-icon",
+    ".svg": "image/svg+xml; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".png": "image/png",
+    ".txt": "text/plain",
+    ".jpg": "image/jpeg",
+    ".wasm": "application/wasm",
+    ".data": "application/octet-stream",
+    ".unityweb": "application/octet-stream",
+    ".json": "application/json",
+}
 
 def add_files(zipf, start_dir, exclude_ext=()):
     for root, dirs, files in os.walk(start_dir):
@@ -927,6 +944,38 @@ def pytest_s3_object(commit_id):
 
     return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
 
+def pytest_s3_general_object(commit_id, filename):
+    s3 = boto3.resource("s3")
+    # TODO: Create a new bucket directory for test artifacts
+    pytest_key = "builds/%s-%s" % (commit_id, filename)
+    return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
+
+def pytest_s3_data_urls(commit_id):
+    test_outputfiles = sorted(
+        glob.glob("{}/*".format(TEST_OUTPUT_DIRECTORY))
+    )
+    logger.info("Getting test data in directory {}".format(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY)))
+    logger.info("Test output files: {}".format(", ".join(test_outputfiles)))
+    test_data_urls = []
+    for filename in test_outputfiles:
+        s3_test_out_obj = pytest_s3_general_object(commit_id, filename)
+
+        s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
+            s3_test_out_obj.bucket_name,
+            s3_test_out_obj.key,
+        )
+
+        _, ext = os.path.splitext(filename)
+
+        if ext in content_types:
+            s3_obj.put(
+                Body=s3_test_out_obj, ACL="public-read", ContentType=content_types[ext]
+            )
+            logger.info(s3_pytest_url)
+            # merged_result["stdout"] += "--- test output url: {}".format(s3_pytest_url)
+            test_data_urls.append(s3_pytest_url)
+    return test_data_urls
+
 @task
 def ci_merge_push_pytest_results(context, commit_id):
 
@@ -936,9 +985,11 @@ def ci_merge_push_pytest_results(context, commit_id):
         s3_obj.bucket_name,
         s3_obj.key,
     )
+    logger.info("ci_merge_push_pytest_results pytest before url check code change logging works")
     logger.info("pytest url %s" % s3_pytest_url)
+    logger.info("test output url: ")
 
-    merged_result = dict(success=True, stdout="", stderr="")
+    merged_result = dict(success=True, stdout="", stderr="", test_data=[])
     result_files = ["tmp/pytest_results.json", "tmp/test_utf_results.json"]
 
     for rf in result_files:
@@ -948,6 +999,8 @@ def ci_merge_push_pytest_results(context, commit_id):
         merged_result["success"] &= result["success"]
         merged_result["stdout"] += result["stdout"] + "\n"
         merged_result["stderr"] += result["stderr"] + "\n"
+
+    merged_result["test_data"] = pytest_s3_data_urls(commit_id)
 
     s3_obj.put(
         Body=json.dumps(merged_result), ACL="public-read", ContentType="application/json"
@@ -1276,11 +1329,19 @@ def poll_ci_build(context):
         )
         res = requests.get(s3_pytest_url)
         if res.status_code == 200:
-            print("pytest url %s" % s3_pytest_url)
             pytest_missing = False
             pytest_result = res.json()
+
             print(pytest_result["stdout"])  # print so that it appears in travis log
             print(pytest_result["stderr"])
+
+            if "test_data" in pytest_result:
+                print("Pytest url: %s" % s3_pytest_url)
+                print("Data urls: ")
+                print(", ".join(pytest_result["test_data"]))
+            else:
+                print("No test data url's in json '{}'.".format(s3_pytest_url))
+
             if not pytest_result["success"]:
                 raise Exception("pytest failure")
             break
@@ -2120,21 +2181,6 @@ def webgl_deploy(
 ):
     from pathlib import Path
     from os.path import isfile, join, isdir
-
-    content_types = {
-        ".js": "application/javascript; charset=utf-8",
-        ".html": "text/html; charset=utf-8",
-        ".ico": "image/x-icon",
-        ".svg": "image/svg+xml; charset=utf-8",
-        ".css": "text/css; charset=utf-8",
-        ".png": "image/png",
-        ".txt": "text/plain",
-        ".jpg": "image/jpeg",
-        ".wasm": "application/wasm",
-        ".data": "application/octet-stream",
-        ".unityweb": "application/octet-stream",
-        ".json": "application/json",
-    }
 
     content_encoding = {".unityweb": "gzip"}
 
@@ -3871,18 +3917,12 @@ def create_room(ctx, file_path="unity/Assets/Resources/rooms/1.json", editor_mod
 @task
 def test_render(ctx, editor_mode=False, local_build=False):
     import ai2thor.controller
-    import random
-    import json
-    import os
     import cv2
     import numpy as np
     print(os.getcwd())
     width = 300
     height = 300
     fov = 45
-    n = 20
-    import os
-    import json
     controller = ai2thor.controller.Controller(
         local_executable_path=None,
         local_build=local_build,
@@ -3895,7 +3935,7 @@ def test_render(ctx, editor_mode=False, local_build=False):
         fieldOfView=fov,
         agentCount=1,
         renderDepthImage=True,
-        server_class=ai2thor.fifo_server.FifoServer,#ai2thor.fifo_server.FifoServer,
+        server_class=ai2thor.fifo_server.FifoServer
     )
 
     image_folder_path = "debug_img"

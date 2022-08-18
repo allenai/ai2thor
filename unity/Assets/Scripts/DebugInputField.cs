@@ -3087,7 +3087,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // pass in a min range, max range, delay
                         if (splitcommand.Length == 2) {
                             // ID of spawner
-                            action.objectType = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
                         else if (splitcommand.Length >= 4) {
                             // Target position

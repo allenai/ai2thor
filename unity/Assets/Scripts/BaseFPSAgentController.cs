@@ -1995,6 +1995,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        protected IEnumerator waitForSecondsRealtime(int seconds) {
+            yield return null; // Necessary as counting happens at the end of the last frame
+            yield return new WaitForSecondsRealtime(seconds);
+            actionFinished(true);
+        }
+
+        public void Sleep(int seconds) {
+            StartCoroutine(waitForSecondsRealtime(seconds));
+        }
+
 #if UNITY_EDITOR
         // for use in Editor to test the Reset function.
         public void Reset(ServerAction action) {
@@ -3855,7 +3865,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ObjectNavExpertAction(ServerAction action) {
             NavMeshPath path = new UnityEngine.AI.NavMeshPath();
             Func<bool> visibilityTest;
-            if (!String.IsNullOrEmpty(action.objectType) && String.IsNullOrEmpty(action.objectId)) {
+            if (!String.IsNullOrEmpty(action.objectType) || !String.IsNullOrEmpty(action.objectId)) {
                 SimObjPhysics sop = getSimObjectFromTypeOrId(action);
                 path = getShortestPath(sop, true);
                 visibilityTest = () => objectIsWithinViewport(sop);
@@ -4559,6 +4569,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetHouseFromTemplate(HouseTemplate template) {
             var rooms = template.rooms.Select(room => room.Value);
 
+            // TODO: Bring back for validation and add tests when making this API public
             // var materials = ProceduralTools.GetMaterials();
             // var assetDb = ProceduralTools.getAssetMap();
             // var materialIds = new HashSet<string>(
@@ -4662,7 +4673,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
 
-            GameObject asset = assetMap.getAsset(assetId);
+            // GameObject asset = assetMap.getAsset(assetId);
 
             var result = ProceduralTools.getHoleAssetBoundingBox(assetId);
 
