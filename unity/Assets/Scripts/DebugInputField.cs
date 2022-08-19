@@ -15,6 +15,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     public class DebugInputField : MonoBehaviour {
         public GameObject Agent = null;
         public AgentManager AManager = null;
+
         private ControlMode controlMode;
 
 #if UNITY_EDITOR
@@ -2968,7 +2969,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "close": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "CloseObject";
-                        action["forceAction"] = true;
 
                         if (splitcommand.Length > 1) {
                             action["objectId"] = splitcommand[1];
@@ -4009,8 +4009,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     0 0 0 0 0 0
                                     0 2 2 2 2 0
                                     0 2 2 2 = 0
-                                    0 1 1 1 = 0
-                                    0 1 * 1 + 0
+                                    0 1 * 1 = 0
+                                    0 1 1 1 + 0
                                     0 0 0 0 0 0
                                 "
                                 ,
@@ -4071,7 +4071,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     wallHeight = 3.0f
                                 }}
                             },
-                            holes = new Dictionary<string, Thor.Procedural.Data.WallRectangularHole>() {
+                            doors = new Dictionary<string, Thor.Procedural.Data.WallRectangularHole>() {
                                 {"=", new Thor.Procedural.Data.Door(){ 
                                     openness = 1.0f,
                                     assetId = "Doorway_1",
@@ -4081,7 +4081,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             },
                             objects = new Dictionary<string, Thor.Procedural.Data.HouseObject>() {
                                 {"*", new Thor.Procedural.Data.HouseObject(){ 
-                                    assetId = "Dining_Table_16_2",
+                                    assetId = "RoboTHOR_side_table_strind",
                                     rotation = new FlexibleRotation() { axis = new Vector3(0, 1, 0), degrees = 90}
                                 }},
                                 {"+", new Thor.Procedural.Data.HouseObject(){ 
@@ -4089,7 +4089,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 }},
                                 {"$", new Thor.Procedural.Data.HouseObject(){ 
                                     assetId = "Apple_4",
-                                    position = new Vector3(0, 2, 0)
+                                    position = new Vector3(0.1f, 1.5f, 0)
                                 }}
                             },
                             proceduralParameters = new ProceduralParameters() {
@@ -4140,6 +4140,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
 
                     Debug.Log("#######   HOUSE Created \n");
+
+
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "TeleportFull";
+                    action["position"] = new Vector3(3.0f, 1.0f, 2.0f);
+                    action["rotation"] = new Vector3(0, 0, 0);
+                    action["horizon"] = 0.0f;
+                    action["standing"] = true;
+                    action["forceAction"] = true;
+
+                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                     break;
                 }
             }
