@@ -102,7 +102,7 @@ public class Agent_SnapMoveProvider : MonoBehaviour
             return;
 
         PhysicsRemoteFPSAgentController agent = (PhysicsRemoteFPSAgentController)AManager.PrimaryAgent;
-        if (m_TimeStarted > 0f || agent.agentState == AgentState.Emit)
+        if (m_TimeStarted > 0f || agent.agentState == AgentState.ActionComplete)
             return;
 
         Dictionary<string, object> action = new Dictionary<string, object>();

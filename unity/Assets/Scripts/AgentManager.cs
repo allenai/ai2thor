@@ -151,7 +151,7 @@ public class AgentManager : MonoBehaviour {
         }
 #endif
 
-        //StartCoroutine(EmitFrame());
+        StartCoroutine(EmitFrameVR());
     }
 
     private void initializePrimaryAgent() {
@@ -1028,6 +1028,18 @@ primaryAgent.ProcessControlCommand(action.dynamicServerAction);
         return this.agentManagerState == AgentState.Emit && emit;
     }
 
+    private bool isActionComplete() {
+        bool complete = true;
+        foreach (BaseFPSAgentController agent in this.agents) {
+            if (agent.agentState != AgentState.ActionComplete) {
+                complete = false;
+                break;
+            }
+        }
+
+        return this.agentManagerState == AgentState.ActionComplete && complete;
+    }
+
     private RenderTexture createRenderTexture(int width, int height) {
         RenderTexture rt = new RenderTexture(width: width, height: height,depth:0, GraphicsFormat.R8G8B8A8_UNorm);
         rt.antiAliasing = 4;
@@ -1039,7 +1051,40 @@ primaryAgent.ProcessControlCommand(action.dynamicServerAction);
             Debug.LogError("Could not create a renderTexture");
             return null;
         }
+    }
 
+    public IEnumerator EmitFrameVR() {
+        while (true) {
+            bool shouldRender = this.renderImage && serverSideScreenshot;
+            yield return new WaitForEndOfFrame();
+
+            frameCounter += 1;
+
+            if (!this.isActionComplete()) {
+                continue;
+            }
+
+            foreach (BaseFPSAgentController agent in this.agents) {
+                if (agent.agentState == AgentState.ActionComplete) {
+                    agent.agentState = AgentState.Emit;
+                }
+            }
+
+            MultiAgentMetadata multiMeta = new MultiAgentMetadata();
+
+            ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
+            List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
+            createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
+            string metadata = serializeMetadataJson(multiMeta);
+            print("Created Metadata");
+            WriteData(metadata);
+        }
+    }
+
+    private void WriteData(string str) {
+        // TODO: NEED A BETTER WAY OF NAMING TXT FILE
+        string filePath = Application.persistentDataPath + @$"/{primaryAgent.lastAction}_[{DateTime.Now.ToString("yyyy-MM-dd--HH--mm-ss")}].txt";
+        File.WriteAllText(filePath, str + '\n');
     }
 
     public IEnumerator EmitFrame() {
@@ -1659,6 +1704,7 @@ public struct MetadataWrapper {
     public AgentMetadata agent;
     public HandMetadata heldObjectPose;
     public ArmMetadata arm;
+    public ArmMetadata[] armVR;
     public float fov;
     public Vector3 cameraPosition;
     public float cameraOrthSize;

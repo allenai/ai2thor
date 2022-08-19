@@ -71,6 +71,8 @@ public class ArmManager : MonoBehaviour
     private bool _isArmMode = false;
     private float _armHeight;
     private bool _readMoveArmBaseInput = false;
+    private ArmAgentController armAgent;
+    private IK_Robot_Arm_Controller arm;
 
     public float ArmHeight {
         get { return _armHeight; }
@@ -105,18 +107,20 @@ public class ArmManager : MonoBehaviour
         _isArmMode = isArmMode;
 
         if (isArmMode) {
-            // Turn on autoSimulate physics
+            armAgent = (ArmAgentController)_agentManager.PrimaryAgent;
+            arm = armAgent.getArm();
+            armAgent.agentState = AgentState.Processing;
             StartCoroutine("ArmCoroutine");
         }
         else {
             // Return to orinigal autoSimulate physics
             StopCoroutine("ArmCoroutine");
+            armAgent.actionFinished(true);
+            
         }
     }
 
     private IEnumerator ArmCoroutine() {
-        var armAgent = (ArmAgentController)_agentManager.PrimaryAgent;
-        var arm = armAgent.getArm();
         CollisionListener collisionListener = arm.collisionListener;
 
         _originPos = _xrController.transform.localPosition;
@@ -173,6 +177,7 @@ public class ArmManager : MonoBehaviour
                     _validResetRotations.AddLast(arm.armTarget.localEulerAngles);
                 }
             }
+            arm.AppendArmMetadataVR();
             yield return null;
         }
     }

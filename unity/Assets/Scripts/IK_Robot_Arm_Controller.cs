@@ -40,7 +40,10 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
 
     private const float extendedArmLength = 0.6325f;
 
+    private List<ArmMetadata> _vrArmMetadataCollection = new List<ArmMetadata>();
+
     public CollisionListener collisionListener;
+
 
     void Start() {
         // calculating based on distance from origin of arm to the 2nd joint, which will always be constant
@@ -837,6 +840,17 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         meta.handSphereRadius = magnetSphere.radius;
         meta.pickupableObjects = WhatObjectsAreInsideMagnetSphereAsObjectID();
         return meta;
+    }
+
+    public ArmMetadata[] GenerateMetadataVR() {
+        ArmMetadata[] temp = _vrArmMetadataCollection.ToArray();
+        _vrArmMetadataCollection.Clear();
+        return temp;
+    }
+
+    public void AppendArmMetadataVR() {
+        ArmMetadata metadata = GenerateMetadata();
+        _vrArmMetadataCollection.Add(metadata);
     }
 
 #if UNITY_EDITOR

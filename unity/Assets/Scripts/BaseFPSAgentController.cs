@@ -272,7 +272,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public CollisionFlags m_CollisionFlags;
         protected Vector3 lastPosition;
 
-        protected string lastAction;
+        public string lastAction {
+            get;
+            protected set;
+        }
         public bool lastActionSuccess {
             get;
             protected set;
@@ -1744,6 +1747,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // ARM
             if (Arm != null) {
                 metaMessage.arm = Arm.GenerateMetadata();
+                // Generate metadata for vr arm 
+                ArmMetadata[] vrArmMetadata = Arm.GenerateMetadataVR();
+                if (vrArmMetadata.Length != 0) {
+                    metaMessage.armVR = vrArmMetadata;
+                }
             }
             else if (SArm != null) {
                 metaMessage.arm = SArm.GenerateMetadata();
