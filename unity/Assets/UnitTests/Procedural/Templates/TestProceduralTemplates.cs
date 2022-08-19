@@ -234,8 +234,8 @@ namespace Tests {
 
             Assert.IsTrue(door.room0 == "1");
             Assert.IsTrue(door.room1 == "2");
-
-            Assert.IsTrue(door.boundingBox.min == new Vector3(3.0f, 0.0f, 0.0f));
+            Assert.IsTrue(door.holePolygon.Count == 2);
+            Assert.IsTrue(door.holePolygon[0] == new Vector3(3.0f, 0.0f, 0.0f));
 
 
             Assert.AreEqual(

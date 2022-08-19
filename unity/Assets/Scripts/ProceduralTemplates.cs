@@ -352,13 +352,23 @@ namespace Thor.Procedural {
                 // begining of the array in x, z
                 var minVector = new Vector3((float)(holeStartCoords.column - distToZeros.x), (float)floorTemplate.floorYPosition, 0.0f);
                 var maxVector = minVector + holeOffset.max;
-
-                hole.boundingBox = new BoundingBox(){
-                    min = minVector,
-                    max = maxVector
+                Debug.Log("&&&&&&&&&&&&&& Created hole polygon");
+                hole.holePolygon = new List<Vector3> {
+                    minVector,
+                    maxVector
                 };
+                var right = (
+                    new Vector3((float)wall0.Item2.column, 0.0f, (float)wall0.Item2.row) - 
+                    new Vector3((float)wall0.Item1.column, 0.0f, (float)wall0.Item1.row)
+                ).normalized;
 
-                hole.assetOffset = holeOffset.offset;
+                var forward = Vector3.Cross(right, Vector3.up);
+                Matrix4x4 wallSpace = new Matrix4x4();
+                wallSpace.SetColumn(0, right);
+                wallSpace.SetColumn(1, Vector3.up);
+                wallSpace.SetColumn(2, forward);
+
+                hole.assetPosition = wallSpace * (minVector + holeOffset.offset + (holeOffset.max / 2.0f));
                 return new List<WallRectangularHole>(){isDoor ? hole as Data.Door : isWindow ? hole as Data.Window : hole};
             }).ToList();
 

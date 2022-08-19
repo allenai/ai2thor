@@ -1284,15 +1284,13 @@ namespace Thor.Procedural {
         }
 
         private static BoundingBox getHoleBoundingBox(WallRectangularHole hole) {
-            if (hole.holePolygon != null && hole.holePolygon.Count >= 2) {
-                return new BoundingBox() {
-                    min = hole.holePolygon[0],
-                    max = hole.holePolygon[1]
-                };
+            if (hole.holePolygon == null || hole.holePolygon.Count < 2) {
+                throw new ArgumentException($"Invalid `holePolygon` for object id: '{hole.id}'. Minimum 2 vertices indicating first min and second max of hole bounding box.");
             }
-            else {
-                return hole.boundingBox;
-            }
+            return new BoundingBox() {
+                min = hole.holePolygon[0],
+                max = hole.holePolygon[1]
+            };
         }
 
         private static Material generatePolygonMaterial(Material sharedMaterial, Vector2 dimensions, MaterialProperties materialProperties = null, float offsetX = 0.0f, float offsetY = 0.0f, bool squareTiling = false) {
@@ -1608,19 +1606,13 @@ namespace Thor.Procedural {
                     var p0p1_norm = p0p1.normalized;
                     var normal = Vector3.Cross(Vector3.up, p0p1_norm);
                     Vector3 pos;
-                    bool positionFromCenter = false;
-                    Vector3 assetOffset = holeCover.assetOffset;
 
                     var holeBB = getHoleBoundingBox(holeCover);
-                    pos = wall.wall0.p0 + (p0p1_norm * (holeBB.min.x + assetOffset.x)) + Vector3.up * (holeBB.min.y + assetOffset.y); //- normal * holeCover.boundingBox.min.z/2.0f;
-
-                    if (holeCover.holePolygon != null && holeCover.holePolygon.Count == 2) {
-                        positionFromCenter = true;
-                        assetOffset = holeCover.assetPosition;
-
-
-                        pos = wall.wall0.p0 + (p0p1_norm * (assetOffset.x)) + Vector3.up * (assetOffset.y); 
-                    }
+       
+                    bool positionFromCenter = true;
+                    Vector3 assetOffset = holeCover.assetPosition;
+                    pos = wall.wall0.p0 + (p0p1_norm * (assetOffset.x)) + Vector3.up * (assetOffset.y); 
+                
                     var rotY = getWallDegreesRotation(new Wall { p0 = wall.wall0.p1, p1 = wall.wall0.p0 });
                     var rotation = Quaternion.AngleAxis(rotY, Vector3.up);
 

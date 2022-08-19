@@ -98,12 +98,10 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class Door : WallRectangularHole {
         public string id { get; set; }
-        public Vector3 assetOffset { get; set; }
         public string room0 { get; set; }
         public string room1 { get; set; }
         public string wall0 { get; set; }
         public string wall1 { get; set; }
-        public BoundingBox boundingBox { get; set; }
         public List<VectorXZ> axesXZ { get; set; }
         public List<Vector3> holePolygon { get; set; }
         public Vector3 assetPosition { get; set; }
@@ -219,10 +217,8 @@ namespace Thor.Procedural.Data {
         public string id { get; set; }
         public string room0 { get; set; }
         public string room1 { get; set; }
-        public BoundingBox boundingBox { get; set; }
         public List<Vector3> holePolygon { get; set; }
         public Vector3 assetPosition { get; set; }
-        public Vector3 assetOffset { get; set; }
         public string wall0 { get; set; }
         public string wall1 { get; set; }
         public bool openable { get; set; }
@@ -396,10 +392,8 @@ namespace Thor.Procedural.Data {
         string room1 { get; set; }
         string wall0 { get; set; }
         string wall1 { get; set; }
-        BoundingBox boundingBox { get; set; }
         public List<Vector3> holePolygon { get; set; }
         public Vector3 assetPosition { get; set; }
-        Vector3 assetOffset { get; set; }
 
         float openness { get; set; }
 

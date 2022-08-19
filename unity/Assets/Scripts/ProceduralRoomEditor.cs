@@ -528,10 +528,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     room1 = connectionProps?.OpenToRoomId,
                     wall0 = wall.id,
                     wall1 = wallRev.id,
-                    boundingBox = new Thor.Procedural.Data.BoundingBox { min = new Vector3(xLen, 0.0f, box.size.z / 2.0f), max = new Vector3(xLen + box.size.x, box.size.y, box.size.z / 2.0f) },
-
-                    //boundingBox = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
-                    // boundingBox = new Thor.Procedural.Data.BoundingBox { min = new Vector3(1f, 0.0f, 0.0f), max = new Vector3(3f, 2.0f, 2.0f) },
+                    holePolygon = new List<Vector3>() { new Vector3(xLen, 0.0f, box.size.z / 2.0f), new Vector3(xLen + box.size.x, box.size.y, box.size.z / 2.0f) },
+                    // boundingBox = new Thor.Procedural.Data.BoundingBox { min = new Vector3(xLen, 0.0f, box.size.z / 2.0f), max = new Vector3(xLen + box.size.x, box.size.y, box.size.z / 2.0f) },
                     type = Enum.GetName(typeof(ConnectionType), (connectionProps?.Type).GetValueOrDefault()),
 
                     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
@@ -549,9 +547,9 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     room1 = connectionProps?.OpenToRoomId,
                     wall0 = wall.id,
                     wall1 = wallRev.id,
-                    boundingBox = new Thor.Procedural.Data.BoundingBox {
-                        min = new Vector3(xLen, yMin, box.size.z / 2.0f),
-                        max = new Vector3(xLen + box.size.x, yMin + box.size.y, box.size.z / 2.0f)
+                    holePolygon = new List<Vector3>() {
+                        new Vector3(xLen, yMin, box.size.z / 2.0f), // Min
+                        new Vector3(xLen + box.size.x, yMin + box.size.y, box.size.z / 2.0f) // Max
                     },
 
                     // boundingBox = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
