@@ -352,7 +352,6 @@ namespace Thor.Procedural {
                 // begining of the array in x, z
                 var minVector = new Vector3((float)(holeStartCoords.column - distToZeros.x), (float)floorTemplate.floorYPosition, 0.0f);
                 var maxVector = minVector + holeOffset.max;
-                Debug.Log("&&&&&&&&&&&&&& Created hole polygon");
                 hole.holePolygon = new List<Vector3> {
                     minVector,
                     maxVector
