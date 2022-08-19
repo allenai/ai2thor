@@ -45,6 +45,9 @@ public class POVToggle : MonoBehaviour
             this._isFPSMode = isFPSMode;
             yield return _screenFader.StartFadeOut();
             if (isFPSMode) {
+                // Only track rotation
+                _trackedPoseDriver.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
+
                 // Save original position
                 _orignalCameraOffsetPos = _cameraOffset.localPosition;
                 _orignalCameraOffsetRot = _cameraOffset.localRotation;
@@ -57,6 +60,7 @@ public class POVToggle : MonoBehaviour
                 if (_firstPersonCharacterCull != null) {
                     _firstPersonCharacterCull.enabled = true;
                 }
+
             } else {
                 StopCoroutine("UpdateFPSCamera");
                 var angleDegrees = _xrOrigin.transform.rotation.eulerAngles.y - _orignalXROriginRot.eulerAngles.y;
@@ -69,6 +73,9 @@ public class POVToggle : MonoBehaviour
                 if (_firstPersonCharacterCull != null) {
                     _firstPersonCharacterCull.enabled = false;
                 }
+
+                // Track both rotation and position
+                _trackedPoseDriver.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
             }
             yield return _screenFader.StartFadeIn();
         }

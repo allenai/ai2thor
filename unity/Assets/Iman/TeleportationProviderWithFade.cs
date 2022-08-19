@@ -10,7 +10,7 @@ public class TeleportationProviderWithFade : TeleportationProvider {
         if (XRManager.Instance.IsFPSMode) {
             XRManager.Instance.ModeText.text = "Cannot Teleprot User \nIn FPS Mode!!!";
             XRManager.Instance.ModeText.color = Color.red;
-            XRManager.Instance.FadeText();
+            //XRManager.Instance.FadeText();
             return false;
         }
 

@@ -18,7 +18,8 @@ public class XRManager : MonoBehaviour
     /// </summary>
     /// 
 
-    [SerializeField] private TMP_Text _modeText;
+    [SerializeField] private TMP_Text _notificationText;
+    [SerializeField] private CanvasGroup _notificationCanvasGroup;
     [SerializeField] private Canvas _armMenu;
     [SerializeField] private TMP_Text _locomotionText;
     [SerializeField] private TMP_Text _armText;
@@ -61,11 +62,11 @@ public class XRManager : MonoBehaviour
 
     private enum ControllerMode {
         user = 0,
-        agent = 1
+        agent = -1
     }
 
     private AgentManager _agentManager = null;
-    private ControllerMode _controllerType = ControllerMode.user;
+    private ControllerMode _controllerMode = ControllerMode.user;
     private bool _isInitialized = false;
     private bool _isFPSMode = false;
     private bool _isArmMode = false;
@@ -76,7 +77,7 @@ public class XRManager : MonoBehaviour
     }
 
     public TMP_Text ModeText {
-        get { return _modeText; }
+        get { return _notificationText; }
     }
 
     public static XRManager Instance { get; private set; }
@@ -176,21 +177,21 @@ public class XRManager : MonoBehaviour
             return;
         }
 
-        _controllerType = ~_controllerType;
-        bool value = Convert.ToBoolean((int)_controllerType);
+        _controllerMode = ~_controllerMode;
+        bool value = Convert.ToBoolean((int)_controllerMode);
 
-        StopCoroutine("FadeText");
+        StopCoroutine("FadeNotificationCoroutine");
 
         if (value) {
             _onAgentLocomotionEvent?.Invoke();
-            _modeText.text = "Locomotion: <color=#0000FF>Agent</color>";
-            _locomotionText.text = _modeText.text;
-            StartCoroutine("FadeText");
+            _notificationText.text = "Locomotion: <color=#0000FF>Agent</color>";
+            _locomotionText.text = _notificationText.text;
+            StartCoroutine("FadeNotificationCoroutine");
         } else {
             _onUserLocomotionEvent?.Invoke();
-            _modeText.text = "Locomotion: <color=#FF0000>User</color>";
-            _locomotionText.text = _modeText.text;
-            StartCoroutine("FadeText");
+            _notificationText.text = "Locomotion: <color=#FF0000>User</color>";
+            _locomotionText.text = _notificationText.text;
+            StartCoroutine("FadeNotificationCoroutine");
         }
     }
 
@@ -201,16 +202,22 @@ public class XRManager : MonoBehaviour
 
         _isFPSMode = !_isFPSMode;
 
-        StopCoroutine("FadeText");
+        StopCoroutine("FadeNotificationCoroutine");
 
         if (_isFPSMode) {
-            _modeText.text = "POV: <color=#0000FF>First</color>";
-            _povText.text = _modeText.text;
-            StartCoroutine("FadeText");
+            _notificationText.text = "POV: <color=#0000FF>First</color>";
+            _povText.text = _notificationText.text;
+
+            // Set locomotion to agent
+            _controllerMode = ControllerMode.agent;
+            _onAgentLocomotionEvent?.Invoke();
+            _locomotionText.text = "Locomotion: <color=#0000FF>Agent</color>";
+
+            StartCoroutine("FadeNotificationCoroutine");
         } else {
-            _modeText.text = "POV: <color=#FF0000>Third</color>";
-            _povText.text = _modeText.text;
-            StartCoroutine("FadeText");
+            _notificationText.text = "POV: <color=#FF0000>Third</color>";
+            _povText.text = _notificationText.text;
+            StartCoroutine("FadeNotificationCoroutine");
         }
 
         _onTogglePOVEvent?.Invoke(_isFPSMode);
@@ -222,19 +229,19 @@ public class XRManager : MonoBehaviour
         }
         _isArmMode = !_isArmMode;
 
-        StopCoroutine("FadeText");
+        StopCoroutine("FadeNotificationCoroutine");
 
         if (_isArmMode) {
             _onArmOnEvent?.Invoke(_isArmMode);
-            _modeText.text = "Arm: <color=#0000FF>On</color>";
-            _armText.text = _modeText.text;
-            StartCoroutine("FadeText");
+            _notificationText.text = "Arm: <color=#0000FF>On</color>";
+            _armText.text = _notificationText.text;
+            StartCoroutine("FadeNotificationCoroutine");
 
         } else {
             _onArmOffEvent?.Invoke(_isArmMode);
-            _modeText.text = "Arm: <color=#FF0000>Off</color>";
-            _armText.text = _modeText.text;
-            StartCoroutine("FadeText");
+            _notificationText.text = "Arm: <color=#FF0000>Off</color>";
+            _armText.text = _notificationText.text;
+            StartCoroutine("FadeNotificationCoroutine");
         }
     }
 
@@ -265,11 +272,11 @@ public class XRManager : MonoBehaviour
             return;
         }
 
-        StopCoroutine("FadeText");
+        StopCoroutine("FadeNotificationCoroutine");
 
-        _modeText.text = "Reset Arm";
-        _modeText.color = Color.white;
-        StartCoroutine("FadeText");
+        _notificationText.text = "Reset Arm";
+        _notificationText.color = Color.white;
+        StartCoroutine("FadeNotificationCoroutine");
 
         _onResetArmEvent?.Invoke();
     }
@@ -281,29 +288,24 @@ public class XRManager : MonoBehaviour
         _armMenu.gameObject.SetActive(!_armMenu.gameObject.activeSelf);
     }
 
-    public void FadeText() {
-        StopCoroutine("FadeTextCoroutine");
-        StartCoroutine("FadeTextCoroutine");
-    }
-
-    private IEnumerator FadeTextCoroutine() {
+    private IEnumerator FadeNotificationCoroutine() {
         float timer = 0;
         while (timer < _fadeTime) {
             timer += Time.deltaTime;
-            _modeText.color = new Color(_modeText.color.r, _modeText.color.g, _modeText.color.b, timer / _fadeTime);
+            _notificationCanvasGroup.alpha =  timer / _fadeTime;
             yield return null;
         }
-        _modeText.color = new Color(_modeText.color.r, _modeText.color.g, _modeText.color.b, 1);
+        _notificationCanvasGroup.alpha = 1;
 
         yield return new WaitForSeconds(_fadeTime);
 
         timer = _fadeTime;
         while (timer > 0) {
             timer -= Time.deltaTime;
-            _modeText.color = new Color(_modeText.color.r, _modeText.color.g, _modeText.color.b, timer / _fadeTime);
+            _notificationCanvasGroup.alpha = timer / _fadeTime;
             yield return null;
         }
-        _modeText.color *= new Color(_modeText.color.r, _modeText.color.g, _modeText.color.b, 0);
+        _notificationCanvasGroup.alpha = 0;
     }
 
 

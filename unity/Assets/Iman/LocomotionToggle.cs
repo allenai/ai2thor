@@ -9,6 +9,9 @@ public class LocomotionToggle : MonoBehaviour {
     /// When the primary button is pressed down activates teleporation mode.
     /// When primary button let go reverts back to base controllers
     /// </summary>
+    /// 
+
+    [SerializeField] private GameObject _reticle;
 
     [Header("Left Hand")]
     [SerializeField] private ActionBasedController _leftAgentXRController;
@@ -36,9 +39,13 @@ public class LocomotionToggle : MonoBehaviour {
             _agentFloorCol.transform.parent = _userFloorCol.transform.parent;
 
             // Add Teleportation Area
-            _agentFloorCol.AddComponent<Agent_TeleportationArea>();
-            _userFloorCol.AddComponent<TeleportationArea>();
-            
+            Agent_TeleportationArea agentArea = _agentFloorCol.AddComponent<Agent_TeleportationArea>();
+            TeleportationArea userArea = _userFloorCol.AddComponent<TeleportationArea>();
+
+            // Add reticle
+            agentArea.customReticle = _reticle;
+            userArea.customReticle = _reticle;
+
 
             _agentFloorCol.SetActive(false);
         }
