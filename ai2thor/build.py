@@ -111,7 +111,6 @@ class Build(object):
             self.tmp_dir = os.path.normpath(self.releases_dir + "/../tmp")
 
     def download(self):
-
         makedirs(self.releases_dir)
         makedirs(self.tmp_dir)
 
