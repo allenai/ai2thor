@@ -110,11 +110,14 @@ class Build(object):
         if self.releases_dir:
             self.tmp_dir = os.path.normpath(self.releases_dir + "/../tmp")
 
+    def tmp_dir_lock_path(self):
+        return os.path.join(self.tmp_dir, self.name) + ".lock"
+
     def download(self):
         makedirs(self.releases_dir)
         makedirs(self.tmp_dir)
 
-        with FileLock(os.path.join(self.tmp_dir, self.name) + ".lock"):
+        with FileLock(self.tmp_dir_lock_path()):
             if not os.path.isdir(self.base_dir):
                 z = self.zipfile()
                 # use tmpdir instead or a random number

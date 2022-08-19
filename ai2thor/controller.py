@@ -30,6 +30,7 @@ from platform import system as platform_system
 from typing import Dict, Any, Union, Optional
 
 import numpy as np
+from filelock import FileLock
 
 import ai2thor.build
 import ai2thor.fifo_server
@@ -1135,7 +1136,7 @@ class Controller(object):
         makedirs(self.commits_cache_dir)  # must make directory for lock to succeed
         # must lock to handle case when multiple procs are started
         # and all fetch from api.github.com
-        with LockEx(self._cache_commit_filename(branch)):
+        with FileLock(self._cache_commit_filename(branch) + ".lock"):
             cache_payload, cache_mtime = self._get_cache_commit_history(branch)
             # we need to limit how often we hit api.github.com since
             # there is a rate limit of 60 per hour per IP
