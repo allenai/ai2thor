@@ -2,6 +2,9 @@ from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 import os
 import requests
 import json
+
+from filelock import FileLock
+
 from ai2thor.util import makedirs
 import ai2thor.downloader
 import zipfile
@@ -112,7 +115,7 @@ class Build(object):
         makedirs(self.releases_dir)
         makedirs(self.tmp_dir)
 
-        with LockEx(os.path.join(self.tmp_dir, self.name)):
+        with FileLock(os.path.join(self.tmp_dir, self.name) + ".lock"):
             if not os.path.isdir(self.base_dir):
                 z = self.zipfile()
                 # use tmpdir instead or a random number
