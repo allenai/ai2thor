@@ -70,6 +70,7 @@ public class AgentManager : MonoBehaviour {
     public const float MAX_FOV = 180;
     public const float MIN_FOV = 0;
     [SerializeField] private GameObject _xrPrefab;
+    [SerializeField] private RenderTexture _agentCameraRenderTexture;
 
 
     public Bounds sceneBounds = UtilityFunctions.CreateEmptyBounds();
@@ -325,7 +326,9 @@ primaryAgent.ProcessControlCommand(action.dynamicServerAction);
         primaryAgent = createAgentType(typeof(ArmAgentController), baseAgentComponent);
         var handObj = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "robot_arm_rig_gripper");
         handObj.gameObject.SetActive(true);
-        primaryAgent.m_Camera.enabled = false;
+        //primaryAgent.m_Camera.enabled = false;
+        primaryAgent.m_Camera.targetDisplay = 2;
+        primaryAgent.m_Camera.targetTexture = _agentCameraRenderTexture;
         primaryAgent.m_Camera.tag = "Untagged";
         //GameObject.Instantiate(_xrPrefab);
     }
