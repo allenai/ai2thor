@@ -10,6 +10,124 @@ using Siccity.GLTFUtility;
 
 
 public class AutoSimObject : EditorWindow {
+  [MenuItem("AI2-THOR/Draw 3D-BB")]
+  static void Draw3DBoundingBoxes() {
+    // find the "Objects" in the hierarchy
+    GameObject[] objects = GameObject.FindGameObjectsWithTag("SimObjPhysics");
+
+    foreach (GameObject obj in objects) {
+      // get the SimObjPhysics component
+      SimObjPhysics simObj = obj.GetComponent<SimObjPhysics>();
+      if (simObj == null) {
+        continue;
+      }
+
+      // skip if it's disabled
+      if (!simObj.enabled) {
+        continue;
+      }
+
+      Debug.Log(simObj.AxisAlignedBoundingBox.size);
+      Debug.Log(simObj.AxisAlignedBoundingBox.center);
+      float xDiff = simObj.AxisAlignedBoundingBox.size.x / 2;
+      float yDiff = simObj.AxisAlignedBoundingBox.size.y / 2;
+      float zDiff = simObj.AxisAlignedBoundingBox.size.z / 2;
+
+      float xMean = simObj.AxisAlignedBoundingBox.center.x;
+      float yMean = simObj.AxisAlignedBoundingBox.center.y;
+      float zMean = simObj.AxisAlignedBoundingBox.center.z;
+
+      // get all of the lines from the 3D bounding box
+      Vector3[] verts = new Vector3[12];
+      verts[0] = new Vector3(xMean - xDiff, yMean - yDiff, zMean - zDiff);
+      verts[1] = new Vector3(xMean + xDiff, yMean - yDiff, zMean - zDiff);
+      verts[2] = new Vector3(xMean + xDiff, yMean + yDiff, zMean - zDiff);
+      verts[3] = new Vector3(xMean - xDiff, yMean + yDiff, zMean - zDiff);
+      verts[4] = new Vector3(xMean - xDiff, yMean - yDiff, zMean + zDiff);
+      verts[5] = new Vector3(xMean + xDiff, yMean - yDiff, zMean + zDiff);
+      verts[6] = new Vector3(xMean + xDiff, yMean + yDiff, zMean + zDiff);
+      verts[7] = new Vector3(xMean - xDiff, yMean + yDiff, zMean + zDiff);
+      verts[8] = new Vector3(xMean - xDiff, yMean - yDiff, zMean - zDiff);
+      verts[9] = new Vector3(xMean - xDiff, yMean - yDiff, zMean + zDiff);
+      verts[10] = new Vector3(xMean - xDiff, yMean + yDiff, zMean - zDiff);
+      verts[11] = new Vector3(xMean - xDiff, yMean + yDiff, zMean + zDiff);
+
+      float size = 0.035f;
+
+      // green color
+      Color color = Color.green;
+
+      // draw the line by instantiating a cube and making it red
+      GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      cube.transform.position = (verts[0] + verts[1]) / 2;
+      cube.transform.localScale = new Vector3(Vector3.Distance(verts[0], verts[1]) + size, size, size);
+      cube.GetComponent<Renderer>().material.color = color;
+
+      cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      cube.transform.position = (verts[1] + verts[2]) / 2;
+      cube.transform.localScale = new Vector3(Vector3.Distance(verts[1], verts[2]) + size, size, size);
+      cube.transform.Rotate(new Vector3(0, 0, 90));
+      cube.GetComponent<Renderer>().material.color = color;
+
+      cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      cube.transform.position = (verts[2] + verts[3]) / 2;
+      cube.transform.localScale = new Vector3(Vector3.Distance(verts[2], verts[3]) + size, size, size);
+      cube.GetComponent<Renderer>().material.color = color;
+
+      cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      cube.transform.position = (verts[3] + verts[0]) / 2;
+      cube.transform.localScale = new Vector3(Vector3.Distance(verts[3], verts[0]) + size, size, size);
+      cube.transform.Rotate(new Vector3(0, 0, 90));
+      cube.GetComponent<Renderer>().material.color = color;
+
+      cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      cube.transform.position = (verts[4] + verts[5]) / 2;
+      cube.transform.localScale = new Vector3(Vector3.Distance(verts[4], verts[5]) + size, size, size);
+      cube.GetComponent<Renderer>().material.color = color;
+
+      cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      cube.transform.position = (verts[5] + verts[6]) / 2;
+      cube.transform.localScale = new Vector3(Vector3.Distance(verts[5], verts[6]) + size, size, size);
+      cube.transform.Rotate(new Vector3(0, 0, 90));
+      cube.GetComponent<Renderer>().material.color = color;
+
+      cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      cube.transform.position = (verts[6] + verts[7]) / 2;
+      cube.transform.localScale = new Vector3(Vector3.Distance(verts[6], verts[7]) + size, size, size);
+      cube.GetComponent<Renderer>().material.color = color;
+
+      cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      cube.transform.position = (verts[7] + verts[4]) / 2;
+      cube.transform.localScale = new Vector3(Vector3.Distance(verts[7], verts[4]) + size, size, size);
+      cube.transform.Rotate(new Vector3(0, 0, 90));
+      cube.GetComponent<Renderer>().material.color = color;
+
+      cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      cube.transform.position = (verts[8] + verts[9]) / 2;
+      cube.transform.localScale = new Vector3(Vector3.Distance(verts[8], verts[9]) + size, size, size);
+      cube.transform.Rotate(new Vector3(90, 0, 90));
+      cube.GetComponent<Renderer>().material.color = color;
+
+      cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      cube.transform.position = (verts[10] + verts[11]) / 2;
+      cube.transform.localScale = new Vector3(Vector3.Distance(verts[10], verts[11]) + size, size, size);
+      cube.transform.Rotate(new Vector3(90, 0, 90));
+      cube.GetComponent<Renderer>().material.color = color;
+
+      cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      cube.transform.position = (verts[1] + verts[5]) / 2;
+      cube.transform.localScale = new Vector3(Vector3.Distance(verts[1], verts[5]) + size, size, size);
+      cube.transform.Rotate(new Vector3(90, 0, 90));
+      cube.GetComponent<Renderer>().material.color = color;
+
+      cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+      cube.transform.position = (verts[2] + verts[6]) / 2;
+      cube.transform.localScale = new Vector3(Vector3.Distance(verts[2], verts[6]) + size, size, size);
+      cube.transform.Rotate(new Vector3(90, 0, 90));
+      cube.GetComponent<Renderer>().material.color = color;
+    }
+  }
+
   [MenuItem("AI2-THOR/Load GLB Prefab")]
   static void LoadGLB() {
     string modelId = "B07B4MJZN1";
