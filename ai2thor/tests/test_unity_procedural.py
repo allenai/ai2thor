@@ -67,7 +67,7 @@ house_template = {
             },
             "floorTemplate": {
                 "roomType": "Bedroom",
-                "floorMaterial": "DarkWoodFloors",
+                "floorMaterial": { "name": "DarkWoodFloors" },
             },
             "floorYPosition": 0.0,
             "wallHeight": 3.0
@@ -84,7 +84,7 @@ house_template = {
             },
             "floorTemplate": {
                 "roomType": "LivingRoom",
-                "floorMaterial": "RedBrick"
+                "floorMaterial": { "name": "RedBrick"}
             },
             "floorYPosition": 0.0,
             "wallHeight": 3.0
@@ -107,7 +107,7 @@ house_template = {
         "floorColliderThickness": 1.0,
         "receptacleHeight": 0.7,
         "skyboxId": "Sky1",
-        "ceilingMaterial": "ps_mat"
+        "ceilingMaterial": { "name":  "ps_mat" }
     }
 
 }
