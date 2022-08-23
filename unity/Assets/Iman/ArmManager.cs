@@ -70,18 +70,12 @@ public class ArmManager : MonoBehaviour
     private bool _isInitialized = false;
     private bool _isArmMode = false;
     private float _armHeight;
-    private bool _readMoveArmBaseInput = false;
     private ArmAgentController armAgent;
     private IK_Robot_Arm_Controller arm;
 
     public float ArmHeight {
         get { return _armHeight; }
         set { _armHeight = Mathf.Clamp(value, 0, 1); }
-    }
-
-    public bool ReadMoveArmBaseInput {
-        get { return _readMoveArmBaseInput; }
-        set { _readMoveArmBaseInput = value; }
     }
 
     public void Initialize() {
@@ -132,23 +126,7 @@ public class ArmManager : MonoBehaviour
             arm.armTarget.localPosition = _xrController.transform.localPosition - _originPos + _armOffset;
             arm.armTarget.localEulerAngles = _xrController.transform.localEulerAngles;
 
-            if (_readMoveArmBaseInput) {
-                var input = ReadInput();
-                if (input != Vector2.zero) {
-                    var cardinal = CardinalUtility.GetNearestCardinal(input);
-                    switch (cardinal) {
-                        case Cardinal.North:
-                            ArmHeight += moveArmAmount;
-                            break;
-                        case Cardinal.South:
-                            ArmHeight -= moveArmAmount;
-                            break;
-                        default:
-                            Assert.IsTrue(false, $"Unhandled {nameof(Cardinal)}={cardinal}");
-                            break;
-                    }
-                }
-            }
+            ArmHeight += ReadInput();
 
             MoveArmBase(armAgent);
 
@@ -204,11 +182,11 @@ public class ArmManager : MonoBehaviour
         arm.transform.localPosition = new Vector3(arm.transform.localPosition.x, _armHeight, arm.transform.localPosition.z);
     }
 
-    protected Vector2 ReadInput() {
-        var leftHandValue = m_LeftHandMoveArmBaseAction.action?.ReadValue<Vector2>() ?? Vector2.zero;
-        var rightHandValue = m_RightHandMoveArmBaseAction.action?.ReadValue<Vector2>() ?? Vector2.zero;
+    protected float ReadInput() {
+        var leftHandValue = m_LeftHandMoveArmBaseAction.action?.ReadValue<float>() ?? 0;
+        var rightHandValue = m_RightHandMoveArmBaseAction.action?.ReadValue<float>() ?? 0;
 
-        return new Vector2(0, (leftHandValue + rightHandValue).y);
+        return rightHandValue - leftHandValue;
     }
 
     public void ToggleGrasp() {
