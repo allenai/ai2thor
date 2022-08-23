@@ -572,6 +572,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public abstract void InitializeBody();
 
+         private bool ValidRotateStepDegreesWithSnapToGrid(float rotateDegrees) {
+            // float eps = 0.00001f;
+            return rotateDegrees == 90.0f || rotateDegrees == 180.0f || rotateDegrees == 270.0f || (rotateDegrees % 360.0f) == 0.0f;
+        }
+
         public void Initialize(ServerAction action) {
 
             this.InitializeBody();
@@ -612,6 +617,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // default is 90 defined in the ServerAction class, specify whatever you want the default to be
             if (action.rotateStepDegrees > 0.0) {
                 this.rotateStepDegrees = action.rotateStepDegrees;
+            }
+
+             if (action.snapToGrid && !ValidRotateStepDegreesWithSnapToGrid(action.rotateStepDegrees)) {
+                errorMessage = $"Invalid values 'rotateStepDegrees': ${action.rotateStepDegrees} and 'snapToGrid':${action.snapToGrid}. 'snapToGrid': 'True' is not supported when 'rotateStepDegrees' is different from grid rotation steps of 0, 90, 180, 270 or 360.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
             }
 
             this.snapToGrid = action.snapToGrid;
@@ -1411,7 +1423,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // freeze y-axis
             transform.rotation = Quaternion.Euler(eulerX, eulerY, 0);
-
         }
 
         // Check if agent is collided with other objects

@@ -348,6 +348,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         action["agentMode"] = "arm";
                         action["agentControllerType"] = "mid-level";
+                        action["renderInstanceSegmentation"] = true;
 
                         // action.useMassThreshold = true;
                         // action.massThreshold = 10f;
@@ -402,6 +403,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "Initialize";
                         action["agentMode"] = "stretch";
                         action["agentControllerType"] = "stretch";
+                        action["renderInstanceSegmentation"] = true;
+
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
 

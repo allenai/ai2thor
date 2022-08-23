@@ -110,7 +110,10 @@ class FifoServer(ai2thor.server.Server):
                 self.unity_proc.wait(timeout=5)
                 returncode = self.unity_proc.returncode
                 message = (
-                    "Unity process has exited - check Player.log for errors. Last action message: %s, returncode=%s"
+                    "Unity process has exited - check "
+                    "~/.config/unity3d/Allen\ Institute\ for\ "
+                    "Artificial\ Intelligence/AI2-THOR/Player.log for errors. "
+                    f"Last action message: %s, returncode=%s"
                     % (self._last_action_message, self.unity_proc.returncode)
                 )
                 # we don't want to restart all process exits since its possible that a user
