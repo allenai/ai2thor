@@ -3806,6 +3806,92 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+                 case "chp_direct": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "CreateHouse";
+                        var ROOM_BASE_PATH = "/Resources/rooms/";
+
+                        path = Application.dataPath + "/Resources/rooms/house_full.json";
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + ROOM_BASE_PATH + file;
+                        }
+
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+                        action["house"] = obj;
+                        // CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        ProceduralTools.CreateHouse(obj.ToObject<ProceduralHouse>(), ProceduralTools.GetMaterials());
+                        break;
+                    }
+                case "chpt": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "GetHouseFromTemplate";
+                        var ROOM_BASE_PATH = "/Resources/rooms/";
+
+                        path = Application.dataPath + "/Resources/rooms/house-template.json";
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + ROOM_BASE_PATH + file;
+                        }
+
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+
+                        action["template"] = obj;
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+                        var house = CurrentActiveController().actionReturn;
+
+                        Debug.Log(house);
+
+                        action.Clear();
+
+                        action["action"] = "CreateHouse";
+                        action["house"] = house;
+
+                        var jsonResolver = new ShouldSerializeContractResolver();
+                        var houseString = Newtonsoft.Json.JsonConvert.SerializeObject(
+                        house,
+                        Newtonsoft.Json.Formatting.None,
+                        new Newtonsoft.Json.JsonSerializerSettings() {
+                            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                            ContractResolver = jsonResolver
+                        }
+                    );
+                        string destination = path = Application.dataPath + ROOM_BASE_PATH + "template-out-house.json";
+                        
+
+                        System.IO.File.WriteAllText(destination, houseString);
+                
+                    
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+                        break;
+                    }
                 case "gad": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 

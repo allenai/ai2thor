@@ -926,9 +926,9 @@ namespace Thor.Procedural {
             var prevOffset = getWallMaterialOffset(previous.id).GetValueOrDefault(Vector2.zero);
             var offsetX = (prev_p0p1.magnitude / previous.materialTilingXDivisor) - Mathf.Floor(prev_p0p1.magnitude / previous.materialTilingXDivisor) + prevOffset.x;
 
-            var shaderName = toCreate.material != null && string.IsNullOrEmpty(toCreate.material.shader) ? "Standard" : toCreate.material.shader;
+            var shaderName = toCreate.material == null || string.IsNullOrEmpty(toCreate.material.shader) ? "Standard" : toCreate.material.shader;
             // TODO Offset Y would require to get joining walls from above and below 
-            var mat = toCreate.material != null && string.IsNullOrEmpty(toCreate.material.name) ? new Material(Shader.Find(toCreate.material.shader)) : materialDb.getAsset(toCreate.material.name);
+            var mat = toCreate.material == null || string.IsNullOrEmpty(toCreate.material.name) ? new Material(Shader.Find(shaderName)) : materialDb.getAsset(toCreate.material.name);
             meshRenderer.material = generatePolygonMaterial(
                 mat, 
                 dimensions, 

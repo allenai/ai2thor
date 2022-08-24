@@ -335,12 +335,15 @@ namespace Thor.Procedural {
                 hole.wall1 = wallCoordinatesToId[wall1];
                 // TODO asset offset
                 hole.id = holeTemplateIdToHouseId(holeTemplateId, index, hole.id);
+                Debug.Log("---- Hole being created " + hole.id);
 
                 if ( string.IsNullOrEmpty(hole.assetId) || !assetMap.ContainsKey(hole.assetId)) {
                     return new List<WallRectangularHole>(){};
                 }
 
                 var holeOffset = ProceduralTools.getHoleAssetBoundingBox(hole.assetId);
+
+                 Debug.Log("---- Hole offset null? " + (hole == null));
 
                 if (holeOffset == null) {
                     return new List<WallRectangularHole>(){};
@@ -368,6 +371,7 @@ namespace Thor.Procedural {
                 wallSpace.SetColumn(2, forward);
 
                 hole.assetPosition = wallSpace * (minVector + holeOffset.offset + (holeOffset.max / 2.0f));
+                Debug.Log("---- Hole def being created " + hole.id);
                 return new List<WallRectangularHole>(){isDoor ? hole as Data.Door : isWindow ? hole as Data.Window : hole};
             }).ToList();
 
