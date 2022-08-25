@@ -975,7 +975,7 @@ def ci_build(context):
     try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         build = pending_travis_build()
-        skip_branches = ["vids", "video", "erick/cloudrendering"]
+        skip_branches = ["vids", "video", "erick/cloudrendering", "it_vr"]
         if build and build["branch"] not in skip_branches:
             # disabling delete temporarily since it interferes with pip releases
             # pytest_s3_object(build["commit_id"]).delete()
