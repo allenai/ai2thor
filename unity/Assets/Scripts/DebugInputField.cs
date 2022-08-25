@@ -3835,6 +3835,59 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ProceduralTools.CreateHouse(obj.ToObject<ProceduralHouse>(), ProceduralTools.GetMaterials());
                         break;
                     }
+                case "chpt_direct": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        var ROOM_BASE_PATH = "/Resources/rooms/";
+
+                        path = Application.dataPath + "/Resources/rooms/house-template.json";
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + ROOM_BASE_PATH + file;
+                        }
+
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+                        var house = Thor.Procedural.Templates.createHouseFromTemplate(obj.ToObject<HouseTemplate>());
+                        // var house = CurrentActiveController().actionReturn;
+
+                    
+                        action.Clear();
+
+                        action["action"] = "CreateHouse";
+                        action["house"] = house;
+
+                        var jsonResolver = new ShouldSerializeContractResolver();
+                        var houseString = Newtonsoft.Json.JsonConvert.SerializeObject(
+                        house,
+                        Newtonsoft.Json.Formatting.None,
+                        new Newtonsoft.Json.JsonSerializerSettings() {
+                            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                            ContractResolver = jsonResolver
+                        }
+                    );
+
+                    Debug.Log("House: " + houseString);
+                        string destination = path = Application.dataPath + ROOM_BASE_PATH + "template-out-house.json";
+                        
+
+                        System.IO.File.WriteAllText(destination, houseString);
+                
+                        ProceduralTools.CreateHouse(JObject.FromObject(house).ToObject<ProceduralHouse>(), ProceduralTools.GetMaterials());
+
+
+                        break;
+                    }
                 case "chpt": {
 
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -4161,7 +4214,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     wallHeight = 3.0f
                                 }}
                             },
-                            doors = new Dictionary<string, Thor.Procedural.Data.WallRectangularHole>() {
+                            doors = new Dictionary<string, Thor.Procedural.Data.Door>() {
                                 {"=", new Thor.Procedural.Data.Door(){ 
                                     openness = 1.0f,
                                     assetId = "Doorway_1",

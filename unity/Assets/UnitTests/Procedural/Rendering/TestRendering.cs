@@ -62,7 +62,7 @@ namespace Tests {
                             wallHeight = 3.0f
                         }}
                     },
-            doors = new Dictionary<string, WallRectangularHole>() {
+            doors = new Dictionary<string, Thor.Procedural.Data.Door>() {
                         {"=", new Thor.Procedural.Data.Door(){
                             openness = 1.0f,
                             assetId = "Doorway_1",
