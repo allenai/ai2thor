@@ -1624,7 +1624,8 @@ namespace Thor.Procedural {
                         rotation: rotation,
                         kinematic: true,
                         color: holeCover.color,
-                        positionBoundingBoxCenter: positionFromCenter
+                        positionBoundingBoxCenter: positionFromCenter,
+                        scale: holeCover.scale
                     );
 
                     setConnectionProperties(go, holeCover);
@@ -1913,7 +1914,8 @@ namespace Thor.Procedural {
             float? openness = null,
             bool? isOn = null,
             bool? isDirty = null,
-            string layer = null
+            string layer = null,
+            Vector3? scale = null
         ) {
             var go = prefab;
 
@@ -1970,6 +1972,14 @@ namespace Thor.Procedural {
             toSpawn.objectID = id;
             toSpawn.name = id;
             toSpawn.assetID = assetId;
+
+            if (scale.HasValue) {
+                // get component in child with mesh renderer
+                var meshRenderer = spawned.GetComponentInChildren<MeshRenderer>();
+                if (meshRenderer != null) {
+                    meshRenderer.transform.localScale = scale.Value;
+                }
+            }
 
             Shader unlitShader = null;
             if (unlit) {

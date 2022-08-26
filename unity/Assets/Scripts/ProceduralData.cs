@@ -110,6 +110,7 @@ namespace Thor.Procedural.Data {
         public float openness { get; set; } = 0.0f;
         public string assetId { get; set; }
 
+        public Vector3? scale { get; set; } = null;
         public SerializableColor color { get; set; } = null;
     }
 
@@ -227,6 +228,7 @@ namespace Thor.Procedural.Data {
         public string type { get; set; }
         public string assetId { get; set; }
 
+        public Vector3? scale { get; set; } = null;
         public SerializableColor color { get; set; } = null;
     }
 
@@ -397,6 +399,7 @@ namespace Thor.Procedural.Data {
 
         float openness { get; set; }
 
+        Vector3? scale { get; set; }
         SerializableColor color { get; set; }
     }
 
