@@ -700,8 +700,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             }
 
+            if (action.randomizeObjectMass) {
+                this.randomizeObjectMass();
+            }
+
             this.visibilityScheme = action.GetVisibilityScheme();
             this.originalLightingValues = null;
+        }
+
+        private void randomizeObjectMass() {
+            foreach (var sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+                rb = sop.GetComponents<Rigidbody>();
+                rb.mass = rb.mass * UnityEngine.Random.Range(0.5f, 1.5f);  // change at most 50% of the mass
+            }
         }
 
         public IEnumerator checkInitializeAgentLocationAction() {

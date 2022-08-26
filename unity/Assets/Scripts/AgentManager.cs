@@ -1921,6 +1921,9 @@ public class ServerAction {
     // for the arm to detect collisions and stop moving
     public float? massThreshold;
 
+    // whether to randomize mass of objects
+    public bool randomizeObjectMass = false;
+
 
     public SimObjType ReceptableSimObjType() {
         if (string.IsNullOrEmpty(receptacleObjectType)) {
