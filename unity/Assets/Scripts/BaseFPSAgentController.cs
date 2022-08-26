@@ -2930,7 +2930,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetVisibleObjects(float? maxDistance = null, string visibilityScheme = null) {
-            VisibilityScheme visSchemeEnum;;
+            VisibilityScheme visSchemeEnum;
             if (visibilityScheme != null) {
                 visibilityScheme = visibilityScheme.ToLower();
                 if (visibilityScheme.ToLower() == "collider") {
@@ -2984,7 +2984,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<SimObjPhysics> interactableItems = new List<SimObjPhysics>();
             Plane[] planes = GeometryUtility.CalculateFrustumPlanes(camera);
             foreach (var sop in filterSimObjs) {
-                VisibilityCheck visCheck = isSimObjVisible(camera, sop, this.maxVisibleDistance, planes);
+                VisibilityCheck visCheck = isSimObjVisible(camera, sop, maxDistance, planes);
                 if (visCheck.visible) {
                     visible.Add(sop);
                 }
