@@ -1977,7 +1977,7 @@ namespace Thor.Procedural {
                 // get component in child with mesh renderer
                 var meshRenderer = spawned.GetComponentInChildren<MeshRenderer>();
                 if (meshRenderer != null) {
-                    meshRenderer.transform.localScale = scale.Value;
+                    ScaleAround(meshRenderer.transform.gameObject, position, scale.Value);
                 }
             }
 
@@ -2018,6 +2018,18 @@ namespace Thor.Procedural {
             }
 
             return toSpawn.transform.gameObject;
+        }
+
+        public static void ScaleAround(GameObject target, Vector3 pivot, Vector3 scaleFactor) {
+            // pivot
+            var pivotDelta = target.transform.position - pivot;
+            pivotDelta.Scale(scaleFactor);
+            target.transform.position = pivot + pivotDelta;
+
+            // scale
+            var finalScale = target.transform.localScale;
+            finalScale.Scale(scaleFactor);
+            target.transform.localScale = finalScale;
         }
 
         public static GameObject spawnObjectInReceptacle(
