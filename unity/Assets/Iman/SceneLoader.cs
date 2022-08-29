@@ -115,6 +115,13 @@ public class SceneLoader : MonoBehaviour
                 _xrManager.transform.SetParent(null);
             }
 
+            GameObject[] agents =  GameObject.FindGameObjectsWithTag("Player");
+            if (agents.Length > 0) {
+                Vector3 pos = agents[0].transform.position;
+                pos.y = _xrManager.transform.position.y;
+                _xrManager.transform.position = pos;
+            }
+
             _xrOrigin = _xrManager.GetComponent<XROrigin>();
             _sceneSwitchMenu.worldCamera = _xrOrigin.Camera;
         }

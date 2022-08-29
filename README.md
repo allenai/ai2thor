@@ -85,7 +85,7 @@ This version of THOR aims to create a new VR interface where a human user is imp
 
 (Quest 2 needs to be in [developer mode](https://developer.oculus.com/documentation/native/android/mobile-device-setup/) and [ADB](https://www.youtube.com/watch?v=daVygBAm1zs&t=42s) has to be installed)
 
-1. Download apk
+1. Download [apk](https://drive.google.com/drive/folders/1ZLg9hQVHHCJZa_Ok4Eo008YyhJK2fAYg?usp=sharing) or make android build from Unity Editor.
 
 2. Connect Quest 2 to computer using USB C cable.
 

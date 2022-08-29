@@ -1085,9 +1085,11 @@ primaryAgent.ProcessControlCommand(action.dynamicServerAction);
     }
 
     private void WriteData(string str) {
-        // TODO: NEED A BETTER WAY OF NAMING TXT FILE
-        string filePath = Application.persistentDataPath + @$"Metadata/{primaryAgent.lastAction}_[{DateTime.Now.ToString("yyyy-MM-dd--HH--mm-ss")}].txt";
-        File.WriteAllText(filePath, str + '\n');
+        string filePath = Application.persistentDataPath + "/Metadata";
+        if (!Directory.Exists(filePath)) {
+            Directory.CreateDirectory(filePath);
+        }
+        File.WriteAllText(filePath + @$"/{primaryAgent.lastAction}_[{DateTime.Now.ToString("yyyy-MM-dd--HH--mm-ss")}].txt", str + '\n');
     }
 
     public IEnumerator EmitFrame() {

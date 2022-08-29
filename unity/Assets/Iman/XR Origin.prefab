@@ -1445,6 +1445,7 @@ GameObject:
   - component: {fileID: 1304928938}
   - component: {fileID: 1304928940}
   - component: {fileID: 1304928939}
+  - component: {fileID: 3178287622934959481}
   m_Layer: 0
   m_Name: OverlayCamera
   m_TagString: Untagged
@@ -1517,6 +1518,22 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1304928937}
   m_Enabled: 1
+--- !u!114 &3178287622934959481
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1304928937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a37fa9d4cc8254e429a2ee29fa1e66c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _speed: 1
+  _alpha: 0
+  _color: {r: 0, g: 0, b: 0, a: 1}
+  _fadeMaterial: {fileID: 2100000, guid: 7634de4c19193b74d827046aa6f901c3, type: 2}
 --- !u!1 &1560009548
 GameObject:
   m_ObjectHideFlags: 0
@@ -2257,7 +2274,6 @@ GameObject:
   - component: {fileID: 1739010285301109734}
   - component: {fileID: 1739010285301109735}
   - component: {fileID: 1739010285301109733}
-  - component: {fileID: 1213167349}
   - component: {fileID: 8182351268069384465}
   m_Layer: 0
   m_Name: Camera
@@ -2406,22 +2422,6 @@ MonoBehaviour:
     m_SingletonActionBindings: []
     m_Flags: 0
   m_HasMigratedActions: 1
---- !u!114 &1213167349
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1739010285301109753}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a37fa9d4cc8254e429a2ee29fa1e66c1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _speed: 1
-  _alpha: 0
-  _color: {r: 0, g: 0, b: 0, a: 1}
-  _fadeMaterial: {fileID: 2100000, guid: 7634de4c19193b74d827046aa6f901c3, type: 2}
 --- !u!114 &8182351268069384465
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2958,7 +2958,7 @@ MonoBehaviour:
   _cameraOffset: {fileID: 1739010285320374846}
   _trackedPoseDriver: {fileID: 1739010285301109733}
   _camera: {fileID: 1739010285301109752}
-  _screenFader: {fileID: 1213167349}
+  _screenFader: {fileID: 0}
   _firstPersonCharacterCull: {fileID: 8182351268069384465}
 --- !u!114 &7001351893881399960
 MonoBehaviour:
