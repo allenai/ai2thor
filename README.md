@@ -105,9 +105,9 @@ This version of THOR aims to create a new VR interface where a human user is imp
 9. There should be a app called AI2-THOR.
 
 <table>
-    <tr align="center">
+    <td align="center">
         <video src="https://user-images.githubusercontent.com/34433210/187088248-129bf846-ecd5-4035-9a35-7f60829a3e79.mp4"/>
-    </tr>
+    </td>
 </table>
 
 
