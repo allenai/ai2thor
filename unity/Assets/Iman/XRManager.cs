@@ -51,6 +51,7 @@ public class XRManager : MonoBehaviour
     [SerializeField] private UnityEvent<bool> _onArmOffEvent = new UnityEvent<bool>();
 
     [SerializeField] private UnityEvent _onResetArmEvent = new UnityEvent();
+    [SerializeField] private UnityEvent _onDefaultArmEvent = new UnityEvent();
 
     [SerializeField] private UnityEvent _onPickUpObjectEvent = new UnityEvent();
 
@@ -292,9 +293,16 @@ public class XRManager : MonoBehaviour
 
         _notificationText.text = "Reset Arm";
         _notificationText.color = Color.white;
-        StartCoroutine("FadeNotificationCoroutine");
 
-        _onResetArmEvent?.Invoke();
+
+        if (_isFPSMode) {
+            _notificationText.text = "Reset Arm";
+            _onResetArmEvent?.Invoke();
+        } else {
+            _notificationText.text = "Default Arm";
+            _onDefaultArmEvent?.Invoke();
+        }
+        StartCoroutine("FadeNotificationCoroutine");
     }
 
     private void ToggleMenu() {

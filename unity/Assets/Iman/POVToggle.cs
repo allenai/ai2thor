@@ -46,7 +46,7 @@ public class POVToggle : MonoBehaviour
             yield return _screenFader.StartFadeOut();
             if (isFPSMode) {
                 // Only track rotation
-                _trackedPoseDriver.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
+                //_trackedPoseDriver.trackingType = TrackedPoseDriver.TrackingType.RotationOnly;
 
                 // Save original position
                 _orignalCameraOffsetPos = _cameraOffset.localPosition;
@@ -75,7 +75,7 @@ public class POVToggle : MonoBehaviour
                 }
 
                 // Track both rotation and position
-                _trackedPoseDriver.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+                //_trackedPoseDriver.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
             }
             yield return _screenFader.StartFadeIn();
         }

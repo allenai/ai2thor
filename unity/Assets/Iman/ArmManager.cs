@@ -208,6 +208,18 @@ public class ArmManager : MonoBehaviour
     public void ResetArm() {
         var armAgent = (ArmAgentController)_agentManager.PrimaryAgent;
         var arm = armAgent.getArm();
+
+        arm.armTarget.position = _xrController.transform.position;
+        arm.armTarget.eulerAngles = _xrController.transform.eulerAngles;
+
+        _originPos = _xrController.transform.localPosition;
+        _armOffset = arm.armTarget.localPosition;
+    }
+
+    public void DefaultArm() {
+        var armAgent = (ArmAgentController)_agentManager.PrimaryAgent;
+        var arm = armAgent.getArm();
+
         arm.armTarget.localPosition = _defaultPos;
         arm.armTarget.eulerAngles = _defaultRot;
 

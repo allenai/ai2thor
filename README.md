@@ -129,17 +129,22 @@ This version of THOR aims to create a new VR interface where a human user is imp
 
 **Modes**
 
-<B>Locomotion</B>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Locomotion</B>
 - User: Control the navigation of the user. Teleport the user and rotate the user using the right joystick.
 - Agent: Control the navigation of the agent. Teleport the agent, move the agent using the left joystick, and rotate the agent using the right joystick.
 
-<B>Arm</B>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Arm</B>
 - On: Have the agents arm follow the movements of the user's controller.
 - Off: Arm does not follow the user's movements.
 
-<B>POV</B>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>POV</B>
 - First: View from the perspective of the agent.
 - Third: View from the perspective of the user.
+
+**How to Access Metadata**
+
+The metadata is generated whenever a action is completed. The metadata is located in:\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```Quest 2\Internal shared storage\Android\data\com.AllenInstituteforArtificialIntelligence.AI2THOR\files\Metadata```
 
 ## 📰 Latest Announcements
 
