@@ -106,11 +106,7 @@ This version of THOR aims to create a new VR interface where a human user is imp
 
 <table>
     <tr>
-        <td align="center">
-            <td width="50%">
-                <video src="https://user-images.githubusercontent.com/34433210/187088248-129bf846-ecd5-4035-9a35-7f60829a3e79.mp4"/>
-            </td>
-        </td>
+        <video src="https://user-images.githubusercontent.com/34433210/187088248-129bf846-ecd5-4035-9a35-7f60829a3e79.mp4"/>
     </tr>
 </table>
 
@@ -127,7 +123,7 @@ This version of THOR aims to create a new VR interface where a human user is imp
 
 5. Now feel free to explore the scene and interact with the agent. There are guides on the controller that can help.
 
-**Modes**
+**Modes:**
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<B>Locomotion</B>
 - User: Control the navigation of the user. Teleport the user and rotate the user using the right joystick.

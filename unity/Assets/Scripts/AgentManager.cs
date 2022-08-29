@@ -1086,7 +1086,7 @@ primaryAgent.ProcessControlCommand(action.dynamicServerAction);
 
     private void WriteData(string str) {
         // TODO: NEED A BETTER WAY OF NAMING TXT FILE
-        string filePath = Application.persistentDataPath + @$"/{primaryAgent.lastAction}_[{DateTime.Now.ToString("yyyy-MM-dd--HH--mm-ss")}].txt";
+        string filePath = Application.persistentDataPath + @$"Metadata/{primaryAgent.lastAction}_[{DateTime.Now.ToString("yyyy-MM-dd--HH--mm-ss")}].txt";
         File.WriteAllText(filePath, str + '\n');
     }
 

@@ -66,7 +66,9 @@ public class ArmManager : MonoBehaviour
     private Vector3 _defaultRot;
     private float _defaultArmHeight;
     private Vector3 _originPos;
-    private Vector3 _armOffset;
+    private Vector3 _originRot;
+    private Vector3 _armPosOffset;
+    private Vector3 _armRotOffset;
     private bool _isInitialized = false;
     private bool _isArmMode = false;
     private float _armHeight;
@@ -84,7 +86,7 @@ public class ArmManager : MonoBehaviour
         var arm = armAgent.getArm();
 
         _defaultPos = arm.armTarget.localPosition;
-        _defaultRot = arm.armTarget.eulerAngles;
+        _defaultRot = arm.armTarget.localEulerAngles;
         _defaultArmHeight = arm.transform.localPosition.y;
         _isInitialized = true;
     }
@@ -118,13 +120,15 @@ public class ArmManager : MonoBehaviour
         CollisionListener collisionListener = arm.collisionListener;
 
         _originPos = _xrController.transform.localPosition;
-        _armOffset = arm.armTarget.localPosition;
+        _originRot = _xrController.transform.localEulerAngles;
+        _armPosOffset = arm.armTarget.localPosition;
+        _armRotOffset = arm.armTarget.localEulerAngles;
         _validResetPositions.AddLast(arm.armTarget.localPosition);
         _validResetRotations.AddLast(arm.armTarget.eulerAngles);
 
         while (true) {
-            arm.armTarget.localPosition = _xrController.transform.localPosition - _originPos + _armOffset;
-            arm.armTarget.localEulerAngles = _xrController.transform.localEulerAngles;
+            arm.armTarget.localPosition = _xrController.transform.localPosition - _originPos + _armPosOffset;
+            arm.armTarget.localEulerAngles = _xrController.transform.localEulerAngles - _originRot + _armRotOffset;
 
             ArmHeight += ReadInput();
 
@@ -139,9 +143,12 @@ public class ArmManager : MonoBehaviour
                 arm.armTarget.localEulerAngles = _validResetRotations.Last();
                 _validResetRotations.RemoveLast();
 
-                // Set originPos and armOffset to new  track hand position
+                // Set originPos and armOffset to new track hand position
+
                 _originPos = _xrController.transform.localPosition;
-                _armOffset = arm.armTarget.localPosition;
+                _originRot = _xrController.transform.localEulerAngles;
+                _armPosOffset = arm.armTarget.localPosition;
+                _armRotOffset = arm.armTarget.localEulerAngles;
 
                 _xrController.SendHapticImpulse(_hapticAmplitude, _hapticDuration);
             } else {
@@ -213,7 +220,9 @@ public class ArmManager : MonoBehaviour
         arm.armTarget.eulerAngles = _xrController.transform.eulerAngles;
 
         _originPos = _xrController.transform.localPosition;
-        _armOffset = arm.armTarget.localPosition;
+        _originRot = _xrController.transform.localEulerAngles;
+        _armPosOffset = arm.armTarget.localPosition;
+        _armRotOffset = arm.armTarget.localEulerAngles;
     }
 
     public void DefaultArm() {
@@ -221,9 +230,11 @@ public class ArmManager : MonoBehaviour
         var arm = armAgent.getArm();
 
         arm.armTarget.localPosition = _defaultPos;
-        arm.armTarget.eulerAngles = _defaultRot;
+        arm.armTarget.localEulerAngles = _defaultRot;
 
         _originPos = _xrController.transform.localPosition;
-        _armOffset = arm.armTarget.localPosition;
+        _originRot = _xrController.transform.localEulerAngles;
+        _armPosOffset = arm.armTarget.localPosition;
+        _armRotOffset = arm.armTarget.localEulerAngles;
     }
 }
