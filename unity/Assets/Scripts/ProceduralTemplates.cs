@@ -24,8 +24,8 @@ namespace Thor.Procedural {
         public string layout;
         public IEnumerable<string> objectsLayouts;
         public Dictionary<string, RoomTemplate> rooms;
-        public Dictionary<string, WallRectangularHole> doors;
-        public Dictionary<string, WallRectangularHole> windows;
+        public Dictionary<string, Thor.Procedural.Data.Door> doors;
+        public Dictionary<string, Window> windows;
         public Dictionary<string, HouseObject> objects;
         public ProceduralParameters proceduralParameters;
     }
@@ -67,10 +67,10 @@ namespace Thor.Procedural {
             IEnumerable<KeyValuePair<string, WallRectangularHole>> holePairs = new List<KeyValuePair<string, WallRectangularHole>>();
 
             if (houseTemplate.doors != null) {
-                holePairs = holePairs.Concat(houseTemplate.doors);
+                holePairs = holePairs.Concat(houseTemplate.doors.Select(d => new KeyValuePair<string, WallRectangularHole>(d.Key, d.Value as WallRectangularHole)));
             }
             if (houseTemplate.windows != null) {
-                holePairs = holePairs.Concat(houseTemplate.windows);
+                holePairs = holePairs.Concat(houseTemplate.windows.Select(d => new KeyValuePair<string, WallRectangularHole>(d.Key, d.Value as WallRectangularHole)));
             }
             
             var holeTemplates = holePairs.ToDictionary(e => e.Key, e => e.Value);;
