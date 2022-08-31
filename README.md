@@ -139,7 +139,7 @@ This version of THOR aims to create a new VR interface where a human user is imp
 
 **How to Access Metadata**
 
-The metadata is generated whenever a action is completed. The metadata is located in:\
+The metadata is generated whenever a action is completed. (If on Mac you will need [Android Transfer File](https://www.android.com/filetransfer/)) The metadata is located in:\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;```Quest 2\Internal shared storage\Android\data\com.AllenInstituteforArtificialIntelligence.AI2THOR\files\Metadata```
 
 ## 📰 Latest Announcements

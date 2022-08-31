@@ -109,6 +109,7 @@ public class SceneLoader : MonoBehaviour
                 _xrManager.transform.SetParent(this.transform);
                 _xrManager.transform.SetParent(null);
                 ScreenFader.Instance.Alpha = 1;
+                ScreenFader.Instance.StartFadeOut();
             } else {
                 _xrManager = GameObject.Instantiate(_xrPrefab).GetComponent<XRManager>();
                 _xrManager.transform.SetParent(this.transform);
