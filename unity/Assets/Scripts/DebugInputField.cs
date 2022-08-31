@@ -725,7 +725,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else {
                             action.objectType = "receptacle";
                         }
-
                         action.action = "ReturnValidSpawnsExpRoom";
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 0;
