@@ -265,6 +265,7 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     public void Generate_ObjectID(SimObjPhysics o) {
+        Debug.Log("calling Generate_ObjectID");
         // check if this object requires it's parent simObjs ObjectID as a prefix
         if (ReceptacleRestrictions.UseParentObjectIDasPrefix.Contains(o.Type)) {
             SimObjPhysics parent = o.transform.parent.GetComponent<SimObjPhysics>();
@@ -285,9 +286,9 @@ public class PhysicsSceneManager : MonoBehaviour {
 
             o.ObjectID = parent.ObjectID + "|" + o.Type.ToString();
 
-            Debug.Log("**************** CALLED GENERATE OBJECT ID " + o.ObjectID);
-            return;
+            setLightSourceNamesAfterGeneratingObjectID(o);
 
+            return;
         }
 
         Vector3 pos = o.transform.position;
@@ -295,6 +296,16 @@ public class PhysicsSceneManager : MonoBehaviour {
         string yPos = (pos.y >= 0 ? "+" : "") + pos.y.ToString("00.00");
         string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
         o.ObjectID = o.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
+
+        setLightSourceNamesAfterGeneratingObjectID(o);
+
+    }
+
+    private void setLightSourceNamesAfterGeneratingObjectID (SimObjPhysics o) {
+        //for toggleable objects with light sources, reset child light object name after shuffle
+        if(o.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)) {
+            o.GetComponent<CanToggleOnOff>().setLightSourcesNames();
+        }
     }
 
     // used to create object id for an object created as result of a state change of another object ie: bread - >breadslice1, breadslice 2 etc

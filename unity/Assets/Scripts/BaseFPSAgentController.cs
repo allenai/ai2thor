@@ -5009,6 +5009,61 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, positions);
         }
 
+        public class LightProperties {
+            public string type; //Directional, Point, Spot, Area
+            public Vector3 position;
+            //rotation defined via angle-axis: Quaternion.AngleAxis(rotDegrees, rotAxis)
+            public float rotDegrees;
+            public Vector3 rotAxis; 
+            public float range; //point and spot lights only
+            public float intensity;
+            public float spotAngle; //spot lights only
+            public Color32 color; //defined as (r, g, b, a) on scale 0:1 for some reason instead of 255?
+        }
+
+        public void GetLights() {
+            var lights = UnityEngine.Object.FindObjectsOfType<Light >();
+
+            List<LightProperties> allOfTheLights = new List<LightProperties>();
+
+            foreach(Light l in lights) {
+                LightProperties lp = new LightProperties();
+                lp.type = l.type.ToString();
+                lp.position = l.transform.position;
+
+                float rotDegrees;
+                Vector3 rotAxis;
+                l.transform.rotation.ToAngleAxis(out rotDegrees, out rotAxis);
+
+                lp.rotDegrees = rotDegrees;
+                lp.rotAxis = rotAxis;
+
+                //if light type is point or spot, add range
+                if(lp.type == "Point" || lp.type == "Spot") {
+                    lp.range = l.range;
+                }
+
+                lp.intensity = l.intensity;
+
+                if(lp.type == "Spot") {
+                    lp.spotAngle = l.spotAngle;
+                }
+
+                lp.color = l.color;
+
+                allOfTheLights.Add(lp);
+            }
+
+            actionFinishedEmit(true, allOfTheLights);
+        }
+
+        public void SetLights() {
+
+            //check that name of light specified exists in scene, if not throw exception
+
+            actionFinished(true);
+        }
+
 #if UNITY_EDITOR
         void OnDrawGizmos() {
             //// check for valid spawn points in GetSpawnCoordinatesAboveObject action

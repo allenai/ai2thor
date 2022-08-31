@@ -124,11 +124,22 @@ public class CanToggleOnOff : MonoBehaviour {
     // Use this for initialization
     void Start() {
 
+        setLightSourcesNames();
+
 #if UNITY_EDITOR
         if (!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)) {
             Debug.LogError(this.name + "is missing the CanToggleOnOff Secondary Property! Please set it!");
         }
 #endif
+    }
+
+    public void setLightSourcesNames () {
+        //set light source names to naming scheme: {objectID}|{Type}|{instance}
+        for (int i = 0; i < LightSources.Length; i++ ) {
+            Light actualLightCauseSometimesTheseAreNested = LightSources[i].GetComponentInChildren<Light>();
+            actualLightCauseSometimesTheseAreNested.name = 
+            this.GetComponent<SimObjPhysics>().objectID + "|" + LightSources[i].GetComponentInChildren<Light>().type.ToString()+ "|" + i.ToString();
+        }
     }
 
     // Update is called once per frame

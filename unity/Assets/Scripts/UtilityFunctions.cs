@@ -293,5 +293,41 @@ public static class UtilityFunctions {
         }
     }
 
+
+    [MenuItem("AI2-THOR/Name All Scene Light Objects")]
+    //light naming convention: {PrefabName/Scene}|{Type}|{instance}
+    private static void NameAllSceneLightObjects() {
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
+            var lights = UnityEngine.Object.FindObjectsOfType<Light >();
+            
+            //we only care about lights that are not parts of sim objects
+            List<Light> sceneLights = new List<Light>();
+
+            foreach (Light l in lights) {
+                 if(!l.GetComponentInParent<SimObjPhysics>()) {
+                    sceneLights.Add(l);
+                 }
+            }
+
+            for (int j = 0; j < sceneLights.Count(); j++) {
+                //check if this light is part of a sim object
+                if(sceneLights[j].GetComponentInParent<SimObjPhysics>()) {
+                    continue;
+                }
+                sceneLights[j].name = "scene|" + sceneLights[j].type.ToString()+ "|" + j.ToString();
+            }
+
+            // foreach (Light l in lights) {
+            //     //check if this light is part of a sim object
+            //     if(l.GetComponentInParent<SimObjPhysics>()) {
+            //         l.name = l.GetComponentInParent<SimObjPhysics>().objectID + "|" + l.type.ToString() + "|" + ;
+            //     }
+            // }
+
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+
+        }
+    }
 #endif
 }
