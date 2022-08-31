@@ -45,6 +45,10 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
     public CollisionListener collisionListener;
 
+    public GameObject GetArmTarget() {
+        return armTarget.gameObject;
+    }
+
     void Start() {
         this.collisionListener = this.GetComponentInParent<CollisionListener>();
         this.collisionListener.registerAllChildColliders();

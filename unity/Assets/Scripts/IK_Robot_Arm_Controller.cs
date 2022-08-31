@@ -6,7 +6,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public partial class IK_Robot_Arm_Controller : MonoBehaviour {
     [SerializeField]
-    private Transform armBase, armTarget, handCameraTransform, FirstJoint, FinalJoint;
+    private Transform armBase, armTarget, elbowTarget, handCameraTransform, FirstJoint, FinalJoint;
 
     [SerializeField]
     private SphereCollider magnetSphere = null;
@@ -48,6 +48,9 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
 
     public GameObject GetArmTarget() {
         return armTarget.gameObject;
+    }
+        public GameObject GetElbowTarget() {
+        return elbowTarget.gameObject;
     }
 
     public GameObject GetMagnetSphere() {

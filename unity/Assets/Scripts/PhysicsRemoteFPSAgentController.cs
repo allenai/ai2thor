@@ -1783,6 +1783,112 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public void TeleportArm(
+            Vector3? position = null,
+            Vector4? rotation = null,
+            float? armHeight = null,
+            float? elbowOrientation = null,
+            bool worldRelative = false,
+            bool forceAction = false
+        ) {
+            Debug.Log("Well, this works up to HERE!");
+
+            GameObject posRotManip, heightManip, elbowManip;
+            Vector3 defaultPosition;
+            Vector4 defaultRotation;
+
+            if (this.GetComponent<BaseAgentComponent>().IKArm.activeInHierarchy == true) {
+                heightManip = this.GetComponent<BaseAgentComponent>().IKArm;
+                posRotManip = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmTarget();
+                elbowManip = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetElbowTarget();
+            }
+
+            else if (this.GetComponent<BaseAgentComponent>().StretchArm.activeInHierarchy == true) {
+                posRotManip = this.GetComponent<BaseAgentComponent>().StretchArm.GetComponent<Stretch_Robot_Arm_Controller>().GetArmTarget();
+            }
+            
+            else {
+                errorMessage = "You cannot teleport the arm on an agent that doesn't have one";
+                actionFinished(false);
+                return;
+            }
+
+            // establish defaults in the absence of inputs
+            Vector3 defaultPosition;
+            if (this.GetComponent<BaseAgentComponent>().IKArm.activeInHierarchy == true) {
+
+            }
+            defaultPosition = 
+
+            Vector4 defaultRotation;
+            // if (position == null) {
+            //     position = new Vector3(0f, 0f, 0.4f);
+            // }
+
+            // if (rotation == null) {
+            //     rotation = Vector4.zero;
+            // }
+
+            if (armHeight == null) {
+                armHeight = -0.003f;
+            }
+
+            if (elbowOrientation == null) {
+                elbowOrientation = 0f;
+            }
+
+            // teleport arm-elements
+            if (!worldRelative) {
+                if (position != null) {
+                    posRotManip.transform.localPosition = (Vector3)position;
+                } else {
+                    posRotManip.transform.localPosition = new Vector3(0f, 0f, 0.4f);
+                }
+
+                if (rotation != null) {
+                    posRotManip.transform.localRotation = Quaternion.AngleAxis(
+                        ((Vector4)rotation).x,
+                        new Vector3(((Vector4)rotation).y, ((Vector4)rotation).z, ((Vector4)rotation).w)
+                    );
+                } else {
+                    posRotManip.transform.localRotation = Quaternion.identity;
+                }
+            } else {
+                if (position == null && rotation == null) {
+                    errorMessage = "worldRelative can only be true when at least one of the two parameters that it affects (position and rotation) is not null";
+                    actionFinished(false);
+                    return;
+                } else {
+                    if (position != null) {
+                        posRotManip.transform.position = (Vector3)position;
+                    } else {
+                        posRotManip.transform.localPosition = new Vector3(0f, 0f, 0.4f);
+                    }
+
+                    if (rotation != null) {
+                        posRotManip.transform.rotation = Quaternion.AngleAxis(
+                            ((Vector4)rotation).x,
+                            new Vector3(((Vector4)rotation).y, ((Vector4)rotation).z, ((Vector4)rotation).w)
+                        );
+                    } else {
+                        posRotManip.transform.localRotation = Quaternion.identity;
+                    }
+                }
+            }
+
+            heightManip.transform.localPosition = new Vector3(
+                heightManip.transform.localPosition.x,
+                (float)armHeight,
+                heightManip.transform.localPosition.z
+            );
+
+            elbowManip.transform.localEulerAngles = new Vector3(
+                elbowManip.transform.localEulerAngles.x,
+                elbowManip.transform.localEulerAngles.y,
+                (float)elbowOrientation
+            );
+        }
+
         public void ToggleArmColliders(IK_Robot_Arm_Controller arm, bool value) {
             if (arm != null) {
                 foreach (CapsuleCollider c in arm.ArmCapsuleColliders) {
