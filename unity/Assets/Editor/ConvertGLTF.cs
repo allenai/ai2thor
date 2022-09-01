@@ -12,6 +12,7 @@ public class ComponentMetadata
 {
     public string name;
     public string tag;
+    public string parentId;
     public int layer;
     public bool isActive;
     public Transform transform;
@@ -72,12 +73,17 @@ public class ConvertGLTF : MonoBehaviour
             JObject asset_metadata = new JObject();
             foreach (Transform child in children_objects) {
                 GameObject child_object = child.gameObject;
+                Transform parent_transform = child.parent;
+                int parent_id = -1;
+                if (parent_transform != null)
+                    parent_id = parent_transform.gameObject.GetInstanceID();
                 ComponentMetadata component = new ComponentMetadata();
                 component.name = child_object.name;
                 component.layer = child_object.layer;
                 component.tag = child_object.tag;
                 component.isActive = child_object.activeSelf;
                 component.transform = child_object.transform;
+                component.parentId = parent_id.ToString();
                 string component_json = JsonUtility.ToJson(component);
                 asset_metadata[child_object.GetInstanceID().ToString()] = JObject.Parse(component_json);
 
@@ -86,6 +92,10 @@ public class ConvertGLTF : MonoBehaviour
                 JObject script_metadata = new JObject();
                 foreach (MonoBehaviour script in scripts) {
                     string script_name = script.GetType().Name;
+                    if (script.GetType() == typeof(SimObjPhysics)) {
+                        SimObjPhysics sim = (SimObjPhysics) script;
+                        sim.Init();
+                    }
                     string script_json = JsonUtility.ToJson(script);
                     script_metadata[script_name] = JObject.Parse(script_json);
                 }
@@ -94,6 +104,7 @@ public class ConvertGLTF : MonoBehaviour
                 }
             }
             File.WriteAllText(path + "/" + game_object.name + ".json", asset_metadata.ToString());
+            break;
         }
     }
 
