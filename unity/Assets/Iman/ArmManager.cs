@@ -72,8 +72,8 @@ public class ArmManager : MonoBehaviour
     private bool _isInitialized = false;
     private bool _isArmMode = false;
     private float _armHeight;
-    private ArmAgentController armAgent;
-    private IK_Robot_Arm_Controller arm;
+    private ArmAgentController _armAgent;
+    private IK_Robot_Arm_Controller _arm;
 
     public float ArmHeight {
         get { return _armHeight; }
@@ -102,67 +102,67 @@ public class ArmManager : MonoBehaviour
 
         _isArmMode = isArmMode;
 
+        _armAgent = (ArmAgentController)_agentManager.PrimaryAgent;
+        _arm = _armAgent.getArm();
         if (isArmMode) {
-            armAgent = (ArmAgentController)_agentManager.PrimaryAgent;
-            arm = armAgent.getArm();
-            armAgent.agentState = AgentState.Processing;
+            _armAgent.agentState = AgentState.Processing;
             StartCoroutine("ArmCoroutine");
         }
         else {
             // Return to orinigal autoSimulate physics
             StopCoroutine("ArmCoroutine");
-            armAgent.actionFinished(true);
+            _armAgent.ContinuousArmMoveFinish();
             
         }
     }
 
     private IEnumerator ArmCoroutine() {
-        CollisionListener collisionListener = arm.collisionListener;
+        CollisionListener collisionListener = _arm.collisionListener;
 
         _originPos = _xrController.transform.localPosition;
         _originRot = _xrController.transform.localEulerAngles;
-        _armPosOffset = arm.armTarget.localPosition;
-        _armRotOffset = arm.armTarget.localEulerAngles;
-        _validResetPositions.AddLast(arm.armTarget.localPosition);
-        _validResetRotations.AddLast(arm.armTarget.eulerAngles);
+        _armPosOffset = _arm.armTarget.localPosition;
+        _armRotOffset = _arm.armTarget.localEulerAngles;
+        _validResetPositions.AddLast(_arm.armTarget.localPosition);
+        _validResetRotations.AddLast(_arm.armTarget.eulerAngles);
 
         while (true) {
-            arm.armTarget.localPosition = _xrController.transform.localPosition - _originPos + _armPosOffset;
-            arm.armTarget.localEulerAngles = _xrController.transform.localEulerAngles - _originRot + _armRotOffset;
+            _arm.armTarget.localPosition = _xrController.transform.localPosition - _originPos + _armPosOffset;
+            _arm.armTarget.localEulerAngles = _xrController.transform.localEulerAngles - _originRot + _armRotOffset;
 
             ArmHeight += ReadInput();
 
-            MoveArmBase(armAgent);
+            MoveArmBase(_armAgent);
 
             PhysicsSceneManager.PhysicsSimulateTHOR(Time.deltaTime);
 
             if (collisionListener.ShouldHalt()) {
                 // Set arm position to last valid position and remove from valid reset lists
-                arm.armTarget.localPosition = _validResetPositions.Last();
+                _arm.armTarget.localPosition = _validResetPositions.Last();
                 _validResetPositions.RemoveLast();
-                arm.armTarget.localEulerAngles = _validResetRotations.Last();
+                _arm.armTarget.localEulerAngles = _validResetRotations.Last();
                 _validResetRotations.RemoveLast();
 
                 // Set originPos and armOffset to new track hand position
 
                 _originPos = _xrController.transform.localPosition;
                 _originRot = _xrController.transform.localEulerAngles;
-                _armPosOffset = arm.armTarget.localPosition;
-                _armRotOffset = arm.armTarget.localEulerAngles;
+                _armPosOffset = _arm.armTarget.localPosition;
+                _armRotOffset = _arm.armTarget.localEulerAngles;
 
                 _xrController.SendHapticImpulse(_hapticAmplitude, _hapticDuration);
             } else {
-                if (!_validResetPositions.Contains(arm.armTarget.localPosition)) {
+                if (!_validResetPositions.Contains(_arm.armTarget.localPosition)) {
                     if (_validResetPositions.Count > _maxResetCount) { // Too many reset positions stored
                         _validResetPositions.RemoveFirst();
                         _validResetRotations.RemoveFirst();
                     }
 
-                    _validResetPositions.AddLast(arm.armTarget.localPosition);
-                    _validResetRotations.AddLast(arm.armTarget.localEulerAngles);
+                    _validResetPositions.AddLast(_arm.armTarget.localPosition);
+                    _validResetRotations.AddLast(_arm.armTarget.localEulerAngles);
                 }
             }
-            arm.AppendArmMetadataVR();
+            _arm.AppendArmMetadataVR();
             yield return null;
         }
     }

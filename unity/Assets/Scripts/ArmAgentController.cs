@@ -573,6 +573,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public void ContinuousArmMoveFinish() {
+            this.lastAction = "VRArmMode";
+            this.actionFinished(true);
+        }
+
         public override bool TeleportCheck(Vector3 position, Vector3 rotation, bool forceAction, float? horizon = null) {
             if (!base.TeleportCheck(position, rotation, forceAction, horizon)) {
                 return false;

@@ -1749,8 +1749,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 metaMessage.arm = Arm.GenerateMetadata();
                 // Generate metadata for vr arm 
                 ArmMetadata[] vrArmMetadata = Arm.GenerateMetadataVR();
-                if (vrArmMetadata.Length != 0) {
-                    metaMessage.armVR = vrArmMetadata;
+                if (vrArmMetadata.Length != 0 && lastAction == "VRArmMode") {
+                    metaMessage.vrArm = vrArmMetadata;
                 }
             }
             else if (SArm != null) {

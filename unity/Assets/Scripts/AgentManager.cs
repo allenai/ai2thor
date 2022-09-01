@@ -1709,7 +1709,7 @@ public struct MetadataWrapper {
     public AgentMetadata agent;
     public HandMetadata heldObjectPose;
     public ArmMetadata arm;
-    public ArmMetadata[] armVR;
+    public ArmMetadata[] vrArm;
     public float fov;
     public Vector3 cameraPosition;
     public float cameraOrthSize;
