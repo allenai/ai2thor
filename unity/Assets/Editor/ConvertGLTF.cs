@@ -15,7 +15,9 @@ public class ComponentMetadata
     public string parentId;
     public int layer;
     public bool isActive;
-    public Transform transform;
+    public Vector3 localPosition;
+    public Quaternion localRotation;
+    public Vector3 localScale;
 }
 
 namespace ExtensionMethods
@@ -82,7 +84,11 @@ public class ConvertGLTF : MonoBehaviour
                 component.layer = child_object.layer;
                 component.tag = child_object.tag;
                 component.isActive = child_object.activeSelf;
-                component.transform = child_object.transform;
+                // Vector3 openRot = coo.openPositions[i];
+                // Vector3 closeRot = coo.closedPositions[i];
+                component.localPosition = child.localPosition;
+                component.localRotation = child.localRotation;
+                component.localScale = child.localScale;
                 component.parentId = parent_id.ToString();
                 string component_json = JsonUtility.ToJson(component);
                 asset_metadata[child_object.GetInstanceID().ToString()] = JObject.Parse(component_json);
@@ -104,7 +110,6 @@ public class ConvertGLTF : MonoBehaviour
                 }
             }
             File.WriteAllText(path + "/" + game_object.name + ".json", asset_metadata.ToString());
-            break;
         }
     }
 
