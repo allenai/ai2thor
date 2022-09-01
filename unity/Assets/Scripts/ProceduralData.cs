@@ -409,7 +409,7 @@ namespace Thor.Procedural.Data {
         public Vector3 p1;
         public float thickness;
         public bool empty;
-        public WallRectangularHole hole = null;
+        public IEnumerable<WallRectangularHole> holes = null;
         public MaterialProperties material;
         public string roomId;
 

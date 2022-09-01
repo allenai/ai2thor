@@ -622,6 +622,15 @@ namespace Thor.Procedural {
             return diff.x * diff.y;
         }
 
+        private static bool pointCompare(Vector3 p0, Vector3 p1, float epsilon = 1e-4f) {
+            var diff = p0-p1;
+            return Math.Abs(diff.x) < epsilon && Math.Abs(diff.y) < epsilon && Math.Abs(diff.z) < epsilon;
+        }
+
+        // private Vector3 binarySearch(Vector3 point, IEnumerable<Vector3> points) {
+        //     points.TakeWhile
+        // }
+
         public static GameObject createAndJoinWall(
             int index,
             AssetMap<Material> materialDb,
@@ -705,27 +714,25 @@ namespace Thor.Procedural {
 
             IEnumerable<BoundingBox> colliderBoundingBoxes = new List<BoundingBox>();
 
-            if (toCreate.hole != null) {
+            var hasHoles = toCreate.holes != null && toCreate.holes.Count() > 0;
+            var k = toCreate.holes?.Count();
+            var hole = hasHoles ? toCreate.holes?.FirstOrDefault(null) : null;
+
+            if (hasHoles) {
    
-                if (toCreate.hole.holePolygon != null && toCreate.hole.holePolygon.Count != 2) {
-                    Debug.LogWarning($"Invalid `holePolygon` on object of id '{toCreate.hole.id}', only supported rectangle holes, 4 points in polygon. Using `boundingBox` instead.");
-                    if (toCreate.hole.holePolygon.Count < 2) {
+                if (hole != null && hole.holePolygon.Count != 2) {
+                    Debug.LogWarning($"Invalid `holePolygon` on object of id '{hole.id}', only supported rectangle holes, 4 points in polygon. Using `boundingBox` instead.");
+                    if (hole.holePolygon.Count < 2) {
                         throw new ArgumentException("$Invalid `holePolygon` on object of id '{toCreate.hole.id}', only supported rectangle holes, 4 points in polygon, polygon has {toCreate.hole.holePolygon.Count}.");
                     }
                 }
 
-                var holeBB = getHoleBoundingBox(toCreate.hole);
+                var holeBB = getHoleBoundingBox(hole);
 
                 var dims = holeBB.max - holeBB.min;
                 var offset = new Vector2(
                     holeBB.min.x, holeBB.min.y
                 );
-
-                if (toCreate.hole.wall1 == toCreate.id) {
-                    offset = new Vector2(
-                        width - holeBB.max.x, holeBB.min.y
-                    );
-                }
 
                 colliderBoundingBoxes = new List<BoundingBox>() {
                     new BoundingBox() {min = p0, max =  p0
@@ -750,10 +757,93 @@ namespace Thor.Procedural {
                             + Vector3.up * (offset.y)
                     }
                 };
-                const float areaEps =0.0001f;
-                colliderBoundingBoxes = colliderBoundingBoxes.Where(bb => Math.Abs(GetBBXYArea(bb)) > areaEps).ToList();
 
+                const float areaEps =0.0001f;
+                colliderBoundingBoxes = colliderBoundingBoxes
+                    .Where(bb => Math.Abs(GetBBXYArea(bb)) > areaEps)
+                    .ToList();
+
+                if (toCreate.holes.Count() > 1) {
+
+                    var holesPoints = toCreate.holes.Select(h => getHoleCompletePolygon(h).ToList());
+
+                    var points = new List<Vector3>() {
+                        toCreate.p0,
+                        toCreate.p1,
+                        toCreate.p0 + new Vector3(0.0f, toCreate.height, 0.0f),
+                        toCreate.p1 + new Vector3(0.0f, toCreate.height, 0.0f)
+                    }.Concat(holesPoints.SelectMany(c => c)).ToList();
+
+                    var sortedByY = points.OrderBy(p => p.y).ToList();
+
+                    // points.Sort()
+
+                    var indexDict = new Dictionary<Vector3, int>();
+
+                    for (var i =0; i < holesPoints.Count(); i++) {
+                        var hPoints = holesPoints.ElementAt(i);
+
+                        for (var indexP0 = 0; indexP0 < 4; indexP0++) {
+                            var indexOffset = i + indexP0;
+                            var indexP1 = (indexP0+1)%4;
+
+                            var edge = hPoints[indexP0] - hPoints[indexP1];
+                            var revEdge = -edge;
+
+                            var pointsWithDistance = points.Select(p => 
+                                (
+                                p, 
+                                p0Dist: Vector3.SqrMagnitude(p - hPoints[indexP0]),
+                                p1Dist: Vector3.SqrMagnitude(p - hPoints[indexP1]),
+                                topLeftOfP1: Mathf.Sign(Vector3.Cross(p - hPoints[indexP1], revEdge).z) > 0 && Mathf.Sign(Vector3.Dot(p - hPoints[indexP1], revEdge)) > 0,
+                                topRightOfP0: Mathf.Sign(Vector3.Cross(edge, p - hPoints[indexP0]).z) > 0 && Mathf.Sign(Vector3.Dot(p - hPoints[indexP0], edge)) > 0
+                                )
+                            );
+
+                            var topLeftPoint = pointsWithDistance.Where(p => p.topLeftOfP1).Aggregate((x, y) => x.p0Dist < y.p0Dist ? x : y).p;
+                            var topRightPoint = pointsWithDistance.Where(p => p.topRightOfP0).Aggregate((x, y) => x.p1Dist < y.p1Dist ? x : y).p;
+                            
+                            var polygonPoints = new List<Vector3>(){
+                                topLeftPoint,
+                                hPoints[indexP0],
+                                hPoints[indexP1],
+                                topRightPoint
+                            };
+                            var indicesP = polygonPoints.Select(
+                                (p, i) => 
+                                    new KeyValuePair<Vector3, int>(p, indexDict.GetValueOrDefault(p, indexOffset + i))
+                            ).ToList();
+
+                            // indexDict.
+                            // indexDict.Append<KeyValuePair<Vector3, int>>(indicesP);
+
+                            for (var idx = 0; idx < indicesP.Count(); idx++) {
+                                var pointWithIndex = indicesP[idx];
+                                if (!indexDict.ContainsKey(pointWithIndex.Key)) {
+                                    // indices(pointWithIndex)
+                                    vertices.Add(pointWithIndex.Key);
+                                }
+
+                                indexDict.Add(indicesP[idx].Key, indicesP[idx].Value);
+                            }
+
+                            triangles.AddRange(new List<int>{0, 1, 2, 2, 3, 0}.Select(localIdx => indicesP[localIdx].Value));
+
+                        }
+
+                        // var edge = hPoints[1] - hPoints[0];
+
+                    }
+                }
+                else {
                 
+
+                if (hole.wall1 == toCreate.id) {
+                    offset = new Vector2(
+                        width - holeBB.max.x, holeBB.min.y
+                    );
+                }
+
                 vertices = new List<Vector3>() {
                         p0,
                         p0 + new Vector3(0.0f, toCreate.height, 0.0f),
@@ -798,6 +888,11 @@ namespace Thor.Procedural {
                 if (generateBackFaces) {
                     triangles.AddRange(triangles.AsEnumerable().Reverse().ToList());
                 }
+
+            }
+
+
+               
 
             } else {
 
@@ -864,8 +959,10 @@ namespace Thor.Procedural {
             mesh.triangles = triangles.ToArray();
             meshF.sharedMesh = mesh;
             var meshRenderer = wallGO.AddComponent<MeshRenderer>();
+            
+           
+            if (hasHoles) {
 
-            if (toCreate.hole != null) {
                 // var meshCollider  = wallGO.AddComponent<MeshCollider>();
                 // meshCollider.sharedMesh = mesh;
                 
@@ -910,7 +1007,7 @@ namespace Thor.Procedural {
                 (Vector3.up * toCreate.height),
                 visibilityPointInterval,
                 wallGO.transform,
-                toCreate.hole
+                toCreate.holes?.First()
             );
 
             setWallSimObjPhysics(wallGO, toCreate.id, visibilityPointsGO, boxCenter, boxSize);
@@ -1232,12 +1329,12 @@ namespace Thor.Procedural {
             return new BoundingBox() { min = minPoint, max = maxPoint };
         }
 
-        private static Wall polygonWallToSimpleWall(PolygonWall wall, Dictionary<string, WallRectangularHole> holes) {
+        private static Wall polygonWallToSimpleWall(PolygonWall wall, Dictionary<string, List<WallRectangularHole>> holes) {
             //wall.polygon.
             var polygons = wall.polygon.OrderBy(p => p.y);
             var maxY = wall.polygon.Max(p => p.y);
-            WallRectangularHole val;
-            var hole = holes.TryGetValue(wall.id, out val) ? val : null;
+            List<WallRectangularHole> val;
+            var wallHoles = holes.TryGetValue(wall.id, out val) ? val : null;
             var p0 = polygons.ElementAt(0);
             return new Wall() {
                 id = wall.id,
@@ -1248,7 +1345,7 @@ namespace Thor.Procedural {
                 empty = wall.empty,
                 roomId = wall.roomId,
                 thickness = wall.thickness,
-                hole = hole,
+                holes = wallHoles,
                 layer = wall.layer,
             };
         }
@@ -1291,6 +1388,23 @@ namespace Thor.Procedural {
                 min = hole.holePolygon[0],
                 max = hole.holePolygon[1]
             };
+        }
+
+        private static IEnumerable<Vector3> getHoleCompletePolygon(WallRectangularHole hole) {
+            if (hole.holePolygon == null || hole.holePolygon.Count < 2) {
+                throw new ArgumentException($"Invalid `holePolygon` for object id: '{hole.id}'. Minimum 2 vertices indicating first min and second max of hole bounding box.");
+            }
+            else if (hole.holePolygon.Count == 2) {
+                return new List<Vector3>() {
+                    hole.holePolygon[0],
+                    hole.holePolygon[0] + new Vector3(0.0f, hole.holePolygon[1].y, 0.0f),
+                    hole.holePolygon[1],
+                    hole.holePolygon[1] - new Vector3(0.0f, hole.holePolygon[1].y, 0.0f),
+                };
+            }
+            else {
+                return hole.holePolygon;
+            }
         }
 
         private static Material generatePolygonMaterial(Material sharedMaterial, Vector2 dimensions, MaterialProperties materialProperties = null, float offsetX = 0.0f, float offsetY = 0.0f, bool squareTiling = false) {
@@ -1383,7 +1497,9 @@ namespace Thor.Procedural {
             var holes = windowsAndDoors
                 .SelectMany(hole => new List<(string, WallRectangularHole)> { (hole.wall0, hole), (hole.wall1, hole) })
                 .Where(pair => !String.IsNullOrEmpty(pair.Item1))
-                .ToDictionary(pair => pair.Item1, pair => pair.Item2);
+                // .ToDictionary(pair => pair.Item1, pair => pair.Item2);
+                .GroupBy(o => o.Item1)
+                .ToDictionary(g => g.Key, g => g.Select(i => i.Item2).ToList());
             //house.doors.SelectMany(door => new List<string>() { door.wall0, door.wall1 });
 
             var roomMap = house.rooms.ToDictionary(r => r.id, r => r.floorPolygon.Select((p, i) => (p, i)));
