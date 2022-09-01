@@ -1518,8 +1518,383 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // freeze y-axis
             transform.rotation = Quaternion.Euler(eulerX, eulerY, 0);
-
         }
+
+        // Helper used with OpenObject commands, which controls the physics
+        // of actually opening an object. Instead of calling this directly,
+        // one is recommended to call openObject, which runs more checks.
+        // Previously named InteractAndWait.
+        private protected IEnumerator openAnimation(
+            CanOpen_Object openableObject,
+            bool markActionFinished,
+            float openness = 1.0f,
+            bool forceAction = false,
+            bool returnToStart = true,
+            bool ignoreAgentInTransition = false,
+            bool stopAtNonStaticCol = false,
+            bool useGripper = false,
+            float? physicsInterval = null,
+            bool freezeContained = false,
+            GameObject posRotManip = null,
+            GameObject posRotRef = null
+        ) {
+            if (openableObject == null) {
+                if (markActionFinished) {
+                    errorMessage = "Must pass in openable object!";
+                    actionFinished(false);
+                }
+                yield break;
+            }
+
+            // stores the object id of each object within this openableObject
+            Dictionary<string, Transform> objectIdToOldParent = null;
+            if (freezeContained) {
+                SimObjPhysics target = ancestorSimObjPhysics(openableObject.gameObject);
+                objectIdToOldParent = new Dictionary<string, Transform>();
+
+                foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
+                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                    objectIdToOldParent[objectId] = toReParent.transform.parent;
+                    toReParent.transform.parent = openableObject.transform;
+                    toReParent.GetComponent<Rigidbody>().isKinematic = true;
+                }
+            }
+            
+            // set conditions for ignoring certain fail-conditions or not
+            // (must be stored on CanOpen_Object component for OnTriggerEnter event to work)
+            openableObject.SetForceAction(forceAction);
+            openableObject.SetIgnoreAgentInTransition(ignoreAgentInTransition);
+            openableObject.SetStopAtNonStaticCol(stopAtNonStaticCol);
+
+            // open the object to openness
+            openableObject.SetIsCurrentlyLerping(true);
+            openableObject.Interact(
+                targetOpenness: openness,
+                physicsInterval: physicsInterval,
+                returnToStart: returnToStart,
+                useGripper: useGripper,
+                returnToStartMode: false,
+                posRotManip: posRotManip,
+                posRotRef: posRotRef);
+            // Wait until all animating is done
+            yield return new WaitUntil(() => (openableObject.GetIsCurrentlyLerping() == false));
+            yield return null;
+            bool succeeded = true;
+            
+            // if failure occurred, revert back to backup state (either start or lastSuccessful), and then report failure
+            if (openableObject.GetFailState() != CanOpen_Object.failState.none) {
+                succeeded = false;
+
+                openableObject.SetIsCurrentlyLerping(true);
+                openableObject.Interact(
+                    targetOpenness: openableObject.GetStartOpenness(),
+                    physicsInterval: physicsInterval,
+                    returnToStart: returnToStart,
+                    useGripper: useGripper,
+                    returnToStartMode: true,
+                    posRotManip: posRotManip,
+                    posRotRef: posRotRef);
+                yield return new WaitUntil(() => (openableObject.GetIsCurrentlyLerping() == false));
+                yield return null;
+                if (openableObject.GetFailState() == CanOpen_Object.failState.collision) {
+                    errorMessage = "Openable object collided with " + openableObject.GetFailureCollision().name;
+                }
+                else if (openableObject.GetFailState() == CanOpen_Object.failState.hyperextension) {
+                    errorMessage = "Agent hyperextended arm while opening object";
+                }
+            }
+
+            // stops any object located within this openableObject from moving
+            if (freezeContained) {
+                foreach (string objectId in objectIdToOldParent.Keys) {
+                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                    toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
+                    Rigidbody rb = toReParent.GetComponent<Rigidbody>();
+                    rb.velocity = new Vector3(0f, 0f, 0f);
+                    rb.angularVelocity = new Vector3(0f, 0f, 0f);
+                    rb.isKinematic = false;
+                }
+            }
+
+            // Reset conditions for next interaction
+            openableObject.SetFailState(CanOpen_Object.failState.none);
+            openableObject.SetFailureCollision(null);
+            
+            openableObject.SetForceAction(false);
+            openableObject.SetIgnoreAgentInTransition(false);
+            openableObject.SetStopAtNonStaticCol(false);
+
+            // Remove PosRotRef from MovingPart
+            if (posRotRef != null) {
+                UnityEngine.Object.Destroy(posRotRef);
+            }
+
+            if (markActionFinished) {
+                actionFinished(succeeded);
+            }
+        }
+
+        // private helper used with OpenObject commands
+        protected void openObject(
+            SimObjPhysics target,
+            float openness,
+            bool forceAction,
+            bool markActionFinished,
+            bool returnToStart = true,
+            bool ignoreAgentInTransition = false,
+            bool stopAtNonStaticCol = false,
+            bool useGripper = false,
+            float? physicsInterval = null,
+            bool simplifyPhysics = false,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+        ) {
+            // backwards compatibility support
+            if (moveMagnitude != null) {
+                // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
+                openness = ((float)moveMagnitude) == 0 ? 1 : (float)moveMagnitude;
+            }
+
+            if (openness > 1 || openness < 0) {
+                errorMessage = "openness must be in [0:1]";
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
+                return;
+            }
+
+            if (target == null) {
+                errorMessage = "Object not found!";
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
+                return;
+            }
+
+            if (!forceAction && !IsInteractable(target)) {
+                errorMessage = "object is visible but occluded by something: " + target.ObjectID;
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
+                return;
+            }
+
+            if (!target.GetComponent<CanOpen_Object>()) {
+                errorMessage = $"{target.ObjectID} is not an Openable object";
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
+                return;
+            }
+
+            CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
+
+            // This is a style choice that applies to Microwaves and Laptops,
+            // where it doesn't make a ton of sense to open them, while they are in use.
+            if (codd.WhatReceptaclesMustBeOffToOpen().Contains(target.Type) && target.GetComponent<CanToggleOnOff>().isOn) {
+                errorMessage = "Target must be OFF to open!";
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
+                return;
+            }
+
+            if (useGripper == true) {
+                // Opening objects with the gripper only works with the IK-Arm
+                // (it'd be preferable to reference the agentMode directly, but no such universal metadata exists)
+                if (this.GetComponent<BaseAgentComponent>().IKArm.activeInHierarchy == false) {
+                    errorMessage = "IK-Arm is required to open objects with gripper";
+                    if (markActionFinished) {
+                        actionFinished(false);
+                    }
+                    return;
+                }
+
+                // Opening objects with the gripper only works with an empty hand
+                if (ItemInHand != null) {
+                    errorMessage = "An empty hand is required to open objects with gripper";
+                    if (markActionFinished) {
+                        actionFinished(false);
+                    }
+                    return;
+                }
+
+                // Opening objects with the gripper currently requires the gripper-sphere to have some overlap with the moving parts' collision geometry
+                GameObject parentMovingPart = FindOverlappingMovingPart(codd);
+                if (parentMovingPart == null) {
+                    errorMessage = "Gripper must be making contact with at least one moving part's surface to open it!";
+                    if (markActionFinished) {
+                        actionFinished(false);
+                    }
+                    return;
+                }
+
+                GameObject posRotManip = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmTarget();
+                GameObject posRotRef = new GameObject("PosRotReference");
+                posRotRef.transform.parent = parentMovingPart.transform;
+                posRotRef.transform.position = posRotManip.transform.position;
+                posRotRef.transform.rotation = posRotManip.transform.rotation;
+                StartCoroutine(openAnimation(
+                    openableObject: codd,
+                    markActionFinished: markActionFinished,
+                    openness: openness,
+                    forceAction: forceAction,
+                    returnToStart: returnToStart,
+                    ignoreAgentInTransition: ignoreAgentInTransition,
+                    stopAtNonStaticCol: stopAtNonStaticCol,
+                    useGripper: useGripper,
+                    physicsInterval: physicsInterval,
+                    freezeContained: simplifyPhysics,
+                    posRotManip: posRotManip,
+                    posRotRef: posRotRef
+                ));
+                return;
+            }
+
+            StartCoroutine(openAnimation(
+                openableObject: codd,
+                markActionFinished: markActionFinished,
+                openness: openness,
+                forceAction: forceAction,
+                returnToStart: returnToStart,
+                ignoreAgentInTransition: ignoreAgentInTransition,
+                stopAtNonStaticCol: stopAtNonStaticCol,
+                useGripper: useGripper,
+                physicsInterval: physicsInterval,
+                freezeContained: simplifyPhysics
+            ));
+        }
+
+        //helper action to set the openness of a "rotate" typed open/close object immediately (no tween over time)
+        public void OpenObjectImmediate(
+            string objectId,
+            float openness = 1.0f
+        ) {
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+            target.GetComponent<CanOpen_Object>().SetOpennessImmediate(openness);
+            actionFinished(true);
+        }
+
+        //helper function to confirm if GripperSphere overlaps with openable object's moving part(s), and which one
+
+        public GameObject FindOverlappingMovingPart(CanOpen_Object codd) {
+            int layerMask = 1 << 8;
+            GameObject magnetSphere = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetMagnetSphere();
+            foreach (GameObject movingPart in codd.GetComponent<CanOpen_Object>().MovingParts) {
+                foreach(Collider col in movingPart.GetComponentsInChildren<Collider>()) {
+                    // Checking for matches between moving parts' colliders and colliders inside of gripper-sphere
+                    foreach(Collider containedCol in Physics.OverlapSphere(
+                        magnetSphere.transform.TransformPoint(magnetSphere.GetComponent<SphereCollider>().center),
+                        magnetSphere.transform.GetComponent<SphereCollider>().radius,
+                        layerMask)) {
+                            if (col == containedCol)
+                            {
+                                return movingPart;
+                            }
+                    }
+                }
+            }
+            return null;
+        }
+
+        public void OpenObject(
+            string objectId,
+            float openness = 1,
+            bool forceAction = false,
+            bool returnToStart = true,
+            bool ignoreAgentInTransition = false,
+            bool stopAtNonStaticCol = false,
+            float? physicsInterval = null,
+            bool useGripper = false,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. Its new name is 'openness'.
+        ) {
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
+            openObject(
+                target: target,
+                openness: openness,
+                forceAction: forceAction,
+                returnToStart: returnToStart,
+                ignoreAgentInTransition: ignoreAgentInTransition,
+                stopAtNonStaticCol: stopAtNonStaticCol,
+                useGripper: useGripper,
+                physicsInterval: physicsInterval,
+                moveMagnitude: moveMagnitude,
+                markActionFinished: true
+            );
+        }
+
+        public void OpenObject(
+            float x,
+            float y,
+            bool forceAction = false,
+            float openness = 1,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+        ) {
+            SimObjPhysics target = getInteractableSimObjectFromXY(
+                x: x, y: y, forceAction: forceAction
+            );
+            openObject(
+                target: target,
+                openness: openness,
+                forceAction: forceAction,
+                moveMagnitude: moveMagnitude,
+                markActionFinished: true
+            );
+        }
+
+        public void PhysicsSyncTransforms() {
+            Physics.SyncTransforms();
+            actionFinished(true);
+        }
+
+        // pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
+        // additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
+        public void PausePhysicsAutoSim() {
+            physicsSceneManager.PausePhysicsAutoSim();
+            actionFinished(true);
+        }
+
+        // if physics AutoSimulation is paused, manually advance the physics timestep by action.timeStep's value. Only use values for timeStep no less than zero and no greater than 0.05
+        public void AdvancePhysicsStep(
+            float timeStep = 0.02f,
+            float? simSeconds = null,
+            bool allowAutoSimulation = false
+        ) {
+            if ((!allowAutoSimulation) && Physics.autoSimulation) {
+                errorMessage = (
+                    "AdvancePhysicsStep can only be called if Physics AutoSimulation is currently " +
+                    "paused or if you have passed allowAutoSimulation=true! Either use the" +
+                    " PausePhysicsAutoSim() action first, or if you already used it, Physics" +
+                    " AutoSimulation has been turned back on already."
+                );
+                actionFinished(false);
+                return;
+            }
+
+            if (timeStep <= 0.0f || timeStep > 0.05f) {
+                errorMessage = "Please use a timeStep between 0.0f and 0.05f. Larger timeSteps produce inconsistent simulation results.";
+                actionFinished(false);
+                return;
+            }
+
+            if (!simSeconds.HasValue) {
+                simSeconds = timeStep;
+            }
+            if (simSeconds.Value < 0.0f) {
+                errorMessage = $"simSeconds must be non-negative (simSeconds=={simSeconds}).";
+                actionFinished(false);
+                return;
+            }
+
+            physicsSceneManager.AdvancePhysicsStep(timeStep, simSeconds, allowAutoSimulation);
+            actionFinished(true);
+        }
+
+        // Use this to immediately unpause physics autosimulation and allow physics to resolve automatically like normal
+        public void UnpausePhysicsAutoSim() {
+            physicsSceneManager.UnpausePhysicsAutoSim();
+            actionFinished(true);
+        }
+
 
         // Check if agent is collided with other objects
         protected bool IsCollided() {
