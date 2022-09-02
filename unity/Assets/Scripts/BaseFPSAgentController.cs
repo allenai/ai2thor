@@ -5010,37 +5010,59 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetLights() {
-            var lights = UnityEngine.Object.FindObjectsOfType<Light >();
+            var lightsInScene = UnityEngine.Object.FindObjectsOfType<Light>(true);
 
             List<PhysicsSceneManager.LightProperties> allOfTheLights = new List<PhysicsSceneManager.LightProperties>();
 
-            // foreach(Light l in lights) {
-            //     PhysicsSceneManager.LightProperties lp = new PhysicsSceneManager.LightProperties();
-            //     lp.type = l.type.ToString();
-            //     lp.position = l.transform.position;
+            //generate the LightParameters for all lights in the scene
+            foreach (Light hikari in lightsInScene) {
+                LightParameters lp = new LightParameters();
+                lp.id = hikari.transform.name;
+                lp.type = LightType.GetName(typeof(LightType), hikari.type);
+                lp.position = hikari.transform.position;
+                lp.localPosition = hikari.transform.localPosition;
+                
+                //culling mask stuff
 
-            //     float rotDegrees;
-            //     Vector3 rotAxis;
-            //     l.transform.rotation.ToAngleAxis(out rotDegrees, out rotAxis);
+                //we gotta somehow do the opposite of THIS
+                // if (lightParams.cullingMaskOff != null) {
+                //     foreach (var layer in lightParams.cullingMaskOff) {
+                //         light.cullingMask &= ~(1 << LayerMask.NameToLayer(layer));
+                //     }
+                // }
+                
 
-            //     lp.rotDegrees = rotDegrees;
-            //     lp.rotAxis = rotAxis;
+                lp.rotation = FlexibleRotation.fromQuaternion(hikari.transform.rotation);
+                lp.intensity = hikari.intensity;
+                lp.indirectMultiplier = hikari.bounceIntensity;
+                lp.range = hikari.range;
+                //only do this if this is a spot light
+                if(hikari.type == LightType.Spot) {
+                    lp.spotAngle = hikari.spotAngle;
+                }
 
-            //     //if light type is point or spot, add range
-            //     if(lp.type == "Point" || lp.type == "Spot") {
-            //         lp.range = l.range;
-            //     }
+                lp.rgb = new SerializableColor() { r = hikari.color.r, g = hikari.color.g, b = hikari.color.b, a = hikari.color.a };
+                
+                //generate shadow params
+                ShadowParameters xemnas = new ShadowParameters() {
+                        strength = hikari.shadowStrength,
+                        type = Enum.GetName(typeof(LightShadows), hikari.shadows),
+                        normalBias = hikari.shadowNormalBias,
+                        bias = hikari.shadowBias,
+                        nearPlane = hikari.shadowNearPlane,
+                        resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), hikari.shadowResolution)
+                };
 
-            //     lp.intensity = l.intensity;
+                //linked sim object
+                //lp.linkedSimObj = ;
 
-            //     if(lp.type == "Spot") {
-            //         lp.spotAngle = l.spotAngle;
-            //     }
+                lp.enabled = hikari.enabled;
 
-            //     lp.color = l.color;
-
-            //     allOfTheLights.Add(lp);
-            // }
+                if(hikari.GetComponentInParent<SimObjPhysics>()) {
+                    lp.parentSimObjID = hikari.GetComponentInParent<SimObjPhysics>().objectID;
+                    lp.parentSimObjName = hikari.GetComponentInParent<SimObjPhysics>().transform.name;
+                }
+            }
 
             actionFinishedEmit(true, allOfTheLights);
         }
