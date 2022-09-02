@@ -613,7 +613,7 @@ namespace Thor.Procedural {
             Vector3 c = vertices[index2];
             Vector3 cross = Vector3.Cross(a-b, a-c);
             float area = cross.magnitude * 0.5f;
-            Debug.Log($"Area between {index0}, {index1}, {index2} = {area}");
+            // Debug.Log($"Area between {index0}, {index1}, {index2} = {area}");
             return area;
         }
 
@@ -776,10 +776,20 @@ namespace Thor.Procedural {
                         + Vector3.up * offset.y
 
                     };
+                
+                // This would be for a left hand local axis space, so front being counter-clockwise of topdown polygon from inside the polygon
+                // triangles = new List<int>() {
+                //      0, 1, 2, 1, 3, 2, 1, 4, 3, 3, 4, 5, 4, 6, 5, 5, 6, 7, 7, 6, 0, 0, 2, 7
+                // };
 
                 triangles = new List<int>() {
-                     0, 1, 2, 1, 3, 2, 1, 4, 3, 3, 4, 5, 4, 6, 5, 5, 6, 7, 7, 6, 0, 0, 2, 7};
-
+                    7, 2, 0, 0, 6, 7, 7, 6, 5, 5, 6, 4, 5, 4, 3, 3, 4, 1, 2, 3, 1, 2, 1, 0
+                };
+                
+                if (toCreate.id == "wall_0_2") {
+                    
+                    Debug.Log($"---------- globalPos: {globalVertexPositions}, p0: {p0.ToString("F5")}, p1: {p0.ToString("F5")}, p0p1_norm: {p0p1_norm.ToString("F5")}, offset: {offset}");
+                }
                 var toRemove = new List<int>();
                 // const float areaEps = 1e-4f;
                 for (int i = 0; i < triangles.Count/3; i++) {
