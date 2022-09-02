@@ -293,6 +293,42 @@ public static class UtilityFunctions {
         }
     }
 
+    [UnityEditor.MenuItem("AI2-THOR/Add GUID to Object Names")]
+    public static void AddGUIDToSimObjPhys() {
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
+            SimObjPhysics[] objects = GameObject.FindObjectsOfType<SimObjPhysics>(true);
+
+            //explicitly track used Guids since we are only using the first 8 characters in the generated ID and want to be sure they are universally unique
+            List<string> usedGuidsJustInCaseCauseIDunnoThisIsRandom = new List<string>();
+
+            foreach (SimObjPhysics sop in objects) {
+                Guid g;
+                bool isThisNew = true;
+                string uid = "";
+
+                while(isThisNew) {
+                    g = Guid.NewGuid();
+                    string first8 = g.ToString("N").Substring(0, 8);
+
+                    //this guid is new and has not been used before
+                    if(!usedGuidsJustInCaseCauseIDunnoThisIsRandom.Contains(first8)) {
+                        usedGuidsJustInCaseCauseIDunnoThisIsRandom.Add(first8);
+                        isThisNew = false;
+                        uid = first8;
+                    }
+
+                    else { 
+                        Debug.Log($"wow what are the odds that {first8} was generated again!?!?");
+                    }
+                }
+
+                sop.name = sop.GetComponent<SimObjPhysics>().Type.ToString() + "_" + uid;
+            }
+
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+        }
+    }
 
     [MenuItem("AI2-THOR/Name All Scene Light Objects")]
     //light naming convention: {PrefabName/scene}|{Light Type}|{instance}
