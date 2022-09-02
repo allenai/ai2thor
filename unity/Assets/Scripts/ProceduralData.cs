@@ -53,7 +53,14 @@ namespace Thor.Procedural.Data {
         public float range { get; set; }
         public SerializableColor rgb { get; set; }
         public ShadowParameters shadow = null;
+        /*
+        linked objects are one of two cases:
+        this is a scene light and it is controlled by some light switch sim object, and is linked to that light switch
+        this is a light that is a child of some sim object (ie: lamp) and it is controlled by that sim object
+        notably, lights that are children of sim objects will have that sim object's name in the light's name (LightParameters.id) as an additional identifier
+        */
         public string linkedObjectId { get; set; }
+        public bool enabled { get; set; }
     }
 
     [Serializable]

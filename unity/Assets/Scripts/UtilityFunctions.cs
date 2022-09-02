@@ -295,7 +295,7 @@ public static class UtilityFunctions {
 
 
     [MenuItem("AI2-THOR/Name All Scene Light Objects")]
-    //light naming convention: {PrefabName/Scene}|{Type}|{instance}
+    //light naming convention: {PrefabName/scene}|{Light Type}|{instance}
     //Editor-only function used to set names of all light assets in scenes that have Lights in them prior to any additional lights being
     //dynamically spawned in by something like a Procedural action.
     private static void NameAllSceneLightObjects() {
@@ -303,31 +303,21 @@ public static class UtilityFunctions {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
             var lights = UnityEngine.Object.FindObjectsOfType<Light>(true);
 
-            //List<Light> lights = new List<Light>();
-
-            // //do this to only include light objects that are in the active scene, otherwise Prefabs with lights in Assets are also included cause RESOURCES>FINDOBJECTSOFTYPEALL AHHHHHH
-            // foreach (Light li in everyLight) {
-            //     if(li.hideFlags == HideFlags.NotEditable || li.hideFlags == HideFlags.HideAndDontSave)
-            //     continue;
-
-            //     if(!EditorUtility.IsPersistent(li.transform.root.gameObject))
-            //     continue;
-
-            //     lights.Add(li);
-            // }
-
-            //separate lights into scene-level lights, and lights that are children of sim objects
+            //separate lights into scene-level lights, and lights that are children of sim objects cause they have to be handled separately
+            //"scene" level lights effectively treat the entire scene as "their sim object" for the purposes of instance counting
             Dictionary<Light, LightType> sceneLights = new Dictionary<Light, LightType>();
             Dictionary<Light, LightType> simObjChildLights = new Dictionary<Light, LightType>();
 
             foreach (Light l in lights) {
                  if(!l.GetComponentInParent<SimObjPhysics>()) {
-                    Debug.Log($"adding {l.transform.name} to sceneLights");
+                    //one caveat here is that light switch objects do control specific "scene" lights
+                    //because they are not children of the light switches, these referenced lights must be set up in editor first
+                    //or at initialization in a Procedural scene. Check the <LightParameters> member <linkedObjectId> to see if some scene light
+                    //is actually controlled by a light switch sim object.
                     sceneLights.Add(l, l.type);
                  }
 
                  else {
-                    Debug.Log($"adding {l.transform.name} to simObjChildLights");
                     simObjChildLights.Add(l, l.type);
                  }
             }
@@ -337,8 +327,6 @@ public static class UtilityFunctions {
             int pointInstance = 0;
             int areaInstance = 0;
 
-            Debug.Log($"scene light count is: {sceneLights.Count}");
-            Debug.Log($"child light count is: {simObjChildLights.Count}");
             //sort the scene lights into point, directional, or spot
             foreach (KeyValuePair<Light, LightType> l in sceneLights) {
                 //Debug.Log(directionalInstance);
@@ -368,11 +356,10 @@ public static class UtilityFunctions {
             
             //map each light/lightType pair to the sim object that they are associated with
             foreach (KeyValuePair<Light, LightType> l in simObjChildLights) {
-                //KeyValuePair<SimObjPhysics, int> simObjToInstanceCount = new KeyValuePair<SimObjPhysics, int>(l.Key.GetComponentInParent<SimObjPhysics>(), 0);
                 lightAndTypeToSimObjPhys.Add(l, l.Key.GetComponentInParent<SimObjPhysics>());
             }
 
-            //track if multiple key lights are children of the same SimObjPhysics
+            //track if multiple key lights in simObjChildLIghts are children of the same SimObjPhysics
             Dictionary<SimObjPhysics, int> simObjToSpotInstanceCountInThatSimObj = new Dictionary<SimObjPhysics, int>();
             Dictionary<SimObjPhysics, int> simObjToDirectionalInstanceCountInThatSimObj = new Dictionary<SimObjPhysics, int>();
             Dictionary<SimObjPhysics, int> simObjToPointInstanceCountInThatSimObj = new Dictionary<SimObjPhysics, int>();
@@ -382,12 +369,12 @@ public static class UtilityFunctions {
                 
                 if(light.Key.Value == LightType.Spot) {
                     if(!simObjToSpotInstanceCountInThatSimObj.ContainsKey(light.Value)){
-                        //this is the first instance of a spotlight found in the sim object
+                        //this is the first instance of a Spot light found in this sim object
                         simObjToSpotInstanceCountInThatSimObj.Add(light.Value, 0);
                     }
 
                     else {
-                        //we have found another instance of this type of light in this sim object before
+                        //we have found another instance of this type of light in this previously found sim object before
                         simObjToSpotInstanceCountInThatSimObj[light.Value]++;
                     }
 
@@ -396,10 +383,12 @@ public static class UtilityFunctions {
 
                 else if(light.Key.Value == LightType.Directional) {
                     if(!simObjToDirectionalInstanceCountInThatSimObj.ContainsKey(light.Value)){
+                        //this is the first instance of a Directional light found in this sim object (PROBS DONT PUT A DIRECTIONAL LIGHT IN A SIM OBJ PREFAB BUT YOU DO YOU I GUESS)
                         simObjToDirectionalInstanceCountInThatSimObj.Add(light.Value, 0);
                     }
 
                     else {
+                        //we have found another instance of this type of light in this previously found sim object before
                         simObjToDirectionalInstanceCountInThatSimObj[light.Value]++;
                     }
 
@@ -408,16 +397,19 @@ public static class UtilityFunctions {
 
                 else if(light.Key.Value == LightType.Point) {    
                     if(!simObjToPointInstanceCountInThatSimObj.ContainsKey(light.Value)){
+                        //this is the first instance of a Point light found in this sim object
                         simObjToPointInstanceCountInThatSimObj.Add(light.Value, 0);
                     }
 
                     else {
+                        //we have found another instance of a Point light in this previously found sim object before
                         simObjToPointInstanceCountInThatSimObj[light.Value]++;
                     }
 
                     light.Key.Key.name = light.Value.transform.name + "|" + light.Key.Value.ToString() + "|" + simObjToPointInstanceCountInThatSimObj[light.Value].ToString();
                 }
 
+                //we currently don't really use area lights since they are baked only but this is here just in case
                 else if(light.Key.Value == LightType.Area) {
 
                     if(!simObjToAreaInstanceCountInThatSimObj.ContainsKey(light.Value)){
