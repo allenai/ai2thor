@@ -817,14 +817,17 @@ namespace Thor.Procedural {
                         p1 +  new Vector3(0.0f, toCreate.height, 0.0f),
                         p1
                     };
+                
+                // triangles = new List<int>() { 1, 2, 0, 2, 3, 0 };
 
-                triangles = new List<int>() { 1, 2, 0, 2, 3, 0 };
+                // Right hand rule
+                triangles = new List<int>() { 0, 3, 2, 0, 2, 1 };
                 if (generateBackFaces) {
                     triangles.AddRange(triangles.AsEnumerable().Reverse().ToList());
                 }
             }
 
-            normals = Enumerable.Repeat(-normal, vertices.Count).ToList();
+            normals = Enumerable.Repeat(normal, vertices.Count).ToList();//.Concat(Enumerable.Repeat(-normal, vertices.Count)).ToList();
 
             uv = vertices.Select(v =>
                 new Vector2(Vector3.Dot(p0p1_norm, v - p0) / width, v.y / toCreate.height))
