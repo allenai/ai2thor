@@ -929,7 +929,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         TimerResetValue = HowManySecondsUntilRoomTemp;
 
-        sceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+        // sceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
         // default all rigidbodies so that if their drag/angular drag is zero, it's at least nonzero
         if (myRigidbody.drag == 0) {
