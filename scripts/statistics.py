@@ -350,7 +350,7 @@ def main(args):
             asset = pd.DataFrame([list(meta.values())], columns=list(meta.keys()))
             gen_objects.append(asset)
             
-    gen_objects_df = pd.concat(gen_objects).sort_values(by='Type', ignore_index=True)
+    gen_objects_df = pd.concat(gen_objects).sort_values(by=['name', 'Type'], ignore_index=True)
     print(gen_objects_df)
     gen_objects_df.to_csv(os.path.join(args.output_dir, 'ai2thor-assets.csv'))
 
