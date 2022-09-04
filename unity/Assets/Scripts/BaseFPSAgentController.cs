@@ -4528,17 +4528,209 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, results.ToArray());
         }
 
-        public void TestLoad(string? imPath) {
-            byte[] imageBytes = File.ReadAllBytes(imPath);
-            actionFinished(success: true);
-        }
-
         public void CameraCrack(int randomSeed = 0) {
             GameObject canvas = Instantiate(CrackedCameraCanvas);
             CrackedCameraManager camMan = canvas.GetComponent<CrackedCameraManager>();
 
             camMan.SpawnCrack(randomSeed);
             actionFinished(true);
+        }
+
+        public void CreateObjectPrefab(
+            Vector3[] vertices,
+            string name,
+            int[] triangles,
+            Vector2[]? uvs = null,
+            string texturePath = null,
+            SerializableCollider[]? colliders = null,
+            PhysicalProperties physicalProperties = null,
+            Vector3[]? visibilityPoints = null,
+            ObjectAnnotations annotations = null
+        ) {
+            string prefabDir = Path.Combine("Assets", "Prefabs", "RuntimePrefabs", name);
+            if (Directory.Exists(prefabDir)) {
+                throw new InvalidOperationException($"Already have a RuntimeAsset named {name}!");
+            }
+            Directory.CreateDirectory(prefabDir);
+
+            // create a new game object
+            GameObject go = new GameObject(name);
+            go.layer = LayerMask.NameToLayer("SimObjVisible");
+            go.tag = "SimObjPhysics";
+
+            // create a new mesh
+            GameObject meshObj = new GameObject("mesh");
+            meshObj.transform.parent = go.transform;
+            Mesh mesh = new Mesh();
+            mesh.vertices = vertices;
+            mesh.triangles = triangles;
+            if (uvs != null) {
+                mesh.uv = uvs;
+            }
+
+            // add the mesh to the object
+            meshObj.AddComponent<MeshRenderer>();
+            MeshFilter meshFilter = meshObj.AddComponent<MeshFilter>();
+            meshFilter.mesh = mesh;
+
+            // load image from disk
+            if (texturePath != null) {
+                // textures aren't saved as part of the prefab, so we load them from disk
+                RuntimePrefab runtimePrefab = go.AddComponent<RuntimePrefab>();
+                runtimePrefab.localTexturePath = texturePath;
+
+                byte[] imageBytes = File.ReadAllBytes(texturePath);
+                Texture2D tex = new Texture2D(2, 2);
+                tex.LoadImage(imageBytes);
+
+                // create a new material
+                Material mat = new Material(Shader.Find("Standard"));
+                mat.mainTexture = tex;
+                
+                // assign the material to the game object
+                meshObj.GetComponent<Renderer>().material = mat;
+
+                // save the material
+                UnityEditor.AssetDatabase.CreateAsset(mat, Path.Combine(prefabDir, $"{name}.mat"));
+
+                runtimePrefab.sharedMaterial = mat;
+            }
+
+            // save the mesh so that it can be loaded later with the prefab
+            UnityEditor.AssetDatabase.CreateAsset(mesh, Path.Combine(prefabDir, $"{name}.asset"));
+
+            // have the mesh refer to the mesh at meshPath
+            meshObj.GetComponent<MeshFilter>().sharedMesh = mesh;
+
+            // add the mesh colliders
+            GameObject triggerCollidersObj = new GameObject("TriggerColliders");
+            triggerCollidersObj.layer = LayerMask.NameToLayer("SimObjVisible");
+            triggerCollidersObj.transform.parent = go.transform;
+
+            GameObject meshCollidersObj = new GameObject("Colliders");
+            meshCollidersObj.layer = LayerMask.NameToLayer("SimObjVisible");
+            meshCollidersObj.transform.parent = go.transform;
+            List<Collider> meshColliders = new List<Collider>();
+            if (colliders != null && colliders.Length > 0) {
+                int i = 0;
+                string collidersDir = Path.Combine(prefabDir, "colliders");
+                if (!Directory.Exists(collidersDir)) {
+                    Directory.CreateDirectory(collidersDir);
+                }
+                foreach (var collider in colliders) {
+                    // create a mesh of the collider
+                    Mesh colliderMesh = new Mesh();
+                    colliderMesh.vertices = collider.vertices;
+                    colliderMesh.triangles = collider.triangles;
+
+                    // add the mesh collider
+                    GameObject meshColliderObj = new GameObject($"collider_{i}");
+                    meshColliderObj.transform.parent = meshCollidersObj.transform;
+                    MeshCollider meshCollider = meshColliderObj.AddComponent<MeshCollider>();
+                    meshCollider.sharedMesh = colliderMesh;
+                    meshCollider.convex = true;
+                    meshColliders.Add(meshCollider);
+
+                    // add the trigger collider
+                    GameObject triggerColliderObj = new GameObject($"trigger_{i}");
+                    triggerColliderObj.transform.parent = triggerCollidersObj.transform;
+                    MeshCollider triggerCollider = triggerColliderObj.AddComponent<MeshCollider>();
+                    triggerCollider.sharedMesh = colliderMesh;
+                    triggerCollider.convex = true;
+                    triggerCollider.isTrigger = true;
+
+                    // save the mesh collider
+                    UnityEditor.AssetDatabase.CreateAsset(colliderMesh, Path.Combine(collidersDir, $"collider_{i}.asset"));
+
+                    i++;
+                }
+            }
+
+            // add the rigidbody
+            Rigidbody rb = go.AddComponent<Rigidbody>();
+            if (physicalProperties != null) {
+                rb.mass = physicalProperties.mass;
+                rb.drag = physicalProperties.drag;
+                rb.angularDrag = physicalProperties.angularDrag;
+                rb.useGravity = physicalProperties.useGravity;
+                rb.isKinematic = physicalProperties.isKinematic;
+            }
+
+            // add the visibility points
+            GameObject visPoints = new GameObject("VisibilityPoints");
+            visPoints.transform.parent = go.transform;
+            Transform[] visPointTransforms = new Transform[visibilityPoints.Length];
+            for (int i = 0; i < visibilityPoints.Length; i++) {
+                GameObject visPoint = new GameObject($"visPoint_{i}");
+                visPoint.transform.parent = visPoints.transform;
+                visPoint.transform.localPosition = visibilityPoints[i];
+                visPointTransforms[i] = visPoint.transform;
+                visPoint.layer = LayerMask.NameToLayer("SimObjVisible");
+            }
+
+            // add the SimObjPhysics component
+            SimObjPhysics sop = go.AddComponent<SimObjPhysics>();
+            sop.VisibilityPoints = visPointTransforms;
+            sop.MyColliders = meshColliders.ToArray();
+            sop.assetID = name;
+            sop.objectID = name;
+
+            // add the annotations of the object
+            if (annotations == null) {
+                annotations = new ObjectAnnotations();
+            }
+            sop.PrimaryProperty = (SimObjPrimaryProperty)Enum.Parse(
+                typeof(SimObjPrimaryProperty), annotations.primaryProperty
+            );
+            sop.Type = (SimObjType)Enum.Parse(typeof(SimObjType), annotations.objectType);
+            if (annotations.secondaryProperties == null) {
+                annotations.secondaryProperties = new string[0];
+            }
+            sop.SecondaryProperties = annotations.secondaryProperties.Select(
+                p => (SimObjSecondaryProperty)Enum.Parse(typeof(SimObjSecondaryProperty), p)
+            ).ToArray();
+
+            // seutp the bounding box
+            GameObject boundingBox = new GameObject("BoundingBox");
+            boundingBox.transform.parent = go.transform;
+            BoxCollider boxCollider = boundingBox.AddComponent<BoxCollider>();
+            boxCollider.enabled = false;
+            float minX = float.MaxValue;
+            float minY = float.MaxValue;
+            float minZ = float.MaxValue;
+            float maxX = float.MinValue;
+            float maxY = float.MinValue;
+            float maxZ = float.MinValue;
+            foreach (var vertex in vertices) {
+                minX = Mathf.Min(minX, vertex.x);
+                minY = Mathf.Min(minY, vertex.y);
+                minZ = Mathf.Min(minZ, vertex.z);
+                maxX = Mathf.Max(maxX, vertex.x);
+                maxY = Mathf.Max(maxY, vertex.y);
+                maxZ = Mathf.Max(maxZ, vertex.z);
+            }
+            boxCollider.center = new Vector3(
+                x: (minX + maxX) / 2.0f,
+                y: (minY + maxY) / 2.0f,
+                z: (minZ + maxZ) / 2.0f
+            );
+            boxCollider.size = new Vector3(
+                x: maxX - minX,
+                y: maxY - minY,
+                z: maxZ - minZ
+            );
+            sop.BoundingBox = boundingBox;
+
+            // save go as a prefab at unity/Assets/Prefabs/RuntimePrefabs/{name}.prefab
+            GameObject savedPrefab = UnityEditor.PrefabUtility.SaveAsPrefabAsset(go, Path.Combine(prefabDir, $"{name}.prefab"));
+
+            // Add the asset to the procedural asset database
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDb != null) {
+                assetDb.prefabs.Add(savedPrefab);
+            }
+
+            actionFinished(success: true);
         }
 
         public void CreateHouse(ProceduralHouse house) {

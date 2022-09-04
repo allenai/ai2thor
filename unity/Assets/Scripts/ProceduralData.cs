@@ -405,6 +405,31 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
+    public class SerializableCollider {
+        public Vector3[] vertices;
+        public int[] triangles;
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class PhysicalProperties {
+        public float mass = 1;
+        public float drag = 0;
+        public float angularDrag = 0.05f;
+        public bool useGravity = true;
+        public bool isKinematic = false;
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class ObjectAnnotations {
+        public string objectType = "Undefined";
+        public string primaryProperty = "Undefined";
+        public string[]? secondaryProperties = null;
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
     public class Wall {
         public string id;
         public float height;
