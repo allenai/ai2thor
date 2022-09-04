@@ -291,6 +291,7 @@ def main(args):
         with open(path) as fp:
             data = json.load(fp)
         has_physics = False
+        is_root = True
         name = os.path.basename(path).split('.json')[0]
         for id, node in data.items():
             scipts = node.get('MonoBehaviour')
@@ -302,7 +303,7 @@ def main(args):
                     'id': id,
                     'name': name,
                     'assetID': meta_src['assetID'],
-                    'parentID': node['parentId'],
+                    'isRoot': is_root,
                     'Type': sim_obj_type_map[meta_src['Type']],
                     'PrimaryProperty': sim_obj_primary_property_map[meta_src['PrimaryProperty']],
                     'SecondaryProperties': [sim_obj_secondary_property_map[sec_prop] for sec_prop in meta_src['SecondaryProperties']],
@@ -323,13 +324,14 @@ def main(args):
                 asset = pd.DataFrame([list(meta.values())], columns=list(meta.keys()))
                 gen_objects.append(asset)
                 has_physics = True
+                is_root = False
         if not has_physics:
             id, node = next(iter(data.items()))
             meta = {
                 'id': id,
                 'name': name,
                 'assetID': node['name'],
-                'parentID': node['parentId'],
+                'isRoot': is_root,
                 'Type': None,
                 'PrimaryProperty': None,
                 'SecondaryProperties': None,
@@ -352,11 +354,10 @@ def main(args):
             
     gen_objects_df = pd.concat(gen_objects).sort_values(by=['name', 'Type'], ignore_index=True)
     print(gen_objects_df)
-    gen_objects_df.to_csv(os.path.join(args.output_dir, 'ai2thor-assets.csv'))
+    gen_objects_df.to_csv(os.path.join(args.output_dir, 'ai2thor-assets.csv'), index=False)
 
-    root_objects_df = gen_objects_df.dropna(subset='assetID')
-    root_objects_df = root_objects_df[root_objects_df['parentID'] == '-1']
-    root_objects_df.to_csv(os.path.join(args.output_dir, 'ai2thor-objects.csv'))
+    root_objects_df = gen_objects_df[gen_objects_df['isRoot']]
+    root_objects_df.to_csv(os.path.join(args.output_dir, 'ai2thor-objects.csv'), index=False)
     objects_plots(root_objects_df, args.output_dir)
 
 
