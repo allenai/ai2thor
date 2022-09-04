@@ -4528,6 +4528,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, results.ToArray());
         }
 
+        public void TestLoad(string? imPath) {
+            byte[] imageBytes = File.ReadAllBytes(imPath);
+            actionFinished(success: true);
+        }
+
         public void CameraCrack(int randomSeed = 0) {
             GameObject canvas = Instantiate(CrackedCameraCanvas);
             CrackedCameraManager camMan = canvas.GetComponent<CrackedCameraManager>();
