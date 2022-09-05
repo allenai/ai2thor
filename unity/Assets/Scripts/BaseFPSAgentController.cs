@@ -4547,11 +4547,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3[]? visibilityPoints = null,
             ObjectAnnotations annotations = null
         ) {
+#if UNITY_EDITOR
             string prefabDir = Path.Combine("Assets", "Prefabs", "RuntimePrefabs", name);
             if (Directory.Exists(prefabDir)) {
                 throw new InvalidOperationException($"Already have a RuntimeAsset named {name}!");
             }
             Directory.CreateDirectory(prefabDir);
+#endif
 
             // create a new game object
             GameObject go = new GameObject(name);
