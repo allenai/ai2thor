@@ -4590,14 +4590,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // assign the material to the game object
                 meshObj.GetComponent<Renderer>().material = mat;
 
+#if UNITY_EDITOR
                 // save the material
                 UnityEditor.AssetDatabase.CreateAsset(mat, Path.Combine(prefabDir, $"{name}.mat"));
+#endif
 
                 runtimePrefab.sharedMaterial = mat;
             }
 
+#if UNITY_EDITOR
             // save the mesh so that it can be loaded later with the prefab
             UnityEditor.AssetDatabase.CreateAsset(mesh, Path.Combine(prefabDir, $"{name}.asset"));
+#endif
 
             // have the mesh refer to the mesh at meshPath
             meshObj.GetComponent<MeshFilter>().sharedMesh = mesh;
@@ -4639,8 +4643,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     triggerCollider.convex = true;
                     triggerCollider.isTrigger = true;
 
+#if UNITY_EDITOR
                     // save the mesh collider
                     UnityEditor.AssetDatabase.CreateAsset(colliderMesh, Path.Combine(collidersDir, $"collider_{i}.asset"));
+#endif
 
                     i++;
                 }
@@ -4722,12 +4728,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             sop.BoundingBox = boundingBox;
 
             // save go as a prefab at unity/Assets/Prefabs/RuntimePrefabs/{name}.prefab
-            GameObject savedPrefab = UnityEditor.PrefabUtility.SaveAsPrefabAsset(go, Path.Combine(prefabDir, $"{name}.prefab"));
+            GameObject savedPrefab = null;
+
+#if UNITY_EDITOR
+            UnityEditor.PrefabUtility.SaveAsPrefabAsset(go, Path.Combine(prefabDir, $"{name}.prefab"));
+#endif
 
             // Add the asset to the procedural asset database
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb != null) {
-                assetDb.prefabs.Add(savedPrefab);
+                assetDb.prefabs.Add(savedPrefab == null ? go : savedPrefab);
             }
 
             actionFinished(success: true);
