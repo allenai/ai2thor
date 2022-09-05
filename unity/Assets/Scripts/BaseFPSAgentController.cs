@@ -4547,14 +4547,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3[]? visibilityPoints = null,
             ObjectAnnotations annotations = null
         ) {
-#if UNITY_EDITOR
-            string prefabDir = Path.Combine("Assets", "Prefabs", "RuntimePrefabs", name);
-            if (Directory.Exists(prefabDir)) {
-                throw new InvalidOperationException($"Already have a RuntimeAsset named {name}!");
-            }
-            Directory.CreateDirectory(prefabDir);
-#endif
-
             // create a new game object
             GameObject go = new GameObject(name);
             go.layer = LayerMask.NameToLayer("SimObjVisible");
@@ -4591,19 +4583,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 
                 // assign the material to the game object
                 meshObj.GetComponent<Renderer>().material = mat;
-
-#if UNITY_EDITOR
-                // save the material
-                UnityEditor.AssetDatabase.CreateAsset(mat, Path.Combine(prefabDir, $"{name}.mat"));
-#endif
-
                 runtimePrefab.sharedMaterial = mat;
             }
-
-#if UNITY_EDITOR
-            // save the mesh so that it can be loaded later with the prefab
-            UnityEditor.AssetDatabase.CreateAsset(mesh, Path.Combine(prefabDir, $"{name}.asset"));
-#endif
 
             // have the mesh refer to the mesh at meshPath
             meshObj.GetComponent<MeshFilter>().sharedMesh = mesh;
@@ -4619,10 +4600,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<Collider> meshColliders = new List<Collider>();
             if (colliders != null && colliders.Length > 0) {
                 int i = 0;
-                string collidersDir = Path.Combine(prefabDir, "colliders");
-                if (!Directory.Exists(collidersDir)) {
-                    Directory.CreateDirectory(collidersDir);
-                }
                 foreach (var collider in colliders) {
                     // create a mesh of the collider
                     Mesh colliderMesh = new Mesh();
@@ -4644,11 +4621,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     triggerCollider.sharedMesh = colliderMesh;
                     triggerCollider.convex = true;
                     triggerCollider.isTrigger = true;
-
-#if UNITY_EDITOR
-                    // save the mesh collider
-                    UnityEditor.AssetDatabase.CreateAsset(colliderMesh, Path.Combine(collidersDir, $"collider_{i}.asset"));
-#endif
 
                     i++;
                 }
@@ -4728,13 +4700,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 z: maxZ - minZ
             );
             sop.BoundingBox = boundingBox;
-
-            // save go as a prefab at unity/Assets/Prefabs/RuntimePrefabs/{name}.prefab
-            GameObject savedPrefab = null;
-
-#if UNITY_EDITOR
-            UnityEditor.PrefabUtility.SaveAsPrefabAsset(go, Path.Combine(prefabDir, $"{name}.prefab"));
-#endif
 
             // Add the asset to the procedural asset database
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
