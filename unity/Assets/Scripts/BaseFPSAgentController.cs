@@ -4703,10 +4703,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Add the asset to the procedural asset database
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
-            go.transform.parent = assetDb.transform;
             if (assetDb != null) {
                 assetDb.prefabs.Add(go);
             }
+
+            // get child object on assetDb's game object that's called "Prefabs"
+            // and add the prefab to that
+            var prefabParentTransform = assetDb.transform.Find("Prefabs");
+            if (prefabParentTransform == null) {
+                var prefabParent = new GameObject("Prefabs");
+                prefabParent.transform.parent = assetDb.transform;
+                prefabParent.SetActive(false);
+                prefabParentTransform = prefabParent.transform;
+            }
+            go.transform.parent = prefabParentTransform;
 
             actionFinished(success: true);
         }
