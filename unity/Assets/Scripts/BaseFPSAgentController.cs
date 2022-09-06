@@ -4538,6 +4538,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void CreateObjectPrefab(
             Vector3[] vertices,
+            Vector3[] normals,
             string name,
             int[] triangles,
             Vector2[]? uvs = null,
@@ -4558,6 +4559,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Mesh mesh = new Mesh();
             mesh.vertices = vertices;
             mesh.triangles = triangles;
+            mesh.normals = normals;
             if (uvs != null) {
                 mesh.uv = uvs;
             }
