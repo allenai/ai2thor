@@ -1541,8 +1541,8 @@ public class JointMetadata {
     public Vector4 rotation;
     public Vector4 rootRelativeRotation;
     public Vector4 localRotation;
-    public float armBaseHeight;
-    public float elbowOrientation;
+    public float? armBaseHeight;
+    public float? elbowOrientation;
 }
 
 [Serializable]
