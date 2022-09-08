@@ -66,7 +66,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 oldLocalPosition = posRotManip.transform.localPosition;
             float oldLocalRotationAngle;
             Vector3 oldLocalRotationAxis;
-            posRotManip.transform.localRotation.ToAngleAxis(out oldLocalRotationAngle, out oldLocalRotationAxis);
+            posRotManip.transform.localRotation.ToAngleAxis(angle: out oldLocalRotationAngle, axis: out oldLocalRotationAxis);
             float oldArmHeight = heightManip.transform.localPosition.y;
             float oldElbowOrientation = elbowManip.transform.localEulerAngles.z;
             
@@ -76,7 +76,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (rotation == null) {
-                rotation = Vector4.zero;
+                rotation = new Vector4(1f, 0f, 0f, 0f);
             }
 
             if (armHeight == null) {
@@ -98,14 +98,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!worldRelative) {
                     posRotManip.transform.localPosition = (Vector3)position;
                     posRotManip.transform.localRotation = Quaternion.AngleAxis(
-                        ((Vector4)rotation).x % 360,
-                        new Vector3(((Vector4)rotation).y, ((Vector4)rotation).z, ((Vector4)rotation).w)
+                        ((Vector4)rotation).w % 360,
+                        new Vector3(((Vector4)rotation).x, ((Vector4)rotation).y, ((Vector4)rotation).z)
                     );
             } else {
                     posRotManip.transform.position = (Vector3)position;
                     posRotManip.transform.rotation = Quaternion.AngleAxis(
-                        ((Vector4)rotation).x % 360,
-                        new Vector3(((Vector4)rotation).y, ((Vector4)rotation).z, ((Vector4)rotation).w)
+                        ((Vector4)rotation).w % 360,
+                        new Vector3(((Vector4)rotation).x, ((Vector4)rotation).y, ((Vector4)rotation).z)
                     );
             }
 

@@ -802,7 +802,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             // ROOT-JOINT RELATIVE ROTATION
             // Root-forward and agent-forward are always the same
 
-            //Grab rotation of current joint's angler relative to root joint
+            // Grab rotation of current joint's angler relative to root joint
             currentRotation = Quaternion.Inverse(armBase.rotation) * joint.GetChild(0).rotation;
 
             // Check that root-relative rotation is angle-axis-notation-compatible
@@ -830,6 +830,9 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             } else {
                 // Special case for robot_arm_1_jnt because it has no parent-joint
                 jointMeta.localRotation = jointMeta.rootRelativeRotation;
+
+                jointMeta.armBaseHeight = this.transform.localPosition.y;
+                jointMeta.elbowOrientation = elbowTarget.localEulerAngles.z;
             }
 
             joints.Add(jointMeta);
