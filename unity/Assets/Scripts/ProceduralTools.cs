@@ -462,7 +462,6 @@ namespace Thor.Procedural {
             var index = 0;
             foreach (var wallTuples in zip3) {
                 foreach ((Wall w0, Wall w1, Wall w2) in wallTuples) {
-                    Debug.Log("~~~~~~~ Wall: " + w0.id);
                     if (!w0.empty) {
                         var wallGO = createAndJoinWall(
                             index,
