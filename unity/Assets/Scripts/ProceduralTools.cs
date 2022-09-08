@@ -447,35 +447,42 @@ namespace Thor.Procedural {
         public static GameObject createWalls(IEnumerable<Wall> walls, AssetMap<Material> materialDb, ProceduralParameters proceduralParameters, string gameObjectId = "Structure") {
             var structure = new GameObject(gameObjectId);
 
-            var zip3 = walls.Zip(
+            var wallsPerRoom = walls.GroupBy(w => w.roomId).Select(m => m.ToList()).ToList();
+
+            var zip3 = wallsPerRoom.Select( walls => walls.Zip(
                 walls.Skip(1).Concat(new Wall[] { walls.FirstOrDefault() }),
                 (w0, w1) => (w0, w1)
             ).Zip(
                 new Wall[] { walls.LastOrDefault() }.Concat(walls.Take(walls.Count() - 1)),
                 (wallPair, w2) => (wallPair.w0, w2, wallPair.w1)
-            ).ToArray();
+            )).ToList();
+
+            // zip3 = zip3.Reverse().ToArray();
 
             var index = 0;
-            foreach ((Wall w0, Wall w1, Wall w2) in zip3) {
-                if (!w0.empty) {
-                    var wallGO = createAndJoinWall(
-                        index,
-                        materialDb,
-                        w0,
-                        w1, 
-                        w2,
-                        squareTiling: proceduralParameters.squareTiling,
-                        minimumBoxColliderThickness: proceduralParameters.minWallColliderThickness,
-                        layer: (
-                            String.IsNullOrEmpty(w0.layer)
-                            ? LayerMask.NameToLayer("SimObjVisible")
-                            : LayerMask.NameToLayer(w0.layer)
-                        ), 
-                        backFaces: false // TODO param from json
-                    );
+            foreach (var wallTuples in zip3) {
+                foreach ((Wall w0, Wall w1, Wall w2) in wallTuples) {
+                    Debug.Log("~~~~~~~ Wall: " + w0.id);
+                    if (!w0.empty) {
+                        var wallGO = createAndJoinWall(
+                            index,
+                            materialDb,
+                            w0,
+                            w1, 
+                            w2,
+                            squareTiling: proceduralParameters.squareTiling,
+                            minimumBoxColliderThickness: proceduralParameters.minWallColliderThickness,
+                            layer: (
+                                String.IsNullOrEmpty(w0.layer)
+                                ? LayerMask.NameToLayer("SimObjVisible")
+                                : LayerMask.NameToLayer(w0.layer)
+                            ), 
+                            backFaces: false // TODO param from json
+                        );
 
-                    wallGO.transform.parent = structure.transform;
-                    index++;
+                        wallGO.transform.parent = structure.transform;
+                        index++;
+                    }
                 }
             }
             return structure;
@@ -937,7 +944,7 @@ namespace Thor.Procedural {
 
 
             var prevOffset = getWallMaterialOffset(previous.id).GetValueOrDefault(Vector2.zero);
-            var offsetX = (prev_p0p1.magnitude / previous.materialTilingXDivisor) - Mathf.Floor(prev_p0p1.magnitude / previous.materialTilingXDivisor) + prevOffset.x;
+            var offsetX = (prev_p0p1.magnitude / previous.material.tilingDivisorX.GetValueOrDefault(1.0f)) - Mathf.Floor(prev_p0p1.magnitude / previous.material.tilingDivisorX.GetValueOrDefault(1.0f)) + prevOffset.x;
 
             var shaderName = toCreate.material == null || string.IsNullOrEmpty(toCreate.material.shader) ? "Standard" : toCreate.material.shader;
             // TODO Offset Y would require to get joining walls from above and below 
