@@ -381,12 +381,7 @@ namespace Thor.Procedural.Data {
         public float metallic;
         public float smoothness;
     }
-
-    // TODO more general
-    // public class House<T> where T : Room
-    // {
-
-    // }
+    
     public interface WallRectangularHole {
         string id { get; set; }
         string assetId { get; set; }
@@ -401,31 +396,6 @@ namespace Thor.Procedural.Data {
 
         Vector3? scale { get; set; }
         SerializableColor color { get; set; }
-    }
-
-    [Serializable]
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class SerializableCollider {
-        public Vector3[] vertices;
-        public int[] triangles;
-    }
-
-    [Serializable]
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class PhysicalProperties {
-        public float mass = 1;
-        public float drag = 0;
-        public float angularDrag = 0.05f;
-        public bool useGravity = true;
-        public bool isKinematic = false;
-    }
-
-    [Serializable]
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class ObjectAnnotations {
-        public string objectType = "Undefined";
-        public string primaryProperty = "Undefined";
-        public string[]? secondaryProperties = null;
     }
 
     [Serializable]
