@@ -447,35 +447,41 @@ namespace Thor.Procedural {
         public static GameObject createWalls(IEnumerable<Wall> walls, AssetMap<Material> materialDb, ProceduralParameters proceduralParameters, string gameObjectId = "Structure") {
             var structure = new GameObject(gameObjectId);
 
-            var zip3 = walls.Zip(
+            var wallsPerRoom = walls.GroupBy(w => w.roomId).Select(m => m.ToList()).ToList();
+
+            var zip3 = wallsPerRoom.Select( walls => walls.Zip(
                 walls.Skip(1).Concat(new Wall[] { walls.FirstOrDefault() }),
                 (w0, w1) => (w0, w1)
             ).Zip(
                 new Wall[] { walls.LastOrDefault() }.Concat(walls.Take(walls.Count() - 1)),
                 (wallPair, w2) => (wallPair.w0, w2, wallPair.w1)
-            ).ToArray();
+            )).ToList();
+
+            // zip3 = zip3.Reverse().ToArray();
 
             var index = 0;
-            foreach ((Wall w0, Wall w1, Wall w2) in zip3) {
-                if (!w0.empty) {
-                    var wallGO = createAndJoinWall(
-                        index,
-                        materialDb,
-                        w0,
-                        w1, 
-                        w2,
-                        squareTiling: proceduralParameters.squareTiling,
-                        minimumBoxColliderThickness: proceduralParameters.minWallColliderThickness,
-                        layer: (
-                            String.IsNullOrEmpty(w0.layer)
-                            ? LayerMask.NameToLayer("SimObjVisible")
-                            : LayerMask.NameToLayer(w0.layer)
-                        ), 
-                        backFaces: false // TODO param from json
-                    );
+            foreach (var wallTuples in zip3) {
+                foreach ((Wall w0, Wall w1, Wall w2) in wallTuples) {
+                    if (!w0.empty) {
+                        var wallGO = createAndJoinWall(
+                            index,
+                            materialDb,
+                            w0,
+                            w1, 
+                            w2,
+                            squareTiling: proceduralParameters.squareTiling,
+                            minimumBoxColliderThickness: proceduralParameters.minWallColliderThickness,
+                            layer: (
+                                String.IsNullOrEmpty(w0.layer)
+                                ? LayerMask.NameToLayer("SimObjVisible")
+                                : LayerMask.NameToLayer(w0.layer)
+                            ), 
+                            backFaces: false // TODO param from json
+                        );
 
-                    wallGO.transform.parent = structure.transform;
-                    index++;
+                        wallGO.transform.parent = structure.transform;
+                        index++;
+                    }
                 }
             }
             return structure;
@@ -613,7 +619,7 @@ namespace Thor.Procedural {
             Vector3 c = vertices[index2];
             Vector3 cross = Vector3.Cross(a-b, a-c);
             float area = cross.magnitude * 0.5f;
-            Debug.Log($"Area between {index0}, {index1}, {index2} = {area}");
+            // Debug.Log($"Area between {index0}, {index1}, {index2} = {area}");
             return area;
         }
 
@@ -776,10 +782,20 @@ namespace Thor.Procedural {
                         + Vector3.up * offset.y
 
                     };
+                
+                // This would be for a left hand local axis space, so front being counter-clockwise of topdown polygon from inside the polygon
+                // triangles = new List<int>() {
+                //      0, 1, 2, 1, 3, 2, 1, 4, 3, 3, 4, 5, 4, 6, 5, 5, 6, 7, 7, 6, 0, 0, 2, 7
+                // };
 
                 triangles = new List<int>() {
-                     0, 1, 2, 1, 3, 2, 1, 4, 3, 3, 4, 5, 4, 6, 5, 5, 6, 7, 7, 6, 0, 0, 2, 7};
-
+                    7, 2, 0, 0, 6, 7, 7, 6, 5, 5, 6, 4, 5, 4, 3, 3, 4, 1, 2, 3, 1, 2, 1, 0
+                };
+                
+                if (toCreate.id == "wall_0_2") {
+                    
+                    Debug.Log($"---------- globalPos: {globalVertexPositions}, p0: {p0.ToString("F5")}, p1: {p0.ToString("F5")}, p0p1_norm: {p0p1_norm.ToString("F5")}, offset: {offset}");
+                }
                 var toRemove = new List<int>();
                 // const float areaEps = 1e-4f;
                 for (int i = 0; i < triangles.Count/3; i++) {
@@ -807,14 +823,17 @@ namespace Thor.Procedural {
                         p1 +  new Vector3(0.0f, toCreate.height, 0.0f),
                         p1
                     };
+                
+                // triangles = new List<int>() { 1, 2, 0, 2, 3, 0 };
 
-                triangles = new List<int>() { 1, 2, 0, 2, 3, 0 };
+                // Right hand rule
+                triangles = new List<int>() { 0, 3, 2, 0, 2, 1 };
                 if (generateBackFaces) {
                     triangles.AddRange(triangles.AsEnumerable().Reverse().ToList());
                 }
             }
 
-            normals = Enumerable.Repeat(-normal, vertices.Count).ToList();
+            normals = Enumerable.Repeat(normal, vertices.Count).ToList();//.Concat(Enumerable.Repeat(-normal, vertices.Count)).ToList();
 
             uv = vertices.Select(v =>
                 new Vector2(Vector3.Dot(p0p1_norm, v - p0) / width, v.y / toCreate.height))
@@ -924,7 +943,7 @@ namespace Thor.Procedural {
 
 
             var prevOffset = getWallMaterialOffset(previous.id).GetValueOrDefault(Vector2.zero);
-            var offsetX = (prev_p0p1.magnitude / previous.materialTilingXDivisor) - Mathf.Floor(prev_p0p1.magnitude / previous.materialTilingXDivisor) + prevOffset.x;
+            var offsetX = (prev_p0p1.magnitude / previous.material.tilingDivisorX.GetValueOrDefault(1.0f)) - Mathf.Floor(prev_p0p1.magnitude / previous.material.tilingDivisorX.GetValueOrDefault(1.0f)) + prevOffset.x;
 
             var shaderName = toCreate.material == null || string.IsNullOrEmpty(toCreate.material.shader) ? "Standard" : toCreate.material.shader;
             // TODO Offset Y would require to get joining walls from above and below 
