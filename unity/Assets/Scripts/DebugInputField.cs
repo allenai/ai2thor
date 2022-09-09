@@ -3444,6 +3444,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "telearm": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "TeleportArm";
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
                 case "expfit": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "WhichContainersDoesAvailableObjectFitIn";
