@@ -5208,16 +5208,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 lp.type = LightType.GetName(typeof(LightType), hikari.type);
                 lp.position = hikari.transform.position;
                 lp.localPosition = hikari.transform.localPosition;
-                
-                //culling mask stuff
 
-                //we gotta somehow do the opposite of THIS
-                // if (lightParams.cullingMaskOff != null) {
-                //     foreach (var layer in lightParams.cullingMaskOff) {
-                //         light.cullingMask &= ~(1 << LayerMask.NameToLayer(layer));
-                //     }
-                // }
-                
+                //culling mask stuff
+                List<string> cullingMaskOff = new List<String>();
+
+                for (int i = 0; i < UtilityFunctions.maxUnityLayerCount; ++i) {
+                    //check what layers are off for this light's mask
+                    if (((1 << i) & hikari.cullingMask) == 0) {
+                        //check if this layer is actually being used (ie: has a name)
+                        if (LayerMask.LayerToName(i).Length != 0) {
+                            cullingMaskOff.Add(LayerMask.LayerToName(i));
+                        }
+                    }
+                }
+
+                lp.cullingMaskOff = cullingMaskOff.ToArray();
 
                 lp.rotation = FlexibleRotation.fromQuaternion(hikari.transform.rotation);
                 lp.intensity = hikari.intensity;
