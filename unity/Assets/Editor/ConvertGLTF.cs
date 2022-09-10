@@ -94,7 +94,7 @@ public class ConvertGLTF : MonoBehaviour
 
     [MenuItem("ConvertGLTF/Convert prefab models to glb format")]
     public static void ConvertObjectToGLB() {
-        var path = EditorUtility.SaveFolderPanel("glTF Export Path", GLTFSceneExporter.SaveFolderPath, "");
+        var path = EditorUtility.SaveFolderPanel("glTF Export Path", GLTFSceneExporter.SaveFolderPath, "ai2thor-object");
         GLTFSceneExporter.SaveFolderPath = path;
         Debug.Log(GLTFSceneExporter.SaveFolderPath);
 
@@ -113,15 +113,14 @@ public class ConvertGLTF : MonoBehaviour
 
     [MenuItem("ConvertGLTF/Convert scene objects to glb format")]
     public static void ConvertSceneToGLB() {
-        var path = EditorUtility.SaveFolderPanel("glTF Export Path", GLTFSceneExporter.SaveFolderPath, "");
+        var path = EditorUtility.SaveFolderPanel("glTF Export Path", GLTFSceneExporter.SaveFolderPath, "ai2thor-scene");
 
         string[] scene_guids = AssetDatabase.FindAssets("t:Scene", new string[] {"Assets/Scenes"});
         foreach (string scene_guid in scene_guids) {
             var scene_path = AssetDatabase.GUIDToAssetPath(scene_guid);
-            Debug.Log(scene_path);
-            
             Scene scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scene_path);
             string output_dir = path + "/" + scene.name;
+            Directory.CreateDirectory(output_dir);
             GLTFSceneExporter.SaveFolderPath = output_dir;
             Debug.Log(GLTFSceneExporter.SaveFolderPath);
             GameObject[] roots = scene.GetRootGameObjects();
@@ -134,7 +133,6 @@ public class ConvertGLTF : MonoBehaviour
                     }
                 }
             }
-            break;
         }
     }
 
