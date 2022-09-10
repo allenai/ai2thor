@@ -119,13 +119,13 @@ public class ConvertGLTF : MonoBehaviour
         foreach (string scene_guid in scene_guids) {
             var scene_path = AssetDatabase.GUIDToAssetPath(scene_guid);
             Scene scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scene_path);
-            string output_dir = path + "/" + scene.name;
-            Directory.CreateDirectory(output_dir);
-            GLTFSceneExporter.SaveFolderPath = output_dir;
-            Debug.Log(GLTFSceneExporter.SaveFolderPath);
             GameObject[] roots = scene.GetRootGameObjects();
             foreach (GameObject root in roots) {
                 if (root.name == "Objects" || root.name == "Structure") {
+                    string output_dir = path + "/" + scene.name + "/" + root.name;
+                    Directory.CreateDirectory(output_dir);
+                    GLTFSceneExporter.SaveFolderPath = output_dir;
+                    Debug.Log(GLTFSceneExporter.SaveFolderPath);
                     foreach (Transform child in root.transform) {
                         Debug.Log(child.name);
                         GameObject game_object = child.gameObject;
@@ -133,6 +133,7 @@ public class ConvertGLTF : MonoBehaviour
                     }
                 }
             }
+            break;
         }
     }
 
