@@ -1556,7 +1556,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.m_Camera,
                 this.maxVisibleDistance,
                 out interactable,
-                this.simObjFilter));
+                simObjects));
 
             HashSet<SimObjPhysics> interactableSimObjsHash = new HashSet<SimObjPhysics>(interactable);
 
