@@ -19,6 +19,8 @@ PUBLIC_WEBGL_S3_BUCKET = "ai2-thor-webgl-public"
 PRIVATE_S3_BUCKET = "ai2-thor-private"
 PYPI_S3_BUCKET = "ai2-thor-pypi"
 
+TEST_OUTPUT_DIRECTORY = "../../images-debug"
+
 LOCAL_BUILD_COMMIT_ID = "local"
 AUTO_BUILD_PLATFORMS = [OSXIntel64, Linux64, CloudRendering]
 

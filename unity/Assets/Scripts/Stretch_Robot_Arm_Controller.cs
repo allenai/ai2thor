@@ -45,6 +45,10 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
     public CollisionListener collisionListener;
 
+    public GameObject GetArmTarget() {
+        return armTarget.gameObject;
+    }
+
     void Start() {
         this.collisionListener = this.GetComponentInParent<CollisionListener>();
         this.collisionListener.registerAllChildColliders();
@@ -685,7 +689,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             }
 
             // ROOT-JOINT RELATIVE ROTATION
-            //Grab rotation of current joint's angler relative to root joint
+            // Grab rotation of current joint's angler relative to root joint
             currentRotation = Quaternion.Inverse(armBase.rotation) * joint.rotation;
 
             // Check that root-relative rotation is angle-axis-notation-compatible
