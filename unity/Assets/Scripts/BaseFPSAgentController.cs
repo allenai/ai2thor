@@ -1542,12 +1542,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public virtual ObjectMetadata[] generateObjectMetadata() {
-            SimObjPhysics[] simObjects = null;
-            if (this.simObjFilter != null) {
-                simObjects = this.simObjFilter;
-            } else {
-                simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+        public virtual ObjectMetadata[] generateObjectMetadata(SimObjPhysics[] simObjects = null) {
+            if (simObjects == null) {
+                if (this.simObjFilter != null) {
+                    simObjects = this.simObjFilter;
+                } else {
+                    simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+                }
             }
 
             SimObjPhysics[] interactable;
@@ -1714,6 +1715,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             objMeta.axisAlignedBoundingBox = simObj.AxisAlignedBoundingBox;
 
             return objMeta;
+        }
+
+        public void GetObjectMetadata(List<string> objectIds) {
+            List<SimObjPhysics> sops = new List<SimObjPhysics>();
+            foreach (string objectId in objectIds) {
+                if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                    sops.Add(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
+                } else {
+                    Debug.Log($"Object ID {objectId} not found in scene.");
+                    continue;
+                }
+            }
+
+            var objectMetadata = generateObjectMetadata(sops.ToArray());
+            actionFinishedEmit(true, objectMetadata);
         }
 
         public SceneBounds GenerateSceneBounds(Bounds bounding) {
