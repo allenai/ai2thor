@@ -5197,6 +5197,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetLights() {
+            print("GetLights in BASE happening now");
+            //debug
+            #if UNITY_EDITOR
+            List<LightParameters> lights = UtilityFunctions.GetLightPropertiesOfScene();
+            UtilityFunctions.debugGetLightPropertiesOfScene(lights);
+            #endif
+
             actionFinishedEmit(true, UtilityFunctions.GetLightPropertiesOfScene());
         }
 

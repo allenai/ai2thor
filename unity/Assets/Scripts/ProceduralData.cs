@@ -45,9 +45,7 @@ namespace Thor.Procedural.Data {
         public string type { get; set; }
         public Vector3 position { get; set; }
         public Vector3 localPosition { get; set; }
-
         public string[] cullingMaskOff { get; set;}
-
         public FlexibleRotation rotation;
         public float intensity { get; set; }
         public float indirectMultiplier { get; set; }

@@ -268,6 +268,8 @@ public static class UtilityFunctions {
     }
 
     public static List<LightParameters> GetLightPropertiesOfScene() {
+
+            Debug.Log("we are inside GetLIghtPropertiesOfScene");
             var lightsInScene = UnityEngine.Object.FindObjectsOfType<Light>(true);
 
             List<LightParameters> allOfTheLights = new List<LightParameters>();
@@ -325,6 +327,8 @@ public static class UtilityFunctions {
                         resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), hikari.shadowResolution)
                 };
 
+                lp.shadow = xemnas;
+
                 //linked sim object
                 //lp.linkedSimObj = ;
 
@@ -338,84 +342,80 @@ public static class UtilityFunctions {
                 allOfTheLights.Add(lp);
             }
 
+            //find all sim obj physics in scene
+
             return allOfTheLights;
     }
 
 #if UNITY_EDITOR
 
     public static void debugGetLightPropertiesOfScene(List<LightParameters> lights) {
+        Debug.Log("we are inside debugGetLightProperties...");
+
         var file = "debugLightProperties.txt";
         var create = File.CreateText("Assets/DebugTextFiles/" + file);
 
-        foreach(LightParameters lp in lights) {
-            create.WriteLine($"ID: {lp.id} \n");
-            create.WriteLine($"\n");
+        create.WriteLine($"Total number of Lights in scene: {lights.Count()}");
 
-            create.WriteLine($"Type: {lp.type} \n");
-            create.WriteLine($"\n");
+        foreach (LightParameters lp in lights) {
+            create.WriteLine($"ID: {lp.id}");
 
-            create.WriteLine($"position: {lp.position} \n");
-            create.WriteLine($"\n");
+            create.WriteLine($"Type: {lp.type}");
 
-            create.WriteLine($"localPosition: {lp.localPosition} \n");
-            create.WriteLine($"\n");
+            create.WriteLine($"position: {lp.position}");
+
+            create.WriteLine($"localPosition: {lp.localPosition}");
 
             if (lp.cullingMaskOff.Length > 0) {
-                create.WriteLine($"Culling Mask Off Layers:\n");
+                create.WriteLine($"Culling Mask Off Layers:");
 
                 foreach (string s in lp.cullingMaskOff) {
-                    create.WriteLine(s + "\n");
+                    create.WriteLine("     " + s);
                 }
+            } else {
+                create.WriteLine($"Culling Mask Off Layers: none");
             }
 
-            else {
-                create.WriteLine($"Culling Mask Off Layers: none \n");
-            }
-            create.WriteLine($"\n");
+            create.WriteLine($"rotation degrees: {lp.rotation.degrees}");
 
-            create.WriteLine($"rotation degrees: {lp.rotation.degrees} \n");
-            create.WriteLine($"\n");
+            create.WriteLine($"rotation axis: {lp.rotation.axis}");
 
-            create.WriteLine($"rotation axis: {lp.rotation.axis} \n");
-            create.WriteLine($"\n");
+            create.WriteLine($"intensity: {lp.intensity}");
 
-            create.WriteLine($"intensity: {lp.intensity} \n");
-            create.WriteLine($"\n");
+            create.WriteLine($"indirect Multiplier: {lp.indirectMultiplier}");
 
-            create.WriteLine($"indirect Multiplier: {lp.indirectMultiplier} \n");
-            create.WriteLine($"\n");
-
-            create.WriteLine($"range: {lp.range} \n");
-            create.WriteLine($"\n");
+            create.WriteLine($"range: {lp.range}");
 
             //this should be 0 if not a spotlight
-            create.WriteLine($"spotAngle: {lp.intensity} \n");
-            create.WriteLine($"\n");
+            if (Mathf.Approximately(lp.spotAngle, 0.0f)) {
+                create.WriteLine("spotAngle: not a spot light!");
+            } else {
+                create.WriteLine($"spotAngle: {lp.spotAngle}");
+            }
 
-            create.WriteLine($"rgba: {lp.rgb.r} {lp.rgb.g} {lp.rgb.b} {lp.rgb.a} \n");
-            create.WriteLine($"\n");
+            create.WriteLine($"rgba: {lp.rgb.r} {lp.rgb.g} {lp.rgb.b} {lp.rgb.a}");
 
-            create.WriteLine($"shadow params: \n");
-            create.WriteLine($"shadow type: {lp.shadow.type} \n");
-            create.WriteLine($"shadow strength: {lp.shadow.strength} \n");
-            create.WriteLine($"shadow normalBias: {lp.shadow.normalBias} \n");
-            create.WriteLine($"shadow bias: {lp.shadow.bias} \n");
-            create.WriteLine($"shadow nearPlane: {lp.shadow.nearPlane} \n");
-            create.WriteLine($"shadow resolution: {lp.shadow.resolution} \n");
-            create.WriteLine($"\n");
+            if (lp.shadow != null) {
+                create.WriteLine($"shadow params:");
+                create.WriteLine($"     shadow type: {lp.shadow.type}");
+                create.WriteLine($"     shadow strength: {lp.shadow.strength}");
+                create.WriteLine($"     shadow normalBias: {lp.shadow.normalBias}");
+                create.WriteLine($"     shadow bias: {lp.shadow.bias}");
+                create.WriteLine($"     shadow nearPlane: {lp.shadow.nearPlane}");
+                create.WriteLine($"     shadow resolution: {lp.shadow.resolution}");
+            } else {
+                create.WriteLine($"shadow params NULL!!!");
+            }
 
-            create.WriteLine($"linkedSimObj: {lp.linkedSimObj} \n");
-            create.WriteLine($"\n");
+            create.WriteLine($"linkedSimObj: {lp.linkedSimObj}");
 
             create.WriteLine($"enabled: {lp.enabled}");
-            create.WriteLine($"\n");
 
             create.WriteLine($"parent Sim Obj Id: {lp.parentSimObjId}");
-            create.WriteLine($"\n");
 
             create.WriteLine($"parent Sim Obj Name: {lp.parentSimObjName}");
-            create.WriteLine($"\n");
-            create.WriteLine($"\n");
+
+            create.WriteLine("");
         }
 
         create.Close();
