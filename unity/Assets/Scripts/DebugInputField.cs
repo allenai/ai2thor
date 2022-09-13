@@ -3687,6 +3687,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // public void CreateRoom(Wall[] walls, float wallHeight, string wallMaterialId, string floorMaterialId, string ceilingMaterialId, float wallThickness = 0.0f, string namePostFix = "") {
 
                     }
+                case "newScene": {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan402_physics");
+                    break;
+                }
+                case "newScene2": {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene("Procedural");
+                    break;
+                }
                 case "ch": {
 
                         Dictionary<string, object> action = new Dictionary<string, object>();
