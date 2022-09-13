@@ -5197,66 +5197,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetLights() {
-            var lightsInScene = UnityEngine.Object.FindObjectsOfType<Light>(true);
-
-            List<PhysicsSceneManager.LightProperties> allOfTheLights = new List<PhysicsSceneManager.LightProperties>();
-
-            //generate the LightParameters for all lights in the scene
-            foreach (Light hikari in lightsInScene) {
-                LightParameters lp = new LightParameters();
-                lp.id = hikari.transform.name;
-                lp.type = LightType.GetName(typeof(LightType), hikari.type);
-                lp.position = hikari.transform.position;
-                lp.localPosition = hikari.transform.localPosition;
-
-                //culling mask stuff
-                List<string> cullingMaskOff = new List<String>();
-
-                for (int i = 0; i < UtilityFunctions.maxUnityLayerCount; ++i) {
-                    //check what layers are off for this light's mask
-                    if (((1 << i) & hikari.cullingMask) == 0) {
-                        //check if this layer is actually being used (ie: has a name)
-                        if (LayerMask.LayerToName(i).Length != 0) {
-                            cullingMaskOff.Add(LayerMask.LayerToName(i));
-                        }
-                    }
-                }
-
-                lp.cullingMaskOff = cullingMaskOff.ToArray();
-
-                lp.rotation = FlexibleRotation.fromQuaternion(hikari.transform.rotation);
-                lp.intensity = hikari.intensity;
-                lp.indirectMultiplier = hikari.bounceIntensity;
-                lp.range = hikari.range;
-                //only do this if this is a spot light
-                if(hikari.type == LightType.Spot) {
-                    lp.spotAngle = hikari.spotAngle;
-                }
-
-                lp.rgb = new SerializableColor() { r = hikari.color.r, g = hikari.color.g, b = hikari.color.b, a = hikari.color.a };
-                
-                //generate shadow params
-                ShadowParameters xemnas = new ShadowParameters() {
-                        strength = hikari.shadowStrength,
-                        type = Enum.GetName(typeof(LightShadows), hikari.shadows),
-                        normalBias = hikari.shadowNormalBias,
-                        bias = hikari.shadowBias,
-                        nearPlane = hikari.shadowNearPlane,
-                        resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), hikari.shadowResolution)
-                };
-
-                //linked sim object
-                //lp.linkedSimObj = ;
-
-                lp.enabled = hikari.enabled;
-
-                if(hikari.GetComponentInParent<SimObjPhysics>()) {
-                    lp.parentSimObjID = hikari.GetComponentInParent<SimObjPhysics>().objectID;
-                    lp.parentSimObjName = hikari.GetComponentInParent<SimObjPhysics>().transform.name;
-                }
-            }
-
-            actionFinishedEmit(true, allOfTheLights);
+            actionFinishedEmit(true, UtilityFunctions.GetLightPropertiesOfScene());
         }
 
         public void SetLights() {

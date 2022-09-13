@@ -44,27 +44,6 @@ public class PhysicsSceneManager : MonoBehaviour {
     public int AdvancePhysicsStepCount;
     public static uint PhysicsSimulateCallCount;
 
-    public class LightProperties {
-        public UnityEngine.LightType type; //Directional, Point, Spot, Area (we currently don't use Area lights)
-        public Vector3 position;
-        public Vector3 rotation; //need to parse as quaternion later
-        public float range; //point and spot lights only
-        public float intensity;
-        public float spotAngle; //spot lights only
-        //color (r, g, b, a)
-        public float r; 
-        public float g;
-        public float b;
-        public float a;
-    }
-
-
-
-    //Light Manager
-    public void cacheLightProperties () {
-
-    }
-
     private void OnEnable() {
         // must do this here instead of Start() since OnEnable gets triggered prior to Start
         // when the component is enabled.

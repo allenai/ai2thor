@@ -8,6 +8,8 @@ using UnityEngine.SceneManagement;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using System.Reflection;
+using Thor.Procedural.Data;
+
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -265,7 +267,160 @@ public static class UtilityFunctions {
         return corners;
     }
 
+    public static List<LightParameters> GetLightPropertiesOfScene() {
+            var lightsInScene = UnityEngine.Object.FindObjectsOfType<Light>(true);
+
+            List<LightParameters> allOfTheLights = new List<LightParameters>();
+
+            //generate the LightParameters for all lights in the scene
+            foreach (Light hikari in lightsInScene) {
+
+                LightParameters lp = new LightParameters();
+
+                lp.id = hikari.transform.name;
+
+                lp.type = LightType.GetName(typeof(LightType), hikari.type);
+
+                lp.position = hikari.transform.position;
+
+                lp.localPosition = hikari.transform.localPosition;
+
+                //culling mask stuff
+                List<string> cullingMaskOff = new List<String>();
+
+                for (int i = 0; i < UtilityFunctions.maxUnityLayerCount; ++i) {
+                    //check what layers are off for this light's mask
+                    if (((1 << i) & hikari.cullingMask) == 0) {
+                        //check if this layer is actually being used (ie: has a name)
+                        if (LayerMask.LayerToName(i).Length != 0) {
+                            cullingMaskOff.Add(LayerMask.LayerToName(i));
+                        }
+                    }
+                }
+
+                lp.cullingMaskOff = cullingMaskOff.ToArray();
+
+                lp.rotation = FlexibleRotation.fromQuaternion(hikari.transform.rotation);
+
+                lp.intensity = hikari.intensity;
+
+                lp.indirectMultiplier = hikari.bounceIntensity;
+
+                lp.range = hikari.range;
+
+                //only do this if this is a spot light
+                if(hikari.type == LightType.Spot) {
+                    lp.spotAngle = hikari.spotAngle;
+                }
+
+                lp.rgb = new SerializableColor() { r = hikari.color.r, g = hikari.color.g, b = hikari.color.b, a = hikari.color.a };
+                
+                //generate shadow params
+                ShadowParameters xemnas = new ShadowParameters() {
+                        strength = hikari.shadowStrength,
+                        type = Enum.GetName(typeof(LightShadows), hikari.shadows),
+                        normalBias = hikari.shadowNormalBias,
+                        bias = hikari.shadowBias,
+                        nearPlane = hikari.shadowNearPlane,
+                        resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), hikari.shadowResolution)
+                };
+
+                //linked sim object
+                //lp.linkedSimObj = ;
+
+                lp.enabled = hikari.enabled;
+
+                if(hikari.GetComponentInParent<SimObjPhysics>()) {
+                    lp.parentSimObjId = hikari.GetComponentInParent<SimObjPhysics>().objectID;
+                    lp.parentSimObjName = hikari.GetComponentInParent<SimObjPhysics>().transform.name;
+                }
+
+                allOfTheLights.Add(lp);
+            }
+
+            return allOfTheLights;
+    }
+
 #if UNITY_EDITOR
+
+    public static void debugGetLightPropertiesOfScene(List<LightParameters> lights) {
+        var file = "debugLightProperties.txt";
+        var create = File.CreateText("Assets/DebugTextFiles/" + file);
+
+        foreach(LightParameters lp in lights) {
+            create.WriteLine($"ID: {lp.id} \n");
+            create.WriteLine($"\n");
+
+            create.WriteLine($"Type: {lp.type} \n");
+            create.WriteLine($"\n");
+
+            create.WriteLine($"position: {lp.position} \n");
+            create.WriteLine($"\n");
+
+            create.WriteLine($"localPosition: {lp.localPosition} \n");
+            create.WriteLine($"\n");
+
+            if (lp.cullingMaskOff.Length > 0) {
+                create.WriteLine($"Culling Mask Off Layers:\n");
+
+                foreach (string s in lp.cullingMaskOff) {
+                    create.WriteLine(s + "\n");
+                }
+            }
+
+            else {
+                create.WriteLine($"Culling Mask Off Layers: none \n");
+            }
+            create.WriteLine($"\n");
+
+            create.WriteLine($"rotation degrees: {lp.rotation.degrees} \n");
+            create.WriteLine($"\n");
+
+            create.WriteLine($"rotation axis: {lp.rotation.axis} \n");
+            create.WriteLine($"\n");
+
+            create.WriteLine($"intensity: {lp.intensity} \n");
+            create.WriteLine($"\n");
+
+            create.WriteLine($"indirect Multiplier: {lp.indirectMultiplier} \n");
+            create.WriteLine($"\n");
+
+            create.WriteLine($"range: {lp.range} \n");
+            create.WriteLine($"\n");
+
+            //this should be 0 if not a spotlight
+            create.WriteLine($"spotAngle: {lp.intensity} \n");
+            create.WriteLine($"\n");
+
+            create.WriteLine($"rgba: {lp.rgb.r} {lp.rgb.g} {lp.rgb.b} {lp.rgb.a} \n");
+            create.WriteLine($"\n");
+
+            create.WriteLine($"shadow params: \n");
+            create.WriteLine($"shadow type: {lp.shadow.type} \n");
+            create.WriteLine($"shadow strength: {lp.shadow.strength} \n");
+            create.WriteLine($"shadow normalBias: {lp.shadow.normalBias} \n");
+            create.WriteLine($"shadow bias: {lp.shadow.bias} \n");
+            create.WriteLine($"shadow nearPlane: {lp.shadow.nearPlane} \n");
+            create.WriteLine($"shadow resolution: {lp.shadow.resolution} \n");
+            create.WriteLine($"\n");
+
+            create.WriteLine($"linkedSimObj: {lp.linkedSimObj} \n");
+            create.WriteLine($"\n");
+
+            create.WriteLine($"enabled: {lp.enabled}");
+            create.WriteLine($"\n");
+
+            create.WriteLine($"parent Sim Obj Id: {lp.parentSimObjId}");
+            create.WriteLine($"\n");
+
+            create.WriteLine($"parent Sim Obj Name: {lp.parentSimObjName}");
+            create.WriteLine($"\n");
+            create.WriteLine($"\n");
+        }
+
+        create.Close();
+    }
+
     [MenuItem("SimObjectPhysics/Toggle Off PlaceableSurface Material")]
     private static void ToggleOffPlaceableSurface() {
         for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
