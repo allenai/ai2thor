@@ -1028,13 +1028,15 @@ class Controller(object):
             )
 
         if self.gpu_device is not None:
-            # This parameter only applies to the CloudRendering platform.
-            # Vulkan maps the passed in parameter to device-index - 1 when compared
-            # to the nvidia-smi device ids
-            device_index = (
-                self.gpu_device if self.gpu_device < 1 else self.gpu_device + 1
-            )
-            command += " -force-device-index %d" % device_index
+            # TODO: it seems the below is no longer true, but we should design some tests for this.
+            ## This parameter only applies to the CloudRendering platform.
+            ## Vulkan maps the passed in parameter to device-index - 1 when compared
+            ## to the nvidia-smi device ids
+            # device_index = (
+            #     self.gpu_device if self.gpu_device < 1 else self.gpu_device + 1
+            # )
+
+            command += f" -force-device-index {self.gpu_device}"
 
         return shlex.split(command)
 
