@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.9431683, g: 0.96826845, b: 0.779442, a: 1}
+  m_IndirectSpecularColor: {r: 0.9431757, g: 0.968267, b: 0.7794459, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1240,7 +1240,7 @@ GameObject:
   - component: {fileID: 109438312}
   - component: {fileID: 109438311}
   m_Layer: 0
-  m_Name: Directional Light
+  m_Name: scene|Directional|0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4934,6 +4934,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1050279905}
     m_Modifications:
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_Name
+      value: QuadDecalSpawnPlane
+      objectReference: {fileID: 0}
     - target: {fileID: 1062225026207406, guid: f3c85a2888bde4483ad75ec2f8ec0a2a, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -5033,11 +5038,6 @@ PrefabInstance:
     - target: {fileID: 4619907589594400, guid: f3c85a2888bde4483ad75ec2f8ec0a2a, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0.00002803692
-      objectReference: {fileID: 0}
-    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
-        type: 3}
-      propertyPath: m_Name
-      value: QuadDecalSpawnPlane
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f3c85a2888bde4483ad75ec2f8ec0a2a, type: 3}
@@ -7661,30 +7661,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1050279905}
     m_Modifications:
-    - target: {fileID: 4768110643035840, guid: 28f76e04de332459e81f1814b505d6ca, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.1692822
-      objectReference: {fileID: 0}
-    - target: {fileID: 4768110643035840, guid: 28f76e04de332459e81f1814b505d6ca, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.27833512
-      objectReference: {fileID: 0}
-    - target: {fileID: 4768110643035840, guid: 28f76e04de332459e81f1814b505d6ca, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0.05285334
-      objectReference: {fileID: 0}
-    - target: {fileID: 4768110643035840, guid: 28f76e04de332459e81f1814b505d6ca, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.005587143
-      objectReference: {fileID: 0}
-    - target: {fileID: 4768110643035840, guid: 28f76e04de332459e81f1814b505d6ca, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.17216823
-      objectReference: {fileID: 0}
-    - target: {fileID: 4768110643035840, guid: 28f76e04de332459e81f1814b505d6ca, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.11413804
-      objectReference: {fileID: 0}
     - target: {fileID: 1013655288625828, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -7781,6 +7757,30 @@ PrefabInstance:
         type: 3}
       propertyPath: m_IsKinematic
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4768110643035840, guid: 28f76e04de332459e81f1814b505d6ca, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.1692822
+      objectReference: {fileID: 0}
+    - target: {fileID: 4768110643035840, guid: 28f76e04de332459e81f1814b505d6ca, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.27833512
+      objectReference: {fileID: 0}
+    - target: {fileID: 4768110643035840, guid: 28f76e04de332459e81f1814b505d6ca, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.05285334
+      objectReference: {fileID: 0}
+    - target: {fileID: 4768110643035840, guid: 28f76e04de332459e81f1814b505d6ca, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.005587143
+      objectReference: {fileID: 0}
+    - target: {fileID: 4768110643035840, guid: 28f76e04de332459e81f1814b505d6ca, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.17216823
+      objectReference: {fileID: 0}
+    - target: {fileID: 4768110643035840, guid: 28f76e04de332459e81f1814b505d6ca, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.11413804
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
@@ -11222,7 +11222,7 @@ GameObject:
   - component: {fileID: 1200349762}
   - component: {fileID: 1200349763}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: scene|Point|0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12202,7 +12202,7 @@ GameObject:
   - component: {fileID: 1266755331}
   - component: {fileID: 1266755332}
   m_Layer: 0
-  m_Name: Point light (2)
+  m_Name: scene|Point|1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13143,7 +13143,7 @@ GameObject:
   - component: {fileID: 1341118480}
   - component: {fileID: 1341118481}
   m_Layer: 0
-  m_Name: LightFixtureLight
+  m_Name: scene|Spot|0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15082,7 +15082,7 @@ GameObject:
   - component: {fileID: 1564136500}
   - component: {fileID: 1564136501}
   m_Layer: 0
-  m_Name: Point light (3)
+  m_Name: scene|Point|2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15836,7 +15836,7 @@ GameObject:
   - component: {fileID: 1609751149}
   - component: {fileID: 1609751150}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: scene|Point|3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -17385,6 +17385,11 @@ PrefabInstance:
       propertyPath: m_LocalRotation.z
       value: -0.0000032457606
       objectReference: {fileID: 0}
+    - target: {fileID: 5709373311238687703, guid: bb36ae54483f41a4e91f9e89e29c043e,
+        type: 3}
+      propertyPath: m_Name
+      value: Candle_b34800e7|Point|0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bb36ae54483f41a4e91f9e89e29c043e, type: 3}
 --- !u!1 &1725963923
@@ -18364,7 +18369,7 @@ GameObject:
   - component: {fileID: 1829617714}
   - component: {fileID: 1829617715}
   m_Layer: 0
-  m_Name: LightFixtureLight
+  m_Name: scene|Spot|1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -20555,11 +20560,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1230860342}
     m_Modifications:
-    - target: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
-        type: 3}
-      propertyPath: m_Name
-      value: DeferredDecalSpawnPlane
-      objectReference: {fileID: 0}
     - target: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
       propertyPath: m_Name
       value: ReceptacleTriggerBox (1)
@@ -20633,6 +20633,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Center.z
       value: -0.1692453
+      objectReference: {fileID: 0}
+    - target: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
+        type: 3}
+      propertyPath: m_Name
+      value: DeferredDecalSpawnPlane
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
