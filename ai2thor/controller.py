@@ -1046,7 +1046,7 @@ class Controller(object):
                         raise RuntimeError(
                             "vulkaninfo failed to run, please ask your administrator to"
                             " install `vulkaninfo` (e.g. on Ubuntu systems this requires running"
-                            " `sudo apt install vulkaninfo`)."
+                            " `sudo apt install vulkan-tools`)."
                         )
 
                     current_gpu = None
