@@ -1033,7 +1033,7 @@ class Controller(object):
             # code finds the device_uuids for each GPU and then figures out the mapping
             # between the CUDA device ids and the Vulkan device ids.
 
-            cuda_vulkan_mapping_path = os.path.join(self.releases_dir, "cuda-vulkan-mapping.json")
+            cuda_vulkan_mapping_path = os.path.join(self.base_dir, "cuda-vulkan-mapping.json")
             with LockEx(cuda_vulkan_mapping_path):
                 if not os.path.exists(cuda_vulkan_mapping_path):
                     vulkan_result = subprocess.run(
@@ -1097,7 +1097,8 @@ class Controller(object):
                         json.dump(cuda_vulkan_mapping, f)
                 else:
                     with open(cuda_vulkan_mapping_path, "r") as f:
-                        cuda_vulkan_mapping = json.load(f)
+                        # JSON dictionaries always have strings as keys, need to re-map here
+                        cuda_vulkan_mapping = {int(k):v for k, v in json.load(f).items()}
 
             command += f" -force-device-index {cuda_vulkan_mapping[self.gpu_device]}"
 
