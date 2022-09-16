@@ -584,7 +584,7 @@ namespace Thor.Procedural {
                     var dist = x0 * z1 - x1 * z0;
                     edgeSum += dist;
                 }
-                if (edgeSum > 0) {
+                if (edgeSum < 0) {
                 
                     wallLoop = wallLoop.Reverse<((double row, double col), (double row, double col))>().Select(p => (p.Item2, p.Item1)).ToList();
                 }

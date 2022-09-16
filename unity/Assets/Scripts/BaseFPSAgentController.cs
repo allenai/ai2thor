@@ -4536,6 +4536,44 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        // Pass in paths to the textures on each side. From the Python side,
+        // you may find py360convert useful for converting equirectangular
+        // images to cube maps.
+        public void CreateSkybox(
+            string upTexturePath,
+            string downTexturePath,
+            string leftTexturePath,
+            string rightTexturePath,
+            string frontTexturePath,
+            string backTexturePath
+        ) {
+            Texture2D upTexture = new Texture2D(2, 2);
+            upTexture.LoadImage(File.ReadAllBytes(upTexturePath));
+            Texture2D downTexture = new Texture2D(2, 2);
+            downTexture.LoadImage(File.ReadAllBytes(downTexturePath));
+            Texture2D leftTexture = new Texture2D(2, 2);
+            leftTexture.LoadImage(File.ReadAllBytes(leftTexturePath));
+            Texture2D rightTexture = new Texture2D(2, 2);
+            rightTexture.LoadImage(File.ReadAllBytes(rightTexturePath));
+            Texture2D frontTexture = new Texture2D(2, 2);
+            frontTexture.LoadImage(File.ReadAllBytes(frontTexturePath));
+            Texture2D backTexture = new Texture2D(2, 2);
+            backTexture.LoadImage(File.ReadAllBytes(backTexturePath));
+
+            // set the skybox
+            Material skybox = new Material(Shader.Find("Skybox/6 Sided"));
+            skybox.SetTexture("_FrontTex", frontTexture);
+            skybox.SetTexture("_BackTex", backTexture);
+            skybox.SetTexture("_LeftTex", leftTexture);
+            skybox.SetTexture("_RightTex", rightTexture);
+            skybox.SetTexture("_UpTex", upTexture);
+            skybox.SetTexture("_DownTex", downTexture);
+            RenderSettings.skybox = skybox;
+
+            actionFinished(true);
+        }
+
+
         public void CreateObjectPrefab(
             Vector3[] vertices,
             Vector3[] normals,
