@@ -1623,7 +1623,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             objMeta.toggleable = simObj.IsToggleable;
-            if (objMeta.toggleable) {
+            //note: not all objects that report back `isToggled` are themselves `toggleable`, however they all do have the `CanToggleOnOff` secondary sim object property
+            //this is to account for cases like a [stove burner], which can report `isToggled` but cannot have the "ToggleObjectOn" action performed on them directly, and instead
+            //a [stove knob] linked to the [stove burner] must have a "ToggleObjectOn" action performed on it to have both the knob and burner set to a state of `isToggled = true` 
+            if (simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)) {
                 objMeta.isToggled = simObj.IsToggled;
             }
 
