@@ -1036,13 +1036,17 @@ class Controller(object):
             cuda_vulkan_mapping_path = os.path.join(self.base_dir, "cuda-vulkan-mapping.json")
             with LockEx(cuda_vulkan_mapping_path):
                 if not os.path.exists(cuda_vulkan_mapping_path):
-                    vulkan_result = subprocess.run(
-                        ["vulkaninfo"],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.DEVNULL,
-                        universal_newlines=True
-                    )
-                    if vulkan_result.returncode != 0:
+                    vulkan_result = None
+                    try:
+                        vulkan_result = subprocess.run(
+                            ["vulkaninfo"],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.DEVNULL,
+                            universal_newlines=True
+                        )
+                    except FileNotFoundError:
+                        pass
+                    if vulkan_result is None or vulkan_result.returncode != 0:
                         raise RuntimeError(
                             "vulkaninfo failed to run, please ask your administrator to"
                             " install `vulkaninfo` (e.g. on Ubuntu systems this requires running"
@@ -1062,13 +1066,17 @@ class Controller(object):
                             else:
                                 device_uuid_to_vulkan_gpu_index[device_uuid] = current_gpu
 
-                    nvidiasmi_result = subprocess.run(
-                        ["nvidia-smi", "-L"],
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.DEVNULL,
-                        universal_newlines=True
-                    )
-                    if nvidiasmi_result.returncode != 0:
+                    nvidiasmi_result = None
+                    try:
+                        nvidiasmi_result = subprocess.run(
+                            ["nvidia-smi", "-L"],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.DEVNULL,
+                            universal_newlines=True
+                        )
+                    except FileNotFoundError:
+                        pass
+                    if nvidiasmi_result is None or nvidiasmi_result.returncode != 0:
                         raise RuntimeError(
                             "`nvidia-smi` failed to run. To use CloudRendering, please ensure you have nvidia GPUs"
                             " installed."
