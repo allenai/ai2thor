@@ -1987,11 +1987,37 @@ namespace Thor.Procedural {
             toSpawn.assetID = assetId;
 
             if (scale.HasValue) {
+                Debug.Log("Setting scale to " + scale.Value);
+                Debug.Log("AssetId " + toSpawn.assetID);
+                Debug.Log("Position " + toSpawn.transform.position);
+                Debug.Log("-----------");
                 // get component in child with mesh renderer
-                var meshRenderer = spawned.GetComponentInChildren<MeshRenderer>();
-                if (meshRenderer != null) {
-                    ScaleAround(meshRenderer.transform.gameObject, position, scale.Value);
+
+                // create a new game object
+                // var newChild = new GameObject();
+                // newChild.transform.parent = spawned.transform;
+
+                // // move all the mesh renderers to the new child
+                // var meshRenderer = spawned.GetComponentsInChildren<MeshRenderer>();
+                // if (meshRenderer != null) {
+                //     foreach (var mr in meshRenderer) {
+                //         // mr.transform.localScale = scale.Value;
+                //         mr.transform.parent = newChild.transform;
+                //     }
+                // }
+                ScaleAround(spawned, position, scale.Value);
+                Transform[] children = new Transform[spawned.transform.childCount];
+                for (int i = 0; i < spawned.transform.childCount; i++) {
+                    children[i] = spawned.transform.GetChild(i);
                 }
+
+                // detach all children
+                spawned.transform.DetachChildren();
+                spawned.transform.localScale = Vector3.one;
+                foreach (Transform t in children) {
+                    t.SetParent(spawned.transform);
+                }
+                spawned.GetComponent<SimObjPhysics>().ContextSetUpBoundingBox(forceCacheReset: true);
             }
 
             Shader unlitShader = null;
