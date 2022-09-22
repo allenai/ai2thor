@@ -2983,7 +2983,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "OpenObjectImmediate";
 
                         action["objectId"] = "Cabinet|-00.73|+02.02|-02.46";
-
                         action["openness"] = 1f;
 
                         CurrentActiveController().ProcessControlCommand(action);
