@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
+using System.Linq;
 
 public partial class IK_Robot_Arm_Controller : MonoBehaviour {
     [SerializeField]
-    private Transform armBase, armTarget, handCameraTransform, FirstJoint, FinalJoint;
+    private Transform armBase, armTarget, elbowTarget, handCameraTransform, FirstJoint, FinalJoint;
 
     [SerializeField]
     private SphereCollider magnetSphere = null;
@@ -41,6 +42,21 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
     private const float extendedArmLength = 0.6325f;
 
     public CollisionListener collisionListener;
+
+    public GameObject GetArmBase() {
+        return armBase.gameObject;
+    }
+
+    public GameObject GetArmTarget() {
+        return armTarget.gameObject;
+    }
+        public GameObject GetElbowTarget() {
+        return elbowTarget.gameObject;
+    }
+
+    public GameObject GetMagnetSphere() {
+        return magnetSphere.gameObject;
+    }
 
     void Start() {
         // calculating based on distance from origin of arm to the 2nd joint, which will always be constant
@@ -553,19 +569,15 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         );
     }
 
-    public List<string> WhatObjectsAreInsideMagnetSphereAsObjectID() {
-        return magnetSphereComp.CurrentlyContainedSimObjectsByID();
-    }
-
-    public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphereAsSOP() {
-        return magnetSphereComp.CurrentlyContainedSimObjects();
+    public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphereAsSOP(bool onlyPickupable) {
+        return magnetSphereComp.CurrentlyContainedSimObjects(onlyPickupable: onlyPickupable);
     }
 
     public IEnumerator ReturnObjectsInMagnetAfterPhysicsUpdate(PhysicsRemoteFPSAgentController controller) {
         yield return new WaitForFixedUpdate();
         List<string> listOfSOP = new List<string>();
-        foreach (string oid in this.WhatObjectsAreInsideMagnetSphereAsObjectID()) {
-            listOfSOP.Add(oid);
+        foreach (SimObjPhysics sop in this.WhatObjectsAreInsideMagnetSphereAsSOP(false)) {
+            listOfSOP.Add(sop.ObjectID);
         }
         Debug.Log("objs: " + string.Join(", ", listOfSOP));
         controller.actionFinished(true, listOfSOP);
@@ -600,7 +612,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         bool pickedUp = false;
 
         // grab all sim objects that are currently colliding with magnet sphere
-        foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP()) {
+        foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP(onlyPickupable: true)) {
             if (objectIds != null) {
                 if (!objectIds.Contains(sop.objectID)) {
                     continue;
@@ -746,7 +758,6 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         List<JointMetadata> joints = new List<JointMetadata>();
 
         // Declare variables used for processing metadata
-        GameObject surrogateChild = new GameObject();
         Transform parentJoint;
         float angleRot;
         Vector3 vectorRot;
@@ -771,11 +782,10 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             jointMeta.rootRelativePosition = FirstJoint.InverseTransformPoint(joint.position);
 
             // ROTATIONS //
-            // GetChild grabs angler since that is what actually changes the geometry angle
-            surrogateChild.transform.rotation = joint.GetChild(0).rotation;
 
             // WORLD RELATIVE ROTATION
-            currentRotation = surrogateChild.transform.rotation;
+            // Angler is grabbed since that is what actually changes the geometry angle
+            currentRotation = joint.GetChild(0).rotation;
 
             // Check that world-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -789,9 +799,8 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             // ROOT-JOINT RELATIVE ROTATION
             // Root-forward and agent-forward are always the same
 
-            //Grab rotation of current joint's angler relative to root joint
-            surrogateChild.transform.SetParent(armBase);
-            currentRotation = surrogateChild.transform.localRotation;
+            // Grab rotation of current joint's angler relative to root joint
+            currentRotation = Quaternion.Inverse(armBase.rotation) * joint.GetChild(0).rotation;
 
             // Check that root-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
@@ -806,9 +815,8 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
                 parentJoint = joint.parent;
 
                 // Grab rotation of current joint's angler relative to parent joint's angler
-                surrogateChild.transform.SetParent(parentJoint.GetChild(0));
-                currentRotation = surrogateChild.transform.localRotation;
-                
+                currentRotation = Quaternion.Inverse(parentJoint.GetChild(0).rotation) * joint.GetChild(0).rotation;
+
                 // Check that parent-relative rotation is angle-axis-notation-compatible
                 if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                     currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
@@ -819,12 +827,14 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             } else {
                 // Special case for robot_arm_1_jnt because it has no parent-joint
                 jointMeta.localRotation = jointMeta.rootRelativeRotation;
+
+                jointMeta.armBaseHeight = this.transform.localPosition.y;
+                jointMeta.elbowOrientation = elbowTarget.localEulerAngles.z;
             }
 
             joints.Add(jointMeta);
         }
 
-        Destroy(surrogateChild);
         meta.joints = joints.ToArray();
 
         // metadata for any objects currently held by the hand on the arm
@@ -840,7 +850,11 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         meta.heldObjects = heldObjectIDs;
         meta.handSphereCenter = magnetSphere.transform.TransformPoint(magnetSphere.center);
         meta.handSphereRadius = magnetSphere.radius;
-        meta.pickupableObjects = WhatObjectsAreInsideMagnetSphereAsObjectID();
+        List<SimObjPhysics> objectsInMagnet = WhatObjectsAreInsideMagnetSphereAsSOP(false);
+        meta.pickupableObjects = objectsInMagnet.Where(
+            x => x.PrimaryProperty == SimObjPrimaryProperty.CanPickup
+        ).Select(x => x.ObjectID).ToList();
+        meta.touchedNotHeldObjects = objectsInMagnet.Select(x => x.ObjectID).ToList();
         return meta;
     }
 

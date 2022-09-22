@@ -121,6 +121,18 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
 
+    private bool forceCreateObjectOrientedBoundingBox = false;
+    
+    private bool shouldCreateObjectOrientedBoundingBox {
+        get {
+            return this.forceCreateObjectOrientedBoundingBox || this.IsPickupable || this.IsMoveable;
+        }
+    }
+
+    public GameObject GetSceneManager() {
+        return sceneManager.gameObject;
+    }
+
     public float GetTimerResetValue() {
         return TimerResetValue;
     }
@@ -164,7 +176,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         ContainedObjectReferences.Remove(t);
     }
 
-    public void syncBoundingBoxes(bool forceCacheReset = false) {
+    public void syncBoundingBoxes(
+        bool forceCacheReset = false,
+        bool forceCreateObjectOrientedBoundingBox = false
+    ) {
+
+        if (forceCreateObjectOrientedBoundingBox) {
+            bool shouldCreateBefore = this.shouldCreateObjectOrientedBoundingBox;
+            this.forceCreateObjectOrientedBoundingBox = forceCreateObjectOrientedBoundingBox;
+
+            forceCacheReset = forceCacheReset || shouldCreateBefore != this.shouldCreateObjectOrientedBoundingBox;
+        }
 
         Vector3 position = this.gameObject.transform.position;
         Quaternion rotation = this.gameObject.transform.rotation;
@@ -294,12 +316,26 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
 
     private ObjectOrientedBoundingBox objectOrientedBoundingBox() {
-        if (this.IsPickupable || this.IsMoveable) {
+        if (this.shouldCreateObjectOrientedBoundingBox) {
             ObjectOrientedBoundingBox b = new ObjectOrientedBoundingBox();
 
-            if (this.BoundingBox == null) {
-                Debug.LogError(this.transform.name + " is missing BoundingBox reference!");
-                return b;
+            bool shouldSetupBBox = false;
+            try {
+                shouldSetupBBox = this.BoundingBox == null;
+            } catch (UnassignedReferenceException e) {
+                shouldSetupBBox = true;
+            }
+
+            if (shouldSetupBBox) {
+                GameObject bb = new GameObject("BoundingBox");
+                bb.transform.position = gameObject.transform.position;
+                bb.transform.SetParent(gameObject.transform);
+                bb.AddComponent<BoxCollider>();
+                bb.GetComponent<BoxCollider>().enabled = false;
+                bb.tag = "Untagged";
+                bb.layer = 0;
+                this.BoundingBox = bb;
+                ContextSetUpBoundingBox();
             }
 
             // unparent child simobjects during bounding box generation
@@ -363,14 +399,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             }
 
             DestroyImmediate(clone);
-
-            // iTween adds references to the iTween.tweens List
-            for (int i = 0; i < iTween.tweens.Count; i++) {
-                if (((GameObject)iTween.tweens[i]["target"]) == null) {
-                   iTween.tweens.RemoveAt(i);
-                }
-            }
-
 
             // Get corner points of SimObject's new BoundingBox, in its correct transformation
             List<Vector3> points = new List<Vector3>();
@@ -2087,7 +2115,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         transform.eulerAngles = Vector3.zero;
 
         if (BoundingBox == null) {
-            GameObject BoundingBox = new GameObject();
+            GameObject BoundingBox = new GameObject("BoundingBox");
             BoundingBox.transform.parent = gameObject.transform;
             BoundingBox.transform.localPosition = Vector3.zero;
             BoundingBox.transform.localEulerAngles = Vector3.zero;
