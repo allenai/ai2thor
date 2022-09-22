@@ -688,8 +688,10 @@ namespace Thor.Procedural {
                 p0 = -(width / 2.0f) * Vector3.right - new Vector3(0.0f, toCreate.height / 2.0f, toCreate.thickness / 2.0f);
                 p1 = (width / 2.0f) * Vector3.right - new Vector3(0.0f, toCreate.height / 2.0f, toCreate.thickness / 2.0f);
 
+                // normal = -Vector3.Cross(Vector3.right, Vector3.up);
                 normal = Vector3.forward;
                 p0p1_norm = Vector3.right;
+                
                 wallGO.transform.position = center;
 
                 wallGO.transform.rotation = Quaternion.AngleAxis(theta * 180.0f / Mathf.PI, Vector3.up);
@@ -783,14 +785,16 @@ namespace Thor.Procedural {
 
                     };
                 
-                // This would be for a left hand local axis space, so front being counter-clockwise of topdown polygon from inside the polygon
-                // triangles = new List<int>() {
-                //      0, 1, 2, 1, 3, 2, 1, 4, 3, 3, 4, 5, 4, 6, 5, 5, 6, 7, 7, 6, 0, 0, 2, 7
-                // };
-
+               
                 triangles = new List<int>() {
-                    7, 2, 0, 0, 6, 7, 7, 6, 5, 5, 6, 4, 5, 4, 3, 3, 4, 1, 2, 3, 1, 2, 1, 0
+                     0, 1, 2, 1, 3, 2, 1, 4, 3, 3, 4, 5, 4, 6, 5, 5, 6, 7, 7, 6, 0, 0, 2, 7
                 };
+
+
+                 // This would be for a left hand local axis space, so front being counter-clockwise of topdown polygon from inside the polygon
+                // triangles = new List<int>() {
+                //     7, 2, 0, 0, 6, 7, 7, 6, 5, 5, 6, 4, 5, 4, 3, 3, 4, 1, 2, 3, 1, 2, 1, 0
+                // };
                 
                 if (toCreate.id == "wall_0_2") {
                     
@@ -824,16 +828,17 @@ namespace Thor.Procedural {
                         p1
                     };
                 
-                // triangles = new List<int>() { 1, 2, 0, 2, 3, 0 };
+                triangles = new List<int>() { 1, 2, 0, 2, 3, 0 };
 
-                // Right hand rule
-                triangles = new List<int>() { 0, 3, 2, 0, 2, 1 };
+                // Counter clockwise wall definition left hand rule
+                // triangles = new List<int>() { 0, 3, 2, 0, 2, 1 };
                 if (generateBackFaces) {
                     triangles.AddRange(triangles.AsEnumerable().Reverse().ToList());
                 }
             }
 
-            normals = Enumerable.Repeat(normal, vertices.Count).ToList();//.Concat(Enumerable.Repeat(-normal, vertices.Count)).ToList();
+            normals = Enumerable.Repeat(-normal, vertices.Count).ToList();
+            // normals = Enumerable.Repeat(normal, vertices.Count).ToList();//.Concat(Enumerable.Repeat(-normal, vertices.Count)).ToList();
 
             uv = vertices.Select(v =>
                 new Vector2(Vector3.Dot(p0p1_norm, v - p0) / width, v.y / toCreate.height))
