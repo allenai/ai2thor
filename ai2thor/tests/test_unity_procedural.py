@@ -57,34 +57,38 @@ house_template = {
     "rooms": {
         "1": {
             "wallTemplate": {
-                "unlit": False,
-                "color": {
-                    "r": 1.0,
-                    "g": 0.0,
-                    "b": 0.0,
-                    "a": 1.0
+                "material": {
+                    "unlit": False,
+                    "color": {
+                        "r": 1.0,
+                        "g": 0.0,
+                        "b": 0.0,
+                        "a": 1.0
+                    }
                 }
             },
             "floorTemplate": {
                 "roomType": "Bedroom",
-                "floorMaterial": "DarkWoodFloors",
+                "floorMaterial": { "name": "DarkWoodFloors" },
             },
             "floorYPosition": 0.0,
             "wallHeight": 3.0
         },
         "2": {
             "wallTemplate": {
-                "unlit": False,
-                "color": {
-                    "r": 0.0,
-                    "g": 0.0,
-                    "b": 1.0,
-                    "a": 1.0
+                "material": {
+                    "unlit": False,
+                    "color": {
+                        "r": 0.0,
+                        "g": 0.0,
+                        "b": 1.0,
+                        "a": 1.0
+                    }
                 }
             },
             "floorTemplate": {
                 "roomType": "LivingRoom",
-                "floorMaterial": "RedBrick"
+                "floorMaterial": { "name": "RedBrick"}
             },
             "floorYPosition": 0.0,
             "wallHeight": 3.0
@@ -107,7 +111,7 @@ house_template = {
         "floorColliderThickness": 1.0,
         "receptacleHeight": 0.7,
         "skyboxId": "Sky1",
-        "ceilingMaterial": "ps_mat"
+        "ceilingMaterial": { "name":  "ps_mat" }
     }
 
 }

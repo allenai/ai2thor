@@ -24,8 +24,8 @@ namespace Thor.Procedural {
         public string layout;
         public IEnumerable<string> objectsLayouts;
         public Dictionary<string, RoomTemplate> rooms;
-        public Dictionary<string, WallRectangularHole> doors;
-        public Dictionary<string, WallRectangularHole> windows;
+        public Dictionary<string, Thor.Procedural.Data.Door> doors;
+        public Dictionary<string, Window> windows;
         public Dictionary<string, HouseObject> objects;
         public ProceduralParameters proceduralParameters;
     }
@@ -67,10 +67,10 @@ namespace Thor.Procedural {
             IEnumerable<KeyValuePair<string, WallRectangularHole>> holePairs = new List<KeyValuePair<string, WallRectangularHole>>();
 
             if (houseTemplate.doors != null) {
-                holePairs = holePairs.Concat(houseTemplate.doors);
+                holePairs = holePairs.Concat(houseTemplate.doors.Select(d => new KeyValuePair<string, WallRectangularHole>(d.Key, d.Value as WallRectangularHole)));
             }
             if (houseTemplate.windows != null) {
-                holePairs = holePairs.Concat(houseTemplate.windows);
+                holePairs = holePairs.Concat(houseTemplate.windows.Select(d => new KeyValuePair<string, WallRectangularHole>(d.Key, d.Value as WallRectangularHole)));
             }
             
             var holeTemplates = holePairs.ToDictionary(e => e.Key, e => e.Value);;
@@ -186,9 +186,9 @@ namespace Thor.Procedural {
                     var wallHeight = template.wallHeight;
                     var walls2D = roomToWallsXZ[intId];
                     room.floorPolygon = walls2D.Select(p => new Vector3((float)p.Item1.row, template.floorYPosition, (float)p.Item1.column)).ToList();
-                    string ceilingMat = "";
+                    MaterialProperties ceilingMat = new MaterialProperties();
 
-                    if (room.ceilings == null || room.ceilings.Count < 1 ||  string.IsNullOrEmpty(room.ceilings[0].material)) {
+                    if (room.ceilings == null || room.ceilings.Count < 1 || room.ceilings[0].material == null) {
                         ceilingMat = houseTemplate.proceduralParameters.ceilingMaterial;
                     }
                     else {
@@ -335,12 +335,15 @@ namespace Thor.Procedural {
                 hole.wall1 = wallCoordinatesToId[wall1];
                 // TODO asset offset
                 hole.id = holeTemplateIdToHouseId(holeTemplateId, index, hole.id);
+                Debug.Log("---- Hole being created " + hole.id);
 
                 if ( string.IsNullOrEmpty(hole.assetId) || !assetMap.ContainsKey(hole.assetId)) {
                     return new List<WallRectangularHole>(){};
                 }
 
                 var holeOffset = ProceduralTools.getHoleAssetBoundingBox(hole.assetId);
+
+                 Debug.Log("---- Hole offset null? " + (hole == null));
 
                 if (holeOffset == null) {
                     return new List<WallRectangularHole>(){};
@@ -352,13 +355,23 @@ namespace Thor.Procedural {
                 // begining of the array in x, z
                 var minVector = new Vector3((float)(holeStartCoords.column - distToZeros.x), (float)floorTemplate.floorYPosition, 0.0f);
                 var maxVector = minVector + holeOffset.max;
-
-                hole.boundingBox = new BoundingBox(){
-                    min = minVector,
-                    max = maxVector
+                hole.holePolygon = new List<Vector3> {
+                    minVector,
+                    maxVector
                 };
+                var right = (
+                    new Vector3((float)wall0.Item2.column, 0.0f, (float)wall0.Item2.row) - 
+                    new Vector3((float)wall0.Item1.column, 0.0f, (float)wall0.Item1.row)
+                ).normalized;
 
-                hole.assetOffset = holeOffset.offset;
+                var forward = Vector3.Cross(right, Vector3.up);
+                Matrix4x4 wallSpace = new Matrix4x4();
+                wallSpace.SetColumn(0, right);
+                wallSpace.SetColumn(1, Vector3.up);
+                wallSpace.SetColumn(2, forward);
+
+                hole.assetPosition = wallSpace * (minVector + holeOffset.offset + (holeOffset.max / 2.0f));
+                Debug.Log("---- Hole def being created " + hole.id);
                 return new List<WallRectangularHole>(){isDoor ? hole as Data.Door : isWindow ? hole as Data.Window : hole};
             }).ToList();
 
