@@ -44,7 +44,7 @@ namespace Tests {
                             0 0 0 0 0 0
                         "
                     },
-                    rooms =  new Dictionary<string, RoomTemplate>() {
+                     rooms =  new Dictionary<string, RoomTemplate>() {
                         {"1", new RoomTemplate(){ 
                             wallTemplate = new PolygonWall() {
                                 material = new MaterialProperties() {
@@ -118,21 +118,18 @@ namespace Tests {
             Assert.IsTrue(new HashSet<string>(house.rooms.Select(x => x.id).Intersect(roomIds)).SetEquals(roomIds));
             var room2Poly = new List<Vector3>() {
                 Vector3.zero,
-                new Vector3(2.0f, 0.0f, 0.0f),
+                new Vector3(0.0f, 0.0f, 4.0f),
                 new Vector3(2.0f, 0.0f, 4.0f),
-                new Vector3(0.0f, 0.0f, 4.0f)
+                new Vector3(2.0f, 0.0f, 0.0f)
             };
-
-            Debug.Log($"Polygons: {string.Join(", ", house.rooms.Find(r => r.id == "2").floorPolygon.Select((p, i) => $"{i}: {p.ToString("F4")})"))}");
             Assert.IsTrue(house.rooms.Find(r => r.id == "2").floorPolygon.Select((p, i) => (point: p, index: i)).All(e => room2Poly.ElementAt(e.index) == e.point));
 
             var room1Poly = new List<Vector3>() {
                 new Vector3(2.0f, 0.0f, 0.0f),
-                new Vector3(4.0f, 0.0f, 0.0f),
-                new Vector3(4.0f, 0.0f, 4.0f),
                 new Vector3(2.0f, 0.0f, 4.0f),
+                new Vector3(4.0f, 0.0f, 4.0f),
+                new Vector3(4.0f, 0.0f, 0.0f)
             };
-            
             Assert.IsTrue(house.rooms.Find(r => r.id == "1").floorPolygon.Select((p, i) => (point: p, index: i)).All(e => room1Poly.ElementAt(e.index) == e.point));
             yield return true;
         }
@@ -155,23 +152,19 @@ namespace Tests {
             Assert.IsTrue(house.walls.All(w => w.polygon.Max(p => p.y) == houseTemplate.rooms[w.roomId].wallHeight));
             
             var room2WallPoints = new List<(Vector3, Vector3)>() {
-                (new Vector3(0.0f, 0.0f, 0.0f), new Vector3(2.0f, 0.0f, 0.0f)),
-                (new Vector3(2.0f, 0.0f, 0.0f), new Vector3(2.0f, 0.0f, 4.0f)),
-                (new Vector3(2.0f, 0.0f, 4.0f), new Vector3(0.0f, 0.0f, 4.0f)),
-                (new Vector3(0.0f, 0.0f, 4.0f), new Vector3(0.0f, 0.0f, 0.0f))
+                (new Vector3(0.0f, 0.0f, 0.0f), new Vector3(0.0f, 0.0f, 4.0f)),
+                (new Vector3(0.0f, 0.0f, 4.0f), new Vector3(2.0f, 0.0f, 4.0f)),
+                (new Vector3(2.0f, 0.0f, 4.0f), new Vector3(2.0f, 0.0f, 0.0f)),
+                (new Vector3(2.0f, 0.0f, 0.0f), new Vector3(0.0f, 0.0f, 0.0f))
             };
-            // Debug.Log($"Wall Polygons: {string.Join(", ", (house.walls.Where(w => w.roomId == "2").Select((wall, i) => $"{i}: p0: {wall.polygon[0].ToString("F4")}, p1: {wall.polygon[1].ToString("F4")})")))}");
             Assert.IsTrue(house.walls.Where(w => w.roomId == "2").Select((wall, index) => (wall, index)).All(e => room2WallPoints.ElementAt(e.index) == (e.wall.polygon[0], e.wall.polygon[1])));
 
             var room1WallPoints = new List<(Vector3, Vector3)>() {
-
-                (new Vector3(2.0f, 0.0f, 0.0f), new Vector3(4.0f, 0.0f, 0.0f)),
-                (new Vector3(4.0f, 0.0f, 0.0f), new Vector3(4.0f, 0.0f, 4.0f)),
-                (new Vector3(4.0f, 0.0f, 4.0f), new Vector3(2.0f, 0.0f, 4.0f)),
-                (new Vector3(2.0f, 0.0f, 4.0f), new Vector3(2.0f, 0.0f, 0.0f))
+                (new Vector3(2.0f, 0.0f, 0.0f), new Vector3(2.0f, 0.0f, 4.0f)),
+                (new Vector3(2.0f, 0.0f, 4.0f), new Vector3(4.0f, 0.0f, 4.0f)),
+                (new Vector3(4.0f, 0.0f, 4.0f), new Vector3(4.0f, 0.0f, 0.0f)),
+                (new Vector3(4.0f, 0.0f, 0.0f), new Vector3(2.0f, 0.0f, 0.0f))
             };
-            // Debug.Log($"Wall Polygons: {string.Join(", ", (house.walls.Where(w => w.roomId == "2").Select((wall, i) => $"{i}: p0: {wall.polygon[0].ToString("F4")}, p1: {wall.polygon[1].ToString("F4")})")))}");
-            
             Assert.IsTrue(house.walls.Where(w => w.roomId == "1").Select((wall, index) => (wall, index)).All(e => room1WallPoints.ElementAt(e.index) == (e.wall.polygon[0], e.wall.polygon[1])));
         
             yield return true;
@@ -241,28 +234,24 @@ namespace Tests {
 
             Assert.IsTrue(door.room0 == "1");
             Assert.IsTrue(door.room1 == "2");
-            Assert.IsTrue(door.holePolygon.Count == 2);
-            Assert.IsTrue(door.holePolygon[0] == new Vector3(3.0f, 0.0f, 0.0f));
 
+            Assert.IsTrue(door.holePolygon[0] == new Vector3(3.0f, 0.0f, 0.0f));
 
             Assert.AreEqual(
                 house.walls.Where(w => w.roomId =="1")
                     .Select(
                         w => (id: w.id, coords: (w.polygon[0], w.polygon[1]))
                     ).ToList()
-                    .Find(w => w.coords == (new Vector3(2.0f, 0.0f, 4.0f), new Vector3(2.0f, 0.0f, 0.0f))).id,
+                    .Find(w => w.coords == (new Vector3(2.0f, 0.0f, 0.0f), new Vector3(2.0f, 0.0f, 4.0f))).id,
                 door.wall0
             );
-
-            // Debug.Log($"Wall Polygons: {string.Join(", ", (house.walls.Where(w => w.roomId == "2").Select((wall, i) => $"{i}: p0: {wall.polygon[0].ToString("F4")}, p1: {wall.polygon[1].ToString("F4")})")))}");
-            
 
             Assert.AreEqual(
                 house.walls.Where(w => w.roomId =="2")
                     .Select(
                         w => (id: w.id, coords: (w.polygon[0], w.polygon[1]))
                     ).ToList()
-                    .Find(w => w.coords == (new Vector3(2.0f, 0.0f, 0.0f), new Vector3(2.0f, 0.0f, 4.0f))).id,
+                    .Find(w => w.coords == (new Vector3(2.0f, 0.0f, 4.0f), new Vector3(2.0f, 0.0f, 0.0f))).id,
                 door.wall1
              );
 
@@ -283,27 +272,26 @@ namespace Tests {
            
             var room2Poly = new List<Vector3>() {
                 Vector3.zero,
-                new Vector3(2.0f, 0.0f, 0.0f),
-                new Vector3(2.0f, 0.0f, 4.0f),
                 new Vector3(0.0f, 0.0f, 4.0f),
+                new Vector3(2.0f, 0.0f, 4.0f),
+                new Vector3(2.0f, 0.0f, 0.0f)
             }.Select(v => v + new Vector3(0.0f, houseTemplate.rooms["2"].wallHeight, 0.0f));
 
             var room2 = house.rooms.Find(r => r.id == "2");
             Assert.IsTrue(room2.ceilings.Count == 1);
-            Assert.IsTrue(room2.ceilings[0].material.name == houseTemplate.proceduralParameters.ceilingMaterial.name);
-            
+            Assert.IsTrue(room2.ceilings[0].material == houseTemplate.proceduralParameters.ceilingMaterial);
             Assert.IsTrue(room2.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).All(e => room2Poly.ElementAt(e.index) == e.point));
 
             var room1Poly = new List<Vector3>() {
                 new Vector3(2.0f, 0.0f, 0.0f),
-                new Vector3(4.0f, 0.0f, 0.0f),
-                new Vector3(4.0f, 0.0f, 4.0f),
                 new Vector3(2.0f, 0.0f, 4.0f),
+                new Vector3(4.0f, 0.0f, 4.0f),
+                new Vector3(4.0f, 0.0f, 0.0f)
             }.Select(v => v + new Vector3(0.0f, houseTemplate.rooms["1"].wallHeight, 0.0f));
 
             var room1 = house.rooms.Find(r => r.id == "1");
             Assert.IsTrue(room1.ceilings.Count == 1);
-            Assert.IsTrue(room1.ceilings[0].material.name == houseTemplate.proceduralParameters.ceilingMaterial.name);
+            Assert.IsTrue(room1.ceilings[0].material == houseTemplate.proceduralParameters.ceilingMaterial);
             Assert.IsTrue(room1.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).All(e => room1Poly.ElementAt(e.index) == e.point));
             yield return true;
         }
