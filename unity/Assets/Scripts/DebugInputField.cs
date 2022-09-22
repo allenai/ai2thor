@@ -3708,6 +3708,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // public void CreateRoom(Wall[] walls, float wallHeight, string wallMaterialId, string floorMaterialId, string ceilingMaterialId, float wallThickness = 0.0f, string namePostFix = "") {
 
                     }
+                case "newScene": {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan402_physics");
+                    break;
+                }
+                case "newScene2": {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene("Procedural");
+                    break;
+                }
                 case "ch": {
 
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -3794,6 +3802,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // 		}
                         // 	}
                         // );
+
+                        break;
+                    }
+
+                case "obj": {
+                        // AssetDatabase.Refresh();
+                        var OBJECTS_BASE_PATH = "/Resources/objects/";
+
+                        path = Application.dataPath + OBJECTS_BASE_PATH + "main.json";
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + OBJECTS_BASE_PATH + file;
+                        }
+
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+                        obj["action"] = "CreateObjectPrefab";
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(obj));
 
                         break;
                     }
