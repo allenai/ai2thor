@@ -432,7 +432,7 @@ public class CanOpen_Object : MonoBehaviour {
         }
 
         // If the collider is a BoundingBox or ReceptacleTriggerBox, then ignore
-        if (other.CompareTag("Untagged") || other.CompareTag("Receptacle")) {
+        if (other.gameObject.layer ==  LayerMask.NameToLayer ("SimObjectInvisible")) {
             // Debug.Log(other + " is bounding box or receptacle trigger box");
             return;
         }
@@ -454,7 +454,7 @@ public class CanOpen_Object : MonoBehaviour {
         if (ancestorSimObjPhysics(other.gameObject) != null &&
             ancestorSimObjPhysics(other.gameObject).PrimaryProperty != SimObjPrimaryProperty.Static &&
             stopAtNonStaticCol == false) {
-            // Debug.Log("Ignore nonstatics" + other);
+            // Debug.Log("Ignore nonstatics " + other);
             return;
         }
 
