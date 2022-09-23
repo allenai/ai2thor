@@ -14,6 +14,7 @@ namespace Tests {
     {
 
         protected HouseTemplate houseTemplate = new HouseTemplate() {
+                    version = ProceduralTools.CURRENT_HOUSE_VERSION,
                     id = "house_0",
                     // TODO, some assumptions can be done to place doors and objects in `layout`
                     // and use `objectsLayouts` for any possible inconsistencies or layering instead of being mandatory for objects
@@ -293,6 +294,28 @@ namespace Tests {
             Assert.IsTrue(room1.ceilings.Count == 1);
             Assert.IsTrue(room1.ceilings[0].material == houseTemplate.proceduralParameters.ceilingMaterial);
             Assert.IsTrue(room1.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).All(e => room1Poly.ElementAt(e.index) == e.point));
+            yield return true;
+        }
+
+        [UnityTest]
+        public IEnumerator TestHouseNullVersion() { 
+            Assert.That(() => {
+                var house = createTestHouse();
+                house.version = null;
+                Debug.Log(house.version);
+                ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
+            }, Throws.ArgumentException);
+            yield return true;
+        }
+
+        [UnityTest]
+        public IEnumerator TestHouseLowerVersion() { 
+            Assert.That(() => {
+                var house = createTestHouse();
+                house.version = "0_0_0";
+                Debug.Log(house.version);
+                ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
+            }, Throws.ArgumentException);
             yield return true;
         }
 
