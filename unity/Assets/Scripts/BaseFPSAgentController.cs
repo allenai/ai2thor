@@ -4785,9 +4785,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     )
                 );
             }
-            Debug.Log("Before Procedural call");
-            var floor = ProceduralTools.CreateHouse(house: house, materialDb: materials);
-
+            
+            try {
+                ProceduralTools.CreateHouse(house: house, materialDb: materials);
+            } 
+            catch (Exception e) {
+                var msg = $"Exception creating house.\n'{e.Message}'\n'{e.InnerException.Message}'";
+                Debug.Log(msg);
+                actionFinished(false, actionReturn: null, errorMessage: msg);
+                return;
+            }
             actionFinished(true);
         }
 

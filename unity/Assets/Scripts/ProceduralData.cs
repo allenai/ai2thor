@@ -14,7 +14,6 @@ using Newtonsoft.Json.Serialization;
 
 
 namespace Thor.Procedural.Data {
-    // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse); 
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
@@ -130,8 +129,7 @@ namespace Thor.Procedural.Data {
             tilingDivisorX = 1.0f,
             tilingDivisorY = 1.0f
         };
-        
-        public SerializableColor ceilingColor { get; set; } = null;
+
         public float navmeshVoxelSize { get; set; }
         public bool ceilingBackFaces { get; set; }
 
@@ -178,7 +176,6 @@ namespace Thor.Procedural.Data {
         public string layer { get; set; }
         public MaterialProperties material;
         public bool empty { get; set; } = false;
-        public SerializableColor color { get; set; } = null;
         public bool unlit;
     }
 
@@ -342,6 +339,7 @@ namespace Thor.Procedural.Data {
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class ProceduralHouse {
+        public string version;
         public ProceduralParameters proceduralParameters { get; set; }
         public string id { get; set; }
         public List<RoomHierarchy> rooms { get; set; } = new List<RoomHierarchy>();
@@ -378,15 +376,10 @@ namespace Thor.Procedural.Data {
         public bool unlit { get; set; }
         public float? tilingDivisorX = 1.0f;
         public float? tilingDivisorY = 1.0f;
-        public float metallic;
-        public float smoothness;
+        public float? metallic;
+        public float? smoothness;
     }
-
-    // TODO more general
-    // public class House<T> where T : Room
-    // {
-
-    // }
+    
     public interface WallRectangularHole {
         string id { get; set; }
         string assetId { get; set; }
@@ -405,31 +398,6 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class SerializableCollider {
-        public Vector3[] vertices;
-        public int[] triangles;
-    }
-
-    [Serializable]
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class PhysicalProperties {
-        public float mass = 1;
-        public float drag = 0;
-        public float angularDrag = 0.05f;
-        public bool useGravity = true;
-        public bool isKinematic = false;
-    }
-
-    [Serializable]
-    [MessagePackObject(keyAsPropertyName: true)]
-    public class ObjectAnnotations {
-        public string objectType = "Undefined";
-        public string primaryProperty = "Undefined";
-        public string[]? secondaryProperties = null;
-    }
-
-    [Serializable]
-    [MessagePackObject(keyAsPropertyName: true)]
     public class Wall {
         public string id;
         public float height;
@@ -442,9 +410,6 @@ namespace Thor.Procedural.Data {
         public string roomId;
 
         public string layer { get; set; }
-
-        public float materialTilingXDivisor = 1.0f;
-        public float materialTilingYDivisor = 1.0f;
 
         public SerializableColor color { get; set; } = null;
 
