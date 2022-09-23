@@ -364,7 +364,6 @@ namespace Thor.Procedural.Data {
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class ProceduralHouse {
-        public string version;
         public ProceduralParameters proceduralParameters { get; set; }
         public string id { get; set; }
         public List<RoomHierarchy> rooms { get; set; } = new List<RoomHierarchy>();
@@ -380,6 +379,7 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class HouseMetadata {
         public Dictionary<string, AgentPose> agentPoses { get; set; }
+        public string schema { get; set; } = null;
     }
 
     [Serializable]

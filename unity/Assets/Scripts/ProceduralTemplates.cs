@@ -22,7 +22,7 @@ namespace Thor.Procedural {
     public class HouseTemplate {
         public string id;
         public string layout;
-        public string version;
+        public HouseMetadata metadata;
         public IEnumerable<string> objectsLayouts;
         public Dictionary<string, RoomTemplate> rooms;
         public Dictionary<string, Thor.Procedural.Data.Door> doors;
@@ -417,8 +417,12 @@ namespace Thor.Procedural {
                 return result;
             });
 
+            HouseMetadata metadata = new HouseMetadata {
+                schema = ProceduralTools.CURRENT_HOUSE_SCHEMA
+            };
+
             return new ProceduralHouse() {
-                version = houseTemplate.version,
+                metadata = metadata,
                 proceduralParameters = houseTemplate.proceduralParameters.DeepClone(),
                 id = !string.IsNullOrEmpty(houseTemplate.id) ? houseTemplate.id : houseId(),
                 rooms = roomsWithWalls.Select(p => p.room).ToList(),

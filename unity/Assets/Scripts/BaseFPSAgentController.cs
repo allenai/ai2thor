@@ -4785,7 +4785,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     )
                 );
             }
-            
+
             try {
                 ProceduralTools.CreateHouse(house: house, materialDb: materials);
             } 

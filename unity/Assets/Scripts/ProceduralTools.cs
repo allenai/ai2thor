@@ -58,7 +58,7 @@ namespace Thor.Procedural {
     }
 
     public static class ProceduralTools {
-        public const string CURRENT_HOUSE_VERSION = "1_0_0";
+        public const string CURRENT_HOUSE_SCHEMA = "1.0.0";
         public class Rectangle {
             public Vector3 center;
             public float width;
@@ -1137,25 +1137,6 @@ namespace Thor.Procedural {
             }
         }
 
-        public static (int, int, int) parseHouseVersion(string version) {
-            if (string.IsNullOrEmpty(version)) {
-                return (0, 0, 0);
-            }
-            else {
-                var versionSplit = version.Split('_');
-                Debug.Log(string.Join(", ", versionSplit));
-                var versionResult = new int[] {0, 0, 0 }.Select((x, i) => {
-                    if (versionSplit.Length > i) {
-                        int outVersion;
-                        bool canParse = int.TryParse(versionSplit[i], out outVersion);
-                        return canParse? outVersion : x;
-                    }
-                    return x;
-                }).ToArray();
-                return (versionResult[0], versionResult[1], versionResult[2]);
-            }
-        }
-
         public static int compareVersion((int, int, int) v0, (int, int, int) v1) {
             var diffs = new int[] {v0.Item1, v0.Item2, v0.Item3}.Zip(new int[] {v1.Item1, v1.Item2, v1.Item3}, (e0, e1) => e0 - e1);
             foreach (var diff in diffs) {
@@ -1171,16 +1152,19 @@ namespace Thor.Procedural {
            AssetMap<Material> materialDb,
            Vector3? position = null
        ) {
-            var version = parseHouseVersion(house.version);
-            var latestVersion = parseHouseVersion(CURRENT_HOUSE_VERSION);
+            // raise exception if metadata contains schema
+            string schema = house.metadata.schema;
+            if (schema == null) {
+                throw new ArgumentException(
+                    "House metadata schema not specified! Should be under house['metadata']['schema']." +
+                    " The current schema is " + CURRENT_HOUSE_SCHEMA
+                );
+            }
 
-            var versionCompare = compareVersion(version, latestVersion);
-
-            if (versionCompare != 0) {
-                var message = versionCompare < 0 ?
-                $"Incompatible house version '{version}', please upgrade to latest '{latestVersion}' using the 'procthor' package's 'scripts/upgrade_house.py'." :
-                $"Invalid house version: '{version}'. Supported version: '{latestVersion}'";
-                throw new ArgumentException(message, "house.version");
+            if (schema != CURRENT_HOUSE_SCHEMA) {
+                throw new ArgumentException(
+                    $"Invalid house schema: '{schema}'. Supported schema: '{CURRENT_HOUSE_SCHEMA}'", "house.version"
+                );
             }
 
             string simObjId = !String.IsNullOrEmpty(house.id) ? house.id : ProceduralTools.DefaultHouseRootObjectName;
