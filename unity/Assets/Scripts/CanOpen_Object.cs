@@ -393,7 +393,7 @@ public class CanOpen_Object : MonoBehaviour {
             if ((armBase.IKTarget.position - armBase.armShoulder.position).magnitude + 1e-5 >= armBase.bone2Length + armBase.bone3Length) {
                 failure = failState.hyperextension;
 #if UNITY_EDITOR
-        Debug.Log("Agent-arm hyperxtended at " + elapsedTime + ". Resetting openness.");
+        Debug.Log("Agent-arm hyperextended at " + elapsedTime + ". Resetting openness.");
 #endif
             }
         }

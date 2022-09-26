@@ -13,6 +13,9 @@ using System.Media;
 namespace Tests {
     public class TestRendering : TestBaseProcedural {
         protected HouseTemplate houseTemplate = new HouseTemplate() {
+            metadata = new HouseMetadata {
+                schema = "1.0.0"
+            },
             id = "house_0",
             // TODO, some assumptions can be done to place doors and objects in `layout`
             // and use `objectsLayouts` for any possible inconsistencies or layering instead of being mandatory for objects

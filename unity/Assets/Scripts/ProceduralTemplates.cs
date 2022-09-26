@@ -22,6 +22,7 @@ namespace Thor.Procedural {
     public class HouseTemplate {
         public string id;
         public string layout;
+        public HouseMetadata metadata;
         public IEnumerable<string> objectsLayouts;
         public Dictionary<string, RoomTemplate> rooms;
         public Dictionary<string, Thor.Procedural.Data.Door> doors;
@@ -416,7 +417,12 @@ namespace Thor.Procedural {
                 return result;
             });
 
+            HouseMetadata metadata = new HouseMetadata {
+                schema = ProceduralTools.CURRENT_HOUSE_SCHEMA
+            };
+
             return new ProceduralHouse() {
+                metadata = metadata,
                 proceduralParameters = houseTemplate.proceduralParameters.DeepClone(),
                 id = !string.IsNullOrEmpty(houseTemplate.id) ? houseTemplate.id : houseId(),
                 rooms = roomsWithWalls.Select(p => p.room).ToList(),
@@ -424,7 +430,6 @@ namespace Thor.Procedural {
                 doors = holes.Where(d => d is Data.Door).Select(d => d as Data.Door).ToList(),
                 windows = holes.Where(d => d is Data.Window).Select(d => d as Data.Window).ToList(),
                 objects = houseObjects.ToList()
-
             };
 
         }
@@ -584,7 +589,7 @@ namespace Thor.Procedural {
                     var dist = x0 * z1 - x1 * z0;
                     edgeSum += dist;
                 }
-                if (edgeSum < 0) {
+                if (edgeSum > 0) {
                 
                     wallLoop = wallLoop.Reverse<((double row, double col), (double row, double col))>().Select(p => (p.Item2, p.Item1)).ToList();
                 }
