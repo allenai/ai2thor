@@ -58,7 +58,7 @@ namespace Thor.Procedural {
     }
 
     public static class ProceduralTools {
-        public const string CURRENT_HOUSE_VERSION = "1_0_0";
+        public const string CURRENT_HOUSE_SCHEMA = "1.0.0";
         public class Rectangle {
             public Vector3 center;
             public float width;
@@ -1142,7 +1142,7 @@ namespace Thor.Procedural {
                 return (0, 0, 0);
             }
             else {
-                var versionSplit = version.Split('_');
+                var versionSplit = version.Split('.');
                 Debug.Log(string.Join(", ", versionSplit));
                 var versionResult = new int[] {0, 0, 0 }.Select((x, i) => {
                     if (versionSplit.Length > i) {
@@ -1171,15 +1171,22 @@ namespace Thor.Procedural {
            AssetMap<Material> materialDb,
            Vector3? position = null
        ) {
-            var version = parseHouseVersion(house.version);
-            var latestVersion = parseHouseVersion(CURRENT_HOUSE_VERSION);
+            
+            if (house.metadata == null || house.metadata.schema == null) {
+                throw new ArgumentException(
+                    $"House metadata schema not specified! Should be under house['metadata']['schema']." +
+                    $" The current schema for this THOR version is '{CURRENT_HOUSE_SCHEMA}'"
+                );
+            }
 
-            var versionCompare = compareVersion(version, latestVersion);
+            var schema = parseHouseVersion(house.metadata?.schema);
+            var latestSchema = parseHouseVersion(CURRENT_HOUSE_SCHEMA);
+            var versionCompare = compareVersion(schema, latestSchema);
 
             if (versionCompare != 0) {
                 var message = versionCompare < 0 ?
-                $"Incompatible house version '{version}', please upgrade to latest '{latestVersion}' using the 'procthor' package's 'scripts/upgrade_house.py'." :
-                $"Invalid house version: '{version}'. Supported version: '{latestVersion}'";
+                $"Incompatible house schema version '{schema}', please upgrade to latest '{latestSchema}' using the 'procthor' package's 'scripts/upgrade_house.py'." :
+                $"Invalid house version: '{schema}'. Supported version: '{latestSchema}'";
                 throw new ArgumentException(message, "house.version");
             }
 
@@ -1379,7 +1386,7 @@ namespace Thor.Procedural {
                         position: pos,
                         rotation: rotation,
                         kinematic: true,
-                        color: holeCover.color,
+                        materialProperties: holeCover.material,
                         positionBoundingBoxCenter: positionFromCenter,
                         scale: holeCover.scale
                     );
@@ -1636,7 +1643,6 @@ namespace Thor.Procedural {
                     // ho.rotation,
                     rotation: Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
                     kinematic: ho.kinematic,
-                    color: ho.color,
                     positionBoundingBoxCenter: true,
                     unlit: ho.unlit,
                     materialProperties: ho.material,
@@ -1660,7 +1666,6 @@ namespace Thor.Procedural {
             Quaternion rotation,
             // FlexibleRotation rotation,
             bool kinematic = false,
-            SerializableColor color = null,
             bool positionBoundingBoxCenter = false,
             bool unlit = false,
             MaterialProperties materialProperties = null,
@@ -1739,12 +1744,19 @@ namespace Thor.Procedural {
                 unlitShader = Shader.Find("Unlit/Color");
             }
 
-            if (color != null) {
+            if (materialProperties != null) {
                 var materials = toSpawn.GetComponentsInChildren<MeshRenderer>().Select(
                     mr => mr.material
                 );
                 foreach (var mat in materials) {
-                    mat.color = new Color(color.r, color.g, color.b, color.a);
+                    if (materialProperties.color != null) {
+                        mat.color = new Color(
+                            materialProperties.color.r, 
+                            materialProperties.color.g, 
+                            materialProperties.color.b, 
+                            materialProperties.color.a
+                        );
+                    }
                     if (unlit) {
                         mat.shader = unlitShader;
                     }
