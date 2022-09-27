@@ -4565,7 +4565,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ProceduralTools.CreateHouse(house: house, materialDb: materials);
             } 
             catch (Exception e) {
-                var msg = $"Exception creating house.\n'{e.Message}'\n'{e.InnerException.Message}'";
+                Debug.Log(e);
+                var msg = $"Exception creating house.\n'{e.Message}'\n'{e.InnerException}'";
                 Debug.Log(msg);
                 actionFinished(false, actionReturn: null, errorMessage: msg);
                 return;

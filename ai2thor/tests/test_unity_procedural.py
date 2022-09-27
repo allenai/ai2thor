@@ -6,6 +6,7 @@ from ai2thor.wsgi_server import WsgiServer
 from ai2thor.fifo_server import FifoServer
 from .test_unity import build_controller, images_near, depth_images_near
 import cv2
+import json
 
 DATA_PATH = "ai2thor/tests/data/"
 IMAGE_FOLDER_PATH = os.path.join(DATA_PATH, "procedural")
@@ -112,8 +113,8 @@ house_template = {
         "receptacleHeight": 0.7,
         "skyboxId": "Sky1",
         "ceilingMaterial": { "name":  "ps_mat" }
-    }
-
+    },
+    "schema": "1.0.0"
 }
 
 # TODO rendering is different for fifo and wsgi server
@@ -137,10 +138,17 @@ def test_render_lit(controller_args):
     assert evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]
     house = evt.metadata["actionReturn"]
 
-    controller.step(
+    with open("test_render_lit.json", "w") as f:
+        print(house)
+        json.dump(house, f)
+
+    evt = controller.step(
         action="CreateHouse",
         house=house
     )
+
+    print("Action success {0}, message {1}".format(evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]))
+    assert evt.metadata['lastActionSuccess']
 
     evt = controller.step(
         action="TeleportFull", x=3.0, y=0.9010001, z=1.0, rotation=dict(x=0, y=0, z=0),
@@ -193,10 +201,13 @@ def test_depth(controller_args):
     assert evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]
     house = evt.metadata["actionReturn"]
 
-    controller.step(
+    evt = controller.step(
         action="CreateHouse",
         house=house
     )
+
+    print("Action success {0}, message {1}".format(evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]))
+    assert evt.metadata['lastActionSuccess']
 
     evt = controller.step(
         action="TeleportFull", x=3.0, y=0.9010001, z=1.0, rotation=dict(x=0, y=0, z=0),
