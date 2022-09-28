@@ -191,6 +191,7 @@ namespace Tests {
             });
 
             var rgbBytes = this.renderPayload.Find(e => e.Key == "image").Value;
+            //Debug.Break();
 
             Debug.Log($" path  {getTestResourcesPath("img")}");
 

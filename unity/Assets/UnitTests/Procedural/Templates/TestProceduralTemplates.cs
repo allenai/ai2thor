@@ -201,7 +201,7 @@ namespace Tests {
             Debug.Log(chair.position);
             // Assert.IsTrue(chair.position == new Vector3(4.0f, 0.0f, 4.0f));
 
-            Assert.That(Vector3.Distance(chair.position, new Vector3(3.2f, 1.0f, 3.2f)), Is.LessThanOrEqualTo(delta));
+            Assert.That(Vector3.Distance(chair.position, new Vector3(3.2f, 1.1f, 3.2f)), Is.LessThanOrEqualTo(delta));
             Assert.IsTrue(chair.assetId == "Chair_007_1");
             Debug.Log(apple.position);
             // Assert.IsTrue(apple.position == new Vector3(4.0f, 2.0f, 4.0f));
