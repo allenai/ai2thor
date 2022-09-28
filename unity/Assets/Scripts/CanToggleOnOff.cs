@@ -143,7 +143,7 @@ public class CanToggleOnOff : MonoBehaviour {
         isCurrentlyLerping = true;
         // check if there are moving parts
         // check if there are lights/materials etc to swap out
-        if (isOn) {
+        if (!isOn) {
             if (MovingParts.Length > 0) {
                 for (int i = 0; i < MovingParts.Length; i++) {
                     if (movementType == MovementType.Slide) {
@@ -166,7 +166,7 @@ public class CanToggleOnOff : MonoBehaviour {
                             desiredOpenness: 1,
                             animationTime: animationTime
                         ));
-                    }                    
+                    }
                 }
             }
 
