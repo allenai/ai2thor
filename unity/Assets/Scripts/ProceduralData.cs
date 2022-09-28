@@ -43,16 +43,25 @@ namespace Thor.Procedural.Data {
         public string id { get; set; }
         public string type { get; set; }
         public Vector3 position { get; set; }
-
+        public Vector3 localPosition { get; set; }
         public string[] cullingMaskOff { get; set;}
-
         public FlexibleRotation rotation;
         public float intensity { get; set; }
         public float indirectMultiplier { get; set; }
         public float range { get; set; }
+        public float spotAngle { get; set; } //only used for spot lights, [1-179] valid range 
         public SerializableColor rgb { get; set; }
         public ShadowParameters shadow = null;
-        public string linkedObjectId { get; set; }
+        /*
+        linked objects are one of two cases:
+        this is a scene light and it is controlled by some light switch sim object, and is linked to that light switch
+        this is a light that is a child of some sim object (ie: lamp) and it is controlled by that sim object
+        notably, lights that are children of sim objects will have that sim object's name in the light's name (LightParameters.id) as an additional identifier
+        */
+        public string linkedSimObj { get; set; } //explicit reference to what Sim Object controls if this light is enabled/disabled when using ToggleOnOff
+        public bool enabled { get; set; }
+        public string parentSimObjId { get; set; } //explicit reference to the objectID of a parent Sim Object this Light is a child of
+        public string parentSimObjName { get; set;} //explicit reference to the game object name of the parent Sim Object this Light is a child of
     }
 
     [Serializable]

@@ -36,10 +36,15 @@ public class CanToggleOnOff : MonoBehaviour {
     [SerializeField]
     public SwapObjList[] MaterialSwapObjects;
 
-    // Light emitting objects that must be toggled enabled/disabled. Can also be used for non-Light objects
-    [Header("Light Source Objects/Objects to Enable or Disable")]
+    // Light emitting objects that must be toggled enabled/disabled.
+    [Header("Light Source to Enable or Disable")]
     [SerializeField]
-    public GameObject[] LightSources;
+    public Light[] LightSources;
+
+    //stuff like particles or other rendered objects to toggle (ex: flame particles, renderers, heat trigger colliders-Microwaves)
+    [Header("Effects/Objects to Enable or Disable")]
+    [SerializeField]
+    public GameObject[] effects;
 
     [Header("Animation Parameters")]
 
@@ -116,6 +121,8 @@ public class CanToggleOnOff : MonoBehaviour {
     // Use this for initialization
     void Start() {
 
+        //setLightSourcesNames();
+
 #if UNITY_EDITOR
         if (!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)) {
             Debug.LogError(this.name + "is missing the CanToggleOnOff Secondary Property! Please set it!");
@@ -123,15 +130,25 @@ public class CanToggleOnOff : MonoBehaviour {
 #endif
     }
 
+    //set light source names to naming scheme: {objectID}|{Type}|{instance}
+    //used to set child light source names
+    // public void setLightSourcesNames () {
+    //     for (int i = 0; i < LightSources.Length; i++ ) {
+    //         Light actualLightCauseSometimesTheseAreNested = LightSources[i].GetComponentInChildren<Light>();
+    //         actualLightCauseSometimesTheseAreNested.name = 
+    //         this.GetComponent<SimObjPhysics>().objectID + "|" + LightSources[i].GetComponentInChildren<Light>().type.ToString()+ "|" + i.ToString();
+    //     }
+    // }
+
     // Update is called once per frame
     void Update() {
         // // test if it can open without Agent Command - Debug Purposes
-        // #if UNITY_EDITOR
-        // if (Input.GetKeyDown(KeyCode.Minus))
-        // {
-        //     Toggle();
-        // }
-        // #endif
+        #if UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.Minus))
+        {
+            Toggle();
+        }
+        #endif
     }
 
     public void Toggle() {
@@ -209,7 +226,13 @@ public class CanToggleOnOff : MonoBehaviour {
         if (isOn) {
             if (LightSources.Length > 0) {
                 for (int i = 0; i < LightSources.Length; i++) {
-                    LightSources[i].SetActive(false);
+                    LightSources[i].transform.gameObject.SetActive(false);
+                }
+            }
+
+            if(effects.Length > 0) {
+                for (int i = 0; i< effects.Length; i++) {
+                    effects[i].SetActive(false);
                 }
             }
 
@@ -234,7 +257,13 @@ public class CanToggleOnOff : MonoBehaviour {
         else {
             if (LightSources.Length > 0) {
                 for (int i = 0; i < LightSources.Length; i++) {
-                    LightSources[i].SetActive(true);
+                    LightSources[i].transform.gameObject.SetActive(true);
+                }
+            }
+
+            if(effects.Length > 0) {
+                for (int i = 0; i< effects.Length; i++) {
+                    effects[i].SetActive(true);
                 }
             }
 

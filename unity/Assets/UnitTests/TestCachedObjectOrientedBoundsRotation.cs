@@ -22,7 +22,7 @@ namespace Tests {
             action["snapToGrid"] = true;
             yield return step(action);
 
-            GameObject book = GameObject.Find("Book_3d15d052");
+            GameObject book = GameObject.Find("Book_e5ef3174");
 
             bool result = false;
             GameObject boundingBox = book.transform.Find("BoundingBox").gameObject;

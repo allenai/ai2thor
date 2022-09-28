@@ -472,6 +472,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 
+                case "getlights": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "GetLights";
+
+                        CurrentActiveController().ProcessControlCommand(action);
+
+                        //ctionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
                 case "stretchtest1": {
                         List<string> commands = new List<string>();
                         commands.Add("run move_stretch_arm_1");

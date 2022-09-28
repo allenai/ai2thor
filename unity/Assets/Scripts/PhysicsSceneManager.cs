@@ -284,10 +284,7 @@ public class PhysicsSceneManager : MonoBehaviour {
             }
 
             o.ObjectID = parent.ObjectID + "|" + o.Type.ToString();
-
-            Debug.Log("**************** CALLED GENERATE OBJECT ID " + o.ObjectID);
             return;
-
         }
 
         Vector3 pos = o.transform.position;
@@ -295,6 +292,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         string yPos = (pos.y >= 0 ? "+" : "") + pos.y.ToString("00.00");
         string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
         o.ObjectID = o.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
+
     }
 
     // used to create object id for an object created as result of a state change of another object ie: bread - >breadslice1, breadslice 2 etc
