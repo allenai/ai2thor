@@ -2974,14 +2974,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (visSchemeEnum == VisibilityScheme.Collider) {
                 visible = GetAllVisibleSimObjPhysicsCollider(
                     camera: m_Camera,
-                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), # lgtm [cs/dereferenced-value-may-be-null]
+                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
                     filterSimObjs: null,
                     interactable: out interactable
                 );
             } else {
                 visible = GetAllVisibleSimObjPhysicsDistance(
                     camera: m_Camera,
-                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), # lgtm [cs/dereferenced-value-may-be-null]
+                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
                     filterSimObjs: null,
                     interactable: out interactable
                 );
