@@ -14,6 +14,7 @@ using Thor.Procedural.Data;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
+
 public static class UtilityFunctions {
 
     //store the max number of layers unity supports in its layer system. By default this is 32
