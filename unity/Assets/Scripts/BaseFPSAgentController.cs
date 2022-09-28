@@ -1542,13 +1542,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public virtual ObjectMetadata[] generateObjectMetadata(SimObjPhysics[] simObjects = null) {
+        public virtual ObjectMetadata[] generateObjectMetadata(SimObjPhysics[] simObjects) {
             if (simObjects == null) {
-                if (this.simObjFilter != null) {
-                    simObjects = this.simObjFilter;
-                } else {
-                    simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
-                }
+                throw new NullReferenceException("null SimObjPhysics passed to generateObjectMetadata");
             }
 
             SimObjPhysics[] interactable;
@@ -1789,7 +1785,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MetadataWrapper metaMessage = new MetadataWrapper();
             metaMessage.agent = agentMeta;
             metaMessage.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            metaMessage.objects = this.generateObjectMetadata();
+            metaMessage.objects = this.generateObjectMetadata(
+                (
+                    this.simObjFilter == null ?
+                    physicsSceneManager.ObjectIdToSimObjPhysics.Values.ToArray() :
+                    this.simObjFilter
+                )
+            );
             metaMessage.isSceneAtRest = physicsSceneManager.isSceneAtRest;
             metaMessage.sceneBounds = GenerateSceneBounds(agentManager.SceneBounds);
             metaMessage.collided = collidedObjects.Length > 0;
@@ -2949,9 +2951,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             VisibilityScheme visSchemeEnum;
             if (visibilityScheme != null) {
                 visibilityScheme = visibilityScheme.ToLower();
-                if (visibilityScheme.ToLower() == "collider") {
+
+                if (
+                    visibilityScheme == Enum.GetName(typeof(VisibilityScheme), VisibilityScheme.Collider).ToLower()
+                ) {
                     visSchemeEnum = VisibilityScheme.Collider;
-                } else if (visibilityScheme.ToLower() == "distance") {
+                } else if (
+                    visibilityScheme == Enum.GetName(typeof(VisibilityScheme), VisibilityScheme.Distance).ToLower()
+                ) {
                     visSchemeEnum = VisibilityScheme.Distance;
                 } else {
                     throw new System.NotImplementedException(
@@ -2967,14 +2974,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (visSchemeEnum == VisibilityScheme.Collider) {
                 visible = GetAllVisibleSimObjPhysicsCollider(
                     camera: m_Camera,
-                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance),
+                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), # lgtm [cs/dereferenced-value-may-be-null]
                     filterSimObjs: null,
                     interactable: out interactable
                 );
             } else {
                 visible = GetAllVisibleSimObjPhysicsDistance(
                     camera: m_Camera,
-                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance),
+                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), # lgtm [cs/dereferenced-value-may-be-null]
                     filterSimObjs: null,
                     interactable: out interactable
                 );
@@ -3645,10 +3652,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float dist = float.PositiveInfinity;
 
+            // Must temporarily enable the box collider c1 as otherwise the call to `ClosestPoint` will return subtly
+            // incorrect results.
             c1.enabled = true;
             foreach (Vector3 p in pointsOnSurfaceOfBoxCollider(c0, divisions)) {
                 Vector3 pLocal = c1.transform.InverseTransformPoint(p) - c1.center;
                 Vector3 size = c1.size;
+                // 0.5 used below because `size` corresponds to full box extents, not half extents
+                // and are measuring things from the center.
                 if (
                     (-0.5f * size.x < pLocal.x && pLocal.x < 0.5f * size.x) &&
                     (-0.5f * size.y < pLocal.y && pLocal.y < 0.5f * size.y) &&
@@ -3669,6 +3680,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             c1.enabled = false;
 
+            // Must temporarily enable the box collider c1 as otherwise the call to `ClosestPoint` will return subtly
+            // incorrect results.
             c0.enabled = true;
             foreach (Vector3 p in pointsOnSurfaceOfBoxCollider(c1, divisions)) {
                 Vector3 pLocal = c0.transform.InverseTransformPoint(p) - c0.center;
