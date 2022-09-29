@@ -98,7 +98,7 @@ house_template = {
         "skyboxId": "Sky1",
         "ceilingMaterial": {"name": "ps_mat"},
     },
-    "schema": "1.0.0",
+    "metadata": {"schema": "1.0.0"},
 }
 
 # TODO rendering is different for fifo and wsgi server
