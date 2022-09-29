@@ -422,7 +422,7 @@ namespace Thor.Procedural {
             };
 
             return new ProceduralHouse() {
-                metadata = new HouseMetadata() { schema=houseTemplate.schema },
+                metadata = new HouseMetadata() { schema=houseTemplate.metadata.schema },
                 proceduralParameters = houseTemplate.proceduralParameters.DeepClone(),
                 id = !string.IsNullOrEmpty(houseTemplate.id) ? houseTemplate.id : houseId(),
                 rooms = roomsWithWalls.Select(p => p.room).ToList(),

@@ -14,7 +14,9 @@ namespace Tests {
     {
 
         protected HouseTemplate houseTemplate = new HouseTemplate() {
-                    schema = ProceduralTools.CURRENT_HOUSE_SCHEMA,
+                    metadata = new HouseMetadata() {
+                        schema = ProceduralTools.CURRENT_HOUSE_SCHEMA
+                    },
                     id = "house_0",
                     // TODO, some assumptions can be done to place doors and objects in `layout`
                     // and use `objectsLayouts` for any possible inconsistencies or layering instead of being mandatory for objects
