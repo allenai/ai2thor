@@ -1137,6 +1137,24 @@ namespace Thor.Procedural {
             }
         }
 
+        public static (int, int, int) parseHouseVersion(string version) {
+            if (string.IsNullOrEmpty(version)) {
+                return (0, 0, 0);
+            } else {
+                var versionSplit = version.Split('.');
+                Debug.Log(string.Join(", ", versionSplit));
+                var versionResult = new int[] {0, 0, 0 }.Select((x, i) => {
+                    if (versionSplit.Length > i) {
+                        int outVersion;
+                        bool canParse = int.TryParse(versionSplit[i], out outVersion);
+                        return canParse? outVersion : x;
+                    }
+                    return x;
+                }).ToArray();
+                return (versionResult[0], versionResult[1], versionResult[2]);
+            }
+        }
+
         public static int compareVersion((int, int, int) v0, (int, int, int) v1) {
             var diffs = new int[] {v0.Item1, v0.Item2, v0.Item3}.Zip(new int[] {v1.Item1, v1.Item2, v1.Item3}, (e0, e1) => e0 - e1);
             foreach (var diff in diffs) {
@@ -1153,18 +1171,22 @@ namespace Thor.Procedural {
            Vector3? position = null
        ) {
             // raise exception if metadata contains schema
-            string schema = house.metadata.schema;
-            if (schema == null) {
+            if (house.metadata == null || house.metadata.schema == null) {
                 throw new ArgumentException(
-                    "House metadata schema not specified! Should be under house['metadata']['schema']." +
-                    " The current schema is " + CURRENT_HOUSE_SCHEMA
+                    $"House metadata schema not specified! Should be under house['metadata']['schema']." +
+                    $" The current schema for this THOR version is '{CURRENT_HOUSE_SCHEMA}'"
                 );
             }
 
-            if (schema != CURRENT_HOUSE_SCHEMA) {
-                throw new ArgumentException(
-                    $"Invalid house schema: '{schema}'. Supported schema: '{CURRENT_HOUSE_SCHEMA}'", "house.version"
-                );
+            var schema = parseHouseVersion(house.metadata?.schema);
+            var latestSchema = parseHouseVersion(CURRENT_HOUSE_SCHEMA);
+            var versionCompare = compareVersion(schema, latestSchema);
+
+            if (versionCompare != 0) {
+                var message = versionCompare < 0 ?
+                $"Incompatible house schema version '{schema}', please upgrade to latest '{latestSchema}' using the 'procthor' package's 'scripts/upgrade_house.py'." :
+                $"Invalid house version: '{schema}'. Supported version: '{latestSchema}'";
+                throw new ArgumentException(message, "house.version");
             }
 
             string simObjId = !String.IsNullOrEmpty(house.id) ? house.id : ProceduralTools.DefaultHouseRootObjectName;
@@ -1363,7 +1385,7 @@ namespace Thor.Procedural {
                         position: pos,
                         rotation: rotation,
                         kinematic: true,
-                        color: holeCover.color,
+                        materialProperties: holeCover.material,
                         positionBoundingBoxCenter: positionFromCenter,
                         scale: holeCover.scale
                     );
@@ -1620,7 +1642,6 @@ namespace Thor.Procedural {
                     // ho.rotation,
                     rotation: Quaternion.AngleAxis(ho.rotation.degrees, ho.rotation.axis),
                     kinematic: ho.kinematic,
-                    color: ho.color,
                     positionBoundingBoxCenter: true,
                     unlit: ho.unlit,
                     materialProperties: ho.material,
@@ -1644,7 +1665,6 @@ namespace Thor.Procedural {
             Quaternion rotation,
             // FlexibleRotation rotation,
             bool kinematic = false,
-            SerializableColor color = null,
             bool positionBoundingBoxCenter = false,
             bool unlit = false,
             MaterialProperties materialProperties = null,
@@ -1733,12 +1753,19 @@ namespace Thor.Procedural {
                 unlitShader = Shader.Find("Unlit/Color");
             }
 
-            if (color != null) {
+            if (materialProperties != null) {
                 var materials = toSpawn.GetComponentsInChildren<MeshRenderer>().Select(
                     mr => mr.material
                 );
                 foreach (var mat in materials) {
-                    mat.color = new Color(color.r, color.g, color.b, color.a);
+                    if (materialProperties.color != null) {
+                        mat.color = new Color(
+                            materialProperties.color.r, 
+                            materialProperties.color.g, 
+                            materialProperties.color.b, 
+                            materialProperties.color.a
+                        );
+                    }
                     if (unlit) {
                         mat.shader = unlitShader;
                     }

@@ -117,7 +117,7 @@ namespace Thor.Procedural.Data {
         public bool openable { get; set; }
         public float openness { get; set; } = 0.0f;
         public string assetId { get; set; }
-
+        public MaterialProperties material { get; set; }
         public Vector3? scale { get; set; } = null;
         public SerializableColor color { get; set; } = null;
     }
@@ -208,7 +208,7 @@ namespace Thor.Procedural.Data {
         public string roomId { get; set; }
         public float thickness { get; set; }
         public string layer { get; set; }
-        public MaterialProperties material;
+        public MaterialProperties material { get; set; }
         public bool empty { get; set; } = false;
         public bool unlit;
     }
@@ -258,7 +258,7 @@ namespace Thor.Procedural.Data {
         public List<VectorXZ> axesXZ { get; set; }
         public string type { get; set; }
         public string assetId { get; set; }
-
+        public MaterialProperties material { get; set; }
         public Vector3? scale { get; set; } = null;
         public SerializableColor color { get; set; } = null;
     }
@@ -359,7 +359,6 @@ namespace Thor.Procedural.Data {
         public bool? isDirty { get; set; } = null;
         
         public bool unlit;
-        public SerializableColor color { get; set; } = null;
         public MaterialProperties material;
     }
 
@@ -427,7 +426,7 @@ namespace Thor.Procedural.Data {
         float openness { get; set; }
 
         Vector3? scale { get; set; }
-        SerializableColor color { get; set; }
+        MaterialProperties material { get; set; }
     }
 
     [Serializable]

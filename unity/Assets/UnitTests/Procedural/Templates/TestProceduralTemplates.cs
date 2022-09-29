@@ -14,9 +14,7 @@ namespace Tests {
     {
 
         protected HouseTemplate houseTemplate = new HouseTemplate() {
-                    metadata = new HouseMetadata {
-                        schema = "1.0.0"
-                    },
+                    schema = ProceduralTools.CURRENT_HOUSE_SCHEMA,
                     id = "house_0",
                     // TODO, some assumptions can be done to place doors and objects in `layout`
                     // and use `objectsLayouts` for any possible inconsistencies or layering instead of being mandatory for objects
@@ -314,7 +312,7 @@ namespace Tests {
         public IEnumerator TestHouseLowerVersion() { 
             Assert.That(() => {
                 var house = createTestHouse();
-                house.metadata.schema = "0.0.0";
+                house.metadata.schema = "0.0.1";
                 Debug.Log(house.metadata.schema);
                 ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
             }, Throws.ArgumentException);
