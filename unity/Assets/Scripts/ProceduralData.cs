@@ -14,7 +14,6 @@ using Newtonsoft.Json.Serialization;
 
 
 namespace Thor.Procedural.Data {
-    // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse); 
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
@@ -109,7 +108,8 @@ namespace Thor.Procedural.Data {
         public bool openable { get; set; }
         public float openness { get; set; } = 0.0f;
         public string assetId { get; set; }
-
+        public MaterialProperties material { get; set; }
+        public Vector3? scale { get; set; } = null;
         public SerializableColor color { get; set; } = null;
     }
 
@@ -129,8 +129,7 @@ namespace Thor.Procedural.Data {
             tilingDivisorX = 1.0f,
             tilingDivisorY = 1.0f
         };
-        
-        public SerializableColor ceilingColor { get; set; } = null;
+
         public float navmeshVoxelSize { get; set; }
         public bool ceilingBackFaces { get; set; }
 
@@ -175,9 +174,8 @@ namespace Thor.Procedural.Data {
         public string roomId { get; set; }
         public float thickness { get; set; }
         public string layer { get; set; }
-        public MaterialProperties material;
+        public MaterialProperties material { get; set; }
         public bool empty { get; set; } = false;
-        public SerializableColor color { get; set; } = null;
         public bool unlit;
     }
 
@@ -226,7 +224,8 @@ namespace Thor.Procedural.Data {
         public List<VectorXZ> axesXZ { get; set; }
         public string type { get; set; }
         public string assetId { get; set; }
-
+        public MaterialProperties material { get; set; }
+        public Vector3? scale { get; set; } = null;
         public SerializableColor color { get; set; } = null;
     }
 
@@ -326,7 +325,6 @@ namespace Thor.Procedural.Data {
         public bool? isDirty { get; set; } = null;
         
         public bool unlit;
-        public SerializableColor color { get; set; } = null;
         public MaterialProperties material;
     }
 
@@ -355,6 +353,7 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class HouseMetadata {
         public Dictionary<string, AgentPose> agentPoses { get; set; }
+        public string schema { get; set; } = null;
     }
 
     [Serializable]
@@ -376,15 +375,10 @@ namespace Thor.Procedural.Data {
         public bool unlit { get; set; }
         public float? tilingDivisorX = 1.0f;
         public float? tilingDivisorY = 1.0f;
-        public float metallic;
-        public float smoothness;
+        public float? metallic;
+        public float? smoothness;
     }
-
-    // TODO more general
-    // public class House<T> where T : Room
-    // {
-
-    // }
+    
     public interface WallRectangularHole {
         string id { get; set; }
         string assetId { get; set; }
@@ -397,7 +391,8 @@ namespace Thor.Procedural.Data {
 
         float openness { get; set; }
 
-        SerializableColor color { get; set; }
+        Vector3? scale { get; set; }
+        MaterialProperties material { get; set; }
     }
 
     [Serializable]
@@ -414,9 +409,6 @@ namespace Thor.Procedural.Data {
         public string roomId;
 
         public string layer { get; set; }
-
-        public float materialTilingXDivisor = 1.0f;
-        public float materialTilingYDivisor = 1.0f;
 
         public SerializableColor color { get; set; } = null;
 

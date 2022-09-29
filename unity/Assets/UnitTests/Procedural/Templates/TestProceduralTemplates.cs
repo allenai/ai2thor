@@ -14,6 +14,7 @@ namespace Tests {
     {
 
         protected HouseTemplate houseTemplate = new HouseTemplate() {
+                    schema = ProceduralTools.CURRENT_HOUSE_SCHEMA,
                     id = "house_0",
                     // TODO, some assumptions can be done to place doors and objects in `layout`
                     // and use `objectsLayouts` for any possible inconsistencies or layering instead of being mandatory for objects
@@ -44,7 +45,7 @@ namespace Tests {
                             0 0 0 0 0 0
                         "
                     },
-                    rooms =  new Dictionary<string, RoomTemplate>() {
+                     rooms =  new Dictionary<string, RoomTemplate>() {
                         {"1", new RoomTemplate(){ 
                             wallTemplate = new PolygonWall() {
                                 material = new MaterialProperties() {
@@ -234,9 +235,8 @@ namespace Tests {
 
             Assert.IsTrue(door.room0 == "1");
             Assert.IsTrue(door.room1 == "2");
-            Assert.IsTrue(door.holePolygon.Count == 2);
-            Assert.IsTrue(door.holePolygon[0] == new Vector3(3.0f, 0.0f, 0.0f));
 
+            Assert.IsTrue(door.holePolygon[0] == new Vector3(3.0f, 0.0f, 0.0f));
 
             Assert.AreEqual(
                 house.walls.Where(w => w.roomId =="1")
@@ -280,7 +280,7 @@ namespace Tests {
 
             var room2 = house.rooms.Find(r => r.id == "2");
             Assert.IsTrue(room2.ceilings.Count == 1);
-            Assert.IsTrue(room2.ceilings[0].material.name == houseTemplate.proceduralParameters.ceilingMaterial.name);
+            Assert.IsTrue(room2.ceilings[0].material == houseTemplate.proceduralParameters.ceilingMaterial);
             Assert.IsTrue(room2.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).All(e => room2Poly.ElementAt(e.index) == e.point));
 
             var room1Poly = new List<Vector3>() {
@@ -292,9 +292,41 @@ namespace Tests {
 
             var room1 = house.rooms.Find(r => r.id == "1");
             Assert.IsTrue(room1.ceilings.Count == 1);
-            Assert.IsTrue(room1.ceilings[0].material.name == houseTemplate.proceduralParameters.ceilingMaterial.name);
+            Assert.IsTrue(room1.ceilings[0].material == houseTemplate.proceduralParameters.ceilingMaterial);
             Assert.IsTrue(room1.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).All(e => room1Poly.ElementAt(e.index) == e.point));
             yield return true;
+        }
+
+        [UnityTest]
+        public IEnumerator TestHouseNullVersion() { 
+            Assert.That(() => {
+                var house = createTestHouse();
+                house.metadata.schema = null;
+                Debug.Log(house.metadata.schema);
+                ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
+            }, Throws.ArgumentException);
+            yield return true;
+        }
+
+        [UnityTest]
+        public IEnumerator TestHouseLowerVersion() { 
+            Assert.That(() => {
+                var house = createTestHouse();
+                house.metadata.schema = "0.0.1";
+                Debug.Log(house.metadata.schema);
+                ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
+            }, Throws.ArgumentException);
+            yield return true;
+        }
+
+         [UnityTest]
+        public IEnumerator TestMultiHole() { 
+              var house = createTestHouse();
+              Debug.Log(house);
+              ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
+              Debug.Break();
+              yield return true;
+              
         }
 
          protected virtual ProceduralHouse createTestHouse() {

@@ -13,6 +13,7 @@ using System.Media;
 namespace Tests {
     public class TestRendering : TestBaseProcedural {
         protected HouseTemplate houseTemplate = new HouseTemplate() {
+            schema = "1.0.0",
             id = "house_0",
             // TODO, some assumptions can be done to place doors and objects in `layout`
             // and use `objectsLayouts` for any possible inconsistencies or layering instead of being mandatory for objects
@@ -192,6 +193,7 @@ namespace Tests {
             var rgbBytes = this.renderPayload.Find(e => e.Key == "image").Value;
 
             Debug.Log($" path  {getTestResourcesPath("img")}");
+            Debug.Break();
 
             // TODO: when width height are fixed add back images and folder paths
             // savePng(rgbBytes, getTestResourcesPath("test.png", false));
