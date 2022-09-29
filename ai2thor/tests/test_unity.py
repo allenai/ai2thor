@@ -189,7 +189,7 @@ def depth_images_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath="
         max = np.max(diff)
         norm_diff = diff / max
         dx = np.where(np.abs(depth1 - depth2) >= epsilon)
-        depth_copy[dx] = norm_diff[dx] * (255, 0, 255)
+        depth_copy[dx] =  (norm_diff[dx]*255, norm_diff[dx] * 0, norm_diff[dx] *255)
         test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
         debug_directory = os.path.join(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY))
         # if os.path.exists(debug_directory):

@@ -14,6 +14,7 @@ namespace Tests {
     {
 
         protected HouseTemplate houseTemplate = new HouseTemplate() {
+                    schema = ProceduralTools.CURRENT_HOUSE_SCHEMA,
                     id = "house_0",
                     // TODO, some assumptions can be done to place doors and objects in `layout`
                     // and use `objectsLayouts` for any possible inconsistencies or layering instead of being mandatory for objects
@@ -44,31 +45,35 @@ namespace Tests {
                             0 0 0 0 0 0
                         "
                     },
-                    rooms =  new Dictionary<string, RoomTemplate>() {
+                     rooms =  new Dictionary<string, RoomTemplate>() {
                         {"1", new RoomTemplate(){ 
                             wallTemplate = new PolygonWall() {
-                                color = SerializableColor.fromUnityColor(Color.red),
-                                unlit = true
+                                material = new MaterialProperties() {
+                                    color = SerializableColor.fromUnityColor(Color.red),
+                                    unlit = true
+                                }
                             },
                             floorTemplate = new RoomHierarchy() {
-                                floorMaterial = "DarkWoodFloors",
+                                floorMaterial = new MaterialProperties() { name = "DarkWoodFloors" },
                                 roomType = "Bedroom"
                             },
                             wallHeight = 3.0f
                         }},
                         {"2", new RoomTemplate(){ 
                             wallTemplate = new PolygonWall() {
-                                color = SerializableColor.fromUnityColor(Color.blue),
-                                unlit = true
+                                material = new MaterialProperties() {
+                                    color = SerializableColor.fromUnityColor(Color.blue),
+                                    unlit = true
+                                }
                             },
                             floorTemplate = new RoomHierarchy() {
-                                floorMaterial = "RedBrick",
+                                floorMaterial = new MaterialProperties() { name = "RedBrick" },
                                 roomType = "LivingRoom"
                             },
                             wallHeight = 3.0f
                         }}
                     },
-                    doors = new Dictionary<string, WallRectangularHole>() {
+                    doors = new Dictionary<string, Thor.Procedural.Data.Door>() {
                         {"=", new Thor.Procedural.Data.Door(){ 
                             openness = 1.0f,
                             assetId = "Doorway_1",
@@ -90,7 +95,7 @@ namespace Tests {
                         }}
                     },
                     proceduralParameters = new ProceduralParameters() {
-                        ceilingMaterial = "ps_mat",
+                        ceilingMaterial = new MaterialProperties() { name = "ps_mat" },
                         floorColliderThickness = 1.0f,
                         receptacleHeight = 0.7f,
                         skyboxId = "Sky1",
@@ -196,7 +201,7 @@ namespace Tests {
             Debug.Log(chair.position);
             // Assert.IsTrue(chair.position == new Vector3(4.0f, 0.0f, 4.0f));
 
-            Assert.That(Vector3.Distance(chair.position, new Vector3(3.2f, 1.0f, 3.2f)), Is.LessThanOrEqualTo(delta));
+            Assert.That(Vector3.Distance(chair.position, new Vector3(3.2f, 1.1f, 3.2f)), Is.LessThanOrEqualTo(delta));
             Assert.IsTrue(chair.assetId == "Chair_007_1");
             Debug.Log(apple.position);
             // Assert.IsTrue(apple.position == new Vector3(4.0f, 2.0f, 4.0f));
@@ -231,8 +236,7 @@ namespace Tests {
             Assert.IsTrue(door.room0 == "1");
             Assert.IsTrue(door.room1 == "2");
 
-            Assert.IsTrue(door.boundingBox.min == new Vector3(3.0f, 0.0f, 0.0f));
-
+            Assert.IsTrue(door.holePolygon[0] == new Vector3(3.0f, 0.0f, 0.0f));
 
             Assert.AreEqual(
                 house.walls.Where(w => w.roomId =="1")
@@ -290,6 +294,28 @@ namespace Tests {
             Assert.IsTrue(room1.ceilings.Count == 1);
             Assert.IsTrue(room1.ceilings[0].material == houseTemplate.proceduralParameters.ceilingMaterial);
             Assert.IsTrue(room1.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).All(e => room1Poly.ElementAt(e.index) == e.point));
+            yield return true;
+        }
+
+        [UnityTest]
+        public IEnumerator TestHouseNullVersion() { 
+            Assert.That(() => {
+                var house = createTestHouse();
+                house.metadata.schema = null;
+                Debug.Log(house.metadata.schema);
+                ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
+            }, Throws.ArgumentException);
+            yield return true;
+        }
+
+        [UnityTest]
+        public IEnumerator TestHouseLowerVersion() { 
+            Assert.That(() => {
+                var house = createTestHouse();
+                house.metadata.schema = "0.0.1";
+                Debug.Log(house.metadata.schema);
+                ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
+            }, Throws.ArgumentException);
             yield return true;
         }
 

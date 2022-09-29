@@ -4871,11 +4871,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var materialIds = new HashSet<string>(
                 house.rooms.SelectMany(
                     r => r.ceilings
-                            .Select(c => c.material)
-                            .Concat(new List<string>() { r.floorMaterial })
-                            .Concat(house.walls.Select(w => w.material))
+                            .Select(c => c.material.name)
+                            .Concat(new List<string>() { r.floorMaterial.name })
+                            .Concat(house.walls.Select(w => w.material.name))
                 ).Concat(
-                    new List<string>() { house.proceduralParameters.ceilingMaterial }
+                    new List<string>() { house.proceduralParameters.ceilingMaterial.name }
                 )
             );
             var missingIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
@@ -4888,9 +4888,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     )
                 );
             }
-            Debug.Log("Before Procedural call");
-            var floor = ProceduralTools.CreateHouse(house: house, materialDb: materials);
-
+            
+            try {
+                ProceduralTools.CreateHouse(house: house, materialDb: materials);
+            } 
+            catch (Exception e) {
+                Debug.Log(e);
+                var msg = $"Exception creating house.\n'{e.Message}'\n'{e.InnerException}'";
+                Debug.Log(msg);
+                actionFinished(false, actionReturn: null, errorMessage: msg);
+                return;
+            }
             actionFinished(true);
         }
 

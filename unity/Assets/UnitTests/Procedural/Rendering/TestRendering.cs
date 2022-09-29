@@ -13,61 +13,66 @@ using System.Media;
 namespace Tests {
     public class TestRendering : TestBaseProcedural {
         protected HouseTemplate houseTemplate = new HouseTemplate() {
+            schema = "1.0.0",
             id = "house_0",
             // TODO, some assumptions can be done to place doors and objects in `layout`
             // and use `objectsLayouts` for any possible inconsistencies or layering instead of being mandatory for objects
             layout = $@"
-            0 0 0 0 0 0
-            0 2 2 2 2 0
-            0 2 2 2 2 0
-            0 1 1 1 1 0
-            0 1 1 1 1 0
-            0 0 0 0 0 0
-        ",
+                        0 0 0 0 0 0
+                        0 2 2 2 2 0
+                        0 2 2 2 2 0
+                        0 1 1 1 1 0
+                        0 1 1 1 1 0
+                        0 0 0 0 0 0
+                    ",
             objectsLayouts = new List<string>() {
-            $@"
-                0 0 0 0 0 0
-                0 2 2 2 2 0
-                0 2 2 2 = 0
-                0 1 1 1 = 0
-                0 1 1 1 1 0
-                0 0 0 0 0 0
-            "
-        },
+                        $@"
+                            0 0 0 0 0 0
+                            0 2 2 2 2 0
+                            0 2 2 2 = 0
+                            0 1 1 1 = 0
+                            0 1 1 1 1 0
+                            0 0 0 0 0 0
+                        "
+                    },
             rooms = new Dictionary<string, RoomTemplate>() {
-            {"1", new RoomTemplate(){
-                wallTemplate = new PolygonWall() {
-                    color = SerializableColor.fromUnityColor(Color.red),
-                    unlit = true
-                },
-                floorTemplate = new RoomHierarchy() {
-                    floorMaterial = "DarkWoodFloors",
-                    roomType = "Bedroom"
-                },
-                wallHeight = 3.0f
-            }},
-            {"2", new RoomTemplate(){
-                wallTemplate = new PolygonWall() {
-                    color = SerializableColor.fromUnityColor(Color.blue),
-                    unlit = true
-                },
-                floorTemplate = new RoomHierarchy() {
-                    floorMaterial = "RedBrick",
-                    roomType = "LivingRoom"
-                },
-                wallHeight = 3.0f
-            }}
-        },
-            doors = new Dictionary<string, WallRectangularHole>() {
-            {"=", new Thor.Procedural.Data.Door(){
-                openness = 1.0f,
-                assetId = "Doorway_1",
-                room0 = "1"
+                        {"1", new RoomTemplate(){
+                            wallTemplate = new PolygonWall() {
+                                material = new MaterialProperties() {
+                                    color = SerializableColor.fromUnityColor(Color.red),
+                                    unlit = true
+                                }
+                            },
+                            floorTemplate = new RoomHierarchy() {
+                                floorMaterial = new MaterialProperties() { name ="DarkWoodFloors" },
+                                roomType = "Bedroom"
+                            },
+                            wallHeight = 3.0f
+                        }},
+                        {"2", new RoomTemplate(){
+                            wallTemplate = new PolygonWall() {
+                                material = new MaterialProperties() {
+                                    color = SerializableColor.fromUnityColor(Color.blue),
+                                    unlit = true
+                                }
+                            },
+                            floorTemplate = new RoomHierarchy() {
+                                floorMaterial = new MaterialProperties() { name = "RedBrick" },
+                                roomType = "LivingRoom"
+                            },
+                            wallHeight = 3.0f
+                        }}
+                    },
+            doors = new Dictionary<string, Thor.Procedural.Data.Door>() {
+                        {"=", new Thor.Procedural.Data.Door(){
+                            openness = 1.0f,
+                            assetId = "Doorway_1",
+                            room0 = "1"
 
-            }}
-        },
+                        }}
+                    },
             proceduralParameters = new ProceduralParameters() {
-                ceilingMaterial = "ps_mat",
+                ceilingMaterial = new MaterialProperties() { name = "ps_mat" },
                 floorColliderThickness = 1.0f,
                 receptacleHeight = 0.7f,
                 skyboxId = "Sky1",
@@ -110,12 +115,12 @@ namespace Tests {
             });
 
             var rgbBytes = this.renderPayload.Find(e => e.Key == "image").Value;
-            
+
             var eps = 40;
             var assertResult = rgbBytes.Select((pixel, index) => (pixel, index))
                 .All(
-                    e => 
-                    (e.index % 3 == 0 && 255 - e.pixel <= eps) || 
+                    e =>
+                    (e.index % 3 == 0 && 255 - e.pixel <= eps) ||
                     (e.index % 3 != 0 && e.pixel <= eps)
                 );
 
@@ -186,6 +191,7 @@ namespace Tests {
             });
 
             var rgbBytes = this.renderPayload.Find(e => e.Key == "image").Value;
+            //Debug.Break();
 
             Debug.Log($" path  {getTestResourcesPath("img")}");
 
@@ -239,6 +245,7 @@ namespace Tests {
             // 0 1 1 1 1 0
             // 0 0 0 0 0 0
             // ",
+            Screen.SetResolution(600, 600, false);
             yield return step(new Dictionary<string, object>() {
                 { "gridSize", 0.25f},
                 { "agentCount", 1},
@@ -253,6 +260,7 @@ namespace Tests {
 
             yield return step(
                 new Dictionary<string, object>() {
+
                 { "position", new Vector3(3.0f, 1.0f, 4.0f)},
                 { "rotation", new Vector3(0, 180, 0)},
                 { "horizon", 0.0f},
