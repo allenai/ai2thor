@@ -1029,12 +1029,86 @@ class Controller(object):
 
         if self.gpu_device is not None:
             # This parameter only applies to the CloudRendering platform.
-            # Vulkan maps the passed in parameter to device-index - 1 when compared
-            # to the nvidia-smi device ids
-            device_index = (
-                self.gpu_device if self.gpu_device < 1 else self.gpu_device + 1
-            )
-            command += " -force-device-index %d" % device_index
+            # Vulkan device ids need not correspond to CUDA device ids. The below
+            # code finds the device_uuids for each GPU and then figures out the mapping
+            # between the CUDA device ids and the Vulkan device ids.
+
+            cuda_vulkan_mapping_path = os.path.join(self.base_dir, "cuda-vulkan-mapping.json")
+            with LockEx(cuda_vulkan_mapping_path):
+                if not os.path.exists(cuda_vulkan_mapping_path):
+                    vulkan_result = None
+                    try:
+                        vulkan_result = subprocess.run(
+                            ["vulkaninfo"],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.DEVNULL,
+                            universal_newlines=True
+                        )
+                    except FileNotFoundError:
+                        pass
+                    if vulkan_result is None or vulkan_result.returncode != 0:
+                        raise RuntimeError(
+                            "vulkaninfo failed to run, please ask your administrator to"
+                            " install `vulkaninfo` (e.g. on Ubuntu systems this requires running"
+                            " `sudo apt install vulkan-tools`)."
+                        )
+
+                    current_gpu = None
+                    device_uuid_to_vulkan_gpu_index = {}
+                    for l in vulkan_result.stdout.splitlines():
+                        gpu_match = re.match("GPU([0-9]+):", l)
+                        if gpu_match is not None:
+                            current_gpu = int(gpu_match.group(1))
+                        elif "deviceUUID" in l:
+                            device_uuid = l.split("=")[1].strip()
+                            if device_uuid in device_uuid_to_vulkan_gpu_index:
+                                assert current_gpu == device_uuid_to_vulkan_gpu_index[device_uuid]
+                            else:
+                                device_uuid_to_vulkan_gpu_index[device_uuid] = current_gpu
+
+                    nvidiasmi_result = None
+                    try:
+                        nvidiasmi_result = subprocess.run(
+                            ["nvidia-smi", "-L"],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.DEVNULL,
+                            universal_newlines=True
+                        )
+                    except FileNotFoundError:
+                        pass
+                    if nvidiasmi_result is None or nvidiasmi_result.returncode != 0:
+                        raise RuntimeError(
+                            "`nvidia-smi` failed to run. To use CloudRendering, please ensure you have nvidia GPUs"
+                            " installed."
+                        )
+
+                    nvidia_gpu_index_to_device_uuid = {}
+                    for l in nvidiasmi_result.stdout.splitlines():
+                        gpu_match = re.match("GPU ([0-9]+):", l)
+                        if gpu_match is None:
+                            continue
+
+                        current_gpu = int(gpu_match.group(1))
+                        uuid_match = re.match(".*\\(UUID: GPU-([^)]+)\\)", l)
+                        nvidia_gpu_index_to_device_uuid[current_gpu] = uuid_match.group(1)
+
+                    cuda_vulkan_mapping = {}
+                    for cuda_gpu_index, device_uuid in nvidia_gpu_index_to_device_uuid.items():
+                        if device_uuid not in device_uuid_to_vulkan_gpu_index:
+                            raise RuntimeError(
+                                f"Could not find a Vulkan device corresponding"
+                                f" to the CUDA device with UUID {device_uuid}."
+                            )
+                        cuda_vulkan_mapping[cuda_gpu_index] = device_uuid_to_vulkan_gpu_index[device_uuid]
+
+                    with open(cuda_vulkan_mapping_path, "w") as f:
+                        json.dump(cuda_vulkan_mapping, f)
+                else:
+                    with open(cuda_vulkan_mapping_path, "r") as f:
+                        # JSON dictionaries always have strings as keys, need to re-map here
+                        cuda_vulkan_mapping = {int(k):v for k, v in json.load(f).items()}
+
+            command += f" -force-device-index {cuda_vulkan_mapping[self.gpu_device]}"
 
         return shlex.split(command)
 

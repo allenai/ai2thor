@@ -673,6 +673,44 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+                case "bboxdist": {
+                    Dictionary<string, object> action = new Dictionary<string, object> {
+                        {"action", "BBoxDistance"},
+                        {"objectId0", splitcommand[1]},
+                        {"objectId1", splitcommand[2]}
+                    };
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
+                case "adjacent": {
+                    Dictionary<string, object> action = new Dictionary<string, object> {
+                        {"action", "CheckUnobstructedPathBetweenObjectCenters"},
+                        {"objectId0", splitcommand[1]},
+                        {"objectId1", splitcommand[2]}
+                    };
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
+                case "whaton": {
+
+                    List<string> objectIds = new List<string>();
+
+                    for (int i = 1; i < splitcommand.Length; i++) {
+                        objectIds.Add(splitcommand[i]);
+                    }
+                    Dictionary<string, object> action = new Dictionary<string, object> {
+                        {"action", "CheckWhatObjectsOn"},
+                        {"objectIds", objectIds},
+                    };
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
                 case "expspawn": {
                         ServerAction action = new ServerAction();
 
@@ -687,7 +725,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else {
                             action.objectType = "receptacle";
                         }
-
                         action.action = "ReturnValidSpawnsExpRoom";
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 0;
@@ -772,7 +809,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else {
                             action.objectVariation = 0;
                         }
-
                         action.y = 0f;// UnityEngine.Random.Range(0, 360);
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -3482,6 +3518,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "PointOnObjectsCollidersClosestToPoint";
                         action["objectId"] = "Dumbbell|+00.00|+00.90|+00.00";
                         action["point"] = new Vector3(0f, 1000f, 0f);
+                        //action["objectId"] = "2|1";
+                        //action["point"] = new Vector3(13.569999694824219f, 0.8979997634887695f, 2.1710000038146973f);
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;

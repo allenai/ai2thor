@@ -527,12 +527,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         determine how to detect collision between a given arm joint and other arm joints.
         */
         public void RotateWristRelative(
+            float pitch = 0f,
             float yaw = 0f,
+            float roll = 0f,
             float speed = 10f,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
             bool disableRendering = true
         ) {
+            // pitch and roll are not supported for the stretch and so we throw an error
+            if (pitch != 0f || roll != 0f) {
+                throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
+            }
+
             Stretch_Robot_Arm_Controller arm = getArm();
 
             arm.rotateWrist(

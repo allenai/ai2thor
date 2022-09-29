@@ -148,11 +148,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-
-        public override ObjectMetadata[] generateObjectMetadata() {
-            return base.generateObjectMetadata();
-        }
-
         public bool isStanding() {
             return (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f;
         }
@@ -161,10 +156,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MetadataWrapper metaWrapper = base.generateMetadataWrapper();
             metaWrapper.agent.isStanding = isStanding();
             return metaWrapper;
-        }
-
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible, bool isInteractable) {
-            return base.ObjectMetadataFromSimObjPhysics(simObj, isVisible, isInteractable);
         }
 
         // change the radius of the agent's capsule on the char controller component, and the capsule collider component
