@@ -4190,18 +4190,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, reachablePositions);
         }
 
-        public void ObjectNavExpertAction(ServerAction action) {
+        public string objectNavExpertAction(
+            string objectId = null,
+            string objectType = null,
+            Vector3? position = null
+        ) {
             NavMeshPath path = new UnityEngine.AI.NavMeshPath();
             Func<bool> visibilityTest;
-            if (!String.IsNullOrEmpty(action.objectType) || !String.IsNullOrEmpty(action.objectId)) {
-                SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+            if (!String.IsNullOrEmpty(objectType) || !String.IsNullOrEmpty(objectId)) {
+                SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
                 path = getShortestPath(sop, true);
                 visibilityTest = () => objectIsWithinViewport(sop);
             }
             else {
                 var startPosition = this.transform.position;
                 var startRotation = this.transform.rotation;
-                SafelyComputeNavMeshPath(startPosition, action.position, path, DefaultAllowedErrorInShortestPath);
+                SafelyComputeNavMeshPath(startPosition, position.Value, path, DefaultAllowedErrorInShortestPath);
                 visibilityTest = () => true;
             }
 
@@ -4210,8 +4214,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 int parts = (int)Math.Round(360f / rotateStepDegrees);
                 if (Math.Abs((parts * 1.0f) - 360f / rotateStepDegrees) > 1e-5) {
                     errorMessage = "Invalid rotate step degrees for agent, must divide 360 without a remainder.";
-                    actionFinished(false);
-                    return;
+                    return null;
                 }
 
                 int numLeft = parts / 2;
@@ -4222,8 +4225,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 if (path.corners.Length <= 1) {
                     if (visibilityTest()) {
-                        actionFinished(true);
-                        return;
+                        return null;
                     }
 
                     int relRotate = 0;
@@ -4257,21 +4259,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     if (relRotate != 0) {
                         if (relRotate < 0) {
-                            actionFinished(true, "RotateLeft");
+                            return "RotateLeft";
                         } else {
-                            actionFinished(true, "RotateRight");
+                            return "RotateRight";
                         }
                     } else if (relHorizon != 0) {
                         if (relHorizon < 0) {
-                            actionFinished(true, "LookUp");
+                            return "LookUp";
                         } else {
-                            actionFinished(true, "LookDown");
+                            return "LookDown";
                         }
                     } else {
                         errorMessage = "Object doesn't seem visible from any rotation/horizon.";
-                        actionFinished(false);
                     }
-                    return;
+                    return null;
                 }
 
                 Vector3 nextCorner = path.corners[1];
@@ -4280,6 +4281,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 float bestDistance = 1000f;
                 for (int i = -numLeft; i <= numRight; i++) {
                     transform.Rotate(0.0f, i * rotateStepDegrees, 0.0f);
+                    Physics.SyncTransforms();
 
                     bool couldMove = moveInDirection(this.transform.forward * gridSize);
                     if (couldMove) {
@@ -4295,7 +4297,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 if (bestDistance >= 1000f) {
                     errorMessage = "Can't seem to move in any direction...";
-                    actionFinished(false);
+                    return null;
                 }
 
 #if UNITY_EDITOR
@@ -4307,15 +4309,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
 
                 if (whichBest < 0) {
-                    actionFinished(true, "RotateLeft");
+                    return "RotateLeft";
                 } else if (whichBest > 0) {
-                    actionFinished(true, "RotateRight");
+                    return "RotateRight";
                 } else {
-                    actionFinished(true, "MoveAhead");
+                    return "MoveAhead";
                 }
-                return;
             } else {
                 errorMessage = "Path to target could not be found";
+                return null;
+            }
+        }
+
+        public void ObjectNavExpertAction(
+            string objectId = null,
+            string objectType = null,
+            Vector3? position = null
+        ) {
+            string action = objectNavExpertAction(objectId, objectType, position);
+
+            if (action != null) {
+                actionFinished(true, action);
+                return;
+            } else {
                 actionFinished(false);
                 return;
             }
