@@ -1212,7 +1212,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 offset,
             HashSet<Collider> ignoreColliders = null
         ) {
-
             RaycastHit[] sweepResults = capsuleCastAllForAgent(
                 GetComponent<CapsuleCollider>(),
                 m_CharacterController.skinWidth,
