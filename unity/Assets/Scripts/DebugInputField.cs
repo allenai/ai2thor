@@ -3822,6 +3822,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "bakenavmesh": { 
+                     CurrentActiveController()
+                     .ProcessControlCommand(new DynamicServerAction(
+                        new Dictionary<string, object> {
+                            {"action", "BakeNavMesh"}
+                        }
+                     ));
+                     break;
+                }
+
                 case "chp": {
 
                         Dictionary<string, object> action = new Dictionary<string, object>();
