@@ -4279,6 +4279,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 int whichBest = 0;
                 float bestDistance = 1000f;
+                string errorMessages = "";
                 for (int i = -numLeft; i <= numRight; i++) {
                     transform.Rotate(0.0f, i * rotateStepDegrees, 0.0f);
                     Physics.SyncTransforms();
@@ -4290,13 +4291,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             bestDistance = newDistance;
                             whichBest = i;
                         }
+                    } else {
+                        errorMessages = errorMessages + " " + errorMessage;
                     }
                     transform.position = startPosition;
                     transform.rotation = startRotation;
                 }
 
                 if (bestDistance >= 1000f) {
-                    errorMessage = "Can't seem to move in any direction...";
+                    errorMessage = "Can't seem to move in any direction. Error messages: " + errorMessages;
                     return null;
                 }
 
