@@ -203,7 +203,7 @@ public class NavMeshSetup : MonoBehaviour {
         }
     }
 
-    private static void SetNavMeshWalkable(GameObject hierarchy) {
+    public static void SetNavMeshWalkable(GameObject hierarchy) {
 
         //  var objectHierarchy = hirerarchy.transform.FirstChildOrDefault(x => x.name.Contains("Floor"));
         hierarchy.GetComponentsInChildren<MeshRenderer>().ToList().ForEach(meshRenderer => {

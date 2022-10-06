@@ -5307,6 +5307,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false, null, "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouse`.");
                 return;
             }
+            ProceduralTools.tagObjectNavmesh(this.gameObject, ignore: true);
             navmesh.BuildNavMesh();
             actionFinished(true);
         }
