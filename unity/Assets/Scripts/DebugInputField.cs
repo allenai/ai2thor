@@ -3129,7 +3129,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             // Target position
                             action["position"] = new Vector3(float.Parse(splitcommand[1]), float.Parse(splitcommand[2]), float.Parse(splitcommand[3]));
                         }
-
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
