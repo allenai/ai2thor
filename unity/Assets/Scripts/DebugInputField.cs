@@ -3806,7 +3806,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
-                 case "chp_direct": {
+                 case "chpd": {
 
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
@@ -3835,7 +3835,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ProceduralTools.CreateHouse(obj.ToObject<ProceduralHouse>(), ProceduralTools.GetMaterials());
                         break;
                     }
-                case "chpt_direct": {
+                case "chptd": {
 
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
