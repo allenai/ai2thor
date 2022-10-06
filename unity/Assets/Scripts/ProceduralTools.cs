@@ -708,37 +708,15 @@ namespace Thor.Procedural {
                             var holePoly = getHoleCompletePolygon(h).ToList();
                             var res = holePoly.Select(
                                 p => {
-                                    // var offset = new Vector2(width - holePoly[0].x, holePoly[0].y);
-                                    // if (h.wall1 == toCreate.id) {
-                                    //     offset = new Vector2(width - holePoly[2].x, holePoly[0].y);
-                                    // }
                                     if (h.wall1 == toCreate.id) {
                                         p.x = width - p.x;
                                     }
                                     return p0 + p0p1_norm * p.x + Vector3.up * p.y;
-                                });
+                            });
                             res =  h.wall1 == toCreate.id ? res.AsEnumerable().Reverse() : res;
                             return res.ToList();
                         }
                     );
-
-                    
-                    
-                    // if (h.wall1 == toCreate.id) {
-                    //     holesPoints = holesPoints.AsEnumerable().Reverse();
-                    // }
-                    // holesPoints = holesPoints.Select(polygon => polygon.OrderBy(p => p.x - p0.x).ToList()).OrderBy(polygon => polygon.First().x - p0.x);
-                    // holesPoints.ToList().OrderBy(p => Vector3.SqrMagnitude(p - p0));
-                    
-
-                    // p0,
-                    //             p0 + new Vector3(0.0f, toCreate.height, 0.0f),
-                    //             p0 + p0p1_norm * offset.x
-                    //             + Vector3.up * offset.y,
-                    //             p0
-                    //             + p0p1_norm * offset.x
-                    //             + Vector3.up * (offset.y + dims.y),
-                    // holesPoints.Select( );
 
                     var points = new List<Vector3>() {
                         p0,
@@ -756,24 +734,19 @@ namespace Thor.Procedural {
                         l => l
                     )).ToList();
 
-                    Debug.Log($"id: {toCreate.id} Points count {points.Count()} {holesPoints.Count()}");
-
-                    var sortedByY = points.OrderBy(p => p.y).ToList();
-
-                    // points.Sort()
+                    // Debug.Log($"id: {toCreate.id} Points count {points.Count()} {holesPoints.Count()}");
 
                     var indexDict = new Dictionary<Vector3, int>();
                     for (var i=0; i< points.Count(); i++) {
                         indexDict.Add(points[i], i);
                     }
 
-                    Debug.Log($"Points: {string.Join(", ", points.Select(p => p.ToString("F4")))}");
+                    // Debug.Log($"Points: {string.Join(", ", points.Select(p => p.ToString("F4")))}");
 
                     for (var i = 0; i < holesPoints.Count(); i++) {
                         var hPoints = holesPoints.ElementAt(i);
 
-                        Debug.Log($"------ HOLE {i}");
-
+                        // Debug.Log($"------ HOLE {i}");
                         
                         for (var indexP0 = 0; indexP0 < 4; indexP0++) {
                            
@@ -786,16 +759,10 @@ namespace Thor.Procedural {
                             var holeP0 = hPoints[indexP0];
                             var holeP1 = hPoints[indexP1];
 
-                             Debug.Log($"Edge p0: {holeP0} p1: {holeP1}");
+                            // Debug.Log($"Edge p0: {holeP0} p1: {holeP1}");
 
                             var edgeNorm = edge.normalized;
                             var upEdge = Vector3.Cross(normal, -edgeNorm);
-
-                            // var followP0 = points.FindAll(p => Vector3.Dot((p-holeP0).normalized, edgeNorm) == 1);
-                            // holeP0 = followP0.Count() == 0 ? holeP0: followP0.First();
-
-                            // var followP1 = points.FindAll(p => Vector3.Dot((p-holeP1).normalized, -edgeNorm) == 1);
-                            // holeP1 = followP1.Count() == 0 ? holeP1: followP1.First();
 
                             var pointsWithDistance = points
                             //  .Where(p => p != holeP0 && p != holeP1)
@@ -813,9 +780,6 @@ namespace Thor.Procedural {
 
                             var sortedUp = pointsWithDistance.Where(p => p.topLeftOfP1 || p.topRightOfP0).OrderBy(p => p.dotP0Up);//.ThenBy(p => p.dotP0Edge);
 
-                            // var tl = pointsWithDistance.Where(p => p.topLeftOfP1).Aggregate((x, y) => x.p0Dist < y.p0Dist ? x : y);
-
-
                             var defaultVal = (
                                     p: Vector3.zero, 
                                     p0Dist: float.MaxValue,
@@ -825,52 +789,32 @@ namespace Thor.Procedural {
                                     dotP0Up: float.MaxValue,
                                     dotP0Edge: float.MaxValue
                                 );
-                            var topLeftCandidates = pointsWithDistance.Where(p => p.topLeftOfP1);
+                                
                             var topLeftDotCandidates = sortedUp.ThenBy(p => p.p0Dist).Where(p => p.topLeftOfP1);
-
-                            var topLefCandidate = topLeftCandidates.Aggregate(defaultVal, (x, y) => x.p0Dist < y.p0Dist ? x : y);
-                            var topLeftPoint = topLeftCandidates.Count() > 0 ? topLeftCandidates.Aggregate((x, y) => x.p0Dist < y.p0Dist ? x : y).p : holeP0;
-                            var topRightCandidates = pointsWithDistance.Where(p => p.topRightOfP0);
                             var topRightDotCandidates = sortedUp.ThenBy(p => p.p1Dist).Where(p => p.topRightOfP0);
 
-                            var topRightCandidate = topRightCandidates.Aggregate(defaultVal, (x, y) => x.p1Dist < y.p1Dist ? x : y);
-                            var topRightPoint = topRightCandidates.Count() > 0 ? topRightCandidates.Aggregate((x, y) => x.p1Dist < y.p1Dist ? x : y).p : hPoints[indexP1];
-
-                            var eps = 1e-2;
+                            // var eps = 1e-2;
                             var followP1 = points
                             // .FindAll(p => Math.Abs(Vector3.Dot((p-holeP1).normalized, -edgeNorm) - 1) < eps).ToList()
                             .FindAll(p => Vector3.Dot((p-holeP1).normalized, -edgeNorm) == 1).ToList()
                             .OrderBy(p => -Vector3.Dot(p - holeP1, -edgeNorm))//Vector3.SqrMagnitude(p - holeP1))
                             .ToList();
 
-                            //topRightPoint = followP1.Count > 0 &&  (topRightPoint - holeP1).sqrMagnitude < (followP1.First() - holeP1).sqrMagnitude  ? followP1.First() : topRightPoint;
-                            topRightPoint = followP1.Count >0 && (followP1.First() - holeP1).sqrMagnitude < (topRightPoint - holeP1).sqrMagnitude ? followP1.First() : topRightPoint;
-                            // topRightPoint = followP1.Count == 0? topRightPoint : followP1.First();
-
-                            // var candidates = sortedUp.Take(2).ToList();
-
-                            // if ( topLeftDotCandidates.Count() > 0) {
-                            //     var minDot = topLeftDotCandidates.First().dotP0Up;
-                            //     topLeftDotCandidates.Where(p => p.dotP0Up == minDot).;
-                            // }
-
                             var topRightPoint1 = topRightDotCandidates.Count() > 0 ? topRightDotCandidates.First() : defaultVal;
                             var topLeftPoint1 = topLeftDotCandidates.Count() > 0 ? topLeftDotCandidates.First() : defaultVal;
                             
-                            
+                    
+                            // Debug.Log($" === edge {indexP0}: topLeft {topLefCandidate.p} p0Dist {topLefCandidate.p0Dist} dotP0Up {topLefCandidate.dotP0Up} dotP0Edge {topLefCandidate.dotP0Edge} , topRight {topRightCandidate.p} p1Dist {topRightCandidate.p1Dist} dotP0Up {topRightCandidate.dotP0Up} dotP0Edge {topRightCandidate.dotP0Edge}");
+                            // Debug.Log($" == candidate0 {topLeftPoint1.p} dotP0Up {topLeftPoint1.dotP0Up} dotP0Edge {topLeftPoint1.dotP0Edge}, candidate1 {topRightPoint1.p} dotP0Up {topRightPoint1.dotP0Up} dotP0Edge {topRightPoint1.dotP0Edge}");
+                            // Debug.Log($"i: {i} topLef {topLeftPoint} p0 {holeP0}  p1 {hPoints[indexP1]} rtop right :  {topRightPoint} ");
 
-                            Debug.Log($" === edge {indexP0}: topLeft {topLefCandidate.p} p0Dist {topLefCandidate.p0Dist} dotP0Up {topLefCandidate.dotP0Up} dotP0Edge {topLefCandidate.dotP0Edge} , topRight {topRightCandidate.p} p1Dist {topRightCandidate.p1Dist} dotP0Up {topRightCandidate.dotP0Up} dotP0Edge {topRightCandidate.dotP0Edge}");
-                            Debug.Log($" == candidate0 {topLeftPoint1.p} dotP0Up {topLeftPoint1.dotP0Up} dotP0Edge {topLeftPoint1.dotP0Edge}, candidate1 {topRightPoint1.p} dotP0Up {topRightPoint1.dotP0Up} dotP0Edge {topRightPoint1.dotP0Edge}");
-                            // Debug.Log($"i: {i} topLef {topLeftPoint} p0 {hPoints[indexP0]}  p1 {hPoints[indexP1]} rtop right :  {topRightPoint}, tl: {tl.p} dotl {Mathf.Sign(0.0f)} dotTl {Mathf.Sign(tl.dotTopLeft) > 0}, crossTL: {tl.crossTopLeft > 0} tldistP0 {tl.p0Dist} tlDistP1 {tl.p1Dist}") ;
-                            Debug.Log($"i: {i} topLef {topLeftPoint} p0 {holeP0}  p1 {hPoints[indexP1]} rtop right :  {topRightPoint} ");
-
-                            topLeftPoint = topLeftDotCandidates.Count() > 0 ? topLeftDotCandidates.First().p : holeP0;
-                            topRightPoint = topRightDotCandidates.Count() > 0 ? topRightDotCandidates.First().p : holeP1;
+                            var topLeftPoint = topLeftDotCandidates.Count() > 0 ? topLeftDotCandidates.First().p : holeP0;
+                            var topRightPoint = topRightDotCandidates.Count() > 0 ? topRightDotCandidates.First().p : holeP1;
                             var cond = followP1.Count >0 && !PointInTriangle(topRightPoint, (holeP1, followP1.First(), topLeftPoint));//&& (followP1.First() - holeP1).sqrMagnitude < (topRightPoint - holeP1).sqrMagnitude;
                             var prevTopRight = topRightPoint;
                             topRightPoint = cond ? followP1.First() : topRightPoint;
                             
-                            Debug.Log($"follow? {cond} {(cond? topRightPoint: Vector3.zero)} count? {followP1.Count >0} topRight {topRightPoint}");
+                            // Debug.Log($"follow? {cond} {(cond? topRightPoint: Vector3.zero)} count? {followP1.Count >0} topRight {topRightPoint}");
                             
                             var polygonPoints = new List<Vector3>(){
                                 topLeftPoint,
@@ -892,7 +836,7 @@ namespace Thor.Procedural {
 
                             
                             var newTriangles = localIndices.Select(localIdx => indicesP[localIdx].index);
-                            Debug.Log($"Triangles: {string.Join(", ", newTriangles)}");
+                            // Debug.Log($"Triangles: {string.Join(", ", newTriangles)}");
                             triangles.AddRange(newTriangles);
 
                         }
