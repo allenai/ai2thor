@@ -1210,7 +1210,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public bool CheckIfAgentCanMove(
             Vector3 offset,
-            HashSet<Collider> ignoreColliders = null
+            HashSet<Collider> ignoreColliders = null,
+            bool ignoreAgentColliders = true
         ) {
 
             RaycastHit[] sweepResults = capsuleCastAllForAgent(
@@ -1221,6 +1222,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 offset.magnitude,
                 LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent")
             );
+
+            if (ignoreColliders == null) {
+                ignoreColliders = new HashSet<Collider>();
+            }
+
+            // Make sure to ignore all of the colliders of the agent itself
+            if (ignoreAgentColliders) {
+                foreach (Collider c in GetComponentsInChildren<Collider>()) {
+                    ignoreColliders.Add(c);
+                }
+            }
+
             // check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
             if (sweepResults.Length > 0) {
                 foreach (RaycastHit res in sweepResults) {
@@ -4253,8 +4266,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Debug.Log(relRotate);
                     Debug.Log(relHorizon);
                     // When in the editor, rotate the agent and camera into the expert direction
-                    m_Camera.transform.localEulerAngles = new Vector3(startCameraRot.x + 30f * relHorizon, 0.0f, 0.0f);
-                    transform.Rotate(0.0f, relRotate * rotateStepDegrees, 0.0f);
+                    //m_Camera.transform.localEulerAngles = new Vector3(startCameraRot.x + 30f * relHorizon, 0.0f, 0.0f);
+                    //transform.Rotate(0.0f, relRotate * rotateStepDegrees, 0.0f);
 #endif
 
                     if (relRotate != 0) {
@@ -4304,10 +4317,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
 #if UNITY_EDITOR
-                transform.Rotate(0.0f, Math.Sign(whichBest) * rotateStepDegrees, 0.0f);
-                if (whichBest == 0) {
-                    moveInDirection(this.transform.forward * gridSize);
-                }
+                //transform.Rotate(0.0f, Math.Sign(whichBest) * rotateStepDegrees, 0.0f);
+                //if (whichBest == 0) {
+                //    moveInDirection(this.transform.forward * gridSize);
+                //}
                 Debug.Log(whichBest);
 #endif
 
