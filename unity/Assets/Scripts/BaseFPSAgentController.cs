@@ -4802,6 +4802,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
         }
 
+        private void randomizeSmoothness(string objectId) {
+            SimObjPhysics sop = getSimObjectFromId(objectId: objectId);
+            if (sop == null) {
+                throw new ArgumentException($"No object with id {objectId} found.");
+            }
+
+            Renderer[] renderers = sop.GetComponentsInChildren<Renderer>();
+            foreach (Renderer renderer in renderers) {
+                foreach (Material material in renderer.materials) {
+                    material.SetFloat("_Metallic", Random.Range(0.0f, 1.0f));
+                    material.SetFloat("_GlossMapScale", Random.Range(0.0f, 1.0f));
+                }
+            }
+        }
+
+
+        public void RandomizeSmoothness(string objectId) {
+            randomizeSmoothness(objectId: objectId);
+            actionFinished(success: true);
+        }
+
+        public void RandomizeSmoothness(string[] objectIds) {
+            if (objectIds == null) {
+                throw new ArgumentNullException(nameof(objectIds));
+            }
+            foreach (string objectId in objectIds) {
+                randomizeSmoothness(objectId: objectId);
+            }
+            actionFinished(success: true);
+        }
+
         public void GetShortestPathToPoint(
             Vector3 position, Vector3 target, float allowedError = DefaultAllowedErrorInShortestPath
         ) {

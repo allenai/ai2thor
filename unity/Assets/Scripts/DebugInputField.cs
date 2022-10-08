@@ -3619,6 +3619,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "smooth": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RandomizeSmoothness";
+                        action["objectIds"] = new string[] {
+                            "small|room|14",
+                            "Sofa1"
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "dmlh": {
                         ServerAction action = new ServerAction();
                         action.action = "DropMidLevelHand";
