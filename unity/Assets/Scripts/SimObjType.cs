@@ -271,7 +271,8 @@ public enum SimObjType : int {
     WashingMachine = 164,
     ClothesDryer = 165,
     Doorframe = 166,
-    Dishwasher = 167
+    Dishwasher = 167,
+    Oven = 168
 }
 
 public static class ReceptacleRestrictions {
