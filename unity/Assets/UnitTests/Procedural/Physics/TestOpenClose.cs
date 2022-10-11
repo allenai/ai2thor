@@ -56,7 +56,7 @@ namespace Tests {
                 });
             yield return new WaitForSeconds(2f);
 
-            Transform testCabinetDoor = GameObject.Find("Cabinet_242ff8ff").transform.Find("CabinetDoor");
+            Transform testCabinetDoor = GameObject.Find("Cabinet_67e9cbea").transform.Find("CabinetDoor");
             bool testCabinetDoorOpened = Mathf.Approximately((testCabinetDoor.localEulerAngles.y + 360) % 360, 270);
             Assert.AreEqual(testCabinetDoorOpened, true);
 

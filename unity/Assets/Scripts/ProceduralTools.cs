@@ -1140,8 +1140,7 @@ namespace Thor.Procedural {
         public static (int, int, int) parseHouseVersion(string version) {
             if (string.IsNullOrEmpty(version)) {
                 return (0, 0, 0);
-            }
-            else {
+            } else {
                 var versionSplit = version.Split('.');
                 Debug.Log(string.Join(", ", versionSplit));
                 var versionResult = new int[] {0, 0, 0 }.Select((x, i) => {
@@ -1171,7 +1170,7 @@ namespace Thor.Procedural {
            AssetMap<Material> materialDb,
            Vector3? position = null
        ) {
-            
+            // raise exception if metadata contains schema
             if (house.metadata == null || house.metadata.schema == null) {
                 throw new ArgumentException(
                     $"House metadata schema not specified! Should be under house['metadata']['schema']." +
@@ -1709,6 +1708,24 @@ namespace Thor.Procedural {
             }
 
             spawned.transform.parent = GameObject.Find("Objects").transform;
+
+            // scale the object
+            if (scale.HasValue) {
+                spawned.transform.localScale = scale.Value;
+                Transform[] children = new Transform[spawned.transform.childCount];
+                for (int i = 0; i < spawned.transform.childCount; i++) {
+                    children[i] = spawned.transform.GetChild(i);
+                }
+
+                // detach all children
+                spawned.transform.DetachChildren();
+                spawned.transform.localScale = Vector3.one;
+                foreach (Transform t in children) {
+                    t.SetParent(spawned.transform);
+                }
+                spawned.GetComponent<SimObjPhysics>().ContextSetUpBoundingBox(forceCacheReset: true);
+            }
+
             // var rotaiton = Quaternion.AngleAxis(rotation.degrees, rotation.axis);
             if (positionBoundingBoxCenter) {
                 var simObj = spawned.GetComponent<SimObjPhysics>();
@@ -1730,14 +1747,6 @@ namespace Thor.Procedural {
             toSpawn.objectID = id;
             toSpawn.name = id;
             toSpawn.assetID = assetId;
-
-            if (scale.HasValue) {
-                // get component in child with mesh renderer
-                var meshRenderer = spawned.GetComponentInChildren<MeshRenderer>();
-                if (meshRenderer != null) {
-                    ScaleAround(meshRenderer.transform.gameObject, position, scale.Value);
-                }
-            }
 
             Shader unlitShader = null;
             if (unlit) {
@@ -1785,18 +1794,6 @@ namespace Thor.Procedural {
             }
 
             return toSpawn.transform.gameObject;
-        }
-
-        public static void ScaleAround(GameObject target, Vector3 pivot, Vector3 scaleFactor) {
-            // pivot
-            var pivotDelta = target.transform.position - pivot;
-            pivotDelta.Scale(scaleFactor);
-            target.transform.position = pivot + pivotDelta;
-
-            // scale
-            var finalScale = target.transform.localScale;
-            finalScale.Scale(scaleFactor);
-            target.transform.localScale = finalScale;
         }
 
         public static GameObject spawnObjectInReceptacle(
