@@ -20,6 +20,7 @@ import io
 import ai2thor.build
 import logging
 
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
