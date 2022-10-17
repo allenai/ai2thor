@@ -39,7 +39,7 @@ namespace Tests {
 
             action["action"] = "SetObjectPoses";
             ObjectPose pose = new ObjectPose() {
-                objectName = "SoapBottle_445f0dcf",
+                objectName = "SoapBottle_a48be41a",
                 position = new Vector3(-1.022f, 0f, 1.456f),
                 rotation = new Vector3(0, -180f, 0)
             };
@@ -50,7 +50,7 @@ namespace Tests {
 
             action.Clear();
 
-            GameObject bottle = GameObject.Find("SoapBottle_445f0dcf");
+            GameObject bottle = GameObject.Find("SoapBottle_a48be41a");
 
             action["action"] = "PickupObject";
             action["objectId"] = bottle.GetComponent<SimObjPhysics>().objectID;

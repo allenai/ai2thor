@@ -232,7 +232,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void UpdateHighlightedObject(Vector3 screenPosition) {
             RaycastHit hit = new RaycastHit();
             var ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(screenPosition);
-            int layerMask = LayerMask.GetMask("SimObjVisible");
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             Physics.Raycast(ray, out hit, this.MinHighlightDistance, layerMask);
             Debug.DrawLine(ray.origin, hit.point, Color.red);
 

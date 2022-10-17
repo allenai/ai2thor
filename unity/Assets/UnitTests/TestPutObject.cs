@@ -47,7 +47,7 @@ namespace Tests {
             action["putNearXY"] = true;
             yield return step(action);
 
-            GameObject creditCard = GameObject.Find("CreditCard_acee2f3e");
+            GameObject creditCard = GameObject.Find("CreditCard_5e829d70");
 
             bool result = false;
             result = Mathf.Approximately(creditCard.transform.position.x, -0.1972949f);
@@ -99,7 +99,7 @@ namespace Tests {
             action["putNearXY"] = false;
             yield return step(action);
 
-            GameObject creditCard = GameObject.Find("CreditCard_acee2f3e");
+            GameObject creditCard = GameObject.Find("CreditCard_5e829d70");
 
             bool result = false;
             result = Mathf.Approximately(creditCard.transform.position.x, -0.4736856f);

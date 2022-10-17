@@ -83,7 +83,13 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
         RaycastHit[] hits;
 
         foreach (Vector3 point in pointsOnGrid) {
-            hits = Physics.RaycastAll(point + new Vector3(0, 5, 0), Vector3.down, 20.0f, 1 << 9, QueryTriggerInteraction.Collide);
+            hits = Physics.RaycastAll(
+                point + new Vector3(0, 5, 0),
+                Vector3.down,
+                20.0f,
+                LayerMask.GetMask("SimObjInvisible"),
+                QueryTriggerInteraction.Collide
+            );
             float[] hitDistances = new float[hits.Length];
 
             for (int i = 0; i < hitDistances.Length; i++) {

@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 [ExecuteInEditMode]
 
 public class PhysicsSceneManager : MonoBehaviour {
-
+    public bool ProceduralMode = false;
     public List<GameObject> RequiredObjects = new List<GameObject>();
 
     // get references to the spawned Required objects after spawning them for the first time.
@@ -63,10 +63,12 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     public void SetupScene(bool generateObjectIds = true) {
+        Debug.Log("------- Setup Scene called " + (generateObjectIds && !ProceduralMode));
         ObjectIdToSimObjPhysics.Clear();
-        GatherSimObjPhysInScene(generateObjectIds: generateObjectIds);
+        GatherSimObjPhysInScene(generateObjectIds && !ProceduralMode);
         GatherAllRBsInScene();
     }
+
     // Use this for initialization
     void Start() {
         PhysicsSceneManager.PhysicsSimulateCallCount = 0;
@@ -283,7 +285,6 @@ public class PhysicsSceneManager : MonoBehaviour {
 
             o.ObjectID = parent.ObjectID + "|" + o.Type.ToString();
             return;
-
         }
 
         Vector3 pos = o.transform.position;
@@ -291,6 +292,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         string yPos = (pos.y >= 0 ? "+" : "") + pos.y.ToString("00.00");
         string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
         o.ObjectID = o.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
+
     }
 
     // used to create object id for an object created as result of a state change of another object ie: bread - >breadslice1, breadslice 2 etc
@@ -384,7 +386,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                 SimObjPhysics existingSOP = obj.GetComponent<SimObjPhysics>();
                 SimObjPhysics copy;
                 if (placedOriginal.Contains(existingSOP)) {
-                    copy = Instantiate(existingSOP);
+                    copy = Instantiate(original: existingSOP);
+                    copy.transform.parent = GameObject.Find("Objects").transform;
                     copy.name += "_copy_" + ii;
                     copy.ObjectID = existingSOP.ObjectID + "_copy_" + ii;
                     copy.objectID = copy.ObjectID;
@@ -450,11 +453,28 @@ public class PhysicsSceneManager : MonoBehaviour {
         bool staticPlacement,
         HashSet<SimObjPhysics> excludedSimObjects,
         ObjectTypeCount[] numDuplicatesOfType,
-        List<SimObjType> excludedReceptacleTypes
+        List<SimObjType> excludedReceptacleTypes,
+        String[] receptacleObjectIds,
+        String[] objectIds,
+        bool allowMoveable
     ) {
 #if UNITY_EDITOR
         var Masterwatch = System.Diagnostics.Stopwatch.StartNew();
 #endif
+
+        //instead of pre-assigning these arrays at editor-time, instead grab all
+        //sim objects in the scene at runtime to try and reposition
+        SimObjPhysics[] simObjsInScene = GameObject.FindObjectsOfType<SimObjPhysics>();
+        List<GameObject> simObjsInSceneToGameObjectList = new List<GameObject>();
+        foreach (SimObjPhysics sop in simObjsInScene) {
+            if (allowMoveable && sop.IsMoveable || sop.IsPickupable) {
+                simObjsInSceneToGameObjectList.Add(sop.gameObject);
+            }
+        }
+
+        //assing all pickupable objects to both RequiredObjects and SpawnedObjects for parity
+        RequiredObjects = simObjsInSceneToGameObjectList;
+        SpawnedObjects = simObjsInSceneToGameObjectList;
 
         if (RequiredObjects.Count == 0) {
 #if UNITY_EDITOR
@@ -531,7 +551,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                     for (int j = 0; j < numExtra; j++) {
                         // Add a copy of the item to try and match the requested number of duplicates
                         SimObjPhysics sop = typeToObjectList[sopType][UnityEngine.Random.Range(0, typeToObjectList[sopType].Count - 1)];
-                        SimObjPhysics copy = Instantiate(sop);
+                        SimObjPhysics copy = Instantiate(original: sop);
+                        copy.transform.parent = GameObject.Find("Objects").transform;
                         copy.name += "_random_copy_" + j;
                         copy.ObjectID = sop.ObjectID + "_copy_" + j;
                         copy.objectID = copy.ObjectID;
@@ -553,10 +574,14 @@ public class PhysicsSceneManager : MonoBehaviour {
 
             Dictionary<SimObjType, List<SimObjPhysics>> objTypeToReceptacles = new Dictionary<SimObjType, List<SimObjPhysics>>();
             foreach (SimObjPhysics receptacleSop in GatherAllReceptaclesInScene()) {
-
                 SimObjType receptType = receptacleSop.ObjType;
-                if (!excludedReceptacleTypes.Contains(receptacleSop.Type) &&
-                        ((!spawnOnlyOutside) || ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(receptacleSop.ObjType))
+                if (
+                    (receptacleObjectIds == null || receptacleObjectIds.Contains(receptacleSop.ObjectID))
+                    && !excludedReceptacleTypes.Contains(receptacleSop.Type)
+                    && (
+                        (!spawnOnlyOutside)
+                        || ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(receptacleSop.ObjType)
+                    )
                 ) {
                     if (!objTypeToReceptacles.ContainsKey(receptacleSop.ObjType)) {
                         objTypeToReceptacles[receptacleSop.ObjType] = new List<SimObjPhysics>();
@@ -577,7 +602,13 @@ public class PhysicsSceneManager : MonoBehaviour {
                 //     sopToPlaceInReceptacle.GetComponent<Break>().Unbreakable = true;
                 // }
 
-                if (excludedSimObjects.Contains(sopToPlaceInReceptacle)) {
+                if (
+                    (
+                        objectIds != null
+                        && !objectIds.Contains(sopToPlaceInReceptacle.ObjectID)
+                    )
+                    || excludedSimObjects.Contains(sopToPlaceInReceptacle)
+                ) {
                     HowManyCouldntSpawn--;
                     continue;
                 }
@@ -586,7 +617,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                 foreach (SimObjPhysics receptacleSop in IterShuffleSimObjPhysicsDictList(objTypeToReceptacles, rng)) {
                     List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
 
-                    if(receptacleSop.ContainedGameObjects().Count > 0 && receptacleSop.IsPickupable) {
+                    if (receptacleSop.ContainedGameObjects().Count > 0 && receptacleSop.IsPickupable) {
                         //this pickupable object already has something in it, skip over it since we currently can't account for detecting bounds of a receptacle + any contained objects
                         continue;
                     }
@@ -703,10 +734,11 @@ public class PhysicsSceneManager : MonoBehaviour {
 
         // if spawning in the agent's hand, ignore collisions with the Agent
         if (spawningInHand) {
-            layermask = 1 << 8;
+            layermask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
         } else {
-            // oh we are spawning it somwhere in the environment, we do need to make sure not to spawn inside the agent or the environment
-            layermask = (1 << 8) | (1 << 10);
+            // oh we are spawning it somwhere in the environment,
+            // we do need to make sure not to spawn inside the agent or the environment
+            layermask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent");
         }
 
         // make sure ALL colliders of the simobj are turned off for this check - can't just turn off the Colliders child object because of objects like

@@ -7,39 +7,40 @@ needed to control the in-game agent through ai2thor.server.
 
 """
 import atexit
-from collections import deque, defaultdict
-from itertools import product
-import json
 import copy
+import json
 import logging
 import math
 import numbers
-import time
-import random
-import shlex
-import subprocess
-import shutil
-import re
 import os
-from platform import system  as platform_system
-from platform import architecture  as platform_architecture
+import random
+import re
+import shlex
+import shutil
+import subprocess
+import time
+import traceback
 import uuid
+import warnings
+from collections import defaultdict, deque
 from functools import lru_cache
-
+from itertools import product
+from platform import architecture as platform_architecture
+from platform import system as platform_system
+from typing import Dict, Any, Union, Optional
 
 import numpy as np
-import ai2thor.wsgi_server
-import ai2thor.fifo_server
-from ai2thor.exceptions import UnityCrashException, RestartError
-from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
-from ai2thor.server import DepthFormat
-import ai2thor.build
-from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
-from ai2thor.util import makedirs, atomic_write
-from ai2thor.util.lock import LockEx
-import ai2thor.platform
 
-import warnings
+import ai2thor.build
+import ai2thor.fifo_server
+import ai2thor.platform
+import ai2thor.wsgi_server
+from ai2thor._quality_settings import DEFAULT_QUALITY, QUALITY_SETTINGS
+from ai2thor.exceptions import RestartError, UnityCrashException
+from ai2thor.interact import DefaultActions, InteractiveControllerPrompt
+from ai2thor.server import DepthFormat
+from ai2thor.util import atomic_write, makedirs
+from ai2thor.util.lock import LockEx
 
 logger = logging.getLogger(__name__)
 
@@ -393,6 +394,8 @@ class Controller(object):
         server_class=None,
         gpu_device=None,
         platform=None,
+        server_timeout: Optional[float] = 100.0,
+        server_start_timeout: float = 300.0,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -401,6 +404,11 @@ class Controller(object):
         self.container_id = None
         self.width = width
         self.height = height
+
+        self.server_timeout = server_timeout
+        self.server_start_timeout = server_start_timeout
+        assert self.server_timeout is None or 0 < self.server_timeout
+        assert 0 < self.server_start_timeout
 
         self.last_event = None
         self.scene = None
@@ -416,18 +424,32 @@ class Controller(object):
         self.x_display = None
         self.gpu_device = gpu_device
         cuda_visible_devices = list(
-            map(int, filter(lambda y: y.isdigit(),
-            map(lambda x: x.strip(),
-                os.environ.get('CUDA_VISIBLE_DEVICES', '').split(',')))))
+            map(
+                int,
+                filter(
+                    lambda y: y.isdigit(),
+                    map(
+                        lambda x: x.strip(),
+                        os.environ.get("CUDA_VISIBLE_DEVICES", "").split(","),
+                    ),
+                ),
+            )
+        )
 
         if self.gpu_device is not None:
 
             # numbers.Integral works for numpy.int32/64 and Python int
-            if (not isinstance(self.gpu_device, numbers.Integral) or self.gpu_device < 0):
-                raise ValueError("Invalid gpu_device: '%s'. gpu_device must be >= 0" % self.gpu_device)
+            if not isinstance(self.gpu_device, numbers.Integral) or self.gpu_device < 0:
+                raise ValueError(
+                    "Invalid gpu_device: '%s'. gpu_device must be >= 0"
+                    % self.gpu_device
+                )
             elif cuda_visible_devices:
                 if self.gpu_device >= len(cuda_visible_devices):
-                    raise ValueError("Invalid gpu_device: '%s'. gpu_device must less than number of CUDA_VISIBLE_DEVICES: %s" % (self.gpu_device, cuda_visible_devices))
+                    raise ValueError(
+                        "Invalid gpu_device: '%s'. gpu_device must less than number of CUDA_VISIBLE_DEVICES: %s"
+                        % (self.gpu_device, cuda_visible_devices)
+                    )
                 else:
                     self.gpu_device = cuda_visible_devices[self.gpu_device]
         elif cuda_visible_devices:
@@ -442,7 +464,11 @@ class Controller(object):
             self.x_display = ":" + self.x_display
 
         if quality not in QUALITY_SETTINGS:
-            valid_qualities = [q for q, v in sorted(QUALITY_SETTINGS.items(), key=lambda qv: qv[1]) if v > 0]
+            valid_qualities = [
+                q
+                for q, v in sorted(QUALITY_SETTINGS.items(), key=lambda qv: qv[1])
+                if v > 0
+            ]
 
             raise ValueError(
                 "Quality {} is invalid, please select from one of the following settings: ".format(
@@ -524,6 +550,12 @@ class Controller(object):
                     DeprecationWarning,
                 )
 
+            if "agentControllerType" in self.initialization_parameters:
+                raise ValueError(
+                    "`agentControllerType` is no longer an allowed initialization parameter."
+                    " Use `agentMode` instead."
+                )
+
             # Let's set the scene for them!
             if scene is None:
                 scenes_in_build = self.scenes_in_build
@@ -560,7 +592,7 @@ class Controller(object):
             init_return = event.metadata["actionReturn"]
             if init_return:
                 self.server.set_init_params(init_return)
-                logging.info("Initialize return: {}".format(init_return))
+                logging.info(f"Initialize return: {init_return}")
 
     def _build_server(self, host, port, width, height):
 
@@ -576,20 +608,22 @@ class Controller(object):
 
         if self.server_class == ai2thor.wsgi_server.WsgiServer:
             self.server = ai2thor.wsgi_server.WsgiServer(
-                host,
+                host=host,
+                timeout=self.server_timeout,
                 port=port,
-                depth_format=self.depth_format,
-                add_depth_noise=self.add_depth_noise,
                 width=width,
                 height=height,
+                depth_format=self.depth_format,
+                add_depth_noise=self.add_depth_noise,
             )
 
         elif self.server_class == ai2thor.fifo_server.FifoServer:
             self.server = ai2thor.fifo_server.FifoServer(
-                depth_format=self.depth_format,
-                add_depth_noise=self.add_depth_noise,
                 width=width,
                 height=height,
+                timeout=self.server_timeout,
+                depth_format=self.depth_format,
+                add_depth_noise=self.add_depth_noise,
             )
 
     def __enter__(self):
@@ -614,31 +648,45 @@ class Controller(object):
 
     @staticmethod
     def normalize_scene(scene):
-
         if re.match(r"^FloorPlan[0-9]+$", scene):
             scene = scene + "_physics"
-
         return scene
 
     def reset(self, scene=None, **init_params):
         if scene is None:
             scene = self.scene
 
-        scene = Controller.normalize_scene(scene)
+        is_procedural = isinstance(scene, dict)
+        if is_procedural:
+            # ProcTHOR scene
+            self.server.send(dict(action="Reset", sceneName="Procedural", sequenceId=0))
+            self.last_event = self.server.receive()
+        else:
+            scene = Controller.normalize_scene(scene)
 
-        # scenes in build can be an empty set when GetScenesInBuild doesn't exist as an action
-        # for old builds
-        if self.scenes_in_build and scene not in self.scenes_in_build:
-            raise ValueError(
-                "\nScene '{}' not contained in build (scene names are case sensitive)."
-                "\nPlease choose one of the following scene names:\n\n{}".format(
-                    scene,
-                    ", ".join(sorted(list(self.scenes_in_build))),
+            # scenes in build can be an empty set when GetScenesInBuild doesn't exist as an action
+            # for old builds
+            if self.scenes_in_build and scene not in self.scenes_in_build:
+                raise ValueError(
+                    "\nScene '{}' not contained in build (scene names are case sensitive)."
+                    "\nPlease choose one of the following scene names:\n\n{}".format(
+                        scene,
+                        ", ".join(sorted(list(self.scenes_in_build))),
+                    )
                 )
-            )
 
-        self.server.send(dict(action="Reset", sceneName=scene, sequenceId=0))
-        self.last_event = self.server.receive()
+            self.server.send(dict(action="Reset", sceneName=scene, sequenceId=0))
+            self.last_event = self.server.receive()
+
+            if (
+                scene in self.robothor_scenes()
+                and self.initialization_parameters.get("agentMode", "default").lower()
+                != "locobot"
+            ):
+                warnings.warn(
+                    "You are using a RoboTHOR scene without using the standard LoCoBot.\n"
+                    + "Did you mean to mean to set agentMode='locobot' upon initialization or within controller.reset(...)?"
+                )
 
         # update the initialization parameters
         init_params = init_params.copy()
@@ -680,21 +728,14 @@ class Controller(object):
                 "On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'."
             )
 
-        if (
-            scene in self.robothor_scenes()
-            and self.initialization_parameters.get("agentMode", "default").lower()
-            != "locobot"
-        ):
-            warnings.warn(
-                "You are using a RoboTHOR scene without using the standard LoCoBot.\n"
-                + "Did you mean to mean to set agentMode='locobot' upon initialization or within controller.reset(...)?"
-            )
-
         self.last_event = self.step(
             action="Initialize",
             raise_for_failure=True,
             **self.initialization_parameters,
         )
+
+        if is_procedural:
+            self.last_event = self.step(action="CreateHouse", house=scene)
 
         self.scene = scene
         return self.last_event
@@ -889,9 +930,9 @@ class Controller(object):
 
         return events
 
-    def step(self, action=None, **action_args):
+    def step(self, action: Union[str, Dict[str, Any]]=None, **action_args):
 
-        if type(action) is dict:
+        if isinstance(action, Dict):
             action = copy.deepcopy(action)  # prevent changes from leaking
         else:
             action = dict(action=action)
@@ -936,18 +977,27 @@ class Controller(object):
         self.server.send(action)
         try:
             self.last_event = self.server.receive()
-        except UnityCrashException as e:
+        except UnityCrashException:
             self.server.stop()
             self.server = None
             # we don't need to pass port or host, since this Exception
             # is only thrown from the FifoServer, start_unity is also
             # not passed since Unity would have to have been started
             # for this to be thrown
-            message = "Restarting unity due to crash: %s" % e
+            message = (
+                f"Restarting unity due to crash when when running action {action}"
+                f" in scene {self.last_event.metadata['sceneName']}:\n{traceback.format_exc()}"
+            )
             warnings.warn(message)
             self.start(width=self.width, height=self.height, x_display=self.x_display)
             self.reset()
             raise RestartError(message)
+        except Exception as e:
+            self.server.stop()
+            raise (TimeoutError if isinstance(e, TimeoutError) else RuntimeError)(
+                f"Error encountered when running action {action}"
+                f" in scene {self.last_event.metadata['sceneName']}."
+            )
 
         if not self.last_event.metadata["lastActionSuccess"]:
             if self.last_event.metadata["errorCode"] in [
@@ -976,13 +1026,89 @@ class Controller(object):
                 " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s"
                 % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
             )
-        
+
         if self.gpu_device is not None:
             # This parameter only applies to the CloudRendering platform.
-            # Vulkan maps the passed in parameter to device-index - 1 when compared
-            # to the nvidia-smi device ids
-            device_index = self.gpu_device if self.gpu_device < 1 else self.gpu_device + 1
-            command += " -force-device-index %d" % device_index
+            # Vulkan device ids need not correspond to CUDA device ids. The below
+            # code finds the device_uuids for each GPU and then figures out the mapping
+            # between the CUDA device ids and the Vulkan device ids.
+
+            cuda_vulkan_mapping_path = os.path.join(self.base_dir, "cuda-vulkan-mapping.json")
+            with LockEx(cuda_vulkan_mapping_path):
+                if not os.path.exists(cuda_vulkan_mapping_path):
+                    vulkan_result = None
+                    try:
+                        vulkan_result = subprocess.run(
+                            ["vulkaninfo"],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.DEVNULL,
+                            universal_newlines=True
+                        )
+                    except FileNotFoundError:
+                        pass
+                    if vulkan_result is None or vulkan_result.returncode != 0:
+                        raise RuntimeError(
+                            "vulkaninfo failed to run, please ask your administrator to"
+                            " install `vulkaninfo` (e.g. on Ubuntu systems this requires running"
+                            " `sudo apt install vulkan-tools`)."
+                        )
+
+                    current_gpu = None
+                    device_uuid_to_vulkan_gpu_index = {}
+                    for l in vulkan_result.stdout.splitlines():
+                        gpu_match = re.match("GPU([0-9]+):", l)
+                        if gpu_match is not None:
+                            current_gpu = int(gpu_match.group(1))
+                        elif "deviceUUID" in l:
+                            device_uuid = l.split("=")[1].strip()
+                            if device_uuid in device_uuid_to_vulkan_gpu_index:
+                                assert current_gpu == device_uuid_to_vulkan_gpu_index[device_uuid]
+                            else:
+                                device_uuid_to_vulkan_gpu_index[device_uuid] = current_gpu
+
+                    nvidiasmi_result = None
+                    try:
+                        nvidiasmi_result = subprocess.run(
+                            ["nvidia-smi", "-L"],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.DEVNULL,
+                            universal_newlines=True
+                        )
+                    except FileNotFoundError:
+                        pass
+                    if nvidiasmi_result is None or nvidiasmi_result.returncode != 0:
+                        raise RuntimeError(
+                            "`nvidia-smi` failed to run. To use CloudRendering, please ensure you have nvidia GPUs"
+                            " installed."
+                        )
+
+                    nvidia_gpu_index_to_device_uuid = {}
+                    for l in nvidiasmi_result.stdout.splitlines():
+                        gpu_match = re.match("GPU ([0-9]+):", l)
+                        if gpu_match is None:
+                            continue
+
+                        current_gpu = int(gpu_match.group(1))
+                        uuid_match = re.match(".*\\(UUID: GPU-([^)]+)\\)", l)
+                        nvidia_gpu_index_to_device_uuid[current_gpu] = uuid_match.group(1)
+
+                    cuda_vulkan_mapping = {}
+                    for cuda_gpu_index, device_uuid in nvidia_gpu_index_to_device_uuid.items():
+                        if device_uuid not in device_uuid_to_vulkan_gpu_index:
+                            raise RuntimeError(
+                                f"Could not find a Vulkan device corresponding"
+                                f" to the CUDA device with UUID {device_uuid}."
+                            )
+                        cuda_vulkan_mapping[cuda_gpu_index] = device_uuid_to_vulkan_gpu_index[device_uuid]
+
+                    with open(cuda_vulkan_mapping_path, "w") as f:
+                        json.dump(cuda_vulkan_mapping, f)
+                else:
+                    with open(cuda_vulkan_mapping_path, "r") as f:
+                        # JSON dictionaries always have strings as keys, need to re-map here
+                        cuda_vulkan_mapping = {int(k):v for k, v in json.load(f).items()}
+
+            command += f" -force-device-index {cuda_vulkan_mapping[self.gpu_device]}"
 
         return shlex.split(command)
 
@@ -1030,7 +1156,7 @@ class Controller(object):
             pass
 
         self.unity_pid = proc.pid
-        atexit.register(lambda: proc.poll() is None and proc.kill())
+        atexit.register(lambda: self.server.stop())
 
     @property
     def tmp_dir(self):
@@ -1080,19 +1206,20 @@ class Controller(object):
         import requests
 
         payload = []
-        makedirs(self.commits_cache_dir) # must make directory for lock to succeed
+        makedirs(self.commits_cache_dir)  # must make directory for lock to succeed
         # must lock to handle case when multiple procs are started
         # and all fetch from api.github.com
         with LockEx(self._cache_commit_filename(branch)):
             cache_payload, cache_mtime = self._get_cache_commit_history(branch)
-            # we need to limit how often we hit api.github.com since 
+            # we need to limit how often we hit api.github.com since
             # there is a rate limit of 60 per hour per IP
             if cache_payload and (time.time() - cache_mtime) < 300:
                 payload = cache_payload
             else:
                 try:
                     res = requests.get(
-                        "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s" % branch
+                        "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s"
+                        % branch
                     )
                     if res.status_code == 404:
                         raise ValueError("Invalid branch name: %s" % branch)
@@ -1165,13 +1292,14 @@ class Controller(object):
             platform_system(), self.width, self.height, self.x_display, self.headless
         )
 
-
         if platform is None:
             candidate_platforms = ai2thor.platform.select_platforms(request)
         else:
             candidate_platforms = [platform]
 
-        builds = self.find_platform_builds(candidate_platforms, request, commits, releases_dir, local_build)
+        builds = self.find_platform_builds(
+            candidate_platforms, request, commits, releases_dir, local_build
+        )
         if not builds:
             platforms_message = ",".join(map(lambda p: p.name(), candidate_platforms))
             if commit_id:
@@ -1182,7 +1310,11 @@ class Controller(object):
             else:
                 raise Exception(
                     "No build exists for arch=%s platforms=%s and commits: %s"
-                    % (platform_system(), platforms_message, ", ".join(map(lambda x: x[:8], commits)))
+                    % (
+                        platform_system(),
+                        platforms_message,
+                        ", ".join(map(lambda x: x[:8], commits)),
+                    )
                 )
 
         # select the first build + platform that succeeds
@@ -1191,7 +1323,10 @@ class Controller(object):
         for build in builds:
             if build.platform.is_valid(request):
                 # don't emit warnings for CloudRendering since we allow it to fallback to a default
-                if build.commit_id != commits[0] and build.platform != ai2thor.platform.CloudRendering:
+                if (
+                    build.commit_id != commits[0]
+                    and build.platform != ai2thor.platform.CloudRendering
+                ):
                     warnings.warn(
                         "Build for the most recent commit: %s is not available.  Using commit build %s"
                         % (commits[0], build.commit_id)
@@ -1203,9 +1338,12 @@ class Controller(object):
         ]
         for build in builds:
             errors = build.platform.validate(request)
-            message = "Platform %s failed validation with the following errors: %s\n  " % (
-                build.platform.name(),
-                "\t\n".join(errors),
+            message = (
+                "Platform %s failed validation with the following errors: %s\n  "
+                % (
+                    build.platform.name(),
+                    "\t\n".join(errors),
+                )
             )
             instructions = build.platform.dependency_instructions(request)
             if instructions:
@@ -1213,7 +1351,9 @@ class Controller(object):
             error_messages.append(message)
         raise Exception("\n".join(error_messages))
 
-    def find_platform_builds(self, candidate_platforms, request, commits, releases_dir, local_build):
+    def find_platform_builds(
+        self, candidate_platforms, request, commits, releases_dir, local_build
+    ):
         builds = []
         for plat in candidate_platforms:
             for commit_id in commits:
@@ -1296,7 +1436,7 @@ class Controller(object):
             self._start_unity_thread(env, width, height, unity_params, image_name)
 
         # receive the first request
-        self.last_event = self.server.receive()
+        self.last_event = self.server.receive(timeout=self.server_start_timeout)
 
         # we should be able to get rid of this since we check the resolution in .reset()
         if self.server.unity_proc is not None and (height < 300 or width < 300):

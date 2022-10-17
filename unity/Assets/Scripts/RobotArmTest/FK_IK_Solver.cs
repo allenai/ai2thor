@@ -5,7 +5,7 @@ using UnityEngine;
 public class FK_IK_Solver : MonoBehaviour {
     public bool isIKDriven;
     public Transform armRoot, armShoulder, armElbow, armWrist, armHand;
-    float bone1Length, bone2Length, bone3Length;
+    public float bone1Length, bone2Length, bone3Length;
     public Transform FKRootTarget, FKShoulderTarget, FKElbowTarget, FKWristTarget;
     public Transform IKTarget, IKPole;
     Transform IKHint;
@@ -37,7 +37,7 @@ public class FK_IK_Solver : MonoBehaviour {
             IKPole.parent.forward = IKTarget.position - armShoulder.position;
 
             // Check if manipulator location is reachable by arm, with 1e-5 bias towards hyperextension when comparing values, to account for rounding errors
-            if ((IKTarget.position - armShoulder.position).magnitude + 1e-5 < bone2Length + bone3Length) {
+            if ((IKTarget.position - armShoulder.position).sqrMagnitude < Mathf.Pow(bone2Length + bone3Length - 1e-5f, 2)) {
                 // Define variables to optimize logic
                 p1x = armShoulder.position.x;
                 p1y = armShoulder.position.y;
