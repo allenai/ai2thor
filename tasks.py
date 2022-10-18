@@ -1137,7 +1137,7 @@ def ci_build(context):
                 os.makedirs('tmp', exist_ok=True)
                 # using threading here instead of multiprocessing since we must use the start_method of spawn, which 
                 # causes the tasks.py to get reloaded, which may be different on a branch from main
-                utf_proc = threading.Thread(target=ci_test_utf, args=(build["branch"], build["commit_id"], arch_temp_dirs["OSXIntel64"]))
+                utf_proc = threading.Thread(target=ci_test_utf, args=(context, build["branch"], build["commit_id"], arch_temp_dirs["OSXIntel64"]))
                 utf_proc.start()
                 procs.append(utf_proc)
                 pytest_proc = threading.Thread(target=ci_pytest, args=(build["branch"], build["commit_id"]))
@@ -3577,13 +3577,13 @@ def generate_pypi_index(context):
     )
 
 
-def ci_test_utf(branch, commit_id, base_dir):
+def ci_test_utf(context, branch, commit_id, base_dir):
     logger.info(
         "running Unity Test framework testRunner for %s %s %s"
         % (branch, commit_id, base_dir)
     )
 
-    results_path, results_logfile = test_utf(base_dir)
+    results_path, results_logfile = test_utf(context, base_dir)
 
     class_data = generate_pytest_utf(results_path)
 
