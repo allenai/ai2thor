@@ -3583,7 +3583,7 @@ def ci_test_utf(branch, commit_id, base_dir):
         % (branch, commit_id, base_dir)
     )
 
-    results_path, results_logfile = test_utf(context, base_dir)
+    results_path, results_logfile = test_utf(base_dir)
 
     class_data = generate_pytest_utf(results_path)
 
@@ -3764,8 +3764,7 @@ def activate_unity_license(context, ulf_path):
 
     subprocess.run('%s -batchmode -manualLicenseFile "%s"' % (_unity_path(), ulf_path), shell=True)
 
-@task
-def test_utf(ctx, base_dir=None):
+def test_utf(base_dir=None):
     """
     Generates a module named ai2thor/tests/test_utf.py with test_XYZ style methods
     that include failures (if any) extracted from the xml output
