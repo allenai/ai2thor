@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.7170012, g: 0.7306422, b: 0.7505908, a: 1}
+  m_IndirectSpecularColor: {r: 0.71791136, g: 0.73149365, b: 0.7516093, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -184,9 +184,9 @@ Transform:
   m_Father: {fileID: 406852861}
   m_RootOrder: 43
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &3839373 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4,
+--- !u!108 &3839375 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 108000013855172872, guid: c6cf98ada65b04564908f4a586bec7f4,
     type: 3}
   m_PrefabInstance: {fileID: 1510923621}
   m_PrefabAsset: {fileID: 0}
@@ -966,7 +966,7 @@ GameObject:
   - component: {fileID: 40943766}
   - component: {fileID: 40943765}
   m_Layer: 0
-  m_Name: Cabinet_debb2107
+  m_Name: Cabinet_9aec3b1d
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -995,8 +995,8 @@ MonoBehaviour:
   currentOpenness: 1
   IgnoreTheseObjects:
   - {fileID: 786800536}
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 1
 --- !u!54 &40943766
 Rigidbody:
@@ -1700,6 +1700,10 @@ PrefabInstance:
       value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 1395432641359966, guid: ec47e0ab5e9d34498b48a01ef9d60abe, type: 3}
+      propertyPath: m_Name
+      value: Book_0d948a76
+      objectReference: {fileID: 0}
+    - target: {fileID: 1395432641359966, guid: ec47e0ab5e9d34498b48a01ef9d60abe, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -1815,7 +1819,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1134598729741078, guid: 00c059e8d00e007458d67b4918ac84ff, type: 3}
       propertyPath: m_Name
-      value: Bread_8485511e
+      value: Bread_d5a1c3f9
       objectReference: {fileID: 0}
     - target: {fileID: 1134598729741078, guid: 00c059e8d00e007458d67b4918ac84ff, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -1899,7 +1903,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4549674607539280, guid: 00c059e8d00e007458d67b4918ac84ff, type: 3}
       propertyPath: m_RootOrder
-      value: 43
+      value: 42
       objectReference: {fileID: 0}
     - target: {fileID: 4549674607539280, guid: 00c059e8d00e007458d67b4918ac84ff, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2555,6 +2559,10 @@ PrefabInstance:
       value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 1673486740688074, guid: 5768b36ae09474cd6bcfc84c3e861786, type: 3}
+      propertyPath: m_Name
+      value: Book_2818088b
+      objectReference: {fileID: 0}
+    - target: {fileID: 1673486740688074, guid: 5768b36ae09474cd6bcfc84c3e861786, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -2959,6 +2967,10 @@ PrefabInstance:
     - target: {fileID: 1816905891022162, guid: 588b43f56a2dd4e599d593c538844eb4, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1837946445612514, guid: 588b43f56a2dd4e599d593c538844eb4, type: 3}
+      propertyPath: m_Name
+      value: Book_e5c8424f
       objectReference: {fileID: 0}
     - target: {fileID: 1837946445612514, guid: 588b43f56a2dd4e599d593c538844eb4, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -3403,7 +3415,7 @@ GameObject:
   - component: {fileID: 116820915}
   - component: {fileID: 116820914}
   m_Layer: 8
-  m_Name: Window_f3201802
+  m_Name: Window_ebbaf2e5
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3582,7 +3594,8 @@ MonoBehaviour:
   MovingParts:
   - {fileID: 1599657038078765}
   MaterialSwapObjects: []
-  LightSources:
+  LightSources: []
+  effects:
   - {fileID: 1890253444}
   OnPositions:
   - {x: 0, y: 90, z: 0}
@@ -3996,7 +4009,7 @@ GameObject:
   - component: {fileID: 132473217}
   - component: {fileID: 132473220}
   m_Layer: 8
-  m_Name: Drawer_07ae8516
+  m_Name: Drawer_ada4d0ff
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4130,9 +4143,10 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 742778970}
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 0
 --- !u!1001 &135012986
 PrefabInstance:
@@ -4248,6 +4262,10 @@ PrefabInstance:
     - target: {fileID: 1906452580477392, guid: c78ab9a4be80e40df92b16d5b1eafb6a, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1934604814244968, guid: c78ab9a4be80e40df92b16d5b1eafb6a, type: 3}
+      propertyPath: m_Name
+      value: GarbageCan_a0ba592c
       objectReference: {fileID: 0}
     - target: {fileID: 1934604814244968, guid: c78ab9a4be80e40df92b16d5b1eafb6a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -4371,6 +4389,10 @@ PrefabInstance:
     - target: {fileID: 1816905891022162, guid: 588b43f56a2dd4e599d593c538844eb4, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1837946445612514, guid: 588b43f56a2dd4e599d593c538844eb4, type: 3}
+      propertyPath: m_Name
+      value: Book_02ed2e4a
       objectReference: {fileID: 0}
     - target: {fileID: 1837946445612514, guid: 588b43f56a2dd4e599d593c538844eb4, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -5115,6 +5137,10 @@ PrefabInstance:
       value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
+      propertyPath: m_Name
+      value: scene|Spot|8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
@@ -5457,7 +5483,7 @@ GameObject:
   - component: {fileID: 169710990}
   - component: {fileID: 169710993}
   m_Layer: 8
-  m_Name: StoveBurner_cbb39264
+  m_Name: StoveBurner_ab166a5a
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5590,6 +5616,7 @@ MonoBehaviour:
   MovingParts: []
   MaterialSwapObjects: []
   LightSources: []
+  effects: []
   OnPositions: []
   OffPositions: []
   animationTime: 0.05
@@ -5854,7 +5881,7 @@ GameObject:
   - component: {fileID: 178884839}
   - component: {fileID: 178884841}
   m_Layer: 8
-  m_Name: Drawer_2dfd73f9
+  m_Name: Drawer_3973fc5f
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5983,9 +6010,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 0
 --- !u!1 &179878715
 GameObject:
@@ -6109,6 +6136,10 @@ PrefabInstance:
       value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
+      propertyPath: m_Name
+      value: scene|Spot|4
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
@@ -6200,6 +6231,10 @@ PrefabInstance:
     - target: {fileID: 1262482927616560, guid: 90e8b77453c3f476daa6e918ca8db950, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1414790210241526, guid: 90e8b77453c3f476daa6e918ca8db950, type: 3}
+      propertyPath: m_Name
+      value: Book_04e45a2c
       objectReference: {fileID: 0}
     - target: {fileID: 1414790210241526, guid: 90e8b77453c3f476daa6e918ca8db950, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -7330,6 +7365,10 @@ PrefabInstance:
       value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
+      propertyPath: m_Name
+      value: scene|Spot|6
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
@@ -7398,7 +7437,7 @@ GameObject:
   - component: {fileID: 229151302}
   - component: {fileID: 229151301}
   m_Layer: 0
-  m_Name: Point light (8)
+  m_Name: scene|Point|0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7478,7 +7517,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1860931948}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &230050598
 GameObject:
@@ -8253,7 +8292,7 @@ GameObject:
   - component: {fileID: 252944112}
   - component: {fileID: 252944114}
   m_Layer: 8
-  m_Name: Drawer_bd186523
+  m_Name: Drawer_e9f533ba
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8385,9 +8424,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 0
 --- !u!1 &253587062
 GameObject:
@@ -8879,7 +8918,7 @@ GameObject:
   - component: {fileID: 271913138}
   - component: {fileID: 271913140}
   m_Layer: 8
-  m_Name: Drawer_85c95736
+  m_Name: Drawer_1e9a9b91
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9008,9 +9047,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 0
 --- !u!4 &272378610 stripped
 Transform:
@@ -9181,9 +9220,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   WhatIsMyStructureObjectTag: 11
---- !u!1 &276934270 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4,
+--- !u!108 &276934272 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 108000013855172872, guid: c6cf98ada65b04564908f4a586bec7f4,
     type: 3}
   m_PrefabInstance: {fileID: 1920213728}
   m_PrefabAsset: {fileID: 0}
@@ -9461,6 +9500,10 @@ PrefabInstance:
       value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 1000013895967288, guid: 8ecd2e9043a2c4c62b0f7a510fc153b0, type: 3}
+      propertyPath: m_Name
+      value: scene|Point|2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013895967288, guid: 8ecd2e9043a2c4c62b0f7a510fc153b0, type: 3}
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
@@ -9624,7 +9667,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1000012092257572, guid: 1e5e547a2780d45a4bd5195fc65a2406, type: 3}
       propertyPath: m_Name
-      value: Faucet_0f2a3a65
+      value: Faucet_ab2bbf59
       objectReference: {fileID: 0}
     - target: {fileID: 1000012092257572, guid: 1e5e547a2780d45a4bd5195fc65a2406, type: 3}
       propertyPath: m_Layer
@@ -9640,7 +9683,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4000012677384008, guid: 1e5e547a2780d45a4bd5195fc65a2406, type: 3}
       propertyPath: m_RootOrder
-      value: 72
+      value: 71
       objectReference: {fileID: 0}
     - target: {fileID: 4000012677384008, guid: 1e5e547a2780d45a4bd5195fc65a2406, type: 3}
       propertyPath: m_LocalScale.x
@@ -9944,7 +9987,7 @@ GameObject:
   - component: {fileID: 298312464}
   - component: {fileID: 298312467}
   m_Layer: 8
-  m_Name: StoveBurner_92e8b125
+  m_Name: StoveBurner_06531075
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10077,6 +10120,7 @@ MonoBehaviour:
   MovingParts: []
   MaterialSwapObjects: []
   LightSources: []
+  effects: []
   OnPositions: []
   OffPositions: []
   animationTime: 0.05
@@ -10923,9 +10967,9 @@ Transform:
   m_Father: {fileID: 406852861}
   m_RootOrder: 191
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &328952689 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4,
+--- !u!108 &328952691 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 108000013855172872, guid: c6cf98ada65b04564908f4a586bec7f4,
     type: 3}
   m_PrefabInstance: {fileID: 1000848133}
   m_PrefabAsset: {fileID: 0}
@@ -11339,7 +11383,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1000892842884654, guid: 2137774ec1727429ea310c9b181231c1, type: 3}
       propertyPath: m_Name
-      value: Apple_9585f63f
+      value: Apple_2d23335f
       objectReference: {fileID: 0}
     - target: {fileID: 1000892842884654, guid: 2137774ec1727429ea310c9b181231c1, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -11403,7 +11447,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4649405098470364, guid: 2137774ec1727429ea310c9b181231c1, type: 3}
       propertyPath: m_RootOrder
-      value: 41
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 4649405098470364, guid: 2137774ec1727429ea310c9b181231c1, type: 3}
       propertyPath: m_LocalPosition.x
@@ -11870,7 +11914,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1560685524484036, guid: 40c3ad78105931b41aee21c9b012379e, type: 3}
       propertyPath: m_Name
-      value: Egg_1c9b3b96
+      value: Egg_3f59b271
       objectReference: {fileID: 0}
     - target: {fileID: 1560685524484036, guid: 40c3ad78105931b41aee21c9b012379e, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -11902,7 +11946,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4437842868540470, guid: 40c3ad78105931b41aee21c9b012379e, type: 3}
       propertyPath: m_RootOrder
-      value: 51
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 4437842868540470, guid: 40c3ad78105931b41aee21c9b012379e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -12277,6 +12321,10 @@ PrefabInstance:
     - target: {fileID: 1933156040162282, guid: 18192d47e1b544bdea8d8f8ce408ff2a, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1974097998912244, guid: 18192d47e1b544bdea8d8f8ce408ff2a, type: 3}
+      propertyPath: m_Name
+      value: Box_faafd524
       objectReference: {fileID: 0}
     - target: {fileID: 1974097998912244, guid: 18192d47e1b544bdea8d8f8ce408ff2a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -12913,6 +12961,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 493076157}
     m_Modifications:
+    - target: {fileID: 1022961260010060, guid: 1e109a495ab1742338b006c955475ae6, type: 3}
+      propertyPath: m_Name
+      value: Bowl_c51d7fd3
+      objectReference: {fileID: 0}
     - target: {fileID: 1022961260010060, guid: 1e109a495ab1742338b006c955475ae6, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -13768,6 +13820,10 @@ PrefabInstance:
       value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
+      propertyPath: m_Name
+      value: scene|Spot|3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
@@ -14544,7 +14600,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1736316611057674, guid: c6fedd6d89fc3b147bca7de7606a712d, type: 3}
       propertyPath: m_Name
-      value: Ladle_c72f2b24
+      value: Ladle_24291006
       objectReference: {fileID: 0}
     - target: {fileID: 1736316611057674, guid: c6fedd6d89fc3b147bca7de7606a712d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -14620,7 +14676,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4451647671820680, guid: c6fedd6d89fc3b147bca7de7606a712d, type: 3}
       propertyPath: m_RootOrder
-      value: 56
+      value: 55
       objectReference: {fileID: 0}
     - target: {fileID: 4451647671820680, guid: c6fedd6d89fc3b147bca7de7606a712d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -14762,6 +14818,10 @@ PrefabInstance:
     - target: {fileID: 1427952473162670, guid: 28357fb495c1a4bada6894f6b77bfa3f, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1453529708023000, guid: 28357fb495c1a4bada6894f6b77bfa3f, type: 3}
+      propertyPath: m_Name
+      value: Box_a942430e
       objectReference: {fileID: 0}
     - target: {fileID: 1453529708023000, guid: 28357fb495c1a4bada6894f6b77bfa3f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -15368,9 +15428,9 @@ Transform:
   m_Father: {fileID: 406852861}
   m_RootOrder: 197
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &466774650 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4,
+--- !u!108 &466774652 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 108000013855172872, guid: c6cf98ada65b04564908f4a586bec7f4,
     type: 3}
   m_PrefabInstance: {fileID: 414404656}
   m_PrefabAsset: {fileID: 0}
@@ -15427,7 +15487,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1452313318222568, guid: 18dfb686cb1c14b4bbd282e7e41b537c, type: 3}
       propertyPath: m_Name
-      value: Lettuce_7160ca93
+      value: Lettuce_e4c06bf0
       objectReference: {fileID: 0}
     - target: {fileID: 1452313318222568, guid: 18dfb686cb1c14b4bbd282e7e41b537c, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -15455,7 +15515,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4314455909562882, guid: 18dfb686cb1c14b4bbd282e7e41b537c, type: 3}
       propertyPath: m_RootOrder
-      value: 42
+      value: 41
       objectReference: {fileID: 0}
     - target: {fileID: 4314455909562882, guid: 18dfb686cb1c14b4bbd282e7e41b537c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -15614,7 +15674,6 @@ Transform:
   - {fileID: 1490577078}
   - {fileID: 2146721386}
   - {fileID: 32802172}
-  - {fileID: 1663751254}
   - {fileID: 855838552}
   - {fileID: 61065653}
   - {fileID: 983193489}
@@ -16125,7 +16184,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1633431546483002, guid: b31fcbd7675d5584992a20342512edd2, type: 3}
       propertyPath: m_Name
-      value: Cup_dc95d5e8
+      value: Cup_bb2cfefd
       objectReference: {fileID: 0}
     - target: {fileID: 1633431546483002, guid: b31fcbd7675d5584992a20342512edd2, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -16201,7 +16260,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4907447012375892, guid: b31fcbd7675d5584992a20342512edd2, type: 3}
       propertyPath: m_RootOrder
-      value: 50
+      value: 49
       objectReference: {fileID: 0}
     - target: {fileID: 4907447012375892, guid: b31fcbd7675d5584992a20342512edd2, type: 3}
       propertyPath: m_LocalPosition.x
@@ -16255,6 +16314,10 @@ PrefabInstance:
     - target: {fileID: 1168667613599608, guid: a977be9bbffcf4db0883f46581976fbb, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1172035238924824, guid: a977be9bbffcf4db0883f46581976fbb, type: 3}
+      propertyPath: m_Name
+      value: Book_23932f0a
       objectReference: {fileID: 0}
     - target: {fileID: 1172035238924824, guid: a977be9bbffcf4db0883f46581976fbb, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -16474,6 +16537,10 @@ PrefabInstance:
     - target: {fileID: 1144655879987402, guid: 0d84661b3e0d34b55af8920efed8bc92, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1236849555476646, guid: 0d84661b3e0d34b55af8920efed8bc92, type: 3}
+      propertyPath: m_Name
+      value: Book_9834ff43
       objectReference: {fileID: 0}
     - target: {fileID: 1236849555476646, guid: 0d84661b3e0d34b55af8920efed8bc92, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -17245,7 +17312,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1860931948}
-  m_RootOrder: 0
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!215 &527322747
 ReflectionProbe:
@@ -17698,9 +17765,9 @@ Transform:
   m_Father: {fileID: 305366257}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &558144068 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4,
+--- !u!108 &558144070 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 108000013855172872, guid: c6cf98ada65b04564908f4a586bec7f4,
     type: 3}
   m_PrefabInstance: {fileID: 185492529}
   m_PrefabAsset: {fileID: 0}
@@ -17904,6 +17971,10 @@ PrefabInstance:
     - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 4294967295
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
+      propertyPath: m_Name
+      value: scene|Spot|10
       objectReference: {fileID: 0}
     - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Layer
@@ -19029,7 +19100,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1633384858682684, guid: 455a094c271f5394f9d1f479ae9a4a8b, type: 3}
       propertyPath: m_Name
-      value: DishSponge_c7859707
+      value: DishSponge_846279b8
       objectReference: {fileID: 0}
     - target: {fileID: 1633384858682684, guid: 455a094c271f5394f9d1f479ae9a4a8b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -19323,9 +19394,9 @@ Transform:
   m_Father: {fileID: 95303358}
   m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &604897887 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4,
+--- !u!108 &604897889 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 108000013855172872, guid: c6cf98ada65b04564908f4a586bec7f4,
     type: 3}
   m_PrefabInstance: {fileID: 1271218621}
   m_PrefabAsset: {fileID: 0}
@@ -19363,6 +19434,10 @@ PrefabInstance:
     - target: {fileID: 1262482927616560, guid: 90e8b77453c3f476daa6e918ca8db950, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1414790210241526, guid: 90e8b77453c3f476daa6e918ca8db950, type: 3}
+      propertyPath: m_Name
+      value: Book_8765161c
       objectReference: {fileID: 0}
     - target: {fileID: 1414790210241526, guid: 90e8b77453c3f476daa6e918ca8db950, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -20890,7 +20965,7 @@ GameObject:
   - component: {fileID: 668677522}
   - component: {fileID: 668677521}
   m_Layer: 0
-  m_Name: Cabinet_c306b4ef
+  m_Name: Cabinet_3f7c894c
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -20941,9 +21016,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 1375144071}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 1
 --- !u!54 &668677522
 Rigidbody:
@@ -21295,9 +21370,9 @@ Transform:
   m_Father: {fileID: 406852861}
   m_RootOrder: 133
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &678516684 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4,
+--- !u!108 &678516686 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 108000013855172872, guid: c6cf98ada65b04564908f4a586bec7f4,
     type: 3}
   m_PrefabInstance: {fileID: 225937862}
   m_PrefabAsset: {fileID: 0}
@@ -21338,7 +21413,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1288102493794036, guid: f04343d5a0f16304392b506c7a5d7b0f, type: 3}
       propertyPath: m_Name
-      value: Spatula_e77c4b4c
+      value: Spatula_650f2009
       objectReference: {fileID: 0}
     - target: {fileID: 1288102493794036, guid: f04343d5a0f16304392b506c7a5d7b0f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -21394,7 +21469,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4843470684545140, guid: f04343d5a0f16304392b506c7a5d7b0f, type: 3}
       propertyPath: m_RootOrder
-      value: 53
+      value: 52
       objectReference: {fileID: 0}
     - target: {fileID: 4843470684545140, guid: f04343d5a0f16304392b506c7a5d7b0f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -21891,7 +21966,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1392476551776996, guid: c13e799f03fd6fc42b258c033ad7fbd5, type: 3}
       propertyPath: m_Name
-      value: Potato_bb7defe9
+      value: Potato_582b16c0
       objectReference: {fileID: 0}
     - target: {fileID: 1392476551776996, guid: c13e799f03fd6fc42b258c033ad7fbd5, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -21923,7 +21998,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4564318737044132, guid: c13e799f03fd6fc42b258c033ad7fbd5, type: 3}
       propertyPath: m_RootOrder
-      value: 58
+      value: 57
       objectReference: {fileID: 0}
     - target: {fileID: 4564318737044132, guid: c13e799f03fd6fc42b258c033ad7fbd5, type: 3}
       propertyPath: m_LocalPosition.x
@@ -22049,6 +22124,10 @@ PrefabInstance:
     - target: {fileID: 1433584009636120, guid: 9a4ca8c00c4e64e6ea2f8c5d977bed4a, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1469215353298782, guid: 9a4ca8c00c4e64e6ea2f8c5d977bed4a, type: 3}
+      propertyPath: m_Name
+      value: Bowl_0fc59175
       objectReference: {fileID: 0}
     - target: {fileID: 1469215353298782, guid: 9a4ca8c00c4e64e6ea2f8c5d977bed4a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -22416,7 +22495,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1942404011819772, guid: 816337c704d7c4cc5a2e59f5f6f7fcec, type: 3}
       propertyPath: m_Name
-      value: GarbageCan_a263d8c9
+      value: GarbageCan_6027cab7
       objectReference: {fileID: 0}
     - target: {fileID: 1942404011819772, guid: 816337c704d7c4cc5a2e59f5f6f7fcec, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -22469,7 +22548,7 @@ GameObject:
   - component: {fileID: 703097659}
   - component: {fileID: 703097658}
   m_Layer: 0
-  m_Name: Cabinet_543c1808
+  m_Name: Cabinet_172b840e
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -22520,9 +22599,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 1468943720}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 1
 --- !u!54 &703097659
 Rigidbody:
@@ -22767,7 +22846,8 @@ MonoBehaviour:
   MovingParts:
   - {fileID: 1599656281191777}
   MaterialSwapObjects: []
-  LightSources:
+  LightSources: []
+  effects:
   - {fileID: 1938318748}
   OnPositions:
   - {x: 0, y: 90, z: 0}
@@ -22894,6 +22974,10 @@ PrefabInstance:
     - target: {fileID: 1110429850069348, guid: 7c555b18ae7184f2aa6fb740c91052d6, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1217569750156398, guid: 7c555b18ae7184f2aa6fb740c91052d6, type: 3}
+      propertyPath: m_Name
+      value: Book_c9cb924f
       objectReference: {fileID: 0}
     - target: {fileID: 1217569750156398, guid: 7c555b18ae7184f2aa6fb740c91052d6, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -23206,6 +23290,10 @@ PrefabInstance:
       value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 1560133318098846, guid: 40efe2941631a467e8b282e3e1e15c5c, type: 3}
+      propertyPath: m_Name
+      value: Book_60678a91
+      objectReference: {fileID: 0}
+    - target: {fileID: 1560133318098846, guid: 40efe2941631a467e8b282e3e1e15c5c, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -23366,7 +23454,7 @@ GameObject:
   - component: {fileID: 742778972}
   - component: {fileID: 742778971}
   m_Layer: 8
-  m_Name: Cabinet_fa78ae35
+  m_Name: Cabinet_e7eb8d10
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -23395,8 +23483,8 @@ MonoBehaviour:
   currentOpenness: 1
   IgnoreTheseObjects:
   - {fileID: 132473215}
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 1
 --- !u!54 &742778972
 Rigidbody:
@@ -23511,7 +23599,7 @@ GameObject:
   - component: {fileID: 744296970}
   - component: {fileID: 744296969}
   m_Layer: 8
-  m_Name: Cabinet_4344e1f2
+  m_Name: Cabinet_ef4f82b2
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -23560,7 +23648,6 @@ MonoBehaviour:
   currentOpenness: 1
   IgnoreTheseObjects: []
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 1
 --- !u!54 &744296970
 Rigidbody:
@@ -24213,6 +24300,10 @@ PrefabInstance:
       value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 1171454225922452, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
+      propertyPath: m_Name
+      value: Book_37f1b498
+      objectReference: {fileID: 0}
+    - target: {fileID: 1171454225922452, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -24801,7 +24892,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1699530301732640, guid: 7427eb9bb9c0be241a44d1f2a799a7c6, type: 3}
       propertyPath: m_Name
-      value: Tomato_bd76feba
+      value: Tomato_5fb6a620
       objectReference: {fileID: 0}
     - target: {fileID: 1699530301732640, guid: 7427eb9bb9c0be241a44d1f2a799a7c6, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -24829,7 +24920,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4382573843596158, guid: 7427eb9bb9c0be241a44d1f2a799a7c6, type: 3}
       propertyPath: m_RootOrder
-      value: 46
+      value: 45
       objectReference: {fileID: 0}
     - target: {fileID: 4382573843596158, guid: 7427eb9bb9c0be241a44d1f2a799a7c6, type: 3}
       propertyPath: m_LocalPosition.x
@@ -24874,7 +24965,7 @@ GameObject:
   - component: {fileID: 786800538}
   - component: {fileID: 786800541}
   m_Layer: 8
-  m_Name: Drawer_9acf1d27
+  m_Name: Drawer_49dc10c8
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -25008,9 +25099,10 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 40943764}
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 0
 --- !u!1 &788343314
 GameObject:
@@ -25349,6 +25441,10 @@ PrefabInstance:
       value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 1488377138201752, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
+      propertyPath: m_Name
+      value: Book_b303299e
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488377138201752, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -25508,7 +25604,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1682789330437360, guid: bf146d8dcd333a448b5b553e2ed3bb4e, type: 3}
       propertyPath: m_Name
-      value: Fork_e07d7873
+      value: Fork_40ceb846
       objectReference: {fileID: 0}
     - target: {fileID: 1682789330437360, guid: bf146d8dcd333a448b5b553e2ed3bb4e, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -25544,7 +25640,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4042404749135100, guid: bf146d8dcd333a448b5b553e2ed3bb4e, type: 3}
       propertyPath: m_RootOrder
-      value: 55
+      value: 54
       objectReference: {fileID: 0}
     - target: {fileID: 4042404749135100, guid: bf146d8dcd333a448b5b553e2ed3bb4e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -25830,6 +25926,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 493076157}
     m_Modifications:
     - target: {fileID: 1126664567920162, guid: dbcf02a6f90704456bd060f8cf7868ac, type: 3}
+      propertyPath: m_Name
+      value: GarbageCan_cdf4a0f0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1126664567920162, guid: dbcf02a6f90704456bd060f8cf7868ac, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -26034,7 +26134,7 @@ Transform:
   - {fileID: 573729964}
   - {fileID: 1005729885}
   m_Father: {fileID: 472216731}
-  m_RootOrder: 60
+  m_RootOrder: 59
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &821817893
 GameObject:
@@ -26170,7 +26270,7 @@ GameObject:
   - component: {fileID: 826208282}
   - component: {fileID: 826208284}
   m_Layer: 8
-  m_Name: Drawer_eae1bd6d
+  m_Name: Drawer_ae5c1e11
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26299,9 +26399,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 0
 --- !u!4 &826998395 stripped
 Transform:
@@ -26782,6 +26882,10 @@ PrefabInstance:
       value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 1395432641359966, guid: ec47e0ab5e9d34498b48a01ef9d60abe, type: 3}
+      propertyPath: m_Name
+      value: Book_2b6b7918
+      objectReference: {fileID: 0}
+    - target: {fileID: 1395432641359966, guid: ec47e0ab5e9d34498b48a01ef9d60abe, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -27247,6 +27351,10 @@ PrefabInstance:
       value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 1229778573671666, guid: 869c5400f474d4c969b5ee6449f8cb6c, type: 3}
+      propertyPath: m_Name
+      value: Bowl_8af50e70
+      objectReference: {fileID: 0}
+    - target: {fileID: 1229778573671666, guid: 869c5400f474d4c969b5ee6449f8cb6c, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -27454,7 +27562,7 @@ GameObject:
   - component: {fileID: 855983216}
   - component: {fileID: 855983215}
   m_Layer: 0
-  m_Name: Cabinet_0ff2254b
+  m_Name: Cabinet_1749e892
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -27501,9 +27609,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 1
 --- !u!54 &855983216
 Rigidbody:
@@ -27631,9 +27739,9 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.75150734, y: 1.0591754, z: 0.7067967}
   m_Center: {x: 0, y: -0.00852474, z: 0.0132322805}
---- !u!1 &857097908 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1000013895967288, guid: 8ecd2e9043a2c4c62b0f7a510fc153b0,
+--- !u!108 &857097910 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 108000010684088714, guid: 8ecd2e9043a2c4c62b0f7a510fc153b0,
     type: 3}
   m_PrefabInstance: {fileID: 2054007066}
   m_PrefabAsset: {fileID: 0}
@@ -27854,7 +27962,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1556709772475454, guid: 8f1141233b0ae344a99cb6b708d8be8e, type: 3}
       propertyPath: m_Name
-      value: ButterKnife_f67775a1
+      value: ButterKnife_b89ea1af
       objectReference: {fileID: 0}
     - target: {fileID: 1556709772475454, guid: 8f1141233b0ae344a99cb6b708d8be8e, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -27992,7 +28100,7 @@ PrefabInstance:
     - target: {fileID: 7442099471613157707, guid: b21767a5ca0bd5f449c19ee7f5a8ade7,
         type: 3}
       propertyPath: m_Name
-      value: Chair_08eed4ad
+      value: Chair_1090c2d5
       objectReference: {fileID: 0}
     - target: {fileID: 7442099472530889724, guid: b21767a5ca0bd5f449c19ee7f5a8ade7,
         type: 3}
@@ -28393,7 +28501,7 @@ GameObject:
   - component: {fileID: 881658754}
   - component: {fileID: 881658756}
   m_Layer: 8
-  m_Name: Drawer_39e42246
+  m_Name: Drawer_ee643389
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28523,9 +28631,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 0
 --- !u!1 &882896302
 GameObject:
@@ -28838,6 +28946,10 @@ PrefabInstance:
       value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 1611907652460468, guid: 429f9167a9be84964b07a0b269d30aaf, type: 3}
+      propertyPath: m_Name
+      value: Box_a342ac18
+      objectReference: {fileID: 0}
+    - target: {fileID: 1611907652460468, guid: 429f9167a9be84964b07a0b269d30aaf, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -29094,7 +29206,7 @@ GameObject:
   - component: {fileID: 913259048}
   - component: {fileID: 913259051}
   m_Layer: 8
-  m_Name: StoveBurner_c1c0de85
+  m_Name: StoveBurner_4b38f6f5
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29227,6 +29339,7 @@ MonoBehaviour:
   MovingParts: []
   MaterialSwapObjects: []
   LightSources: []
+  effects: []
   OnPositions: []
   OffPositions: []
   animationTime: 0.05
@@ -29324,7 +29437,7 @@ Transform:
   - {fileID: 1938318749}
   - {fileID: 2022925384}
   m_Father: {fileID: 472216731}
-  m_RootOrder: 63
+  m_RootOrder: 62
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &919172808
 GameObject:
@@ -29659,7 +29772,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1122442170877536, guid: fdc09cab87950cc4c98ff3080290b1b6, type: 3}
       propertyPath: m_Name
-      value: SaltShaker_7e800e97
+      value: SaltShaker_6320d1b6
       objectReference: {fileID: 0}
     - target: {fileID: 1122442170877536, guid: fdc09cab87950cc4c98ff3080290b1b6, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -29707,7 +29820,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4818036067491336, guid: fdc09cab87950cc4c98ff3080290b1b6, type: 3}
       propertyPath: m_RootOrder
-      value: 45
+      value: 44
       objectReference: {fileID: 0}
     - target: {fileID: 4818036067491336, guid: fdc09cab87950cc4c98ff3080290b1b6, type: 3}
       propertyPath: m_LocalPosition.x
@@ -30435,7 +30548,7 @@ GameObject:
   - component: {fileID: 952371572}
   - component: {fileID: 952371574}
   m_Layer: 8
-  m_Name: Drawer_de38c694
+  m_Name: Drawer_d7beddd4
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -30564,9 +30677,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 0
 --- !u!1 &956956403
 GameObject:
@@ -31323,7 +31436,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1679868556070144, guid: 4e98163d12cf5b844967076eb276319d, type: 3}
       propertyPath: m_Name
-      value: PepperShaker_822ce267
+      value: PepperShaker_57398a24
       objectReference: {fileID: 0}
     - target: {fileID: 1679868556070144, guid: 4e98163d12cf5b844967076eb276319d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -31339,7 +31452,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4468376325903498, guid: 4e98163d12cf5b844967076eb276319d, type: 3}
       propertyPath: m_RootOrder
-      value: 44
+      value: 43
       objectReference: {fileID: 0}
     - target: {fileID: 4468376325903498, guid: 4e98163d12cf5b844967076eb276319d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -31405,6 +31518,10 @@ PrefabInstance:
     - target: {fileID: 1133422216560890, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1171454225922452, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
+      propertyPath: m_Name
+      value: Book_626edbde
       objectReference: {fileID: 0}
     - target: {fileID: 1171454225922452, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -31682,7 +31799,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1374739436022700, guid: 03544085c8acd8546a745fbc3572b6e7, type: 3}
       propertyPath: m_Name
-      value: Spoon_dfb446f0
+      value: Spoon_ab4315e1
       objectReference: {fileID: 0}
     - target: {fileID: 1374739436022700, guid: 03544085c8acd8546a745fbc3572b6e7, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -31738,7 +31855,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4613403647489294, guid: 03544085c8acd8546a745fbc3572b6e7, type: 3}
       propertyPath: m_RootOrder
-      value: 54
+      value: 53
       objectReference: {fileID: 0}
     - target: {fileID: 4613403647489294, guid: 03544085c8acd8546a745fbc3572b6e7, type: 3}
       propertyPath: m_LocalPosition.x
@@ -31946,7 +32063,7 @@ Transform:
   - {fileID: 1621433788}
   - {fileID: 298312463}
   m_Father: {fileID: 472216731}
-  m_RootOrder: 65
+  m_RootOrder: 64
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &993509663
 GameObject:
@@ -32042,6 +32159,10 @@ PrefabInstance:
     - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 4294967295
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
+      propertyPath: m_Name
+      value: scene|Spot|2
       objectReference: {fileID: 0}
     - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Layer
@@ -32295,7 +32416,7 @@ GameObject:
   - component: {fileID: 1005729882}
   - component: {fileID: 1005729886}
   m_Layer: 8
-  m_Name: StoveBurner_98e15632
+  m_Name: StoveBurner_360448ba
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -32428,6 +32549,7 @@ MonoBehaviour:
   MovingParts: []
   MaterialSwapObjects: []
   LightSources: []
+  effects: []
   OnPositions: []
   OffPositions: []
   animationTime: 0.05
@@ -32557,6 +32679,10 @@ PrefabInstance:
     - target: {fileID: 1427952473162670, guid: 28357fb495c1a4bada6894f6b77bfa3f, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1453529708023000, guid: 28357fb495c1a4bada6894f6b77bfa3f, type: 3}
+      propertyPath: m_Name
+      value: Box_4baf2972
       objectReference: {fileID: 0}
     - target: {fileID: 1453529708023000, guid: 28357fb495c1a4bada6894f6b77bfa3f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -32919,6 +33045,10 @@ PrefabInstance:
       value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 1172035238924824, guid: a977be9bbffcf4db0883f46581976fbb, type: 3}
+      propertyPath: m_Name
+      value: Book_ac0ec8ca
+      objectReference: {fileID: 0}
+    - target: {fileID: 1172035238924824, guid: a977be9bbffcf4db0883f46581976fbb, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -33120,11 +33250,11 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    m_TransformParent: {fileID: 472216731}
+    m_TransformParent: {fileID: 1860931948}
     m_Modifications:
     - target: {fileID: 1079595898826576, guid: fd2fd800e9fdd44cbb8a5edd7e456226, type: 3}
       propertyPath: m_Name
-      value: LightSwitch_72dc5d13
+      value: LightSwitch_117b5e68
       objectReference: {fileID: 0}
     - target: {fileID: 1079595898826576, guid: fd2fd800e9fdd44cbb8a5edd7e456226, type: 3}
       propertyPath: m_IsActive
@@ -33168,7 +33298,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4975459698678516, guid: fd2fd800e9fdd44cbb8a5edd7e456226, type: 3}
       propertyPath: m_RootOrder
-      value: 40
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4975459698678516, guid: fd2fd800e9fdd44cbb8a5edd7e456226, type: 3}
       propertyPath: m_LocalPosition.x
@@ -33211,82 +33341,82 @@ PrefabInstance:
         type: 3}
       propertyPath: LightSources.Array.data[0]
       value: 
-      objectReference: {fileID: 1868191422}
+      objectReference: {fileID: 1868191424}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[1]
       value: 
-      objectReference: {fileID: 678516684}
+      objectReference: {fileID: 678516686}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[2]
       value: 
-      objectReference: {fileID: 558144068}
+      objectReference: {fileID: 558144070}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[3]
       value: 
-      objectReference: {fileID: 1624956195}
+      objectReference: {fileID: 1624956197}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[4]
       value: 
-      objectReference: {fileID: 3839373}
+      objectReference: {fileID: 3839375}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[5]
       value: 
-      objectReference: {fileID: 328952689}
+      objectReference: {fileID: 328952691}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[6]
       value: 
-      objectReference: {fileID: 466774650}
+      objectReference: {fileID: 466774652}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[7]
       value: 
-      objectReference: {fileID: 276934270}
+      objectReference: {fileID: 276934272}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[8]
       value: 
-      objectReference: {fileID: 604897887}
+      objectReference: {fileID: 604897889}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[9]
       value: 
-      objectReference: {fileID: 1525214459}
+      objectReference: {fileID: 1525214461}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[10]
       value: 
-      objectReference: {fileID: 1725604300}
+      objectReference: {fileID: 1725604302}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[11]
       value: 
-      objectReference: {fileID: 857097908}
+      objectReference: {fileID: 1444699476}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[12]
       value: 
-      objectReference: {fileID: 229151300}
+      objectReference: {fileID: 857097910}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[13]
       value: 
-      objectReference: {fileID: 1494998554}
+      objectReference: {fileID: 229151301}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[14]
       value: 
-      objectReference: {fileID: 1954809698}
+      objectReference: {fileID: 1494998555}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: LightSources.Array.data[15]
       value: 
-      objectReference: {fileID: 1444699474}
+      objectReference: {fileID: 1954809699}
     - target: {fileID: 114172096304395088, guid: fd2fd800e9fdd44cbb8a5edd7e456226,
         type: 3}
       propertyPath: MaterialSwapObjects.Array.size
@@ -34898,7 +35028,8 @@ MonoBehaviour:
   MovingParts:
   - {fileID: 1599658065669508}
   MaterialSwapObjects: []
-  LightSources:
+  LightSources: []
+  effects:
   - {fileID: 8885339}
   OnPositions:
   - {x: 0, y: 90, z: 0}
@@ -36841,6 +36972,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 1687187946}
     m_Modifications:
     - target: {fileID: 1126664567920162, guid: dbcf02a6f90704456bd060f8cf7868ac, type: 3}
+      propertyPath: m_Name
+      value: GarbageCan_6af6d3d1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1126664567920162, guid: dbcf02a6f90704456bd060f8cf7868ac, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -37171,7 +37306,7 @@ Transform:
   - {fileID: 8885340}
   - {fileID: 913259047}
   m_Father: {fileID: 472216731}
-  m_RootOrder: 64
+  m_RootOrder: 63
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1155095573
 GameObject:
@@ -37221,6 +37356,10 @@ PrefabInstance:
     - target: {fileID: 1144655879987402, guid: 0d84661b3e0d34b55af8920efed8bc92, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1236849555476646, guid: 0d84661b3e0d34b55af8920efed8bc92, type: 3}
+      propertyPath: m_Name
+      value: Book_0a9c6884
       objectReference: {fileID: 0}
     - target: {fileID: 1236849555476646, guid: 0d84661b3e0d34b55af8920efed8bc92, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -38171,7 +38310,7 @@ Transform:
   - {fileID: 1890253445}
   - {fileID: 1377664260}
   m_Father: {fileID: 472216731}
-  m_RootOrder: 62
+  m_RootOrder: 61
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1179902019
 GameObject:
@@ -38479,7 +38618,8 @@ MonoBehaviour:
   MovingParts:
   - {fileID: 1599658089258500}
   MaterialSwapObjects: []
-  LightSources:
+  LightSources: []
+  effects:
   - {fileID: 1621433787}
   OnPositions:
   - {x: 0, y: 90, z: 0}
@@ -38609,6 +38749,10 @@ PrefabInstance:
     - target: {fileID: 1686550988747062, guid: 27635ae4cc1074ed2946cf4f2871c067, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1736935182800834, guid: 27635ae4cc1074ed2946cf4f2871c067, type: 3}
+      propertyPath: m_Name
+      value: Box_b645731d
       objectReference: {fileID: 0}
     - target: {fileID: 1736935182800834, guid: 27635ae4cc1074ed2946cf4f2871c067, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -39021,7 +39165,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1956952944724170, guid: ec9a5dc36c14eeb4c844ee8bb18add94, type: 3}
       propertyPath: m_Name
-      value: Knife_c4e30f36
+      value: Knife_32559729
       objectReference: {fileID: 0}
     - target: {fileID: 1956952944724170, guid: ec9a5dc36c14eeb4c844ee8bb18add94, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -39029,7 +39173,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4239656028243506, guid: ec9a5dc36c14eeb4c844ee8bb18add94, type: 3}
       propertyPath: m_RootOrder
-      value: 48
+      value: 47
       objectReference: {fileID: 0}
     - target: {fileID: 4239656028243506, guid: ec9a5dc36c14eeb4c844ee8bb18add94, type: 3}
       propertyPath: m_LocalScale.x
@@ -39572,7 +39716,7 @@ GameObject:
   - component: {fileID: 1214849058}
   - component: {fileID: 1214849060}
   m_Layer: 8
-  m_Name: Drawer_1dc87e35
+  m_Name: Drawer_44d719df
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -39707,9 +39851,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 0
 --- !u!1 &1215789579
 GameObject:
@@ -40175,6 +40319,10 @@ PrefabInstance:
       value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 1560133318098846, guid: 40efe2941631a467e8b282e3e1e15c5c, type: 3}
+      propertyPath: m_Name
+      value: Book_541e0c99
+      objectReference: {fileID: 0}
+    - target: {fileID: 1560133318098846, guid: 40efe2941631a467e8b282e3e1e15c5c, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -40475,7 +40623,7 @@ GameObject:
   - component: {fileID: 1241101943}
   - component: {fileID: 1241101941}
   m_Layer: 8
-  m_Name: Cabinet_dd0dadee
+  m_Name: Cabinet_a98fbc09
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -40527,9 +40675,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 1468943720}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 1
 --- !u!54 &1241101942
 Rigidbody:
@@ -41110,7 +41258,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1772464016078428, guid: a1af0f1f0bc69004c8d96d996e13fd72, type: 3}
       propertyPath: m_Name
-      value: Pot_6ba0c538
+      value: Pot_68f3f3e0
       objectReference: {fileID: 0}
     - target: {fileID: 1772464016078428, guid: a1af0f1f0bc69004c8d96d996e13fd72, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -41178,7 +41326,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4089761793792794, guid: a1af0f1f0bc69004c8d96d996e13fd72, type: 3}
       propertyPath: m_RootOrder
-      value: 52
+      value: 51
       objectReference: {fileID: 0}
     - target: {fileID: 4089761793792794, guid: a1af0f1f0bc69004c8d96d996e13fd72, type: 3}
       propertyPath: m_LocalPosition.x
@@ -41716,6 +41864,10 @@ PrefabInstance:
       value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
+      propertyPath: m_Name
+      value: scene|Spot|5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
@@ -41786,7 +41938,7 @@ GameObject:
   - component: {fileID: 1272828763}
   - component: {fileID: 1272828762}
   m_Layer: 8
-  m_Name: CounterTop_8f576980
+  m_Name: CounterTop_87ea3962
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -42441,7 +42593,7 @@ GameObject:
   - component: {fileID: 1298483388}
   - component: {fileID: 1298483390}
   m_Layer: 8
-  m_Name: Drawer_82bbe621
+  m_Name: Drawer_0f0979ed
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -42571,9 +42723,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 0
 --- !u!1 &1299836467
 GameObject:
@@ -42619,7 +42771,7 @@ GameObject:
   - component: {fileID: 1299957225}
   - component: {fileID: 1299957224}
   m_Layer: 8
-  m_Name: Cabinet_613b3391
+  m_Name: Cabinet_ddb3e0e0
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -42687,9 +42839,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 1375144071}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 1
 --- !u!114 &1299957225
 MonoBehaviour:
@@ -42933,7 +43085,7 @@ PrefabInstance:
     - target: {fileID: 2854155525033573181, guid: 1b4245442e486434a8aff6300277ad99,
         type: 3}
       propertyPath: m_Name
-      value: Bowl_1e37cba3
+      value: Bowl_7d4ccff3
       objectReference: {fileID: 0}
     - target: {fileID: 2854774253135623449, guid: 1b4245442e486434a8aff6300277ad99,
         type: 3}
@@ -43809,7 +43961,8 @@ MonoBehaviour:
   MovingParts:
   - {fileID: 1599657977688317}
   MaterialSwapObjects: []
-  LightSources:
+  LightSources: []
+  effects:
   - {fileID: 1799742486}
   OnPositions:
   - {x: 0, y: 90, z: 0}
@@ -46312,7 +46465,7 @@ GameObject:
   - component: {fileID: 1377664261}
   - component: {fileID: 1377664264}
   m_Layer: 8
-  m_Name: StoveBurner_b26a250c
+  m_Name: StoveBurner_6b49cad8
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -46445,6 +46598,7 @@ MonoBehaviour:
   MovingParts: []
   MaterialSwapObjects: []
   LightSources: []
+  effects: []
   OnPositions: []
   OffPositions: []
   animationTime: 0.05
@@ -46679,6 +46833,10 @@ PrefabInstance:
     - target: {fileID: 1363553776678988, guid: 26df65a6a6afc4842b304c10f8fc6b90, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1575969452657584, guid: 26df65a6a6afc4842b304c10f8fc6b90, type: 3}
+      propertyPath: m_Name
+      value: Book_3747b22e
       objectReference: {fileID: 0}
     - target: {fileID: 1575969452657584, guid: 26df65a6a6afc4842b304c10f8fc6b90, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -46984,6 +47142,10 @@ PrefabInstance:
     - target: {fileID: 1363553776678988, guid: 26df65a6a6afc4842b304c10f8fc6b90, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1575969452657584, guid: 26df65a6a6afc4842b304c10f8fc6b90, type: 3}
+      propertyPath: m_Name
+      value: Book_15ee94fa
       objectReference: {fileID: 0}
     - target: {fileID: 1575969452657584, guid: 26df65a6a6afc4842b304c10f8fc6b90, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -47315,7 +47477,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1643384722978530, guid: f63713440aabf42f08e41dd851977392, type: 3}
       propertyPath: m_Name
-      value: CoffeeMachine_36ab8f54
+      value: CoffeeMachine_8626f75d
       objectReference: {fileID: 0}
     - target: {fileID: 1694676859657818, guid: f63713440aabf42f08e41dd851977392, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -47371,7 +47533,7 @@ GameObject:
   - component: {fileID: 1423615026}
   - component: {fileID: 1423615025}
   m_Layer: 0
-  m_Name: Directional Light
+  m_Name: scene|Directional|0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -47451,7 +47613,7 @@ Transform:
   m_LocalScale: {x: 1.0000004, y: 1.0000005, z: 1}
   m_Children: []
   m_Father: {fileID: 1860931948}
-  m_RootOrder: 3
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 24.665, y: -33.25, z: 33.833}
 --- !u!1 &1423739818
 GameObject:
@@ -47661,7 +47823,7 @@ GameObject:
   - component: {fileID: 1427516949}
   - component: {fileID: 1427516951}
   m_Layer: 8
-  m_Name: Drawer_9863fcfd
+  m_Name: Drawer_424043cf
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -47790,9 +47952,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 0
 --- !u!1 &1429751890
 GameObject:
@@ -48021,7 +48183,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1860931948}
-  m_RootOrder: 1
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!215 &1438558365
 ReflectionProbe:
@@ -48130,9 +48292,9 @@ Transform:
   m_Father: {fileID: 2022925384}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: -90.00001, z: 0}
---- !u!1 &1444699474 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1000013895967288, guid: 8ecd2e9043a2c4c62b0f7a510fc153b0,
+--- !u!108 &1444699476 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 108000010684088714, guid: 8ecd2e9043a2c4c62b0f7a510fc153b0,
     type: 3}
   m_PrefabInstance: {fileID: 284211055}
   m_PrefabAsset: {fileID: 0}
@@ -48196,6 +48358,10 @@ PrefabInstance:
     - target: {fileID: 1428932007692582, guid: 516a3a667ad6a4348997a8a61e638d1a, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1524761884493804, guid: 516a3a667ad6a4348997a8a61e638d1a, type: 3}
+      propertyPath: m_Name
+      value: Book_02a22390
       objectReference: {fileID: 0}
     - target: {fileID: 1524761884493804, guid: 516a3a667ad6a4348997a8a61e638d1a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -49033,7 +49199,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1199701509452014, guid: 84417f34ddb2ab5449327b2254f39e8a, type: 3}
       propertyPath: m_Name
-      value: SoapBottle_9a83652c
+      value: SoapBottle_977a5c07
       objectReference: {fileID: 0}
     - target: {fileID: 1199701509452014, guid: 84417f34ddb2ab5449327b2254f39e8a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -49157,7 +49323,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4439813824711978, guid: 84417f34ddb2ab5449327b2254f39e8a, type: 3}
       propertyPath: m_RootOrder
-      value: 47
+      value: 46
       objectReference: {fileID: 0}
     - target: {fileID: 4439813824711978, guid: 84417f34ddb2ab5449327b2254f39e8a, type: 3}
       propertyPath: m_LocalScale.x
@@ -49565,6 +49731,10 @@ PrefabInstance:
       value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
+      propertyPath: m_Name
+      value: scene|Spot|9
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
@@ -49717,7 +49887,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1076153184521882, guid: e5e6f5b3aefcdb349a076a830f2441b8, type: 3}
       propertyPath: m_Name
-      value: Pan_2f38a984
+      value: Pan_72f9bafb
       objectReference: {fileID: 0}
     - target: {fileID: 1076153184521882, guid: e5e6f5b3aefcdb349a076a830f2441b8, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -49897,7 +50067,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4548265956861240, guid: e5e6f5b3aefcdb349a076a830f2441b8, type: 3}
       propertyPath: m_RootOrder
-      value: 59
+      value: 58
       objectReference: {fileID: 0}
     - target: {fileID: 4548265956861240, guid: e5e6f5b3aefcdb349a076a830f2441b8, type: 3}
       propertyPath: m_LocalScale.x
@@ -50142,7 +50312,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1224566405962816, guid: fd003ea663e60497cb3913a4dca34cf2, type: 3}
       propertyPath: m_Name
-      value: Fridge_5dc2dd1b
+      value: Fridge_0c8b2aac
       objectReference: {fileID: 0}
     - target: {fileID: 1224566405962816, guid: fd003ea663e60497cb3913a4dca34cf2, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -50590,6 +50760,10 @@ PrefabInstance:
       value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 1673486740688074, guid: 5768b36ae09474cd6bcfc84c3e861786, type: 3}
+      propertyPath: m_Name
+      value: Book_e66c90f1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1673486740688074, guid: 5768b36ae09474cd6bcfc84c3e861786, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -50785,7 +50959,7 @@ GameObject:
   - component: {fileID: 1494998556}
   - component: {fileID: 1494998555}
   m_Layer: 0
-  m_Name: Point light (10)
+  m_Name: scene|Point|3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -50865,7 +51039,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1860931948}
-  m_RootOrder: 4
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1495110603
 GameObject:
@@ -51022,7 +51196,7 @@ GameObject:
   - component: {fileID: 1508753409}
   - component: {fileID: 1508753408}
   m_Layer: 8
-  m_Name: Sink_b29c6436
+  m_Name: Sink_8d06bd95
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -51149,6 +51323,10 @@ PrefabInstance:
     - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 4294967295
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
+      propertyPath: m_Name
+      value: scene|Spot|0
       objectReference: {fileID: 0}
     - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Layer
@@ -51473,7 +51651,7 @@ GameObject:
   - component: {fileID: 1521348528}
   - component: {fileID: 1521348530}
   m_Layer: 8
-  m_Name: Drawer_63a2e610
+  m_Name: Drawer_2b94e84f
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -51603,9 +51781,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 0
 --- !u!1 &1523874773
 GameObject:
@@ -51711,9 +51889,9 @@ Transform:
   m_Father: {fileID: 406852861}
   m_RootOrder: 184
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1525214459 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4,
+--- !u!108 &1525214461 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 108000013855172872, guid: c6cf98ada65b04564908f4a586bec7f4,
     type: 3}
   m_PrefabInstance: {fileID: 1657290748}
   m_PrefabAsset: {fileID: 0}
@@ -52869,6 +53047,10 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1268307072111384, guid: 47b71520e7f624ccc8551e686e59bfe4, type: 3}
+      propertyPath: m_Name
+      value: Bowl_997ea700
+      objectReference: {fileID: 0}
+    - target: {fileID: 1268307072111384, guid: 47b71520e7f624ccc8551e686e59bfe4, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -53033,7 +53215,7 @@ GameObject:
   - component: {fileID: 1573852298}
   - component: {fileID: 1573852297}
   m_Layer: 8
-  m_Name: Window_66418bd2
+  m_Name: Window_a948c2ff
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -53151,7 +53333,8 @@ MonoBehaviour:
   MovingParts:
   - {fileID: 1599658234241207}
   MaterialSwapObjects: []
-  LightSources:
+  LightSources: []
+  effects:
   - {fileID: 573729962}
   OnPositions:
   - {x: 0, y: 90, z: 0}
@@ -54021,7 +54204,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1942830244655438, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_Name
-      value: Plate_343544da
+      value: Plate_f7062da2
       objectReference: {fileID: 0}
     - target: {fileID: 1942830244655438, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -54033,7 +54216,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4514323350623280, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_RootOrder
-      value: 49
+      value: 48
       objectReference: {fileID: 0}
     - target: {fileID: 4514323350623280, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_LocalPosition.x
@@ -54472,9 +54655,9 @@ Transform:
   m_Father: {fileID: 661505781}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1624956195 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4,
+--- !u!108 &1624956197 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 108000013855172872, guid: c6cf98ada65b04564908f4a586bec7f4,
     type: 3}
   m_PrefabInstance: {fileID: 163485670}
   m_PrefabAsset: {fileID: 0}
@@ -55581,6 +55764,10 @@ PrefabInstance:
       value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
+      propertyPath: m_Name
+      value: scene|Spot|7
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
@@ -56196,6 +56383,10 @@ PrefabInstance:
       value: 64
       objectReference: {fileID: 0}
     - target: {fileID: 1550589710507070, guid: 03509c993799443f5ab57541667674aa, type: 3}
+      propertyPath: m_Name
+      value: Book_5d3492ba
+      objectReference: {fileID: 0}
+    - target: {fileID: 1550589710507070, guid: 03509c993799443f5ab57541667674aa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -56465,6 +56656,10 @@ PrefabInstance:
     - target: {fileID: 1429063063608974, guid: 72342cb34af68448c8a1f23efec6087d, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1454802217640514, guid: 72342cb34af68448c8a1f23efec6087d, type: 3}
+      propertyPath: m_Name
+      value: Bowl_50987fe7
       objectReference: {fileID: 0}
     - target: {fileID: 1454802217640514, guid: 72342cb34af68448c8a1f23efec6087d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -56956,7 +57151,7 @@ PrefabInstance:
     - target: {fileID: 629410298267782516, guid: 2529fc1a396a4443fade9b51897cb9a5,
         type: 3}
       propertyPath: m_Name
-      value: Mug_a894633b
+      value: Mug_5b20fbb4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2529fc1a396a4443fade9b51897cb9a5, type: 3}
@@ -57871,9 +58066,9 @@ Transform:
   m_Father: {fileID: 268688756}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1725604300 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4,
+--- !u!108 &1725604302 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 108000013855172872, guid: c6cf98ada65b04564908f4a586bec7f4,
     type: 3}
   m_PrefabInstance: {fileID: 1474799951}
   m_PrefabAsset: {fileID: 0}
@@ -58222,7 +58417,7 @@ GameObject:
   - component: {fileID: 1738775301}
   - component: {fileID: 1738775300}
   m_Layer: 8
-  m_Name: Floor_0e01fcfd
+  m_Name: Floor_bbd4574e
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -58602,7 +58797,7 @@ Transform:
   - {fileID: 653671660}
   - {fileID: 659333563}
   m_Father: {fileID: 472216731}
-  m_RootOrder: 73
+  m_RootOrder: 72
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1739879943
 GameObject:
@@ -59669,7 +59864,7 @@ GameObject:
   - component: {fileID: 1794258804}
   - component: {fileID: 1794258803}
   m_Layer: 8
-  m_Name: CounterTop_9deb677b
+  m_Name: CounterTop_8c9efcb4
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -59858,7 +60053,7 @@ GameObject:
   - component: {fileID: 1799313332}
   - component: {fileID: 1799313334}
   m_Layer: 8
-  m_Name: Drawer_ee45d4d5
+  m_Name: Drawer_c0f04d10
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -59989,9 +60184,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 0
 --- !u!1 &1799742486 stripped
 GameObject:
@@ -60962,12 +61157,13 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 527322746}
-  - {fileID: 1438558364}
+  - {fileID: 1663751254}
   - {fileID: 229151302}
-  - {fileID: 1423615026}
   - {fileID: 1494998556}
   - {fileID: 1954809700}
+  - {fileID: 527322746}
+  - {fileID: 1438558364}
+  - {fileID: 1423615026}
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -61012,9 +61208,9 @@ Transform:
   m_Father: {fileID: 493076157}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1868191422 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4,
+--- !u!108 &1868191424 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 108000013855172872, guid: c6cf98ada65b04564908f4a586bec7f4,
     type: 3}
   m_PrefabInstance: {fileID: 566139128}
   m_PrefabAsset: {fileID: 0}
@@ -61451,7 +61647,7 @@ Transform:
   - {fileID: 1799742487}
   - {fileID: 169710989}
   m_Father: {fileID: 472216731}
-  m_RootOrder: 61
+  m_RootOrder: 60
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1877215817
 PrefabInstance:
@@ -61518,7 +61714,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1776411824363882, guid: b25f28ecad9b741578e19fe25017e648, type: 3}
       propertyPath: m_Name
-      value: Toaster_6a591439
+      value: Toaster_22ab325a
       objectReference: {fileID: 0}
     - target: {fileID: 1776411824363882, guid: b25f28ecad9b741578e19fe25017e648, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -62311,7 +62507,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1883156348559814, guid: 0be9f5a439796f3499624355bccbd204, type: 3}
       propertyPath: m_Name
-      value: CellPhone_286b05dc
+      value: CellPhone_aedef2ad
       objectReference: {fileID: 0}
     - target: {fileID: 1883156348559814, guid: 0be9f5a439796f3499624355bccbd204, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -62323,7 +62519,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4657079740071546, guid: 0be9f5a439796f3499624355bccbd204, type: 3}
       propertyPath: m_RootOrder
-      value: 57
+      value: 56
       objectReference: {fileID: 0}
     - target: {fileID: 4657079740071546, guid: 0be9f5a439796f3499624355bccbd204, type: 3}
       propertyPath: m_LocalScale.x
@@ -62812,6 +63008,10 @@ PrefabInstance:
     - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 4294967295
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
+      propertyPath: m_Name
+      value: scene|Spot|1
       objectReference: {fileID: 0}
     - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Layer
@@ -63805,7 +64005,7 @@ GameObject:
   - component: {fileID: 1954809700}
   - component: {fileID: 1954809699}
   m_Layer: 0
-  m_Name: Point light (9)
+  m_Name: scene|Point|4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -63885,7 +64085,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1860931948}
-  m_RootOrder: 5
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1963374072
 PrefabInstance:
@@ -63897,6 +64097,10 @@ PrefabInstance:
     - target: {fileID: 1110429850069348, guid: 7c555b18ae7184f2aa6fb740c91052d6, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1217569750156398, guid: 7c555b18ae7184f2aa6fb740c91052d6, type: 3}
+      propertyPath: m_Name
+      value: Book_e5494e0c
       objectReference: {fileID: 0}
     - target: {fileID: 1217569750156398, guid: 7c555b18ae7184f2aa6fb740c91052d6, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -64403,6 +64607,10 @@ PrefabInstance:
     - target: {fileID: 1480557593627484, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1488377138201752, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
+      propertyPath: m_Name
+      value: Book_eec8e097
       objectReference: {fileID: 0}
     - target: {fileID: 1488377138201752, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -65322,7 +65530,7 @@ GameObject:
   - component: {fileID: 2022925381}
   - component: {fileID: 2022925385}
   m_Layer: 8
-  m_Name: StoveBurner_dabd9a17
+  m_Name: StoveBurner_c581f3ca
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -65455,6 +65663,7 @@ MonoBehaviour:
   MovingParts: []
   MaterialSwapObjects: []
   LightSources: []
+  effects: []
   OnPositions: []
   OffPositions: []
   animationTime: 0.05
@@ -65711,7 +65920,7 @@ GameObject:
   - component: {fileID: 2031416822}
   - component: {fileID: 2031416821}
   m_Layer: 8
-  m_Name: Window_728f89cc
+  m_Name: Window_c2ac07c7
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -66622,6 +66831,10 @@ PrefabInstance:
       value: 4294967295
       objectReference: {fileID: 0}
     - target: {fileID: 1000013895967288, guid: 8ecd2e9043a2c4c62b0f7a510fc153b0, type: 3}
+      propertyPath: m_Name
+      value: scene|Point|1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013895967288, guid: 8ecd2e9043a2c4c62b0f7a510fc153b0, type: 3}
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
@@ -67288,7 +67501,7 @@ GameObject:
   - component: {fileID: 2084512388}
   - component: {fileID: 2084512387}
   m_Layer: 0
-  m_Name: Cabinet_b8bd1dfd
+  m_Name: Cabinet_eaf65aa0
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -67335,9 +67548,9 @@ MonoBehaviour:
   animationTime: 0.2
   triggerEnabled: 1
   currentOpenness: 1
-  IgnoreTheseObjects: []
+  IgnoreTheseObjects:
+  - {fileID: 46227328}
   isOpen: 0
-  isCurrentlyResetting: 1
   movementType: 1
 --- !u!54 &2084512388
 Rigidbody:
@@ -67480,6 +67693,10 @@ PrefabInstance:
     - target: {fileID: 1428932007692582, guid: 516a3a667ad6a4348997a8a61e638d1a, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1524761884493804, guid: 516a3a667ad6a4348997a8a61e638d1a, type: 3}
+      propertyPath: m_Name
+      value: Book_82453550
       objectReference: {fileID: 0}
     - target: {fileID: 1524761884493804, guid: 516a3a667ad6a4348997a8a61e638d1a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -67760,7 +67977,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1158546357057600, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
       propertyPath: m_Name
-      value: Kettle_9d53679c
+      value: Kettle_fbe2db4a
       objectReference: {fileID: 0}
     - target: {fileID: 1158546357057600, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -69158,6 +69375,10 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1268307072111384, guid: 47b71520e7f624ccc8551e686e59bfe4, type: 3}
+      propertyPath: m_Name
+      value: Bowl_c0533f4e
+      objectReference: {fileID: 0}
+    - target: {fileID: 1268307072111384, guid: 47b71520e7f624ccc8551e686e59bfe4, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -69874,7 +70095,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1080134357590154, guid: fce43cd9906d9459c82103455f97e40a, type: 3}
       propertyPath: m_Name
-      value: Microwave_a3a0e26a
+      value: Microwave_034418c4
       objectReference: {fileID: 0}
     - target: {fileID: 1080134357590154, guid: fce43cd9906d9459c82103455f97e40a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -70203,7 +70424,7 @@ GameObject:
   - component: {fileID: 114739950834541479}
   - component: {fileID: 54418558146547901}
   m_Layer: 8
-  m_Name: SinkBasin_ce3fbced
+  m_Name: SinkBasin_0b197de3
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -70721,7 +70942,7 @@ GameObject:
   - component: {fileID: 54642749920153533}
   - component: {fileID: 121722208}
   m_Layer: 8
-  m_Name: StoveKnob_b6289931
+  m_Name: StoveKnob_d2aa9e48
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -70740,7 +70961,7 @@ GameObject:
   - component: {fileID: 54642749599242737}
   - component: {fileID: 715260716}
   m_Layer: 8
-  m_Name: StoveKnob_ff298767
+  m_Name: StoveKnob_222489f6
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -70759,7 +70980,7 @@ GameObject:
   - component: {fileID: 54642751003882132}
   - component: {fileID: 1189685321}
   m_Layer: 8
-  m_Name: StoveKnob_91b77348
+  m_Name: StoveKnob_9b4908fb
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -70778,7 +70999,7 @@ GameObject:
   - component: {fileID: 54642751048433940}
   - component: {fileID: 1073814473}
   m_Layer: 8
-  m_Name: StoveKnob_f9571e4d
+  m_Name: StoveKnob_09865c03
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -70797,7 +71018,7 @@ GameObject:
   - component: {fileID: 54642751128165485}
   - component: {fileID: 1329628848}
   m_Layer: 8
-  m_Name: StoveKnob_81a1042a
+  m_Name: StoveKnob_02a2aeb7
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -70816,7 +71037,7 @@ GameObject:
   - component: {fileID: 54642751418829863}
   - component: {fileID: 1578456826}
   m_Layer: 8
-  m_Name: StoveKnob_dfa40698
+  m_Name: StoveKnob_c8efc5af
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -71442,7 +71663,7 @@ Transform:
   - {fileID: 4194924524669523}
   - {fileID: 338488102}
   m_Father: {fileID: 472216731}
-  m_RootOrder: 66
+  m_RootOrder: 65
   m_LocalEulerAnglesHint: {x: 180, y: 89.99999, z: 0}
 --- !u!4 &4322997120251575
 Transform:
@@ -71460,7 +71681,7 @@ Transform:
   - {fileID: 4194924277979673}
   - {fileID: 337464335}
   m_Father: {fileID: 472216731}
-  m_RootOrder: 67
+  m_RootOrder: 66
   m_LocalEulerAnglesHint: {x: 180, y: 89.99999, z: 0}
 --- !u!4 &4322997227624526
 Transform:
@@ -71478,7 +71699,7 @@ Transform:
   - {fileID: 4194924133840096}
   - {fileID: 561454684}
   m_Father: {fileID: 472216731}
-  m_RootOrder: 71
+  m_RootOrder: 70
   m_LocalEulerAnglesHint: {x: 180, y: 89.99999, z: 0}
 --- !u!4 &4322997275339726
 Transform:
@@ -71496,7 +71717,7 @@ Transform:
   - {fileID: 4194924156372832}
   - {fileID: 1636853067}
   m_Father: {fileID: 472216731}
-  m_RootOrder: 70
+  m_RootOrder: 69
   m_LocalEulerAnglesHint: {x: 180, y: 89.99999, z: 0}
 --- !u!4 &4322997700997931
 Transform:
@@ -71514,7 +71735,7 @@ Transform:
   - {fileID: 4194922719633285}
   - {fileID: 599869758}
   m_Father: {fileID: 472216731}
-  m_RootOrder: 69
+  m_RootOrder: 68
   m_LocalEulerAnglesHint: {x: 180, y: 89.99999, z: 0}
 --- !u!4 &4322998328124775
 Transform:
@@ -71532,7 +71753,7 @@ Transform:
   - {fileID: 4194923070032329}
   - {fileID: 70542261}
   m_Father: {fileID: 472216731}
-  m_RootOrder: 68
+  m_RootOrder: 67
   m_LocalEulerAnglesHint: {x: 180, y: 89.99999, z: 0}
 --- !u!4 &4398606312485945
 Transform:

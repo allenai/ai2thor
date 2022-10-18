@@ -259,13 +259,13 @@ If you use AI2-THOR or iTHOR scenes, please cite the original AI2-THOR paper:
 If you use 🏘️ ProcTHOR or procedurally generated scenes, please cite the following paper:
 
 ```bibtex
-@article{procthor,
+@inproceedings{procthor,
   author={Matt Deitke and Eli VanderBilt and Alvaro Herrasti and
           Luca Weihs and Jordi Salvador and Kiana Ehsani and
           Winson Han and Eric Kolve and Ali Farhadi and
           Aniruddha Kembhavi and Roozbeh Mottaghi},
   title={{ProcTHOR: Large-Scale Embodied AI Using Procedural Generation}},
-  journal={arXiv},
+  journal={NeurIPS},
   year={2022}
 }
 ```
@@ -308,4 +308,3 @@ AI2 is a non-profit institute with the mission to contribute to humanity through
 <a href="//prior.allenai.org">
 <p align="center"><img width="100%" src="https://raw.githubusercontent.com/allenai/ai2thor/main/doc/static/ai2-prior.svg" /></p>
 </a>
-

@@ -7,6 +7,7 @@ import random
 import re
 import string
 import time
+import shutil
 import warnings
 
 import jsonschema
@@ -15,10 +16,15 @@ import pytest
 from PIL import ImageChops, ImageFilter, Image
 
 from ai2thor.controller import Controller
-from ai2thor.fifo_server import FifoServer
+from ai2thor.build import TEST_OUTPUT_DIRECTORY
 from ai2thor.tests.constants import TESTS_DATA_DIR, TEST_SCENE
 from ai2thor.wsgi_server import WsgiServer
-
+from ai2thor.fifo_server import FifoServer
+from PIL import ImageChops, ImageFilter, Image
+import glob
+import cv2
+import functools
+import ctypes
 
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
@@ -35,8 +41,8 @@ class ThirdPartyCameraMetadata:
     rotation = "rotation"
     fieldOfView = "fieldOfView"
 
-class TestController(Controller):
 
+class TestController(Controller):
     def unity_command(self, width, height, headless):
         command = super().unity_command(width, height, headless)
         # force OpenGLCore to get used so that the tests run in a consistent way
@@ -52,12 +58,13 @@ def build_controller(**args):
     # build instead of 'local'
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
+        print("args test controller")
+        print(default_args)
         c = TestController(**default_args)
 
     # used for resetting
     c._original_initialization_parameters = c.initialization_parameters
     return c
-
 
 _wsgi_controller = build_controller(server_class=WsgiServer)
 _fifo_controller = build_controller(server_class=FifoServer)
@@ -81,6 +88,15 @@ def reset_controller(controller):
 
     return controller
 
+
+def save_image(file_path, image, flip_br=False):
+    img = image
+    if flip_br:
+        img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    cv2.imwrite(file_path, img)
+
+def depth_to_gray_rgb(data):
+    return (255.0 / data.max() * (data - data.min())).astype(np.uint8)
 
 @pytest.fixture
 def wsgi_controller():
@@ -127,11 +143,69 @@ def assert_near(point1, point2, error_message=""):
         )
 
 
-def assert_images_near(image1, image2, max_mean_pixel_diff=1):
-    return np.mean(np.abs(image1 - image2).flatten()) <= max_mean_pixel_diff
+def images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, filepath=""):
+    print("Mean pixel difference: {}, Max pixel difference: {}.".format(
+        np.mean(np.abs(image1 - image2).flatten()),
+        np.max(np.abs(image1 - image2).flatten()))
+    )
+    result = np.mean(np.abs(image1 - image2).flatten()) <= max_mean_pixel_diff
+    if not result and debug_save:
+        # TODO put images somewhere accessible
+        dx = np.where(~np.all(image1 == image2, axis=-1))
+        img_copy = image1.copy()
+        diff = (image1 - image2)
+        max = np.max(diff)
+        norm_diff = diff / max
+        img_copy[dx] = (255, 0, 255)
 
+        # for i in range(np.shape(dx)[1]):
+        #     value = img_copy[dx[0][i], dx[0][i]]
+        #     img_copy[dx[0][i] : dx[0][i]] = (255.0, 255.0, 255.0)
+        # img_copy[dx] +=  ((255.0, 255.0, 255.0) * norm_diff[dx])+ img_copy[dx]
 
-def assert_images_far(image1, image2, min_mean_pixel_diff=10):
+        test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
+        debug_directory = os.path.join(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY))
+        # if os.path.exists(debug_directory):
+        #     shutil.rmtree(debug_directory)
+        # os.makedirs(debug_directory)
+
+        save_image(os.path.join(debug_directory, f'{test_name}_diff.png'), img_copy)
+        save_image(os.path.join(debug_directory, f'{test_name}_fail.png'), image1)
+        print(f'Saved failed test images in "{debug_directory}"')
+
+    return result
+
+def depth_images_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath=""):
+    # result = np.allclose(depth1, depth2, atol=epsilon)
+    result = np.mean(np.abs(depth1 - depth2).flatten()) <= epsilon
+    print("Max pixel difference: {}, Mean pixel difference: {}".format(
+        np.max((depth1 - depth2).flatten()),
+        np.mean((depth1 - depth2).flatten()))
+    )
+    if not result and debug_save:
+        depth1_gray = depth_to_gray_rgb(depth1)
+        depth_copy = cv2.cvtColor(depth1_gray, cv2.COLOR_GRAY2RGB)
+        diff = np.abs(depth1 - depth2)
+        max = np.max(diff)
+        norm_diff = diff / max
+        dx = np.where(np.abs(depth1 - depth2) >= epsilon)
+        depth_copy[dx] =  (norm_diff[dx]*255, norm_diff[dx] * 0, norm_diff[dx] *255)
+        test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
+        debug_directory = os.path.join(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY))
+        # if os.path.exists(debug_directory):
+        #     shutil.rmtree(debug_directory)
+        # os.makedirs(debug_directory)
+
+        save_image(os.path.join(debug_directory, f'{test_name}_diff.png'), depth_copy)
+        save_image(os.path.join(debug_directory, f'{test_name}_fail.png'), depth1_gray)
+        np.save(
+            os.path.join(debug_directory, f'{test_name}_fail-raw.npy'),
+            depth1.astype(np.float32),
+        ),
+        print(f'Saved failed test images in "{debug_directory}"')
+    return result
+
+def images_far(image1, image2, min_mean_pixel_diff=10):
     return np.mean(np.abs(image1 - image2).flatten()) >= min_mean_pixel_diff
 
 
@@ -186,6 +260,7 @@ def test_third_party_camera_with_image_synthesis(fifo_controller):
             position=dict(x=-1.0, z=-2.0, y=1.0),
         )
     )
+    print(len(event.third_party_depth_frames))
     assert len(event.third_party_depth_frames) == 1
     assert len(event.third_party_semantic_segmentation_frames) == 1
     assert len(event.third_party_camera_frames) == 1
@@ -1122,17 +1197,6 @@ def test_change_resolution_image_synthesis(fifo_controller):
         renderDepthImage=True,
         renderSemanticSegmentation=True,
     )
-    def depth_to_gray_rgb(data):
-        return (255.0 / data.max() * (data - data.min())).astype(np.uint8)
-
-    def save_image(name, image, flip_br=False):
-        import cv2
-        img = image
-        print("is none? {0} is none".format(img is None))
-        if flip_br:
-            img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        cv2.imwrite("{}.png".format(name), img)
-
     fifo_controller.step("RotateRight")
     fifo_controller.step("RotateLeft")
     fifo_controller.step("RotateRight")
@@ -1765,9 +1829,9 @@ def test_set_random_seed(controller):
     controller.step(action="SetRandomSeed", seed=42)
     s42_frame = controller.step(action="RandomizeMaterials").frame
 
-    assert_images_far(s42_frame, s41_frame)
-    assert_images_far(s42_frame, orig_frame)
-    assert_images_far(s41_frame, orig_frame)
+    images_far(s42_frame, s41_frame)
+    images_far(s42_frame, orig_frame)
+    images_far(s41_frame, orig_frame)
 
     f1_1 = controller.reset().frame
     f1_2 = controller.step(action="SetRandomSeed", seed=42).frame
@@ -1777,12 +1841,12 @@ def test_set_random_seed(controller):
     f2_2 = controller.step(action="SetRandomSeed", seed=42).frame
     f2_3 = controller.step(action="RandomizeMaterials").frame
 
-    assert_images_near(f1_1, f2_1)
-    assert_images_near(f1_1, f1_2)
-    assert_images_near(f2_1, f2_2)
-    assert_images_near(f1_3, f2_3)
-    assert_images_far(f2_1, f2_3)
-    assert_images_far(f1_1, f1_3)
+    images_near(f1_1, f2_1)
+    images_near(f1_1, f1_2)
+    images_near(f2_1, f2_2)
+    images_near(f1_3, f2_3)
+    images_far(f2_1, f2_3)
+    images_far(f1_1, f1_3)
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)

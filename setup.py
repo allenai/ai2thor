@@ -60,3 +60,4 @@ setup(
     scripts=["scripts/ai2thor-xorg"],
     include_package_data=False,
 )
+

@@ -372,6 +372,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             List<Vector3> closePoints = new List<Vector3>();
             foreach (Collider c in target.GetComponentsInChildren<Collider>()) {
+                // The below subtype checks are required as `ClosestPoint` only works
+                // on certain collider types. We fall back to using the object's bounding box (see below)
+                // if there are no colliders of the supported types.
                 if (
                     c.enabled && !c.isTrigger && (
                         c is BoxCollider ||

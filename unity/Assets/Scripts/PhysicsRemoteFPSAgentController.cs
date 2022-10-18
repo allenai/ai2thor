@@ -9,6 +9,7 @@ using System.Linq;
 using Priority_Queue;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Animations;
 using UnityEngine.SceneManagement;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
@@ -147,11 +148,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-
-        public override ObjectMetadata[] generateObjectMetadata() {
-            return base.generateObjectMetadata();
-        }
-
         public bool isStanding() {
             return (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f;
         }
@@ -160,10 +156,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MetadataWrapper metaWrapper = base.generateMetadataWrapper();
             metaWrapper.agent.isStanding = isStanding();
             return metaWrapper;
-        }
-
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible, bool isInteractable) {
-            return base.ObjectMetadataFromSimObjPhysics(simObj, isVisible, isInteractable);
         }
 
         // change the radius of the agent's capsule on the char controller component, and the capsule collider component
@@ -3836,8 +3828,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 while (numStillGoing > 0) {
                     foreach (SimObjPhysics sop in animating) {
                         if (animatingType.ContainsKey(sop) &&
-                            (animatingType[sop] == "toggleable" && sop.GetComponent<CanToggleOnOff>().GetiTweenCount() == 0 || animatingType[sop] == "openable") &&
-                            sop.GetComponent<CanOpen_Object>().GetiTweenCount() == 0
+                            (animatingType[sop] == "toggleable" && sop.GetComponent<CanToggleOnOff>().GetIsCurrentlyLerping() == false || animatingType[sop] == "openable") &&
+                            sop.GetComponent<CanOpen_Object>().GetIsCurrentlyLerping() == false
                         ) {
                             numStillGoing--;
                         }
@@ -3852,7 +3844,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            // ok none of the objects that were actively toggling have any itweens going, so we are done!
+            // ok none of the objects that were actively toggling have any lerps going, so we are done!
             actionFinished(true);
         }
 
@@ -4619,8 +4611,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // syntactic sugar for open object with openness = 0.
-        public void CloseObject(string objectId, bool forceAction = false) {
-            OpenObject(objectId: objectId, forceAction: forceAction, openness: 0);
+        public void CloseObject(
+            string objectId,
+            bool forceAction = false,
+            bool returnToStart = true,
+            bool ignoreAgentInTransition = false,
+            bool stopAtNonStaticCol = false,
+            float? physicsInterval = null,
+            bool useGripper = false
+            ) {
+            OpenObject(
+                objectId: objectId,
+                openness: 0,
+                forceAction: forceAction,
+                returnToStart: returnToStart,
+                ignoreAgentInTransition: ignoreAgentInTransition,
+                stopAtNonStaticCol: stopAtNonStaticCol,
+                physicsInterval: physicsInterval,
+                useGripper: useGripper
+                );
         }
 
         // syntactic sugar for open object with openness = 0.
@@ -4763,9 +4772,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private protected IEnumerator openAnimation(
             CanOpen_Object openableObject,
             bool markActionFinished,
-            bool freezeContained = false,
             float openness = 1.0f,
-            bool ignoreAgentInTransition = true
+            bool forceAction = false,
+            bool returnToStart = true,
+            bool ignoreAgentInTransition = false,
+            bool stopAtNonStaticCol = false,
+            bool useGripper = false,
+            float? physicsInterval = null,
+            bool freezeContained = false,
+            GameObject posRotManip = null,
+            GameObject posRotRef = null
         ) {
             if (openableObject == null) {
                 if (markActionFinished) {
@@ -4773,17 +4789,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(false);
                 }
                 yield break;
-            }
-
-            // disables all colliders in the scene
-            List<Collider> collidersDisabled = new List<Collider>();
-            if (ignoreAgentInTransition) {
-                foreach (Collider c in GetComponentsInChildren<Collider>()) {
-                    if (c.enabled) {
-                        collidersDisabled.Add(c);
-                        c.enabled = false;
-                    }
-                }
             }
 
             // stores the object id of each object within this openableObject
@@ -4799,33 +4804,48 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     toReParent.GetComponent<Rigidbody>().isKinematic = true;
                 }
             }
-
-            // just incase there's a failure, we can undo it
-            float startOpenness = openableObject.currentOpenness;
+            
+            // set conditions for ignoring certain fail-conditions or not
+            // (must be stored on CanOpen_Object component for OnTriggerEnter event to work)
+            openableObject.SetForceAction(forceAction);
+            openableObject.SetIgnoreAgentInTransition(ignoreAgentInTransition);
+            openableObject.SetStopAtNonStaticCol(stopAtNonStaticCol);
 
             // open the object to openness
-            openableObject.Interact(openness);
-            yield return new WaitUntil(() => (openableObject.GetiTweenCount() == 0));
+            openableObject.SetIsCurrentlyLerping(true);
+            openableObject.Interact(
+                targetOpenness: openness,
+                physicsInterval: physicsInterval,
+                returnToStart: returnToStart,
+                useGripper: useGripper,
+                returnToStartMode: false,
+                posRotManip: posRotManip,
+                posRotRef: posRotRef);
+            // Wait until all animating is done
+            yield return new WaitUntil(() => (openableObject.GetIsCurrentlyLerping() == false));
             yield return null;
             bool succeeded = true;
+            
+            // if failure occurred, revert back to backup state (either start or lastSuccessful), and then report failure
+            if (openableObject.GetFailState() != CanOpen_Object.failState.none) {
+                succeeded = false;
 
-            if (ignoreAgentInTransition) {
-                GameObject openableGameObj = openableObject.GetComponentInParent<SimObjPhysics>().gameObject;
-
-                // check for collision failure
-                if (isAgentCapsuleCollidingWith(openableGameObj) || isHandObjectCollidingWith(openableGameObj)) {
-                    errorMessage = "Object failed to open/close successfully.";
-                    succeeded = false;
-
-                    // failure: reset the openness!
-                    openableObject.Interact(openness: startOpenness);
-                    yield return new WaitUntil(() => (openableObject.GetiTweenCount() == 0));
-                    yield return null;
+                openableObject.SetIsCurrentlyLerping(true);
+                openableObject.Interact(
+                    targetOpenness: openableObject.GetStartOpenness(),
+                    physicsInterval: physicsInterval,
+                    returnToStart: returnToStart,
+                    useGripper: useGripper,
+                    returnToStartMode: true,
+                    posRotManip: posRotManip,
+                    posRotRef: posRotRef);
+                yield return new WaitUntil(() => (openableObject.GetIsCurrentlyLerping() == false));
+                yield return null;
+                if (openableObject.GetFailState() == CanOpen_Object.failState.collision) {
+                    errorMessage = "Openable object collided with " + openableObject.GetFailureCollision().name;
                 }
-
-                // re-enables all previously disabled colliders
-                foreach (Collider c in collidersDisabled) {
-                    c.enabled = true;
+                else if (openableObject.GetFailState() == CanOpen_Object.failState.hyperextension) {
+                    errorMessage = "Agent hyperextended arm while opening object";
                 }
             }
 
@@ -4841,38 +4861,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+            // Reset conditions for next interaction
+            openableObject.SetFailState(CanOpen_Object.failState.none);
+            openableObject.SetFailureCollision(null);
+            
+            openableObject.SetForceAction(false);
+            openableObject.SetIgnoreAgentInTransition(false);
+            openableObject.SetStopAtNonStaticCol(false);
+
+            // Remove PosRotRef from MovingPart
+            if (posRotRef != null) {
+                UnityEngine.Object.Destroy(posRotRef);
+            }
+
             if (markActionFinished) {
                 actionFinished(succeeded);
             }
-        }
-
-        protected bool anyInteractionsStillRunning(List<CanOpen_Object> coos) {
-            bool anyStillRunning = false;
-            if (!anyStillRunning) {
-                foreach (CanOpen_Object coo in coos) {
-                    if (coo.GetiTweenCount() != 0) {
-                        anyStillRunning = true;
-                        break;
-                    }
-                }
-            }
-            return anyStillRunning;
-        }
-
-        protected IEnumerator InterpolateRotation(Quaternion targetRotation, float seconds) {
-            var time = Time.time;
-            var newTime = time;
-            while (newTime - time < seconds) {
-                yield return null;
-                newTime = Time.time;
-                var diffSeconds = newTime - time;
-                var alpha = Mathf.Min(diffSeconds / seconds, 1.0f);
-                this.transform.rotation = Quaternion.Lerp(this.transform.rotation, targetRotation, alpha);
-
-            }
-            Debug.Log("Rotate action finished! " + (newTime - time));
-            //  this.transform.rotation = targetRotation;
-            actionFinished(true);
         }
 
         // swap an object's materials out to the cooked version of the object
@@ -5100,7 +5104,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool success = false;
 
 
-            yield return new WaitUntil(() => (ctof != null && ctof.GetiTweenCount() == 0 && ctof.isOn == !ctofInitialState));
+            yield return new WaitUntil(() => (ctof != null && ctof.GetIsCurrentlyLerping() == false && ctof.isOn == !ctofInitialState));
             success = true;
 
             if (!success) {
@@ -5118,6 +5122,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float openness,
             bool forceAction,
             bool markActionFinished,
+            bool returnToStart = true,
+            bool ignoreAgentInTransition = false,
+            bool stopAtNonStaticCol = false,
+            bool useGripper = false,
+            float? physicsInterval = null,
             bool simplifyPhysics = false,
             float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
         ) {
@@ -5171,11 +5180,69 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
+            if (useGripper == true) {
+                // Opening objects with the gripper only works with the IK-Arm
+                // (it'd be preferable to reference the agentMode directly, but no such universal metadata exists)
+                if (this.GetComponent<BaseAgentComponent>().IKArm.activeInHierarchy == false) {
+                    errorMessage = "IK-Arm is required to open objects with gripper";
+                    if (markActionFinished) {
+                        actionFinished(false);
+                    }
+                    return;
+                }
+                
+                // Opening objects with the gripper only works with an empty hand
+                if (ItemInHand != null) {
+                    errorMessage = "An empty hand is required to open objects with gripper";
+                    if (markActionFinished) {
+                        actionFinished(false);
+                    }
+                    return;
+                }
+
+                // Opening objects with the gripper currently requires the gripper-sphere to have some overlap with the moving parts' collision geometry
+                GameObject parentMovingPart = FindOverlappingMovingPart(codd);
+                if (parentMovingPart == null) {
+                    errorMessage = "Gripper must be making contact with at least one moving part's surface to open it!";
+                    if (markActionFinished) {
+                        actionFinished(false);
+                    }
+                    return;
+                }
+
+                GameObject posRotManip = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmTarget();
+                GameObject posRotRef = new GameObject("PosRotReference");
+                posRotRef.transform.parent = parentMovingPart.transform;
+                posRotRef.transform.position = posRotManip.transform.position;
+                posRotRef.transform.rotation = posRotManip.transform.rotation;
+                StartCoroutine(openAnimation(
+                    openableObject: codd,
+                    markActionFinished: markActionFinished,
+                    openness: openness,
+                    forceAction: forceAction,
+                    returnToStart: returnToStart,
+                    ignoreAgentInTransition: ignoreAgentInTransition,
+                    stopAtNonStaticCol: stopAtNonStaticCol,
+                    useGripper: useGripper,
+                    physicsInterval: physicsInterval,
+                    freezeContained: simplifyPhysics,
+                    posRotManip: posRotManip,
+                    posRotRef: posRotRef
+                ));
+                return;
+            }
+
             StartCoroutine(openAnimation(
                 openableObject: codd,
-                freezeContained: simplifyPhysics,
+                markActionFinished: markActionFinished,
                 openness: openness,
-                markActionFinished: markActionFinished
+                forceAction: forceAction,
+                returnToStart: returnToStart,
+                ignoreAgentInTransition: ignoreAgentInTransition,
+                stopAtNonStaticCol: stopAtNonStaticCol,
+                useGripper: useGripper,
+                physicsInterval: physicsInterval,
+                freezeContained: simplifyPhysics
             ));
         }
 
@@ -5188,18 +5255,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.GetComponent<CanOpen_Object>().SetOpennessImmediate(openness);
             actionFinished(true);
         }
+        
+        //helper function to confirm if GripperSphere overlaps with openable object's moving part(s), and which one
+    
+        public GameObject FindOverlappingMovingPart(CanOpen_Object codd)
+        {
+            int layerMask = 1 << 8;
+            GameObject magnetSphere = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetMagnetSphere();
+            foreach (GameObject movingPart in codd.GetComponent<CanOpen_Object>().MovingParts) {
+                foreach(Collider col in movingPart.GetComponentsInChildren<Collider>()) {
+                    // Checking for matches between moving parts' colliders and colliders inside of gripper-sphere
+                    foreach(Collider containedCol in Physics.OverlapSphere(
+                        magnetSphere.transform.TransformPoint(magnetSphere.GetComponent<SphereCollider>().center),
+                        magnetSphere.transform.GetComponent<SphereCollider>().radius,
+                        layerMask)) {
+                            if (col == containedCol)
+                            {
+                                return movingPart;
+                            }
+                    }
+                }
+            }
+            return null;
+        }
 
         public void OpenObject(
             string objectId,
-            bool forceAction = false,
             float openness = 1,
-            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+            bool forceAction = false,
+            bool returnToStart = true,
+            bool ignoreAgentInTransition = false,
+            bool stopAtNonStaticCol = false,
+            float? physicsInterval = null,
+            bool useGripper = false,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. Its new name is 'openness'.
         ) {
             SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
             openObject(
                 target: target,
                 openness: openness,
                 forceAction: forceAction,
+                returnToStart: returnToStart,
+                ignoreAgentInTransition: ignoreAgentInTransition,
+                stopAtNonStaticCol: stopAtNonStaticCol,
+                useGripper: useGripper,
+                physicsInterval: physicsInterval,
                 moveMagnitude: moveMagnitude,
                 markActionFinished: true
             );
@@ -6395,34 +6495,94 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        protected bool isHandObjectCollidingWith(GameObject otherGameObject) {
-            if (ItemInHand == null) {
-                return false;
-            }
-            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
-            foreach (CapsuleCollider cc in ItemInHand.GetComponentsInChildren<CapsuleCollider>()) {
-                foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore)) {
-                    if (hasAncestor(c.transform.gameObject, otherGameObject)) {
-                        return true;
-                    }
-                }
-            }
-            foreach (BoxCollider bc in ItemInHand.GetComponentsInChildren<BoxCollider>()) {
-                foreach (Collider c in PhysicsExtensions.OverlapBox(bc, layerMask, QueryTriggerInteraction.Ignore)) {
-                    if (!hasAncestor(c.transform.gameObject, otherGameObject)) {
-                        return true;
-                    }
-                }
-            }
-            foreach (SphereCollider sc in ItemInHand.GetComponentsInChildren<SphereCollider>()) {
-                foreach (Collider c in PhysicsExtensions.OverlapSphere(sc, layerMask, QueryTriggerInteraction.Ignore)) {
-                    if (!hasAncestor(c.transform.gameObject, otherGameObject)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
+        // protected GameObject isUnmoveableSurfaceCollidingWith(GameObject openableObject) {
+        //     // Okay, this is the part where I begrudgingly add an entire check of every moving parts' collider
+        //     // against every contained collider to see if it belongs to a structure or static SimObject...ugh...
+        //     int layerMask = 1 << 8;
+        //     foreach (GameObject MovingPart in openableObject.GetComponent<CanOpen_Object>().MovingParts) {
+        //         foreach (Collider col in MovingPart.transform.Find("Colliders").GetComponentsInChildren<Collider>()) {
+        //             if (col.GetType() == typeof(BoxCollider)) {
+        //                 BoxCollider bcol = col as BoxCollider;
+        //                 foreach (Collider containedCol in Physics.OverlapBox(
+        //                     bcol.transform.TransformPoint(bcol.center),
+        //                     bcol.size / 2f,
+        //                     bcol.transform.rotation,
+        //                     layerMask)) {
+        //                     return IsContainedColliderADealbreaker(openableObject, containedCol);
+        //                 }
+        //             }
+
+        //             else if (col.GetType() == typeof(CapsuleCollider)) {
+        //                 CapsuleCollider ccol = col as CapsuleCollider;
+        //                 foreach (Collider containedCol in Physics.OverlapCapsule(
+        //                     ccol.transform.TransformPoint(new Vector3 (ccol.center.x, ccol.center.y + ccol.height / 2, ccol.center.y)),
+        //                     ccol.transform.TransformPoint(new Vector3 (ccol.center.x, ccol.center.y - ccol.height / 2, ccol.center.y)),
+        //                     ccol.radius,
+        //                     layerMask)) {
+        //                     return IsContainedColliderADealbreaker(openableObject, containedCol);
+        //                 }
+        //             }
+
+        //             else if (col.GetType() == typeof(SphereCollider)) {
+        //                 SphereCollider scol = col as SphereCollider;
+        //                 foreach (Collider containedCol in Physics.OverlapSphere(
+        //                     scol.transform.TransformPoint(scol.center),
+        //                     scol.radius,
+        //                     layerMask)) {
+        //                     return IsContainedColliderADealbreaker(openableObject, containedCol);
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     return null;
+        // }
+        //
+        // protected GameObject IsContainedColliderADealbreaker(GameObject openableObject, Collider containedCol) {
+        //     // Edge Case 1: There should be no need to compare static gameobjects against other static gameobjects and structures,
+        //     // or else we have a larger problem upstream with object placement
+        //     if (containedCol.GetType() == typeof(MeshCollider)) {
+        //         // if (openableObject) == // Blah blah blah working on it...
+        //         return containedCol.gameObject;
+        //     }
+        //     // collider shouldn't be 
+        //     else if (ancestorSimObjPhysics(containedCol.gameObject) != null &&
+        //         ancestorSimObjPhysics(containedCol.gameObject).gameObject != openableObject &&
+        //         ancestorSimObjPhysics(containedCol.gameObject).PrimaryProperty == SimObjPrimaryProperty.Static) {
+        //         return ancestorSimObjPhysics(containedCol.gameObject).gameObject;
+        //     }
+        //     else {
+        //         return ancestorSimObjPhysics(containedCol.gameObject).gameObject;
+        //     }
+        // }
+        //
+        // protected bool isHandObjectCollidingWith(GameObject otherGameObject) {
+        //     if (ItemInHand == null) {
+        //         return false;
+        //     }
+        //     int layerMask = 1 << 8;
+        //     foreach (CapsuleCollider cc in ItemInHand.GetComponentsInChildren<CapsuleCollider>()) {
+        //         foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore)) {
+        //             if (hasAncestor(c.transform.gameObject, otherGameObject)) {
+        //                 return true;
+        //             }
+        //         }
+        //     }
+        //     foreach (BoxCollider bc in ItemInHand.GetComponentsInChildren<BoxCollider>()) {
+        //         foreach (Collider c in PhysicsExtensions.OverlapBox(bc, layerMask, QueryTriggerInteraction.Ignore)) {
+        //             if (!hasAncestor(c.transform.gameObject, otherGameObject)) {
+        //                 return true;
+        //             }
+        //         }
+        //     }
+        //     foreach (SphereCollider sc in ItemInHand.GetComponentsInChildren<SphereCollider>()) {
+        //         foreach (Collider c in PhysicsExtensions.OverlapSphere(sc, layerMask, QueryTriggerInteraction.Ignore)) {
+        //             if (!hasAncestor(c.transform.gameObject, otherGameObject)) {
+        //                 return true;
+        //             }
+        //         }
+        //     }
+        //     return false;
+        // }
 
         public float roundToGridSize(float x, float gridSize, bool roundUp) {
             int mFactor = Convert.ToInt32(1.0f / gridSize);

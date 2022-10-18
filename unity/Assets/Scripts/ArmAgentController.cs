@@ -50,6 +50,89 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void TeleportArm(
+            Vector3? position = null,
+            Vector4? rotation = null,
+            float? armHeight = null,
+            float? elbowOrientation = null,
+            bool worldRelative = false,
+            bool forceAction = false
+        ) {
+            GameObject heightManip = this.GetComponent<BaseAgentComponent>().IKArm;
+            GameObject posRotManip = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmTarget();
+            GameObject elbowManip = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetElbowTarget();
+
+            // cache old values in case there's a failure
+            Vector3 oldLocalPosition = posRotManip.transform.localPosition;
+            float oldLocalRotationAngle;
+            Vector3 oldLocalRotationAxis;
+            posRotManip.transform.localRotation.ToAngleAxis(angle: out oldLocalRotationAngle, axis: out oldLocalRotationAxis);
+            float oldArmHeight = heightManip.transform.localPosition.y;
+            float oldElbowOrientation = elbowManip.transform.localEulerAngles.z;
+            
+            // establish defaults in the absence of inputs
+            if (position == null) {
+                position = new Vector3(0f, 0f, 0.4f);
+            }
+
+            if (rotation == null) {
+                rotation = new Vector4(1f, 0f, 0f, 0f);
+            }
+
+            if (armHeight == null) {
+                armHeight = -0.003f;
+            }
+
+            if (elbowOrientation == null) {
+                elbowOrientation = 0f;
+            }
+
+            // teleport arm! (height first, since world-relative positioning needs to take it into account)
+            heightManip.transform.localPosition = new Vector3(
+                heightManip.transform.localPosition.x,
+                (float)armHeight,
+                heightManip.transform.localPosition.z
+            );
+
+            // teleport arm-elements
+            if (!worldRelative) {
+                    posRotManip.transform.localPosition = (Vector3)position;
+                    posRotManip.transform.localRotation = Quaternion.AngleAxis(
+                        ((Vector4)rotation).w % 360,
+                        new Vector3(((Vector4)rotation).x, ((Vector4)rotation).y, ((Vector4)rotation).z)
+                    );
+            } else {
+                    posRotManip.transform.position = (Vector3)position;
+                    posRotManip.transform.rotation = Quaternion.AngleAxis(
+                        ((Vector4)rotation).w % 360,
+                        new Vector3(((Vector4)rotation).x, ((Vector4)rotation).y, ((Vector4)rotation).z)
+                    );
+            }
+
+            elbowManip.transform.localEulerAngles = new Vector3(
+                elbowManip.transform.localEulerAngles.x,
+                elbowManip.transform.localEulerAngles.y,
+                (float)elbowOrientation
+            );
+
+            if (Arm.IsArmColliding() && !forceAction) {
+                errorMessage = "collision detected at desired transform, cannot teleport";
+                heightManip.transform.localPosition = new Vector3(
+                    heightManip.transform.localPosition.x,
+                    oldArmHeight,
+                    heightManip.transform.localPosition.z);
+                posRotManip.transform.localPosition = oldLocalPosition;
+                posRotManip.transform.localRotation = Quaternion.AngleAxis(oldLocalRotationAngle, oldLocalRotationAxis);
+                elbowManip.transform.localEulerAngles = new Vector3(
+                    elbowManip.transform.localEulerAngles.x,
+                    elbowManip.transform.localEulerAngles.y,
+                    oldElbowOrientation);
+                actionFinished(false);
+            } else {
+                actionFinished(true);
+            }
+        }
+
         /*
         This function is identical to `MoveArm` except that rather than
         giving a target position you instead give an "offset" w.r.t.

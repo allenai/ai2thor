@@ -46,7 +46,7 @@ public class ExpRoomEditor : EditorWindow {
     [MenuItem("ExpRoom/Add all pickupable receptacle prefabs to AvailableContainers", true)]
     [MenuItem("ExpRoom/Interactively add all pickupable prefabs to AvailableObjects", true)]
     static bool HideMenuIfNotInExpRoom() {
-        Debug.Log(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+        //Debug.Log(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
         return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "FloorPlan_ExpRoom";
     }
 

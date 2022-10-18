@@ -14,6 +14,9 @@ namespace Tests {
     {
 
         protected HouseTemplate houseTemplate = new HouseTemplate() {
+                    metadata = new HouseMetadata() {
+                        schema = ProceduralTools.CURRENT_HOUSE_SCHEMA
+                    },
                     id = "house_0",
                     // TODO, some assumptions can be done to place doors and objects in `layout`
                     // and use `objectsLayouts` for any possible inconsistencies or layering instead of being mandatory for objects
@@ -44,31 +47,35 @@ namespace Tests {
                             0 0 0 0 0 0
                         "
                     },
-                    rooms =  new Dictionary<string, RoomTemplate>() {
+                     rooms =  new Dictionary<string, RoomTemplate>() {
                         {"1", new RoomTemplate(){ 
                             wallTemplate = new PolygonWall() {
-                                color = SerializableColor.fromUnityColor(Color.red),
-                                unlit = true
+                                material = new MaterialProperties() {
+                                    color = SerializableColor.fromUnityColor(Color.red),
+                                    unlit = true
+                                }
                             },
                             floorTemplate = new RoomHierarchy() {
-                                floorMaterial = "DarkWoodFloors",
+                                floorMaterial = new MaterialProperties() { name = "DarkWoodFloors" },
                                 roomType = "Bedroom"
                             },
                             wallHeight = 3.0f
                         }},
                         {"2", new RoomTemplate(){ 
                             wallTemplate = new PolygonWall() {
-                                color = SerializableColor.fromUnityColor(Color.blue),
-                                unlit = true
+                                material = new MaterialProperties() {
+                                    color = SerializableColor.fromUnityColor(Color.blue),
+                                    unlit = true
+                                }
                             },
                             floorTemplate = new RoomHierarchy() {
-                                floorMaterial = "RedBrick",
+                                floorMaterial = new MaterialProperties() { name = "RedBrick" },
                                 roomType = "LivingRoom"
                             },
                             wallHeight = 3.0f
                         }}
                     },
-                    holes = new Dictionary<string, WallRectangularHole>() {
+                    doors = new Dictionary<string, Thor.Procedural.Data.Door>() {
                         {"=", new Thor.Procedural.Data.Door(){ 
                             openness = 1.0f,
                             assetId = "Doorway_1",
@@ -90,7 +97,7 @@ namespace Tests {
                         }}
                     },
                     proceduralParameters = new ProceduralParameters() {
-                        ceilingMaterial = "ps_mat",
+                        ceilingMaterial = new MaterialProperties() { name = "ps_mat" },
                         floorColliderThickness = 1.0f,
                         receptacleHeight = 0.7f,
                         skyboxId = "Sky1",
@@ -118,7 +125,7 @@ namespace Tests {
                 new Vector3(2.0f, 0.0f, 4.0f),
                 new Vector3(2.0f, 0.0f, 0.0f)
             };
-            Assert.IsTrue(house.rooms.Find(r => r.id == "2").floorPolygon.Select((p, i) => (point: p, index: i)).ToList().TrueForAll(e => room2Poly.ElementAt(e.index) == e.point));
+            Assert.IsTrue(house.rooms.Find(r => r.id == "2").floorPolygon.Select((p, i) => (point: p, index: i)).All(e => room2Poly.ElementAt(e.index) == e.point));
 
             var room1Poly = new List<Vector3>() {
                 new Vector3(2.0f, 0.0f, 0.0f),
@@ -126,7 +133,7 @@ namespace Tests {
                 new Vector3(4.0f, 0.0f, 4.0f),
                 new Vector3(4.0f, 0.0f, 0.0f)
             };
-            Assert.IsTrue(house.rooms.Find(r => r.id == "1").floorPolygon.Select((p, i) => (point: p, index: i)).ToList().TrueForAll(e => room1Poly.ElementAt(e.index) == e.point));
+            Assert.IsTrue(house.rooms.Find(r => r.id == "1").floorPolygon.Select((p, i) => (point: p, index: i)).All(e => room1Poly.ElementAt(e.index) == e.point));
             yield return true;
         }
 
@@ -145,7 +152,7 @@ namespace Tests {
            
             Assert.AreEqual(house.walls.Count, 8);
 
-            Assert.IsTrue(house.walls.TrueForAll(w => w.polygon.Max(p => p.y) == houseTemplate.rooms[w.roomId].wallHeight));
+            Assert.IsTrue(house.walls.All(w => w.polygon.Max(p => p.y) == houseTemplate.rooms[w.roomId].wallHeight));
             
             var room2WallPoints = new List<(Vector3, Vector3)>() {
                 (new Vector3(0.0f, 0.0f, 0.0f), new Vector3(0.0f, 0.0f, 4.0f)),
@@ -153,7 +160,7 @@ namespace Tests {
                 (new Vector3(2.0f, 0.0f, 4.0f), new Vector3(2.0f, 0.0f, 0.0f)),
                 (new Vector3(2.0f, 0.0f, 0.0f), new Vector3(0.0f, 0.0f, 0.0f))
             };
-            Assert.IsTrue(house.walls.Where(w => w.roomId == "2").Select((wall, index) => (wall, index)).ToList().TrueForAll(e => room2WallPoints.ElementAt(e.index) == (e.wall.polygon[0], e.wall.polygon[1])));
+            Assert.IsTrue(house.walls.Where(w => w.roomId == "2").Select((wall, index) => (wall, index)).All(e => room2WallPoints.ElementAt(e.index) == (e.wall.polygon[0], e.wall.polygon[1])));
 
             var room1WallPoints = new List<(Vector3, Vector3)>() {
                 (new Vector3(2.0f, 0.0f, 0.0f), new Vector3(2.0f, 0.0f, 4.0f)),
@@ -161,7 +168,7 @@ namespace Tests {
                 (new Vector3(4.0f, 0.0f, 4.0f), new Vector3(4.0f, 0.0f, 0.0f)),
                 (new Vector3(4.0f, 0.0f, 0.0f), new Vector3(2.0f, 0.0f, 0.0f))
             };
-            Assert.IsTrue(house.walls.Where(w => w.roomId == "1").Select((wall, index) => (wall, index)).ToList().TrueForAll(e => room1WallPoints.ElementAt(e.index) == (e.wall.polygon[0], e.wall.polygon[1])));
+            Assert.IsTrue(house.walls.Where(w => w.roomId == "1").Select((wall, index) => (wall, index)).All(e => room1WallPoints.ElementAt(e.index) == (e.wall.polygon[0], e.wall.polygon[1])));
         
             yield return true;
         }
@@ -187,11 +194,22 @@ namespace Tests {
             var apple = house.objects.Find(x => x.id == "$");
 
             // TODO add y position of floor to house Template object
-            Assert.IsTrue(table.position == new Vector3(4.0f, 0.0f, 2.0f));
+            Debug.Log(table.position);
+            // Without bounding box center offset
+            // Assert.IsTrue(table.position == new Vector3(4.0f, 0.0f, 2.0f));
+            var delta = 1e-1;
+            Assert.That(Vector3.Distance(table.position, new Vector3(3.7f, 0.8f, 1.7f)), Is.LessThanOrEqualTo(delta));
             Assert.IsTrue(table.assetId == "Dining_Table_16_2");
-            Assert.IsTrue(chair.position == new Vector3(4.0f, 0.0f, 4.0f));
+            Debug.Log(chair.position);
+            // Assert.IsTrue(chair.position == new Vector3(4.0f, 0.0f, 4.0f));
+
+            Assert.That(Vector3.Distance(chair.position, new Vector3(3.2f, 1.1f, 3.2f)), Is.LessThanOrEqualTo(delta));
             Assert.IsTrue(chair.assetId == "Chair_007_1");
-            Assert.IsTrue(apple.position == new Vector3(4.0f, 2.0f, 4.0f));
+            Debug.Log(apple.position);
+            // Assert.IsTrue(apple.position == new Vector3(4.0f, 2.0f, 4.0f));
+
+            Assert.That(Vector3.Distance(apple.position, new Vector3(3.1f, 2.1f, 3.1f)), Is.LessThanOrEqualTo(delta));
+            
             Assert.IsTrue(apple.assetId == "Apple_4");
             Assert.AreEqual(table.room, "1");
             Assert.AreEqual(chair.room, "1");
@@ -220,8 +238,7 @@ namespace Tests {
             Assert.IsTrue(door.room0 == "1");
             Assert.IsTrue(door.room1 == "2");
 
-            Assert.IsTrue(door.boundingBox.min == new Vector3(3.0f, 0.0f, 0.0f));
-
+            Assert.IsTrue(door.holePolygon[0] == new Vector3(3.0f, 0.0f, 0.0f));
 
             Assert.AreEqual(
                 house.walls.Where(w => w.roomId =="1")
@@ -266,7 +283,7 @@ namespace Tests {
             var room2 = house.rooms.Find(r => r.id == "2");
             Assert.IsTrue(room2.ceilings.Count == 1);
             Assert.IsTrue(room2.ceilings[0].material == houseTemplate.proceduralParameters.ceilingMaterial);
-            Assert.IsTrue(room2.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).ToList().TrueForAll(e => room2Poly.ElementAt(e.index) == e.point));
+            Assert.IsTrue(room2.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).All(e => room2Poly.ElementAt(e.index) == e.point));
 
             var room1Poly = new List<Vector3>() {
                 new Vector3(2.0f, 0.0f, 0.0f),
@@ -278,7 +295,29 @@ namespace Tests {
             var room1 = house.rooms.Find(r => r.id == "1");
             Assert.IsTrue(room1.ceilings.Count == 1);
             Assert.IsTrue(room1.ceilings[0].material == houseTemplate.proceduralParameters.ceilingMaterial);
-            Assert.IsTrue(room1.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).ToList().TrueForAll(e => room1Poly.ElementAt(e.index) == e.point));
+            Assert.IsTrue(room1.ceilings[0].polygon.Select((p, i) => (point: p, index: i)).All(e => room1Poly.ElementAt(e.index) == e.point));
+            yield return true;
+        }
+
+        [UnityTest]
+        public IEnumerator TestHouseNullVersion() { 
+            Assert.That(() => {
+                var house = createTestHouse();
+                house.metadata.schema = null;
+                Debug.Log(house.metadata.schema);
+                ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
+            }, Throws.ArgumentException);
+            yield return true;
+        }
+
+        [UnityTest]
+        public IEnumerator TestHouseLowerVersion() { 
+            Assert.That(() => {
+                var house = createTestHouse();
+                house.metadata.schema = "0.0.1";
+                Debug.Log(house.metadata.schema);
+                ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
+            }, Throws.ArgumentException);
             yield return true;
         }
 

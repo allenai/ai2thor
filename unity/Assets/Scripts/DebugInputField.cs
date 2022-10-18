@@ -473,6 +473,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 
+                case "getlights": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "GetLights";
+
+                        CurrentActiveController().ProcessControlCommand(action);
+
+                        //ctionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
                 case "stretchtest1": {
                         List<string> commands = new List<string>();
                         commands.Add("run move_stretch_arm_1");
@@ -726,7 +739,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else {
                             action.objectType = "receptacle";
                         }
-
                         action.action = "ReturnValidSpawnsExpRoom";
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 0;
@@ -3482,6 +3494,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "telearm": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "TeleportArm";
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
                 case "expfit": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "WhichContainersDoesAvailableObjectFitIn";
@@ -3613,6 +3633,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "smooth": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RandomizeSmoothness";
+                        action["objectIds"] = new string[] {
+                            "small|room|14",
+                            "Sofa1"
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "dmlh": {
                         ServerAction action = new ServerAction();
                         action.action = "DropMidLevelHand";
@@ -3727,6 +3758,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // public void CreateRoom(Wall[] walls, float wallHeight, string wallMaterialId, string floorMaterialId, string ceilingMaterialId, float wallThickness = 0.0f, string namePostFix = "") {
 
                     }
+                case "newScene": {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan402_physics");
+                    break;
+                }
+                case "newScene2": {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene("Procedural");
+                    break;
+                }
                 case "ch": {
 
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -3817,6 +3856,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "obj": {
+                        // AssetDatabase.Refresh();
+                        var OBJECTS_BASE_PATH = "/Resources/objects/";
+
+                        path = Application.dataPath + OBJECTS_BASE_PATH + "main.json";
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + OBJECTS_BASE_PATH + file;
+                        }
+
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+                        obj["action"] = "CreateObjectPrefab";
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(obj));
+
+                        break;
+                    }
+
                 case "chp": {
 
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -3842,6 +3907,145 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         JObject obj = JObject.Parse(jsonStr);
 
                         action["house"] = obj;
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+                        break;
+                    }
+                 case "chp_direct": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "CreateHouse";
+                        var ROOM_BASE_PATH = "/Resources/rooms/";
+
+                        path = Application.dataPath + "/Resources/rooms/house_full.json";
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + ROOM_BASE_PATH + file;
+                        }
+
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+                        action["house"] = obj;
+                        // CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        ProceduralTools.CreateHouse(obj.ToObject<ProceduralHouse>(), ProceduralTools.GetMaterials());
+                        break;
+                    }
+                case "chpt_direct": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        var ROOM_BASE_PATH = "/Resources/rooms/";
+
+                        path = Application.dataPath + "/Resources/rooms/house-template.json";
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + ROOM_BASE_PATH + file;
+                        }
+
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+                        var house = Thor.Procedural.Templates.createHouseFromTemplate(obj.ToObject<HouseTemplate>());
+                        // var house = CurrentActiveController().actionReturn;
+
+                    
+                        action.Clear();
+
+                        action["action"] = "CreateHouse";
+                        action["house"] = house;
+
+                        var jsonResolver = new ShouldSerializeContractResolver();
+                        var houseString = Newtonsoft.Json.JsonConvert.SerializeObject(
+                        house,
+                        Newtonsoft.Json.Formatting.None,
+                        new Newtonsoft.Json.JsonSerializerSettings() {
+                            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                            ContractResolver = jsonResolver
+                        }
+                    );
+
+                    Debug.Log("House: " + houseString);
+                        string destination = path = Application.dataPath + ROOM_BASE_PATH + "template-out-house.json";
+                        
+
+                        System.IO.File.WriteAllText(destination, houseString);
+                
+                        ProceduralTools.CreateHouse(JObject.FromObject(house).ToObject<ProceduralHouse>(), ProceduralTools.GetMaterials());
+
+
+                        break;
+                    }
+                case "chpt": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "GetHouseFromTemplate";
+                        var ROOM_BASE_PATH = "/Resources/rooms/";
+
+                        path = Application.dataPath + "/Resources/rooms/house-template.json";
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + ROOM_BASE_PATH + file;
+                        }
+
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+
+                        action["template"] = obj;
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+                        var house = CurrentActiveController().actionReturn;
+
+                        Debug.Log(house);
+
+                        action.Clear();
+
+                        action["action"] = "CreateHouse";
+                        action["house"] = house;
+
+                        var jsonResolver = new ShouldSerializeContractResolver();
+                        var houseString = Newtonsoft.Json.JsonConvert.SerializeObject(
+                        house,
+                        Newtonsoft.Json.Formatting.None,
+                        new Newtonsoft.Json.JsonSerializerSettings() {
+                            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                            ContractResolver = jsonResolver
+                        }
+                    );
+                        string destination = path = Application.dataPath + ROOM_BASE_PATH + "template-out-house.json";
+                        
+
+                        System.IO.File.WriteAllText(destination, houseString);
+                
+                    
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
 
                         break;
@@ -4049,8 +4253,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     0 0 0 0 0 0
                                     0 2 2 2 2 0
                                     0 2 2 2 = 0
-                                    0 1 1 1 = 0
-                                    0 1 * 1 + 0
+                                    0 1 * 1 = 0
+                                    0 1 1 1 + 0
                                     0 0 0 0 0 0
                                 "
                                 ,
@@ -4090,28 +4294,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             rooms =  new Dictionary<string, RoomTemplate>() {
                                 {"1", new RoomTemplate(){ 
                                     wallTemplate = new Thor.Procedural.Data.PolygonWall() {
-                                        color = SerializableColor.fromUnityColor(Color.red),
-                                        unlit = true
+                                        material = new MaterialProperties() {
+                                            color = SerializableColor.fromUnityColor(Color.red),
+                                            unlit = true
+                                        }
                                     },
                                     floorTemplate = new Thor.Procedural.Data.RoomHierarchy() {
-                                        floorMaterial = "DarkWoodFloors",
+                                        floorMaterial = new MaterialProperties() { name = "DarkWoodFloors"},
                                         roomType = "Bedroom"
                                     },
                                     wallHeight = 3.0f
                                 }},
                                 {"2", new RoomTemplate(){ 
                                     wallTemplate = new Thor.Procedural.Data.PolygonWall() {
-                                        color = SerializableColor.fromUnityColor(Color.blue),
-                                        unlit = true
+                                        material = new MaterialProperties() {
+                                            color = SerializableColor.fromUnityColor(Color.blue),
+                                            unlit = true
+                                        }
                                     },
                                     floorTemplate = new Thor.Procedural.Data.RoomHierarchy() {
-                                        floorMaterial = "RedBrick",
+                                        floorMaterial = new MaterialProperties() { name ="RedBrick" },
                                         roomType = "LivingRoom"
                                     },
                                     wallHeight = 3.0f
                                 }}
                             },
-                            holes = new Dictionary<string, Thor.Procedural.Data.WallRectangularHole>() {
+                            doors = new Dictionary<string, Thor.Procedural.Data.Door>() {
                                 {"=", new Thor.Procedural.Data.Door(){ 
                                     openness = 1.0f,
                                     assetId = "Doorway_1",
@@ -4121,7 +4329,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             },
                             objects = new Dictionary<string, Thor.Procedural.Data.HouseObject>() {
                                 {"*", new Thor.Procedural.Data.HouseObject(){ 
-                                    assetId = "Dining_Table_16_2",
+                                    assetId = "RoboTHOR_side_table_strind",
                                     rotation = new FlexibleRotation() { axis = new Vector3(0, 1, 0), degrees = 90}
                                 }},
                                 {"+", new Thor.Procedural.Data.HouseObject(){ 
@@ -4129,11 +4337,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 }},
                                 {"$", new Thor.Procedural.Data.HouseObject(){ 
                                     assetId = "Apple_4",
-                                    position = new Vector3(0, 2, 0)
+                                    position = new Vector3(0.1f, 1.5f, 0)
                                 }}
                             },
                             proceduralParameters = new ProceduralParameters() {
-                                ceilingMaterial = "ps_mat",
+                                ceilingMaterial = new MaterialProperties() { name = "ps_mat" },
                                 floorColliderThickness = 1.0f,
                                 receptacleHeight = 0.7f,
                                 skyboxId = "Sky1",
@@ -4180,6 +4388,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
 
                     Debug.Log("#######   HOUSE Created \n");
+
+
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "TeleportFull";
+                    action["position"] = new Vector3(3.0f, 1.0f, 2.0f);
+                    action["rotation"] = new Vector3(0, 0, 0);
+                    action["horizon"] = 0.0f;
+                    action["standing"] = true;
+                    action["forceAction"] = true;
+
+                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                     break;
                 }
             }

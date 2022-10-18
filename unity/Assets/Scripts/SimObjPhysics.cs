@@ -129,6 +129,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
     }
 
+    public GameObject GetSceneManager() {
+        return sceneManager.gameObject;
+    }
+
     public float GetTimerResetValue() {
         return TimerResetValue;
     }
@@ -395,14 +399,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             }
 
             DestroyImmediate(clone);
-
-            // iTween adds references to the iTween.tweens List
-            for (int i = 0; i < iTween.tweens.Count; i++) {
-                if (((GameObject)iTween.tweens[i]["target"]) == null) {
-                   iTween.tweens.RemoveAt(i);
-                }
-            }
-
 
             // Get corner points of SimObject's new BoundingBox, in its correct transformation
             List<Vector3> points = new List<Vector3>();
@@ -768,18 +764,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
 
 #if UNITY_EDITOR
-
-    [UnityEditor.MenuItem("AI2-THOR/Add GUID to Object Names")]
-    public static void AddGUIDToSimObjPhys() {
-        SimObjPhysics[] objects = GameObject.FindObjectsOfType<SimObjPhysics>();// Resources.FindObjectsOfTypeAll(typeof(GameObject)) as GameObject[];
-        foreach (SimObjPhysics sop in objects) {
-            Guid g;
-            g = Guid.NewGuid();
-            sop.name = sop.GetComponent<SimObjPhysics>().Type.ToString() + "_" + g.ToString("N").Substring(0, 8);
-        }
-
-        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-    }
 
     [UnityEditor.MenuItem("SimObjectPhysics/Create RB Collider")]
     public static void CreateRBCollider() {

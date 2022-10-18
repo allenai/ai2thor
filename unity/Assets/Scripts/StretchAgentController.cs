@@ -98,24 +98,64 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-//         /*
-//         This function is identical to `MoveArm` except that rather than
-//         giving a target position you instead give an "offset" w.r.t.
-//         the arm's (i.e. wrist's) current location.
+        public void TeleportArm(
+            Vector3? position = null,
+            float? rotation = null,
+            bool worldRelative = false,
+            bool forceAction = false
+        ) {
+            GameObject posRotManip = this.GetComponent<BaseAgentComponent>().StretchArm.GetComponent<Stretch_Robot_Arm_Controller>().GetArmTarget();
 
-//         Thus if you want to increase the
-//         arms x position (in world coordinates) by 0.1m you should
-//         pass in `offset=Vector3(0.1f, 0f, 0f)` and `coordinateSpace="world"`.
-//         If you wanted to move the arm 0.1m to the "right" from the agent's
-//         perspective then you would pass in the same offset but set
-//         `coordinateSpace="armBase"`. Note that this last movement is **not**
-//         the same as passing `position=Vector3(0.1f, 0f, 0f)` to the `MoveArm`
-//         action with `coordinateSpace="wrist"` as, if the wrist has been rotated,
-//         right need not mean the same thing to the arm base as it does to the wrist.
+            // cache old values in case there's a failure
+            Vector3 oldLocalPosition = posRotManip.transform.localPosition;
+            float oldLocalRotationAngle = posRotManip.transform.localEulerAngles.y;
 
-//         Finally note that when `coordinateSpace="wrist"` then both `MoveArm` and
-//         `MoveArmRelative` are identical.
-//         */
+            // establish defaults in the absence of inputs
+            if (position == null) {
+                position = new Vector3(0f, 0.1f, 0f);
+            }
+
+            if (rotation == null) {
+                rotation = -180f;
+            }
+
+            // teleport arm!
+            if (!worldRelative) {
+                posRotManip.transform.localPosition = (Vector3)position;
+                posRotManip.transform.localEulerAngles = new Vector3 (0, (float)rotation % 360, 0);
+            } else {
+                posRotManip.transform.position = (Vector3)position;
+                posRotManip.transform.eulerAngles = new Vector3 (0, (float)rotation % 360, 0);
+            }
+
+            if (SArm.IsArmColliding() && !forceAction) {
+                errorMessage = "collision detected at desired transform, cannot teleport";
+                posRotManip.transform.localPosition = oldLocalPosition;
+                posRotManip.transform.localEulerAngles = new Vector3(0, oldLocalRotationAngle, 0);
+                actionFinished(false);
+            } else {
+                actionFinished(true);
+            }
+        }
+
+        /*
+        This function is identical to `MoveArm` except that rather than
+        giving a target position you instead give an "offset" w.r.t.
+        the arm's (i.e. wrist's) current location.
+
+        Thus if you want to increase the
+        arms x position (in world coordinates) by 0.1m you should
+        pass in `offset=Vector3(0.1f, 0f, 0f)` and `coordinateSpace="world"`.
+        If you wanted to move the arm 0.1m to the "right" from the agent's
+        perspective then you would pass in the same offset but set
+        `coordinateSpace="armBase"`. Note that this last movement is **not**
+        the same as passing `position=Vector3(0.1f, 0f, 0f)` to the `MoveArm`
+        action with `coordinateSpace="wrist"` as, if the wrist has been rotated,
+        right need not mean the same thing to the arm base as it does to the wrist.
+
+        Finally note that when `coordinateSpace="wrist"` then both `MoveArm` and
+        `MoveArmRelative` are identical.
+        */
         public void MoveArmRelative(
             Vector3 offset,
             float speed = 1,
@@ -487,12 +527,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         determine how to detect collision between a given arm joint and other arm joints.
         */
         public void RotateWristRelative(
+            float pitch = 0f,
             float yaw = 0f,
+            float roll = 0f,
             float speed = 10f,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
             bool disableRendering = true
         ) {
+            // pitch and roll are not supported for the stretch and so we throw an error
+            if (pitch != 0f || roll != 0f) {
+                throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
+            }
+
             Stretch_Robot_Arm_Controller arm = getArm();
 
             arm.rotateWrist(

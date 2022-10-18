@@ -274,7 +274,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public CollisionFlags m_CollisionFlags;
         protected Vector3 lastPosition;
 
-        protected string lastAction;
+        public string lastAction;
         public bool lastActionSuccess {
             get;
             protected set;
@@ -1553,12 +1553,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public virtual ObjectMetadata[] generateObjectMetadata() {
-            SimObjPhysics[] simObjects = null;
-            if (this.simObjFilter != null) {
-                simObjects = this.simObjFilter;
-            } else {
-                simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+        public virtual ObjectMetadata[] generateObjectMetadata(SimObjPhysics[] simObjects) {
+            if (simObjects == null) {
+                throw new NullReferenceException("null SimObjPhysics passed to generateObjectMetadata");
             }
 
             SimObjPhysics[] interactable;
@@ -1566,7 +1563,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.m_Camera,
                 this.maxVisibleDistance,
                 out interactable,
-                this.simObjFilter));
+                simObjects));
 
             HashSet<SimObjPhysics> interactableSimObjsHash = new HashSet<SimObjPhysics>(interactable);
 
@@ -1634,7 +1631,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             objMeta.toggleable = simObj.IsToggleable;
-            if (objMeta.toggleable) {
+            //note: not all objects that report back `isToggled` are themselves `toggleable`, however they all do have the `CanToggleOnOff` secondary sim object property
+            //this is to account for cases like a [stove burner], which can report `isToggled` but cannot have the "ToggleObjectOn" action performed on them directly, and instead
+            //a [stove knob] linked to the [stove burner] must have a "ToggleObjectOn" action performed on it to have both the knob and burner set to a state of `isToggled = true` 
+            if (simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)) {
                 objMeta.isToggled = simObj.IsToggled;
             }
 
@@ -1727,6 +1727,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return objMeta;
         }
 
+        public void GetObjectMetadata(List<string> objectIds) {
+            List<SimObjPhysics> sops = new List<SimObjPhysics>();
+            foreach (string objectId in objectIds) {
+                if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                    sops.Add(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
+                } else {
+                    Debug.Log($"Object ID {objectId} not found in scene.");
+                    continue;
+                }
+            }
+
+            var objectMetadata = generateObjectMetadata(sops.ToArray());
+            actionFinishedEmit(true, objectMetadata);
+        }
+
         public SceneBounds GenerateSceneBounds(Bounds bounding) {
             SceneBounds b = new SceneBounds();
             List<float[]> cornerPoints = new List<float[]>();
@@ -1784,7 +1799,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MetadataWrapper metaMessage = new MetadataWrapper();
             metaMessage.agent = agentMeta;
             metaMessage.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            metaMessage.objects = this.generateObjectMetadata();
+            metaMessage.objects = this.generateObjectMetadata(
+                (
+                    this.simObjFilter == null ?
+                    physicsSceneManager.ObjectIdToSimObjPhysics.Values.ToArray() :
+                    this.simObjFilter
+                )
+            );
             metaMessage.isSceneAtRest = physicsSceneManager.isSceneAtRest;
             metaMessage.sceneBounds = GenerateSceneBounds(agentManager.SceneBounds);
             metaMessage.collided = collidedObjects.Length > 0;
@@ -2925,6 +2946,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return GetAllVisibleSimObjPhysicsDistance(camera, maxDistance, filterSimObjs, out interactable);
             }
         }
+
         protected SimObjPhysics[] GetAllVisibleSimObjPhysics(
             Camera camera,
             float maxDistance,
@@ -2937,6 +2959,50 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 return GetAllVisibleSimObjPhysicsDistance(camera, maxDistance, filterSimObjs, out interactable);
             }
+        }
+
+        public void GetVisibleObjects(float? maxDistance = null, string visibilityScheme = null) {
+            VisibilityScheme visSchemeEnum;
+            if (visibilityScheme != null) {
+                visibilityScheme = visibilityScheme.ToLower();
+
+                if (
+                    visibilityScheme == Enum.GetName(typeof(VisibilityScheme), VisibilityScheme.Collider).ToLower()
+                ) {
+                    visSchemeEnum = VisibilityScheme.Collider;
+                } else if (
+                    visibilityScheme == Enum.GetName(typeof(VisibilityScheme), VisibilityScheme.Distance).ToLower()
+                ) {
+                    visSchemeEnum = VisibilityScheme.Distance;
+                } else {
+                    throw new System.NotImplementedException(
+                        $"Visibility scheme {visibilityScheme} is not implemented. Must be 'distance' or 'collider'."
+                    );
+                }
+            } else {
+                visSchemeEnum = this.visibilityScheme;
+            }
+
+            SimObjPhysics[] interactable;
+            SimObjPhysics[] visible;
+            if (visSchemeEnum == VisibilityScheme.Collider) {
+                visible = GetAllVisibleSimObjPhysicsCollider(
+                    camera: m_Camera,
+                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
+                    filterSimObjs: null,
+                    interactable: out interactable
+                );
+            } else {
+                visible = GetAllVisibleSimObjPhysicsDistance(
+                    camera: m_Camera,
+                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
+                    filterSimObjs: null,
+                    interactable: out interactable
+                );
+            }
+
+            // Return only the ObjectIds of the visible objects
+            actionFinishedEmit(true, visible.Select(sop => sop.ObjectID).ToList());
         }
 
         // this is a faster version of the visibility check, but is not entirely
@@ -2955,7 +3021,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<SimObjPhysics> interactableItems = new List<SimObjPhysics>();
             Plane[] planes = GeometryUtility.CalculateFrustumPlanes(camera);
             foreach (var sop in filterSimObjs) {
-                VisibilityCheck visCheck = isSimObjVisible(camera, sop, this.maxVisibleDistance, planes);
+                VisibilityCheck visCheck = isSimObjVisible(camera, sop, maxDistance, planes);
                 if (visCheck.visible) {
                     visible.Add(sop);
                 }
@@ -3547,7 +3613,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 zCenterVals.Add(-halfSize.z + halfSize.z * alpha);
             }
 
-            List<Vector3> pointsOnSurface = new List<Vector3>();
             for (int whichX = 0; whichX < 2; whichX++) {
                 List<float> xVals = whichX == 1 ? xMinMax : xCenterVals;
                 
@@ -3601,10 +3666,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float dist = float.PositiveInfinity;
 
+            // Must temporarily enable the box collider c1 as otherwise the call to `ClosestPoint` will return subtly
+            // incorrect results.
             c1.enabled = true;
             foreach (Vector3 p in pointsOnSurfaceOfBoxCollider(c0, divisions)) {
                 Vector3 pLocal = c1.transform.InverseTransformPoint(p) - c1.center;
                 Vector3 size = c1.size;
+                // 0.5 used below because `size` corresponds to full box extents, not half extents
+                // and are measuring things from the center.
                 if (
                     (-0.5f * size.x < pLocal.x && pLocal.x < 0.5f * size.x) &&
                     (-0.5f * size.y < pLocal.y && pLocal.y < 0.5f * size.y) &&
@@ -3625,6 +3694,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             c1.enabled = false;
 
+            // Must temporarily enable the box collider c1 as otherwise the call to `ClosestPoint` will return subtly
+            // incorrect results.
             c0.enabled = true;
             foreach (Vector3 p in pointsOnSurfaceOfBoxCollider(c1, divisions)) {
                 Vector3 pLocal = c0.transform.InverseTransformPoint(p) - c0.center;
@@ -4745,6 +4816,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
         }
 
+        private void randomizeSmoothness(string objectId) {
+            SimObjPhysics sop = getSimObjectFromId(objectId: objectId);
+            if (sop == null) {
+                throw new ArgumentException($"No object with id {objectId} found.");
+            }
+
+            Renderer[] renderers = sop.GetComponentsInChildren<Renderer>();
+            foreach (Renderer renderer in renderers) {
+                foreach (Material material in renderer.materials) {
+                    material.SetFloat("_Metallic", Random.Range(0.0f, 1.0f));
+                    material.SetFloat("_GlossMapScale", Random.Range(0.0f, 1.0f));
+                }
+            }
+        }
+
+
+        public void RandomizeSmoothness(string objectId) {
+            randomizeSmoothness(objectId: objectId);
+            actionFinished(success: true);
+        }
+
+        public void RandomizeSmoothness(string[] objectIds) {
+            if (objectIds == null) {
+                throw new ArgumentNullException(nameof(objectIds));
+            }
+            foreach (string objectId in objectIds) {
+                randomizeSmoothness(objectId: objectId);
+            }
+            actionFinished(success: true);
+        }
+
         public void GetShortestPathToPoint(
             Vector3 position, Vector3 target, float allowedError = DefaultAllowedErrorInShortestPath
         ) {
@@ -4807,6 +4909,231 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        // Pass in paths to the textures on each side. From the Python side,
+        // you may find py360convert useful for converting equirectangular
+        // images to cube maps.
+        public void CreateSkybox(
+            string upTexturePath,
+            string downTexturePath,
+            string leftTexturePath,
+            string rightTexturePath,
+            string frontTexturePath,
+            string backTexturePath
+        ) {
+            Texture2D upTexture = new Texture2D(2, 2);
+            upTexture.LoadImage(File.ReadAllBytes(upTexturePath));
+            Texture2D downTexture = new Texture2D(2, 2);
+            downTexture.LoadImage(File.ReadAllBytes(downTexturePath));
+            Texture2D leftTexture = new Texture2D(2, 2);
+            leftTexture.LoadImage(File.ReadAllBytes(leftTexturePath));
+            Texture2D rightTexture = new Texture2D(2, 2);
+            rightTexture.LoadImage(File.ReadAllBytes(rightTexturePath));
+            Texture2D frontTexture = new Texture2D(2, 2);
+            frontTexture.LoadImage(File.ReadAllBytes(frontTexturePath));
+            Texture2D backTexture = new Texture2D(2, 2);
+            backTexture.LoadImage(File.ReadAllBytes(backTexturePath));
+
+            // set the skybox
+            Material skybox = new Material(Shader.Find("Skybox/6 Sided"));
+            skybox.SetTexture("_FrontTex", frontTexture);
+            skybox.SetTexture("_BackTex", backTexture);
+            skybox.SetTexture("_LeftTex", leftTexture);
+            skybox.SetTexture("_RightTex", rightTexture);
+            skybox.SetTexture("_UpTex", upTexture);
+            skybox.SetTexture("_DownTex", downTexture);
+            RenderSettings.skybox = skybox;
+
+            actionFinished(true);
+        }
+
+
+        public void CreateObjectPrefab(
+            Vector3[] vertices,
+            Vector3[] normals,
+            string name,
+            int[] triangles,
+            Vector2[]? uvs = null,
+            string texturePath = null,
+            SerializableCollider[]? colliders = null,
+            PhysicalProperties physicalProperties = null,
+            Vector3[]? visibilityPoints = null,
+            ObjectAnnotations annotations = null
+        ) {
+            // create a new game object
+            GameObject go = new GameObject(name);
+            go.layer = LayerMask.NameToLayer("SimObjVisible");
+            go.tag = "SimObjPhysics";
+
+            // create a new mesh
+            GameObject meshObj = new GameObject("mesh");
+            meshObj.transform.parent = go.transform;
+            Mesh mesh = new Mesh();
+            mesh.vertices = vertices;
+            mesh.triangles = triangles;
+            mesh.normals = normals;
+            if (uvs != null) {
+                mesh.uv = uvs;
+            }
+
+            // add the mesh to the object
+            meshObj.AddComponent<MeshRenderer>();
+            MeshFilter meshFilter = meshObj.AddComponent<MeshFilter>();
+            meshFilter.mesh = mesh;
+
+            // load image from disk
+            if (texturePath != null) {
+                // textures aren't saved as part of the prefab, so we load them from disk
+                RuntimePrefab runtimePrefab = go.AddComponent<RuntimePrefab>();
+                runtimePrefab.localTexturePath = texturePath;
+
+                byte[] imageBytes = File.ReadAllBytes(texturePath);
+                Texture2D tex = new Texture2D(2, 2);
+                tex.LoadImage(imageBytes);
+
+                // create a new material
+                Material mat = new Material(Shader.Find("Standard"));
+                mat.mainTexture = tex;
+                
+                // assign the material to the game object
+                meshObj.GetComponent<Renderer>().material = mat;
+                runtimePrefab.sharedMaterial = mat;
+            }
+
+            // have the mesh refer to the mesh at meshPath
+            meshObj.GetComponent<MeshFilter>().sharedMesh = mesh;
+
+            // add the mesh colliders
+            GameObject triggerCollidersObj = new GameObject("TriggerColliders");
+            triggerCollidersObj.layer = LayerMask.NameToLayer("SimObjVisible");
+            triggerCollidersObj.transform.parent = go.transform;
+
+            GameObject meshCollidersObj = new GameObject("Colliders");
+            meshCollidersObj.layer = LayerMask.NameToLayer("SimObjVisible");
+            meshCollidersObj.transform.parent = go.transform;
+            List<Collider> meshColliders = new List<Collider>();
+            if (colliders != null && colliders.Length > 0) {
+                int i = 0;
+                foreach (var collider in colliders) {
+                    // create a mesh of the collider
+                    Mesh colliderMesh = new Mesh();
+                    colliderMesh.vertices = collider.vertices;
+                    colliderMesh.triangles = collider.triangles;
+
+                    // add the mesh collider
+                    GameObject meshColliderObj = new GameObject($"collider_{i}");
+                    meshColliderObj.transform.parent = meshCollidersObj.transform;
+                    MeshCollider meshCollider = meshColliderObj.AddComponent<MeshCollider>();
+                    meshCollider.sharedMesh = colliderMesh;
+                    meshCollider.convex = true;
+                    meshColliders.Add(meshCollider);
+
+                    // add the trigger collider
+                    GameObject triggerColliderObj = new GameObject($"trigger_{i}");
+                    triggerColliderObj.transform.parent = triggerCollidersObj.transform;
+                    MeshCollider triggerCollider = triggerColliderObj.AddComponent<MeshCollider>();
+                    triggerCollider.sharedMesh = colliderMesh;
+                    triggerCollider.convex = true;
+                    triggerCollider.isTrigger = true;
+
+                    i++;
+                }
+            }
+
+            // add the rigidbody
+            Rigidbody rb = go.AddComponent<Rigidbody>();
+            if (physicalProperties != null) {
+                rb.mass = physicalProperties.mass;
+                rb.drag = physicalProperties.drag;
+                rb.angularDrag = physicalProperties.angularDrag;
+                rb.useGravity = physicalProperties.useGravity;
+                rb.isKinematic = physicalProperties.isKinematic;
+            }
+
+            // add the visibility points
+            GameObject visPoints = new GameObject("VisibilityPoints");
+            visPoints.transform.parent = go.transform;
+            Transform[] visPointTransforms = new Transform[visibilityPoints.Length];
+            for (int i = 0; i < visibilityPoints.Length; i++) {
+                GameObject visPoint = new GameObject($"visPoint_{i}");
+                visPoint.transform.parent = visPoints.transform;
+                visPoint.transform.localPosition = visibilityPoints[i];
+                visPointTransforms[i] = visPoint.transform;
+                visPoint.layer = LayerMask.NameToLayer("SimObjVisible");
+            }
+
+            // add the SimObjPhysics component
+            SimObjPhysics sop = go.AddComponent<SimObjPhysics>();
+            sop.VisibilityPoints = visPointTransforms;
+            sop.MyColliders = meshColliders.ToArray();
+            sop.assetID = name;
+            sop.objectID = name;
+
+            // add the annotations of the object
+            if (annotations == null) {
+                annotations = new ObjectAnnotations();
+            }
+            sop.PrimaryProperty = (SimObjPrimaryProperty)Enum.Parse(
+                typeof(SimObjPrimaryProperty), annotations.primaryProperty
+            );
+            sop.Type = (SimObjType)Enum.Parse(typeof(SimObjType), annotations.objectType);
+            if (annotations.secondaryProperties == null) {
+                annotations.secondaryProperties = new string[0];
+            }
+            sop.SecondaryProperties = annotations.secondaryProperties.Select(
+                p => (SimObjSecondaryProperty)Enum.Parse(typeof(SimObjSecondaryProperty), p)
+            ).ToArray();
+
+            // seutp the bounding box
+            GameObject boundingBox = new GameObject("BoundingBox");
+            boundingBox.transform.parent = go.transform;
+            BoxCollider boxCollider = boundingBox.AddComponent<BoxCollider>();
+            boxCollider.enabled = false;
+            float minX = float.MaxValue;
+            float minY = float.MaxValue;
+            float minZ = float.MaxValue;
+            float maxX = float.MinValue;
+            float maxY = float.MinValue;
+            float maxZ = float.MinValue;
+            foreach (var vertex in vertices) {
+                minX = Mathf.Min(minX, vertex.x);
+                minY = Mathf.Min(minY, vertex.y);
+                minZ = Mathf.Min(minZ, vertex.z);
+                maxX = Mathf.Max(maxX, vertex.x);
+                maxY = Mathf.Max(maxY, vertex.y);
+                maxZ = Mathf.Max(maxZ, vertex.z);
+            }
+            boxCollider.center = new Vector3(
+                x: (minX + maxX) / 2.0f,
+                y: (minY + maxY) / 2.0f,
+                z: (minZ + maxZ) / 2.0f
+            );
+            boxCollider.size = new Vector3(
+                x: maxX - minX,
+                y: maxY - minY,
+                z: maxZ - minZ
+            );
+            sop.BoundingBox = boundingBox;
+
+            // Add the asset to the procedural asset database
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDb != null) {
+                assetDb.prefabs.Add(go);
+            }
+
+            // get child object on assetDb's game object that's called "Prefabs"
+            // and add the prefab to that
+            var prefabParentTransform = assetDb.transform.Find("Prefabs");
+            if (prefabParentTransform == null) {
+                var prefabParent = new GameObject("Prefabs");
+                prefabParent.transform.parent = assetDb.transform;
+                prefabParent.SetActive(false);
+                prefabParentTransform = prefabParent.transform;
+            }
+            go.transform.parent = prefabParentTransform;
+
+            actionFinished(success: true);
+        }
+
         public void CreateHouse(ProceduralHouse house) {
             var rooms = house.rooms.SelectMany(room => house.rooms);
 
@@ -4814,11 +5141,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var materialIds = new HashSet<string>(
                 house.rooms.SelectMany(
                     r => r.ceilings
-                            .Select(c => c.material)
-                            .Concat(new List<string>() { r.floorMaterial })
-                            .Concat(house.walls.Select(w => w.material))
+                            .Select(c => c.material.name)
+                            .Concat(new List<string>() { r.floorMaterial.name })
+                            .Concat(house.walls.Select(w => w.material.name))
                 ).Concat(
-                    new List<string>() { house.proceduralParameters.ceilingMaterial }
+                    new List<string>() { house.proceduralParameters.ceilingMaterial.name }
                 )
             );
             var missingIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
@@ -4831,10 +5158,68 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     )
                 );
             }
-            Debug.Log("Before Procedural call");
-            var floor = ProceduralTools.CreateHouse(house: house, materialDb: materials);
 
+            try {
+                ProceduralTools.CreateHouse(house: house, materialDb: materials);
+            } 
+            catch (Exception e) {
+                Debug.Log(e);
+                var msg = $"Exception creating house.\n'{e.Message}'\n'{e.InnerException}'";
+                Debug.Log(msg);
+                actionFinished(false, actionReturn: null, errorMessage: msg);
+                return;
+            }
             actionFinished(true);
+        }
+
+        public void GetHouseFromTemplate(HouseTemplate template) {
+            var rooms = template.rooms.Select(room => room.Value);
+
+            // TODO: Bring back for validation and add tests when making this API public
+            // var materials = ProceduralTools.GetMaterials();
+            // var assetDb = ProceduralTools.getAssetMap();
+            // var materialIds = new HashSet<string>(
+            //     rooms.SelectMany(
+            //         r => new List<string>() {
+            //             r.floorTemplate.floorMaterial,
+            //             r.wallTemplate.material
+            //         }.Concat(
+            //             r.floorTemplate.ceilings.Select(c => c.material)
+            //         )
+            //     ).Concat(
+            //         new List<string>() { template.proceduralParameters.ceilingMaterial }
+            //     )
+            // );
+            // var missingIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
+            // if (missingIds.Count() > 0) {
+            //     actionFinished(
+            //         success: false,
+            //         errorMessage: (
+            //             $"Invalid materials: {string.Join(", ", missingIds.Select(id => $"'{id}'"))}. "
+            //             + "Not existing or not loaded to the ProceduralAssetDatabase component."
+            //         )
+            //     );
+            // }
+
+            // var missingObjectIds = template.objects
+            //     .Select(o => (o.Value.assetId, o.Value.id))
+            //     .Concat(template.doors.Select(a => (a.Value.assetId, a.Value.id)))
+            //     .Concat(template.windows.Select(a => (a.Value.assetId, a.Value.id)))
+            //     .Where(v => !assetDb.ContainsKey(v.assetId));
+
+            // if (missingObjectIds.Count() > 0) {
+            //     actionFinished(
+            //         success: false,
+            //         errorMessage: (
+            //             $"Invalid assetId: {string.Join(", ", missingObjectIds.Select(a => $"'{a.assetId}'"))}. For objects:  {string.Join(", ", missingObjectIds.Select(a => $"'{a.id}'"))}."
+            //             + "Not existing or not loaded to the ProceduralAssetDatabase component."
+            //         )
+            //     );
+            // }
+
+            var house = Templates.createHouseFromTemplate(template);
+
+            actionFinished(true, house);
         }
 
         public void GetAssetDatabase() {
@@ -5228,6 +5613,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Debug.Log(positions[1]);
 #endif
             actionFinished(true, positions);
+        }
+
+        public void GetLights() {
+            print("GetLights in BASE happening now");
+            //debug
+            #if UNITY_EDITOR
+            List<LightParameters> lights = UtilityFunctions.GetLightPropertiesOfScene();
+            UtilityFunctions.debugGetLightPropertiesOfScene(lights);
+            #endif
+
+            actionFinishedEmit(true, UtilityFunctions.GetLightPropertiesOfScene());
+        }
+
+        public void SetLights() {
+
+            //check that name of light specified exists in scene, if not throw exception
+
+            actionFinished(true);
         }
 
 #if UNITY_EDITOR

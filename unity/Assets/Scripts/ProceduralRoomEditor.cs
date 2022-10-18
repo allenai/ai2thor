@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 using Newtonsoft.Json.Linq;
 #if UNITY_EDITOR
 using EasyButtons.Editor;
+using UnityEditor.SceneManagement;
 #endif
 using EasyButtons;
 using System;
@@ -14,10 +15,9 @@ using Thor.Procedural.Data;
 using System.Linq;
 using System.IO;
 
-#if UNITY_EDITOR
 [ExecuteInEditMode]
 public class ProceduralRoomEditor : MonoBehaviour {
-    private IEnumerable<NamedSimObj> namedSimObjects;
+    private List<(Vector3, Color)> spheres = new List<(Vector3, Color)>();
     public ProceduralHouse loadedHouse;
     protected class NamedSimObj {
         public string assetId;
@@ -28,6 +28,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
     [UnityEngine.Header("Loading")]
     public string LoadBasePath = "/Resources/rooms/";
     public string layoutJSONFilename;
+
+    #if UNITY_EDITOR
 
     private ProceduralHouse readHouseFromJson(string fileName) {
         var path = BuildLayoutPath(fileName);
@@ -482,10 +484,11 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 // polygon = getPolygonFromWallPoints(p0, p1, backWallClosestRight.height),
                 // TODO get material somehow
                 // material = connectionProps?.openFromWallMaterial?.name
-                material = material.name,
-
-                materialTilingXDivisor = lenn / material.mainTextureScale.x,
-                materialTilingYDivisor = backWallClosestRight.height / material.mainTextureScale.y
+                material = new MaterialProperties() { 
+                    name = material.name, 
+                    tilingDivisorX = lenn / material.mainTextureScale.x,  
+                    tilingDivisorY = backWallClosestRight.height / material.mainTextureScale.y
+                },
             };
 
             // var wallRev = createNewWall(
@@ -525,10 +528,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     room1 = connectionProps?.OpenToRoomId,
                     wall0 = wall.id,
                     wall1 = wallRev.id,
-                    boundingBox = new Thor.Procedural.Data.BoundingBox { min = new Vector3(xLen, 0.0f, box.size.z / 2.0f), max = new Vector3(xLen + box.size.x, box.size.y, box.size.z / 2.0f) },
-
-                    //boundingBox = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
-                    // boundingBox = new Thor.Procedural.Data.BoundingBox { min = new Vector3(1f, 0.0f, 0.0f), max = new Vector3(3f, 2.0f, 2.0f) },
+                    holePolygon = new List<Vector3>() { new Vector3(xLen, 0.0f, box.size.z / 2.0f), new Vector3(xLen + box.size.x, box.size.y, box.size.z / 2.0f) },
+                    // boundingBox = new Thor.Procedural.Data.BoundingBox { min = new Vector3(xLen, 0.0f, box.size.z / 2.0f), max = new Vector3(xLen + box.size.x, box.size.y, box.size.z / 2.0f) },
                     type = Enum.GetName(typeof(ConnectionType), (connectionProps?.Type).GetValueOrDefault()),
 
                     openable = d.SecondaryProperties.Contains(SimObjSecondaryProperty.CanOpen),
@@ -546,9 +547,9 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     room1 = connectionProps?.OpenToRoomId,
                     wall0 = wall.id,
                     wall1 = wallRev.id,
-                    boundingBox = new Thor.Procedural.Data.BoundingBox {
-                        min = new Vector3(xLen, yMin, box.size.z / 2.0f),
-                        max = new Vector3(xLen + box.size.x, yMin + box.size.y, box.size.z / 2.0f)
+                    holePolygon = new List<Vector3>() {
+                        new Vector3(xLen, yMin, box.size.z / 2.0f), // Min
+                        new Vector3(xLen + box.size.x, yMin + box.size.y, box.size.z / 2.0f) // Max
                     },
 
                     // boundingBox = new Thor.Procedural.Data.BoundingBox { min = box.center - boxOffset, max = box.center + boxOffset },
@@ -695,8 +696,6 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //     return doorWalls;
     // }
 
-    private List<(Vector3, Color)> spheres = new List<(Vector3, Color)>();
-
     void OnDrawGizmosSelected() {
 
         foreach (var (c, color) in spheres) {
@@ -713,10 +712,11 @@ public class ProceduralRoomEditor : MonoBehaviour {
             polygon = getPolygonFromWallPoints(p0, p1, height),
             // TODO get material somehow
             // material = connectionProps?.openFromWallMaterial?.name
-            material = material.name,
-
-            materialTilingXDivisor = len / material.mainTextureScale.x,
-            materialTilingYDivisor = height / material.mainTextureScale.y
+            material = new MaterialProperties() { 
+                name = material.name,
+                tilingDivisorX = len / material.mainTextureScale.x,
+                tilingDivisorY = height / material.mainTextureScale.y
+            }
         };
 
     }
@@ -741,9 +741,11 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 id = w.gameObject.name,
                 roomId = w.GetComponentInChildren<WallProperties>().RoomId,
                 polygon = poly,
-                material = material.name,
-                materialTilingXDivisor = box.size.x / material.mainTextureScale.x,
-                materialTilingYDivisor = box.size.y / material.mainTextureScale.y
+                material = new MaterialProperties() { 
+                    name = material.name,
+                    tilingDivisorX = box.size.x / material.mainTextureScale.x,
+                    tilingDivisorY = box.size.y / material.mainTextureScale.y
+                }
             };
         }
         ).ToList();
@@ -824,12 +826,10 @@ public class ProceduralRoomEditor : MonoBehaviour {
     }
 
     [Button]
-    public void ReloadScene() {
-#if UNITY_EDITOR        
+    public void ReloadScene() {       
         var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
 
-        UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scene.path);
-#endif        
+        UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scene.path);      
     }
 
     [Button(Expanded = true)]
@@ -990,7 +990,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     range = l.range,
                     rgb = new SerializableColor() { r = l.color.r, g = l.color.g, b = l.color.b, a = l.color.a },
                     shadow = sp,
-                    linkedObjectId = objectLink
+                    linkedSimObj = objectLink
                 };
             }
         ).ToList();
@@ -1024,7 +1024,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
 
 
-        house.proceduralParameters.ceilingMaterial = GameObject.Find(ProceduralTools.DefaultCeilingRootObjectName).GetComponentInChildren<MeshRenderer>().sharedMaterial.name;
+        house.proceduralParameters.ceilingMaterial = new MaterialProperties() { name = GameObject.Find(ProceduralTools.DefaultCeilingRootObjectName).GetComponentInChildren<MeshRenderer>().sharedMaterial.name };
         house.proceduralParameters.skyboxId = RenderSettings.skybox.name;
 
         Debug.Log("Lights " + house.proceduralParameters.lights.Count);
@@ -1051,14 +1051,17 @@ public class ProceduralRoomEditor : MonoBehaviour {
         var path = Application.dataPath + LoadBasePath + layoutFilename;
         return path;
     }
-    // Start is called before the first frame update
-    void Start() {
 
+    [UnityEditor.MenuItem("Procedural/Build Asset Database")]
+    public static void BuildAssetDB() {
+        var proceduralADB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+        // proceduralADB.prefabs = new AssetMap<GameObject>(ProceduralTools.FindPrefabsInAssets().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+        // proceduralADB.materials = new AssetMap<Material>(ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+
+        proceduralADB.prefabs = ProceduralTools.FindPrefabsInAssets();
+        proceduralADB.materials = ProceduralTools.FindAssetsByType<Material>();
+        proceduralADB.totalMats = proceduralADB.materials.Count();
+        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
     }
-
-    // Update is called once per frame
-    void Update() {
-
-    }
+    #endif
 }
-#endif
