@@ -313,6 +313,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public string objectNavExpertAction(
+            string objectId = null,
+            string objectType = null,
+            Vector3? position = null
+        ) {
+            CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+            Vector3 oldCenter = cc.center;
+            float oldRadius = cc.radius;
+
+            // Recentering/resizing the capsule collider to contain the arm assuming
+            // the arm was moved so that it was contained, as much as possible, within the agent's
+            // original capsule collider
+            cc.center = new Vector3(0.12f, 0f, 0.1f);
+            cc.radius = 0.36f;
+
+            Physics.SyncTransforms();
+            string action = base.objectNavExpertAction(objectId, objectType, position);
+
+            cc.center = oldCenter;
+            cc.radius = oldRadius;
+            Physics.SyncTransforms();
+
+            return action;
+        }
+
         public void MoveAgent(
             float ahead = 0,
             float right = 0,
