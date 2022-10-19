@@ -4194,6 +4194,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "BakeNavMesh";
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                         break;
+
                     }
                 case "va": {
 
