@@ -392,7 +392,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             targetTeleport = Vector3.zero;
 
 #if UNITY_EDITOR
-            Debug.Log($"lastAction: '{this.lastAction}'");            Debug.Log($"lastActionSuccess: '{success}'");
+            Debug.Log($"lastAction: '{this.lastAction}'"); Debug.Log($"lastActionSuccess: '{success}'");
             if (!success) {
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
             } else if (actionReturn != null) {
@@ -592,7 +592,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public abstract void InitializeBody();
 
-         private bool ValidRotateStepDegreesWithSnapToGrid(float rotateDegrees) {
+        private bool ValidRotateStepDegreesWithSnapToGrid(float rotateDegrees) {
             // float eps = 0.00001f;
             return rotateDegrees == 90.0f || rotateDegrees == 180.0f || rotateDegrees == 270.0f || (rotateDegrees % 360.0f) == 0.0f;
         }
@@ -647,7 +647,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.rotateStepDegrees = action.rotateStepDegrees;
             }
 
-             if (action.snapToGrid && !ValidRotateStepDegreesWithSnapToGrid(action.rotateStepDegrees)) {
+            if (action.snapToGrid && !ValidRotateStepDegreesWithSnapToGrid(action.rotateStepDegrees)) {
                 errorMessage = $"Invalid values 'rotateStepDegrees': ${action.rotateStepDegrees} and 'snapToGrid':${action.snapToGrid}. 'snapToGrid': 'True' is not supported when 'rotateStepDegrees' is different from grid rotation steps of 0, 90, 180, 270 or 360.";
                 Debug.Log(errorMessage);
                 actionFinished(false);
@@ -1540,7 +1540,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (var simObj in simObjects) {
 
 
-                if (filterObjectTypes.Contains( Enum.GetName(typeof(SimObjType), simObj.Type) )) {
+                if (filterObjectTypes.Contains(Enum.GetName(typeof(SimObjType), simObj.Type))) {
                     filter.Add(simObj);
                 }
             }
@@ -1670,6 +1670,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 objMeta.salientMaterials = salientMaterialsToString;
+
+                if (simObj.salientColors.Length > 0) {
+                    string[] salientColorsToString = new string[simObj.salientColors.Length];
+                    for (int i = 0; i < simObj.salientColors.Length; i++) {
+                        salientColorsToString[i] = simObj.salientColors[i].ToString();
+                    }
+                    objMeta.salientColors = salientColorsToString;
+                }
 
                 // this object should also report back mass since it is moveable/pickupable
                 objMeta.mass = simObj.Mass;
@@ -1849,8 +1857,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // ARM
             if (Arm != null) {
                 metaMessage.arm = Arm.GenerateMetadata();
-            }
-            else if (SArm != null) {
+            } else if (SArm != null) {
                 metaMessage.arm = SArm.GenerateMetadata();
             }
 
@@ -2000,9 +2007,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // throws an exception. It is used to short circuit errors,
                 // which terminates the action immediately.
 #if UNITY_EDITOR
-		Debug.Log("Caught target invocation exception");
-		Debug.Log(e);
-		Debug.Log(e.InnerException.Message);
+                Debug.Log("Caught target invocation exception");
+                Debug.Log(e);
+                Debug.Log(e.InnerException.Message);
 #endif
                 actionFinished(
                     success: false,
@@ -3118,8 +3125,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 foreach (SimObjPhysics sop in Arm.heldObjects.Keys) {
                     sopAndIncInvisibleTuples.Add((sop, false));
                 }
-            }
-            else if (SArm != null && SArm.gameObject.activeSelf) {
+            } else if (SArm != null && SArm.gameObject.activeSelf) {
                 foreach (SimObjPhysics sop in SArm.heldObjects.Keys) {
                     sopAndIncInvisibleTuples.Add((sop, false));
                 }
@@ -3206,8 +3212,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 mask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent");
             }
 
-            bool isSopHeldByArm = ( Arm != null && Arm.gameObject.activeSelf && Arm.heldObjects.ContainsKey(sop) ) ||
-                                  ( SArm != null && SArm.gameObject.activeSelf && SArm.heldObjects.ContainsKey(sop) );
+            bool isSopHeldByArm = (Arm != null && Arm.gameObject.activeSelf && Arm.heldObjects.ContainsKey(sop)) ||
+                                  (SArm != null && SArm.gameObject.activeSelf && SArm.heldObjects.ContainsKey(sop));
 
             // check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
             // ignored by the other raycast
@@ -3215,7 +3221,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, mask)) {
                     if (
                         hit.transform == sop.transform
-                        || ( isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
+                        || (isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))))
                     ) {
                         visCheck.visible = true;
                         visCheck.interactable = true;
@@ -3239,7 +3245,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ) {
                 if (
                     hit.transform == sop.transform
-                    || ( isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
+                    || (isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))))
                 ) {
                     // if this line is drawn, then this visibility point is in camera frame and not occluded
                     // might want to use this for a targeting check as well at some point....
@@ -3599,9 +3605,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             Vector3 halfSize = 0.5f * bc.size;
 
-            List<float> xMinMax = new List<float> {-halfSize.x, halfSize.x};
-            List<float> yMinMax = new List<float> {-halfSize.y, halfSize.y};
-            List<float> zMinMax = new List<float> {-halfSize.z, halfSize.z};
+            List<float> xMinMax = new List<float> { -halfSize.x, halfSize.x };
+            List<float> yMinMax = new List<float> { -halfSize.y, halfSize.y };
+            List<float> zMinMax = new List<float> { -halfSize.z, halfSize.z };
 
             List<float> xCenterVals = new List<float>();
             List<float> yCenterVals = new List<float>();
@@ -3615,7 +3621,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             for (int whichX = 0; whichX < 2; whichX++) {
                 List<float> xVals = whichX == 1 ? xMinMax : xCenterVals;
-                
+
                 for (int whichY = 0; whichY < 2; whichY++) {
                     List<float> yVals = whichY == 1 ? yMinMax : yCenterVals;
 
@@ -3626,9 +3632,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             continue;
                         }
 
-                        # if UNITY_EDITOR
+#if UNITY_EDITOR
                         Vector3? lastPoint = null;
-                        # endif
+#endif
                         foreach (float x in xVals) {
                             foreach (float y in yVals) {
                                 foreach (float z in zVals) {
@@ -3651,7 +3657,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void BBoxDistance(string objectId0, string objectId1, int divisions=3) {
+        public void BBoxDistance(string objectId0, string objectId1, int divisions = 3) {
             SimObjPhysics sop0 = getSimObjectFromId(objectId0);
             SimObjPhysics sop1 = getSimObjectFromId(objectId1);
             if (sop0 == null || sop1 == null) {
@@ -3775,7 +3781,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             toReturn["adjacent"] = objectsInWay.Count == 0;
 #if UNITY_EDITOR
-            string are_arent = (bool) toReturn["adjacent"] ? "are" : "aren't";
+            string are_arent = (bool)toReturn["adjacent"] ? "are" : "aren't";
             Debug.Log($"Objects {are_arent} adjacent ({String.Join(", ", objectsInWay)}).");
 #endif
             toReturn["objectInWay"] = objectsInWay;
@@ -3829,7 +3835,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return (onObjectIds.Count != 0 ? onObjectIds.ToList()[0] : null);
         }
 
-        public void CheckWhatObjectOn(string objectId, int divisions=3, float belowDistance=1e-2f) {
+        public void CheckWhatObjectOn(string objectId, int divisions = 3, float belowDistance = 1e-2f) {
             SimObjPhysics sop = getSimObjectFromId(objectId);
             if (sop == null) {
                 actionFinishedEmit(false); // Error message set already by getSimObjectFromId
@@ -3841,7 +3847,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void CheckWhatObjectsOn(List<string> objectIds, int divisions=3, float belowDistance=1e-2f) {
+        public void CheckWhatObjectsOn(List<string> objectIds, int divisions = 3, float belowDistance = 1e-2f) {
             Dictionary<string, string> objectIdToOnObjectId = new Dictionary<string, string>();
             foreach (string objectId in objectIds) {
                 SimObjPhysics sop = getSimObjectFromId(objectId);
@@ -4211,8 +4217,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 SimObjPhysics sop = getSimObjectFromTypeOrId(action);
                 path = getShortestPath(sop, true);
                 visibilityTest = () => objectIsWithinViewport(sop);
-            }
-            else {
+            } else {
                 var startPosition = this.transform.position;
                 var startRotation = this.transform.rotation;
                 SafelyComputeNavMeshPath(startPosition, action.position, path, DefaultAllowedErrorInShortestPath);
@@ -4505,7 +4510,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Vector3 point1 = startPositionCapsuleCenter + new Vector3(0, innerHeight, 0);
             Vector3 point2 = startPositionCapsuleCenter + new Vector3(0, -innerHeight + skinWidth, 0);
-            
+
             return Physics.CapsuleCastAll(
                 point1: point1,
                 point2: point2,
@@ -4993,7 +4998,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // create a new material
                 Material mat = new Material(Shader.Find("Standard"));
                 mat.mainTexture = tex;
-                
+
                 // assign the material to the game object
                 meshObj.GetComponent<Renderer>().material = mat;
                 runtimePrefab.sharedMaterial = mat;
@@ -5161,8 +5166,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             try {
                 ProceduralTools.CreateHouse(house: house, materialDb: materials);
-            } 
-            catch (Exception e) {
+            } catch (Exception e) {
                 Debug.Log(e);
                 var msg = $"Exception creating house.\n'{e.Message}'\n'{e.InnerException}'";
                 Debug.Log(msg);
@@ -5263,7 +5267,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // returns manually annotated "hole" metadata for connectors like doors of windows, to generate
         // the correct procedural polygons when creating a procedural house.
         public void GetAssetHoleMetadata(string assetId) {
-             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
                 actionFinished(
                     success: false,
@@ -5288,9 +5292,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     success: false,
                     errorMessage: $"Asset '{assetId}' does not have a HoleMetadata component, it's probably not a connector like a door or window or component has to be added in the prefab."
                 );
-            
-            }
-            else {
+
+            } else {
                 actionFinished(
                     success: false,
                     actionReturn: result
@@ -5618,10 +5621,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetLights() {
             print("GetLights in BASE happening now");
             //debug
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             List<LightParameters> lights = UtilityFunctions.GetLightPropertiesOfScene();
             UtilityFunctions.debugGetLightPropertiesOfScene(lights);
-            #endif
+#endif
 
             actionFinishedEmit(true, UtilityFunctions.GetLightPropertiesOfScene());
         }

@@ -74,6 +74,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     [Header("Salient Materials")] // if this object is moveable or pickupable, set these up
     public SalientObjectMaterial[] salientMaterials;
 
+    [Header("Salient Color")] // if this object is moveable or pickupable, set these up
+    public SalientColor[] salientColors;
+
     private PhysicsMaterialValues[] OriginalPhysicsMaterialValuesForAllMyColliders = null;
 
     public Dictionary<Collider, ContactPoint[]> contactPointsDictionary = new Dictionary<Collider, ContactPoint[]>();

@@ -1431,6 +1431,7 @@ public class ObjectMetadata {
     // This is only for objects that are Pickupable or Moveable
     public string[] salientMaterials;
 
+    public string[] salientColors;
     public string[] receptacleObjectIds;
 
     // distance from object's transform to agent transform
@@ -2045,6 +2046,29 @@ public enum SalientObjectMaterial {
     Sponge,
     Organic,
     Leather
+};
+
+public enum SalientColor {
+    Null, //do not leave it on this, unless you want to denote that the salient color for this object has not been annotated
+    Red,
+    Red_Orange,
+    Orange,
+    Brown,
+    Tan,
+    Yellow_Orange,
+    Yellow,
+    Yellow_Green,
+    Green,
+    Blue_Green,
+    Blue,
+    Blue_Violet,
+    Violet,
+    Gray,
+    Black,
+    White, 
+    Gold, 
+    Silver, 
+    Bronze
 };
 
 [Serializable]
