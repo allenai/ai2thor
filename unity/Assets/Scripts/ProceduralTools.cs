@@ -1140,7 +1140,8 @@ namespace Thor.Procedural {
         public static (int, int, int) parseHouseVersion(string version) {
             if (string.IsNullOrEmpty(version)) {
                 return (0, 0, 0);
-            } else {
+            }
+            else {
                 var versionSplit = version.Split('.');
                 Debug.Log(string.Join(", ", versionSplit));
                 var versionResult = new int[] {0, 0, 0 }.Select((x, i) => {
@@ -1536,11 +1537,12 @@ namespace Thor.Procedural {
 
         }
 
-        public static void tagObjectNavmesh(GameObject gameObject, string navMeshAreaName = "Walkable") {
+        public static void tagObjectNavmesh(GameObject gameObject, string navMeshAreaName = "Walkable", bool ignore = false) {
             var modifier = gameObject.GetComponent<NavMeshModifier>();
             if (modifier == null) {
                 modifier = gameObject.AddComponent<NavMeshModifier>();
             }
+            modifier.ignoreFromBuild = ignore;
             modifier.overrideArea = true;
             modifier.area = NavMesh.GetAreaFromName(navMeshAreaName);
         }
@@ -1551,6 +1553,8 @@ namespace Thor.Procedural {
             var navMesh = floorGameObject.AddComponent<NavMeshSurface>();
             // TODO multiple agents
             var navMeshAgent = GameObject.FindObjectOfType<NavMeshAgent>();
+
+            tagObjectNavmesh(navMeshAgent.gameObject, ignore: true);
 
             navMesh.agentTypeID = navMeshAgent.agentTypeID;
             var settings = navMesh.GetBuildSettings();
