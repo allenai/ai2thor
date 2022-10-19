@@ -792,11 +792,20 @@ public class AgentManager : MonoBehaviour {
     }
 
     public IEnumerator WaitOnResolutionChange(int width, int height) {
-        while (Screen.width != width || Screen.height != height) {
-            yield return null;
+        yield return new WaitForEndOfFrame();
+        yield return new WaitForEndOfFrame();
+
+        bool success = true;
+        if (Screen.width != width || Screen.height != height) {
+            success = false;
+            this.primaryAgent.errorMessage = (
+                $"Screen resolution change failed, requested ({width}, {height}), actual ({Screen.width}, {Screen.height})." +
+                $" This is likely due to Unity not supporting the requested resolution and instead using the closest possible resolution."
+            );
         }
+
         this.resetAllImageSynthesis();
-        this.primaryAgent.actionFinished(true);
+        this.primaryAgent.actionFinished(success);
     }
 
     public void ChangeQuality(string quality) {
