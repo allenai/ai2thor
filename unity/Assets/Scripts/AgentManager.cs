@@ -792,8 +792,13 @@ public class AgentManager : MonoBehaviour {
     }
 
     public IEnumerator WaitOnResolutionChange(int width, int height) {
-        yield return new WaitForEndOfFrame();
-        yield return new WaitForEndOfFrame();
+        for (int i = 0; i < 30; i++) {
+            if (UnityEngine.Screen.width == width && UnityEngine.Screen.height == height) {
+                break;
+            }
+            yield return null;
+            yield return new WaitForEndOfFrame();
+        }
 
         bool success = true;
         if (Screen.width != width || Screen.height != height) {
