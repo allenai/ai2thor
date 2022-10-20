@@ -2068,7 +2068,8 @@ public enum SalientColor {
     White, 
     Gold, 
     Silver, 
-    Bronze
+    Bronze,
+    Pink
 };
 
 [Serializable]
