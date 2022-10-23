@@ -950,31 +950,31 @@ def pytest_s3_general_object(commit_id, filename):
     pytest_key = "builds/%s-%s" % (commit_id, filename)
     return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
 
-def pytest_s3_data_urls(commit_id):
-    test_outputfiles = sorted(
-        glob.glob("{}/*".format(TEST_OUTPUT_DIRECTORY))
-    )
-    logger.info("Getting test data in directory {}".format(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY)))
-    logger.info("Test output files: {}".format(", ".join(test_outputfiles)))
-    test_data_urls = []
-    for filename in test_outputfiles:
-        s3_test_out_obj = pytest_s3_general_object(commit_id, filename)
-
-        s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
-            s3_test_out_obj.bucket_name,
-            s3_test_out_obj.key,
-        )
-
-        _, ext = os.path.splitext(filename)
-
-        if ext in content_types:
-            s3_obj.put(
-                Body=s3_test_out_obj, ACL="public-read", ContentType=content_types[ext]
-            )
-            logger.info(s3_pytest_url)
-            # merged_result["stdout"] += "--- test output url: {}".format(s3_pytest_url)
-            test_data_urls.append(s3_pytest_url)
-    return test_data_urls
+# def pytest_s3_data_urls(commit_id):
+#     test_outputfiles = sorted(
+#         glob.glob("{}/*".format(TEST_OUTPUT_DIRECTORY))
+#     )
+#     logger.info("Getting test data in directory {}".format(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY)))
+#     logger.info("Test output files: {}".format(", ".join(test_outputfiles)))
+#     test_data_urls = []
+#     for filename in test_outputfiles:
+#         s3_test_out_obj = pytest_s3_general_object(commit_id, filename)
+#
+#         s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
+#             s3_test_out_obj.bucket_name,
+#             s3_test_out_obj.key,
+#         )
+#
+#         _, ext = os.path.splitext(filename)
+#
+#         if ext in content_types:
+#             s3_test_out_obj.put(
+#                 Body=s3_test_out_obj, ACL="public-read", ContentType=content_types[ext]
+#             )
+#             logger.info(s3_pytest_url)
+#             # merged_result["stdout"] += "--- test output url: {}".format(s3_pytest_url)
+#             test_data_urls.append(s3_pytest_url)
+#     return test_data_urls
 
 @task
 def ci_merge_push_pytest_results(context, commit_id):
@@ -987,7 +987,7 @@ def ci_merge_push_pytest_results(context, commit_id):
     )
     logger.info("ci_merge_push_pytest_results pytest before url check code change logging works")
     logger.info("pytest url %s" % s3_pytest_url)
-    logger.info("test output url: ")
+    logger.info("s3 obj is valid: {}".format(s3_obj))
 
     merged_result = dict(success=True, stdout="", stderr="", test_data=[])
     result_files = ["tmp/pytest_results.json", "tmp/test_utf_results.json"]
@@ -1000,7 +1000,7 @@ def ci_merge_push_pytest_results(context, commit_id):
         merged_result["stdout"] += result["stdout"] + "\n"
         merged_result["stderr"] += result["stderr"] + "\n"
 
-    merged_result["test_data"] = pytest_s3_data_urls(commit_id)
+    # merged_result["test_data"] = pytest_s3_data_urls(commit_id)
 
     s3_obj.put(
         Body=json.dumps(merged_result), ACL="public-read", ContentType="application/json"
@@ -3764,8 +3764,7 @@ def activate_unity_license(context, ulf_path):
 
     subprocess.run('%s -batchmode -manualLicenseFile "%s"' % (_unity_path(), ulf_path), shell=True)
 
-@task
-def test_utf(ctx, base_dir=None):
+def test_utf(base_dir=None):
     """
     Generates a module named ai2thor/tests/test_utf.py with test_XYZ style methods
     that include failures (if any) extracted from the xml output
