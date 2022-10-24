@@ -1117,6 +1117,7 @@ def ci_build(context):
                         for i in range(minutes_to_wait):
                             try:
                                 build_success = build_success_queue.get(timeout=60)
+                                break
                             except (TimeoutError, Empty):
                                 logger.info(f"Waiting for build to complete, have waited {i+1} minutes ({minutes_to_wait} max).")
 
