@@ -1671,7 +1671,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 objMeta.salientMaterials = salientMaterialsToString;
 
-                if (simObj.salientColors.Length > 0) {
+                if (simObj.salientColors != null && simObj.salientColors.Length > 0) {
                     string[] salientColorsToString = new string[simObj.salientColors.Length];
                     for (int i = 0; i < simObj.salientColors.Length; i++) {
                         salientColorsToString[i] = simObj.salientColors[i].ToString();
