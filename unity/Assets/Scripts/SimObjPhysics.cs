@@ -2103,14 +2103,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         transform.eulerAngles = Vector3.zero;
 
         if (BoundingBox == null) {
-            GameObject BoundingBox = new GameObject("BoundingBox");
+            BoundingBox = new GameObject("BoundingBox");
             BoundingBox.transform.parent = gameObject.transform;
             BoundingBox.transform.localPosition = Vector3.zero;
             BoundingBox.transform.localEulerAngles = Vector3.zero;
             BoundingBox.transform.localScale = Vector3.one;
         }
-
         BoundingBox.transform.localScale = Vector3.one;// make sure to default existing BoundingBox to 1 as well
+
+        if (BoundingBox.GetComponent<BoxCollider>() == null) {
+            BoundingBox.AddComponent<BoxCollider>();
+        }
 
         // This collider is used as a size reference for the Agent's Rotation checking boxes, so it does not need
         // to be enabled. To ensure this doesn't interact with anything else, set the Tag to Untagged, the layer to 
@@ -2128,16 +2131,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         ).ToArray();
         MeshFilter[] meshes = transform.GetComponentsInChildren<MeshFilter>();
 
-        // SkinnedMeshRenderer[] skinnedMeshes = transform.GetComponentsInChildren<SkinnedMeshRenderer>();
-        // Transform rootBoneParentSaver;
-        // Transform rootBoneSurrogateParent = new GameObject().transform;
-
         // Reset existing Bounding Box
-        if (BoundingBox.GetComponent<BoxCollider>()) {
-            BoundingBox.GetComponent<BoxCollider>().enabled = true;
-            BoundingBox.GetComponent<BoxCollider>().center = colliders[0].bounds.center;
-            BoundingBox.GetComponent<BoxCollider>().size = Vector3.zero;
-        }
+        BoundingBox.GetComponent<BoxCollider>().enabled = true;
+        BoundingBox.GetComponent<BoxCollider>().center = colliders[0].bounds.center;
+        BoundingBox.GetComponent<BoxCollider>().size = Vector3.zero;
 
         Bounds newBoundingBox = UtilityFunctions.CreateEmptyBounds();
         Vector3 minMeshXZ = colliders[0].bounds.center;
@@ -2150,7 +2147,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         // Encapsulate all mesh filters (used instead of mesh renderers because you can sample individual vertex ids with the filters)
         // Excluded min-y because my material ID triangles are all located way below their respective main-meshes
-        // newBoundingBox.Encapsulate(meshGroup.GetComponent<meshFilter>().mesh.bounds.min);
         foreach (MeshFilter meshFilter in meshes) {
             // if (meshFilter.gameObject.name != "screen_1" && meshFilter.gameObject.name != "screen_2")
             //{
@@ -2178,32 +2174,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
                 newBoundingBox.Encapsulate(minMeshXZ);
                 newBoundingBox.Encapsulate(maxMeshXYZ);
             }
-            //}
         }
-
-        // Encapsulate all skinned mesh renderers (requires moving the bones, not the skinned mesh renderers)
-        // foreach (SkinnedMeshRenderer skinnedMesh in skinnedMeshes)
-        //{
-        //    skinnedMesh.updateWhenOffscreen = true;
-
-        //    rootBoneParentSaver = skinnedMesh.rootBone.parent;
-
-        //    rootBoneSurrogateParent.position = rootBoneParentSaver.position;
-        //    rootBoneSurrogateParent.rotation = rootBoneParentSaver.rotation;
-        //    skinnedMesh.rootBone.transform.SetParent(rootBoneSurrogateParent);
-
-        //    rootBoneSurrogateParent.transform.position = Vector3.zero;
-        //    rootBoneSurrogateParent.transform.rotation = Quaternion.identity;
-
-        //    newBoundingBox.Encapsulate(skinnedMesh.bounds.min);
-        //    newBoundingBox.Encapsulate(skinnedMesh.bounds.max);
-
-        //    rootBoneSurrogateParent.position = rootBoneParentSaver.position;
-        //    rootBoneSurrogateParent.rotation = rootBoneParentSaver.rotation;
-        //    skinnedMesh.rootBone.SetParent(rootBoneParentSaver);
-        //}
-
-        // DestroyImmediate(rootBoneSurrogateParent.gameObject);
 
         // Assign new bounds to BoundingBox
         // Debug.Log("Min/max of BoundingBox: " + newBoundingBox.min + ", " + newBoundingBox.max);
@@ -2211,10 +2182,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // Set Bounding Box Buffer Here!!!
         BoundingBox.GetComponent<BoxCollider>().size = newBoundingBox.size + new Vector3(0.01f, 0.01f, 0.01f);
         BoundingBox.GetComponent<BoxCollider>().enabled = false;
-
-        // var currentBoundingBox = currentGameObject.transform.Find("BoundingBox").GetComponent<BoxCollider>();
-        // currentBoundingBox.size = currentGameObject.GetComponent<MeshFilter>().sharedMesh.bounds.size + new Vector3(0.2f, 0.2f, 0.2f);
-        // currentBoundingBox.center = currentGameObject.GetComponent<MeshFilter>().sharedMesh.bounds.center
 
         transform.position = transformSaver[0];
         transform.eulerAngles = transformSaver[1];
