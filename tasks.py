@@ -1059,7 +1059,6 @@ def ci_build(context):
 
             private_scene_options = [False]
 
-            procs = []
             build_archs = ["OSXIntel64", "Linux64"]
 
             # CloudRendering only supported with 2020.3.25
@@ -1122,10 +1121,15 @@ def ci_build(context):
                                 logger.info(f"Waiting for build to complete, have waited {i+1} minutes ({minutes_to_wait} max).")
 
                         has_any_build_failed = has_any_build_failed or not build_success
-                        if not build_success:
-                            logger.error(f"Build failed not start build for {arch}")
+                        if build_success:
+                            logger.info(
+                                f"Build success detected for {arch} {build['commit_id']}"
+                            )
+                        else:
+                            logger.error(f"Build failed for {arch}")
                             p.kill()
-                            p.join(10.0)
+
+                        p.join(10.0)
 
 
             # the UnityLockfile is used as a trigger to indicate that Unity has closed
@@ -1143,6 +1147,7 @@ def ci_build(context):
 
             # don't run tests for a tag since results should exist
             # for the branch commit
+            procs = []
             if build["tag"] is None:
 
                 # its possible that the cache doesn't get linked if the builds
@@ -1155,7 +1160,10 @@ def ci_build(context):
                 os.makedirs('tmp', exist_ok=True)
                 # using threading here instead of multiprocessing since we must use the start_method of spawn, which 
                 # causes the tasks.py to get reloaded, which may be different on a branch from main
-                utf_proc = threading.Thread(target=ci_test_utf, args=(build["branch"], build["commit_id"], arch_temp_dirs["OSXIntel64"]))
+                utf_proc = threading.Thread(
+                    target=ci_test_utf,
+                    args=(build["branch"], build["commit_id"], arch_temp_dirs["OSXIntel64"])
+                )
                 utf_proc.start()
                 procs.append(utf_proc)
                 pytest_proc = threading.Thread(target=ci_pytest, args=(build["branch"], build["commit_id"]))
@@ -1263,7 +1271,7 @@ def ci_build_arch(
     root_dir: str,
     arch: str,
     commit_id: str,
-    is_done_queue: Optional[multiprocessing.Queue],
+    build_success_queue: Optional[multiprocessing.Queue],
     include_private_scenes=False,
     immediately_fail_and_push_log: bool = False
 ):
@@ -1274,7 +1282,6 @@ def ci_build_arch(
     build_path = build_dir + ".zip"
     build_info = {}
 
-    proc = None
     start_time = time.time()
     try:
         build_info["log"] = f"{build_name}.log"
@@ -1297,12 +1304,12 @@ def ci_build_arch(
         logger.info(f"finished build for {arch} {commit_id}, took {(time.time() - start_time) / 60:.2f} minutes")
 
         archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes)
-        is_done_queue.put(True)
+        build_success_queue.put(True)
     except Exception as e:
         logger.info(f"Caught exception when building {arch} {commit_id} after {(time.time() - start_time) / 60:.2f} minutes: {e}")
         build_info["build_exception"] = f"Exception building: {e}"
         build_log_push(build_info, include_private_scenes)
-        is_done_queue.put(False)
+        build_success_queue.put(False)
 
 
 
@@ -1317,7 +1324,7 @@ def poll_ci_build(context):
 
     hours_before_timeout = 2
     print(f"WAITING FOR BUILDS TO COMPLETE ({hours_before_timeout} hours before timeout)")
-
+    start_time = time.time()
     last_emit_time = 0
     for i in range(360 * hours_before_timeout):
         log_exist_count = 0
@@ -1349,6 +1356,8 @@ def poll_ci_build(context):
             break
         sys.stdout.flush()
         time.sleep(10)
+
+    print(f"\nCHECKING TOOK {(time.time() - start_time) / 60:.2f} minutes")
 
     print("\nCHECKING IF ALL BUILDS SUCCESSFULLY UPLOADED")
 
