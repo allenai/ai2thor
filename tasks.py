@@ -12,6 +12,9 @@ import shutil
 import subprocess
 import pprint
 import random
+from queue import Empty
+from typing import Optional
+
 from invoke import task
 import boto3
 import botocore.exceptions
@@ -48,6 +51,11 @@ content_types = {
     ".unityweb": "application/octet-stream",
     ".json": "application/json",
 }
+
+
+class ForcedFailure(Exception):
+    pass
+
 
 def add_files(zipf, start_dir, exclude_ext=()):
     for root, dirs, files in os.walk(start_dir):
@@ -177,7 +185,7 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
     full_env.update(env)
     full_env["UNITY_BUILD_NAME"] = target_path
     result_code = subprocess.check_call(command, shell=True, env=full_env)
-    print("Exited with code {}".format(result_code))
+    print(f"Exited with code {result_code}")
     success = result_code == 0
     if success:
         generate_build_metadata(os.path.join(project_path, build_dir, "metadata.json"))
@@ -1009,7 +1017,9 @@ def ci_merge_push_pytest_results(context, commit_id):
 
 def ci_pytest(branch, commit_id):
     import requests
-    logger.info("running pytest for %s %s" % (branch, commit_id))
+    logger.info(f"running pytest for {branch} {commit_id}")
+
+    start_time = time.time()
 
     proc = subprocess.run(
         "pytest", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -1024,7 +1034,7 @@ def ci_pytest(branch, commit_id):
     with open("tmp/pytest_results.json", "w") as f:
         f.write(json.dumps(result))
 
-    logger.info("finished pytest for %s %s" % (branch, commit_id))
+    logger.info(f"finished pytest for {branch} {commit_id} in {time.time() - start_time:.2f} seconds")
 
 
 @task
@@ -1040,7 +1050,7 @@ def ci_build(context):
             # disabling delete temporarily since it interferes with pip releases
             # pytest_s3_object(build["commit_id"]).delete()
             logger.info(
-                "pending build for %s %s" % (build["branch"], build["commit_id"])
+                f"pending build for {build['branch']} {build['commit_id']}"
             )
             clean()
             subprocess.check_call("git fetch", shell=True)
@@ -1049,7 +1059,6 @@ def ci_build(context):
 
             private_scene_options = [False]
 
-            procs = []
             build_archs = ["OSXIntel64", "Linux64"]
 
             # CloudRendering only supported with 2020.3.25
@@ -1058,28 +1067,28 @@ def ci_build(context):
             if _unity_version() == "2020.3.25f1":
                 build_archs.append("CloudRendering")
 
+            has_any_build_failed = False
             for include_private_scenes in private_scene_options:
                 for arch in build_archs:
                     logger.info(
-                        "starting build for %s %s %s"
-                        % (arch, build["branch"], build["commit_id"])
+                        f"processing {arch} {build['branch']} {build['commit_id']}"
                     )
                     temp_dir = arch_temp_dirs[arch] = os.path.join(os.environ["HOME"], "tmp/unity-%s-%s-%s-%s" % (arch, build["commit_id"], os.getpid(), random.randint(0, 2**32 - 1)))
                     os.makedirs(temp_dir)
-                    logger.info( "copying unity data to %s" % (temp_dir,))
+                    logger.info(f"copying unity data to {temp_dir}")
                     # -c uses MacOS clonefile
-                    subprocess.check_call("cp -a -c unity %s" % temp_dir, shell=True)
-                    logger.info( "completed unity data copy to %s" % (temp_dir,))
+                    subprocess.check_call(f"cp -a -c unity {temp_dir}", shell=True)
+                    logger.info(f"completed unity data copy to {temp_dir}")
                     rdir = os.path.join(temp_dir, "unity/builds")
                     commit_build = ai2thor.build.Build(
-                        arch,
-                        build["commit_id"],
+                        platform=arch,
+                        commit_id=build["commit_id"],
                         include_private_scenes=include_private_scenes,
                         releases_dir=rdir,
                     )
                     if commit_build.exists():
                         logger.info(
-                            "found build for commit %s %s" % (build["commit_id"], arch)
+                            f"found build for commit {build['commit_id']} {arch}"
                         )
                         # download the build so that we can run the tests
                         if arch == "OSXIntel64":
@@ -1089,26 +1098,39 @@ def ci_build(context):
                         # been built, we avoid bootstrapping the cache since we short circuited on the line above
                         link_build_cache(temp_dir, arch, build["branch"])
 
-                        # ci_build_arch(temp_dir, arch, build["commit_id"], include_private_scenes)
-                        p = multiprocessing.Process(target=ci_build_arch, args=(temp_dir, arch, build["commit_id"], include_private_scenes,))
-                        active_procs = lambda x: sum([p.is_alive() for p in x])
-                        started = False
-                        for _ in range(200):
-                            if active_procs(procs) > 0:
-                                logger.info("too many active procs - waiting before start %s " % arch)
-                                time.sleep(15)
-                                continue
-                            else:
-                                logger.info("starting build process for %s " % arch)
-                                started = True
-                                p.start()
-                                # wait for Unity to start so that it can pick up the GICache config
-                                # changes
-                                time.sleep(30)
-                                procs.append(p)
-                                break
-                        if not started:
-                            logger.error("could not start build for %s" % arch)
+                        build_success_queue = multiprocessing.Queue()
+                        p = multiprocessing.Process(
+                            target=ci_build_arch,
+                            kwargs=dict(
+                                root_dir=temp_dir,
+                                arch=arch,
+                                commit_id=build["commit_id"],
+                                build_success_queue=build_success_queue,
+                                include_private_scenes=include_private_scenes,
+                                immediately_fail_and_push_log=has_any_build_failed, # Don't bother trying another build if one has already failed
+                            )
+                        )
+                        p.start()
+
+                        build_success = False
+                        minutes_to_wait = 120
+                        for i in range(minutes_to_wait):
+                            try:
+                                build_success = build_success_queue.get(timeout=60)
+                            except (TimeoutError, Empty):
+                                logger.info(f"Waiting for build to complete, have waited {i+1} minutes ({minutes_to_wait} max).")
+
+                        has_any_build_failed = has_any_build_failed or not build_success
+                        if build_success:
+                            logger.info(
+                                f"Build success detected for {arch} {build['commit_id']}"
+                            )
+                        else:
+                            logger.error(f"Build failed for {arch}")
+                            p.kill()
+
+                        p.join(10.0)
+
 
             # the UnityLockfile is used as a trigger to indicate that Unity has closed
             # the project and we can run the unit tests
@@ -1116,15 +1138,16 @@ def ci_build(context):
             for arch in build_archs:
                 lock_file_path = os.path.join(arch_temp_dirs[arch], "unity/Temp/UnityLockfile")
                 if os.path.isfile(lock_file_path):
-                    logger.info("attempting to lock %s" % lock_file_path)
+                    logger.info(f"attempting to lock {lock_file_path}")
                     lock_file = os.open(lock_file_path, os.O_RDWR)
                     fcntl.lockf(lock_file, fcntl.LOCK_EX)
                     fcntl.lockf(lock_file, fcntl.LOCK_UN)
                     os.close(lock_file)
-                    logger.info("obtained lock on %s" % lock_file_path)
+                    logger.info(f"obtained lock on {lock_file_path}")
 
             # don't run tests for a tag since results should exist
             # for the branch commit
+            procs = []
             if build["tag"] is None:
 
                 # its possible that the cache doesn't get linked if the builds
@@ -1137,7 +1160,10 @@ def ci_build(context):
                 os.makedirs('tmp', exist_ok=True)
                 # using threading here instead of multiprocessing since we must use the start_method of spawn, which 
                 # causes the tasks.py to get reloaded, which may be different on a branch from main
-                utf_proc = threading.Thread(target=ci_test_utf, args=(build["branch"], build["commit_id"], arch_temp_dirs["OSXIntel64"]))
+                utf_proc = threading.Thread(
+                    target=ci_test_utf,
+                    args=(build["branch"], build["commit_id"], arch_temp_dirs["OSXIntel64"])
+                )
                 utf_proc.start()
                 procs.append(utf_proc)
                 pytest_proc = threading.Thread(target=ci_pytest, args=(build["branch"], build["commit_id"]))
@@ -1241,8 +1267,14 @@ def set_gi_cache_folder(arch):
     subprocess.check_call("plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path), shell=True)
     subprocess.check_call("plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,), shell=True)
 
-def ci_build_arch(root_dir, arch, commit_id, include_private_scenes=False):
-
+def ci_build_arch(
+    root_dir: str,
+    arch: str,
+    commit_id: str,
+    build_success_queue: Optional[multiprocessing.Queue],
+    include_private_scenes=False,
+    immediately_fail_and_push_log: bool = False
+):
     os.chdir(root_dir)
     unity_path = "unity"
     build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes)
@@ -1250,22 +1282,34 @@ def ci_build_arch(root_dir, arch, commit_id, include_private_scenes=False):
     build_path = build_dir + ".zip"
     build_info = {}
 
-    proc = None
+    start_time = time.time()
     try:
-        build_info["log"] = "%s.log" % (build_name,)
+        build_info["log"] = f"{build_name}.log"
+
+        if immediately_fail_and_push_log:
+            raise ForcedFailure(
+                f"Build for {arch} {commit_id} was told to fail immediately, likely because a build for"
+                f" another architecture already failed."
+            )
+
         env = {}
         if include_private_scenes:
             env["INCLUDE_PRIVATE_SCENES"] = "true"
         set_gi_cache_folder(arch)
+
+        logger.info(
+            f"starting build for {arch} {commit_id}"
+        )
         _build(unity_path, arch, build_dir, build_name, env)
-        logger.info("finished build for %s %s" % (arch, commit_id))
+        logger.info(f"finished build for {arch} {commit_id}, took {(time.time() - start_time) / 60:.2f} minutes")
 
         archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes)
-
+        build_success_queue.put(True)
     except Exception as e:
-        print("Caught exception %s" % e)
-        build_info["build_exception"] = "Exception building: %s" % e
+        logger.info(f"Caught exception when building {arch} {commit_id} after {(time.time() - start_time) / 60:.2f} minutes: {e}")
+        build_info["build_exception"] = f"Exception building: {e}"
         build_log_push(build_info, include_private_scenes)
+        build_success_queue.put(False)
 
 
 
@@ -1278,8 +1322,11 @@ def poll_ci_build(context):
     commit_id = git_commit_id()
     start_datetime = datetime.datetime.utcnow()
 
+    hours_before_timeout = 2
+    print(f"WAITING FOR BUILDS TO COMPLETE ({hours_before_timeout} hours before timeout)")
+    start_time = time.time()
     last_emit_time = 0
-    for i in range(360):
+    for i in range(360 * hours_before_timeout):
         log_exist_count = 0
         # must emit something at least once every 10 minutes
         # otherwise travis will time out the build
@@ -1303,18 +1350,33 @@ def poll_ci_build(context):
             # we observe errors when polling AWS periodically - we don't want these to stop
             # the build
             except requests.exceptions.ConnectionError as e:
-                print("Caught exception %s" % e)
+                print(f"Caught exception when polling AWS, ignoring (error: {e})")
 
         if log_exist_count == len(check_platforms):
             break
         sys.stdout.flush()
         time.sleep(10)
 
+    print(f"\nCHECKING TOOK {(time.time() - start_time) / 60:.2f} minutes")
+
+    print("\nCHECKING IF ALL BUILDS SUCCESSFULLY UPLOADED")
+
+    any_failures = False
     for plat in ai2thor.build.AUTO_BUILD_PLATFORMS:
+        ai2thor.build.Build(plat, commit_id, False)
         commit_build = ai2thor.build.Build(plat, commit_id, False)
-        if not commit_build.exists():
-            print("Build log url: %s" % commit_build.log_url)
-            raise Exception("Failed to build %s for commit: %s " % (plat.name(), commit_id))
+
+        success = commit_build.exists()
+        any_failures = any_failures or not success
+        if not success:
+            print(f"\nBuild DOES NOT exist for arch {plat}, expected log url: {commit_build.log_url}")
+        else:
+            print(f"\nBuild DOES exist for arch {plat}, log url: {commit_build.log_url}")
+
+    if any_failures:
+        raise Exception(f"Build failures detected")
+
+    print("\nRETRIEVING `pytest` RESULTS")
 
     pytest_missing = True
     for i in range(30):
@@ -1336,11 +1398,11 @@ def poll_ci_build(context):
             print(pytest_result["stderr"])
 
             if "test_data" in pytest_result:
-                print("Pytest url: %s" % s3_pytest_url)
+                print(f"Pytest url: {s3_pytest_url}")
                 print("Data urls: ")
                 print(", ".join(pytest_result["test_data"]))
             else:
-                print("No test data url's in json '{}'.".format(s3_pytest_url))
+                print(f"No test data url's in json '{s3_pytest_url}'.")
 
             if not pytest_result["success"]:
                 raise Exception("pytest failure")
