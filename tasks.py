@@ -921,7 +921,7 @@ def travis_build(build_id):
     return res.json()
 
 
-def pending_travis_build():
+def pending_travis_build(branch=None):
     import requests
 
     res = requests.get(
@@ -938,13 +938,23 @@ def pending_travis_build():
         if b["tag"]:
             tag = b["tag"]["name"]
 
-        return {
-            "branch": b["branch"]["name"],
-            "commit_id": b["commit"]["sha"],
-            "tag": tag,
-            "id": b["id"],
-        }
-
+        if branch is None:
+            return {
+                "branch": b["branch"]["name"],
+                "commit_id": b["commit"]["sha"],
+                "tag": tag,
+                "id": b["id"],
+                "latest_build_commit_id": b['branch']['last_build']['commit']['sha'] if "last_build" in b['branch'] and 'commit' in b['branch']['last_build'] else b["commit"]["sha"]
+            }
+        elif branch == b["branch"]["name"]:
+            return {
+                "branch": b["branch"]["name"],
+                "commit_id": b["commit"]["sha"],
+                "tag": tag,
+                "id": b["id"],
+                "latest_build_commit_id": b['branch']['last_build']['commit']['sha'] if "last_build" in b[
+                    'branch'] and 'commit' in b['branch']['last_build'] else b["commit"]["sha"]
+            }
 
 def pytest_s3_object(commit_id):
     s3 = boto3.resource("s3")
@@ -1039,7 +1049,6 @@ def ci_pytest(branch, commit_id):
 
 @task
 def ci_build(context):
-
     lock_f = open(os.path.join(os.environ["HOME"], ".ci-build.lock"), "w")
     arch_temp_dirs = dict()
     try:
@@ -1052,6 +1061,7 @@ def ci_build(context):
             logger.info(
                 f"pending build for {build['branch']} {build['commit_id']}"
             )
+            # TODO separate this into CI script that starts the invoke task
             clean()
             subprocess.check_call("git fetch", shell=True)
             subprocess.check_call("git checkout %s --" % build["branch"], shell=True)
@@ -1068,7 +1078,10 @@ def ci_build(context):
                 build_archs.append("CloudRendering")
 
             has_any_build_failed = False
+            cancel_build = False
             for include_private_scenes in private_scene_options:
+                if cancel_build:
+                    break
                 for arch in build_archs:
                     logger.info(
                         f"processing {arch} {build['branch']} {build['commit_id']}"
@@ -1114,87 +1127,113 @@ def ci_build(context):
 
                         build_success = False
                         minutes_to_wait = 120
+                        check_builds_interval_minutes = 1
+                        minutest_till_check = check_builds_interval_minutes
                         for i in range(minutes_to_wait):
                             try:
                                 build_success = build_success_queue.get(timeout=60)
+                                minutest_till_check -= 1
+                                if minutest_till_check == 0:
+                                    minutest_till_check = check_builds_interval_minutes
+                                    new_build = pending_travis_build(branch=build['branch'])
+                                    if new_build is None:
+                                        cancel_build = True
+                                        logger.info(
+                                            f"Build for {build['commit_id']} was cancelled by Travis."
+                                        )
+                                        break
+                                    if new_build['latest_build_commit_id'] != build['commit_id']:
+                                        cancel_build = True
+                                        logger.info(
+                                            f"More recent build found on branch: {build['branch']} building for: {build['commit_id']}, found: {new_build['latest_build_commit_id']}"
+                                        )
+                                        break
+
                             except (TimeoutError, Empty):
                                 logger.info(f"Waiting for build to complete, have waited {i+1} minutes ({minutes_to_wait} max).")
-
-                        has_any_build_failed = has_any_build_failed or not build_success
-                        if build_success:
+                        if cancel_build:
                             logger.info(
-                                f"Build success detected for {arch} {build['commit_id']}"
+                                f"Stopping unity process building {arch} for {build['commit_id']}"
                             )
-                        else:
-                            logger.error(f"Build failed for {arch}")
                             p.kill()
+                        else:
+                            has_any_build_failed = has_any_build_failed or not build_success
+                            if build_success:
+                                logger.info(
+                                    f"Build success detected for {arch} {build['commit_id']}"
+                                )
+                            else:
+                                logger.error(f"Build failed for {arch}")
+                                p.kill()
 
                         p.join(10.0)
+                        if cancel_build:
+                            break
 
+            if not cancel_build:
+                # the UnityLockfile is used as a trigger to indicate that Unity has closed
+                # the project and we can run the unit tests
+                # waiting for all builds to complete before starting tests
+                for arch in build_archs:
+                    lock_file_path = os.path.join(arch_temp_dirs[arch], "unity/Temp/UnityLockfile")
+                    if os.path.isfile(lock_file_path):
+                        logger.info(f"attempting to lock {lock_file_path}")
+                        lock_file = os.open(lock_file_path, os.O_RDWR)
+                        fcntl.lockf(lock_file, fcntl.LOCK_EX)
+                        fcntl.lockf(lock_file, fcntl.LOCK_UN)
+                        os.close(lock_file)
+                        logger.info(f"obtained lock on {lock_file_path}")
 
-            # the UnityLockfile is used as a trigger to indicate that Unity has closed
-            # the project and we can run the unit tests
-            # waiting for all builds to complete before starting tests
-            for arch in build_archs:
-                lock_file_path = os.path.join(arch_temp_dirs[arch], "unity/Temp/UnityLockfile")
-                if os.path.isfile(lock_file_path):
-                    logger.info(f"attempting to lock {lock_file_path}")
-                    lock_file = os.open(lock_file_path, os.O_RDWR)
-                    fcntl.lockf(lock_file, fcntl.LOCK_EX)
-                    fcntl.lockf(lock_file, fcntl.LOCK_UN)
-                    os.close(lock_file)
-                    logger.info(f"obtained lock on {lock_file_path}")
+                # don't run tests for a tag since results should exist
+                # for the branch commit
+                procs = []
+                if build["tag"] is None:
 
-            # don't run tests for a tag since results should exist
-            # for the branch commit
-            procs = []
-            if build["tag"] is None:
+                    # its possible that the cache doesn't get linked if the builds
+                    # succeeded during an earlier run
+                    link_build_cache(arch_temp_dirs["OSXIntel64"], "OSXIntel64", build["branch"])
 
-                # its possible that the cache doesn't get linked if the builds
-                # succeeded during an earlier run
-                link_build_cache(arch_temp_dirs["OSXIntel64"], "OSXIntel64", build["branch"])
-
-                # link builds directory so pytest can run
-                logger.info("current directory pre-symlink %s" % os.getcwd())
-                os.symlink(os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"), "unity/builds")
-                os.makedirs('tmp', exist_ok=True)
-                # using threading here instead of multiprocessing since we must use the start_method of spawn, which 
-                # causes the tasks.py to get reloaded, which may be different on a branch from main
-                utf_proc = threading.Thread(
-                    target=ci_test_utf,
-                    args=(build["branch"], build["commit_id"], arch_temp_dirs["OSXIntel64"])
-                )
-                utf_proc.start()
-                procs.append(utf_proc)
-                pytest_proc = threading.Thread(target=ci_pytest, args=(build["branch"], build["commit_id"]))
-                pytest_proc.start()
-                procs.append(pytest_proc)
-
-            ## allow webgl to be force deployed with #webgl-deploy in the commit comment
-
-            if (
-                build["branch"] in ["main", "demo-updates"]
-                and "#webgl-deploy" in git_commit_comment()
-            ):
-                ci_build_webgl(context, build["commit_id"])
-
-
-            for p in procs:
-                if p:
-                    logger.info(
-                        "joining proc %s for %s %s"
-                        % (p, build["branch"], build["commit_id"])
+                    # link builds directory so pytest can run
+                    logger.info("current directory pre-symlink %s" % os.getcwd())
+                    os.symlink(os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"), "unity/builds")
+                    os.makedirs('tmp', exist_ok=True)
+                    # using threading here instead of multiprocessing since we must use the start_method of spawn, which
+                    # causes the tasks.py to get reloaded, which may be different on a branch from main
+                    utf_proc = threading.Thread(
+                        target=ci_test_utf,
+                        args=(build["branch"], build["commit_id"], arch_temp_dirs["OSXIntel64"])
                     )
-                    p.join()
+                    utf_proc.start()
+                    procs.append(utf_proc)
+                    pytest_proc = threading.Thread(target=ci_pytest, args=(build["branch"], build["commit_id"]))
+                    pytest_proc.start()
+                    procs.append(pytest_proc)
 
-            if build["tag"] is None:
-                ci_merge_push_pytest_results(context, build["commit_id"])
+                ## allow webgl to be force deployed with #webgl-deploy in the commit comment
 
-            # must have this after all the procs are joined
-            # to avoid generating a _builds.py file that would affect pytest execution
-            build_pip_commit(context)
-            push_pip_commit(context)
-            generate_pypi_index(context)
+                if (
+                    build["branch"] in ["main", "demo-updates"]
+                    and "#webgl-deploy" in git_commit_comment()
+                ):
+                    ci_build_webgl(context, build["commit_id"])
+
+
+                for p in procs:
+                    if p:
+                        logger.info(
+                            "joining proc %s for %s %s"
+                            % (p, build["branch"], build["commit_id"])
+                        )
+                        p.join()
+
+                if build["tag"] is None:
+                    ci_merge_push_pytest_results(context, build["commit_id"])
+
+                # must have this after all the procs are joined
+                # to avoid generating a _builds.py file that would affect pytest execution
+                build_pip_commit(context)
+                push_pip_commit(context)
+                generate_pypi_index(context)
 
             # give the travis poller time to see the result
             for i in range(12):
