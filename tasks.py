@@ -1042,6 +1042,7 @@ def ci_build(context):
             logger.info(
                 "pending build for %s %s" % (build["branch"], build["commit_id"])
             )
+            
             clean()
             subprocess.check_call("git fetch", shell=True)
             subprocess.check_call("git checkout %s --" % build["branch"], shell=True)
