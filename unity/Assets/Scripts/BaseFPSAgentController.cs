@@ -709,6 +709,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void randomizeObjectMass() {
+            int customSeed = 10302022;
+            Random.InitState(customSeed);
             foreach (var sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 Rigidbody rb = sop.GetComponent<Rigidbody>();
                 rb.mass = rb.mass * UnityEngine.Random.Range(0.5f, 1.5f);  // change at most 50% of the mass
