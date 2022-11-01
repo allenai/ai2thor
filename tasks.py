@@ -955,6 +955,7 @@ def pending_travis_build(branch=None):
                 "latest_build_commit_id": b['branch']['last_build']['commit']['sha'] if "last_build" in b[
                     'branch'] and 'commit' in b['branch']['last_build'] else b["commit"]["sha"]
             }
+    return None
 
 def pytest_s3_object(commit_id):
     s3 = boto3.resource("s3")
@@ -1133,7 +1134,7 @@ def ci_build(context):
                             try:
                                 build_success = build_success_queue.get(timeout=60)
                                 minutest_till_check -= 1
-                                if minutest_till_check == 0:
+                                if minutest_till_check <= 0:
                                     minutest_till_check = check_builds_interval_minutes
                                     new_build = pending_travis_build(branch=build['branch'])
                                     if new_build is None:
