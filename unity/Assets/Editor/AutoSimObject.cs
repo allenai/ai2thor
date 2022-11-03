@@ -153,7 +153,7 @@ public class AutoSimObject : EditorWindow {
 
   [MenuItem("AI2-THOR/Make Sim Object")]
   static void MakeSimObject() {
-    string basePath = "Assets/Prefabs/abo/";
+    string basePath = "Assets/Prefabs/debug/";
 
     // get all folders in the basePath
     string[] folders = System.IO.Directory.GetDirectories(basePath);
@@ -166,16 +166,26 @@ public class AutoSimObject : EditorWindow {
       var annotationsStr = System.IO.File.ReadAllText(basePath + modelId + "/annotations.json");
       JObject annotations = JObject.Parse(annotationsStr);
 
-      GameObject obj;
+      GameObject obj = new GameObject(modelId);
+      GameObject mesh;
       if (System.IO.File.Exists(basePath + modelId + "/model.glb")) {
         // load the glb file -- used with abo
-        obj = Importer.LoadFromFile(basePath + modelId + "/model.glb");
+        mesh = Importer.LoadFromFile(basePath + modelId + "/model.glb");
       } else {
         // instantiate the obj file -- used with google scanned objects
         var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(basePath + modelId + "/model.obj");
-        obj = GameObject.Instantiate(prefab);
+        mesh = GameObject.Instantiate(prefab);
       }
-      obj.transform.rotation = Quaternion.identity;
+      // mesh.transform.rotation = Quaternion.identity;
+      // Debug.Log("position:");
+      // Debug.Log(obj.transform.position);
+      // Debug.Log("rotation:");
+      // Debug.Log(obj.transform.position);
+      // Debug.Log("scale:");
+      // Debug.Log(obj.transform.localScale);
+      mesh.transform.parent = obj.transform;
+      // set the name
+      mesh.name = "mesh";
 
       // add the name
       obj.name = modelId;
@@ -185,12 +195,12 @@ public class AutoSimObject : EditorWindow {
       // add a SimObjPhysics component
       SimObjPhysics simObj = obj.AddComponent<SimObjPhysics>();
       simObj.assetID = modelId;
-      string primaryProperty = annotations["primaryProperty"].ToString();
-      if (primaryProperty != "") {
-        simObj.PrimaryProperty = (SimObjPrimaryProperty)Enum.Parse(
-          typeof(SimObjPrimaryProperty), annotations["primaryProperty"].ToString()
-        );
-      }
+      // string primaryProperty = annotations["primaryProperty"].ToString();
+      // if (primaryProperty != "") {
+      //   simObj.PrimaryProperty = (SimObjPrimaryProperty)Enum.Parse(
+      //     typeof(SimObjPrimaryProperty), annotations["primaryProperty"].ToString()
+      //   );
+      // }
 
       // add the visibility points
       GameObject visPoints = new GameObject("visibilityPoints");
@@ -208,62 +218,99 @@ public class AutoSimObject : EditorWindow {
         visPoint.layer = LayerMask.NameToLayer("SimObjVisible");
       }
       simObj.VisibilityPoints = visPointsTransforms;
-      visPoints.transform.localScale = new Vector3(1, 1, 1);
-      visPoints.transform.localPosition = new Vector3(0, 0, 0);
 
-      GameObject meshColliders = new GameObject("colliders");
-      meshColliders.layer = LayerMask.NameToLayer("SimObjVisible");
-      meshColliders.transform.parent = obj.transform;
+      // GameObject meshColliders = new GameObject("colliders");
+      // meshColliders.layer = LayerMask.NameToLayer("SimObjVisible");
+      // meshColliders.transform.parent = obj.transform;
+
+      // List<Collider> colliders = new List<Collider>();
+      // for (int i = 0; i < annotations["colliders"].Count(); i++) {
+      //   // skip meta files
+      //   MeshCollider meshCollider = meshColliders.AddComponent<MeshCollider>();
+
+      //   Mesh colliderMesh = new Mesh();
+      //   // cast annotations["colliders"][i].vertices to Vector3[]
+      //   Vector3[] vertices = new Vector3[annotations["colliders"][i]["vertices"].Count()];
+      //   for (int j = 0; j < annotations["colliders"][i]["vertices"].Count(); j++) {
+      //     vertices[j] = new Vector3(
+      //       (float)annotations["colliders"][i]["vertices"][j]["x"],
+      //       (float)annotations["colliders"][i]["vertices"][j]["y"],
+      //       (float)annotations["colliders"][i]["vertices"][j]["z"]
+      //     );
+      //   }
+      //   colliderMesh.vertices = vertices;
+      //   colliderMesh.triangles = annotations["colliders"][i]["triangles"].ToObject<int[]>();
+
+      //   meshCollider.sharedMesh = colliderMesh;
+      //   meshCollider.convex = true;
+      //   colliders.Add(meshCollider);
+      // }
+      // simObj.MyColliders = colliders.ToArray();
+
+      // visPoints.transform.localScale = new Vector3(1, 1, 1);
+      // visPoints.transform.localPosition = new Vector3(0, 0, 0);
 
       // get all the colliders
-      string collidersPath = basePath + modelId + "/colliders/";
-      string[] colliderPaths = System.IO.Directory.GetFiles(collidersPath);
+      // string collidersPath = basePath + modelId + "/colliders/";
+      // string[] colliderPaths = System.IO.Directory.GetFiles(collidersPath);
 
       // add the colliders
-      List<Collider> colliders = new List<Collider>();
-      for (int i = 0; i < colliderPaths.Length; i++) {
-        // skip meta files
-        if (!colliderPaths[i].EndsWith(".obj")) {
-          continue;
-        }
-        MeshCollider meshCollider = meshColliders.AddComponent<MeshCollider>();
-        meshCollider.sharedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(colliderPaths[i]);
-        meshCollider.convex = true;
-        colliders.Add(meshCollider);
-      }
-      simObj.MyColliders = colliders.ToArray();
+      // List<Collider> colliders = new List<Collider>();
+      // for (int i = 0; i < colliderPaths.Length; i++) {
+      //   // skip meta files
+      //   if (!colliderPaths[i].EndsWith(".obj")) {
+      //     continue;
+      //   }
+      //   MeshCollider meshCollider = meshColliders.AddComponent<MeshCollider>();
+      //   meshCollider.sharedMesh = AssetDatabase.LoadAssetAtPath<Mesh>(colliderPaths[i]);
+      //   meshCollider.convex = true;
+      //   colliders.Add(meshCollider);
+      // }
+      // simObj.MyColliders = colliders.ToArray();
 
       // add a RigidBody component
       Rigidbody rigidBody = obj.AddComponent<Rigidbody>();
 
       // rotate the internal components of the model. Note that you do not want to do this
       // at `obj` level as it should be at its cannonical orientation when at rotation 0,0,0.
-      Quaternion rot = Quaternion.Euler(
-        (float)annotations["transform"]["rotation"]["x"],
-        (float)annotations["transform"]["rotation"]["y"],
-        (float)annotations["transform"]["rotation"]["z"]
-      );
+      // Quaternion rot = Quaternion.Euler(
+      //   (float)annotations["transform"]["rotation"]["x"],
+      //   (float)annotations["transform"]["rotation"]["y"],
+      //   (float)annotations["transform"]["rotation"]["z"]
+      // );
       // TODO: This is buggy - Find("default") doesn't work for some objects!
       // simObj.transform.Find("default").rotation = rot;
-      visPoints.transform.rotation = rot;
-      meshColliders.transform.rotation = rot;
+      // visPoints.transform.rotation = rot;
+      // meshColliders.transform.rotation = rot;
 
       // set the transform scale
-      obj.transform.localScale = new Vector3(
-        (float)annotations["transform"]["scale"]["x"],
-        (float)annotations["transform"]["scale"]["y"],
-        (float)annotations["transform"]["scale"]["z"]
-      );
+      // obj.transform.localScale = new Vector3(
+      //   (float)annotations["transform"]["scale"]["x"],
+      //   (float)annotations["transform"]["scale"]["y"],
+      //   (float)annotations["transform"]["scale"]["z"]
+      // );
 
       // Generate receptacle trigger boxes
-      ReceptacleTriggerBoxEditor.TryToAddReceptacleTriggerBox(sop: simObj);
-      simObj.SecondaryProperties = new SimObjSecondaryProperty[] { SimObjSecondaryProperty.Receptacle };
+      if ((bool) annotations["receptacleCandidate"]) {
+        ReceptacleTriggerBoxEditor.TryToAddReceptacleTriggerBox(sop: simObj);
+        GameObject receptacleTriggerBoxes = obj.transform.Find("ReceptacleTriggerBoxes").gameObject;
+        if (receptacleTriggerBoxes.transform.childCount > 0) {
+          receptacleTriggerBoxes.transform.localScale = mesh.transform.localScale;
+          simObj.SecondaryProperties = new SimObjSecondaryProperty[] { SimObjSecondaryProperty.Receptacle };
+        }
+      }
+
+      var placeGLB = obj.AddComponent<PlaceGLB>();
+      placeGLB.basePath = basePath + modelId + "/";
+
+      // remove the mesh object from the scene
+      GameObject.DestroyImmediate(mesh);
 
       // save obj as a prefab
       PrefabUtility.SaveAsPrefabAsset(obj, basePath + modelId + "/" + modelId + ".prefab");
 
       // delete the obj
-      // GameObject.DestroyImmediate(obj);
+      GameObject.DestroyImmediate(obj);
       Debug.Log("Saved " + modelId + " as a prefab");
     }
   }
