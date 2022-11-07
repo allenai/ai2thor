@@ -1,3 +1,4 @@
+
 <p align="center"><img width="50%" src="https://raw.githubusercontent.com/allenai/ai2thor/main/doc/static/logo.svg" /></p>
 <h3 align="center"><i>A Near Photo-Realistic Interactable Framework for Embodied AI Agents</i></h3>
 
