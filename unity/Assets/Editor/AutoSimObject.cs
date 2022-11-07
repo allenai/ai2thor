@@ -3,10 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using System.Security.Cryptography;
 using Newtonsoft.Json.Linq;
 using Siccity.GLTFUtility;
+using Thor.Procedural;
 
 
 public class AutoSimObject : EditorWindow {
@@ -129,7 +131,7 @@ public class AutoSimObject : EditorWindow {
   }
 
   [MenuItem("AI2-THOR/Load GLB Prefab")]
-  static void LoadGLB() {
+  public static void LoadGLB() {
     string modelId = "B07B4MJZN1";
     string prefabPath = "Assets/Prefabs/abo/" + modelId + "/" + modelId + ".prefab";
     string glbModel = "Assets/Prefabs/abo/" + modelId + "/model.glb";
@@ -152,7 +154,7 @@ public class AutoSimObject : EditorWindow {
   }
 
   [MenuItem("AI2-THOR/Make Sim Object")]
-  static void MakeSimObject() {
+  public static void MakeSimObject() {
     string basePath = "Assets/Prefabs/debug/";
 
     // get all folders in the basePath
@@ -314,4 +316,21 @@ public class AutoSimObject : EditorWindow {
       Debug.Log("Saved " + modelId + " as a prefab");
     }
   }
+
+
+  public static void BuildAssetDBForProcedural() {
+            // /EditorSceneManager.LoadS
+            var scenePath = "Assets/Scenes/Procedural/Procedural.unity";
+            // var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
+
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
+            var proceduralADB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            // proceduralADB.prefabs = new AssetMap<GameObject>(ProceduralTools.FindPrefabsInAssets().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+            // proceduralADB.materials = new AssetMap<Material>(ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+
+            proceduralADB.prefabs = ProceduralTools.FindPrefabsInAssets();
+            proceduralADB.materials = ProceduralTools.FindAssetsByType<Material>();
+            proceduralADB.totalMats = proceduralADB.materials.Count();
+            EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        }
 }

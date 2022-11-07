@@ -66,6 +66,12 @@ public class Build {
             Debug.Log("Adding Scene " + scene);
         }
 
+        if (ObjectVerseBuild()) {
+            // run Editor Scripts
+            AutoSimObject.MakeSimObject();
+            AutoSimObject.BuildAssetDBForProcedural();
+        }
+
         // zip + compresslevel=1 && LZ4 is faster by about 30 seconds 
         // (and results in smaller .zip files) than
         // zip + compresslevel=6 (default) && uncomprsesed asset bundles 
@@ -93,9 +99,26 @@ public class Build {
         List<string> envScenes = GetScenesFromEnv();
         if (envScenes.Count > 0) {
             return envScenes;
-        } else {
+        }
+        else if (ObjectVerseBuild()) {
+            return GetProceduralScenes();
+        } 
+        else {
             return GetAllScenePaths();
         }
+    }
+
+    private static List<string> GetProceduralScenes() {
+        List<string> files = new List<string>();
+        List<string> scenes = new List<string>();
+        files.AddRange(Directory.GetFiles("Assets/Scenes/Procedural"));
+        foreach (string f in files) {
+
+            if (f.EndsWith(".unity")) {
+                scenes.Add(f);
+            }
+        }
+        return scenes;
     }
 
     private static List<string> GetAllScenePaths() {
@@ -146,6 +169,10 @@ public class Build {
 
     private static bool ScriptsOnly() {
         return GetBoolEnvVariable("BUILD_SCRIPTS_ONLY");
+    }
+
+    private static bool ObjectVerseBuild() {
+        return GetBoolEnvVariable("OBJECTVERSE_BUILD");
     }
 
     private static bool IncludePrivateScenes() {
