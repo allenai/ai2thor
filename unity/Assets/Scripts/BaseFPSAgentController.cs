@@ -4986,6 +4986,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // assign the material to the game object
                 meshObj.GetComponent<Renderer>().material = mat;
                 runtimePrefab.sharedMaterial = mat;
+            } else {
+                // create a new material
+                Material mat = new Material(Shader.Find("Standard"));
+                meshObj.GetComponent<Renderer>().material = mat;
             }
 
             // have the mesh refer to the mesh at meshPath
