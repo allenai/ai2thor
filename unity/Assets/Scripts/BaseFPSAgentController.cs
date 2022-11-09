@@ -5165,6 +5165,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     rtb.transform.position = sop.transform.position;
                     rtb.transform.parent = go.transform;
                     rtb.layer = LayerMask.NameToLayer("SimObjInvisible");
+                    rtb.AddComponent<Contains>();
                     BoxCollider bc = rtb.AddComponent<BoxCollider>();
                     bc.center = (c0 + c1 + c2 + c3) * 0.25f - rtb.transform.position + new Vector3(0f, rtbYSize / 2.0f, 0f);
                     bc.size = c2 - c0 + new Vector3(0f, rtbYSize, 0f);

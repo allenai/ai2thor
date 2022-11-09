@@ -150,7 +150,6 @@ public class AgentManager : MonoBehaviour {
             jsInterface.enabled = true;
         }
 #endif
-
         StartCoroutine(EmitFrame());
     }
 
@@ -987,6 +986,7 @@ public class AgentManager : MonoBehaviour {
 
     public IEnumerator EmitFrame() {
         while (true) {
+           
             bool shouldRender = this.renderImage && serverSideScreenshot;
             yield return new WaitForEndOfFrame();
 
@@ -1000,7 +1000,7 @@ public class AgentManager : MonoBehaviour {
                     agent.agentState = AgentState.Emit;
                 }
             }
-                        
+            
             if (!this.canEmit()) {
                 continue;
             }
@@ -1009,7 +1009,7 @@ public class AgentManager : MonoBehaviour {
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
             List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
             createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
-
+            Debug.Log("------ payload");
 #if UNITY_WEBGL
                 JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
                 if (jsInterface != null) {
@@ -1018,7 +1018,10 @@ public class AgentManager : MonoBehaviour {
 #endif
 
 
-
+// Tradeoff of faster unity editor vs python controller parity 
+// for faster editor add back || !UNITY_EDITOR below, and #if UNITY_EDITOR and break after socket 
+// creation failure
+// Not running code below loses compatibility with python controlled editor
 #if !UNITY_WEBGL
             if (serverType == serverTypes.WSGI) {
                 WWWForm form = new WWWForm();
@@ -1040,6 +1043,9 @@ public class AgentManager : MonoBehaviour {
                     } catch (SocketException e) {
                         var msg = e.ToString();
                         Debug.Log("Socket exception: " + msg);
+// TODO: change how payload creation is run in editor, it keeps creating the payload every
+// frame create new controller state Emitted, to detect between ready to emit and already emitted
+// remove back for python controller parity                        
 #if UNITY_EDITOR        
                         break;
 #endif
