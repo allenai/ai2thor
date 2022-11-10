@@ -5303,6 +5303,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     // add the mesh collider
                     GameObject meshColliderObj = new GameObject($"collider_{i}");
+                    meshColliderObj.layer = LayerMask.NameToLayer("SimObjVisible");
                     meshColliderObj.transform.parent = meshCollidersObj.transform;
                     MeshCollider meshCollider = meshColliderObj.AddComponent<MeshCollider>();
                     meshCollider.sharedMesh = colliderMesh;
@@ -5311,6 +5312,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     // add the trigger collider
                     GameObject triggerColliderObj = new GameObject($"trigger_{i}");
+                    triggerColliderObj.layer = LayerMask.NameToLayer("SimObjVisible");
                     triggerColliderObj.transform.parent = triggerCollidersObj.transform;
                     MeshCollider triggerCollider = triggerColliderObj.AddComponent<MeshCollider>();
                     triggerCollider.sharedMesh = colliderMesh;
