@@ -5255,16 +5255,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 metadata.Add(simObj.gameObject.name,
                     new AssetMetadata() {
                         id = simObj.gameObject.name,
-                        objectType = simObj.Type,
-                        primaryProperty = simObj.PrimaryProperty,
-                        secondaryProperties = simObj.SecondaryProperties,
+                        objectType = simObj.Type.ToString(),
+                        primaryProperty = simObj.PrimaryProperty.ToString(),
+                        secondaryProperties = simObj.SecondaryProperties.Select(s => s.ToString()).ToList(),
                         boundingBox = new BoundingBox() {
                             min = bb.center - bb.size / 2.0f,
                             max = bb.center + bb.size / 2.0f
                         },
                         mass = simObj.Mass,
-                        salientColors = simObj.salientColors,
-                        salientMaterials = simObj.salientMaterials
+                        salientColors = simObj.salientColors.Select(s => s.ToString()).ToList(),
+                        salientMaterials = simObj.salientMaterials.Select(s => s.ToString()).ToList()
                     }
                 );
             }
