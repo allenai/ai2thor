@@ -5277,7 +5277,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
 
                 if (spawnObjects) {
-                    Destroy(simObj.gameObject);
+                    simObj.gameObject.SetActive(false);
                 }
             }
 
