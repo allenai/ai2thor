@@ -14,8 +14,8 @@ using UnityEngine.SceneManagement;
 public class PhysicsSimulationParams {
     public bool autoSimulation = true;
     public float? fixedDeltaTime = null;
-    public float maxActionTimeMilliseconds = 1000;
-    public int maxActionPhysicsSteps = 0;
+    public float maxActionTimeMilliseconds = 0;
+    // public int maxActionPhysicsSteps = int.MaxValue;
 }
 
 public class PhysicsSceneManager : MonoBehaviour {
@@ -50,6 +50,8 @@ public class PhysicsSceneManager : MonoBehaviour {
     public HashSet<Rigidbody> rbsInScene = new HashSet<Rigidbody>(); // list of all active rigidbodies in the scene
     public int AdvancePhysicsStepCount;
     public static uint PhysicsSimulateCallCount;
+
+    public static float PhysicsSimulateTimeSeconds;
 
     public PhysicsSimulationParams physicsSimulationParams {
         get;
@@ -91,20 +93,109 @@ public class PhysicsSceneManager : MonoBehaviour {
 
     public static void PhysicsSimulateTHOR(float deltaTime) {
         Physics.Simulate(deltaTime);
+        PhysicsSceneManager.PhysicsSimulateTimeSeconds += deltaTime;
         PhysicsSceneManager.PhysicsSimulateCallCount++;
     }
 
-    public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
+    public static ActionFinished runActionPhysicsSimulation(IEnumerator enumerator, PhysicsSimulationParams physicsSimulationParams) {
         int count = 0;
+        var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         var previousAutoSimulate = Physics.autoSimulation;
-        Physics.autoSimulation = false;
+        Physics.autoSimulation = physicsSimulationParams.autoSimulation;
+        PhysicsSceneManager.PhysicsSimulateTimeSeconds = 0.0f;
+        var startPhysicsSimulateCallTime = PhysicsSceneManager.PhysicsSimulateCallCount;
+        ActionFinished actionFinished = null;
         while (enumerator.MoveNext()) {
-            // physics simulate happens in  updateTransformPropertyFixedUpdate as long
-            // as autoSimulation is off
+            
+            // ActionFinished was found but enumerator keeps moving forward, throw error
+            if (actionFinished != null) {
+                actionFinished = new ActionFinished() {
+                    success = false,
+                    errorMessage = "`ActionFinished` was not the last yield return statement for action. Unreachable code found."
+                };
+                break;
+            }
+
+            if (enumerator.Current.GetType() == typeof(WaitForFixedUpdate) && !physicsSimulationParams.autoSimulation) {
+                if (fixedDeltaTime == 0f) {
+                Physics.SyncTransforms();
+                } else {
+                    PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+                }
+            }
+            else if (enumerator.Current.GetType() == typeof(ActionFinished)) {
+                actionFinished = (ActionFinished)(enumerator.Current as ActionFinished);
+            }
+
             count++;
         }
+
+        if (actionFinished != null) {
+            actionFinished = new ActionFinished() {
+                success = false,
+                errorMessage = "Action did not return an `ActionFinished`"
+            };
+        }
+        
+        // ActionFinished actionFinished;
+        // try {
+        //     actionFinished = (ActionFinished)(enumerator.Current as ActionFinished);
+        // }
+        // catch (InvalidCastException) {
+        //     actionFinished = new ActionFinished() {
+        //         success = false,
+        //         errorMessage = "Action did not return an `ActionFinished`"
+        //     };
+        // }
+
+        var currentSimulationCallCount = PhysicsSceneManager.PhysicsSimulateCallCount - startPhysicsSimulateCallTime;
+
+        while (
+            // currentSimulationCallCount < physicsSimulationParams.maxActionPhysicsSteps ||
+            PhysicsSimulateTimeSeconds*1000.0f < physicsSimulationParams.maxActionTimeMilliseconds
+        ) {
+            PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+        }
+
         Physics.autoSimulation = previousAutoSimulate;
-        return count;
+        return actionFinished;
+    }
+
+    public static IEnumerator addPhysicsSimulationPadding(ActionInvokable target, IEnumerator action, PhysicsSimulationParams physicsSimulationParams) {
+        var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+        var previousFixedDeltaTime = Time.fixedDeltaTime;
+        Time.fixedDeltaTime = fixedDeltaTime;
+        var startFixedTimeSeconds = Time.fixedTime;
+        ActionFinished actionFinished = null;
+        while (action.MoveNext()) {
+            if (actionFinished != null) {
+                actionFinished = new ActionFinished() {
+                    success = false,
+                    errorMessage = "`ActionFinished` was not the last yield return statement for action. Unreachable code found."
+                };
+            }
+            if (typeof(ActionFinished) == action.Current.GetType()) {
+                actionFinished = (ActionFinished)(action.Current as ActionFinished);
+            }
+            yield return action.Current;
+        }
+
+         if (actionFinished != null) {
+            actionFinished = new ActionFinished() {
+                success = false,
+                errorMessage = "Action did not return an `ActionFinished`"
+            };   
+        }
+
+        var actionFixedTime = Time.fixedTime - startFixedTimeSeconds;
+        while (actionFixedTime < physicsSimulationParams.maxActionTimeMilliseconds * 1000.0f) {
+            yield return new WaitForFixedUpdate();
+            actionFixedTime += fixedDeltaTime;
+        }
+
+        target.ActionFinished(actionFinished);
+
+        Time.fixedDeltaTime = previousFixedDeltaTime;
     }
 
     // Returns previous parameters

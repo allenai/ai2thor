@@ -178,6 +178,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public IEnumerator MoveArmNewNew(
+            Vector3 position,
+            PhysicsSimulationParams physicsSimulationParams,
+            float speed = 1,
+            bool returnToStart = true,
+            string coordinateSpace = "armBase",
+            bool restrictMovement = false
+        ) {
+            Stretch_Robot_Arm_Controller arm = getArm();
+            var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+            yield return arm.moveArmTargetNew(
+                controller: this,
+                target: position,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                coordinateSpace: coordinateSpace,
+                restrictTargetPosition: restrictMovement
+            );
+        }
+
         public void MoveArm(
             Vector3 position,
             float speed = 1,

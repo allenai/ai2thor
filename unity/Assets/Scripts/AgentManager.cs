@@ -28,7 +28,7 @@ using UnityEngine.Rendering.PostProcessing;
 using UnityStandardAssets.ImageEffects;
 
 
-public class AgentManager : MonoBehaviour {
+public class AgentManager : MonoBehaviour, ActionInvokable {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
     protected int frameCounter;
     protected bool serverSideScreenshot;
@@ -153,6 +153,10 @@ public class AgentManager : MonoBehaviour {
         StartCoroutine(EmitFrame());
     }
 
+     public void ActionFinished(ActionFinished result) {
+        this.activeAgent().ActionFinished(result);
+    }
+
     private void initializePrimaryAgent() {
         if (this.PrimaryAgent == null) {
             SetUpPhysicsController();
@@ -201,7 +205,9 @@ public class AgentManager : MonoBehaviour {
                 return;
             }
         }
-
+        
+        // TODO: why not change to, remove one reflexion call
+        // primaryAgent.Initialize(action);
         primaryAgent.ProcessControlCommand(action.dynamicServerAction);
         Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         if (action.targetFrameRate > 0) {

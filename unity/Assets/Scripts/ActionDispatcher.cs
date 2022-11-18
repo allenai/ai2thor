@@ -1,11 +1,24 @@
 
 using System.Reflection;
+using System.Collections;
 using System.Collections.Generic;
 using System;
 using System.Linq;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
 
+
+ public class ActionFinished {
+    public bool success;
+    public object actionReturn;
+    public string errorMessage;
+    public bool toEmitState;
+}
+
+ public interface ActionInvokable {
+        void ActionFinished(ActionFinished actionFinished);
+        Coroutine StartCoroutine(System.Collections.IEnumerator routine);
+    }
 
 /*
     The ActionDispatcher takes a dynamic object with an 'action' property and 
@@ -310,7 +323,7 @@ public static class ActionDispatcher {
             .Select((tuple) => tuple.method);
     }
 
-    public static void Dispatch<T>(T target, DynamicServerAction dynamicServerAction) where T : MonoBehaviour {
+    public static void Dispatch<T>(T target, DynamicServerAction dynamicServerAction) where T : ActionInvokable {
         MethodInfo method = getDispatchMethod(target.GetType(), dynamicServerAction);
 
         if (method == null) {
@@ -321,7 +334,12 @@ public static class ActionDispatcher {
         System.Reflection.ParameterInfo[] methodParams = method.GetParameters();
         object[] arguments = new object[methodParams.Length];
         var physicsSimulationProperties = dynamicServerAction.physicsSimulationProperties;
-        var usePhysicsSimulationProperties = physicsSimulationProperties != null;
+        var usePhysicsSimulationParams = physicsSimulationProperties != null;
+        if (typeof(IEnumerator) == method.ReturnType) {
+            usePhysicsSimulationParams = true;
+            // Default simulation params
+            physicsSimulationProperties = new PhysicsSimulationParams();
+        }
         if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(ServerAction)) {
             ServerAction serverAction = dynamicServerAction.ToObject<ServerAction>();
             serverAction.dynamicServerAction = dynamicServerAction;
@@ -329,7 +347,7 @@ public static class ActionDispatcher {
         } else {
             var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
             var argumentKeys = dynamicServerAction.ArgumentKeys().ToList();
-            if (usePhysicsSimulationProperties) {
+            if (usePhysicsSimulationParams) {
                 argumentKeys.Add(DynamicServerAction.physicsSimulationPropsVariable);
             }
             var invalidArgs = argumentKeys
@@ -383,22 +401,50 @@ public static class ActionDispatcher {
         if (missingArguments != null) {
             throw new MissingArgumentsActionException(missingArguments);
         }
-        if (!usePhysicsSimulationProperties) {
+        if (!usePhysicsSimulationParams) {
             method.Invoke(target, arguments);
         }
         else {
-            // physicsSimulationProperties.fixedDeltaTime = physicsSimulationProperties.fixedDeltaTime == null? Time.fixedDeltaTime: physicsSimulationProperties.fixedDeltaTime;
-            var action = (System.Collections.IEnumerator)(method.Invoke(target, arguments));
-            if (!physicsSimulationProperties.autoSimulation) {
-                PhysicsSceneManager.unrollSimulatePhysics(
+            var callActionFinished = true;
+            IEnumerator action = null;
+            if (method.ReturnType != (typeof(System.Collections.IEnumerator))) {
+               
+                
+                // throw new InvalidActionCallWithPhysicsSimulationParams(
+                //     "Actions called with argument `physicsSimulationParams` must return IEnumerator or ActionFinished, if it is a legacy action call without `physicsSimulationParams` or change action to return IEnumerator or ActionFinished in source."
+                // );
+                callActionFinished = false;
+                // TODO: add when migration is full remove callAction finished and get actionFinished from return type, remove dummy
+                method.Invoke(target, arguments);
+                action = ActionFinishedWrapper(new ActionFinished());
+                PhysicsSceneManager.runActionPhysicsSimulation(
                     action, 
-                    physicsSimulationProperties.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime)
+                    physicsSimulationProperties
                 );
+                
             }
             else {
-                target.StartCoroutine(action);
+            // physicsSimulationProperties.fixedDeltaTime = physicsSimulationProperties.fixedDeltaTime == null? Time.fixedDeltaTime: physicsSimulationProperties.fixedDeltaTime;
+                action = (System.Collections.IEnumerator)(method.Invoke(target, arguments));
+                if (!physicsSimulationProperties.autoSimulation) {
+                    
+                    var actionFinished = PhysicsSceneManager.runActionPhysicsSimulation(
+                        action, 
+                        physicsSimulationProperties
+                    );
+                    if (callActionFinished){
+                        target.ActionFinished(actionFinished);
+                    }
+                }
+                else {
+                    target.StartCoroutine(PhysicsSceneManager.addPhysicsSimulationPadding(target, action, physicsSimulationProperties));
+                }
             }
         }
+    }
+
+    public static IEnumerator ActionFinishedWrapper(ActionFinished actionFinished) {
+        yield return actionFinished;
     }
 
     public static System.Collections.IEnumerator invokeActionUnderPhysicsSimulation<T>(
@@ -447,6 +493,10 @@ public class MethodParamComparer : IComparer<MethodInfo> {
 
 [Serializable]
 public class InvalidActionException : Exception { }
+
+public class InvalidActionCallWithPhysicsSimulationParams : Exception {
+    public InvalidActionCallWithPhysicsSimulationParams(string message): base(message) { }
+ }
 
 [Serializable]
 public class AmbiguousActionException : Exception {

@@ -111,6 +111,58 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public static IEnumerator moveNew(
+            PhysicsRemoteFPSAgentController controller,
+            CollisionListener collisionListener,
+            Transform moveTransform,
+            Vector3 targetPosition,
+            float fixedDeltaTime,
+            float unitsPerSecond,
+            bool returnToStartPropIfFailed = false,
+            bool localPosition = false
+        ) {
+            bool teleport = (unitsPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
+
+            Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>, IEnumerator> moveClosure =
+                (get, set, next) => updateTransformPropertyFixedUpdateNew(
+                    controller: controller,
+                    collisionListener: collisionListener,
+                    moveTransform: moveTransform,
+                    target: targetPosition,
+                    getProp: get,
+                    setProp: set,
+                    nextProp: next,
+                    getDirection: (target, current) => (target - current).normalized,
+                    distanceMetric: (target, current) => Vector3.SqrMagnitude(target - current),
+                    fixedDeltaTime: fixedDeltaTime,
+                    returnToStartPropIfFailed: returnToStartPropIfFailed,
+                    epsilon: 1e-6 // Since the distance metric uses SqrMagnitude this amounts to a distance of 1 millimeter
+            );
+
+            Func<Transform, Vector3> getPosFunc;
+            Action<Transform, Vector3> setPosFunc;
+            Func<Transform, Vector3, Vector3> nextPosFunc;
+            if (localPosition) {
+                getPosFunc = (t) => t.localPosition;
+                setPosFunc = (t, pos) => t.localPosition = pos;
+                nextPosFunc = (t, direction) => t.localPosition + direction * unitsPerSecond * fixedDeltaTime;
+            } else {
+                getPosFunc = (t) => t.position;
+                setPosFunc = (t, pos) => t.position = pos;
+                nextPosFunc = (t, direction) => t.position + direction * unitsPerSecond * fixedDeltaTime;
+            }
+
+            if (teleport) {
+                nextPosFunc = (t, direction) => targetPosition;
+            }
+
+            return moveClosure(
+                getPosFunc,
+                setPosFunc,
+                nextPosFunc
+            );
+        }
+
         protected static IEnumerator finallyDestroyGameObjects(
             List<GameObject> gameObjectsToDestroy,
             IEnumerator steps
@@ -338,6 +390,153 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public static IEnumerator updateTransformPropertyFixedUpdateNew<T>(
+            PhysicsRemoteFPSAgentController controller,
+            CollisionListener collisionListener,
+            Transform moveTransform,
+            T target,
+            Func<Transform, T> getProp,
+            Action<Transform, T> setProp,
+            Func<Transform, T, T> nextProp,
+            // We could remove this one, but it is a speedup to not compute direction for position update calls at every addToProp call and just outside while
+            Func<T, T, T> getDirection,
+            Func<T, T, float> distanceMetric,
+            float fixedDeltaTime,
+            bool returnToStartPropIfFailed,
+            double epsilon
+        ) {
+            T originalProperty = getProp(moveTransform);
+            var previousProperty = originalProperty;
+
+            IK_Robot_Arm_Controller ikArm;
+            FK_IK_Solver ikArmSolver;
+            Stretch_Robot_Arm_Controller stretchArm;
+            Stretch_Arm_Solver stretchArmSolver;
+            if (controller.GetType() == typeof(StretchAgentController)) {
+                ikArm = null;
+                ikArmSolver = null;
+                stretchArm = controller.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+                //Debug.Log("This is the stretchArm: " + stretchArm.name);
+                stretchArmSolver = stretchArm.gameObject.GetComponentInChildren<Stretch_Arm_Solver>();
+                //Debug.Log("This is the stretchArmSolver: " + stretchArmSolver.name);
+            }
+
+            else {
+                ikArm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                //Debug.Log("This is the ikArm: " + ikArm.name);
+                ikArmSolver = ikArm.gameObject.GetComponentInChildren<FK_IK_Solver>();
+                //Debug.Log("This is the ikArmSolver: " + ikArmSolver.name);
+                stretchArm = null;
+                stretchArmSolver = null;
+            }
+
+#if UNITY_EDITOR
+        Debug.Log("ContinuousMovement arm ->");
+        if (controller.GetType() == typeof(ArmAgentController)) {
+	        Debug.Log(ikArm);
+        }
+        else if (controller.GetType() == typeof(StretchAgentController)) {
+            Debug.Log(stretchArm);
+        }
+#endif
+
+            // commenting out the WaitForEndOfFrame here since we shoudn't need 
+            // this as we already wait for a frame to pass when we execute each action
+            // yield return yieldInstruction;
+
+            var currentProperty = getProp(moveTransform);
+            float currentDistance = distanceMetric(target, currentProperty);
+
+            T directionToTarget = getDirection(target, currentProperty);
+
+            bool haveGottenWithinEpsilon = currentDistance <= epsilon;
+            while (!collisionListener.ShouldHalt()) {
+                previousProperty = getProp(moveTransform);
+
+                T next = nextProp(moveTransform, directionToTarget);
+                float nextDistance = distanceMetric(target, next);
+
+                // allows for snapping behaviour to target when the target is close
+                // if nextDistance is too large then it will overshoot, in this case we snap to the target
+                // this can happen if the speed it set high
+                if (
+                    nextDistance <= epsilon
+                    || nextDistance > distanceMetric(target, getProp(moveTransform))
+                ) {
+                    setProp(moveTransform, target);
+                } else {
+                    setProp(moveTransform, next);
+                }
+
+                // this will be a NOOP for Rotate/Move/Height actions
+                if (controller.GetType() == typeof(ArmAgentController)) {
+                    ikArmSolver.ManipulateArm();
+                }
+
+                // TODO: why have two different Manipulate methods, this introduces dependencies to two different
+                // arm classes. We should make these arm classes a non-mono behavior inheriting a common interface
+                else if (controller.GetType() == typeof(StretchAgentController)) {
+                    stretchArmSolver.ManipulateStretchArm();
+                }
+                
+                // if (!Physics.autoSimulation) {
+                //     if (fixedDeltaTime == 0f) {
+                //         Physics.SyncTransforms();
+                //     } else {
+                //         PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+                //     }
+                // }
+
+                yield return new WaitForFixedUpdate();
+
+                currentDistance = distanceMetric(target, getProp(moveTransform));
+
+                if (currentDistance <= epsilon) {
+                    // This logic is a bit unintuitive but it ensures we run the
+                    // `setProp(moveTransform, target);` line above once we get within epsilon
+                    if (haveGottenWithinEpsilon) {
+                        break;
+                    } else {
+                        haveGottenWithinEpsilon = true;
+                    }
+                }
+            }
+
+            T resetProp = previousProperty;
+            if (returnToStartPropIfFailed) {
+                resetProp = originalProperty;
+            }
+            var actionFinished = continuousMoveFinishNew(
+                controller,
+                collisionListener,
+                moveTransform,
+                setProp,
+                target,
+                resetProp
+            );
+
+            // we call this one more time in the event that the arm collided and was reset
+            if (controller.GetType() == typeof(ArmAgentController)) {
+                ikArmSolver.ManipulateArm();
+            }
+            else if (controller.GetType() == typeof(StretchAgentController)) {
+                stretchArmSolver.ManipulateStretchArm();
+            }
+
+            // Will call simulate physics once more 
+            yield return new WaitForFixedUpdate();
+           
+            yield return actionFinished;
+
+            // if (!Physics.autoSimulation) {
+            //     if (fixedDeltaTime == 0f) {
+            //         Physics.SyncTransforms();
+            //     } else {
+            //         PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+            //     }
+            // }
+        }
+
         private static void continuousMoveFinish<T>(
             PhysicsRemoteFPSAgentController controller,
             CollisionListener collisionListener,
@@ -373,6 +572,47 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             controller.errorMessage = debugMessage;
             controller.actionFinished(actionSuccess, debugMessage);
+        }
+
+        private static ActionFinished continuousMoveFinishNew<T>(
+            PhysicsRemoteFPSAgentController controller,
+            CollisionListener collisionListener,
+            Transform moveTransform,
+            System.Action<Transform, T> setProp,
+            T target,
+            T resetProp
+        ) {
+            bool actionSuccess = true;
+            string errorMessage = "";
+            IK_Robot_Arm_Controller arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            var staticCollisions = collisionListener.StaticCollisions().ToList();
+
+            if (staticCollisions.Count > 0) {
+                var sc = staticCollisions[0];
+
+                // decide if we want to return to original property or last known property before collision
+                setProp(moveTransform, resetProp);
+
+                // if we hit a sim object
+                if (sc.isSimObj) {
+                    errorMessage = "Collided with static sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
+                }
+
+                // if we hit a structural object that isn't a sim object but still has static collision
+                if (!sc.isSimObj) {
+                    errorMessage = "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + target + "'.";
+                }
+
+                actionSuccess = false;
+            }
+
+            // controller.errorMessage = debugMessage;
+            // controller.actionFinished(actionSuccess, debugMessage);
+            return new ActionFinished() {
+                success = actionSuccess,
+                errorMessage = errorMessage
+            };
         }
     }
 }

@@ -18,7 +18,7 @@ using Thor.Procedural.Data;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
-    abstract public class BaseFPSAgentController {
+    abstract public class BaseFPSAgentController : ActionInvokable {
         // debug draw bounds of objects in editor
 #if UNITY_EDITOR
         protected List<Bounds> gizmobounds = new List<Bounds>();
@@ -31,6 +31,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public GameObject gameObject {
             get => this.baseAgentComponent.gameObject;
+        }
+
+        public Coroutine StartCoroutine(IEnumerator routine) {
+            return this.baseAgentComponent.StartCoroutine(routine);
         }
 
         public SimObjPhysics[] VisibleSimObjPhysics;
@@ -400,13 +404,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 #endif
         }
-
-        public class ActionFinished {
-            public bool success;
-            public object actionReturn;
-            public string errorMessage;
+        
+        public virtual void ActionFinished(ActionFinished result) {
+            if (result.errorMessage != null) {
+                this.errorMessage = result.errorMessage;
+            }
+            actionFinished(success: result.success, newState: !result.toEmitState ? AgentState.ActionComplete : AgentState.Emit, actionReturn: result.actionReturn);
+           // ??? this.resumePhysics();
         }
 
+        // Delete and use yield return ActionFinished
         public virtual void actionFinished(bool success, object actionReturn = null, string errorMessage = null) {
             if (errorMessage != null) {
                 this.errorMessage = errorMessage;
@@ -1939,7 +1946,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ProcessControlCommand(controlCommand: controlCommand, target: this);
         }
 
-        public void ProcessControlCommand(DynamicServerAction controlCommand, object target) {
+        public void ProcessControlCommand<T>(DynamicServerAction controlCommand, T target) where T: ActionInvokable{
             lastActionInitialPhysicsSimulateCount = PhysicsSceneManager.PhysicsSimulateCallCount;
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
@@ -6043,9 +6050,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MonoBehaviour.print(message);
         }
 
-        public void StartCoroutine(IEnumerator coroutine) {
-            this.baseAgentComponent.StartCoroutine(coroutine);
-        }
+        // public void StartCoroutine(IEnumerator coroutine) {
+        //     this.baseAgentComponent.StartCoroutine(coroutine);
+        // }
 
         public T GetComponent<T>() where T : Component {
             return this.baseAgentComponent.GetComponent<T>();
