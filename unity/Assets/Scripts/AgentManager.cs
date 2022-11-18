@@ -2030,6 +2030,7 @@ public enum Temperature {
 // Salient materials are only for pickupable and moveable objects,
 // for now static only objects do not report material back since we have to assign them manually
 // They are the materials that make up an object (ie: cell phone - metal, glass).
+[Serializable]
 public enum SalientObjectMaterial {
     Metal,
     Wood,
@@ -2048,6 +2049,7 @@ public enum SalientObjectMaterial {
     Leather
 };
 
+[Serializable]
 public enum SalientColor {
     Null, //do not leave it on this, unless you want to denote that the salient color for this object has not been annotated
     Red,

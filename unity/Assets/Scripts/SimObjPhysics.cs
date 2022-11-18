@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using UnityEngine.SceneManagement;
 using System.Linq;
+using MessagePack;
 
 #if UNITY_EDITOR
 using UnityEditor;

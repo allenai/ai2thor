@@ -5236,7 +5236,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            var metadata = new Dictionary<string, Dictionary<string, object>>();
+            var metadata = new Dictionary<string, AssetMetadata>();
             foreach (GameObject p in assetDb.prefabs) {
                 if (p.GetComponent<SimObjPhysics>() == null) {
                     continue;
@@ -5251,16 +5251,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     );
                     continue;
                 }
-
-                metadata.Add(simObj.gameObject.name, new Dictionary<string, object>() {
-                    ["objectType"] = simObj.Type.ToString(),
-                    ["primaryProperty"] = simObj.PrimaryProperty.ToString(),
-                    ["secondaryProperties"] = simObj.SecondaryProperties.Select(s => s.ToString()).ToList(),
-                    ["boundingBox"] = new BoundingBox() {
-                        min = bb.center - bb.size / 2.0f,
-                        max = bb.center + bb.size / 2.0f
+ 
+                metadata.Add(simObj.gameObject.name,
+                    new AssetMetadata() {
+                        id = simObj.gameObject.name,
+                        objectType = simObj.Type,
+                        primaryProperty = simObj.PrimaryProperty,
+                        secondaryProperties = simObj.SecondaryProperties,
+                        boundingBox = new BoundingBox() {
+                            min = bb.center - bb.size / 2.0f,
+                            max = bb.center + bb.size / 2.0f
+                        },
+                        mass = simObj.Mass,
+                        salientColors = simObj.salientColors,
+                        salientMaterials = simObj.salientMaterials
                     }
-                });
+                );
             }
 
             actionFinished(true, metadata);

@@ -19,10 +19,13 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class AssetMetadata {
         public string id;
-        public string type;
-        public string primaryProperty;
-        public List<string> secondaryProperties;
+        public SimObjType objectType;
+        public SimObjPrimaryProperty primaryProperty;
+        public SimObjSecondaryProperty[] secondaryProperties;
         public BoundingBox boundingBox;
+        public float mass;
+        public SalientColor[] salientColors;
+        public SalientObjectMaterial[] salientMaterials;
     }
 
     [Serializable]

@@ -4057,8 +4057,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "GetAssetDatabase";
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
-                        // var assetMetadata = (List<AssetMetadata>)CurrentActiveController().actionReturn as List<AssetMetadata>;
-                        // Debug.Log($"assetDb: {string.Join("\n", assetMetadata.Select(m => $"{m.id}|{m.type}|box: {m.boundingBox.min}, {m.boundingBox.max}, {m.primaryProperty}"))}");
+
+                        var assetMetadata = (Dictionary<string, AssetMetadata>)CurrentActiveController().actionReturn as Dictionary<string, AssetMetadata>;
+                        Debug.Log($"assetDb: {string.Join("\n", assetMetadata.Select(m => $"{m.Key}: {m.Value.id}|{m.Value.objectType}|box: {m.Value.boundingBox.min}, {m.Value.boundingBox.max}, {m.Value.primaryProperty}, {m.Value.mass}, colors: {string.Join(", ", m.Value.salientColors.Select(x => x.ToString()))} mats: {string.Join(", ", m.Value.salientMaterials.Select(x => x.ToString()))}"))}");
                         break;
                     }
                 case "soirr": {
