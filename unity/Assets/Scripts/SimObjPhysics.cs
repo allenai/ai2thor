@@ -98,7 +98,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public int numStructureHit = 0;
 
     // the velocity of this object from the last frame
-    public float lastVelocity = 0;// start at zero assuming at rest
+    public float lastSquaredVelocity = 0;// start at zero assuming at rest
 
     // reference to this gameobject's rigidbody
     private Rigidbody myRigidbody;
@@ -1004,7 +1004,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         if (sceneManager.physicsSimulationPaused == false && myRigidbody != null)
         // record this object's current velocity
         {
-            lastVelocity = Math.Abs(myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.velocity.sqrMagnitude);
+            lastSquaredVelocity = Math.Abs(myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.velocity.sqrMagnitude);
         }
     }
 

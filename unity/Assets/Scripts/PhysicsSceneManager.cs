@@ -11,6 +11,13 @@ using UnityEngine.SceneManagement;
 
 [ExecuteInEditMode]
 
+public class PhysicsSimulationParams {
+    public bool autoSimulation = true;
+    public float? fixedDeltaTime = null;
+    public float maxActionTimeMilliseconds = 1000;
+    public int maxActionPhysicsSteps = 0;
+}
+
 public class PhysicsSceneManager : MonoBehaviour {
     public bool ProceduralMode = false;
     public List<GameObject> RequiredObjects = new List<GameObject>();
@@ -43,6 +50,13 @@ public class PhysicsSceneManager : MonoBehaviour {
     public HashSet<Rigidbody> rbsInScene = new HashSet<Rigidbody>(); // list of all active rigidbodies in the scene
     public int AdvancePhysicsStepCount;
     public static uint PhysicsSimulateCallCount;
+
+    public PhysicsSimulationParams physicsSimulationParams {
+        get;
+        protected set;
+    }
+
+    private PhysicsSimulationParams previousPhysicsSimulationParams;
 
     private void OnEnable() {
         // must do this here instead of Start() since OnEnable gets triggered prior to Start
@@ -80,6 +94,27 @@ public class PhysicsSceneManager : MonoBehaviour {
         PhysicsSceneManager.PhysicsSimulateCallCount++;
     }
 
+    public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
+        int count = 0;
+        var previousAutoSimulate = Physics.autoSimulation;
+        Physics.autoSimulation = false;
+        while (enumerator.MoveNext()) {
+            // physics simulate happens in  updateTransformPropertyFixedUpdate as long
+            // as autoSimulation is off
+            count++;
+        }
+        Physics.autoSimulation = previousAutoSimulate;
+        return count;
+    }
+
+    // Returns previous parameters
+    public static PhysicsSimulationParams applyPhysicsSimulationParams(PhysicsSimulationParams physicsSimulationParams) {
+        return new PhysicsSimulationParams() {
+            autoSimulation = Physics.autoSimulation,
+            fixedDeltaTime = Time.fixedDeltaTime
+        };
+    }
+
     private void GatherAllRBsInScene() {
         // cache all rigidbodies that are in the scene by default
         // NOTE: any rigidbodies created from actions such as Slice/Break or spawned in should be added to this!
@@ -101,7 +136,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                 SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
 
                 float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
-                float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
+                float accel = (currentVelocity - sop.lastSquaredVelocity) / Time.fixedDeltaTime;
 
                 if (Mathf.Abs(accel) <= 0.0001f) {
                     sop.inMotion = false;
@@ -949,7 +984,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                 foreach (Rigidbody rb in rbs) {
                     if (rb.GetComponentInParent<SimObjPhysics>()) {
                         SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
-                        sop.lastVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
+                        sop.lastSquaredVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
                     }
                 }
             }

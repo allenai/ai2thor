@@ -1679,8 +1679,11 @@ public class DynamicServerAction {
         "renderClassImage",
         "renderNormalsImage",
         "renderInstanceSegmentation",
-        "action"
+        "action",
+        "physicsSimulationProperties"
     };
+
+    public const string physicsSimulationPropsVariable = "physicsSimulationProperties";
 
     public JObject jObject {
         get;
@@ -1702,6 +1705,12 @@ public class DynamicServerAction {
     public string action {
         get {
             return this.jObject["action"].ToString();
+        }
+    }
+
+    public PhysicsSimulationParams physicsSimulationProperties {
+        get {
+            return this.jObject["physicsSimulationProperties"] != null ? this.jObject["physicsSimulationProperties"].ToObject<PhysicsSimulationParams>() : null;
         }
     }
 
@@ -1771,6 +1780,15 @@ public class DynamicServerAction {
     // valid argument for Initialize as well as a global parameter
     public IEnumerable<string> ArgumentKeys() {
         return this.jObject.Properties().Select(p => p.Name).Where(argName => !AllowedExtraneousParameters.Contains(argName)).ToList();
+    }
+
+    public IEnumerable<string> ArgumentKeysWithPhysicsSimulationProperies() { 
+        return this.jObject
+            .Properties()
+            .Select(p => p.Name)
+            .Where(argName => !AllowedExtraneousParameters.Except(new HashSet<string> {"physicsSimulationProperties"})
+            .Contains(argName))
+            .ToList();
     }
 
     public IEnumerable<string> Keys() {
@@ -1932,6 +1950,8 @@ public class ServerAction {
     // the mass threshold for how massive a pickupable/moveable sim object needs to be
     // for the arm to detect collisions and stop moving
     public float? massThreshold;
+
+    public PhysicsSimulationParams physicsSimulationProperties = null; 
 
 
     public SimObjType ReceptableSimObjType() {

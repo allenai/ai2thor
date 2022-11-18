@@ -310,7 +310,7 @@ public static class ActionDispatcher {
             .Select((tuple) => tuple.method);
     }
 
-    public static void Dispatch(System.Object target, DynamicServerAction dynamicServerAction) {
+    public static void Dispatch<T>(T target, DynamicServerAction dynamicServerAction) where T : MonoBehaviour {
         MethodInfo method = getDispatchMethod(target.GetType(), dynamicServerAction);
 
         if (method == null) {
@@ -320,14 +320,19 @@ public static class ActionDispatcher {
         List<string> missingArguments = null;
         System.Reflection.ParameterInfo[] methodParams = method.GetParameters();
         object[] arguments = new object[methodParams.Length];
+        var physicsSimulationProperties = dynamicServerAction.physicsSimulationProperties;
+        var usePhysicsSimulationProperties = physicsSimulationProperties != null;
         if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(ServerAction)) {
             ServerAction serverAction = dynamicServerAction.ToObject<ServerAction>();
             serverAction.dynamicServerAction = dynamicServerAction;
             arguments[0] = serverAction;
         } else {
             var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
-            var invalidArgs = dynamicServerAction
-                .ArgumentKeys()
+            var argumentKeys = dynamicServerAction.ArgumentKeys().ToList();
+            if (usePhysicsSimulationProperties) {
+                argumentKeys.Add(DynamicServerAction.physicsSimulationPropsVariable);
+            }
+            var invalidArgs = argumentKeys
                 .Where(argName => !paramDict.ContainsKey(argName))
                 .ToList();
             if (invalidArgs.Count > 0) {
@@ -378,9 +383,37 @@ public static class ActionDispatcher {
         if (missingArguments != null) {
             throw new MissingArgumentsActionException(missingArguments);
         }
-        method.Invoke(target, arguments);
+        if (!usePhysicsSimulationProperties) {
+            method.Invoke(target, arguments);
+        }
+        else {
+            // physicsSimulationProperties.fixedDeltaTime = physicsSimulationProperties.fixedDeltaTime == null? Time.fixedDeltaTime: physicsSimulationProperties.fixedDeltaTime;
+            var action = (System.Collections.IEnumerator)(method.Invoke(target, arguments));
+            if (!physicsSimulationProperties.autoSimulation) {
+                PhysicsSceneManager.unrollSimulatePhysics(
+                    action, 
+                    physicsSimulationProperties.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime)
+                );
+            }
+            else {
+                target.StartCoroutine(action);
+            }
+        }
     }
+
+    public static System.Collections.IEnumerator invokeActionUnderPhysicsSimulation<T>(
+        MethodInfo method,
+        T target,
+        object[] args,
+        PhysicsSimulationParams physicsSimulationProperties) where T : MonoBehaviour {
+
+    yield return null;
+
+    }
+
 }
+
+
 
 public class MethodParamComparer : IComparer<MethodInfo> {
 

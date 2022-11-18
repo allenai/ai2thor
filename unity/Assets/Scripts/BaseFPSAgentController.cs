@@ -401,6 +401,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
         }
 
+        public class ActionFinished {
+            public bool success;
+            public object actionReturn;
+            public string errorMessage;
+        }
+
         public virtual void actionFinished(bool success, object actionReturn = null, string errorMessage = null) {
             if (errorMessage != null) {
                 this.errorMessage = errorMessage;
