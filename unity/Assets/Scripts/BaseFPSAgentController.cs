@@ -5228,7 +5228,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, house);
         }
 
-        public void GetAssetDatabase() {
+        public void GetAssetDatabase(bool spawnObjects = false) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
                 errorMessage = "ProceduralAssetDatabase not in scene.";
@@ -5242,7 +5242,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     continue;
                 }
 
-                var simObj = p.GetComponent<SimObjPhysics>();
+                SimObjPhysics simObj = null;
+                if (spawnObjects) {
+                    GameObject go = (GameObject) Instantiate(p);
+                    simObj = go.GetComponent<SimObjPhysics>();
+                    simObj.syncBoundingBoxes(forceCacheReset: true);
+                } else {
+                    simObj = p.GetComponent<SimObjPhysics>();
+                }
+
                 var bb = simObj.AxisAlignedBoundingBox;
 
                 if (metadata.ContainsKey(simObj.gameObject.name)) {
@@ -5252,9 +5260,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     continue;
                 }
  
-                metadata.Add(simObj.gameObject.name,
+                metadata.Add(p.GetComponent<SimObjPhysics>().gameObject.name,
                     new AssetMetadata() {
-                        id = simObj.gameObject.name,
+                        id = p.GetComponent<SimObjPhysics>().gameObject.name,
                         objectType = simObj.Type.ToString(),
                         primaryProperty = simObj.PrimaryProperty.ToString(),
                         secondaryProperties = simObj.SecondaryProperties.Select(s => s.ToString()).ToList(),
@@ -5267,6 +5275,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         salientMaterials = simObj.salientMaterials.Select(s => s.ToString()).ToList()
                     }
                 );
+
+                if (spawnObjects) {
+                    Destroy(simObj.gameObject);
+                }
             }
 
             actionFinished(true, metadata);

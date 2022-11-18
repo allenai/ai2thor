@@ -4055,11 +4055,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         // AssetDatabase.Refresh();
                         action["action"] = "GetAssetDatabase";
+                        action["spawnObjects"] = true;
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
 
                         var assetMetadata = (Dictionary<string, AssetMetadata>)CurrentActiveController().actionReturn as Dictionary<string, AssetMetadata>;
-                        Debug.Log($"assetDb: {string.Join("\n", assetMetadata.Select(m => $"{m.Key}: {m.Value.id}|{m.Value.objectType}|box: {m.Value.boundingBox.min}, {m.Value.boundingBox.max}, {m.Value.primaryProperty}, {m.Value.mass}, colors: {string.Join(", ", m.Value.salientColors)} mats: {string.Join(", ", m.Value.salientMaterials)}"))}");
+                        Debug.Log($"assetMetadata count: {assetMetadata.Count}");
+                        var bin25 = assetMetadata["bin_25"];
+                        Debug.Log($"bin25: {bin25.boundingBox.min}, {bin25.boundingBox.max}");
+                        //Debug.Log($"assetDb: {string.Join("\n", assetMetadata.Select(m => $"{m.Key}: {m.Value.id}|{m.Value.objectType}|box: {m.Value.boundingBox.min}, {m.Value.boundingBox.max}, {m.Value.primaryProperty}, {m.Value.mass}, colors: {string.Join(", ", m.Value.salientColors)} mats: {string.Join(", ", m.Value.salientMaterials)}"))}");
                         break;
                     }
                 case "soirr": {
