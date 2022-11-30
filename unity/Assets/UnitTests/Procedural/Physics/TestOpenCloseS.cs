@@ -8,14 +8,15 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Linq;
 
 namespace Tests {
-    public class TestOpenClose : TestBase {
+    public class TestOpenCloseS : TestBase {
+
         [SetUp]
         public override void Setup() {
-            UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan1_physics");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan401_physics");
         }
 
         [UnityTest]
-        public IEnumerator TestOpening() {
+        public IEnumerator TestOpenCloseScale() {
 
             yield return step(new Dictionary<string, object>() {
                     { "action", "Initialize"},
@@ -26,8 +27,16 @@ namespace Tests {
             yield return new WaitForSeconds(2f);
 
             yield return step(new Dictionary<string, object>() {
+                    { "action", "RotateRight"},
+                    { "disableRendering", true},
+                    { "returnToStart", true}
+                });
+            yield return new WaitForSeconds(2f);
+
+            yield return step(new Dictionary<string, object>() {
                     { "action", "MoveAgent"},
-                    { "right", -0.7f},
+                    { "ahead", 0.65f},
+                    { "right", 1.05f},
                     { "disableRendering", true},
                     { "returnToStart", true}
                 });
@@ -37,30 +46,34 @@ namespace Tests {
                     { "action", "MoveArm"},
                     { "coordinateSpace", "world"},
                     { "disableRendering", true},
-                    { "position", new Vector3(-1.3149f, 0.6049995f, 0.04580003f)}
+                    { "position", new Vector3(-1.1267f, 0.8986163f, -0.1051f)}
                 });
 
-            //yield return new WaitForSeconds(2f);
-            yield return step(new Dictionary<string, object>() {
-                    { "action", "LookDown"},
-                    { "degrees", 30f} 
-                });
-
-            //yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(2f);
             yield return step(new Dictionary<string, object>() {
                     { "action", "OpenObject"},
-                    { "objectId", "Cabinet|-01.55|+00.50|+00.38"},
+                    { "objectId", "ShowerCurtain|-00.79|+02.22|-00.24"},
                     { "useGripper", true},
                     { "returnToStart", true},
                     { "stopAtNonStaticCol", false}
                 });
             yield return new WaitForSeconds(2f);
 
-            Transform testCabinetDoor = GameObject.Find("Cabinet_242ff8ff").transform.Find("CabinetDoor");
-            bool testCabinetDoorOpened = Mathf.Approximately((testCabinetDoor.localEulerAngles.y + 360) % 360, 270);
-            Assert.AreEqual(testCabinetDoorOpened, true);
+            Transform testShowerCurtain = GameObject.Find("ShowerCurtain_d39572d2").transform.Find("Curtain");
+            bool testShowerCurtainOpened = Mathf.Approximately(testShowerCurtain.localScale.x, 5);
+            Assert.AreEqual(testShowerCurtainOpened, true);
 
-            yield return true;
+            yield return step(new Dictionary<string, object>() {
+                    { "action", "CloseObject"},
+                    { "objectId", "ShowerCurtain|-00.79|+02.22|-00.24"},
+                    { "useGripper", true},
+                    { "returnToStart", true},
+                    { "stopAtNonStaticCol", false}
+                });
+            yield return new WaitForSeconds(2f);
+
+            bool testShowerCurtainClosed = Mathf.Approximately(testShowerCurtain.localScale.x, 1);
+            Assert.AreEqual(testShowerCurtainClosed, true);
         }
 
         protected string serializeObject(object obj) {
