@@ -91,7 +91,7 @@ namespace Tests {
                     { "action", "MoveArm"},
                     { "coordinateSpace", "world"},
                     { "disableRendering", true},
-                    { "position", new Vector3(-1.3149f, 0.8358991f, 0.203f)}
+                    { "position", new Vector3(-1.3149f, 0.8358991f, 0.204f)}
                 });
 
             //yield return new WaitForSeconds(2f);
