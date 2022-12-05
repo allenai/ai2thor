@@ -1037,21 +1037,17 @@ class Controller(object):
             cuda_vulkan_mapping_path = os.path.join(self.base_dir, "cuda-vulkan-mapping.json")
             with LockEx(cuda_vulkan_mapping_path):
                 if not os.path.exists(cuda_vulkan_mapping_path):
-                    vulkan_result = None
-                    try:
-                        vulkan_result = subprocess.run(
-                            ["vulkaninfo"],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.DEVNULL,
-                            universal_newlines=True
-                        )
-                    except FileNotFoundError:
-                        pass
-                    if vulkan_result is None or vulkan_result.returncode != 0:
+                    vulkan_result = subprocess.run(
+                        ["vulkaninfo"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.DEVNULL,
+                        universal_newlines=True
+                    )
+                    if vulkan_result.returncode != 0:
                         raise RuntimeError(
                             "vulkaninfo failed to run, please ask your administrator to"
                             " install `vulkaninfo` (e.g. on Ubuntu systems this requires running"
-                            " `sudo apt install vulkan-tools`)."
+                            " `sudo apt install vulkaninfo`)."
                         )
 
                     current_gpu = None
@@ -1067,17 +1063,13 @@ class Controller(object):
                             else:
                                 device_uuid_to_vulkan_gpu_index[device_uuid] = current_gpu
 
-                    nvidiasmi_result = None
-                    try:
-                        nvidiasmi_result = subprocess.run(
-                            ["nvidia-smi", "-L"],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.DEVNULL,
-                            universal_newlines=True
-                        )
-                    except FileNotFoundError:
-                        pass
-                    if nvidiasmi_result is None or nvidiasmi_result.returncode != 0:
+                    nvidiasmi_result = subprocess.run(
+                        ["nvidia-smi", "-L"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.DEVNULL,
+                        universal_newlines=True
+                    )
+                    if nvidiasmi_result.returncode != 0:
                         raise RuntimeError(
                             "`nvidia-smi` failed to run. To use CloudRendering, please ensure you have nvidia GPUs"
                             " installed."
@@ -1214,7 +1206,7 @@ class Controller(object):
             cache_payload, cache_mtime = self._get_cache_commit_history(branch)
             # we need to limit how often we hit api.github.com since
             # there is a rate limit of 60 per hour per IP
-            if cache_payload and (time.time() - cache_mtime) < 300:
+            if (cache_payload and (time.time() - cache_mtime) < 500):
                 payload = cache_payload
             else:
                 try:
