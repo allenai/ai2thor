@@ -118,7 +118,7 @@ public class PhysicsSceneManager : MonoBehaviour {
 
             if (enumerator.Current.GetType() == typeof(WaitForFixedUpdate) && !physicsSimulationParams.autoSimulation) {
                 if (fixedDeltaTime == 0f) {
-                Physics.SyncTransforms();
+                    Physics.SyncTransforms();
                 } else {
                     PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
                 }
@@ -150,11 +150,13 @@ public class PhysicsSceneManager : MonoBehaviour {
 
         var currentSimulationCallCount = PhysicsSceneManager.PhysicsSimulateCallCount - startPhysicsSimulateCallTime;
 
-        while (
-            // currentSimulationCallCount < physicsSimulationParams.maxActionPhysicsSteps ||
-            PhysicsSimulateTimeSeconds*1000.0f < physicsSimulationParams.maxActionTimeMilliseconds
-        ) {
-            PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+        if (!physicsSimulationParams.autoSimulation) {
+            while (
+                // currentSimulationCallCount < physicsSimulationParams.maxActionPhysicsSteps ||
+                PhysicsSimulateTimeSeconds*1000.0f < physicsSimulationParams.maxActionTimeMilliseconds
+            ) {
+                PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+            }
         }
 
         Physics.autoSimulation = previousAutoSimulate;
@@ -173,6 +175,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                     success = false,
                     errorMessage = "`ActionFinished` was not the last yield return statement for action. Unreachable code found."
                 };
+                break;
             }
             if (typeof(ActionFinished) == action.Current.GetType()) {
                 actionFinished = (ActionFinished)(action.Current as ActionFinished);

@@ -103,10 +103,18 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         robosimsHost = LoadStringVariable(robosimsHost, "HOST");
         serverSideScreenshot = LoadBoolVariable(serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
         robosimsClientToken = LoadStringVariable(robosimsClientToken, "CLIENT_TOKEN");
-        serverType = (serverTypes)Enum.Parse(typeof(serverTypes), LoadStringVariable(serverTypes.WSGI.ToString(), "SERVER_TYPE").ToUpper());
+        serverType = (serverTypes)Enum.Parse(typeof(serverTypes), LoadStringVariable(serverTypes.FIFO.ToString(), "SERVER_TYPE").ToUpper());
         if (serverType == serverTypes.FIFO) {
             string serverPipePath = LoadStringVariable(null, "FIFO_SERVER_PIPE_PATH");
             string clientPipePath = LoadStringVariable(null, "FIFO_CLIENT_PIPE_PATH");
+
+            if (string.IsNullOrEmpty(serverPipePath)) {
+                serverPipePath = "fifo_pipe/server.pipe";
+                
+            }
+            if (string.IsNullOrEmpty(clientPipePath)) {
+                clientPipePath = "fifo_pipe/client.pipe";
+            }
 
             Debug.Log("creating fifo server: " + serverPipePath);
             Debug.Log("client fifo path: " + clientPipePath);
@@ -1043,6 +1051,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     // Debug.Log("connecting to host: " + robosimsHost);
                     IPAddress host = IPAddress.Parse(robosimsHost);
                     IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
+                    Debug.Log("address family " + host.AddressFamily);
+                    
                     this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                     try {
                         this.sock.Connect(hostep);
@@ -1125,12 +1135,16 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
 
                 this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
+                Debug.Log("-- fifo Sent message");
                 AsyncGPUReadback.WaitAllRequests();
+                 Debug.Log("-- fifo wait requests message");
                 foreach (var item in renderPayload) {
                     this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
                 }
                 this.fifoClient.SendEOM();
+                Debug.Log("-- fifo sendeom ");
                 string msg = this.fifoClient.ReceiveMessage();
+                Debug.Log("-- fifo msg recieve ");
                 ProcessControlCommand(msg);
 
                 while (canEmit() && this.fastActionEmit) {
@@ -1686,10 +1700,10 @@ public class DynamicServerAction {
         "renderNormalsImage",
         "renderInstanceSegmentation",
         "action",
-        "physicsSimulationProperties"
+        physicsSimulationParamsVariable
     };
 
-    public const string physicsSimulationPropsVariable = "physicsSimulationProperties";
+    public const string physicsSimulationParamsVariable = "physicsSimulationParams";
 
     public JObject jObject {
         get;
@@ -1714,9 +1728,9 @@ public class DynamicServerAction {
         }
     }
 
-    public PhysicsSimulationParams physicsSimulationProperties {
+    public PhysicsSimulationParams physicsSimulationParams {
         get {
-            return this.jObject["physicsSimulationProperties"] != null ? this.jObject["physicsSimulationProperties"].ToObject<PhysicsSimulationParams>() : null;
+            return this.jObject[physicsSimulationParamsVariable] != null ? this.jObject[physicsSimulationParamsVariable].ToObject<PhysicsSimulationParams>() : null;
         }
     }
 

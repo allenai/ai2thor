@@ -1958,6 +1958,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.agentState = AgentState.Processing;
 
             try {
+                // Debug.Log("Calling dispatch");
                 ActionDispatcher.Dispatch(target: target, dynamicServerAction: controlCommand);
             } catch (InvalidArgumentsException e) {
                 errorMessage =

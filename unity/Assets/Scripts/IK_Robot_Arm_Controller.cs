@@ -294,6 +294,75 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         );
     }
 
+     public IEnumerator moveArmTargetNew(
+        PhysicsRemoteFPSAgentController controller,
+        Vector3 target,
+        float unitsPerSecond,
+        float fixedDeltaTime = 0.02f,
+        bool returnToStart = false,
+        string coordinateSpace = "armBase",
+        bool restrictTargetPosition = false
+    ) {
+         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
+        collisionListener.Reset();
+
+        IK_Robot_Arm_Controller arm = this;
+
+        // Move arm based on hand space or arm origin space
+        Vector3 targetWorldPos;
+        switch (coordinateSpace) {
+            case "world":
+                // world space, can be used to move directly toward positions
+                // returned by sim objects
+                targetWorldPos = target;
+                break;
+            case "wrist":
+                // space relative to base of the wrist, where the camera is
+                targetWorldPos = handCameraTransform.TransformPoint(target);
+                break;
+            case "armBase":
+                // space relative to the root of the arm, joint 1
+                targetWorldPos = arm.transform.Find("robot_arm_FK_IK_rig").transform.TransformPoint(target);
+                break;
+            default:
+                throw new ArgumentException("Invalid coordinateSpace: " + coordinateSpace);
+        }
+
+        // TODO Remove this after restrict movement is finalized
+        Vector3 targetShoulderSpace = (this.transform.InverseTransformPoint(targetWorldPos) - new Vector3(0, 0, originToShoulderLength));
+
+#if UNITY_EDITOR
+        Debug.Log(
+            $"pos target {target} world {targetWorldPos} remaining {targetShoulderSpace.z}\n" +
+            $"magnitude {targetShoulderSpace.magnitude} extendedArmLength {extendedArmLength}"
+        );
+#endif
+
+        if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos)) {
+            targetShoulderSpace = (
+                this.transform.InverseTransformPoint(targetWorldPos)
+                - new Vector3(0, 0, originToShoulderLength)
+            );
+            throw new InvalidOperationException(
+                $"Invalid target: Position '{target}' in space '{coordinateSpace}' is behind shoulder."
+            );
+        }
+
+        yield return resetArmTargetPositionRotationAsLastStep(
+            ContinuousMovement.move(
+                controller,
+                collisionListener,
+                armTarget,
+                targetWorldPos,
+                fixedDeltaTime,
+                unitsPerSecond,
+                returnToStart,
+                false
+            )
+        );
+
+    }
+
     public void moveArmTarget(
         PhysicsRemoteFPSAgentController controller,
         Vector3 target,

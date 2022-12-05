@@ -195,6 +195,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public IEnumerator MoveArmNew(
+            Vector3 position,
+            PhysicsSimulationParams physicsSimulationParams,
+            float speed = 1,
+            bool returnToStart = true,
+            string coordinateSpace = "armBase",
+            bool restrictMovement = false
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+            var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+            yield return arm.moveArmTargetNew(
+                controller: this,
+                target: position,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                coordinateSpace: coordinateSpace,
+                restrictTargetPosition: restrictMovement
+            );
+        }
+
         /*
         Let's say you wanted the agent to be able to rotate the object it's
         holding so that it could get multiple views of the object. You

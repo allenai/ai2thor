@@ -11,6 +11,7 @@ import ai2thor.controller
 import ai2thor
 import random
 import copy
+import time
 
 MAX_TESTS = 20
 MAX_EP_LEN = 100
@@ -25,18 +26,48 @@ controller = ai2thor.controller.Controller(
     height=900,
     agentMode="arm",
     fieldOfView=100,
-    agentControllerType="mid-level",
+    start_unity=False,
+    port=8200,
+    host="127.0.0.1",
+    # server_class=ai2thor.wsgi_server.WsgiServer
     server_class=ai2thor.fifo_server.FifoServer,
 )
 
 ADITIONAL_ARM_ARGS = {
     "disableRendering": True,
     "restrictMovement": False,
-    "waitForFixedUpdate": False,
+    # "waitForFixedUpdate": False,  // deprecated
     "returnToStart": True,
-    "speed": 1,
-    "move_constant": 0.05,
+    "speed": 1
 }
+
+ADDITONAL_MOVEMENT_ARGS = {
+        "disableRendering": True,
+        "returnToStart": True,
+        "speed": 1
+    }
+
+ADITIONAL_ARM_ARGS_BY_ACTION = {
+    "MoveArm": {
+        "restrictMovement": False,
+        **ADDITONAL_MOVEMENT_ARGS
+    },
+    "MoveArmNew": {
+        "restrictMovement": False,
+        "returnToStart": True,
+        "speed": 1,
+        "physicsSimulationParams": {
+            "autoSimulation": False
+        }
+    },
+    "MoveArmBase": ADDITONAL_MOVEMENT_ARGS,
+    "RotateAgent": ADDITONAL_MOVEMENT_ARGS,
+    "MoveAhead": ADDITONAL_MOVEMENT_ARGS,
+    "MoveAgent": ADDITONAL_MOVEMENT_ARGS
+
+}
+
+MOVE_CONSTANT = 0.05
 
 
 def get_reachable_positions(controller):
@@ -45,10 +76,10 @@ def get_reachable_positions(controller):
     return reachable_positions
 
 
-def execute_command(controller, command, action_dict_addition):
+def execute_command(controller, command, action_dict_addition_by_action):
 
     base_position = get_current_arm_state(controller)
-    change_height = action_dict_addition["move_constant"]
+    change_height = MOVE_CONSTANT
     change_value = change_height
     action_details = {}
 
@@ -73,73 +104,45 @@ def execute_command(controller, command, action_dict_addition):
         pickupable = controller.last_event.metadata["arm"]["pickupableObjects"]
         print(pickupable)
     elif command == "d":
-        controller.step(action="DropMidLevelHand", **action_dict_addition)
-        action_details = dict(action="DropMidLevelHand", **action_dict_addition)
+        action_details = dict(action="DropMidLevelHand", add_extra_args=True)
     elif command == "mm":
-        action_dict_addition = copy.copy(action_dict_addition)
-        if "moveSpeed" in action_dict_addition:
-            action_dict_addition["speed"] = action_dict_addition["moveSpeed"]
-        controller.step(
-            action="MoveContinuous",
-            direction=dict(x=0.0, y=0.0, z=0.2),
-            **action_dict_addition
-        )
         action_details = dict(
-            action="MoveContinuous",
-            direction=dict(x=0.0, y=0.0, z=0.2),
-            **action_dict_addition
+            action="MoveAgent",
+            ahead=0.2,
+            add_extra_args=True
         )
 
     elif command == "rr":
-        action_dict_addition = copy.copy(action_dict_addition)
+        action_details = dict(
+            action="RotateAgent", degrees=45, add_extra_args=True
+        )
 
-        if "moveSpeed" in action_dict_addition:
-            action_dict_addition["speed"] = action_dict_addition["moveSpeed"]
-        controller.step(action="RotateContinuous", degrees=45, **action_dict_addition)
-        action_details = dict(
-            action="RotateContinuous", degrees=45, **action_dict_addition
-        )
     elif command == "ll":
-        action_dict_addition = copy.copy(action_dict_addition)
-        controller.step(action="RotateContinuous", degrees=-45, **action_dict_addition)
         action_details = dict(
-            action="RotateContinuous", degrees=-45, **action_dict_addition
+            action="RotateAgent", degrees=-45, add_extra_args=True
         )
+
     elif command == "m":
-        controller.step(action="MoveAhead", **action_dict_addition)
-        action_details = dict(action="MoveAhead", **action_dict_addition)
+        action_details = dict(action="MoveAhead", add_extra_args=True)
 
     elif command == "r":
-        controller.step(action="RotateRight", degrees=45, **action_dict_addition)
-        action_details = dict(action="RotateRight", degrees=45, **action_dict_addition)
+        action_details = dict(action="RotateRight", degrees=45, add_extra_args=True)
     elif command == "l":
-        controller.step(action="RotateLeft", degrees=45, **action_dict_addition)
-        action_details = dict(action="RotateLeft", degrees=45, **action_dict_addition)
+        action_details = dict(action="RotateLeft", degrees=45, add_extra_args=True)
     elif command == "p":
-        controller.step(action="PickUpMidLevelHand")
-        action_details = dict(action="PickUpMidLevelHand")
+        action_details = dict(action="PickupObject")
     elif command == "q":
         action_details = {}
     else:
         action_details = {}
 
     if command in ["w", "z", "s", "a", "3", "4"]:
-
-        controller.step(
-            action="MoveMidLevelArm",
-            position=dict(
-                x=base_position["x"], y=base_position["y"], z=base_position["z"]
-            ),
-            handCameraSpace=False,
-            **action_dict_addition
-        )
         action_details = dict(
-            action="MoveMidLevelArm",
+            action="MoveArmNew",
             position=dict(
                 x=base_position["x"], y=base_position["y"], z=base_position["z"]
             ),
-            handCameraSpace=False,
-            **action_dict_addition
+            add_extra_args=True
         )
 
     elif command in ["u", "j"]:
@@ -148,11 +151,19 @@ def execute_command(controller, command, action_dict_addition):
         elif base_position["h"] < 0:
             base_position["h"] = 0
 
-        controller.step(
-            action="MoveArmBase", y=base_position["h"], **action_dict_addition
-        )
         action_details = dict(
-            action="MoveArmBase", y=base_position["h"], **action_dict_addition
+            action="MoveArmBase",
+            y=base_position["h"],
+            add_extra_args=True
+        )
+
+    if 'add_extra_args' in action_details and action_details['add_extra_args']:
+        del action_details['add_extra_args']
+        action_dict_addition = action_dict_addition_by_action[action_details['action']]
+        action_details = dict(**action_details, **action_dict_addition)
+    if 'action' in action_details:
+        controller.step(
+            **action_details
         )
 
     return action_details
@@ -196,19 +207,29 @@ def two_dict_equal(dict1, dict2):
         # https://lgtm.com/rules/7860092/
         type_equal = type(val1) == type(val2)
         assert type_equal, ("different type", dict1, dict2)
-        if type(val1) == dict:
-            equal = two_dict_equal(val1, val2)
-        elif type(val1) == list:
-            equal = two_list_equal(val1, val2)
-        elif math.isnan(val1):
-            equal = math.isnan(val2)
-        elif type(val1) == float:
-            equal = abs(val1 - val2) < 0.001
-        else:
-            equal = val1 == val2
-        if not equal:
-            print("not equal", val1, val2)
-            return equal
+        try:
+            if type(val1) == dict:
+                equal = two_dict_equal(val1, val2)
+            elif type(val1) == list:
+                equal = two_list_equal(val1, val2)
+            elif type(val1) == str:
+                equal = val1 == val2
+            elif val1 is None:
+                equal = val1 is None and val2 is None
+            elif math.isnan(val1):
+                equal = math.isnan(val2)
+            elif type(val1) == float:
+                equal = abs(val1 - val2) < 0.001
+            else:
+                equal = val1 == val2
+            if not equal:
+                print("not equal", val1, val2)
+                return equal
+        except Exception as err:
+            print(f"Unexpected {err}, {type(err)}")
+            print(f"val1 {val1} val2 {val2}")
+            equal = False
+
     return equal
 
 
@@ -239,6 +260,7 @@ def random_tests():
             z=initial_location["z"],
             rotation=dict(x=0, y=initial_rotation, z=0),
             horizon=10,
+            standing=True
         )
         initial_pose = dict(
             action="TeleportFull",
@@ -247,20 +269,22 @@ def random_tests():
             z=initial_location["z"],
             rotation=dict(x=0, y=initial_rotation, z=0),
             horizon=10,
+            standing=True
         )
         controller.step("PausePhysicsAutoSim")
         all_commands = []
         before = datetime.datetime.now()
         for j in range(MAX_EP_LEN):
             command = random.choice(set_of_actions)
-            execute_command(controller, command, ADITIONAL_ARM_ARGS)
+
+            execute_command(controller, command, ADITIONAL_ARM_ARGS_BY_ACTION)
             all_commands.append(command)
 
             pickupable = controller.last_event.metadata["arm"]["pickupableObjects"]
             picked_up_before = controller.last_event.metadata["arm"]["heldObjects"]
             if len(pickupable) > 0 and len(picked_up_before) == 0:
                 cmd = "p"
-                execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+                execute_command(controller, cmd, ADITIONAL_ARM_ARGS_BY_ACTION)
                 all_commands.append(cmd)
                 if controller.last_event.metadata["lastActionSuccess"] is False:
                     print("Failed to pick up ")
@@ -296,7 +320,11 @@ def random_tests():
 def determinism_test(all_tests):
     # Redo the actions 20 times:
     # only do this if an object is picked up
-    for k, test_point in all_tests.items():
+    passed_count = 0
+    filtered = [list(all_tests.items())[11]]
+    for k, test_point in filtered:
+        start = time.time()
+        print(f"Test {k}")
         initial_location = test_point["initial_location"]
         initial_rotation = test_point["initial_rotation"]
         all_commands = test_point["all_commands"]
@@ -312,19 +340,24 @@ def determinism_test(all_tests):
             z=initial_location["z"],
             rotation=dict(x=0, y=initial_rotation, z=0),
             horizon=10,
+            standing=True
         )
         controller.step("PausePhysicsAutoSim")
         for cmd in all_commands:
-            execute_command(controller, cmd, ADITIONAL_ARM_ARGS)
+            execute_command(controller, cmd, ADITIONAL_ARM_ARGS_BY_ACTION)
         current_state = get_current_full_state(controller)
         if not two_dict_equal(final_state, current_state):
             print("not deterministic")
             print("scene name", controller.last_event.metadata["sceneName"])
             print("initial pose", initial_pose)
             print("list of actions", all_commands)
-            pdb.set_trace()
+            # pdb.set_trace()
         else:
             print("test {} passed".format(k))
+            passed_count += 1
+        end = time.time()
+        print(f"Elapsed: {end - start}")
+        print(f"Passed: {passed_count}/{len(all_tests.items())}")
 
 
 if __name__ == "__main__":
@@ -332,6 +365,6 @@ if __name__ == "__main__":
     # with open('determinism_json.json' ,'w') as f:
     #     json.dump(all_dict, f)
 
-    with open("arm_test/determinism_json.json", "r") as f:
+    with open("arm_test/determinism_json_2.json", "r") as f:
         all_dict = json.load(f)
     determinism_test(all_dict)

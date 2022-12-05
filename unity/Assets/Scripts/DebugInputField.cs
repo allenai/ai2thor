@@ -779,6 +779,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     IEnumerator executeBatch(JArray jActions) {
                         int i = 0;
                         foreach (JObject action in jActions) {
+                            if (!action.ContainsKey("action")) {
+                                continue;
+                            }
                             while (CurrentActiveController().IsProcessing) {
                                 yield return new WaitForEndOfFrame();
                             }
