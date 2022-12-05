@@ -18,6 +18,9 @@ MAX_EP_LEN = 100
 scene_names = ["FloorPlan{}_physics".format(i + 1) for i in range(30)]
 set_of_actions = ["mm", "rr", "ll", "w", "z", "a", "s", "u", "j", "3", "4", "p"]
 
+new_actions = True
+new_action_suffix = "New"
+
 controller = ai2thor.controller.Controller(
     local_build=True,
     scene=scene_names[0],
@@ -47,18 +50,36 @@ ADDITONAL_MOVEMENT_ARGS = {
         "speed": 1
     }
 
-ADITIONAL_ARM_ARGS_BY_ACTION = {
-    "MoveArm": {
-        "restrictMovement": False,
-        **ADDITONAL_MOVEMENT_ARGS
-    },
-    "MoveArmNew": {
-        "restrictMovement": False,
+ADITIONAL_NEW_MOVEMENT_ARGS= {
         "returnToStart": True,
         "speed": 1,
         "physicsSimulationParams": {
             "autoSimulation": False
         }
+    }
+
+MoveArm = "MoveArmNew"
+
+MoveArmBase = "MoveArmBase"
+RotateAgent = "RotateAgent"
+MoveAhead = "MoveAhead"
+MoveAgent = "MoveAgent"
+
+
+ADITIONAL_ARM_ARGS_BY_ACTION = {
+
+    "MoveArmNew": {
+        "restrictMovement": False,
+        **ADITIONAL_NEW_MOVEMENT_ARGS
+    },
+    "MoveArmBaseNew": ADITIONAL_NEW_MOVEMENT_ARGS,
+    "RotateAgentNew": ADITIONAL_NEW_MOVEMENT_ARGS,
+    "MoveAheadNew": ADITIONAL_NEW_MOVEMENT_ARGS,
+    "MoveAgentNew": ADITIONAL_NEW_MOVEMENT_ARGS,
+
+    "MoveArm": {
+        "restrictMovement": False,
+        **ADDITONAL_MOVEMENT_ARGS
     },
     "MoveArmBase": ADDITONAL_MOVEMENT_ARGS,
     "RotateAgent": ADDITONAL_MOVEMENT_ARGS,
@@ -66,6 +87,13 @@ ADITIONAL_ARM_ARGS_BY_ACTION = {
     "MoveAgent": ADDITONAL_MOVEMENT_ARGS
 
 }
+
+def actionName(action):
+    return action
+    # if not new_actions:
+    #     return action
+    # else:
+    #     return f"{action}{new_action_suffix}"
 
 MOVE_CONSTANT = 0.05
 
@@ -107,28 +135,30 @@ def execute_command(controller, command, action_dict_addition_by_action):
         action_details = dict(action="DropMidLevelHand", add_extra_args=True)
     elif command == "mm":
         action_details = dict(
-            action="MoveAgent",
+            action=actionName(MoveAgent),
             ahead=0.2,
             add_extra_args=True
         )
 
     elif command == "rr":
         action_details = dict(
-            action="RotateAgent", degrees=45, add_extra_args=True
+            action= actionName(RotateAgent), degrees=45, add_extra_args=True
         )
 
     elif command == "ll":
         action_details = dict(
-            action="RotateAgent", degrees=-45, add_extra_args=True
+            action=actionName(RotateAgent), degrees=-45, add_extra_args=True
         )
 
     elif command == "m":
-        action_details = dict(action="MoveAhead", add_extra_args=True)
+        action_details = dict(action=actionName(MoveAhead), add_extra_args=True)
 
     elif command == "r":
-        action_details = dict(action="RotateRight", degrees=45, add_extra_args=True)
+        action_details = dict(action=actionName(RotateAgent), degrees=45, add_extra_args=True)
     elif command == "l":
-        action_details = dict(action="RotateLeft", degrees=45, add_extra_args=True)
+        # action_details = dict(action="RotateLeft", degrees=45, add_extra_args=True)
+        action_details = dict(action=actionName(RotateAgent), degrees=-45, add_extra_args=True)
+
     elif command == "p":
         action_details = dict(action="PickupObject")
     elif command == "q":
@@ -138,7 +168,7 @@ def execute_command(controller, command, action_dict_addition_by_action):
 
     if command in ["w", "z", "s", "a", "3", "4"]:
         action_details = dict(
-            action="MoveArmNew",
+            action=MoveArm,
             position=dict(
                 x=base_position["x"], y=base_position["y"], z=base_position["z"]
             ),
@@ -152,7 +182,7 @@ def execute_command(controller, command, action_dict_addition_by_action):
             base_position["h"] = 0
 
         action_details = dict(
-            action="MoveArmBase",
+            action=actionName(MoveArmBase),
             y=base_position["h"],
             add_extra_args=True
         )
