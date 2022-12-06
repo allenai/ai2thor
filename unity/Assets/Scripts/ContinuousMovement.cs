@@ -111,58 +111,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public static IEnumerator moveNew(
-            PhysicsRemoteFPSAgentController controller,
-            CollisionListener collisionListener,
-            Transform moveTransform,
-            Vector3 targetPosition,
-            float fixedDeltaTime,
-            float unitsPerSecond,
-            bool returnToStartPropIfFailed = false,
-            bool localPosition = false
-        ) {
-            bool teleport = (unitsPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
-
-            Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>, IEnumerator> moveClosure =
-                (get, set, next) => updateTransformPropertyFixedUpdateNew(
-                    controller: controller,
-                    collisionListener: collisionListener,
-                    moveTransform: moveTransform,
-                    target: targetPosition,
-                    getProp: get,
-                    setProp: set,
-                    nextProp: next,
-                    getDirection: (target, current) => (target - current).normalized,
-                    distanceMetric: (target, current) => Vector3.SqrMagnitude(target - current),
-                    fixedDeltaTime: fixedDeltaTime,
-                    returnToStartPropIfFailed: returnToStartPropIfFailed,
-                    epsilon: 1e-6 // Since the distance metric uses SqrMagnitude this amounts to a distance of 1 millimeter
-            );
-
-            Func<Transform, Vector3> getPosFunc;
-            Action<Transform, Vector3> setPosFunc;
-            Func<Transform, Vector3, Vector3> nextPosFunc;
-            if (localPosition) {
-                getPosFunc = (t) => t.localPosition;
-                setPosFunc = (t, pos) => t.localPosition = pos;
-                nextPosFunc = (t, direction) => t.localPosition + direction * unitsPerSecond * fixedDeltaTime;
-            } else {
-                getPosFunc = (t) => t.position;
-                setPosFunc = (t, pos) => t.position = pos;
-                nextPosFunc = (t, direction) => t.position + direction * unitsPerSecond * fixedDeltaTime;
-            }
-
-            if (teleport) {
-                nextPosFunc = (t, direction) => targetPosition;
-            }
-
-            return moveClosure(
-                getPosFunc,
-                setPosFunc,
-                nextPosFunc
-            );
-        }
-
         protected static IEnumerator finallyDestroyGameObjects(
             List<GameObject> gameObjectsToDestroy,
             IEnumerator steps

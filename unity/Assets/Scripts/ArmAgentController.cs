@@ -376,6 +376,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public IEnumerator MoveAgentNew(
+            float ahead = 0,
+            float right = 0,
+            float speed = 1,
+            PhysicsSimulationParams physicsSimulationParams = null,
+            bool returnToStart = true
+        ) {
+            if (ahead == 0 && right == 0) {
+                throw new ArgumentException("Must specify ahead or right!");
+            }
+            Vector3 direction = new Vector3(x: right, y: 0, z: ahead);
+            float fixedDeltaTimeFloat = (physicsSimulationParams?.fixedDeltaTime).GetValueOrDefault(Time.fixedDeltaTime);
+
+            CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
+
+            Vector3 directionWorld = transform.TransformDirection(direction);
+            Vector3 targetPosition = transform.position + directionWorld;
+
+            collisionListener.Reset();
+
+            yield return ContinuousMovement.move(
+                controller: this,
+                collisionListener: collisionListener,
+                moveTransform: this.transform,
+                targetPosition: targetPosition,
+                fixedDeltaTime: fixedDeltaTimeFloat,
+                unitsPerSecond: speed,
+                returnToStartPropIfFailed: returnToStart,
+                localPosition: false
+            );
+        }
+
         public override void MoveAhead(
             float? moveMagnitude = null,
             string objectId = "",                // TODO: Unused, remove when refactoring the controllers
