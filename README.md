@@ -265,8 +265,9 @@ If you use 🏘️ ProcTHOR or procedurally generated scenes, please cite the fo
           Winson Han and Eric Kolve and Ali Farhadi and
           Aniruddha Kembhavi and Roozbeh Mottaghi},
   title={{ProcTHOR: Large-Scale Embodied AI Using Procedural Generation}},
-  journal={NeurIPS},
-  year={2022}
+  booktitle={NeurIPS},
+  year={2022},
+  note={Outstanding Paper Award}
 }
 ```
 
