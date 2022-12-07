@@ -102,6 +102,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         var previousAutoSimulate = Physics.autoSimulation;
         Physics.autoSimulation = physicsSimulationParams.autoSimulation;
+        
         PhysicsSceneManager.PhysicsSimulateTimeSeconds = 0.0f;
         var startPhysicsSimulateCallTime = PhysicsSceneManager.PhysicsSimulateCallCount;
         ActionFinished actionFinished = null;
@@ -126,11 +127,11 @@ public class PhysicsSceneManager : MonoBehaviour {
             else if (enumerator.Current.GetType() == typeof(ActionFinished)) {
                 actionFinished = (ActionFinished)(enumerator.Current as ActionFinished);
             }
-
             count++;
         }
 
-        if (actionFinished != null) {
+        if (actionFinished == null) {
+           
             actionFinished = new ActionFinished() {
                 success = false,
                 errorMessage = "Action did not return an `ActionFinished`"

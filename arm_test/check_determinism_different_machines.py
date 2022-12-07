@@ -12,6 +12,7 @@ import ai2thor
 import random
 import copy
 import time
+import argparse
 
 MAX_TESTS = 20
 MAX_EP_LEN = 100
@@ -58,7 +59,7 @@ ADITIONAL_NEW_MOVEMENT_ARGS= {
         }
     }
 
-MoveArm = "MoveArmNew"
+MoveArm = "MoveArm"
 
 MoveArmBase = "MoveArmBase"
 RotateAgent = "RotateAgent"
@@ -89,11 +90,11 @@ ADITIONAL_ARM_ARGS_BY_ACTION = {
 }
 
 def actionName(action):
-    return action
-    # if not new_actions:
-    #     return action
-    # else:
-    #     return f"{action}{new_action_suffix}"
+    # return action
+    if not new_actions:
+        return action
+    else:
+        return f"{action}{new_action_suffix}"
 
 MOVE_CONSTANT = 0.05
 
@@ -154,6 +155,7 @@ def execute_command(controller, command, action_dict_addition_by_action):
         action_details = dict(action=actionName(MoveAhead), add_extra_args=True)
 
     elif command == "r":
+        # action_details = dict(action="RotateRight", degrees=45, add_extra_args=True)
         action_details = dict(action=actionName(RotateAgent), degrees=45, add_extra_args=True)
     elif command == "l":
         # action_details = dict(action="RotateLeft", degrees=45, add_extra_args=True)
@@ -168,7 +170,7 @@ def execute_command(controller, command, action_dict_addition_by_action):
 
     if command in ["w", "z", "s", "a", "3", "4"]:
         action_details = dict(
-            action=MoveArm,
+            action=actionName(MoveArm),
             position=dict(
                 x=base_position["x"], y=base_position["y"], z=base_position["z"]
             ),
@@ -192,6 +194,7 @@ def execute_command(controller, command, action_dict_addition_by_action):
         action_dict_addition = action_dict_addition_by_action[action_details['action']]
         action_details = dict(**action_details, **action_dict_addition)
     if 'action' in action_details:
+        # print(f"Calling action: {action_details['action']} with {action_details}")
         controller.step(
             **action_details
         )
@@ -347,12 +350,14 @@ def random_tests():
     return all_dict
 
 
-def determinism_test(all_tests):
+def determinism_test(all_tests, test_index=None):
     # Redo the actions 20 times:
     # only do this if an object is picked up
     passed_count = 0
-    filtered = [list(all_tests.items())[11]]
-    for k, test_point in filtered:
+    tests = all_tests.items()
+    if test_index is not  None:
+        tests = [list(tests)[test_index]]
+    for k, test_point in tests:
         start = time.time()
         print(f"Test {k}")
         initial_location = test_point["initial_location"]
@@ -375,6 +380,8 @@ def determinism_test(all_tests):
         controller.step("PausePhysicsAutoSim")
         for cmd in all_commands:
             execute_command(controller, cmd, ADITIONAL_ARM_ARGS_BY_ACTION)
+            # if controller.last_action['action'] == MoveArm:
+            #     break
         current_state = get_current_full_state(controller)
         if not two_dict_equal(final_state, current_state):
             print("not deterministic")
@@ -397,4 +404,14 @@ if __name__ == "__main__":
 
     with open("arm_test/determinism_json_2.json", "r") as f:
         all_dict = json.load(f)
-    determinism_test(all_dict)
+
+    parser = argparse.ArgumentParser(
+        prog='Arm Determinism Tests',
+        description='Testing arm determinism')
+    parser.add_argument('-i', '--index', type=int)
+
+    args = parser.parse_args()
+
+    print(args.index)
+
+    determinism_test(all_dict, args.index)

@@ -336,9 +336,12 @@ public static class ActionDispatcher {
         var physicsSimulationProperties = dynamicServerAction.physicsSimulationParams;
         var usePhysicsSimulationParams = physicsSimulationProperties != null;
         if (typeof(IEnumerator) == method.ReturnType) {
-            usePhysicsSimulationParams = true;
-            // Default simulation params
-            physicsSimulationProperties = new PhysicsSimulationParams();
+            // Backwards compat action
+            if (!usePhysicsSimulationParams) {
+                usePhysicsSimulationParams = true;
+                // Default simulation params
+                physicsSimulationProperties = new PhysicsSimulationParams();
+            }
         }
         if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(ServerAction)) {
             ServerAction serverAction = dynamicServerAction.ToObject<ServerAction>();
@@ -403,8 +406,10 @@ public static class ActionDispatcher {
         }
 
         var methodReturn = method.Invoke(target, arguments);
+        Debug.Log($"-Methoth dispatch invoke {usePhysicsSimulationParams} method: {method.Name}");
 
         if (usePhysicsSimulationParams) {
+            Debug.Log($"-- Invoke usePhysicsSimulationParams true autosim: {physicsSimulationProperties.autoSimulation}");
             var callActionFinished = true;
             IEnumerator action = null;
             var runAsCoroutine = false;
@@ -427,7 +432,8 @@ public static class ActionDispatcher {
                 // TODO: when migration is full remove callAction finished, add back exception for this branch
                 action = ActionFinishedWrapper(new ActionFinished()); 
             }
-            if (!runAsCoroutine) {    
+            if (!runAsCoroutine) { 
+                Debug.Log("-- did not Ran as coroutine");
                 var actionFinished = PhysicsSceneManager.runActionPhysicsSimulation(
                     action, 
                     physicsSimulationProperties
@@ -440,6 +446,7 @@ public static class ActionDispatcher {
                 
             }
             else {
+                 Debug.Log("-- Ran as coroutine");
                 target.StartCoroutine(PhysicsSceneManager.addPhysicsSimulationPadding(target, action, physicsSimulationProperties));
             }
             

@@ -59,6 +59,46 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public static IEnumerator rotateNew(
+            PhysicsRemoteFPSAgentController controller,
+            CollisionListener collisionListener,
+            Transform moveTransform,
+            Quaternion targetRotation,
+            float fixedDeltaTime,
+            float radiansPerSecond,
+            bool returnToStartPropIfFailed = false
+        ) {
+            bool teleport = (radiansPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
+
+            float degreesPerSecond = radiansPerSecond * 180.0f / Mathf.PI;
+
+            Func<Transform, Quaternion> getRotFunc = (t) => t.rotation;
+            Action<Transform, Quaternion> setRotFunc = (t, target) => t.rotation = target;
+            Func<Transform, Quaternion, Quaternion> nextRotFunc = (t, target) => Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond);
+
+            if (teleport) {
+                nextRotFunc = (t, target) => target;
+            }
+
+            return updateTransformPropertyFixedUpdateNew(
+                controller: controller,
+                collisionListener: collisionListener,
+                moveTransform: moveTransform,
+                target: targetRotation,
+                getProp: getRotFunc,
+                setProp: setRotFunc,
+                nextProp: nextRotFunc,
+                // Direction function for quaternion should just output target quaternion, since RotateTowards is used for addToProp
+                getDirection: (target, current) => target,
+                // Distance Metric
+                distanceMetric: (target, current) => Quaternion.Angle(current, target),
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStartPropIfFailed: returnToStartPropIfFailed,
+                epsilon: 1e-3
+            );
+        }
+
+
         public static IEnumerator move(
             PhysicsRemoteFPSAgentController controller,
             CollisionListener collisionListener,
@@ -73,6 +113,58 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>, IEnumerator> moveClosure =
                 (get, set, next) => updateTransformPropertyFixedUpdate(
+                    controller: controller,
+                    collisionListener: collisionListener,
+                    moveTransform: moveTransform,
+                    target: targetPosition,
+                    getProp: get,
+                    setProp: set,
+                    nextProp: next,
+                    getDirection: (target, current) => (target - current).normalized,
+                    distanceMetric: (target, current) => Vector3.SqrMagnitude(target - current),
+                    fixedDeltaTime: fixedDeltaTime,
+                    returnToStartPropIfFailed: returnToStartPropIfFailed,
+                    epsilon: 1e-6 // Since the distance metric uses SqrMagnitude this amounts to a distance of 1 millimeter
+            );
+
+            Func<Transform, Vector3> getPosFunc;
+            Action<Transform, Vector3> setPosFunc;
+            Func<Transform, Vector3, Vector3> nextPosFunc;
+            if (localPosition) {
+                getPosFunc = (t) => t.localPosition;
+                setPosFunc = (t, pos) => t.localPosition = pos;
+                nextPosFunc = (t, direction) => t.localPosition + direction * unitsPerSecond * fixedDeltaTime;
+            } else {
+                getPosFunc = (t) => t.position;
+                setPosFunc = (t, pos) => t.position = pos;
+                nextPosFunc = (t, direction) => t.position + direction * unitsPerSecond * fixedDeltaTime;
+            }
+
+            if (teleport) {
+                nextPosFunc = (t, direction) => targetPosition;
+            }
+
+            return moveClosure(
+                getPosFunc,
+                setPosFunc,
+                nextPosFunc
+            );
+        }
+
+         public static IEnumerator moveNew(
+            PhysicsRemoteFPSAgentController controller,
+            CollisionListener collisionListener,
+            Transform moveTransform,
+            Vector3 targetPosition,
+            float fixedDeltaTime,
+            float unitsPerSecond,
+            bool returnToStartPropIfFailed = false,
+            bool localPosition = false
+        ) {
+            bool teleport = (unitsPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
+
+            Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>, IEnumerator> moveClosure =
+                (get, set, next) => updateTransformPropertyFixedUpdateNew(
                     controller: controller,
                     collisionListener: collisionListener,
                     moveTransform: moveTransform,
@@ -470,7 +562,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else if (controller.GetType() == typeof(StretchAgentController)) {
                 stretchArmSolver.ManipulateStretchArm();
             }
-
+            
             // Will call simulate physics once more 
             yield return new WaitForFixedUpdate();
            

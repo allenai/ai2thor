@@ -205,7 +205,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             IK_Robot_Arm_Controller arm = getArm();
             var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
-            yield return arm.moveArmTargetNew(
+            Debug.Log("--- MoveArmNew");
+            // yield return new ActionFinished() {success= true};
+            return arm.moveArmTargetNew(
                 controller: this,
                 target: position,
                 unitsPerSecond: speed,
@@ -396,7 +398,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             collisionListener.Reset();
 
-            yield return ContinuousMovement.move(
+            return ContinuousMovement.moveNew(
                 controller: this,
                 collisionListener: collisionListener,
                 moveTransform: this.transform,
@@ -429,6 +431,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+         public IEnumerator MoveAheadNew(
+            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
+            float speed = 1,
+            PhysicsSimulationParams physicsSimulationParams = null,
+            bool returnToStart = true
+        ) {
+            return MoveAgentNew(
+                ahead: moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                physicsSimulationParams: physicsSimulationParams,
+                returnToStart: returnToStart
+            );
+        }
+
         public override void MoveBack(
             float? moveMagnitude = null,
             string objectId = "",                // TODO: Unused, remove when refactoring the controllers
@@ -447,6 +468,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fixedDeltaTime: fixedDeltaTime,
                 returnToStart: returnToStart,
                 disableRendering: disableRendering
+            );
+        }
+
+         public IEnumerator MoveBackNew(
+            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
+            float speed = 1,
+            PhysicsSimulationParams physicsSimulationParams = null,
+            bool returnToStart = true
+        ) {
+            return MoveAgentNew(
+                ahead: -moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                physicsSimulationParams: physicsSimulationParams,
+                returnToStart: returnToStart
             );
         }
 
@@ -564,6 +604,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public IEnumerator RotateAgentNew(
+            float degrees,
+            float speed = 1.0f,
+            bool waitForFixedUpdate = false,
+            bool returnToStart = true,
+            PhysicsSimulationParams physicsSimulationParams = null
+        ) {
+            CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
+            collisionListener.Reset();
+
+            // this.transform.Rotate()
+            return ContinuousMovement.rotateNew(
+                controller: this,
+                collisionListener: this.GetComponentInParent<CollisionListener>(),
+                moveTransform: this.transform,
+                targetRotation: this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
+                fixedDeltaTime: (physicsSimulationParams?.fixedDeltaTime).GetValueOrDefault(Time.fixedDeltaTime),
+                radiansPerSecond: speed,
+                returnToStartPropIfFailed: returnToStart
+            );
+        }
+
         /*
         Rotates the wrist (in a relative fashion) given some input
         pitch, yaw, and roll offsets. Easiest to see how this works by
@@ -671,6 +733,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
                 returnToStartPositionIfFailed: returnToStart,
                 disableRendering: disableRendering,
+                normalizedY: normalizedY
+            );
+        }
+
+        // constrain arm's y position based on the agent's current capsule collider center and extents
+        // valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
+        // arm constrained by the agent's capsule
+        public IEnumerator MoveArmBaseNew(
+            float y,
+            float speed = 1,
+            bool returnToStart = true,
+            bool normalizedY = true,
+            PhysicsSimulationParams physicsSimulationParams = null
+        ) {
+            if (normalizedY && (y < 0f || y > 1f)) {
+                // Checking for bounds when normalizedY == false is handled by arm.moveArmBase
+                throw new ArgumentOutOfRangeException($"y={y} value must be in [0, 1] when normalizedY=true.");
+            }
+            float fixedDeltaTimeFloat = (physicsSimulationParams?.fixedDeltaTime).GetValueOrDefault(Time.fixedDeltaTime);
+
+            IK_Robot_Arm_Controller arm = getArm();
+            return arm.moveArmBaseNew(
+                controller: this,
+                height: y,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTimeFloat,
+                returnToStartPositionIfFailed: returnToStart,
                 normalizedY: normalizedY
             );
         }

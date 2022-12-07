@@ -239,9 +239,18 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
     }
 
     protected IEnumerator resetArmTargetPositionRotationAsLastStep(IEnumerator steps) {
+        // IEnumerator last = null;
         while (steps.MoveNext()) {
             yield return steps.Current;
         }
+        Vector3 pos = handCameraTransform.transform.position;
+        Quaternion rot = handCameraTransform.transform.rotation;
+        armTarget.position = pos;
+        armTarget.rotation = rot;
+    }
+
+    protected IEnumerator resetArmTargetPositionRotationEnumerator() {
+        yield return null;
         Vector3 pos = handCameraTransform.transform.position;
         Quaternion rot = handCameraTransform.transform.rotation;
         armTarget.position = pos;
@@ -303,6 +312,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         string coordinateSpace = "armBase",
         bool restrictTargetPosition = false
     ) {
+        Debug.Log("---- IKROBO moveNEW start");
          // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
 
@@ -348,8 +358,23 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             );
         }
 
-        yield return resetArmTargetPositionRotationAsLastStep(
-            ContinuousMovement.move(
+        // yield return resetArmTargetPositionRotationAsLastStep(
+        //     ContinuousMovement.moveNew(
+        //         controller,
+        //         collisionListener,
+        //         armTarget,
+        //         targetWorldPos,
+        //         fixedDeltaTime,
+        //         unitsPerSecond,
+        //         returnToStart,
+        //         false
+        //     )
+        // );
+
+        Debug.Log("--- IK_ROBOT ARM calling moveNEW");
+
+        return resetArmTargetPositionRotationAsLastStep(
+            ContinuousMovement.moveNew(
                 controller,
                 collisionListener,
                 armTarget,
@@ -491,6 +516,46 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
         } else {
             StartCoroutine(moveCall);
         }
+    }
+
+    public IEnumerator moveArmBaseNew(
+        PhysicsRemoteFPSAgentController controller,
+        float height,
+        float unitsPerSecond,
+        float fixedDeltaTime = 0.02f,
+        bool returnToStartPositionIfFailed = false,
+        bool normalizedY = true
+    ) {
+        // clearing out colliders here since OnTriggerExit is not consistently called in Editor
+        collisionListener.Reset();
+
+        CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
+        Vector3 capsuleWorldCenter = cc.transform.TransformPoint(cc.center);
+
+        float maxY = capsuleWorldCenter.y + cc.height / 2f;
+        float minY = capsuleWorldCenter.y + (-cc.height / 2f) / 2f;
+
+        if (normalizedY) {
+            height = (maxY - minY) * height + minY;
+        }
+
+        if (height < minY || height > maxY) {
+            throw new ArgumentOutOfRangeException($"height={height} value must be in [{minY}, {maxY}].");
+        }
+
+        Vector3 target = new Vector3(this.transform.position.x, height, this.transform.position.z);
+        return resetArmTargetPositionRotationAsLastStep(
+                ContinuousMovement.moveNew(
+                controller: controller,
+                collisionListener: collisionListener,
+                moveTransform: this.transform,
+                targetPosition: target,
+                fixedDeltaTime: fixedDeltaTime,
+                unitsPerSecond: unitsPerSecond,
+                returnToStartPropIfFailed: returnToStartPositionIfFailed,
+                localPosition: false
+            )
+        );
     }
 
     public void moveArmBaseUp(

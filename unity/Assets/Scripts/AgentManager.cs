@@ -1135,16 +1135,12 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
 
                 this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
-                Debug.Log("-- fifo Sent message");
                 AsyncGPUReadback.WaitAllRequests();
-                 Debug.Log("-- fifo wait requests message");
                 foreach (var item in renderPayload) {
                     this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
                 }
                 this.fifoClient.SendEOM();
-                Debug.Log("-- fifo sendeom ");
                 string msg = this.fifoClient.ReceiveMessage();
-                Debug.Log("-- fifo msg recieve ");
                 ProcessControlCommand(msg);
 
                 while (canEmit() && this.fastActionEmit) {
