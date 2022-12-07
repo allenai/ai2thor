@@ -15,6 +15,8 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
 using UnityEngine.Rendering;
 using UnityEngine.Experimental.Rendering;
 #if PLATFORM_CLOUD_RENDERING
@@ -1063,6 +1065,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 // frame create new controller state Emitted, to detect between ready to emit and already emitted
 // remove back for python controller parity                        
 #if UNITY_EDITOR        
+                        Debug.LogWarning("EmitFrame WILL STOP RUNNING. createPayload will not be called after every action. Possible environment mismatch. Use python server to match standalone environment.");
                         break;
 #endif
                     }
@@ -1133,14 +1136,29 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
                 byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(multiMeta,
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+                
+                #if UNITY_EDITOR
+                    
+                    Debug.Log("FIFO Timeout started. Trying to read from FIFO server...");
+                    var completed = Task.Run(() => this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata)).Wait(2000);
+                    Debug.Log("ReachedTimeout " + !completed);
+                    if (!completed) {
+                        Debug.Log("FIFO Timeout Reached. Start FIFO server first if remote control is needed.");
+                        Debug.LogWarning("EmitFrame WILL STOP RUNNING. createPayload will not be called after every action. Possible environment mismatch. Use python server to match standalone environment.");
+                        break;
+                    }
+                #else 
+                    this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
+                #endif
 
-                this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
                 AsyncGPUReadback.WaitAllRequests();
                 foreach (var item in renderPayload) {
                     this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
                 }
                 this.fifoClient.SendEOM();
+                
                 string msg = this.fifoClient.ReceiveMessage();
+                
                 ProcessControlCommand(msg);
 
                 while (canEmit() && this.fastActionEmit) {
@@ -1176,6 +1194,18 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
 
     }
+
+    // public static async Task AwaitWithTimeout(this Task task, int timeout, Action success, Action error)
+    // {
+    //     if (await Task.WhenAny(task, Task.Delay(timeout)) == task)
+    //     {
+    //         success();
+    //     }
+    //     else
+    //     {
+    //         error();
+    //     }
+    // }
 
 
     // Uniform entry point for both the test runner and the python server for step dispatch calls
