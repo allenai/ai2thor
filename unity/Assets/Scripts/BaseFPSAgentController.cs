@@ -1799,6 +1799,98 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        // for use with TouchThenApplyForce feedback return
+        public struct WhatDidITouch {
+            public bool didHandTouchSomething;// did the hand touch something or did it hit nothing?
+            public string objectId;// id of object touched, if it is a sim object
+            public float armsLength;// the amount the hand moved from it's starting position to hit the object touched
+        }
+
+        // used to check if an specified sim object has come to rest
+        // set useTimeout bool to use a faster time out
+        protected IEnumerator checkIfObjectHasStoppedMoving(
+            SimObjPhysics sop,
+            float length,
+            bool useTimeout = false) {
+            // yield for the physics update to make sure this yield is consistent regardless of framerate
+            yield return new WaitForFixedUpdate();
+
+            float startTime = Time.time;
+            float waitTime = TimeToWaitForObjectsToComeToRest;
+
+            if (useTimeout) {
+                waitTime = 1.0f;
+            }
+
+            if (sop != null) {
+                Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
+                bool stoppedMoving = false;
+
+                while (Time.time - startTime < waitTime) {
+                    if (sop == null) {
+                        break;
+                    }
+
+                    float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
+                    float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
+
+                    // ok the accel is basically zero, so it has stopped moving
+                    if (Mathf.Abs(accel) <= 0.001f) {
+                        // force the rb to stop moving just to be safe
+                        rb.velocity = Vector3.zero;
+                        rb.angularVelocity = Vector3.zero;
+                        rb.Sleep();
+                        stoppedMoving = true;
+                        break;
+                    } else {
+                        yield return new WaitForFixedUpdate();
+                    }
+                }
+
+                // so we never stopped moving and we are using the timeout
+                if (!stoppedMoving && useTimeout) {
+                    errorMessage = "object couldn't come to rest";
+                    // print(errorMessage);
+                    actionFinished(false);
+                    yield break;
+                }
+
+                // we are past the wait time threshold, so force object to stop moving before
+                // rb.velocity = Vector3.zero;
+                // rb.angularVelocity = Vector3.zero;
+                // rb.Sleep();
+
+                // return to metadatawrapper.actionReturn if an object was touched during this interaction
+                if (length != 0.0f) {
+                    WhatDidITouch feedback = new WhatDidITouch() { didHandTouchSomething = true, objectId = sop.objectID, armsLength = length };
+
+#if UNITY_EDITOR
+                    print("yield timed out");
+                    print("didHandTouchSomething: " + feedback.didHandTouchSomething);
+                    print("object id: " + feedback.objectId);
+                    print("armslength: " + feedback.armsLength);
+#endif
+
+                    // force objec to stop moving 
+                    rb.velocity = Vector3.zero;
+                    rb.angularVelocity = Vector3.zero;
+                    rb.Sleep();
+
+                    actionFinished(true, feedback);
+                }
+
+                // if passed in length is 0, don't return feedback cause not all actions need that
+                else {
+                    DefaultAgentHand();
+                    actionFinished(true, sop.transform.position);
+                }
+            } else {
+                errorMessage = "null reference sim obj in checkIfObjectHasStoppedMoving call";
+                actionFinished(false);
+            }
+
+        }
+
         public void TeleportObject(
             string objectId,
             Vector3 position,
