@@ -122,6 +122,11 @@ public class NavMeshSetup : MonoBehaviour {
         selection.ToList().ForEach(sceneName => BuildNavmeshForScene(sceneName));
     }
 
+    [UnityEditor.MenuItem("NavMesh/Build NavMesh for Active Scene")]
+    public static void BuildForCurrentActiveScene() {
+        BuildNavmeshForScene(EditorSceneManager.GetActiveScene().path);
+    } 
+
     private static List<string> GetRoboSceneNames(int lastIndex, int lastSubIndex, string nameTemplate, string pathPrefix = "Assets/Scenes") {
         var scenes = new List<string>();
         for (var i = 1; i <= lastIndex; i++) {
@@ -153,10 +158,11 @@ public class NavMeshSetup : MonoBehaviour {
     }
 
     private static void BuildNavmeshForScene(string sceneName) {
-        EditorSceneManager.OpenScene(sceneName);
+        //EditorSceneManager.OpenScene(sceneName);
         SetNavMeshNotWalkable(GameObject.Find("Objects"));
         SetNavMeshNotWalkable(GameObject.Find("Structure"));
-        SetNavMeshWalkable(GameObject.Find("Objects").transform.FirstChildOrDefault(x => x.name.Contains("Floor")).gameObject);
+        SetNavMeshWalkable(SearchForSimObjectType(SimObjType.Floor, GameObject.Find("Objects")));
+        //SetNavMeshWalkable(GameObject.Find("Objects").transform.FirstChildOrDefault(x => x.name.Contains("Floor")).gameObject);
 
         // var floorStruct = GameObject.Find("Structure").transform.FirstChildOrDefault(x => x.name.Contains("Decals"));
         // if (floorStruct != null) {
@@ -168,7 +174,7 @@ public class NavMeshSetup : MonoBehaviour {
         var navmeshAgent = agentController.GetComponentInChildren<NavMeshAgent>();
         navmeshAgent.enabled = true;
         // The Editor bake interface does not take with parameters and could not be modified as of 2018.3
-        // var buildSettings = 
+        //var buildSettings = 
         new NavMeshBuildSettings() {
             agentTypeID = navmeshAgent.agentTypeID,
             agentRadius = 0.2f,
@@ -184,31 +190,38 @@ public class NavMeshSetup : MonoBehaviour {
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
     }
 
-    private static void SetNavMeshNotWalkable(GameObject hirerarchy) {
+    public static void SetNavMeshNotWalkable(GameObject hierarchy) {
 
-        var objectHierarchy = GameObject.Find("Objects");
-        if (objectHierarchy == null) {
-            objectHierarchy = GameObject.Find("Object");
-        }
-        for (int i = 0; i < objectHierarchy.transform.childCount; i++) {
-            var child = objectHierarchy.transform.GetChild(i);
+        for (int i = 0; i < hierarchy.transform.childCount; i++) {
+            var child = hierarchy.transform.GetChild(i);
             child.GetComponentsInChildren<MeshRenderer>().ToList().ForEach(meshRenderer => {
                 Debug.Log("Mesh Renderer " + meshRenderer.gameObject.name + " layer ");
                 UnityEditor.GameObjectUtility.SetStaticEditorFlags(meshRenderer.gameObject, UnityEditor.StaticEditorFlags.NavigationStatic);
                 UnityEditor.GameObjectUtility.SetNavMeshArea(meshRenderer.gameObject, NavMesh.GetAreaFromName("Not Walkable"));
             });
-            Debug.Log("Setting flag for " + child.gameObject.name + " layer " + NavMesh.GetAreaFromName("Not Walkable"));
+            //Debug.Log("Setting flag for " + child.gameObject.name + " layer " + NavMesh.GetAreaFromName("Not Walkable"));
         }
     }
 
-    private static void SetNavMeshWalkable(GameObject hirerarchy) {
+    private static void SetNavMeshWalkable(GameObject hierarchy) {
 
         //  var objectHierarchy = hirerarchy.transform.FirstChildOrDefault(x => x.name.Contains("Floor"));
-        hirerarchy.GetComponentsInChildren<MeshRenderer>().ToList().ForEach(meshRenderer => {
+        hierarchy.GetComponentsInChildren<MeshRenderer>().ToList().ForEach(meshRenderer => {
             Debug.Log("Mesh Renderer " + meshRenderer.gameObject.name + " layer ");
             UnityEditor.GameObjectUtility.SetStaticEditorFlags(meshRenderer.gameObject, UnityEditor.StaticEditorFlags.NavigationStatic);
             UnityEditor.GameObjectUtility.SetNavMeshArea(meshRenderer.gameObject, NavMesh.GetAreaFromName("Walkable"));
         });
+    }
+
+    private static GameObject SearchForSimObjectType(SimObjType sot, GameObject hierarchy) {
+        GameObject go = null;
+
+        hierarchy.GetComponentsInChildren<SimObjPhysics>().ToList().ForEach(sop => {
+            if(sop.ObjType == sot)
+            go = sop.gameObject;
+        });
+
+        return go;
     }
 #endif
 }

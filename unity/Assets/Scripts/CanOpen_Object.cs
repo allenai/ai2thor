@@ -23,7 +23,18 @@ public class CanOpen_Object : MonoBehaviour {
 
     [SerializeField]
     public float currentOpenness = 1.0f; // 0.0 to 1.0 - percent of openPosition the object opens. 
-    private float startOpenness; // used to reset on failure
+    
+    // used to reset on failure
+    private float startOpenness;
+    private float lastSuccessfulOpenness;
+    public enum failState {none, collision, hyperextension};
+    private failState failure = failState.none;
+    private GameObject failureCollision;
+    
+    // used to store whether moving parts should treat non-static SimObjects as barriers
+    private bool forceAction = false;
+    private bool ignoreAgentInTransition = false;
+    private bool stopAtNonStaticCol = false;
 
     [Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
     // these are objects to ignore collision with. This is in case the fridge doors touch each other or something that might
@@ -35,10 +46,12 @@ public class CanOpen_Object : MonoBehaviour {
     [SerializeField]
     public bool isOpen = false;
 
-    [SerializeField]
-    public bool isCurrentlyResetting = true;
+    private bool isCurrentlyLerping = false;
+    // [SerializeField]
+    //public bool isCurrentlyResetting = false;
+    // private bool isCurrentlyResetting = false;
 
-    protected enum MovementType { Slide, Rotate, ScaleX, ScaleY, ScaleZ };
+    public enum MovementType { Slide, Rotate, Scale };
 
     [SerializeField]
     protected MovementType movementType;
@@ -58,21 +71,6 @@ public class CanOpen_Object : MonoBehaviour {
 
     public List<SimObjType> WhatReceptaclesMustBeOffToOpen() {
         return MustBeOffToOpen;
-    }
-
-    void Awake() {
-        if (MovingParts != null) {
-            // init Itween in all doors to prep for animation
-            foreach (GameObject go in MovingParts) {
-                // Init is getting called in Awake() vs Start() so that cloned gameobjects can add MovingParts
-                // before iTween.Awake() gets called which would throw an error if this was done in Start()
-                iTween.Init(go);
-
-                // check to make sure all doors have a Fridge_Door.cs script on them, if not throw a warning
-                // if (!go.GetComponent<Fridge_Door>())
-                // Debug.Log("Fridge Door is missing Fridge_Door.cs component! OH NO!");
-            }
-        }
     }
 
     // Use this for initialization
@@ -120,17 +118,10 @@ public class CanOpen_Object : MonoBehaviour {
         movementType = MovementType.Rotate;
     }
 
-    public void SetMovementToScaleX() {
-        movementType = MovementType.ScaleX;
+    public void SetMovementToScale() {
+        movementType = MovementType.Scale;
     }
 
-    public void SetMovementToScaleY() {
-        movementType = MovementType.ScaleY;
-    }
-
-    public void SetMovementToScaleZ() {
-        movementType = MovementType.ScaleZ;
-    }
 #endif
 
     //sets the openness of a "rotation" based open/close object immediately without using tweening
@@ -141,10 +132,19 @@ public class CanOpen_Object : MonoBehaviour {
             MovingParts[i].transform.localRotation = Quaternion.Euler(newRot);
         }
 
-        setIsOpen(openness: openness);
+        setIsOpen(openness);
     }
 
-    public void Interact(float openness = 1.0f) {
+    public void Interact(
+        float targetOpenness = 1.0f,
+        float? physicsInterval = null,
+        bool returnToStart = true,
+        bool useGripper = false,
+        bool returnToStartMode = false,
+        GameObject posRotManip = null,
+        GameObject posRotRef = null
+        ) {
+
         // if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         // before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
@@ -152,109 +152,335 @@ public class CanOpen_Object : MonoBehaviour {
             gameObject.GetComponent<Rigidbody>().isKinematic = false;
         }
 
-        startOpenness = currentOpenness;
-        for (int i = 0; i < MovingParts.Length; i++) {
-            Hashtable args = new Hashtable() {
-                {"islocal", true},
-                {"time", animationTime},
-                {"easetype", "linear"}
-            };
+        // set physicsInterval to default of 0.02 if no value has yet been given
+        physicsInterval = physicsInterval.GetValueOrDefault(Time.fixedDeltaTime);
 
-            // we are on the last moving part here
-            if (i == MovingParts.Length - 1) {
-                args["onCompleteTarget"] = gameObject;
-            }
-
-            // let's open the object!
-            if (movementType == MovementType.Rotate) {
-                args["rotation"] = openPositions[i] * openness;
-                iTween.RotateTo(MovingParts[i], args);
-            } else if (movementType == MovementType.Slide) {
-                // this is used to determine which components of openPosition need to be scaled
-                // default to open position without percentage open modifiers
-                Vector3 lerpToPosition = openPositions[i];
-
-                // some x, y, z components don't change when sliding open
-                // only apply openness modifier to components of vector3 that actually change
-                if (openPositions[i].x - closedPositions[i].x != Mathf.Epsilon) {
-                    lerpToPosition.x = ((openPositions[i].x - closedPositions[i].x) * openness) + closedPositions[i].x;
-                }
-                if (openPositions[i].y - closedPositions[i].y != Mathf.Epsilon) {
-                    lerpToPosition.y = ((openPositions[i].y - closedPositions[i].y) * openness) + closedPositions[i].y;
-                }
-                if (openPositions[i].z - closedPositions[i].z != Mathf.Epsilon) {
-                    lerpToPosition.z = ((openPositions[i].z - closedPositions[i].z) * openness) + closedPositions[i].z;
-                }
-                args["position"] = lerpToPosition;
-                iTween.MoveTo(MovingParts[i], args);
-            } else if (movementType == MovementType.ScaleY) {
-                args["scale"] = new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * openness, openPositions[i].z);
-                iTween.ScaleTo(MovingParts[i], args);
-            } else if (movementType == MovementType.ScaleX) {
-                // we are on the last loop here
-                args["scale"] = new Vector3(closedPositions[i].x + (openPositions[i].x - closedPositions[i].x) * openness, openPositions[i].y, openPositions[i].z);
-                iTween.ScaleTo(MovingParts[i], args);
-            } else if (movementType == MovementType.ScaleZ) {
-                args["scale"] = new Vector3(openPositions[i].x, openPositions[i].y, closedPositions[i].z + (openPositions[i].z - closedPositions[i].z) * openness);
-                iTween.ScaleTo(MovingParts[i], args);
-            }
+        if (failure == failState.none) {
+            // storing initial opennness-state case there's a failure, and we want to revert back to it
+            startOpenness = currentOpenness;
+            // storing lastSuccessfulOpenness in case opening fails on very first physics-step, and returnToStart is false
+            lastSuccessfulOpenness = currentOpenness;
         }
 
-        setIsOpen(openness: openness);
+        // okay let's open / reset the object!
+        if (movementType == MovementType.Slide) {
+            if (failure == failState.none || returnToStart == true) {
+                 StartCoroutine(LerpPosition(
+                    movingParts: MovingParts,
+                    closedLocalPositions: closedPositions,
+                    openLocalPositions: openPositions,
+                    initialOpenness: currentOpenness,
+                    desiredOpenness: targetOpenness,
+                    animationTime: animationTime,
+                    physicsInterval: (float)physicsInterval,
+                    useGripper: useGripper,
+                    returnToStartMode: returnToStartMode,
+                    posRotManip: posRotManip,
+                    posRotRef: posRotRef
+                 ));
+            } else {
+                currentOpenness = lastSuccessfulOpenness;
+                for (int i = 0; i < MovingParts.Length; i++) {
+                    MovingParts[i].transform.localPosition = Vector3.Lerp(closedPositions[i], openPositions[i], currentOpenness);
+                }
+                SyncPosRot(posRotManip, posRotRef);
+                
+                setIsOpen(currentOpenness);
+                isCurrentlyLerping = false;
+            }
+        } else if (movementType == MovementType.Rotate) {
+            if (failure == failState.none || returnToStart == true) {
+                StartCoroutine(LerpRotation(
+                    movingParts: MovingParts,
+                    closedLocalRotations: closedPositions,
+                    openLocalRotations: openPositions,
+                    initialOpenness: currentOpenness,
+                    desiredOpenness: targetOpenness,
+                    animationTime: animationTime,
+                    physicsInterval: (float)physicsInterval,
+                    useGripper: useGripper,
+                    returnToStartMode: returnToStartMode,
+                    posRotManip: posRotManip,
+                    posRotRef: posRotRef
+                ));
+            } else {
+                currentOpenness = lastSuccessfulOpenness;
+                for (int i = 0; i < MovingParts.Length; i++) {
+                    MovingParts[i].transform.localRotation = Quaternion.Lerp(Quaternion.Euler(closedPositions[i]), Quaternion.Euler(openPositions[i]), currentOpenness);
+                }
+                SyncPosRot(posRotManip, posRotRef);
+
+                setIsOpen(currentOpenness);
+                isCurrentlyLerping = false;
+            }
+        } else if (movementType == MovementType.Scale) {
+            if (failure == failState.none || returnToStart == true) {
+                StartCoroutine(LerpScale(
+                    movingParts: MovingParts,
+                    closedLocalScales: closedPositions,
+                    openLocalScales: openPositions,
+                    initialOpenness: currentOpenness,
+                    desiredOpenness: targetOpenness,
+                    animationTime: animationTime,
+                    physicsInterval: (float)physicsInterval,
+                    useGripper: useGripper,
+                    returnToStartMode: returnToStartMode,
+                    posRotManip: posRotManip,
+                    posRotRef: posRotRef
+                ));
+            } else {
+                currentOpenness = lastSuccessfulOpenness;
+                for (int i = 0; i < MovingParts.Length; i++) {
+                    MovingParts[i].transform.localScale = Vector3.Lerp(closedPositions[i], openPositions[i], currentOpenness);
+                }
+                SyncPosRot(posRotManip, posRotRef);
+
+                setIsOpen(currentOpenness);
+                isCurrentlyLerping = false;
+            }
+        }
+    }
+
+    private protected IEnumerator LerpPosition(
+        GameObject[] movingParts,
+        Vector3[] closedLocalPositions,
+        Vector3[] openLocalPositions,
+        float initialOpenness,
+        float desiredOpenness,
+        float animationTime,
+        float physicsInterval,
+        bool useGripper,
+        bool returnToStartMode,
+        GameObject posRotManip,
+        GameObject posRotRef
+    ) {
+        float elapsedTime = 0f;
+        while (elapsedTime < animationTime && (failure == failState.none || returnToStartMode == true))
+        {
+            lastSuccessfulOpenness = currentOpenness;
+            elapsedTime += physicsInterval;
+            currentOpenness = Mathf.Clamp(
+                initialOpenness + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
+                Mathf.Min(initialOpenness, desiredOpenness),
+                Mathf.Max(initialOpenness, desiredOpenness));
+
+            for (int i = 0; i < movingParts.Length; i++) {
+                movingParts[i].transform.localPosition = Vector3.Lerp(closedLocalPositions[i], openLocalPositions[i], currentOpenness);
+            }
+
+            if (useGripper == true) {
+                SyncPosRot(posRotManip, posRotRef);
+            }
+
+            stepOpen(physicsInterval, useGripper, elapsedTime);
+#if UNITY_EDITOR
+            yield return null;
+#endif
+        }
+
+        setIsOpen(currentOpenness);
+        isCurrentlyLerping = false;
+        yield break;
+    }
+
+    private protected IEnumerator LerpRotation(
+        GameObject[] movingParts,
+        Vector3[] closedLocalRotations,
+        Vector3[] openLocalRotations,
+        float initialOpenness,
+        float desiredOpenness,
+        float animationTime,
+        float physicsInterval,
+        bool useGripper,
+        bool returnToStartMode,
+        GameObject posRotManip,
+        GameObject posRotRef
+    ) {
+        float elapsedTime = 0f;
+        while (elapsedTime < animationTime && (failure == failState.none || returnToStartMode == true))
+        {
+            lastSuccessfulOpenness = currentOpenness;
+            elapsedTime += physicsInterval;
+            currentOpenness = Mathf.Clamp(
+                initialOpenness + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
+                Mathf.Min(initialOpenness, desiredOpenness),
+                Mathf.Max(initialOpenness, desiredOpenness));
+
+            for (int i = 0; i < movingParts.Length; i++) {
+                movingParts[i].transform.localRotation = Quaternion.Lerp(Quaternion.Euler(closedLocalRotations[i]), Quaternion.Euler(openLocalRotations[i]), currentOpenness);
+            }
+
+            if (useGripper == true) {
+                SyncPosRot(posRotManip, posRotRef);
+            }
+
+#if UNITY_EDITOR
+            yield return null;
+#endif
+            stepOpen(physicsInterval, useGripper, elapsedTime);
+        }
+
+        setIsOpen(currentOpenness);
+        isCurrentlyLerping = false;
+        yield break;
+    }
+
+    private protected IEnumerator LerpScale(
+        GameObject[] movingParts,
+        Vector3[] closedLocalScales,
+        Vector3[] openLocalScales,
+        float initialOpenness,
+        float desiredOpenness,
+        float animationTime,
+        float physicsInterval,
+        bool useGripper,
+        bool returnToStartMode,
+        GameObject posRotManip,
+        GameObject posRotRef
+    ) {
+        float elapsedTime = 0f;
+
+        while (elapsedTime < animationTime && (failure == failState.none || returnToStartMode == true))
+        {
+            lastSuccessfulOpenness = currentOpenness;
+            elapsedTime += physicsInterval;
+            currentOpenness = Mathf.Clamp(
+                initialOpenness + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
+                Mathf.Min(initialOpenness, desiredOpenness),
+                Mathf.Max(initialOpenness, desiredOpenness));
+
+            for (int i = 0; i < movingParts.Length; i++) {
+                movingParts[i].transform.localScale = Vector3.Lerp(closedLocalScales[i], openLocalScales[i], currentOpenness);
+            }
+
+            if (useGripper == true) {
+                SyncPosRot(posRotManip, posRotRef);
+            }
+
+            stepOpen(physicsInterval, useGripper, elapsedTime);
+#if UNITY_EDITOR
+            yield return null;
+#endif
+        }
+
+        setIsOpen(currentOpenness);
+        isCurrentlyLerping = false;
+        yield break;
     }
 
     private void setIsOpen(float openness) {
         isOpen = openness != 0;
         currentOpenness = openness;
-        // SwitchActiveBoundingBox();
     }
-
-    //// private void SwitchActiveBoundingBox() {
-    //    // some things that open and close don't need to switch bounding boxes- drawers for example, only things like
-    //    // cabinets that are not self contained need to switch between open/close bounding box references (ie: books, cabinets, microwave, etc)
-    //    if (OpenBoundingBox == null || ClosedBoundingBox == null) {
-    //        return;
-    //    }
-
-    //    SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
-    //    sop.BoundingBox = isOpen ? OpenBoundingBox : ClosedBoundingBox;
-    //}
 
     public bool GetisOpen() {
         return isOpen;
     }
 
-    // for use in OnTriggerEnter ignore check
-    // return true if it should ignore the object hit. Return false to cause this object to reset to the original position
-    public bool IsInIgnoreArray(Collider other, GameObject[] arrayOfCol) {
-        for (int i = 0; i < arrayOfCol.Length; i++) {
-            if (other.GetComponentInParent<CanOpen_Object>().transform) {
-                if (other.GetComponentInParent<CanOpen_Object>().transform == arrayOfCol[i].transform) {
-                    return true;
-                }
-            } else {
-                return true;
+    public void stepOpen(
+        float physicsInterval,
+        bool useGripper,
+        float elapsedTime) {
+        if (Physics.autoSimulation != true) {
+            PhysicsSceneManager.PhysicsSimulateTHOR(physicsInterval);
+            Physics.SyncTransforms();
+        }
+
+        // failure check (The OnTriggerEnter collision check is listening at all times,
+        // but this hyperextension check must be called manually)
+        if (useGripper == true && forceAction == false) {
+            FK_IK_Solver armBase = GameObject.Find("FPSController").GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmBase().GetComponent<FK_IK_Solver>();
+            if ((armBase.IKTarget.position - armBase.armShoulder.position).magnitude + 1e-5 >= armBase.bone2Length + armBase.bone3Length) {
+                failure = failState.hyperextension;
+#if UNITY_EDITOR
+        Debug.Log("Agent-arm hyperextended at " + elapsedTime + ". Resetting openness.");
+#endif
             }
         }
-        return false;
     }
 
-    public int GetiTweenCount() {
-        // the number of iTween instances running on all doors managed by this fridge
-        int count = 0;
-        foreach (GameObject go in MovingParts) {
-            count += iTween.Count(go);
+    public void OnTriggerEnter(Collider other) {
+        // If the openable object is meant to ignore trigger collisions entirely, then ignore
+        if (!triggerEnabled) {
+            // Debug.Log("I'm supposed to ignore triggers!, Bye, " + other);
+            return;
         }
-        return count; // iTween.Count(this.transform.gameObject);
+
+        // If the openable object is not opening or closing, then ignore
+        if (!isCurrentlyLerping) {
+            // Debug.Log("I'm not currently lerping! Bye, " + other);
+            return;
+        }
+
+        // If forceAction is enabled, then ignore
+        if (forceAction == true) {
+            // Debug.Log("All checks are off when forceAction is true!");
+            return;
+        }
+
+        // If the overlapping collider is a (non-physical) trigger collider, then ignore
+        if (other.isTrigger == true) {
+            // Debug.Log(other + "is a trigger, so bye!");
+            return;
+        }
+
+        // If the overlapping collider is a child of one of the gameobjects
+        // that it's been explicitly told to disregard, then ignore
+        if (IsInIgnoreArray(other, IgnoreTheseObjects)) {
+            // Debug.Log(other + " is in ignore array");
+            return;
+        }
+
+        // If the collider is a BoundingBox or ReceptacleTriggerBox, then ignore
+        if (other.gameObject.layer ==  LayerMask.NameToLayer ("SimObjectInvisible")) {
+            // Debug.Log(other + " is bounding box or receptacle trigger box");
+            return;
+        }
+
+        // If the overlapping collider is a descendant of the openable GameObject itself (or its parent), then ignore
+        if (hasAncestor(other.transform.gameObject, gameObject)) {
+            // Debug.Log(other + " belongs to me!");
+            return;
+        }
+
+        // If the overlapping collider is a descendant of the agent when ignoreAgentInTransition is true, then ignore
+        if (ignoreAgentInTransition == true && hasAncestor(other.transform.gameObject, GameObject.Find("FPSController"))) {
+            // Debug.Log(other + " belongs to agent, and ignoreAgentInTransition is active!");
+            return;
+        }
+
+        // If the overlapping collider belongs to a non-static SimObject, then ignore
+        // (Unless we explicitly tell the action to treat non-static SimObjects as barriers)
+        if (ancestorSimObjPhysics(other.gameObject) != null &&
+            ancestorSimObjPhysics(other.gameObject).PrimaryProperty != SimObjPrimaryProperty.Static &&
+            stopAtNonStaticCol == false) {
+            // Debug.Log("Ignore nonstatics " + other);
+            return;
+        }
+
+        // All right, so it was a legit collision? RESET!
+        failure = failState.collision;
+        if (ancestorSimObjPhysics(other.gameObject) != null) {
+            failureCollision = other.GetComponentInParent<SimObjPhysics>().gameObject;
+        }
+        else {
+            failureCollision = other.gameObject;
+        }
+#if UNITY_EDITOR
+        Debug.Log(gameObject.name + " hit " + failureCollision + ". Resetting openness.");
+#endif
     }
 
-    // note: reset can interrupt the Interact() itween call because
-    // it will start a new set of tweens before onComplete is called from Interact()... it seems
-    public void Reset() {
-        if (!isCurrentlyResetting) {
-            Interact(openness: startOpenness);
-            StartCoroutine("updateReset");
+    // for use in OnTriggerEnter ignore check
+    // return true if it should ignore the object hit. Return false to cause this object to reset to the original position
+    public bool IsInIgnoreArray(Collider other, GameObject[] ignoredObjects) {
+        foreach (GameObject ignoredObject in ignoredObjects) {
+            foreach (Collider ignoredCollider in ignoredObject.GetComponentsInChildren<Collider>())
+                if (other == ignoredCollider) {
+                    return true;
+                }
         }
+    return false;
     }
 
     private bool hasAncestor(GameObject child, GameObject potentialAncestor) {
@@ -267,66 +493,60 @@ public class CanOpen_Object : MonoBehaviour {
         }
     }
 
-    public void OnTriggerEnter(Collider other) {
-        if (other.CompareTag("Receptacle")) {
-            return;
+    private static SimObjPhysics ancestorSimObjPhysics(GameObject go) {
+        if (go == null) {
+            return null;
         }
-        if (!triggerEnabled) {
-            return;
-        }
-        // note: Normally rigidbodies set to Kinematic will never call the OnTriggerX events
-        // when colliding with another rigidbody that is kinematic. For some reason, if the other object
-        // has a trigger collider even though THIS object only has a kinematic rigidbody, this
-        // function is still called so we'll use that here:
-
-        // The Agent has a trigger Capsule collider, and other cabinets/drawers have
-        // a trigger collider, so this is used to reset the position if the agent or another
-        // cabinet or drawer is in the way of this object opening/closing
-
-        // if hitting the Agent AND not being currently held by the Agent(so things like Laptops don't constantly reset if the agent is holding them)
-        // ..., reset position and report failed action
-        // NOTE: hitting the agent and resetting is now handled by the OpenAnimation coroutine in PhysicsRemote
-
-        //// If the thing your colliding with is one of your (grand)-children then don't worry about it
-        if (hasAncestor(other.transform.gameObject, gameObject)) {
-            return;
-        }
-
-        // if hitting another object that has double doors, do some checks 
-        if (other.GetComponentInParent<CanOpen_Object>() && isCurrentlyResetting == true) {
-            if (IsInIgnoreArray(other, IgnoreTheseObjects)) {
-                // don't reset, it's cool to ignore these since some cabinets literally clip into each other if they are double doors
-                return;
-            }
-
-            // oh it was something else RESET! DO IT!
-            else {
-                // check the collider hit's parent for itween instances
-                // if 0, then it is not actively animating so check against it. This is needed so openable objects don't reset unless they are the active
-                // object moving. Otherwise, an open cabinet hit by a drawer would cause the Drawer AND the cabinet to try and reset.
-                // this should be fine since only one cabinet/drawer will be moving at a time given the Agent's action only opening on object at a time
-                if (other.transform.GetComponentInParent<CanOpen_Object>().GetiTweenCount() == 0
-                    && other.GetComponentInParent<SimObjPhysics>().PrimaryProperty == SimObjPrimaryProperty.Static)// check this so that objects that are openable & pickupable don't prevent drawers/cabinets from animating
-                {
-#if UNITY_EDITOR
-                    Debug.Log(gameObject.name + " hit " + other.name + " on " + other.GetComponentInParent<SimObjPhysics>().transform.name + " Resetting position");
-#endif
-                    isCurrentlyResetting = false;
-                    Reset();
-                }
-            }
+        SimObjPhysics so = go.GetComponent<SimObjPhysics>();
+        if (so != null) {
+            return so;
+        } else if (go.transform.parent != null) {
+            return ancestorSimObjPhysics(go.transform.parent.gameObject);
+        } else {
+            return null;
         }
     }
 
-    // resets the isCurrentlyResetting boolean once the reset tween is done. This checks for iTween instances, once there are none this object can be used again
-    private IEnumerator updateReset() {
-        while (true) {
-            if (GetiTweenCount() != 0) {
-                yield return new WaitForEndOfFrame();
-            } else {
-                isCurrentlyResetting = true;
-                yield break;
-            }
+    public MovementType GetMovementType() {
+        return movementType;
+    }
+    public float GetStartOpenness() {
+        return startOpenness;
+    }
+    public void SetFailState(failState failState) {
+        failure = failState;
+    }
+    public failState GetFailState() {
+        return failure;
+    }
+    public void SetFailureCollision(GameObject collision) {
+        failureCollision = collision;
+    }
+    public GameObject GetFailureCollision() {
+        return failureCollision;
+    }
+    public void SetForceAction(bool forceAction) {
+        this.forceAction = forceAction;
+    }
+    public void SetIgnoreAgentInTransition(bool ignoreAgentInTransition) {
+        this.ignoreAgentInTransition = ignoreAgentInTransition;
+    }
+    public void SetStopAtNonStaticCol(bool stopAtNonStaticCol) {
+        this.stopAtNonStaticCol = stopAtNonStaticCol;
+    }
+    public bool GetIsCurrentlyLerping() {
+        if (this.isCurrentlyLerping) {
+            return true;
         }
+        else {
+            return false;
+        }
+    }
+    public void SetIsCurrentlyLerping(bool isCurrentlyLerping) {
+        this.isCurrentlyLerping = isCurrentlyLerping;
+    }
+    public void SyncPosRot(GameObject child, GameObject parent) {
+            child.transform.position = parent.transform.position;
+            child.transform.rotation = parent.transform.rotation;
     }
 }

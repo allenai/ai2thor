@@ -274,8 +274,17 @@ public class Contains : MonoBehaviour {
 
             RaycastHit hit;
 
-            if (Physics.Raycast(point, -ydir, out hit, ydist, 1 << 8, QueryTriggerInteraction.Collide))// NOTE: QueryTriggerInteraction was previously Ignore
-            {
+            // NOTE: QueryTriggerInteraction was previously Ignore
+            if (
+                Physics.Raycast(
+                    point,
+                    -ydir,
+                    out hit,
+                    ydist,
+                    LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
+                    QueryTriggerInteraction.Collide
+                )
+            ) {
 
                 // IMPORTANT NOTE: For objects like Sinks and Bathtubs where the interior simobject (SinkBasin, BathtubBasin) are children, make sure the interior Contains scripts have their 'myParent' field
                 // set to the PARENT object of the sim object, not the sim object itself ie: SinkBasin's myParent = Sink

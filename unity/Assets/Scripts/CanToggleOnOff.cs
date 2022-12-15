@@ -36,10 +36,15 @@ public class CanToggleOnOff : MonoBehaviour {
     [SerializeField]
     public SwapObjList[] MaterialSwapObjects;
 
-    // Light emitting objects that must be toggled enabled/disabled. Can also be used for non-Light objects
-    [Header("Light Source Objects/Objects to Enable or Disable")]
+    // Light emitting objects that must be toggled enabled/disabled.
+    [Header("Light Source to Enable or Disable")]
     [SerializeField]
-    public GameObject[] LightSources;
+    public Light[] LightSources;
+
+    //stuff like particles or other rendered objects to toggle (ex: flame particles, renderers, heat trigger colliders-Microwaves)
+    [Header("Effects/Objects to Enable or Disable")]
+    [SerializeField]
+    public GameObject[] effects;
 
     [Header("Animation Parameters")]
 
@@ -58,6 +63,8 @@ public class CanToggleOnOff : MonoBehaviour {
     // microwaves should be default off etc.
     [SerializeField]
     public bool isOn = true;
+
+    private bool isCurrentlyLerping = false;
 
     protected enum MovementType { Slide, Rotate };
 
@@ -111,18 +118,10 @@ public class CanToggleOnOff : MonoBehaviour {
 
 #endif
 
-    void Awake() {
-        if (MovingParts != null) {
-            foreach (GameObject go in MovingParts) {
-                // Init is getting called in Awake() vs Start() so that cloned gameobjects can add MovingParts
-                // before iTween.Awake() gets called which would throw an error if this was done in Start()
-                iTween.Init(go);
-            }
-        }
-    }
-
     // Use this for initialization
     void Start() {
+
+        //setLightSourcesNames();
 
 #if UNITY_EDITOR
         if (!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)) {
@@ -131,25 +130,25 @@ public class CanToggleOnOff : MonoBehaviour {
 #endif
     }
 
+    //set light source names to naming scheme: {objectID}|{Type}|{instance}
+    //used to set child light source names
+    // public void setLightSourcesNames () {
+    //     for (int i = 0; i < LightSources.Length; i++ ) {
+    //         Light actualLightCauseSometimesTheseAreNested = LightSources[i].GetComponentInChildren<Light>();
+    //         actualLightCauseSometimesTheseAreNested.name = 
+    //         this.GetComponent<SimObjPhysics>().objectID + "|" + LightSources[i].GetComponentInChildren<Light>().type.ToString()+ "|" + i.ToString();
+    //     }
+    // }
+
     // Update is called once per frame
     void Update() {
         // // test if it can open without Agent Command - Debug Purposes
-        // #if UNITY_EDITOR
-        // if (Input.GetKeyDown(KeyCode.Minus))
-        // {
-        //     Toggle();
-        // }
-        // #endif
-    }
-
-    public int GetiTweenCount() {
-        // the number of iTween instances running on all doors managed by this fridge
-        int count = 0;
-
-        foreach (GameObject go in MovingParts) {
-            count += iTween.Count(go);
+        #if UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.Minus))
+        {
+            Toggle();
         }
-        return count;// iTween.Count(this.transform.gameObject);
+        #endif
     }
 
     public void Toggle() {
@@ -157,92 +156,68 @@ public class CanToggleOnOff : MonoBehaviour {
         if (!SelfControlled) {
             return;
         }
-
+        
+        isCurrentlyLerping = true;
         // check if there are moving parts
         // check if there are lights/materials etc to swap out
-        if (isOn) {
+        if (!isOn) {
             if (MovingParts.Length > 0) {
                 for (int i = 0; i < MovingParts.Length; i++) {
-                    if (movementType == MovementType.Rotate) {
-                        if (i == MovingParts.Length - 1) {
-                            iTween.RotateTo(MovingParts[i], iTween.Hash(
-                            "rotation", OffPositions[i],
-                            "islocal", true,
-                            "time", animationTime,
-                            "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
-                        } else {
-                            iTween.RotateTo(MovingParts[i], iTween.Hash(
-                                "rotation", OffPositions[i],
-                                "islocal", true,
-                                "time", animationTime,
-                                "easetype", "linear"));
-                        }
+                    if (movementType == MovementType.Slide) {
+                        StartCoroutine(LerpPosition(
+                            movingParts: MovingParts,
+                            offLocalPositions: OffPositions,
+                            onLocalPositions: OnPositions,
+                            initialOpenness: 0,
+                            desiredOpenness: 1,
+                            animationTime: animationTime
+                        ));
                     }
 
-                    if (movementType == MovementType.Slide) {
-                        if (i == MovingParts.Length - 1) {
-                            iTween.MoveTo(MovingParts[i], iTween.Hash(
-                            "position", OffPositions[i],
-                            "islocal", true,
-                            "time", animationTime,
-                            "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
-                        } else {
-                            iTween.MoveTo(MovingParts[i], iTween.Hash(
-                                "position", OffPositions[i],
-                                "islocal", true,
-                                "time", animationTime,
-                                "easetype", "linear"));
-                        }
+                    else if (movementType == MovementType.Rotate) { 
+                        StartCoroutine(LerpRotation(
+                            movingParts: MovingParts,
+                            offLocalRotations: OffPositions,
+                            onLocalRotations: OnPositions,
+                            initialOpenness: 0,
+                            desiredOpenness: 1,
+                            animationTime: animationTime
+                        ));
                     }
                 }
             }
 
-            // if no moving parts, then only materials and lights need to be swapped
-            else {
-                setisOn();
-            }
+            setisOn();
         } else {
             if (MovingParts.Length > 0) {
                 for (int i = 0; i < MovingParts.Length; i++) {
-                    if (movementType == MovementType.Rotate) {
-                        if (i == MovingParts.Length - 1) {
-                            iTween.RotateTo(MovingParts[i], iTween.Hash(
-                            "rotation", OnPositions[i],
-                            "islocal", true,
-                            "time", animationTime,
-                            "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
-                        } else {
-                            iTween.RotateTo(MovingParts[i], iTween.Hash(
-                                "rotation", OnPositions[i],
-                                "islocal", true,
-                                "time", animationTime,
-                                "easetype", "linear"));
-                        }
+                    if (movementType == MovementType.Slide) {
+                        StartCoroutine(LerpPosition(
+                            movingParts: MovingParts,
+                            offLocalPositions: OffPositions,
+                            onLocalPositions: OnPositions,
+                            initialOpenness: 1,
+                            desiredOpenness: 0,
+                            animationTime: animationTime
+                        ));
                     }
 
-                    if (movementType == MovementType.Slide) {
-                        if (i == MovingParts.Length - 1) {
-                            iTween.MoveTo(MovingParts[i], iTween.Hash(
-                            "position", OnPositions[i],
-                            "islocal", true,
-                            "time", animationTime,
-                            "easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
-                        } else {
-                            iTween.MoveTo(MovingParts[i], iTween.Hash(
-                                "position", OnPositions[i],
-                                "islocal", true,
-                                "time", animationTime,
-                                "easetype", "linear"));
-                        }
-                    }
+                    else if (movementType == MovementType.Rotate) { 
+                        StartCoroutine(LerpRotation(
+                            movingParts: MovingParts,
+                            offLocalRotations: OffPositions,
+                            onLocalRotations: OnPositions,
+                            initialOpenness: 1,
+                            desiredOpenness: 0,
+                            animationTime: animationTime
+                        ));
+                    }                    
                 }
             }
 
-            // if no moving parts, then only materials and lights need to be toggled
-            else {
-                setisOn();
-            }
+            setisOn();
         }
+        isCurrentlyLerping = false;
     }
 
     // toggle isOn variable, swap Materials and enable/disable Light sources
@@ -251,7 +226,13 @@ public class CanToggleOnOff : MonoBehaviour {
         if (isOn) {
             if (LightSources.Length > 0) {
                 for (int i = 0; i < LightSources.Length; i++) {
-                    LightSources[i].SetActive(false);
+                    LightSources[i].transform.gameObject.SetActive(false);
+                }
+            }
+
+            if(effects.Length > 0) {
+                for (int i = 0; i< effects.Length; i++) {
+                    effects[i].SetActive(false);
                 }
             }
 
@@ -276,7 +257,13 @@ public class CanToggleOnOff : MonoBehaviour {
         else {
             if (LightSources.Length > 0) {
                 for (int i = 0; i < LightSources.Length; i++) {
-                    LightSources[i].SetActive(true);
+                    LightSources[i].transform.gameObject.SetActive(true);
+                }
+            }
+
+            if(effects.Length > 0) {
+                for (int i = 0; i< effects.Length; i++) {
+                    effects[i].SetActive(true);
                 }
             }
 
@@ -298,6 +285,57 @@ public class CanToggleOnOff : MonoBehaviour {
         }
     }
 
+    private protected IEnumerator LerpPosition(
+        GameObject[] movingParts,
+        Vector3[] offLocalPositions,
+        Vector3[] onLocalPositions,
+        float initialOpenness,
+        float desiredOpenness,
+        float animationTime
+    ) {
+        float elapsedTime = 0f;
+        while (elapsedTime < animationTime) {
+            elapsedTime += Time.fixedDeltaTime;
+            float currentOpenness = Mathf.Clamp(
+                initialOpenness + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
+                Mathf.Min(initialOpenness, desiredOpenness),
+                Mathf.Max(initialOpenness, desiredOpenness));
+            for (int i = 0; i < movingParts.Length; i++) {
+                movingParts[i].transform.localPosition = Vector3.Lerp(offLocalPositions[i], onLocalPositions[i], currentOpenness);
+            }
+        }
+        yield break;
+    }
+    private protected IEnumerator LerpRotation(
+        GameObject[] movingParts,
+        Vector3[] offLocalRotations,
+        Vector3[] onLocalRotations,
+        float initialOpenness,
+        float desiredOpenness,
+        float animationTime
+    ) {
+        float elapsedTime = 0f;
+        while (elapsedTime < animationTime) {
+            elapsedTime += Time.fixedDeltaTime;
+            float currentOpenness = Mathf.Clamp(
+                initialOpenness + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
+                Mathf.Min(initialOpenness, desiredOpenness),
+                Mathf.Max(initialOpenness, desiredOpenness));
+            for (int i = 0; i < MovingParts.Length; i++) {
+                    MovingParts[i].transform.localRotation = Quaternion.Lerp(Quaternion.Euler(offLocalRotations[i]), Quaternion.Euler(onLocalRotations[i]), currentOpenness);
+                }
+        }
+        yield break;
+    }
+    public bool GetIsCurrentlyLerping() {
+        if (this.isCurrentlyLerping) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    
     // [ContextMenu("Get On-Off Materials")]
     // void ContextOnOffMaterials()
     // {

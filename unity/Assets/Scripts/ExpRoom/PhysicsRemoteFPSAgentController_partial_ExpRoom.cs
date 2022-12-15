@@ -372,16 +372,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             List<Vector3> closePoints = new List<Vector3>();
             foreach (Collider c in target.GetComponentsInChildren<Collider>()) {
-                if (c.enabled && !c.isTrigger) {
+                // The below subtype checks are required as `ClosestPoint` only works
+                // on certain collider types. We fall back to using the object's bounding box (see below)
+                // if there are no colliders of the supported types.
+                if (
+                    c.enabled && !c.isTrigger && (
+                        c is BoxCollider ||
+                        c is SphereCollider ||
+                        c is CapsuleCollider ||
+                        (c is MeshCollider && ((MeshCollider) c).convex)
+                    )
+                ) {
                     closePoints.Add(c.ClosestPoint(point));
+#if UNITY_EDITOR
+                    Vector3 closePoint = closePoints[closePoints.Count - 1];
+                    Debug.Log($"For collider {c}, {closePoint} has dist {Vector3.Distance(closePoint, point)}");
+#endif
                 }
             }
-            closePoints = closePoints.OrderBy(x => Vector3.Distance(point, x)).ToList();
+            if (closePoints.Count == 0) {
+                target.syncBoundingBoxes(forceCreateObjectOrientedBoundingBox: true);
+                BoxCollider bbox = target.BoundingBox.GetComponent<BoxCollider>();
+                bbox.enabled = true;
+                closePoints.Add(bbox.ClosestPoint(point));
+                bbox.enabled = false;
 #if UNITY_EDITOR
-            foreach (Vector3 p in closePoints) {
-                Debug.Log($"{p} has dist {Vector3.Distance(p, point)}");
-            }
+                Vector3 closePoint = closePoints[closePoints.Count - 1];
+                Debug.Log(
+                    $"Could not find any usable colliders in {objectId}. Instead using the bounding box," +
+                    $" for the bounding box {closePoint} has dist {Vector3.Distance(closePoint, point)}"
+                );
 #endif
+            }
+            closePoints = closePoints.OrderBy(x => Vector3.Distance(point, x)).ToList();
             actionFinishedEmit(true, closePoints);
         }
 
@@ -443,7 +466,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Camera camera = thirdPartyCameraIndex.HasValue ? agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value] : m_Camera;
                 foreach (Transform point in visPoints) {
                     // if this particular point is in view...
-                    
+
                     if (CheckIfVisibilityPointInViewport(target, point, camera, false).visible) {
                         visPointCount++;
                     }
@@ -560,7 +583,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             toReturn["normal"] = planeGo.transform.up;
             if (!(bool)toReturn["enabled"]) {
                 errorMessage = (
-                    "Clipping plane was placed on object but is disabled as the"+
+                    "Clipping plane was placed on object but is disabled as the" +
                     " input bounding box contained no points on the object's mesh."
                 );
                 actionFinished(false, toReturn);

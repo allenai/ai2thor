@@ -438,72 +438,78 @@ def test_last_action(mocker):
     assert e.metadata["lastActionSuccess"]
 
 def test_unity_command_force_device_index(mocker):
-    mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
-    mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
-    mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
-    mocker.patch("ai2thor.controller.ai2thor.platform.select_platforms", select_platforms_linux_cr)
-    mocker.patch(
-        "ai2thor.controller.ai2thor.platform.CloudRendering.validate", fake_validate
-    )
-    mocker.patch(
-        "ai2thor.controller.ai2thor.platform.Linux64.validate",
-        fake_invalid_linux64_validate,
-    )
+    pass
 
-    mocker.patch("ai2thor.platform.CloudRendering.enabled", True)
-    original_visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES")
-    try:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "2,3,4"
+    # TODO: this test is no longer valid as the mapping between CUDA/Vulkan
+    #   devices and CUDA devices is more arbitrary than we first believed.
+    #   We should find a way to test this in a more robust way.
 
-        c = controller(platform=CloudRendering, gpu_device=1)
-        assert c.unity_command(650, 550, False) == [
-            c._build.executable_path,
-            "-screen-fullscreen",
-            "0",
-            "-screen-quality",
-            "7",
-            "-screen-width",
-            "650",
-            "-screen-height",
-            "550",
-            '-force-device-index',
-            '4'
-        ]
-    finally:
-        if original_visible_devices:
-            os.environ["CUDA_VISIBLE_DEVICES"] = original_visible_devices
-        else:
-            del os.environ["CUDA_VISIBLE_DEVICES"]
-
-    c = controller(platform=CloudRendering, gpu_device=5)
-    assert c.unity_command(650, 550, False) == [
-        c._build.executable_path,
-        "-screen-fullscreen",
-        "0",
-        "-screen-quality",
-        "7",
-        "-screen-width",
-        "650",
-        "-screen-height",
-        "550",
-        '-force-device-index',
-        '6'
-    ]
-
-    c = controller(platform=CloudRendering, gpu_device=0)
-    assert c.unity_command(650, 550, False) == [
-        c._build.executable_path,
-        "-screen-fullscreen",
-        "0",
-        "-screen-quality",
-        "7",
-        "-screen-width",
-        "650",
-        "-screen-height",
-        "550",
-        '-force-device-index',
-        '0'
-    ]
+    # mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
+    # mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
+    # mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
+    # mocker.patch("ai2thor.controller.ai2thor.platform.select_platforms", select_platforms_linux_cr)
+    # mocker.patch(
+    #     "ai2thor.controller.ai2thor.platform.CloudRendering.validate", fake_validate
+    # )
+    # mocker.patch(
+    #     "ai2thor.controller.ai2thor.platform.Linux64.validate",
+    #     fake_invalid_linux64_validate,
+    # )
+    #
+    # mocker.patch("ai2thor.platform.CloudRendering.enabled", True)
+    # original_visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES")
+    # try:
+    #     os.environ["CUDA_VISIBLE_DEVICES"] = "2,3,4"
+    #
+    #     c = controller(platform=CloudRendering, gpu_device=1)
+    #     assert c.unity_command(650, 550, False) == [
+    #         c._build.executable_path,
+    #         "-screen-fullscreen",
+    #         "0",
+    #         "-screen-quality",
+    #         "7",
+    #         "-screen-width",
+    #         "650",
+    #         "-screen-height",
+    #         "550",
+    #         '-force-device-index',
+    #         '4'
+    #     ]
+    # finally:
+    #     if original_visible_devices:
+    #         os.environ["CUDA_VISIBLE_DEVICES"] = original_visible_devices
+    #     else:
+    #         del os.environ["CUDA_VISIBLE_DEVICES"]
+    #
+    # c = controller(platform=CloudRendering, gpu_device=5)
+    # assert c.unity_command(650, 550, False) == [
+    #     c._build.executable_path,
+    #     "-screen-fullscreen",
+    #     "0",
+    #     "-screen-quality",
+    #     "7",
+    #     "-screen-width",
+    #     "650",
+    #     "-screen-height",
+    #     "550",
+    #     '-force-device-index',
+    #     '6'
+    # ]
+    #
+    # c = controller(platform=CloudRendering, gpu_device=0)
+    # assert c.unity_command(650, 550, False) == [
+    #     c._build.executable_path,
+    #     "-screen-fullscreen",
+    #     "0",
+    #     "-screen-quality",
+    #     "7",
+    #     "-screen-width",
+    #     "650",
+    #     "-screen-height",
+    #     "550",
+    #     '-force-device-index',
+    #     '0'
+    # ]
 
 
 

@@ -34,6 +34,7 @@ public class ColorChanger : MonoBehaviour {
             "WatchMaterials",
             "ArmChairMaterials",
             "BedMaterials",
+            "BedsheetMaterials",
             "ChairMaterials",
             "CoffeeTableMaterials",
             "DeskMaterials",
@@ -165,7 +166,12 @@ public class ColorChanger : MonoBehaviour {
         HashSet<string> activeMaterialNames = new HashSet<string>();
         foreach (var renderer in GameObject.FindObjectsOfType<Renderer>()) {
             foreach (var mat in renderer.sharedMaterials) {
-                activeMaterialNames.Add(mat.name);
+                if (mat != null && mat.name != null) {
+#if UNITY_EDITOR
+                    Debug.Log("Found material: " + mat.name);
+#endif
+                    activeMaterialNames.Add(mat.name);
+                }
             }
         }
 
@@ -235,5 +241,25 @@ public class ColorChanger : MonoBehaviour {
                 mat.color = matPair.Value.color;
             }
         }
+    }
+
+    public Dictionary<string, string[]> GetMaterials() {
+        Dictionary<string, string[]> orSomething = new Dictionary<string, string[]>();
+
+        if (objectMaterials == null) {
+            cacheMaterials();
+        }
+
+        foreach (KeyValuePair<string, List<ResourceAssetReference<Material>>> sm in objectMaterials) {
+            List<string> materialNames = new List<string>();
+
+            foreach (ResourceAssetReference<Material> resourceAssetReference in sm.Value) {
+                materialNames.Add(resourceAssetReference.Name);
+            }
+
+            orSomething.Add(sm.Key, materialNames.ToArray());
+        }
+
+        return orSomething;
     }
 }

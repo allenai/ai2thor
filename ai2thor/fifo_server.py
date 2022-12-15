@@ -5,15 +5,22 @@ ai2thor.server
 Handles all communication with Unity through a Flask service.  Messages
 are sent to the controller using a pair of request/response queues.
 """
-import ai2thor.server
 import json
-import msgpack
 import os
-import tempfile
-from ai2thor.exceptions import UnityCrashException
-from enum import IntEnum, unique
-from collections import defaultdict
+import select
 import struct
+import tempfile
+import time
+from collections import defaultdict
+from enum import IntEnum, unique
+from io import TextIOWrapper
+from typing import Optional
+
+import msgpack
+
+import ai2thor.server
+from ai2thor.exceptions import UnityCrashException
+
 
 # FifoFields
 @unique
@@ -45,17 +52,18 @@ class FifoServer(ai2thor.server.Server):
 
     def __init__(
         self,
-        width,
-        height,
+        width: int,
+        height: int,
+        timeout: Optional[float] = 100.0,
         depth_format=ai2thor.server.DepthFormat.Meters,
-        add_depth_noise=False,
+        add_depth_noise: bool = False,
     ):
 
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.server_pipe_path = os.path.join(self.tmp_dir.name, "server.pipe")
         self.client_pipe_path = os.path.join(self.tmp_dir.name, "client.pipe")
-        self.server_pipe = None
-        self.client_pipe = None
+        self.server_pipe: Optional[TextIOWrapper] = None
+        self.client_pipe: Optional[TextIOWrapper] = None
         self.raw_metadata = None
         self.raw_files = None
         self._last_action_message = None
@@ -93,19 +101,52 @@ class FifoServer(ai2thor.server.Server):
         }
 
         self.eom_header = self._create_header(FieldType.END_OF_MESSAGE, b"")
-        super().__init__(width, height, depth_format, add_depth_noise)
+        super().__init__(
+            width=width,
+            height=height,
+            timeout=timeout,
+            depth_format=depth_format,
+            add_depth_noise=add_depth_noise
+        )
 
     def _create_header(self, message_type, body):
         return struct.pack(self.header_format, message_type, len(body))
 
-    def _recv_message(self):
+    def _read_with_timeout(self, server_pipe, message_size: int, timeout: Optional[float]):
+        if timeout is None:
+            return server_pipe.read(message_size)
+
+        start_t = time.time()
+        message = b""
+
+        while message_size > 0:
+            r, w, e = select.select([server_pipe], [], [], timeout)
+            if server_pipe in r:
+                part = os.read(server_pipe.fileno(), message_size)
+                message_size -= len(part)
+                message = message + part
+
+            cur_t = time.time()
+            if timeout is not None and cur_t - start_t > timeout:
+                break
+
+        if message_size != 0:
+            raise TimeoutError(f"Reading from AI2-THOR backend timed out (using {timeout}s) timeout.")
+
+        return message
+
+    def _recv_message(self, timeout: Optional[float]):
         if self.server_pipe is None:
             self.server_pipe = open(self.server_pipe_path, "rb")
 
         metadata = None
         files = defaultdict(list)
         while True:
-            header = self.server_pipe.read(self.header_size)  # message type + length
+            header = self._read_with_timeout(
+                server_pipe=self.server_pipe,
+                message_size=self.header_size,
+                timeout=self.timeout if timeout is None else timeout
+            )  # message type + length
             if len(header) == 0:
                 self.unity_proc.wait(timeout=5)
                 returncode = self.unity_proc.returncode
@@ -131,7 +172,13 @@ class FifoServer(ai2thor.server.Server):
             # print("got header %s" % header)
             field_type_int, message_length = struct.unpack(self.header_format, header)
             field_type = self.field_types[field_type_int]
-            body = self.server_pipe.read(message_length)
+
+            body = self._read_with_timeout(
+                server_pipe=self.server_pipe,
+                message_size=message_length,
+                timeout=self.timeout if timeout is None else timeout
+            )
+
             # print("field type")
             # print(field_type)
             if field_type is FieldType.METADATA:
@@ -177,9 +224,11 @@ class FifoServer(ai2thor.server.Server):
         self.client_pipe.write(header + body + self.eom_header)
         self.client_pipe.flush()
 
-    def receive(self):
+    def receive(self, timeout: Optional[float] = None):
 
-        metadata, files = self._recv_message()
+        metadata, files = self._recv_message(
+            timeout=self.timeout if timeout is None else timeout
+        )
 
         if metadata is None:
             raise ValueError("no metadata received from recv_message")
@@ -215,5 +264,11 @@ class FifoServer(ai2thor.server.Server):
         return params
 
     def stop(self):
-        self.client_pipe.close()
-        self.server_pipe.close()
+        if self.client_pipe is not None:
+            self.client_pipe.close()
+
+        if self.server_pipe is not None:
+            self.server_pipe.close()
+
+        if self.unity_proc is not None and self.unity_proc.poll() is None:
+            self.unity_proc.kill()

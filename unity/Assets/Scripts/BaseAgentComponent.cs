@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
-    public class BaseAgentComponent : MonoBehaviour{
+    public class BaseAgentComponent : MonoBehaviour {
         // debug draw bounds of objects in editor
 #if UNITY_EDITOR
         protected List<Bounds> gizmobounds = new List<Bounds>();
@@ -27,12 +27,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Material[] ScreenFaces; // 0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
         public GameObject[] TargetCircles = null;
-        
+
         [HideInInspector]
         public BaseFPSAgentController agent;
-        
+
         public DroneObjectLauncher DroneObjectLauncher;
-        
+
         void LateUpdate() {
             if (this.agent == null) {
                 return;

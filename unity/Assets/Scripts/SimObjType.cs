@@ -266,6 +266,11 @@ public enum SimObjType : int {
     Floor = 159,
     ScreenFrame = 160,
     ScreenSheet = 161,
+    Wall = 162,
+    Doorway = 163,
+    WashingMachine = 164,
+    ClothesDryer = 165,
+    Doorframe = 166
 }
 
 public static class ReceptacleRestrictions {

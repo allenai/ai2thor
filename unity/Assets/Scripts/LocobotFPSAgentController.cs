@@ -22,7 +22,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected float rotateGaussianMu = 0.0f;
         protected float rotateGaussianSigma = 0.5f;
         protected bool allowHorizontalMovement = false;
-        
+
         public LocobotFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 

@@ -632,7 +632,7 @@ public static class SimUtil {
         }
 
         // opens up the prefab asset
-        string prefabPath = "Assets/Physics/Scene Setup Prefabs/PhysicsSceneManager.prefab";
+        string prefabPath = "Assets/Physics/SceneSetupPrefabs/PhysicsSceneManager.prefab";
         GameObject physicsSceneManager = UnityEditor.PrefabUtility.LoadPrefabContents(prefabPath);
         ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
 
