@@ -1891,6 +1891,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         }
 
+        public void SetObjectPoses(ServerAction action) {
+            // make sure objectPoses and also the Object Pose elements inside are initialized correctly
+            if (action.objectPoses == null || action.objectPoses[0] == null) {
+                errorMessage = "objectPoses was not initialized correctly. Please make sure each element in the objectPoses list is initialized.";
+                actionFinished(false);
+                return;
+            }
+            StartCoroutine(setObjectPoses(action.objectPoses, action.placeStationary));
+        }
+
+        // SetObjectPoses is performed in a coroutine otherwise if
+        // a frame does not pass prior to this AND the imageSynthesis
+        // is enabled for say depth or normals, Unity will crash on 
+        // a subsequent scene reset()
+        protected IEnumerator setObjectPoses(ObjectPose[] objectPoses, bool placeStationary) {
+            yield return new WaitForEndOfFrame();
+            bool success = physicsSceneManager.SetObjectPoses(objectPoses, out errorMessage, placeStationary);
+
+            //update image synthesis since scene has changed
+            if (this.imageSynthesis && this.imageSynthesis.enabled) {
+                this.imageSynthesis.OnSceneChange();
+            }
+
+            actionFinished(success, errorMessage);
+        }
+
         public void TeleportObject(
             string objectId,
             Vector3 position,
