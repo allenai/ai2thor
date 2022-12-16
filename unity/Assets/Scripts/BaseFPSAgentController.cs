@@ -1296,6 +1296,44 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //disables specified object and all contained objects if the specified object is a receptacle
+        public void DisableObjectGroup(string objectId) {
+            if(physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                SimObjPhysics sop = getInteractableSimObjectFromId(objectId, true);
+                //check if object is receptacle
+                if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                    //if it is receptacle, grab reference to all contained objects
+                    //clear the list of references first
+                    sop.ClearContainedObjectReferences();
+                    foreach (SimObjPhysics containedSOP in sop.SimObjectsContainedByReceptacle) {
+                        sop.AddToContainedObjectReferences(containedSOP);
+                        //disable contained objects
+                        containedSOP.transform.gameObject.SetActive(false);
+                    }
+                }
+
+                //disable objectId
+                sop.transform.gameObject.SetActive(false);
+            }
+        }
+
+        //re-enables a specified object and all contained objects if the specified object is a receptacle
+        //must be used in tandem with DisableObjectGroup, not the normal DisableObject action
+        public void EnableObjectGroup(string objectId) {
+            if(physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                SimObjPhysics sop = getInteractableSimObjectFromId(objectId, true);
+
+                if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+
+                    foreach (SimObjPhysics containedSOP in sop.ContainedObjectReferences) {
+                        containedSOP.transform.gameObject.SetActive(true);
+                    }
+                }
+
+                sop.transform.gameObject.SetActive(true);
+            }
+        }
+
         // remove a given sim object from the scene. Pass in the object's objectID string to remove it.
         public void RemoveFromScene(string objectId) {
             SimObjPhysics sop = getSimObjectFromId(objectId: objectId);

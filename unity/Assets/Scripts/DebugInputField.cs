@@ -724,6 +724,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+                case "dog": {
+                                        Dictionary<string, object> action = new Dictionary<string, object> {
+                        {"action", "DisableObjectGroup"},
+                        {"objectId", splitcommand[1]},
+                    };
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
+                case "eog": {
+                                        Dictionary<string, object> action = new Dictionary<string, object> {
+                        {"action", "EnableObjectGroup"},
+                        {"objectId", splitcommand[1]},
+                    };
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
                 case "expspawn": {
                         ServerAction action = new ServerAction();
 
