@@ -725,7 +725,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 case "dog": {
-                                        Dictionary<string, object> action = new Dictionary<string, object> {
+                        Dictionary<string, object> action = new Dictionary<string, object> {
                         {"action", "DisableObjectGroup"},
                         {"objectId", splitcommand[1]},
                     };
@@ -734,7 +734,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 case "eog": {
-                                        Dictionary<string, object> action = new Dictionary<string, object> {
+                        Dictionary<string, object> action = new Dictionary<string, object> {
                         {"action", "EnableObjectGroup"},
                         {"objectId", splitcommand[1]},
                     };
@@ -742,6 +742,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+                case "trg": {
+                        Dictionary<string, object> action = new Dictionary<string, object> {
+                        {"action", "TeleportReceptacleGroup"},
+                        {"objectId", splitcommand[1]},
+                        {"position", new Vector3(-6f, 0.008f, 1.15f)},
+                        //{"position", new Vector3(-4.5f, 0.008f, 1.15f)},
+                        {"rotation", new Vector3(0, 0, 0)}
+                    };
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
                 case "expspawn": {
                         ServerAction action = new ServerAction();
 

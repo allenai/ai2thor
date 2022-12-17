@@ -1297,11 +1297,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //disables specified object and all contained objects if the specified object is a receptacle
-        public void DisableObjectGroup(string objectId) {
-            if(physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+        public void DisableReceptacleGroup(string objectId) {
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 SimObjPhysics sop = getInteractableSimObjectFromId(objectId, true);
                 //check if object is receptacle
-                if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
                     //if it is receptacle, grab reference to all contained objects
                     //clear the list of references first
                     sop.ClearContainedObjectReferences();
@@ -1319,11 +1319,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //re-enables a specified object and all contained objects if the specified object is a receptacle
         //must be used in tandem with DisableObjectGroup, not the normal DisableObject action
-        public void EnableObjectGroup(string objectId) {
-            if(physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+        public void EnableReceptacleGroup(string objectId) {
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 SimObjPhysics sop = getInteractableSimObjectFromId(objectId, true);
 
-                if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
 
                     foreach (SimObjPhysics containedSOP in sop.ContainedObjectReferences) {
                         containedSOP.transform.gameObject.SetActive(true);
@@ -1332,6 +1332,134 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 sop.transform.gameObject.SetActive(true);
             }
+        }
+
+        //teleports an object, and if it is a receptacle, teleports all contained
+        //objects to the final teleport location as well.
+        //forceaction - set to true to ignore collider checks and allow teleporting into clipping areas
+        //forceKinematic - set all objects to be kinematic after teleporting
+        //makeUnbreakable - make it so all objects can't be broken due to random forces, even if kinematic
+        public void TeleportReceptacleGroup(
+            string objectId,
+            Vector3 position,
+            Vector3 rotation,
+            bool forceAction = false,
+            bool forceKinematic = true,
+            bool makeUnbreakable = true
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            if (!sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                errorMessage = $"{objectId} is not a Receptacle and can not be used with TeleportObjectGroup";
+                actionFinished(false);
+                return;
+            }
+
+            bool teleportSuccess = teleportReceptacleGroup(
+                sop: sop,
+                position: position,
+                rotation: rotation,
+                forceAction: forceAction,
+                forceKinematic: forceKinematic,
+                makeUnbreakable: makeUnbreakable,
+                includeErrorMessage: true
+            );
+
+            if (teleportSuccess) {
+                if (!forceKinematic) {
+                    StartCoroutine(checkIfObjectHasStoppedMoving(sop, 0, true));
+                    return;
+                } else {
+                    actionFinished(true);
+                    return;
+                }
+            } else {
+                actionFinished(false);
+                return;
+            }
+        }
+
+        public bool teleportReceptacleGroup(
+            SimObjPhysics sop,
+            Vector3 position,
+            Vector3 rotation,
+            bool forceAction,
+            bool forceKinematic,
+            bool makeUnbreakable,
+            bool includeErrorMessage = false
+        ) {
+            Vector3 oldPosition = sop.transform.position;
+            Quaternion oldRotation = sop.transform.rotation;
+
+            sop.ClearContainedObjectReferences();
+
+            List<GameObject> ignoreTheseObjectColliders = new List<GameObject>();
+
+            foreach (SimObjPhysics containedSOP in sop.SimObjectsContainedByReceptacle) {
+                
+                sop.ClearContainedObjectReferences();
+                //add to contained references to track later
+                sop.AddToContainedObjectReferences(containedSOP);
+
+                if (forceKinematic)
+                    containedSOP.GetComponent<Rigidbody>().isKinematic = true;
+
+                if (makeUnbreakable) {
+                    if (containedSOP.GetComponent<Break>()) {
+                        containedSOP.GetComponent<Break>().Unbreakable = true;
+                    }
+                }
+
+                ignoreTheseObjectColliders.Add(containedSOP.transform.gameObject);
+
+                //set parent so when sop is teleported, the containedSOP goes with it
+                containedSOP.transform.SetParent(sop.transform);
+            }
+
+            if (makeUnbreakable) {
+                if (sop.GetComponent<Break>()) {
+                    sop.GetComponent<Break>().Unbreakable = true;
+                }
+            }
+
+            sop.transform.position = position;
+            sop.transform.rotation = Quaternion.Euler(rotation);
+            
+            if (forceKinematic) {
+                sop.GetComponent<Rigidbody>().isKinematic = true;
+            }
+
+            if (!forceAction) {
+                Collider colliderHitIfTeleported = UtilityFunctions.firstColliderObjectCollidingWith(sop.gameObject, ignoreTheseObjectColliders);
+                if (colliderHitIfTeleported != null) {
+                    sop.transform.position = oldPosition;
+                    sop.transform.rotation = oldRotation;
+                    SimObjPhysics hitSop = ancestorSimObjPhysics(colliderHitIfTeleported.gameObject);
+                    if (includeErrorMessage) {
+                        errorMessage = $"{sop.ObjectID} is colliding with {(hitSop != null ? hitSop.ObjectID : colliderHitIfTeleported.name)} after teleport.";
+                    }
+
+                    //unparent everything to reset
+                    foreach (SimObjPhysics containedSOP in sop.ContainedObjectReferences) {
+                        containedSOP.transform.SetParent(GameObject.Find("Objects").transform);
+                    }
+
+                    return false;
+                }
+            }
+
+            //teleport successful so unparent everything
+            foreach (SimObjPhysics containedSOP in sop.ContainedObjectReferences) {
+                containedSOP.transform.SetParent(GameObject.Find("Objects").transform);
+            }
+
+            return true;
         }
 
         // remove a given sim object from the scene. Pass in the object's objectID string to remove it.
