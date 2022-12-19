@@ -746,8 +746,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object> {
                         {"action", "TeleportReceptacleGroup"},
                         {"objectId", splitcommand[1]},
-                        {"position", new Vector3(-6f, 0.008f, 1.15f)},
-                        //{"position", new Vector3(-4.5f, 0.008f, 1.15f)},
+                        //{"position", new Vector3(-6f, 0.008f, 1.15f)},
+                        {"position", new Vector3(-4.5f, 0.008f, 1.15f)},
+                        {"rotation", new Vector3(0, 0, 0)}
+                    };
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
+                case "prgap": {
+                        Dictionary<string, object> action = new Dictionary<string, object> {
+                        {"action", "PlaceReceptacleGroupAtPoint"},
+                        {"objectId", splitcommand[1]},
+                        //{"position", new Vector3(-6f, 0.008f, 1.15f)},
+                        {"position", new Vector3(-4.5f, 1f, 1.15f)},
                         {"rotation", new Vector3(0, 0, 0)}
                     };
                     CurrentActiveController().ProcessControlCommand(action);

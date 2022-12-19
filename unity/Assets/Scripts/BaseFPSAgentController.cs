@@ -1345,7 +1345,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 rotation,
             bool forceAction = false,
             bool forceKinematic = true,
-            bool makeUnbreakable = true
+            bool makeUnbreakable = true,
+            bool checkInSceneBounds = true
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}";
@@ -1367,6 +1368,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 rotation: rotation,
                 forceAction: forceAction,
                 forceKinematic: forceKinematic,
+                checkInSceneBounds: checkInSceneBounds,
                 makeUnbreakable: makeUnbreakable,
                 includeErrorMessage: true
             );
@@ -1389,26 +1391,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics sop,
             Vector3 position,
             Vector3 rotation,
-            bool forceAction,
-            bool forceKinematic,
-            bool makeUnbreakable,
+            bool forceAction = false,
+            bool forceKinematic = true,
+            bool makeUnbreakable = true,
+            bool checkInSceneBounds = true,
             bool includeErrorMessage = false
         ) {
+            // make sure point we are moving the object to is valid
+            if (!agentManager.sceneBounds.Contains(position) && checkInSceneBounds) {
+                if (includeErrorMessage) {
+                    errorMessage = $"Position coordinate ({position}) is not within scene bounds ({agentManager.sceneBounds})";
+                }
+                return false;
+            }
+
+            if (forceKinematic)
+                MakeAllObjectsStationary();
+
             Vector3 oldPosition = sop.transform.position;
             Quaternion oldRotation = sop.transform.rotation;
 
+            if (forceKinematic) {
+                sop.GetComponent<Rigidbody>().isKinematic = true;
+            }
+
+            //prepare to get contained object references of this receptacle
             sop.ClearContainedObjectReferences();
 
             List<GameObject> ignoreTheseObjectColliders = new List<GameObject>();
 
             foreach (SimObjPhysics containedSOP in sop.SimObjectsContainedByReceptacle) {
-                
-                sop.ClearContainedObjectReferences();
                 //add to contained references to track later
                 sop.AddToContainedObjectReferences(containedSOP);
-
-                if (forceKinematic)
-                    containedSOP.GetComponent<Rigidbody>().isKinematic = true;
 
                 if (makeUnbreakable) {
                     if (containedSOP.GetComponent<Break>()) {
@@ -1430,9 +1444,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             sop.transform.position = position;
             sop.transform.rotation = Quaternion.Euler(rotation);
-            
-            if (forceKinematic) {
-                sop.GetComponent<Rigidbody>().isKinematic = true;
+
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
             }
 
             if (!forceAction) {
@@ -1460,6 +1474,162 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             return true;
+        }
+
+        public void PlaceReceptacleGroupAtPoint(
+            string objectId,
+            Vector3 position,
+            Vector3? rotation = null,
+            bool forceAction = false,
+            bool forceKinematic = true,
+            bool makeUnbreakable = true,
+            bool checkInSceneBounds = true
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId} in scene.";
+                actionFinishedEmit(false);
+                return;
+            }
+
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            if (!sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                errorMessage = $"{objectId} is not a Receptacle and can not be used with PlaceReceptacleAtPoint";
+                actionFinished(false);
+                return;
+            }
+
+            bool placeReceptacleAtPointSuccess = placeReceptacleGroupAtPoint(
+                target: sop,
+                position: position,
+                rotation: rotation,
+                forceKinematic: forceKinematic,
+                forceAction: forceAction,
+                checkInSceneBounds: checkInSceneBounds,
+                makeUnbreakable: makeUnbreakable,
+                includeErrorMessage: true
+            );
+
+            if (placeReceptacleAtPointSuccess) {
+                if (!forceKinematic) {
+                    StartCoroutine(checkIfObjectHasStoppedMoving(sop, 0, true));
+                    return;
+                } else {
+                    actionFinished(true);
+                    return;
+                }
+            } else {
+                actionFinished(false);
+                return;
+            }
+        }
+
+        public bool placeReceptacleGroupAtPoint(
+            SimObjPhysics target,
+            Vector3 position,
+            Vector3? rotation,
+            bool forceAction = false,
+            bool forceKinematic = true,
+            bool makeUnbreakable = true,
+            bool includeErrorMessage = true,
+            bool checkInSceneBounds = true
+        ) {
+            // make sure point we are moving the object to is valid
+            if (!agentManager.sceneBounds.Contains(position) && checkInSceneBounds) {
+                if (includeErrorMessage) {
+                    errorMessage = $"Position coordinate ({position}) is not within scene bounds ({agentManager.sceneBounds})";
+                }
+                return false;
+            }
+
+            if (forceKinematic)
+                MakeAllObjectsStationary();
+
+            //prepare to get contained object references of this receptacle
+            target.ClearContainedObjectReferences();
+
+            List<GameObject> ignoreTheseObjectColliders = new List<GameObject>();
+
+            foreach (SimObjPhysics containedSOP in target.SimObjectsContainedByReceptacle) {
+                //add to contained references to track later
+                target.AddToContainedObjectReferences(containedSOP);
+
+                if (makeUnbreakable) {
+                    if (containedSOP.GetComponent<Break>()) {
+                        containedSOP.GetComponent<Break>().Unbreakable = true;
+                    }
+                }
+
+                ignoreTheseObjectColliders.Add(containedSOP.transform.gameObject);
+
+                //set parent so when sop is teleported, the containedSOP goes with it
+                containedSOP.transform.SetParent(target.transform);
+            }
+
+            Quaternion originalRotation = target.transform.rotation;
+            if (rotation.HasValue) {
+                target.transform.rotation = Quaternion.Euler(rotation.Value);
+            }
+            Vector3 originalPos = target.transform.position;
+            target.transform.position = agentManager.SceneBounds.min - new Vector3(-100f, -100f, -100f);
+
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
+            }
+
+            // ok let's get the distance from the simObj to the bottom most part of its colliders
+            Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
+            BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
+
+            b.enabled = true;
+            Vector3 bottomPoint = b.ClosestPoint(targetNegY);
+            b.enabled = false;
+
+            float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
+
+            float offset = distFromSopToBottomPoint + 0.005f; // Offset in case the surface below isn't completely flat
+
+            Vector3 finalPos = GetSurfacePointBelowPosition(position) + new Vector3(0, offset, 0);
+
+            if (makeUnbreakable) {
+                if (target.GetComponent<Break>()) {
+                    target.GetComponent<Break>().Unbreakable = true;
+                }
+            }
+
+            // Check spawn area here            
+            target.transform.position = finalPos;
+
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
+            }
+
+            if (!forceAction) {
+                Collider colliderHitIfTeleported = UtilityFunctions.firstColliderObjectCollidingWith(target.gameObject, ignoreTheseObjectColliders);
+                if (colliderHitIfTeleported != null) {
+                    target.transform.position = originalPos;
+                    target.transform.rotation = originalRotation;
+                    SimObjPhysics hitSop = ancestorSimObjPhysics(colliderHitIfTeleported.gameObject);
+                    if (includeErrorMessage) {
+                        errorMessage = $"{target.ObjectID} is colliding with {(hitSop != null ? hitSop.ObjectID : colliderHitIfTeleported.name)} after repositioning.";
+                    }
+
+                    //unparent everything to reset
+                    foreach (SimObjPhysics containedSOP in target.ContainedObjectReferences) {
+                        containedSOP.transform.SetParent(GameObject.Find("Objects").transform);
+                    }
+
+                    return false;
+                }
+            }
+
+            //teleport successful so unparent everything
+            foreach (SimObjPhysics containedSOP in target.ContainedObjectReferences) {
+                containedSOP.transform.SetParent(GameObject.Find("Objects").transform);
+            }
+
+            return true;
+
         }
 
         // remove a given sim object from the scene. Pass in the object's objectID string to remove it.
