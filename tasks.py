@@ -4445,3 +4445,7 @@ def plot(
     plt.legend()
 
     plt.savefig('{}.png'.format(output_filename.replace(".png", "")))
+
+
+def run_benchmark():
+
