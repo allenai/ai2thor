@@ -126,14 +126,16 @@ public class ConvertGLTF : MonoBehaviour
                     Directory.CreateDirectory(output_dir);
                     GLTFSceneExporter.SaveFolderPath = output_dir;
                     Debug.Log(GLTFSceneExporter.SaveFolderPath);
+
+                    Vector3 root_position = root.transform.localPosition;
                     foreach (Transform child in root.transform) {
                         Debug.Log(child.name);
                         GameObject game_object = child.gameObject;
+                        game_object.transform.Translate(root_position, Space.World);
                         ExportObject(game_object, output_dir);
                     }
                 }
             }
-            break;
         }
     }
 
