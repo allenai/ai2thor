@@ -2781,6 +2781,302 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void SetObjectPoses(ServerAction action) {
+            // make sure objectPoses and also the Object Pose elements inside are initialized correctly
+            if (action.objectPoses == null || action.objectPoses[0] == null) {
+                errorMessage = "objectPoses was not initialized correctly. Please make sure each element in the objectPoses list is initialized.";
+                actionFinished(false);
+                return;
+            }
+            StartCoroutine(setObjectPoses(action.objectPoses, action.placeStationary));
+        }
+
+        // SetObjectPoses is performed in a coroutine otherwise if
+        // a frame does not pass prior to this AND the imageSynthesis
+        // is enabled for say depth or normals, Unity will crash on 
+        // a subsequent scene reset()
+        protected IEnumerator setObjectPoses(ObjectPose[] objectPoses, bool placeStationary) {
+            yield return new WaitForEndOfFrame();
+            bool success = physicsSceneManager.SetObjectPoses(objectPoses, out errorMessage, placeStationary);
+
+            //update image synthesis since scene has changed
+            if (this.imageSynthesis && this.imageSynthesis.enabled) {
+                this.imageSynthesis.OnSceneChange();
+            }
+
+            actionFinished(success, errorMessage);
+        }
+
+
+        // pass in a Vector3, presumably from GetReachablePositions, and try to place a sim object flush on a surface below that point
+        // unlike PlaceHeldObject or InitialRandomSpawn, this won't be limited by a Receptacle, but only limited by collision
+        public void PlaceObjectAtPoint(
+            string objectId,
+            Vector3 position,
+            Vector3? rotation = null,
+            bool forceKinematic = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
+                return;
+            }
+
+            // find the object in the scene, disregard visibility
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            bool placeObjectSuccess = PlaceObjectAtPoint(
+                target: target,
+                position: position,
+                rotation: rotation,
+                forceKinematic: forceKinematic,
+                includeErrorMessage: true
+            );
+
+            if (placeObjectSuccess) {
+                if (!forceKinematic) {
+                    StartCoroutine(checkIfObjectHasStoppedMoving(target, true));
+                    return;
+                } else {
+                    actionFinished(true);
+                    return;
+                }
+            } else {
+                actionFinished(false);
+                return;
+            }
+        }
+
+        public bool PlaceObjectAtPoint(
+            SimObjPhysics target,
+            Vector3 position,
+            Vector3? rotation,
+            bool forceKinematic,
+            bool includeErrorMessage = false
+        ) {
+            // make sure point we are moving the object to is valid
+            if (!agentManager.sceneBounds.Contains(position)) {
+                if (includeErrorMessage) {
+                    errorMessage = $"Position coordinate ({position}) is not within scene bounds ({agentManager.sceneBounds})";
+                }
+                return false;
+            }
+
+            Quaternion originalRotation = target.transform.rotation;
+            if (rotation.HasValue) {
+                target.transform.rotation = Quaternion.Euler(rotation.Value);
+            }
+            Vector3 originalPos = target.transform.position;
+            target.transform.position = agentManager.SceneBounds.min - new Vector3(-100f, -100f, -100f);
+
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
+            }
+
+            bool wasInHand = false;
+            if (ItemInHand) {
+                if (ItemInHand.transform.gameObject == target.transform.gameObject) {
+                    wasInHand = true;
+                }
+            }
+
+            // ok let's get the distance from the simObj to the bottom most part of its colliders
+            Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
+            BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
+
+            b.enabled = true;
+            Vector3 bottomPoint = b.ClosestPoint(targetNegY);
+            b.enabled = false;
+
+            float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
+
+            float offset = distFromSopToBottomPoint + 0.005f; // Offset in case the surface below isn't completely flat
+
+            Vector3 finalPos = GetSurfacePointBelowPosition(position) + new Vector3(0, offset, 0);
+
+            // Check spawn area here            
+            target.transform.position = finalPos;
+
+            if (!Physics.autoSyncTransforms) {
+                Physics.SyncTransforms();
+            }
+
+            Collider colliderHitIfSpawned = UtilityFunctions.firstColliderObjectCollidingWith(
+                target.gameObject
+            );
+
+            if (colliderHitIfSpawned == null) {
+                target.transform.position = finalPos;
+
+                Rigidbody rb = target.GetComponent<Rigidbody>();
+
+                if (forceKinematic) {
+                    rb.isKinematic = forceKinematic;
+                }
+
+                // Additional stuff we need to do if placing item that was in hand
+                if (wasInHand) {
+
+                    rb.constraints = RigidbodyConstraints.None;
+                    rb.useGravity = true;
+
+                    // change collision detection mode while falling so that obejcts don't phase through colliders.
+                    // this is reset to discrete on SimObjPhysics.cs's update 
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+                    GameObject topObject = GameObject.Find("Objects");
+                    if (topObject != null) {
+                        ItemInHand.transform.parent = topObject.transform;
+                    } else {
+                        ItemInHand.transform.parent = null;
+                    }
+
+                    target.DropContainedObjects(reparentContainedObjects: true, forceKinematic: forceKinematic);
+                    target.isInAgentHand = false;
+                    ItemInHand = null;
+
+                }
+                return true;
+            }
+
+            target.transform.position = originalPos;
+            target.transform.rotation = originalRotation;
+
+            // if the original position was in agent hand, reparent object to agent hand
+            if (wasInHand) {
+                target.transform.SetParent(AgentHand.transform);
+                ItemInHand = target.gameObject;
+                target.isInAgentHand = true;
+                target.GetComponent<Rigidbody>().isKinematic = true;
+            }
+
+            if (includeErrorMessage) {
+                SimObjPhysics hitSop = ancestorSimObjPhysics(colliderHitIfSpawned.gameObject);
+                errorMessage = (
+                    $"Spawn area not clear ({(hitSop != null ? hitSop.ObjectID : colliderHitIfSpawned.name)})"
+                    + " is in the way), can't place object at that point"
+                );
+            }
+            return false;
+        }
+
+        public void PlaceObjectAtPoint(
+            string objectId,
+            Vector3[] positions,
+            Vector3? rotation = null,
+            bool forceKinematic = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
+                return;
+            }
+
+            // find the object in the scene, disregard visibility
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            bool placeObjectSuccess = false;
+
+            foreach (Vector3 position in positions) {
+                placeObjectSuccess = PlaceObjectAtPoint(
+                    target: target,
+                    position: position,
+                    rotation: rotation,
+                    forceKinematic: forceKinematic,
+                    includeErrorMessage: true
+                );
+                if (placeObjectSuccess) {
+                    errorMessage = "";
+                    break;
+                }
+            }
+
+            if (placeObjectSuccess) {
+                if (!forceKinematic) {
+                    StartCoroutine(checkIfObjectHasStoppedMoving(target, true));
+                    return;
+                } else {
+                    actionFinished(true);
+                    return;
+                }
+            } else {
+                actionFinished(false);
+                return;
+            }
+        }
+
+        // Similar to PlaceObjectAtPoint(...) above but returns a bool if successful
+        public bool placeObjectAtPoint(SimObjPhysics t, Vector3 position) {
+            SimObjPhysics target = null;
+            // find the object in the scene, disregard visibility
+            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
+                if (sop.objectID == t.objectID) {
+                    target = sop;
+                }
+            }
+
+            if (target == null) {
+                return false;
+            }
+
+            // make sure point we are moving the object to is valid
+            if (!agentManager.sceneBounds.Contains(position)) {
+                return false;
+            }
+
+            // ok let's get the distance from the simObj to the bottom most part of its colliders
+            Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
+            BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
+
+            b.enabled = true;
+            Vector3 bottomPoint = b.ClosestPoint(targetNegY);
+            b.enabled = false;
+
+            float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
+
+            float offset = distFromSopToBottomPoint;
+
+            // final position to place on surface
+            Vector3 finalPos = GetSurfacePointBelowPosition(position) + new Vector3(0, offset, 0);
+
+
+            // check spawn area, if its clear, then place object at finalPos
+            InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
+            if (ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false)) {
+                target.transform.position = finalPos;
+                return true;
+            }
+
+            return false;
+        }
+
+        // from given position in worldspace, raycast straight down and return a point of any surface hit
+        // useful for getting a worldspace coordinate on the floor given any point in space.
+        public Vector3 GetSurfacePointBelowPosition(Vector3 position) {
+            Vector3 point = Vector3.zero;
+
+            // raycast down from the position like 10m and see if you hit anything. If nothing hit, return the original position and an error message?
+            RaycastHit hit;
+            if (
+                Physics.Raycast(
+                    position,
+                    Vector3.down,
+                    out hit,
+                    10f,
+                    LayerMask.GetMask("Default", "SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent"),
+                    QueryTriggerInteraction.Ignore
+                )
+            ) {
+                point = hit.point;
+                return point;
+            }
+
+            // nothing hit, return the original position?
+            else {
+                return position;
+            }
+        }
+        
         protected T[] flatten2DimArray<T>(T[,] array) {
             int nrow = array.GetLength(0);
             int ncol = array.GetLength(1);
