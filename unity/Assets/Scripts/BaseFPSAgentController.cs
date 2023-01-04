@@ -2549,6 +2549,238 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+      public void TeleportObject(
+            string objectId,
+            Vector3 position,
+            Vector3 rotation,
+            bool forceAction = false,
+            bool forceKinematic = false,
+            bool allowTeleportOutOfHand = false,
+            bool makeUnbreakable = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            bool teleportSuccess = TeleportObject(
+                sop: sop,
+                position: position,
+                rotation: rotation,
+                forceAction: forceAction,
+                forceKinematic: forceKinematic,
+                allowTeleportOutOfHand: allowTeleportOutOfHand,
+                makeUnbreakable: makeUnbreakable,
+                includeErrorMessage: true
+            );
+
+            if (teleportSuccess) {
+                if (!forceKinematic) {
+                    StartCoroutine(checkIfObjectHasStoppedMoving(sop, true));
+                    return;
+                } else {
+                    actionFinished(true);
+                    return;
+                }
+            } else {
+                actionFinished(false);
+                return;
+            }
+        }
+
+
+        public void TeleportObject(
+            string objectId,
+            Vector3[] positions,
+            Vector3 rotation,
+            bool forceAction = false,
+            bool forceKinematic = false,
+            bool allowTeleportOutOfHand = false,
+            bool makeUnbreakable = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}";
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            bool teleportSuccess = false;
+            foreach (Vector3 position in positions) {
+                teleportSuccess = TeleportObject(
+                    sop: sop,
+                    position: position,
+                    rotation: rotation,
+                    forceAction: forceAction,
+                    forceKinematic: forceKinematic,
+                    allowTeleportOutOfHand: allowTeleportOutOfHand,
+                    makeUnbreakable: makeUnbreakable,
+                    includeErrorMessage: true
+                );
+                if (teleportSuccess) {
+                    errorMessage = "";
+                    break;
+                }
+            }
+
+            if (teleportSuccess) {
+                // TODO: Do we want to wait for objects to stop moving when teleported?
+                // if (!forceKinematic) {
+                //     StartCoroutine(checkIfObjectHasStoppedMoving(sop, 0, true));
+                //     return;
+                // }
+                actionFinished(true);
+                return;
+            } else {
+                actionFinished(false);
+                return;
+            }
+        }
+
+        public bool TeleportObject(
+            SimObjPhysics sop,
+            Vector3 position,
+            Vector3 rotation,
+            bool forceAction,
+            bool forceKinematic,
+            bool allowTeleportOutOfHand,
+            bool makeUnbreakable,
+            bool includeErrorMessage = false
+        ) {
+            bool sopInHand = ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>();
+            if (sopInHand && !allowTeleportOutOfHand) {
+                if (includeErrorMessage) {
+                    errorMessage = "Cannot teleport object in hand.";
+                }
+                return false;
+            }
+            Vector3 oldPosition = sop.transform.position;
+            Quaternion oldRotation = sop.transform.rotation;
+
+            sop.transform.position = position;
+            sop.transform.rotation = Quaternion.Euler(rotation);
+            if (forceKinematic) {
+                sop.GetComponent<Rigidbody>().isKinematic = true;
+            }
+            if (!forceAction) {
+                Collider colliderHitIfTeleported = UtilityFunctions.firstColliderObjectCollidingWith(sop.gameObject);
+                if (colliderHitIfTeleported != null) {
+                    sop.transform.position = oldPosition;
+                    sop.transform.rotation = oldRotation;
+                    SimObjPhysics hitSop = ancestorSimObjPhysics(colliderHitIfTeleported.gameObject);
+                    if (includeErrorMessage) {
+                        errorMessage = $"{sop.ObjectID} is colliding with {(hitSop != null ? hitSop.ObjectID : colliderHitIfTeleported.name)} after teleport.";
+                    }
+                    return false;
+                }
+            }
+
+            if (makeUnbreakable) {
+                if (sop.GetComponent<Break>()) {
+                    sop.GetComponent<Break>().Unbreakable = true;
+                }
+            }
+
+            if (sopInHand) {
+                if (!forceKinematic) {
+                    Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+                    rb.constraints = RigidbodyConstraints.None;
+                    rb.useGravity = true;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                }
+                GameObject topObject = GameObject.Find("Objects");
+                if (topObject != null) {
+                    ItemInHand.transform.parent = topObject.transform;
+                } else {
+                    ItemInHand.transform.parent = null;
+                }
+
+                sop.DropContainedObjects(reparentContainedObjects: true, forceKinematic: forceKinematic);
+                sop.isInAgentHand = false;
+                ItemInHand = null;
+            }
+
+            return true;
+        }
+
+        public void TeleportObject(
+            string objectId,
+            float x,
+            float y,
+            float z,
+            Vector3 rotation,
+            bool forceAction = false,
+            bool forceKinematic = false,
+            bool allowTeleportOutOfHand = false,
+            bool makeUnbreakable = false
+        ) {
+            TeleportObject(
+                objectId: objectId,
+                position: new Vector3(x, y, z),
+                rotation: rotation,
+                forceAction: forceAction,
+                forceKinematic: forceKinematic,
+                allowTeleportOutOfHand: allowTeleportOutOfHand,
+                makeUnbreakable: makeUnbreakable
+            );
+        }
+
+        // used to check if an specified sim object has come to rest
+        // set useTimeout bool to use a faster time out
+        protected IEnumerator checkIfObjectHasStoppedMoving(
+            SimObjPhysics sop,
+            bool useTimeout = false) {
+            // yield for the physics update to make sure this yield is consistent regardless of framerate
+            yield return new WaitForFixedUpdate();
+
+            float startTime = Time.time;
+            float waitTime = TimeToWaitForObjectsToComeToRest;
+
+            if (useTimeout) {
+                waitTime = 1.0f;
+            }
+
+            if (sop != null) {
+                Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
+                bool stoppedMoving = false;
+
+                while (Time.time - startTime < waitTime) {
+                    if (sop == null) {
+                        break;
+                    }
+
+                    float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
+                    float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
+
+                    // ok the accel is basically zero, so it has stopped moving
+                    if (Mathf.Abs(accel) <= 0.001f) {
+                        // force the rb to stop moving just to be safe
+                        rb.velocity = Vector3.zero;
+                        rb.angularVelocity = Vector3.zero;
+                        rb.Sleep();
+                        stoppedMoving = true;
+                        break;
+                    } else {
+                        yield return new WaitForFixedUpdate();
+                    }
+                }
+
+                // so we never stopped moving and we are using the timeout
+                if (!stoppedMoving && useTimeout) {
+                    errorMessage = "object couldn't come to rest";
+                    // print(errorMessage);
+                    actionFinished(false);
+                    yield break;
+                }
+
+            } else {
+                errorMessage = "null reference sim obj in checkIfObjectHasStoppedMoving call";
+                actionFinished(false);
+            }
+        }
+
         protected T[] flatten2DimArray<T>(T[,] array) {
             int nrow = array.GetLength(0);
             int ncol = array.GetLength(1);
