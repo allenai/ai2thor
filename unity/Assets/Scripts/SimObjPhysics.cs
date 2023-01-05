@@ -910,6 +910,68 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
 
     // Use this for initialization
+    public void Init() {
+        // For debug in editor only
+#if UNITY_EDITOR
+        List<SimObjSecondaryProperty> temp = new List<SimObjSecondaryProperty>(SecondaryProperties);
+        if (temp.Contains(SimObjSecondaryProperty.Receptacle)) {
+            if (ReceptacleTriggerBoxes.Length == 0) {
+                Debug.LogError(this.name + " is missing ReceptacleTriggerBoxes please hook them up");
+            }
+        }
+
+        if (temp.Contains(SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
+            if (!gameObject.GetComponent<ObjectSpecificReceptacle>()) {
+                Debug.LogError(this.name + " is missing the ObjectSpecificReceptacle component!");
+            }
+        }
+
+        if (this.tag != "SimObjPhysics") {
+            Debug.LogError(this.name + " is missing SimObjPhysics tag!");
+        }
+
+        if (IsPickupable || IsMoveable) {
+            if (salientMaterials.Length == 0) {
+                Debug.LogError(this.name + " is missing Salient Materials array!");
+            }
+        }
+
+        if (this.transform.localScale != new Vector3(1, 1, 1)) {
+            Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
+        }
+#endif
+        // end debug setup stuff
+
+        // OriginalPhysicsMaterialValuesForAllMyColliders = new PhysicsMaterialValues[MyColliders.Length];
+
+        // for (int i = 0; i < MyColliders.Length; i++) {
+        //     OriginalPhysicsMaterialValuesForAllMyColliders[i] =
+        //     new PhysicsMaterialValues(MyColliders[i].material.dynamicFriction, MyColliders[i].material.staticFriction, MyColliders[i].material.bounciness);
+        // }
+
+        myRigidbody = gameObject.GetComponent<Rigidbody>();
+
+        Rigidbody rb = myRigidbody;
+
+        RBoriginalAngularDrag = rb.angularDrag;
+        RBoriginalDrag = rb.drag;
+
+        TimerResetValue = HowManySecondsUntilRoomTemp;
+
+        // sceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+
+        // default all rigidbodies so that if their drag/angular drag is zero, it's at least nonzero
+        if (myRigidbody.drag == 0) {
+            myRigidbody.drag = 0.01f;
+        }
+        if (myRigidbody.angularDrag == 0) {
+            myRigidbody.angularDrag = 0.01f;
+        }
+
+        initializeProperties();
+    }
+
+    // Use this for initialization
     void Start() {
         // For debug in editor only
 #if UNITY_EDITOR
