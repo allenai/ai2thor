@@ -970,6 +970,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         initializeProperties();
     }
+
     // Use this for initialization
     void Start() {
         // For debug in editor only
