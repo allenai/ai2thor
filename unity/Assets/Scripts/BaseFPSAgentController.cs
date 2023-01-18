@@ -2578,7 +2578,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (teleportSuccess) {
                 if (!forceKinematic) {
-                    StartCoroutine(checkIfObjectHasStoppedMoving(sop, true));
+                    StartCoroutine(checkIfObjectHasStoppedMoving(sop: sop, useTimeout: true));
                     return;
                 } else {
                     actionFinished(true);
@@ -2835,7 +2835,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (placeObjectSuccess) {
                 if (!forceKinematic) {
-                    StartCoroutine(checkIfObjectHasStoppedMoving(target, true));
+                    StartCoroutine(checkIfObjectHasStoppedMoving(sop: target, useTimeout: true));
                     return;
                 } else {
                     actionFinished(true);
@@ -2993,7 +2993,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (placeObjectSuccess) {
                 if (!forceKinematic) {
-                    StartCoroutine(checkIfObjectHasStoppedMoving(target, true));
+                    StartCoroutine(checkIfObjectHasStoppedMoving(sop: target, useTimeout: true));
                     return;
                 } else {
                     actionFinished(true);

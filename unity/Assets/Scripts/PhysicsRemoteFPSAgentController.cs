@@ -1982,7 +1982,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else {
                 // print("autosimulation true");
                 sop.ApplyForce(action);
-                StartCoroutine(checkIfObjectHasStoppedMoving(sop, length));
+                StartCoroutine(checkIfObjectHasStoppedMoving(sop: sop, length: length));
             }
         }
         // used to check if an specified sim object has come to rest
@@ -4068,7 +4068,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!physicsSceneManager.physicsSimulationPaused) {
                 // this is true by default
                 if (autoSimulation) {
-                    StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>()));
+                    StartCoroutine(checkIfObjectHasStoppedMoving(sop: ItemInHand.GetComponent<SimObjPhysics>(), useTimeout: false));
                 } else {
                     StartCoroutine(checkDropHeldObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
                 }
