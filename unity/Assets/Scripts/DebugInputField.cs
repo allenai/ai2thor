@@ -2572,8 +2572,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // drop object
                 case "dr": {
-                        ServerAction action = new ServerAction();
-                        action.action = "DropHandObject";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "DropHeldObject";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }

@@ -2774,6 +2774,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(false);
                     yield break;
                 }
+                
+                DefaultAgentHand();
+                actionFinished(true, sop.transform.position);
 
             } else {
                 errorMessage = "null reference sim obj in checkIfObjectHasStoppedMoving call";
