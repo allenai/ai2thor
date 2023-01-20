@@ -268,6 +268,8 @@ public static class UtilityFunctions {
         return corners;
     }
 
+    //Goes through all game objects with a <Light> component on them in the scene
+    //
     public static List<LightParameters> GetLightPropertiesOfScene() {
 
             Debug.Log("we are inside GetLIghtPropertiesOfScene");
@@ -336,14 +338,12 @@ public static class UtilityFunctions {
                 lp.enabled = hikari.enabled;
 
                 if(hikari.GetComponentInParent<SimObjPhysics>()) {
-                    lp.parentSimObjId = hikari.GetComponentInParent<SimObjPhysics>().objectID;
+                    lp.parentSimObjObjectId = hikari.GetComponentInParent<SimObjPhysics>().objectID;
                     lp.parentSimObjName = hikari.GetComponentInParent<SimObjPhysics>().transform.name;
                 }
 
                 allOfTheLights.Add(lp);
             }
-
-            //find all sim obj physics in scene
 
             return allOfTheLights;
     }
@@ -412,7 +412,7 @@ public static class UtilityFunctions {
 
             create.WriteLine($"enabled: {lp.enabled}");
 
-            create.WriteLine($"parent Sim Obj Id: {lp.parentSimObjId}");
+            create.WriteLine($"parent Sim Obj Id: {lp.parentSimObjObjectId}");
 
             create.WriteLine($"parent Sim Obj Name: {lp.parentSimObjName}");
 
@@ -555,7 +555,7 @@ public static class UtilityFunctions {
                 lightAndTypeToSimObjPhys.Add(l, l.Key.GetComponentInParent<SimObjPhysics>());
             }
 
-            //track if multiple key lights in simObjChildLIghts are children of the same SimObjPhysics
+            //track if multiple key lights in simObjChildLights are children of the same SimObjPhysics
             Dictionary<SimObjPhysics, int> simObjToSpotInstanceCountInThatSimObj = new Dictionary<SimObjPhysics, int>();
             Dictionary<SimObjPhysics, int> simObjToDirectionalInstanceCountInThatSimObj = new Dictionary<SimObjPhysics, int>();
             Dictionary<SimObjPhysics, int> simObjToPointInstanceCountInThatSimObj = new Dictionary<SimObjPhysics, int>();
