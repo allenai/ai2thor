@@ -1042,8 +1042,10 @@ def ci_pytest(branch, commit_id):
 
 @task
 def ci_build(context):
+    import glob, os
     with open(os.path.join(os.environ["HOME"], ".ci-build.lock"), "w") as lock_f:
         arch_temp_dirs = dict()
+        has_any_build_failed = False
         try:
             fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
             build = pending_travis_build()
@@ -1069,7 +1071,6 @@ def ci_build(context):
                 if _unity_version() == "2020.3.25f1":
                     build_archs.append("CloudRendering")
 
-                has_any_build_failed = False
                 for include_private_scenes in private_scene_options:
                     for arch in build_archs:
                         logger.info(
@@ -1219,6 +1220,9 @@ def ci_build(context):
         finally:
             for arch, temp_dir in arch_temp_dirs.items():
                 logger.info("deleting temp dir %s" % temp_dir)
+                if has_any_build_failed:
+                    for file in glob.glob(f"{temp_dir}/**/*.log"):
+                        shutil.copy(file, os.path.join("~/debug", os.path.basename(glob)))
                 shutil.rmtree(temp_dir)
 
 
