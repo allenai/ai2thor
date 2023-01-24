@@ -1220,6 +1220,7 @@ def ci_build(context):
         finally:
             for arch, temp_dir in arch_temp_dirs.items():
                 logger.info("deleting temp dir %s" % temp_dir)
+                
                 if has_any_build_failed:
                     for file in glob.glob(f"{temp_dir}/**/*.log"):
                         log_out = os.path.join("~", "debug", os.path.basename(file))
