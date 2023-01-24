@@ -1222,7 +1222,7 @@ def ci_build(context):
                 logger.info("deleting temp dir %s" % temp_dir)
                 if has_any_build_failed:
                     for file in glob.glob(f"{temp_dir}/**/*.log"):
-                        log_out = os.path.join("~/debug", os.path.basename(glob))
+                        log_out = os.path.join("~", "debug", os.path.basename(glob))
                         logger.info("copying failed log to %s" % log_out)
                         shutil.copy(file, log_out)
                 shutil.rmtree(temp_dir)
