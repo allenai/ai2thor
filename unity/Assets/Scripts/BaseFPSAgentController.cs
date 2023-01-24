@@ -2728,7 +2728,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // used to check if an specified sim object has come to rest
-        // set useTimeout bool to use a faster time out
+        // set useTimeout bool to use a faster time out 
         protected IEnumerator checkIfObjectHasStoppedMoving(
             SimObjPhysics sop,
             bool useTimeout = false) {
