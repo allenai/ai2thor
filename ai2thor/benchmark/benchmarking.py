@@ -1,6 +1,11 @@
 import copy
 from collections import defaultdict
 import numpy as np
+import logging
+import functools
+import operator
+from operator import itemgetter
+
 class BenchmarkConfig:
     def __init__(
             self,
@@ -13,7 +18,6 @@ class BenchmarkConfig:
             experiment_sample_count = 100,
             filter_object_types="",
             teleport_random_before_actions=False,
-            distance_visibility_scheme=False,
 
             verbose=False,
             local_build=False,
@@ -35,51 +39,94 @@ class BenchmarkConfig:
 
         self.filter_object_types = filter_object_types
         self.teleport_random_before_actions = teleport_random_before_actions
-        self.distance_visibility_scheme = distance_visibility_scheme
         self.title = title
 
 class ActionsPerSecondBenchmarker():
     def __init__(self):
-        self.__benchmark_aggregate_key = "average_runtime"
-        self.__atomic_key = "runtime"
+        self.__aggregate_key = "average_frametime"
+        self.__atomic_key = "frametime"
+        self.__transformed_key = "actions_per_second"
         pass
 
-    def get_benchmark_key(self):
-        return self.__benchmark_param_key
+    def name(self):
+        return "Actions Per Second"
 
-    def benchmark(self, env, action_group_name, action_group):
-        average_frametime = 0
+    def benchmark(self, env, action_config, report_add_key_values={}):
+        start = time.time()
+        env.step(dict(action=action_config["action"], **action_config["args"]))
+        end = time.time()
+        frame_time = end - start
 
-        per_action_benchmark =  defaultdict(lambda: defaultdict(lambda: {"frametime": 0.0, "count": 0}))
-        b = []
+        record = {
+                "action": action_config["action"],
+                "count": 1,
+                [self.__aggregate_key]: frame_time
+            }
+        record = {**record, **add_key_values}
 
-        for i in range(action_group["sample_count"]):
-            action_config = action_group["selector"](action_group["actions"])
-            start = time.time()
-            env.step(dict(action=action_config["action"], **action_config["args"]))
-            end = time.time()
-            frame_time = end - start
-            average_frame_time += frame_time
-            b.append({"group": action_group_name, "action": action_config["action"], [self.__atomic_key]: frame_time})
+        return record
 
-            per_action_benchmark[action_config["action"]]["frametime"] = frame_time
-            per_action_benchmark[action_config["action"]]["count"] =
+    # def benchmark(self, env, action_group_name, action_group, add_key_values={}):
+    #     average_frametime = 0
+    #
+    #     # per_action_benchmark =  defaultdict(lambda: defaultdict(lambda: {"frametime": 0.0, "count": 0}))
+    #     record_per_action = defaultdict(list)
+    #     b = []
+    #
+    #     for i in range(action_group["sample_count"]):
+    #         action_config = action_group["selector"](action_group["actions"])
+    #         start = time.time()
+    #         env.step(dict(action=action_config["action"], **action_config["args"]))
+    #         end = time.time()
+    #         frame_time = end - start
+    #         average_frame_time += frame_time
+    #         # b.append({"group": action_group_name, "action": action_config["action"], [self.__atomic_key]: frame_time})
+    #
+    #         record = {
+    #                 "group": action_group_name,
+    #                 "action": action_config["action"],
+    #                 "count": 1,
+    #                 [self.__aggregate_key]: frame_time
+    #             }
+    #         record = {**record, **add_key_values}
+    #         record_per_action[action_config["action"]] += [record]
+    #
+    #
+    #         # per_action_benchmark[action_config["action"]]["frametime"] = frame_time
+    #         # per_action_benchmark[action_config["action"]]["count"] += 1
+    #
+    #     aggregates = [transform_aggregate(aggregate(record_per_action, a)) for a in action_group["actions"]] +\
+    #                  [transform_aggregate(aggregate(record_per_action, "group"))]
+    #
+    #     return aggregates
 
+    def aggregate_by(self, records, dimensions, include_dimensions=True, transform=True, aggregate_out_key=None):
+        # aggregate = [report[k] for k in keys ]
+        if not isinstance(dimensions, list):
+            dimensions = [dimensions]
 
+        if aggregate_out_key is None:
+            aggregate_out_key = self.__aggregate_key
 
-        average_frame_time = average_frame_time / float(n)
+        grouper = itemgetter(*dimensions)
 
+        transform = lambda x: self.transform_aggregate(x) if transform else lambda x: x
 
-        return {[self.__benchmark_param_key]: average_frametime}
+        groups = itertools.groupby(records, grouper)
 
-    def aggregate(self, report, dimension, value):
+        aggregated_groups = {
+            [dimension]: transform({
+                "count": len(slice),
+                [aggregate_out_key]: np.sum(slice, lambda x: x[self.__aggregate_key]/len(slice)),
+            })
+            for dimension, slice in groups
+        }
+        # dimensions =
+        # return dict(**aggregated_groups,
 
-        slice = [b for b in report if report[dimension] == value]
-        total = np.sum(slice, lambda x: x[self.__atomic_key])
-        return {"count": b, [self.__atomic_key]: total}
-
-
-
+    def transform_aggregate(self, report):
+        report[self.__transformed_key] = 1/report[self.__aggregate_key]
+        return report
 
 class UnityActionBenchmarkRunner(BenchmarkConfig):
     def __init__(self, benchmarkers, **benchmarker_kwargs):
@@ -120,9 +167,13 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
 
             default_selector = lambda x: random.choice(x)
             if isinstance(group_copy["selector"], str):
+                if group_copy["selector"] == "random":
+                    group_copy["selector"] = default_selector
                 # TODO: potentially add more selectors
-                pass
-            group_copy["selector"] = default_selector
+            if group_copy["selector"] is None:
+                group_copy["selector"] = default_selector
+
+            # TODO: Arg selector for potentially sending different values as arguments
 
 
             return group_copy
@@ -134,7 +185,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                 "look": {"actions": ["LookUp", "LookDown"]}
             }
 
-        action_map = {k: [get_complete_action_dict(group) for group in v] for k,v in action_map.items()}
+        action_map = {k: get_complete_action_dict(group) for k,group in action_map.items()}
 
         action_map["all"] = [v for k,v in action_map.items()]
 
@@ -254,13 +305,13 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             )
 
         args = self.init_params
-        if self.editor_mode:
-            args["port"] = 8200
-            args["start_unity"] = False
-            del args["commit_id"]
-        elif local_build:
-            args["local_build"] = self.local_build
-            del args["commit_id"]
+        # if self.editor_mode:
+        #     args["port"] = 8200
+        #     args["start_unity"] = False
+        #     del args["commit_id"]
+        # elif local_build:
+        #     args["local_build"] = self.local_build
+        #     del args["commit_id"]
 
         env = ai2thor.controller.Controller(
             **args
@@ -279,21 +330,39 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             elif isinstance(scenes, list):
                 scene_list = [scenes]
         else:
-            scene_list = [["FloorPlan{}_physics".format(i) for i in range(room_range[0], room_range[1])] for room_range
-                          in room_ranges]
+            scene_list = []
+            # scene_list = [["FloorPlan{}_physics".format(i) for i in range(room_range[0], room_range[1])] for room_range
+            #               in room_ranges]
 
         procedural_json_filenames = None
         if self.procedural_houses:
             scene_list = scene_list + [("Procedural", house) for house in self.procedural_houses]
 
-        benchmark_map = {"scenes": {}, "title": self.title, "controller_params": {**args},
-                         "benchmark_params": {"platform": platform.system(), "filter_object_types": self.filter_object_types,
+
+        experiment_list = [
+            [[(scene, procedural_house, benchmarker, i) for benchmarker in self.benchmarkers]
+                    for i in range(self.experiment_sample_count)]
+                           for (scene, procedural_house) in scene_list
+        ]
+
+        experiment_list = functools.reduce(
+            operator.iconcat,
+            functools.reduce(operator.iconcat, experiment_list, []),
+            []
+        )
+
+        benchmark_map = {"benchmarks": defaultdict(lambda: defaultdict(lambda: {})), "title": self.title,
+                         "controller_params": {**args},
+                         "benchmark_params": {"platform": platform.system(),
+                                              "filter_object_types": self.filter_object_types,
                                               "action_sample_number": self.action_sample_count}}
         total_average_ft = 0
         scene_count = 0
+        benchmarks = defaultdict(list)
 
-        for scene,procedural_house in scene_list:
-            scene_benchmark = {}
+        scene_benchmark = defaultdict(lambda: {})
+        records = []
+        for (scene, procedural_house, benchmarker, experiment_index) in scene_list:
             if self.verbose:
                 print("Loading scene {}".format(scene))
             env.reset(scene)
@@ -307,6 +376,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             scene_average_fr = 0
 
             house = procedural_house
+            house_id = ""
             if house != None:
                 success = create_procedural_house(house)
                 if not success:
@@ -314,27 +384,56 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                     if self.verbose:
                         print(f"Procedural house creation failed for house {house['id']}")
                     continue
+                house_id = house["id"]
 
-            for action_name, actions in action_map.items():
+            record_per_action = defaultdict(list)
+            # records = []
+            for action_group_name, action_group in action_map.items():
 
                 telerport_to_random_reachable(env, house)
-                for benchmarker in self.benchmarkers:
-                    benchmarker(env, action_name, actions)
-                ft = benchmark_actions(env, action_name, actions)
-                scene_benchmark[action_name] = ft
-                scene_average_fr += ft
 
-            scene_average_fr = scene_average_fr / float(len(action_tuples))
-            total_average_ft += scene_average_fr
+                for i in range(action_group["sample_count"]):
+                    action_config = action_group["selector"](action_group["actions"])
+                    record = benchmarker.benchmark(
+                        env,
+                        action_config,
+                        {
+                            "action_group": action_group_name,
+                            "house": house_id,
+                            "scene": scene,
+                            "experiment_index": experiment_index,
+                            "benchmarker": benchmarker.name(),
+                        }
+                    )
+                    records.append(record)
 
             if self.verbose:
                 print("Total average frametime: {}".format(scene_average_fr))
 
-            benchmark_map["scenes"][scene] = scene_benchmark
-            scene_count += 1
+        env.stop()
+
+        by_benchmarker = bencharker.aggregate_by(records, "benchmarker")
+        by_scene = bencharker.aggregate_by(records, ["scene", "house", "benchmarker"])
+        by_action = bencharker.aggregate_by(records, ["scene", "house", "benchmarker", "action"])
+        by_action_group = bencharker.aggregate_by(records, ["scene", "house", "benchmarker", "action_group"])
+
+
+        house_or_scene = lambda house,scene: scene if house == "" else house
+        # [{[f"{scene if house == '' else house}"]: aggregate} for ((scene, house_id, benchmarker_name, action_group), aggregate) in by_action_group.items()]
+
+
+        for ((scene, house_id, benchmarker_name, action_or_group), aggregate) in dict(**by_action_group, **by_action).items():
+            benchmark_map["benchmarks"][benchmarker_name][house_or_scene(scene, house_id)][action_name] = aggregate
+
+        for ((scene, house_id, benchmarker_name), aggregate) in by_scene.items():
+            for k, v in aggregate:
+                benchmark_map["benchmarks"][benchmarker_name][house_or_scene(scene, house_id)][k] = v
+
+        for benchmarker_name,aggregate in by_benchmarker.items():
+            for k, v in aggregate:
+                benchmark_map["benchmarks"][benchmarker_name][k] = v
 
         benchmark_map["average_framerate_seconds"] = total_average_ft / scene_count
         with open(out, "w") as f:
             f.write(json.dumps(benchmark_map, indent=4, sort_keys=True))
 
-        env.stop()
