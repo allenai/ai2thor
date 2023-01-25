@@ -4500,6 +4500,7 @@ def run_benchmark(
     if scenes:
         scenes = scenes.split(",")
 
+
     if "Procedural" not in scenes and house_json_filename:
         scenes.append("Procedural")
 
