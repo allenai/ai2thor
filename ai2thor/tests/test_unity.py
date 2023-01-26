@@ -2263,7 +2263,7 @@ def test_fill_liquid(controller):
 
 def test_timeout():
     kwargs = {
-        "server_timeout": 2.0
+        "server_timeout": 10.0
     }
     for c in [
         build_controller(server_class=WsgiServer, **kwargs),
@@ -2273,7 +2273,7 @@ def test_timeout():
         assert c.last_event.metadata["lastActionSuccess"]
 
         with pytest.raises(TimeoutError):
-            c.step("Sleep", seconds=4)
+            c.step("Sleep", seconds=12)
 
         # Above crash should kill the unity process
         time.sleep(1.0)
