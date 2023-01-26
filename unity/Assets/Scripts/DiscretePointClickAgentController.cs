@@ -33,6 +33,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (throwForceBar) {
                 throwForceBar.SetActive(false);
             }
+            
             // InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
             // TODO: move debug input field script from, Input Field and disable here
         }
