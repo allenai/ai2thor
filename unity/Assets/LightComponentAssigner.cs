@@ -55,18 +55,24 @@ public class LightComponentAssigner : MonoBehaviour
             //check if this object is toggleable
             SimObjPhysics rootSOP = contentRoot.GetComponent<SimObjPhysics>();
 
+            bool didIMakeEdits = false;
+
             if (rootSOP.IsToggleable && rootSOP.GetComponent<CanToggleOnOff>().LightSources.Length > 0) {
+                didIMakeEdits = true;
                 //find any referenced light objects this controls
                 //for each light object this sim object controls, add the WhatControlsThis component
                 //update WhatcontrolsThis component to reference the sim object
                 foreach (Light l in rootSOP.GetComponent<CanToggleOnOff>().LightSources) {
                     WhatControlsThis wct = l.gameObject.AddComponent<WhatControlsThis>();
                     wct.SimObjThatControlsMe = rootSOP;
+
                 }
             }
 
             //save edits
+            if(didIMakeEdits)
             PrefabUtility.SaveAsPrefabAsset(contentRoot, assetPath);
+            
             PrefabUtility.UnloadPrefabContents(contentRoot);
         }
     }
