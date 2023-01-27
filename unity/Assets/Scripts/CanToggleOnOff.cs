@@ -126,7 +126,7 @@ public class CanToggleOnOff : MonoBehaviour {
             WhatControlsThis wct;
             foreach (Light l in LightSources) {
                 wct = l.gameObject.AddComponent<WhatControlsThis>();
-                wct.ThingThatControlsMe = this.gameObject.GetComponentInParent<SimObjPhysics>();
+                wct.SimObjThatControlsMe = this.gameObject.GetComponentInParent<SimObjPhysics>();
             }
         }
 
