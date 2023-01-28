@@ -392,6 +392,7 @@ class Controller(object):
         download_only=False,
         include_private_scenes=False,
         server_class=None,
+        server_type=None,
         gpu_device=None,
         platform=None,
         server_timeout: Optional[float] = 100.0,
@@ -483,6 +484,9 @@ class Controller(object):
                     quality
                 )
             )
+
+        if server_type is not None and server_class is None:
+            self.server_class = Controller.server_type_to_class(server_type)
 
         if server_class is None and platform_system() == "Windows":
             self.server_class = ai2thor.wsgi_server.WsgiServer
@@ -739,6 +743,17 @@ class Controller(object):
 
         self.scene = scene
         return self.last_event
+
+    @classmethod
+    def server_type_to_class(cls, server_type):
+        if server_type == ai2thor.fifo_server.FifoServer.server_type:
+            return ai2thor.fifo_server.FifoServer
+        elif server_type == ai2thor.wsgi_server.WsgiServer.server_type:
+            return ai2thor.wsgi_server.WsgiServer
+        else:
+            valid_servers = str.join([f"'{x}'" for x in [ai2thor.fifo_server.FifoServer.server_type, ai2thor.wsgi_server.WsgiServer.server_type]], ",")
+            raise ValueError(f"Invalid server type '{server_type}'. Only valid values: {valid_servers} ")
+
 
     def random_initialize(
         self,
@@ -1119,7 +1134,7 @@ class Controller(object):
         env["AI2THOR_SERVER_TYPE"] = self.server.server_type
         env["AI2THOR_SERVER_SIDE_SCREENSHOT"] = "False" if self.headless else "True"
         for k, v in server_params.items():
-            env["AI2THOR_" + k.upper()] = v
+            env["AI2THOR_" + k.upper()] = str(v)
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
 
@@ -1129,11 +1144,15 @@ class Controller(object):
         )
 
         makedirs(self.log_dir)
+        extra_args={}
+        if os.name == 'nt':
+            extra_args = dict(shell=True)
         self.server.unity_proc = proc = subprocess.Popen(
             command,
             env=env,
             stdout=open(os.path.join(self.log_dir, "unity.log"), "a"),
             stderr=open(os.path.join(self.log_dir, "unity.log"), "a"),
+            **extra_args
         )
 
         try:
@@ -1291,7 +1310,6 @@ class Controller(object):
         request = ai2thor.platform.Request(
             platform_system(), self.width, self.height, self.x_display, self.headless
         )
-
         if platform is None:
             candidate_platforms = ai2thor.platform.select_platforms(request)
         else:

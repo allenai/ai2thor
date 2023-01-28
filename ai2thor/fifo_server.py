@@ -251,8 +251,11 @@ class FifoServer(ai2thor.server.Server):
         )
 
     def start(self):
-        os.mkfifo(self.server_pipe_path)
-        os.mkfifo(self.client_pipe_path)
+        if os.name != 'nt':
+            os.mkfifo(self.server_pipe_path)
+            os.mkfifo(self.client_pipe_path)
+        else: # Windows
+            self.server_pipe_path, self.client_pipe_path = os.pipe()
         self.started = True
 
     # params to pass up to unity

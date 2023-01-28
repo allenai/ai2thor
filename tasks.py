@@ -1,6 +1,7 @@
 import os
 import sys
-import fcntl
+if os.name != 'nt':
+    import fcntl
 import datetime
 import json
 import re
@@ -4467,6 +4468,11 @@ def run_benchmark(
 ):
 
     import json
+    import os
+    import ai2thor.wsgi_server as ws
+    import ai2thor.fifo_server as fs
+    path = os.path.abspath(fs.__file__)
+    print(path)
     import ai2thor.benchmark.benchmarking as benchmark
     args = dict(
         local_executable_path = None,
@@ -4477,8 +4483,7 @@ def run_benchmark(
         width = width,
         height = height,
         fieldOfView = fov,
-        agentControllerType = 'mid-level',
-        server_class = ai2thor.fifo_server.FifoServer,
+        server_type = ai2thor.wsgi_server.WsgiServer.server_type,
         visibilityScheme = 'Distance' if distance_visibility_scheme else 'Collider'
     )
     if editor_mode:
@@ -4499,13 +4504,16 @@ def run_benchmark(
 
     if scenes:
         scenes = scenes.split(",")
+    else:
+        scenes = []
 
-
-    if "Procedural" not in scenes and house_json_filename:
+    if "Procedural" not in scenes and len(house_json_paths):
         scenes.append("Procedural")
 
     runner = benchmark.UnityActionBenchmarkRunner(
+        benchmarkers=[benchmark.SimsPerSecondBenchmarker(only_transformed_key=True)],
         init_params=args,
+        name=title,
 
         scenes=scenes,
         procedural_houses=houses,
@@ -4516,7 +4524,6 @@ def run_benchmark(
         teleport_random_before_actions=teleport_random_before_actions,
 
         verbose=verbose,
-        title=title,
         output_file=out,
     )
     runner.benchmark(
@@ -4541,6 +4548,20 @@ def run_benchmark(
             },
             "look": {
                 "actions": [
+                    {"action": "LookUp", "args": {}},
+                    {"action": "LookDown", "args": {}}
+                ],
+                "sample_count": number_samples,
+                "selector": "random"
+            },
+            "all": {
+                "actions": [
+                    {"action": "MoveAhead", "args": {}},
+                    {"action": "MoveBack", "args": {}},
+                    {"action": "MoveLeft", "args": {}},
+                    {"action": "MoveRight", "args": {}},
+                    {"action": "RotateRight", "args": {}},
+                    {"action": "RotateLeft", "args": {}},
                     {"action": "LookUp", "args": {}},
                     {"action": "LookDown", "args": {}}
                 ],
