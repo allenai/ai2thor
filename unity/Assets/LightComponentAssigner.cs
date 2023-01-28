@@ -46,10 +46,13 @@ public class LightComponentAssigner : MonoBehaviour
 
         GetAllPrefabs();
 
+        Debug.Log("here!");
+
         foreach (KeyValuePair<GameObject, string> go in assetToAssetPath) {
             GameObject asetRoot = go.Key;
             string assetPath = go.Value;
 
+            Debug.Log("loading prefab");
             GameObject contentRoot = PrefabUtility.LoadPrefabContents(assetPath);
 
             //check if this object is toggleable
@@ -57,7 +60,8 @@ public class LightComponentAssigner : MonoBehaviour
 
             bool didIMakeEdits = false;
 
-            if (rootSOP.IsToggleable && rootSOP.GetComponent<CanToggleOnOff>().LightSources.Length > 0) {
+            if (rootSOP.GetComponent<CanToggleOnOff>() && rootSOP.GetComponent<CanToggleOnOff>().LightSources.Length > 0) {
+                Debug.Log($"found a toggleable thing with lights: {rootSOP.name}");
                 didIMakeEdits = true;
                 //find any referenced light objects this controls
                 //for each light object this sim object controls, add the WhatControlsThis component
@@ -65,14 +69,14 @@ public class LightComponentAssigner : MonoBehaviour
                 foreach (Light l in rootSOP.GetComponent<CanToggleOnOff>().LightSources) {
                     WhatControlsThis wct = l.gameObject.AddComponent<WhatControlsThis>();
                     wct.SimObjThatControlsMe = rootSOP;
-
                 }
             }
 
             //save edits
             if(didIMakeEdits)
             PrefabUtility.SaveAsPrefabAsset(contentRoot, assetPath);
-            
+
+            Debug.Log("about to unload prefab");
             PrefabUtility.UnloadPrefabContents(contentRoot);
         }
     }
