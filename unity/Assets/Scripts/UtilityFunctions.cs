@@ -333,7 +333,14 @@ public static class UtilityFunctions {
                 lp.shadow = xemnas;
 
                 //linked sim object
-                //lp.linkedSimObj = ;
+                if(hikari.GetComponent<WhatControlsThis>()) {
+                    SimObjPhysics thingThatControlsMe = hikari.GetComponent<WhatControlsThis>().SimObjThatControlsMe;
+                    lp.controllerSimObjId = thingThatControlsMe.objectID.ToString();
+                    lp.controllerSimObjName = thingThatControlsMe.name.ToString();
+                }
+
+                else
+                Debug.Log($"Light named: {hikari.gameObject.name} does not have a WhatControlsThis component");
 
                 lp.enabled = hikari.enabled;
 
@@ -408,7 +415,9 @@ public static class UtilityFunctions {
                 create.WriteLine($"shadow params NULL!!!");
             }
 
-            create.WriteLine($"linkedSimObj: {lp.linkedSimObj}");
+            create.WriteLine($"controllerSimObjId: {lp.controllerSimObjId}");
+            
+            create.WriteLine($"controllerSimObjName: {lp.controllerSimObjName}");
 
             create.WriteLine($"enabled: {lp.enabled}");
 

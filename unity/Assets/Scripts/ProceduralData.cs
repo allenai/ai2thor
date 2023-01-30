@@ -66,7 +66,9 @@ namespace Thor.Procedural.Data {
         */
 
         //explicit reference to what Sim Object controls if this light is enabled/disabled when using ToggleOnOff
-        public string linkedSimObj { get; set; }
+        public string controllerSimObjId { get; set; }
+        //explicit reference to the game object name of what Sim Object controls if this light is enabled/disabled when using ToggleOnOff
+        public string controllerSimObjName {get; set; }
         //is this light currently on or not
         public bool enabled { get; set; }
         //explicit reference to the objectID of a parent Sim Object this Light is a child of

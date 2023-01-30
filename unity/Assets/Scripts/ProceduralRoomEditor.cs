@@ -990,7 +990,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     range = l.range,
                     rgb = new SerializableColor() { r = l.color.r, g = l.color.g, b = l.color.b, a = l.color.a },
                     shadow = sp,
-                    linkedSimObj = objectLink
+                    controllerSimObjId = objectLink
                 };
             }
         ).ToList();
