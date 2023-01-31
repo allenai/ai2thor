@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.64405453, g: 0.6618528, b: 0.5299755, a: 1}
+  m_IndirectSpecularColor: {r: 0.64409924, g: 0.6618855, b: 0.5299832, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -7407,38 +7407,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
-      propertyPath: m_RootOrder
-      value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -1.685
-      objectReference: {fileID: 0}
-    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.0009356141
-      objectReference: {fileID: 0}
-    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.327
-      objectReference: {fileID: 0}
-    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -7517,6 +7485,38 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Enabled
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
+      propertyPath: m_RootOrder
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -1.685
+      objectReference: {fileID: 0}
+    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.0009356141
+      objectReference: {fileID: 0}
+    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.327
+      objectReference: {fileID: 0}
+    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4941973957752900, guid: 48098ea6fcb7c4e98809051db97291a2, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
@@ -11276,6 +11276,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1200349762}
   - component: {fileID: 1200349763}
+  - component: {fileID: 1200349764}
   m_Layer: 0
   m_Name: scene|Point|0
   m_TagString: Untagged
@@ -11359,6 +11360,19 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!114 &1200349764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1200349761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 171edda3064844df987438058e939c2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SimObjThatControlsMe: {fileID: 1313123439}
 --- !u!1 &1210102614
 GameObject:
   m_ObjectHideFlags: 0
@@ -12256,6 +12270,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1266755331}
   - component: {fileID: 1266755332}
+  - component: {fileID: 1266755333}
   m_Layer: 0
   m_Name: scene|Point|1
   m_TagString: Untagged
@@ -12339,6 +12354,19 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!114 &1266755333
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1266755330}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 171edda3064844df987438058e939c2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SimObjThatControlsMe: {fileID: 1313123439}
 --- !u!1 &1272317770
 GameObject:
   m_ObjectHideFlags: 0
@@ -13197,6 +13225,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1341118480}
   - component: {fileID: 1341118481}
+  - component: {fileID: 1341118482}
   m_Layer: 0
   m_Name: scene|Spot|0
   m_TagString: Untagged
@@ -13282,6 +13311,19 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!114 &1341118482
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1341118479}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 171edda3064844df987438058e939c2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SimObjThatControlsMe: {fileID: 1313123439}
 --- !u!1 &1346124150
 GameObject:
   m_ObjectHideFlags: 0
@@ -15136,6 +15178,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1564136500}
   - component: {fileID: 1564136501}
+  - component: {fileID: 1564136502}
   m_Layer: 0
   m_Name: scene|Point|2
   m_TagString: Untagged
@@ -15219,6 +15262,19 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!114 &1564136502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1564136499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 171edda3064844df987438058e939c2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SimObjThatControlsMe: {fileID: 1313123439}
 --- !u!1 &1564674978
 GameObject:
   m_ObjectHideFlags: 0
@@ -15890,6 +15946,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1609751149}
   - component: {fileID: 1609751150}
+  - component: {fileID: 1609751151}
   m_Layer: 0
   m_Name: scene|Point|3
   m_TagString: Untagged
@@ -15973,6 +16030,19 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!114 &1609751151
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1609751148}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 171edda3064844df987438058e939c2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SimObjThatControlsMe: {fileID: 1313123439}
 --- !u!1 &1610059672
 GameObject:
   m_ObjectHideFlags: 0
@@ -18423,6 +18493,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1829617714}
   - component: {fileID: 1829617715}
+  - component: {fileID: 1829617716}
   m_Layer: 0
   m_Name: scene|Spot|1
   m_TagString: Untagged
@@ -18508,6 +18579,19 @@ Light:
   m_UseViewFrustumForShadowCasterCull: 1
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!114 &1829617716
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1829617713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 171edda3064844df987438058e939c2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SimObjThatControlsMe: {fileID: 1313123439}
 --- !u!1 &1834881744
 GameObject:
   m_ObjectHideFlags: 0
