@@ -2,6 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using UnityEngine.SceneManagement;
+
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.SceneManagement;
+#endif
 
 #if UNITY_EDITOR
 [ExecuteInEditMode]
@@ -80,6 +86,30 @@ public class LightComponentAssigner : MonoBehaviour
             PrefabUtility.UnloadPrefabContents(contentRoot);
         }
     }
+
+    public void AddWhatControlsThisComponentToSceneLights() {
+        //open every scene
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
+            SimObjPhysics[] objects = GameObject.FindObjectsOfType<SimObjPhysics>(true);
+
+            foreach (SimObjPhysics sop in objects) {
+                //find all sim objs that are toggleable with light sources
+                if(sop.GetComponent<CanToggleOnOff>() && sop.GetComponent<CanToggleOnOff>().LightSources.Length >0) {
+                    //check if the `WhatControlsThis component is already here or not
+                    foreach(Light l in sop.GetComponent<CanToggleOnOff>().LightSources) {
+                        //no pre cached `WhatControlsThis` component? Then this is not a prefab's light it is a scene light so lets goooooo
+                        if(!l.GetComponent<WhatControlsThis>()) {
+                            WhatControlsThis wct = l.gameObject.AddComponent<WhatControlsThis>();
+                            wct.SimObjThatControlsMe = sop;
+                        }
+                    }
+                }
+            }
+
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+        }
+    }
 }
 
 [CustomEditor (typeof(LightComponentAssigner))]
@@ -93,6 +123,11 @@ public class EditorLightComponentAssigner : Editor
         if(GUILayout.Button("Assign WhatControlsThis component to Prefabs"))
         {
             myScript.AddWhatControlsThisComponent();
+        }
+
+        if(GUILayout.Button("Assign WhatControlsThis component to Scene Lights"))
+        {
+            myScript.AddWhatControlsThisComponentToSceneLights();
         }
     }
 

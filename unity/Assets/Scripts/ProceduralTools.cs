@@ -1403,15 +1403,15 @@ namespace Thor.Procedural {
             }
 
             var lightingRoot = new GameObject(DefaultLightingRootName);
-            if (house.proceduralParameters.lights != null) {
+            if (house.proceduralParameters.lights != null) {                
                 foreach (var lightParams in house.proceduralParameters.lights) {
+                    //name light game object in format scene|<light type>|<instance count>
                     var go = new GameObject(lightParams.id);
                     go.transform.position = lightParams.position;
                     if (lightParams.rotation != null) {
                         go.transform.rotation = lightParams.rotation.toQuaternion();
                     }
                     var light = go.AddComponent<Light>();
-                    //light.lightmapBakeType = LightmapBakeType.Realtime; //removed because this is editor only, and probably not needed since the light should default to Realtime Light Mode anyway?
                     light.type = (LightType)Enum.Parse(typeof(LightType), lightParams.type, ignoreCase: true);
                     light.color = new Color(lightParams.rgb.r, lightParams.rgb.g, lightParams.rgb.b, lightParams.rgb.a);
                     light.intensity = lightParams.intensity;
@@ -1432,7 +1432,6 @@ namespace Thor.Procedural {
                         light.shadowResolution = (UnityEngine.Rendering.LightShadowResolution)Enum.Parse(typeof(UnityEngine.Rendering.LightShadowResolution), lightParams.shadow.resolution, ignoreCase: true);
                     }
                     go.transform.parent = lightingRoot.transform;
-
                 }
             }
 
@@ -1689,51 +1688,6 @@ namespace Thor.Procedural {
                 }
             }
 
-            if (isOn.HasValue) {
-                var canToggle = spawned.GetComponentInChildren<CanToggleOnOff>();
-                if (canToggle != null) {
-                    if (isOn.Value != canToggle.isOn) {
-                        canToggle.Toggle();
-                    }
-
-                    //this logic only works for prefabs with child lights on them
-                    //scene-level lights not in a sim obj prefab hierarchy are handled differently
-                    Dictionary<Light, SimObjPhysics> childLights = new Dictionary<Light, SimObjPhysics>();
-                    //gather all light child objects in this sim object prefab
-                    foreach (Light l in canToggle.LightSources) {
-                        childLights.Add(l, l.GetComponentInParent<SimObjPhysics>());
-                    }
-
-                    //track instance count for lights for this sim object
-                    int directionalInstance = 0;
-                    int spotInstance = 0;
-                    int pointInstance = 0;
-                    int areaInstance = 0;
-
-                    foreach (KeyValuePair<Light, SimObjPhysics> lsop in childLights) {
-                        if(lsop.Key.type == LightType.Directional) {
-                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + directionalInstance;
-                            directionalInstance++;
-                        }
-
-                        if(lsop.Key.type == LightType.Spot) {
-                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + spotInstance;
-                            spotInstance++;
-                        }
-
-                        if(lsop.Key.type == LightType.Point) {
-                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + pointInstance;
-                            pointInstance++;
-                        }
-
-                        if(lsop.Key.type == LightType.Area) {
-                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + areaInstance;
-                            areaInstance++;
-                        }
-                    }
-
-                }
-            }
 
             if (isDirty.HasValue) {
                 var dirt = spawned.GetComponentInChildren<Dirty>();
@@ -1784,6 +1738,51 @@ namespace Thor.Procedural {
             toSpawn.objectID = id;
             toSpawn.name = id;
             toSpawn.assetID = assetId;
+
+            if (isOn.HasValue) {
+                var canToggle = spawned.GetComponentInChildren<CanToggleOnOff>();
+                if (canToggle != null) {
+                    if (isOn.Value != canToggle.isOn) {
+                        canToggle.Toggle();
+                    }
+
+                    //this logic only works for prefabs with child lights on them
+                    //scene-level lights not in a sim obj prefab hierarchy are handled differently
+                    Dictionary<Light, SimObjPhysics> childLights = new Dictionary<Light, SimObjPhysics>();
+                    //gather all light child objects in this sim object prefab
+                    foreach (Light l in canToggle.LightSources) {
+                        childLights.Add(l, l.GetComponentInParent<SimObjPhysics>());
+                    }
+
+                    //track instance count for lights for this sim object
+                    int directionalInstance = 0;
+                    int spotInstance = 0;
+                    int pointInstance = 0;
+                    int areaInstance = 0;
+
+                    foreach (KeyValuePair<Light, SimObjPhysics> lsop in childLights) {
+                        if(lsop.Key.type == LightType.Directional) {
+                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + directionalInstance;
+                            directionalInstance++;
+                        }
+
+                        if(lsop.Key.type == LightType.Spot) {
+                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + spotInstance;
+                            spotInstance++;
+                        }
+
+                        if(lsop.Key.type == LightType.Point) {
+                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + pointInstance;
+                            pointInstance++;
+                        }
+
+                        if(lsop.Key.type == LightType.Area) {
+                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + areaInstance;
+                            areaInstance++;
+                        }
+                    }
+                }
+            }
 
             Shader unlitShader = null;
             if (unlit) {
