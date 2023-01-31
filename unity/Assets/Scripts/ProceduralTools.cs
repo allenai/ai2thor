@@ -1695,6 +1695,41 @@ namespace Thor.Procedural {
                     if (isOn.Value != canToggle.isOn) {
                         canToggle.Toggle();
                     }
+
+                    Dictionary<Light, SimObjPhysics> childLights = new Dictionary<Light, SimObjPhysics>();
+                    //gather all light child objects in this sim object prefab
+                    foreach (Light l in canToggle.LightSources) {
+                        childLights.Add(l, l.GetComponentInParent<SimObjPhysics>());
+                    }
+
+                    //track instance count for lights for this sim object
+                    int directionalInstance = 0;
+                    int spotInstance = 0;
+                    int pointInstance = 0;
+                    int areaInstance = 0;
+
+                    foreach (KeyValuePair<Light, SimObjPhysics> lsop in childLights) {
+                        if(lsop.Key.type == LightType.Directional) {
+                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + directionalInstance;
+                            directionalInstance++;
+                        }
+
+                        if(lsop.Key.type == LightType.Spot) {
+                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + spotInstance;
+                            spotInstance++;
+                        }
+
+                        if(lsop.Key.type == LightType.Point) {
+                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + pointInstance;
+                            pointInstance++;
+                        }
+
+                        if(lsop.Key.type == LightType.Area) {
+                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + areaInstance;
+                            areaInstance++;
+                        }
+                    }
+
                 }
             }
 
