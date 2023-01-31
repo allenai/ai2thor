@@ -1696,6 +1696,8 @@ namespace Thor.Procedural {
                         canToggle.Toggle();
                     }
 
+                    //this logic only works for prefabs with child lights on them
+                    //scene-level lights not in a sim obj prefab hierarchy are handled differently
                     Dictionary<Light, SimObjPhysics> childLights = new Dictionary<Light, SimObjPhysics>();
                     //gather all light child objects in this sim object prefab
                     foreach (Light l in canToggle.LightSources) {

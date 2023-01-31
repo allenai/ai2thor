@@ -120,16 +120,6 @@ public class CanToggleOnOff : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-
-        //go through light sources this toggleable object controls, and add a WhatControlsThis component to them
-        if(LightSources.Length >0) {
-            WhatControlsThis wct;
-            foreach (Light l in LightSources) {
-                wct = l.gameObject.AddComponent<WhatControlsThis>();
-                wct.SimObjThatControlsMe = this.gameObject.GetComponentInParent<SimObjPhysics>();
-            }
-        }
-
 #if UNITY_EDITOR
         if (!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)) {
             Debug.LogError(this.name + "is missing the CanToggleOnOff Secondary Property! Please set it!");
