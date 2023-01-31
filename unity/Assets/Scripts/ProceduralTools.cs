@@ -1344,6 +1344,7 @@ namespace Thor.Procedural {
 
             }
 
+            //spawn all prefab sim obj physics
             foreach (var obj in house.objects) {
                 spawnObjectHierarchy(obj);
             }
@@ -1405,7 +1406,7 @@ namespace Thor.Procedural {
             var lightingRoot = new GameObject(DefaultLightingRootName);
             if (house.proceduralParameters.lights != null) {                
                 foreach (var lightParams in house.proceduralParameters.lights) {
-                    //name light game object in format scene|<light type>|<instance count>
+                    //name light game object in format scene|<light type>|<instance count> in the house json
                     var go = new GameObject(lightParams.id);
                     go.transform.position = lightParams.position;
                     if (lightParams.rotation != null) {
@@ -1413,6 +1414,14 @@ namespace Thor.Procedural {
                     }
                     var light = go.AddComponent<Light>();
                     light.type = (LightType)Enum.Parse(typeof(LightType), lightParams.type, ignoreCase: true);
+
+                    if(light.type == LightType.Spot) {
+                        //spot angle must be in range [1-179]
+                        if(lightParams.spotAngle > 0) {
+                            light.spotAngle = lightParams.spotAngle;
+                        }
+                    }
+
                     light.color = new Color(lightParams.rgb.r, lightParams.rgb.g, lightParams.rgb.b, lightParams.rgb.a);
                     light.intensity = lightParams.intensity;
                     light.bounceIntensity = lightParams.indirectMultiplier;
@@ -1431,6 +1440,24 @@ namespace Thor.Procedural {
                         light.shadowNearPlane = lightParams.shadow.nearPlane;
                         light.shadowResolution = (UnityEngine.Rendering.LightShadowResolution)Enum.Parse(typeof(UnityEngine.Rendering.LightShadowResolution), lightParams.shadow.resolution, ignoreCase: true);
                     }
+
+                    //since any lightswitch or other light controlling prefabs have been spawned,
+                    //set find the sim object that controls this light via controllerSimObjName
+                    if(lightParams.controllerSimObjId != null) {
+                        SimObjPhysics mySOP = GameObject.Find(lightParams.controllerSimObjId).GetComponent<SimObjPhysics>();
+                        if(!mySOP.GetComponent<CanToggleOnOff>()) {
+                            throw new ArgumentException ($"The controllerSimObjId of {lightParams.id}'s light parameters is missing the toggleable functionality and can't be assigned to this light");
+                        }
+                        WhatControlsThis wct = light.gameObject.AddComponent<WhatControlsThis>();
+                        wct.SimObjThatControlsMe = mySOP;
+                        //now update LightSources array with this
+                        CanToggleOnOff ctoo = mySOP.GetComponent<CanToggleOnOff>();
+
+                        Array.Resize(ref ctoo.LightSources, ctoo.LightSources.Length + 1);
+                        ctoo.LightSources[ctoo.LightSources.Length - 1] = light;
+                        
+                    }
+
                     go.transform.parent = lightingRoot.transform;
                 }
             }

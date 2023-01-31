@@ -47,6 +47,7 @@ namespace Thor.Procedural.Data {
         public string[] cullingMaskOff { get; set;}
         public FlexibleRotation rotation;
         public float intensity { get; set; }
+        //assigns to bounceIntensity
         public float indirectMultiplier { get; set; }
         public float range { get; set; }
         public float spotAngle { get; set; } //only used for spot lights, [1-179] valid range 
@@ -67,14 +68,10 @@ namespace Thor.Procedural.Data {
 
         //explicit reference to what Sim Object controls if this light is enabled/disabled when using ToggleOnOff
         public string controllerSimObjId { get; set; }
-        //explicit reference to the game object name of what Sim Object controls if this light is enabled/disabled when using ToggleOnOff
-        public string controllerSimObjName {get; set; }
-        //is this light currently on or not
-        public bool enabled { get; set; }
         //explicit reference to the objectID of a parent Sim Object this Light is a child of
         public string parentSimObjObjectId { get; set; }
-        //explicit reference to the game object name of the parent Sim Object this Light is a child of
-        public string parentSimObjName { get; set;} 
+        //is this light currently on or not
+        public bool enabled { get; set; }
     }
 
     [Serializable]

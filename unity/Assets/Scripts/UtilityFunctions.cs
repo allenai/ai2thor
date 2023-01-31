@@ -336,7 +336,6 @@ public static class UtilityFunctions {
                 if(hikari.GetComponent<WhatControlsThis>()) {
                     SimObjPhysics thingThatControlsMe = hikari.GetComponent<WhatControlsThis>().SimObjThatControlsMe;
                     lp.controllerSimObjId = thingThatControlsMe.objectID.ToString();
-                    lp.controllerSimObjName = thingThatControlsMe.name.ToString();
                 }
 
                 else
@@ -346,7 +345,6 @@ public static class UtilityFunctions {
 
                 if(hikari.GetComponentInParent<SimObjPhysics>()) {
                     lp.parentSimObjObjectId = hikari.GetComponentInParent<SimObjPhysics>().objectID;
-                    lp.parentSimObjName = hikari.GetComponentInParent<SimObjPhysics>().transform.name;
                 }
 
                 allOfTheLights.Add(lp);
@@ -417,13 +415,9 @@ public static class UtilityFunctions {
 
             create.WriteLine($"controllerSimObjId: {lp.controllerSimObjId}");
             
-            create.WriteLine($"controllerSimObjName: {lp.controllerSimObjName}");
-
             create.WriteLine($"enabled: {lp.enabled}");
 
             create.WriteLine($"parent Sim Obj Id: {lp.parentSimObjObjectId}");
-
-            create.WriteLine($"parent Sim Obj Name: {lp.parentSimObjName}");
 
             create.WriteLine("");
         }
