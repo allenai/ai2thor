@@ -1,24 +1,42 @@
-import copy
+from abc import abstractmethod, ABC
 from collections import defaultdict
-import numpy as np
-import logging
-import functools
-import operator
+from functools import reduce
 from operator import itemgetter
+import ai2thor.controller
+import copy
+import functools
+import inspect
+import itertools
 import itertools
 import json
+import logging
+import numpy as np
+import operator
+import os
+import platform
+import random
+import sys
 import time
-import itertools
+import time
+
+BENCHMARKING_S3_BUCKET = "ai2-thor-benchmark"
+
+FORMAT = '%(asctime)s %(message)s'
+# logging.basicConfig(level=logging.DEBUG, format=FORMAT)
+logger = logging.getLogger(__name__)
+
+
 class BenchmarkConfig:
     def __init__(
             self,
+            benchmarker_class_names,
             init_params,
             name="",
 
             scenes=None,
             procedural_houses=None,
 
-            action_sample_count=100,
+            action_sample_count=1,
             experiment_sample_count = 100,
             filter_object_types="",
             teleport_random_before_actions=False,
@@ -30,6 +48,20 @@ class BenchmarkConfig:
             output_file="benchmark.json",
 
         ):
+        if verbose:
+            logger.setLevel(logging.DEBUG)
+        else:
+            logger.setLevel(logging.WARNING)
+        benchmarker_map = {cls.__name__: cls for cls in Benchmarker.__subclasses__()}
+        self.benchmarkers = []
+        for benchmarker_class in benchmarker_class_names:
+            if benchmarker_class in benchmarker_map:
+                self.benchmarkers.append(benchmarker_map[benchmarker_class](only_transformed_aggregates))
+            else:
+                raise ValueError(
+                    f"Invalid benchmarker class '{benchmarker_class}'. Available {str.join(benchmarker_map.keys(), ', ')}"
+                )
+
         self.init_params = init_params
         self.action_sample_count = action_sample_count
         self.experiment_sample_count = experiment_sample_count
@@ -47,13 +79,67 @@ class BenchmarkConfig:
         self.teleport_random_before_actions = teleport_random_before_actions
         self.name = name
 
-class SimsPerSecondBenchmarker():
+
+class Benchmarker(ABC):
     def __init__(self, only_transformed_key=False):
-        self.__aggregate_key = "average_frametime"
-        self.__atomic_key = "frametime"
-        self.__transformed_key = "average_sims_per_second"
+        self.only_transformed_key=False
+        pass
+
+    @abstractmethod
+    def aggregate_key(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def transformed_key(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def name(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def benchmark(self, env, action_config, add_key_values={}):
+        raise NotImplementedError
+
+    def aggregate_by(self, records, dimensions, transform=True, aggregate_out_key=None):
+        if not isinstance(dimensions, list):
+            dimensions = [dimensions]
+
+        if aggregate_out_key is None:
+            aggregate_out_key = self.aggregate_key()
+
+        grouper = itemgetter(*dimensions)
+
+        transform = lambda x: self.transform_aggregate(x) if transform else lambda x: x
+
+        groups = itertools.groupby(sorted(records, key=grouper), grouper)
+
+        groups = [(dimension, list(slice)) for dimension, slice in groups]
+
+        aggregated_groups = {
+            dimension: transform({
+                "count": len(slice),
+                aggregate_out_key: np.sum([v[self.aggregate_key()] for v in slice])/len(slice),
+            })
+            for dimension, slice in groups
+        }
+        return aggregated_groups
+
+    @abstractmethod
+    def transform_aggregate(self, report):
+        raise NotImplementedError
+
+
+class SimsPerSecondBenchmarker(Benchmarker):
+    def __init__(self, only_transformed_key=False):
         self.only_transformed_key = only_transformed_key
         pass
+
+    def aggregate_key(self):
+        return "average_frametime"
+
+    def transformed_key(self):
+        return "average_sims_per_second"
 
     def name(self):
         return "Simulations Per Second"
@@ -67,60 +153,34 @@ class SimsPerSecondBenchmarker():
         record = {
                 "action": action_config["action"],
                 "count": 1,
-                self.__aggregate_key: frame_time
+                self.aggregate_key(): frame_time
             }
         record = {**record, **add_key_values}
 
         return record
 
-    def aggregate_by(self, records, dimensions, transform=True, aggregate_out_key=None):
-        # aggregate = [report[k] for k in keys ]
-        if not isinstance(dimensions, list):
-            dimensions = [dimensions]
-
-        if aggregate_out_key is None:
-            aggregate_out_key = self.__aggregate_key
-
-        grouper = itemgetter(*dimensions)
-
-        transform = lambda x: self.transform_aggregate(x) if transform else lambda x: x
-
-        groups = itertools.groupby(sorted(records, key=grouper), grouper)
-
-        groups = [(dimension, list(slice)) for dimension, slice in groups]
-
-        aggregated_groups = {
-            dimension: transform({
-                "count": len(slice),
-                aggregate_out_key: np.sum([v[self.__aggregate_key] for v in slice])/len(slice),
-            })
-            for dimension, slice in groups
-        }
-        return aggregated_groups
-
     def transform_aggregate(self, report):
-        report[self.__transformed_key] = 1/report[self.__aggregate_key]
+        report[self.transformed_key()] = 1/report[self.aggregate_key()]
         if self.only_transformed_key:
-            del report[self.__aggregate_key]
+            del report[self.aggregate_key()]
         return report
 
+
+
 class UnityActionBenchmarkRunner(BenchmarkConfig):
-    def __init__(self, benchmarkers, **benchmarker_kwargs):
-        self.benchmarkers = benchmarkers
+    def __init__(self, **benchmarker_kwargs):
+
+        with open("benchmarker_args.json", "w") as f:
+            json.dump(benchmarker_kwargs, f, indent=4)
+        # from ai2thor.build import logger
+
+
         super().__init__(**benchmarker_kwargs)
 
     def benchmark(
             self,
             action_map = {}
     ):
-        import ai2thor.controller
-        import random
-        import platform
-        import time
-        from functools import reduce
-        from pprint import pprint
-
-        import os
         curr = os.path.dirname(os.path.abspath(__file__))
 
         def get_complete_action_dict(action_group):
@@ -163,29 +223,6 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
 
         action_map = {k: get_complete_action_dict(group) for k,group in action_map.items()}
 
-        # action_map["all"] = [v for k,v in action_map.items()]
-
-        # def test_routine(env, test_actions, n=self.ex):
-        #     average_frame_time = 0
-        #     for i in range(n):
-        #         action = random.choice(test_actions)
-        #         start = time.time()
-        #         env.step(dict(action=action))
-        #         end = time.time()
-        #         frame_time = end - start
-        #         average_frame_time += frame_time
-        #
-        #     average_frame_time = average_frame_time / float(n)
-        #     return average_frame_time
-
-        # def benchmark_actions(env, action_name, actions):
-        #     if self.verbose:
-        #         print("--- Actions {}".format(actions))
-        #     frame_time = test_routine(env, actions)
-        #     if self.verbose:
-        #         print("{} average: {}".format(action_name, 1 / frame_time))
-        #     return 1 / frame_time
-
         procedural = False
         if self.procedural_houses:
             procedural = True
@@ -193,7 +230,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         def create_procedural_house(procedural_house):
             if procedural_house:
                 if self.verbose:
-                    print("Creating procedural house: ".format(procedural_house['id']))
+                    logger.info("Creating procedural house: ".format(procedural_house['id']))
 
                 evt =env.step(
                     action="CreateHouse",
@@ -206,19 +243,28 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             if self.filter_object_types != "":
                 if self.filter_object_types == "*":
                     if self.verbose:
-                        print("-- Filter All Objects From Metadata")
+                        logger.info("-- Filter All Objects From Metadata")
                     env.step(action="SetObjectFilter", objectIds=[])
                 else:
                     types = filter_object_types.split(",")
                     evt = env.step(action="SetObjectFilterForType", objectTypes=types)
                     if self.verbose:
-                        print("Filter action, Success: {}, error: {}".format(evt.metadata["lastActionSuccess"],
+                        logger.info("Filter action, Success: {}, error: {}".format(evt.metadata["lastActionSuccess"],
                                                                              evt.metadata["errorMessage"]))
             return house
 
         def telerport_to_random_reachable(env, house=None):
-
             evt = env.step(action="GetReachablePositions")
+            if house is not None and "metadata" in house and not evt.metadata["lastActionSuccess"]:
+                if "agent" in house["metadata"]:
+                    logger.info("Teleporting ")
+                    evt = env.step(
+                        dict(
+                            action="TeleportFull",
+                            forceAction=True,
+                            **house["metadata"]
+                        )
+                    )
 
             if (
                     not evt.metadata["lastActionSuccess"] or
@@ -315,9 +361,15 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             []
         )
 
+        experiment_list = [(scene, procedural_house, x, y) for (scene, procedural_house, x, y) in experiment_list if not(scene == "Procedural" and procedural_house is None)]
+
+
+
         benchmark_map = { "title": self.name, "benchmarks": defaultdict(lambda: defaultdict(lambda: {})),
                          "controller_params": controller_params,
                          "benchmark_params": {"platform": platform.system(),
+                                              "arch": env._build.platform.__name__,
+                                              "commit_id": env._build.commit_id,
                                               "filter_object_types": self.filter_object_types,
                                               "action_sample_number": self.action_sample_count}}
         total_average_ft = 0
@@ -330,7 +382,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             env.reset(scene)
 
             if self.verbose:
-                print("------ {}".format(scene))
+                print("------ {}, house={}".format(scene, procedural_house))
 
             scene_average_fr = 0
 
@@ -384,7 +436,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                 by_action.update(benchmarker.aggregate_by(records, ["scene", "house", "benchmarker", "action"]))
             by_action_group.update(benchmarker.aggregate_by(records, ["scene", "house", "benchmarker", "action_group"]))
 
-        house_or_scene = lambda house,scene: scene if house == "" else house
+        house_or_scene = lambda scene,house: scene if scene != "Procedural" else house
         # [{[f"{scene if house == '' else house}"]: aggregate} for ((scene, house_id, benchmarker_name, action_group), aggregate) in by_action_group.items()]
         benchmark_map["action_groups"] = {group_name: [a["action"] for a in group["actions"]] for group_name, group in
                                           action_map.items()}
@@ -397,19 +449,14 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
 
 
         for ((scene, house_id, benchmarker_name), aggregate) in by_scene.items():
-            print(aggregate)
-            # for k, v in aggregate.items():
             benchmark_map["benchmarks"][benchmarker_name][house_or_scene(scene, house_id)]["scene"] = aggregate
+            if scene == "Procedural":
+                benchmark_map["benchmarks"][benchmarker_name][house_or_scene(scene, house_id)]["scene"]["procedural"] = True
 
         for benchmarker_name,aggregate in by_benchmarker.items():
             benchmark_map["benchmarks"][benchmarker_name]["global"] = aggregate
         if scene_count:
             benchmark_map["average_framerate_seconds"] = total_average_ft / scene_count
 
-
-        # if self.only_transformed_aggregates:
-        #     for benchmarker in self.benchmarkers:
-        #         benchmark_map["benchmarks"]
-        with open(self.output_file, "w") as f:
-            f.write(json.dumps(benchmark_map, indent=4, sort_keys=True))
+        return benchmark_map
 
