@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using MIConvexHull;
 using Thor.Procedural;
 using Thor.Procedural.Data;
+using Newtonsoft.Json;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
@@ -6440,14 +6441,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetLights() {
-            print("GetLights in BASE happening now");
-            //debug
-            #if UNITY_EDITOR
             List<LightParameters> lights = UtilityFunctions.GetLightPropertiesOfScene();
-            UtilityFunctions.debugGetLightPropertiesOfScene(lights);
-            #endif
 
-            actionFinishedEmit(true, UtilityFunctions.GetLightPropertiesOfScene());
+            var jsonResolver = new ShouldSerializeContractResolver();
+            string json = JsonConvert.SerializeObject(
+                lights, 
+                Formatting.Indented,
+                new Newtonsoft.Json.JsonSerializerSettings() {
+                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                    ContractResolver = jsonResolver
+                    }
+                );
+
+            // #if UNITY_EDITOR
+            // UtilityFunctions.exportJsonToDebug(json);
+            // #endif
+
+            actionFinishedEmit(true, json);
+        }
+
+        public void SetLights(List<LightParameters> lightParams) {
+            Debug.Log("In SetLights in BaseFPS");
+            UtilityFunctions.SetLightPropertiesOfScene(lightParams);
+            Debug.Log("Finished call to UtilityFunctions");
+            actionFinishedEmit(true);
         }
 
         public void SetLights() {

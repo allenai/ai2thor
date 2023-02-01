@@ -1455,7 +1455,6 @@ namespace Thor.Procedural {
 
                         Array.Resize(ref ctoo.LightSources, ctoo.LightSources.Length + 1);
                         ctoo.LightSources[ctoo.LightSources.Length - 1] = light;
-                        
                     }
 
                     go.transform.parent = lightingRoot.transform;

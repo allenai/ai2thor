@@ -471,19 +471,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
-                
-                case "getlights": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-
-                        action["action"] = "GetLights";
-
-                        CurrentActiveController().ProcessControlCommand(action);
-
-                        //ctionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
-                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
-
-                        break;
-                    }
 
                 case "stretchtest1": {
                         List<string> commands = new List<string>();
@@ -795,6 +782,49 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                     StartCoroutine(executeBatch(jActions: actions));
                     break;
+
+                case "getlights": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "GetLights";
+
+                        CurrentActiveController().ProcessControlCommand(action);
+
+                        //ctionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                case "setlights": {
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "SetLights";
+                        var ROOM_BASE_PATH = "/DebugTextFiles/";
+
+                        path = Application.dataPath + "/DebugTextFiles/exportedLightParams.json";
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + ROOM_BASE_PATH + file;
+                        }
+
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"json: being read {jsonStr}");
+
+                        JArray obj = JArray.Parse(jsonStr);
+                        Debug.Log("did it get through the parse?");
+                        action["lightParams"] = obj;
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        
+                        break;
+                    }
 
                 case "exp": {
                         ServerAction action = new ServerAction();

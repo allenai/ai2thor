@@ -268,11 +268,9 @@ public static class UtilityFunctions {
         return corners;
     }
 
-    //Goes through all game objects with a <Light> component on them in the scene
-    //
+    //Goes through all game objects with a <Light> component on them in the scene and grabs their parameters
     public static List<LightParameters> GetLightPropertiesOfScene() {
 
-            Debug.Log("we are inside GetLIghtPropertiesOfScene");
             var lightsInScene = UnityEngine.Object.FindObjectsOfType<Light>(true);
 
             List<LightParameters> allOfTheLights = new List<LightParameters>();
@@ -338,10 +336,10 @@ public static class UtilityFunctions {
                     lp.controllerSimObjId = thingThatControlsMe.objectID.ToString();
                 }
 
-                else
-                Debug.Log($"Light named: {hikari.gameObject.name} does not have a WhatControlsThis component");
+                // else
+                // Debug.Log($"Light named: {hikari.gameObject.name} does not have a WhatControlsThis component");
 
-                lp.enabled = hikari.enabled;
+                lp.enabled = hikari.gameObject.activeSelf;
 
                 if(hikari.GetComponentInParent<SimObjPhysics>()) {
                     lp.parentSimObjObjectId = hikari.GetComponentInParent<SimObjPhysics>().objectID;
@@ -353,7 +351,79 @@ public static class UtilityFunctions {
             return allOfTheLights;
     }
 
+    public static void SetLightPropertiesOfScene(List<LightParameters> lightParams) {
+        if(lightParams == null) {
+            throw new ArgumentNullException("no Light Parameters supplied to SetLightPropertiesOfScene action.");
+        }
+
+        //ok first find all light objects in the scene
+        Light[] allLightsInScene = UnityEngine.Object.FindObjectsOfType<Light>(includeInactive: true);
+        Debug.Log("in SetLights in UtilityFunctions");
+        foreach (var lp in lightParams) {
+            Debug.Log($"Setting light properties for {lp.id}");
+
+            Light light = null;
+            //find the light in the scene
+            foreach(Light lightInScene in allLightsInScene) {
+                if(lightInScene.name == lp.id) {
+                    light = lightInScene;
+                }
+            }
+
+            if(light == null) {
+                Debug.Log($"Light {lp.id} was null?????");
+                throw new NullReferenceException($"light named {lp.id} does not exist in this scene!");
+            }
+
+            light.transform.position = lp.position;
+            if(lp.rotation != null) {
+                light.transform.rotation = lp.rotation.toQuaternion();
+            }
+
+            var lightComponent = light.GetComponent<Light>();
+
+            var lightParamType = (LightType)Enum.Parse(typeof(LightType), lp.type, ignoreCase: true);
+            //if the type of this light is not the same as the property type passed in, we need a new light component
+            if(lightComponent.type != lightParamType) {
+                lightComponent.type = lightParamType;
+            }
+
+            if(lightComponent.type == LightType.Spot) {
+                //spot angle must be in range [1-179]
+                if(lightComponent.spotAngle > 0) {
+                    lightComponent.spotAngle = lp.spotAngle;
+                }            
+            }
+
+            lightComponent.color = new Color(lp.rgb.r, lp.rgb.g, lp.rgb.b, lp.rgb.a);
+            lightComponent.intensity = lp.intensity;
+            lightComponent.bounceIntensity = lp.indirectMultiplier;
+            lightComponent.range = lp.range;
+            if (lp.cullingMaskOff != null) {
+                foreach (var layer in lp.cullingMaskOff) {
+                    lightComponent.cullingMask &= ~(1 << LayerMask.NameToLayer(layer));
+                }
+            }
+
+            if (lp.shadow != null) {
+                lightComponent.shadowStrength = lp.shadow.strength;
+                lightComponent.shadows = (LightShadows)Enum.Parse(typeof(LightShadows), lp.shadow.type, ignoreCase: true);
+                lightComponent.shadowBias = lp.shadow.bias;
+                lightComponent.shadowNormalBias = lp.shadow.normalBias;
+                lightComponent.shadowNearPlane = lp.shadow.nearPlane;
+                lightComponent.shadowResolution = (UnityEngine.Rendering.LightShadowResolution)Enum.Parse(typeof(UnityEngine.Rendering.LightShadowResolution), lp.shadow.resolution, ignoreCase: true);
+            }
+        }
+    }
+
 #if UNITY_EDITOR
+
+    public static void exportJsonToDebug(string json) {
+        var file = "exportedLightParams.json";
+        //var create = File.CreateText("Assets/DebugTextFiles/" + file).Dispose();
+        File.WriteAllText("Assets/DebugTextFiles/" + file, json);
+        //create.Close();
+    }
 
     public static void debugGetLightPropertiesOfScene(List<LightParameters> lights) {
         Debug.Log("we are inside debugGetLightProperties...");
