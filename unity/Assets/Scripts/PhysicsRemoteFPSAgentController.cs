@@ -2560,14 +2560,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        // coroutine to yield n frames before returning
-        protected IEnumerator waitForNFramesAndReturn(int n, bool actionSuccess) {
-            for (int i = 0; i < n; i++) {
-                yield return null;
-            }
-            actionFinished(actionSuccess);
-        }
-
         // Moves hand relative the agent (but not relative the camera, i.e. up is up)
         // x, y, z coordinates should specify how far to move in that direction, so
         // x=.1, y=.1, z=0 will move the hand .1 in both the x and y coordinates.

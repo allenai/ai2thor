@@ -356,8 +356,11 @@ public static class UtilityFunctions {
             throw new ArgumentNullException("no Light Parameters supplied to SetLightPropertiesOfScene action.");
         }
 
+        //also check if specific changeable properties in lightParams are not null
+
         //ok first find all light objects in the scene
         Light[] allLightsInScene = UnityEngine.Object.FindObjectsOfType<Light>(includeInactive: true);
+
         Debug.Log("in SetLights in UtilityFunctions");
         foreach (var lp in lightParams) {
             Debug.Log($"Setting light properties for {lp.id}");
@@ -371,7 +374,6 @@ public static class UtilityFunctions {
             }
 
             if(light == null) {
-                Debug.Log($"Light {lp.id} was null?????");
                 throw new NullReferenceException($"light named {lp.id} does not exist in this scene!");
             }
 
@@ -423,76 +425,6 @@ public static class UtilityFunctions {
         //var create = File.CreateText("Assets/DebugTextFiles/" + file).Dispose();
         File.WriteAllText("Assets/DebugTextFiles/" + file, json);
         //create.Close();
-    }
-
-    public static void debugGetLightPropertiesOfScene(List<LightParameters> lights) {
-        Debug.Log("we are inside debugGetLightProperties...");
-
-        var file = "debugLightProperties.txt";
-        var create = File.CreateText("Assets/DebugTextFiles/" + file);
-
-        create.WriteLine($"Total number of Lights in scene: {lights.Count()}");
-
-        foreach (LightParameters lp in lights) {
-            create.WriteLine($"ID: {lp.id}");
-
-            create.WriteLine($"Type: {lp.type}");
-
-            create.WriteLine($"position: {lp.position}");
-
-            create.WriteLine($"localPosition: {lp.localPosition}");
-
-            if (lp.cullingMaskOff.Length > 0) {
-                create.WriteLine($"Culling Mask Off Layers:");
-
-                foreach (string s in lp.cullingMaskOff) {
-                    create.WriteLine("     " + s);
-                }
-            } else {
-                create.WriteLine($"Culling Mask Off Layers: none");
-            }
-
-            create.WriteLine($"rotation degrees: {lp.rotation.degrees}");
-
-            create.WriteLine($"rotation axis: {lp.rotation.axis}");
-
-            create.WriteLine($"intensity: {lp.intensity}");
-
-            create.WriteLine($"indirect Multiplier: {lp.indirectMultiplier}");
-
-            create.WriteLine($"range: {lp.range}");
-
-            //this should be 0 if not a spotlight
-            if (Mathf.Approximately(lp.spotAngle, 0.0f)) {
-                create.WriteLine("spotAngle: not a spot light!");
-            } else {
-                create.WriteLine($"spotAngle: {lp.spotAngle}");
-            }
-
-            create.WriteLine($"rgba: {lp.rgb.r} {lp.rgb.g} {lp.rgb.b} {lp.rgb.a}");
-
-            if (lp.shadow != null) {
-                create.WriteLine($"shadow params:");
-                create.WriteLine($"     shadow type: {lp.shadow.type}");
-                create.WriteLine($"     shadow strength: {lp.shadow.strength}");
-                create.WriteLine($"     shadow normalBias: {lp.shadow.normalBias}");
-                create.WriteLine($"     shadow bias: {lp.shadow.bias}");
-                create.WriteLine($"     shadow nearPlane: {lp.shadow.nearPlane}");
-                create.WriteLine($"     shadow resolution: {lp.shadow.resolution}");
-            } else {
-                create.WriteLine($"shadow params NULL!!!");
-            }
-
-            create.WriteLine($"controllerSimObjId: {lp.controllerSimObjId}");
-            
-            create.WriteLine($"enabled: {lp.enabled}");
-
-            create.WriteLine($"parent Sim Obj Id: {lp.parentSimObjObjectId}");
-
-            create.WriteLine("");
-        }
-
-        create.Close();
     }
 
     [MenuItem("SimObjectPhysics/Toggle Off PlaceableSurface Material")]

@@ -6440,6 +6440,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, positions);
         }
 
+        // coroutine to yield n frames before returning
+        protected IEnumerator waitForNFramesAndReturn(int n, bool actionSuccess) {
+            for (int i = 0; i < n; i++) {
+                yield return null;
+            }
+            actionFinished(actionSuccess);
+        }
+
         public void GetLights() {
             List<LightParameters> lights = UtilityFunctions.GetLightPropertiesOfScene();
 
@@ -6453,25 +6461,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 );
 
-            // #if UNITY_EDITOR
-            // UtilityFunctions.exportJsonToDebug(json);
-            // #endif
+            #if UNITY_EDITOR
+            UtilityFunctions.exportJsonToDebug(json);
+            #endif
 
             actionFinishedEmit(true, json);
         }
 
         public void SetLights(List<LightParameters> lightParams) {
             Debug.Log("In SetLights in BaseFPS");
+            
             UtilityFunctions.SetLightPropertiesOfScene(lightParams);
+
             Debug.Log("Finished call to UtilityFunctions");
-            actionFinishedEmit(true);
-        }
 
-        public void SetLights() {
-
-            //check that name of light specified exists in scene, if not throw exception
-
-            actionFinished(true);
+            //delay actionfinished until frame update to be safe???
+            StartCoroutine(waitForNFramesAndReturn(1, true));
         }
 
 #if UNITY_EDITOR
