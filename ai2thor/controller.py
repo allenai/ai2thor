@@ -623,7 +623,7 @@ class Controller(object):
 
         elif self.server_class == ai2thor.fifo_server.FifoServer:
             #Not supported on Windows
-            if os.name != 'nt':
+            if os.name == 'nt':
                 raise ValueError("FIFO server not supported on Windows platform.")
             self.server = ai2thor.fifo_server.FifoServer(
                 width=width,
