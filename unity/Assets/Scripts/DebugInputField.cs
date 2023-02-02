@@ -790,14 +790,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         CurrentActiveController().ProcessControlCommand(action);
 
-                        //ctionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
-                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
-
                         break;
                     }
 
                 case "setlights": {
 
+                        //note, to test `SetLights` use in-editor `GetLights` to
+                        //generate a debug json of light parameters of a given scene at 
+                        //Assets/DebugTextFiles/exportedLightParams.json
+                        //
+                        //this is because the LightParameters class must be passed as 
+                        //json format for compatibility, which is done automatically for
+                        //pythong dict -> Unity as it turns it into a json for us, but
+                        //from this debug input field it can't convert LightParameters classes
+                        //to a json until someone decides to make that I guess and i'm lazy so
+                        //we're just gonna debug export it as a json directly its fine, I promise its fine
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
                         action["action"] = "SetLights";

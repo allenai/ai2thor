@@ -6451,30 +6451,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetLights() {
             List<LightParameters> lights = UtilityFunctions.GetLightPropertiesOfScene();
 
+#if UNITY_EDITOR
+            //if editor, debug to create a json of the light parameters for testing
             var jsonResolver = new ShouldSerializeContractResolver();
             string json = JsonConvert.SerializeObject(
-                lights, 
+                lights,
                 Formatting.Indented,
                 new Newtonsoft.Json.JsonSerializerSettings() {
                     ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
                     ContractResolver = jsonResolver
-                    }
+                }
                 );
-
-            #if UNITY_EDITOR
             UtilityFunctions.exportJsonToDebug(json);
-            #endif
+#endif
 
-            actionFinishedEmit(true, json);
+            actionFinishedEmit(true, lights);
         }
 
         public void SetLights(List<LightParameters> lightParams) {
-            Debug.Log("In SetLights in BaseFPS");
-            
             UtilityFunctions.SetLightPropertiesOfScene(lightParams);
-
-            Debug.Log("Finished call to UtilityFunctions");
-
             //delay actionfinished until frame update to be safe???
             StartCoroutine(waitForNFramesAndReturn(1, true));
         }

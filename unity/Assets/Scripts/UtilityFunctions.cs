@@ -286,8 +286,6 @@ public static class UtilityFunctions {
 
                 lp.position = hikari.transform.position;
 
-                lp.localPosition = hikari.transform.localPosition;
-
                 //culling mask stuff
                 List<string> cullingMaskOff = new List<String>();
 
@@ -356,15 +354,19 @@ public static class UtilityFunctions {
             throw new ArgumentNullException("no Light Parameters supplied to SetLightPropertiesOfScene action.");
         }
 
-        //also check if specific changeable properties in lightParams are not null
-
         //ok first find all light objects in the scene
         Light[] allLightsInScene = UnityEngine.Object.FindObjectsOfType<Light>(includeInactive: true);
 
-        Debug.Log("in SetLights in UtilityFunctions");
         foreach (var lp in lightParams) {
-            Debug.Log($"Setting light properties for {lp.id}");
 
+            #if UNITY_EDITOR
+            Debug.Log($"Setting light properties for {lp.id}");
+            #endif
+
+            if(lp.id == null ){
+                throw new ArgumentException($"Light Parameter's `id` property is missing or null!");
+            }
+            
             Light light = null;
             //find the light in the scene
             foreach(Light lightInScene in allLightsInScene) {
