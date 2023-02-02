@@ -195,7 +195,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         # TODO: Arg selector for potentially sending different values as arguments
         return group_copy
 
-    def __create_procedural_house(self, procedural_house):
+    def __create_procedural_house(self, env, procedural_house):
         if procedural_house:
             logger.info("Creating procedural house: ".format(procedural_house['id']))
 
@@ -356,7 +356,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             house = procedural_house
             house_id = ""
             if house is not None:
-                success = self.__create_procedural_house(house)
+                success = self.__create_procedural_house(env, house)
                 if not success:
                     logger.warn(f"Procedural house creation failed for house {house['id']}")
                     continue
