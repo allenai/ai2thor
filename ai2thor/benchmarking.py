@@ -7,7 +7,6 @@ import copy
 import functools
 import inspect
 import itertools
-import itertools
 import json
 import logging
 import numpy as np
@@ -16,7 +15,6 @@ import os
 import platform
 import random
 import sys
-import time
 import time
 
 BENCHMARKING_S3_BUCKET = "ai2-thor-benchmark"
