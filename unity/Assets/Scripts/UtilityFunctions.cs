@@ -417,6 +417,8 @@ public static class UtilityFunctions {
                 lightComponent.shadowNearPlane = lp.shadow.nearPlane;
                 lightComponent.shadowResolution = (UnityEngine.Rendering.LightShadowResolution)Enum.Parse(typeof(UnityEngine.Rendering.LightShadowResolution), lp.shadow.resolution, ignoreCase: true);
             }
+
+            light.gameObject.SetActive(lp.enabled);
         }
     }
 

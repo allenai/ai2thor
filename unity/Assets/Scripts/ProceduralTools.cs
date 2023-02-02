@@ -1458,6 +1458,9 @@ namespace Thor.Procedural {
                     }
 
                     go.transform.parent = lightingRoot.transform;
+
+                    //set enabled state of light game object
+                    go.SetActive(lightParams.enabled);
                 }
             }
 
