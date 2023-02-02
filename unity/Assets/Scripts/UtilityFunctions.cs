@@ -354,7 +354,7 @@ public static class UtilityFunctions {
             throw new ArgumentNullException("no Light Parameters supplied to SetLightPropertiesOfScene action.");
         }
 
-        //ok first find all light objects in the scene
+        //ok first find all light objects in the scene and cache them so we also find any inactive lights
         Light[] allLightsInScene = UnityEngine.Object.FindObjectsOfType<Light>(includeInactive: true);
 
         foreach (var lp in lightParams) {
@@ -380,22 +380,40 @@ public static class UtilityFunctions {
             }
 
             light.transform.position = lp.position;
+
             if(lp.rotation != null) {
                 light.transform.rotation = lp.rotation.toQuaternion();
             }
 
-            var lightComponent = light.GetComponent<Light>();
+            else {
+                throw new ArgumentException($"Light Parameter's `rotation` property is missing or null!");
+            }
 
+            var lightComponent = light.GetComponent<Light>();
+            if(lightComponent == null) {
+                throw new NullReferenceException($"light named {lp.id} does not have a light component!");
+            }
+
+            if(lp.type == null) {
+                throw new ArgumentException($"Light Parameter's `type` property is missing or null!");
+            }
+
+            //parse to light type enum
             var lightParamType = (LightType)Enum.Parse(typeof(LightType), lp.type, ignoreCase: true);
+
             //if the type of this light is not the same as the property type passed in, we need a new light component
             if(lightComponent.type != lightParamType) {
                 lightComponent.type = lightParamType;
             }
 
+            //if this was, or is now a spot light
             if(lightComponent.type == LightType.Spot) {
                 //spot angle must be in range [1-179]
-                if(lightComponent.spotAngle > 0) {
+                if(lightComponent.spotAngle > 0 && lightComponent.spotAngle < 180) {
                     lightComponent.spotAngle = lp.spotAngle;
+                }
+                else {
+                    throw new ArgumentException($"Light Parameter's `spotAngle` property is not in valid bounds. spotAngle must be [1-179]");
                 }            
             }
 
@@ -403,6 +421,10 @@ public static class UtilityFunctions {
             lightComponent.intensity = lp.intensity;
             lightComponent.bounceIntensity = lp.indirectMultiplier;
             lightComponent.range = lp.range;
+
+
+            //culling mask and shadows both have default values in-scene, so not necessary to throw exceptions if no
+            // mask or shadow values are passed in, instead lights will remain as they were before
             if (lp.cullingMaskOff != null) {
                 foreach (var layer in lp.cullingMaskOff) {
                     lightComponent.cullingMask &= ~(1 << LayerMask.NameToLayer(layer));
@@ -416,6 +438,17 @@ public static class UtilityFunctions {
                 lightComponent.shadowNormalBias = lp.shadow.normalBias;
                 lightComponent.shadowNearPlane = lp.shadow.nearPlane;
                 lightComponent.shadowResolution = (UnityEngine.Rendering.LightShadowResolution)Enum.Parse(typeof(UnityEngine.Rendering.LightShadowResolution), lp.shadow.resolution, ignoreCase: true);
+            }
+
+            //change parent object if you want???
+            if(lp.parentSimObjObjectId != null) {
+
+                if(lp.parentSimObjObjectId == light.gameObject.name) {
+                    throw new ArgumentException($"Light Parameter's `parentSimObjObjectId` is the same name as {lp.id}. Cannot set parent to itself!");
+                }
+
+                GameObject go = GameObject.Find(lp.parentSimObjObjectId);
+                light.gameObject.transform.parent = go.transform;
             }
 
             light.gameObject.SetActive(lp.enabled);

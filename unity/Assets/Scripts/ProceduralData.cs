@@ -74,7 +74,7 @@ namespace Thor.Procedural.Data {
         public SerializableColor rgb { get; set; } //color of light
 
         [JsonProperty(Order = 11)]
-        public float indirectMultiplier { get; set; } //assigns to bounceIntensity of light bounce on other objects
+        public float indirectMultiplier { get; set; } //assigns to bounceIntensity of light bounce on other objects. 0 is no bounce, 1 is "normal" >1 is artificially high
 
         [JsonProperty(Order = 12)]
         public string[] cullingMaskOff { get; set; } //culling mask properties of light
