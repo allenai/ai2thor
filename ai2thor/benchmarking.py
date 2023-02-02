@@ -229,8 +229,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
 
         def create_procedural_house(procedural_house):
             if procedural_house:
-                if self.verbose:
-                    logger.info("Creating procedural house: ".format(procedural_house['id']))
+                logger.info("Creating procedural house: ".format(procedural_house['id']))
 
                 evt =env.step(
                     action="CreateHouse",
@@ -242,14 +241,12 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
 
             if self.filter_object_types != "":
                 if self.filter_object_types == "*":
-                    if self.verbose:
-                        logger.info("-- Filter All Objects From Metadata")
+                    logger.info("-- Filter All Objects From Metadata")
                     env.step(action="SetObjectFilter", objectIds=[])
                 else:
                     types = filter_object_types.split(",")
                     evt = env.step(action="SetObjectFilterForType", objectTypes=types)
-                    if self.verbose:
-                        logger.info("Filter action, Success: {}, error: {}".format(evt.metadata["lastActionSuccess"],
+                    logger.info("Filter action, Success: {}, error: {}".format(evt.metadata["lastActionSuccess"],
                                                                              evt.metadata["errorMessage"]))
             return house
 
@@ -285,7 +282,6 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                     poly = house['rooms'][0]['floorPolygon']
                     pos = centroid(poly)
 
-                    print("poly center: {0}".format(pos))
                 evt = env.step(
                     dict(
                         action="TeleportFull",
@@ -298,33 +294,33 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                         forceAction=True
                     )
                 )
-                if self.verbose:
-                    print("--Teleport, " + " err: " + evt.metadata["errorMessage"])
+
+                logger.info("--Teleport, " + " err: " + evt.metadata["errorMessage"])
 
                 evt = env.step(action="GetReachablePositions")
 
-            # print("After GetReachable AgentPos: {}".format(evt.metadata["agent"]["position"]))
-            if self.verbose:
-                print("-- GetReachablePositions success: {}, message: {}".format(evt.metadata["lastActionSuccess"],
+
+
+            logger.info("-- GetReachablePositions success: {}, message: {}".format(evt.metadata["lastActionSuccess"],
                                                                                  evt.metadata["errorMessage"]))
 
-            reachable_pos = evt.metadata["actionReturn"]
+            if len(evt.metadata["actionReturn"]):
+                reachable_pos = evt.metadata["actionReturn"]
 
-            # print(evt.metadata["actionReturn"])
-            pos = random.choice(reachable_pos)
-            rot = random.choice([0, 90, 180, 270])
+                pos = random.choice(reachable_pos)
+                rot = random.choice([0, 90, 180, 270])
 
-            evt = env.step(
-                dict(
-                    action="TeleportFull",
-                    x=pos['x'],
-                    y=pos['y'],
-                    z=pos['z'],
-                    rotation=dict(x=0, y=rot, z=0),
-                    horizon=0.0,
-                    standing=True
+                evt = env.step(
+                    dict(
+                        action="TeleportFull",
+                        x=pos['x'],
+                        y=pos['y'],
+                        z=pos['z'],
+                        rotation=dict(x=0, y=rot, z=0),
+                        horizon=0.0,
+                        standing=True
+                    )
                 )
-            )
 
         args = self.init_params
         controller_params = copy.deepcopy(args)
@@ -377,12 +373,11 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
 
         records = []
         for (scene, procedural_house, benchmarker, experiment_index) in experiment_list:
-            if self.verbose:
-                print("Loading scene {}".format(scene))
+
+            logger.info("Loading scene {}".format(scene))
             env.reset(scene)
 
-            if self.verbose:
-                print("------ {}, house={}".format(scene, procedural_house))
+            logger.info("------ {}, house={}".format(scene, procedural_house))
 
             scene_average_fr = 0
 
@@ -391,16 +386,13 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             if house is not None:
                 success = create_procedural_house(house)
                 if not success:
-                    if self.verbose:
-                        print(f"Procedural house creation failed for house {house['id']}")
+                    logger.warn(f"Procedural house creation failed for house {house['id']}")
                     continue
                 house_id = house["id"]
 
             for action_group_name, action_group in action_map.items():
 
                 telerport_to_random_reachable(env, house)
-                print(action_group)
-                print(action_group["sample_count"])
                 for i in range(action_group["sample_count"]):
                     action_config = action_group["selector"](action_group["actions"])
                     record = benchmarker.benchmark(
@@ -416,8 +408,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                     )
                     records.append(record)
 
-            if self.verbose:
-                print("Total average frametime: {}".format(scene_average_fr))
+            logger.info("Total average frametime: {}".format(scene_average_fr))
 
         env.stop()
 
@@ -427,9 +418,6 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         by_action_group = {}
 
         for benchmarker in self.benchmarkers:
-            print(by_benchmarker)
-            print(benchmarker)
-            print(records)
             by_benchmarker.update(benchmarker.aggregate_by(records, "benchmarker"))
             by_scene.update(benchmarker.aggregate_by(records, ["scene", "house", "benchmarker"]))
             if self.include_per_action_breakdown:
@@ -437,7 +425,6 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             by_action_group.update(benchmarker.aggregate_by(records, ["scene", "house", "benchmarker", "action_group"]))
 
         house_or_scene = lambda scene,house: scene if scene != "Procedural" else house
-        # [{[f"{scene if house == '' else house}"]: aggregate} for ((scene, house_id, benchmarker_name, action_group), aggregate) in by_action_group.items()]
         benchmark_map["action_groups"] = {group_name: [a["action"] for a in group["actions"]] for group_name, group in
                                           action_map.items()}
 
