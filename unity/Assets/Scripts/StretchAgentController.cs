@@ -51,11 +51,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // set secondary arm-camera
             Camera fp_camera_2 = m_CharacterController.transform.Find("SecondaryCamera").GetComponent<Camera>();
             fp_camera_2.gameObject.SetActive(true);
-            fp_camera_2.transform.localPosition = new Vector3(-0.04f, 0.432f, 0.024f);
+//            fp_camera_2.transform.localPosition = new Vector3(-0.04f, 0.432f, 0.024f);
+            fp_camera_2.transform.localPosition = new Vector3(0.0353f, 0.5088f, -0.076f);
             fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
             fp_camera_2.fieldOfView = 90f;
 //            fp_camera_2.fieldOfView = 75f;
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
+
+            // set secondary arm-camera
+            Camera fp_camera_3 = m_CharacterController.transform.Find("GripperCamera").GetComponent<Camera>();
+            fp_camera_3.gameObject.SetActive(true);
+//            fp_camera_3.transform.localPosition = new Vector3(0f, -0.09862678f, 0f);
+//            fp_camera_3.transform.localEulerAngles = new Vector3(0f, 0f, 0f);
+//            fp_camera_3.fieldOfView = 90f;
+            fp_camera_2.fieldOfView = 75f;
+            agentManager.registerAsThirdPartyCamera(fp_camera_3);
 
             // limit camera from looking too far down
             this.maxDownwardLookAngle = 90f;
