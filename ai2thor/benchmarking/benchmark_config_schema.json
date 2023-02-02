@@ -1,0 +1,552 @@
+{
+   "$schema":"https://json-schema.org/draft/2019-09/schema",
+   "$id":"0.0.1",
+   "type":"object",
+   "default":{
+      
+   },
+   "title":"Benchmark Config",
+   "required":[
+      "benchmarker_class_names",
+      "init_params",
+      "name",
+      "action_groups"
+   ],
+   "oneOf":[
+      {
+         "required":[
+            "scenes"
+         ]
+      },
+      {
+         "required":[
+            "procedural_houses"
+         ]
+      }
+   ],
+   "properties":{
+      "benchmarker_class_names":{
+         "type":"array",
+         "default":[
+            
+         ],
+         "title":"The classnames of benchmarkers to run for benchmark. Must inherit ai2thor.benchmarking.Benchmarker and be in main branch.",
+         "items":{
+            "type":"string",
+            "default":"",
+            "title":"Sims per second action benchmarker.",
+            "examples":[
+               "SimsPerSecondBenchmarker"
+            ]
+         },
+         "examples":[
+            [
+               "SimsPerSecondBenchmarker"
+            ]
+         ]
+      },
+      "init_params":{
+         "type":"object",
+         "default":{
+            
+         },
+         "title":"The controller constructor parameters.",
+         "required":[
+            "width",
+            "height",
+            "server_type"
+         ],
+         "properties":{
+            "local_executable_path":{
+               "type":"null",
+               "default":null,
+               "title":"The local_executable_path init param.",
+               "examples":[
+                  null
+               ]
+            },
+            "local_build":{
+               "type":"boolean",
+               "default":false,
+               "title":"The local_build init param.",
+               "examples":[
+                  false
+               ]
+            },
+            "start_unity":{
+               "type":"boolean",
+               "default":false,
+               "title":"The start_unity init param.",
+               "examples":[
+                  true
+               ]
+            },
+            "commit_id":{
+               "type":"null",
+               "default":null,
+               "title":"The commit_id init param",
+               "examples":[
+                  null
+               ]
+            },
+            "gridSize":{
+               "type":"number",
+               "default":0.0,
+               "title":"The gridSize init param.",
+               "examples":[
+                  0.25
+               ]
+            },
+            "width":{
+               "type":"integer",
+               "default":0,
+               "title":"The width init param",
+               "examples":[
+                  600
+               ]
+            },
+            "height":{
+               "type":"integer",
+               "default":0,
+               "title":"The height init param",
+               "examples":[
+                  600
+               ]
+            },
+            "fieldOfView":{
+               "type":"integer",
+               "default":0,
+               "title":"The fieldOfView init param",
+               "examples":[
+                  45
+               ]
+            },
+            "server_type":{
+               "type":"string",
+               "default":"",
+               "title":"string representing the server_class init param",
+               "examples":[
+                  "WSGI",
+                  "FIFO"
+               ]
+            },
+            "visibilityScheme":{
+               "type":"string",
+               "default":"",
+               "title":"The visibilityScheme init param",
+               "examples":[
+                  "Collider",
+                  "Distance"
+               ]
+            }
+         },
+         "examples":[
+            {
+               "local_executable_path":null,
+               "local_build":false,
+               "start_unity":true,
+               "commit_id":null,
+               "gridSize":0.25,
+               "width":600,
+               "height":600,
+               "fieldOfView":45,
+               "server_type":"WSGI",
+               "visibilityScheme":"Collider"
+            }
+         ]
+      },
+      "name":{
+         "type":"string",
+         "default":"",
+         "title":"The name of the benchmark run",
+         "examples":[
+            "Sims Per Second"
+         ]
+      },
+      "scenes":{
+         "type":"array",
+         "default":[
+            
+         ],
+         "title":"The scenes to be benchmarked. Procedural should not be specified.",
+         "items":{
+            "type":"string",
+            "default":"",
+            "title":"A Schema",
+            "examples":[
+               "FloorPlan1_physics"
+            ]
+         },
+         "examples":[
+            [
+               "FloorPlan1_physics"
+            ]
+         ]
+      },
+      "procedural_houses":{
+         "type":"array",
+         "default":[
+            
+         ],
+         "title":"List of procedural house json objects or filenames in s3 under bucket 'ai2-thor-benchmark/procedural_houses'",
+         "items":{
+            "type":"string",
+            "default":"",
+            "title":"A Schema",
+            "examples":[
+               "train_3.json",
+               "{'doors': ... }"
+            ]
+         },
+         "examples":[
+            [
+               "train_3.json"
+            ]
+         ]
+      },
+      "action_sample_count":{
+         "type":"integer",
+         "default":1,
+         "title":"The number of times an action in an action group is ran, unless overrided in action_group.",
+         "examples":[
+            100
+         ]
+      },
+      "experiment_sample_count":{
+         "type":"integer",
+         "default":1,
+         "title":"The number of times an experiment is run, experiment is a benchmarker, scene, house combination.",
+         "examples":[
+            1
+         ]
+      },
+      "filter_object_types":{
+         "type":[
+            "array",
+            "string"
+         ],
+         "default":null,
+         "title":"List of strings indicating the metadata object filters, names coorespond to sim object types. Special string value '*' to filter all objects",
+         "examples":[
+            "*",
+            "Door"
+         ]
+      },
+      "random_teleport_before_action_group":{
+         "type":"boolean",
+         "default":false,
+         "title":"Wether to teleport randomly befor executing an action group.",
+         "examples":[
+            true
+         ]
+      },
+      "verbose":{
+         "type":"boolean",
+         "default":false,
+         "title":"Sets logging level to DEBUG.",
+         "examples":[
+            false
+         ]
+      },
+      "action_groups":{
+         "type":"object",
+         "default":{
+            
+         },
+         "title":"The action groups to be benchmarked.",
+         "properties":{
+            "group_name":{
+               "type":"object",
+               "default":{
+                  
+               },
+               "title":"Action group.",
+               "required":[
+                  "actions",
+                  "sample_count",
+                  "selector"
+               ],
+               "properties":{
+                  "actions":{
+                     "type":"array",
+                     "default":[
+                        
+                     ],
+                     "title":"The actions Schema",
+                     "items":{
+                        "type":"object",
+                        "title":"A Schema",
+                        "required":[
+                           "action",
+                           "args"
+                        ],
+                        "properties":{
+                           "action":{
+                              "type":"string",
+                              "title":"The action name.",
+                              "examples":[
+                                 "MoveAhead",
+                                 "MoveBack",
+                                 "MoveLeft",
+                                 "MoveRight"
+                              ]
+                           },
+                           "args":{
+                              "type":"object",
+                              "title":"The arguments this action will be run with.",
+                              "required":[
+                                 
+                              ],
+                              "properties":{
+                                 
+                              },
+                              "examples":[
+                                 {
+                                    
+                                 },
+                                 {
+                                    
+                                 },
+                                 {
+                                    
+                                 },
+                                 {
+                                    
+                                 }
+                              ]
+                           }
+                        },
+                        "examples":[
+                           {
+                              "action":"MoveAhead",
+                              "args":{
+                                 
+                              }
+                           },
+                           {
+                              "action":"MoveBack",
+                              "args":{
+                                 
+                              }
+                           },
+                           {
+                              "action":"MoveLeft",
+                              "args":{
+                                 
+                              }
+                           },
+                           {
+                              "action":"MoveRight",
+                              "args":{
+                                 
+                              }
+                           }
+                        ]
+                     },
+                     "examples":[
+                        [
+                           {
+                              "action":"MoveAhead",
+                              "args":{
+                                 
+                              }
+                           },
+                           {
+                              "action":"MoveBack",
+                              "args":{
+                                 
+                              }
+                           },
+                           {
+                              "action":"MoveLeft",
+                              "args":{
+                                 
+                              }
+                           },
+                           {
+                              "action":"MoveRight",
+                              "args":{
+                                 
+                              }
+                           }
+                        ]
+                     ]
+                  },
+                  "sample_count":{
+                     "type":"integer",
+                     "default":0,
+                     "title":"The number of times to run actions in this group.",
+                     "examples":[
+                        100
+                     ]
+                  },
+                  "selector":{
+                     "type":"string",
+                     "default":"random",
+                     "title":"The type of action selector.",
+                     "examples":[
+                        "random"
+                     ]
+                  }
+               },
+               "examples":[
+                  {
+                     "actions":[
+                        {
+                           "action":"MoveAhead",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"MoveBack",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"MoveLeft",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"MoveRight",
+                           "args":{
+                              
+                           }
+                        }
+                     ],
+                     "sample_count":100,
+                     "selector":"random"
+                  }
+               ]
+            },
+            "examples":[
+               {
+                  "move":{
+                     "actions":[
+                        {
+                           "action":"MoveAhead",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"MoveBack",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"MoveLeft",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"MoveRight",
+                           "args":{
+                              
+                           }
+                        }
+                     ],
+                     "sample_count":100,
+                     "selector":"random"
+                  },
+                  "rotate":{
+                     "actions":[
+                        {
+                           "action":"RotateRight",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"RotateLeft",
+                           "args":{
+                              
+                           }
+                        }
+                     ],
+                     "sample_count":100,
+                     "selector":"random"
+                  },
+                  "look":{
+                     "actions":[
+                        {
+                           "action":"LookUp",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"LookDown",
+                           "args":{
+                              
+                           }
+                        }
+                     ],
+                     "sample_count":100,
+                     "selector":"random"
+                  },
+                  "all":{
+                     "actions":[
+                        {
+                           "action":"MoveAhead",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"MoveBack",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"MoveLeft",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"MoveRight",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"RotateRight",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"RotateLeft",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"LookUp",
+                           "args":{
+                              
+                           }
+                        },
+                        {
+                           "action":"LookDown",
+                           "args":{
+                              
+                           }
+                        }
+                     ],
+                     "sample_count":100,
+                     "selector":"random"
+                  }
+               }
+            ]
+         }
+      }
+   }
+}

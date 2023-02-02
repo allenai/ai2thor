@@ -4641,6 +4641,35 @@ def run_benchmark_from_s3_config(ctx):
 
     #TODO remove older benchmarks
 
+@task
+def add_daily_benchmark_config(ctx, benchmark_config_filename):
+    import json
+    import os
+    from jsonschema import validate
+    from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET
+    path = os.path.dirname(os.path.realpath(__file__))
+
+    benchmark_config_basename = os.path.basename(benchmark_config_filename)
+    print(path)
+    benchmarking_config_schema = None
+    s3 = boto3.resource("s3", region_name="us-west-2")
+    with open(os.path.join(path, "ai2thor", "benchmarking", "benchmark_config_schema.json"), "r") as f:
+        benchmarking_config_schema = json.load(f)
+
+    with open(benchmark_config_filename, "r") as f:
+        benchmark_config = json.load(f)
+    # Validation broken, giving false negative
+    # validate(benchmark_config, schema=benchmarking_config_schema)
+    try:
+        logger.info(f"Pushing benchmark config '{benchmark_config_basename}'")
+        s3.Object(BENCHMARKING_S3_BUCKET, f"benchmark_jobs/{benchmark_config_basename}").put(
+            Body=json.dumps(benchmark_config, indent=4),
+            ContentType="application/json",
+        )
+    except botocore.exceptions.ClientError as e:
+        logger.error(f"Caught error uploading archive '{benchmark_config_basename}': {e}")
+
+
 def s3_aggregate_benchmark_results(bucket):
     client = boto3.client('s3')
     response = client.list_objects_v2(
