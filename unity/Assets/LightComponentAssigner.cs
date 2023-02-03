@@ -79,8 +79,8 @@ public class LightComponentAssigner : MonoBehaviour
                     }
                     else {
                         wct = l.gameObject.GetComponent<WhatControlsThis>();
-                        Array.Resize(ref wct.SimObjsThatControlsMe, wct.SimObjsThatControlsMe.Length + 1);
-                        wct.SimObjsThatControlsMe[wct.SimObjsThatControlsMe.Length - 1] = rootSOP;
+                        Array.Resize(ref wct.SimObjsThatControlMe, wct.SimObjsThatControlMe.Length + 1);
+                        wct.SimObjsThatControlMe[wct.SimObjsThatControlMe.Length - 1] = rootSOP;
                     }
                 }
             }
@@ -112,8 +112,8 @@ public class LightComponentAssigner : MonoBehaviour
                         }
                         else {
                             wct = l.gameObject.GetComponent<WhatControlsThis>();
-                            Array.Resize(ref wct.SimObjsThatControlsMe, wct.SimObjsThatControlsMe.Length + 1);
-                            wct.SimObjsThatControlsMe[wct.SimObjsThatControlsMe.Length - 1] = sop;
+                            Array.Resize(ref wct.SimObjsThatControlMe, wct.SimObjsThatControlMe.Length + 1);
+                            wct.SimObjsThatControlMe[wct.SimObjsThatControlMe.Length - 1] = sop;
                         }
                     }
                 }

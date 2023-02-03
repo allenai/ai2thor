@@ -1461,7 +1461,7 @@ namespace Thor.Procedural {
                             ctoo.LightSources[ctoo.LightSources.Length - 1] = light;
                         }
                             WhatControlsThis wct = light.gameObject.AddComponent<WhatControlsThis>();
-                            wct.SimObjsThatControlsMe = thingsThatControlMe.ToArray();
+                            wct.SimObjsThatControlMe = thingsThatControlMe.ToArray();
                     }
 
                     go.transform.parent = lightingRoot.transform;
