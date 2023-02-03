@@ -330,8 +330,15 @@ public static class UtilityFunctions {
 
                 //linked sim object
                 if(hikari.GetComponent<WhatControlsThis>()) {
-                    SimObjPhysics thingThatControlsMe = hikari.GetComponent<WhatControlsThis>().SimObjThatControlsMe;
-                    lp.controllerSimObjId = thingThatControlsMe.objectID.ToString();
+                    SimObjPhysics[] thingsThatControlsMe = hikari.GetComponent<WhatControlsThis>().SimObjsThatControlsMe;
+
+                    List<String> thingsThatControlMeToString = new List<String>();
+
+                    foreach(SimObjPhysics sop in thingsThatControlsMe) {
+                        thingsThatControlMeToString.Add(sop.objectID.ToString());
+                    }
+
+                    lp.controllerSimObjIds = thingsThatControlMeToString.ToArray();
                 }
 
                 // else

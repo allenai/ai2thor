@@ -56,7 +56,7 @@ namespace Thor.Procedural.Data {
         public bool enabled { get; set; } //the active state of the light game object (NOT the light component of the game object)
 
         [JsonProperty(Order = 5)]
-        public string controllerSimObjId { get; set; } //what Sim Object controls if this light is enabled/disabled when using ToggleOnOff
+        public string[] controllerSimObjIds { get; set; } //what Sim Object controls if this light is enabled/disabled when using ToggleOnOff
 
         [JsonProperty(Order = 6)]
         public string parentSimObjObjectId { get; set; } //the objectID of a parent Sim Object this Light is a child of

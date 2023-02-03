@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.SceneManagement;
+using System;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -51,15 +52,12 @@ public class LightComponentAssigner : MonoBehaviour
     public void AddWhatControlsThisComponent() {
 
         GetAllPrefabs();
-
-        Debug.Log("here!");
-
         foreach (KeyValuePair<GameObject, string> go in assetToAssetPath) {
             GameObject asetRoot = go.Key;
             string assetPath = go.Value;
 
-            Debug.Log("loading prefab");
             GameObject contentRoot = PrefabUtility.LoadPrefabContents(assetPath);
+            Debug.Log($"loading prefab: {contentRoot.name}");
 
             //check if this object is toggleable
             SimObjPhysics rootSOP = contentRoot.GetComponent<SimObjPhysics>();
@@ -73,8 +71,20 @@ public class LightComponentAssigner : MonoBehaviour
                 //for each light object this sim object controls, add the WhatControlsThis component
                 //update WhatcontrolsThis component to reference the sim object
                 foreach (Light l in rootSOP.GetComponent<CanToggleOnOff>().LightSources) {
-                    WhatControlsThis wct = l.gameObject.AddComponent<WhatControlsThis>();
-                    wct.SimObjThatControlsMe = rootSOP;
+                    WhatControlsThis wct;
+                    if(!gameObject.GetComponent<WhatControlsThis>()) {
+                        wct = l.gameObject.AddComponent<WhatControlsThis>();
+
+                    }
+                    else {
+                        wct = l.gameObject.GetComponent<WhatControlsThis>();
+
+                        //no this should do the thing where we clone the array and add one element to it as a new array and stuff
+                        //check procedural tools line 1444
+                        Array.Resize(ref wct.SimObjsThatControlsMe, wct.SimObjsThatControlsMe.Length + 1);
+                        wct.SimObjsThatControlsMe[wct.SimObjsThatControlsMe.Length - 1] = rootSOP;
+                        //wct.SimObjsThatControlsMe = new SimObjPhysics[1] {rootSOP}; //delete thiiiiiis
+                    }
                 }
             }
 
@@ -101,7 +111,7 @@ public class LightComponentAssigner : MonoBehaviour
                         //no pre cached `WhatControlsThis` component? Then this is not a prefab's light it is a scene light so lets goooooo
                         if(!l.GetComponent<WhatControlsThis>()) {
                             WhatControlsThis wct = l.gameObject.AddComponent<WhatControlsThis>();
-                            wct.SimObjThatControlsMe = sop;
+                            wct.SimObjsThatControlsMe = new SimObjPhysics[1] {sop};
                         }
                     }
                 }

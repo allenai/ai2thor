@@ -979,6 +979,9 @@ public class ProceduralRoomEditor : MonoBehaviour {
                         resolution = Enum.GetName(typeof(UnityEngine.Rendering.LightShadowResolution), l.shadowResolution)
                     };
                 }
+
+                string[] controllerObjects = new string[1] {objectLink};
+
                 return new LightParameters() {
                     id = l.gameObject.name,
                     type = LightType.GetName(typeof(LightType), l.type),
@@ -990,7 +993,7 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     range = l.range,
                     rgb = new SerializableColor() { r = l.color.r, g = l.color.g, b = l.color.b, a = l.color.a },
                     shadow = sp,
-                    controllerSimObjId = objectLink
+                    controllerSimObjIds = controllerObjects
                 };
             }
         ).ToList();
