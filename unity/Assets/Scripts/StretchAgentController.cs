@@ -63,7 +63,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 //            fp_camera_3.transform.localPosition = new Vector3(0f, -0.09862678f, 0f);
 //            fp_camera_3.transform.localEulerAngles = new Vector3(0f, 0f, 0f);
 //            fp_camera_3.fieldOfView = 90f;
-            fp_camera_2.fieldOfView = 75f;
+            fp_camera_3.fieldOfView = 75f;
             agentManager.registerAsThirdPartyCamera(fp_camera_3);
 
             // limit camera from looking too far down
