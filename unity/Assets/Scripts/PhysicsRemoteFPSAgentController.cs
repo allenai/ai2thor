@@ -2907,6 +2907,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ScaleObject(
+            string objectId,
+            float scaleX,
+            float scaleY,
+            float scaleZ,
+            float scaleOverSeconds = 1.0f,
+            bool forceAction = false
+        ) {
+            // if object is in the scene and visible, assign it to 'target'
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
+
+            // neither objectId nor coordinates found an object
+            if (target == null) {
+                errorMessage = $"Object with ID {objectId} does not appear to be interactable.";
+                actionFinished(false);
+                return;
+            }
+            Vector3 targetScale = new Vector3(
+                target.transform.localScale.x * scaleX,
+                target.transform.localScale.y * scaleY,
+                target.transform.localScale.z * scaleZ
+            );
+            StartCoroutine(scaleObject(targetScale, target, scaleOverSeconds));
+        }
+
+        public void ScaleObject(
             float x,
             float y,
             float scale,
