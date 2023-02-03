@@ -49,6 +49,7 @@ public class LightComponentAssigner : MonoBehaviour
         }
     }
 
+    //editor function to add "WhatControlsThis" to all light child objects in prefabs
     public void AddWhatControlsThisComponent() {
 
         GetAllPrefabs();
@@ -72,18 +73,14 @@ public class LightComponentAssigner : MonoBehaviour
                 //update WhatcontrolsThis component to reference the sim object
                 foreach (Light l in rootSOP.GetComponent<CanToggleOnOff>().LightSources) {
                     WhatControlsThis wct;
-                    if(!gameObject.GetComponent<WhatControlsThis>()) {
+                    if(!l.gameObject.GetComponent<WhatControlsThis>()) {
                         wct = l.gameObject.AddComponent<WhatControlsThis>();
 
                     }
                     else {
                         wct = l.gameObject.GetComponent<WhatControlsThis>();
-
-                        //no this should do the thing where we clone the array and add one element to it as a new array and stuff
-                        //check procedural tools line 1444
                         Array.Resize(ref wct.SimObjsThatControlsMe, wct.SimObjsThatControlsMe.Length + 1);
                         wct.SimObjsThatControlsMe[wct.SimObjsThatControlsMe.Length - 1] = rootSOP;
-                        //wct.SimObjsThatControlsMe = new SimObjPhysics[1] {rootSOP}; //delete thiiiiiis
                     }
                 }
             }
@@ -108,10 +105,15 @@ public class LightComponentAssigner : MonoBehaviour
                 if(sop.GetComponent<CanToggleOnOff>() && sop.GetComponent<CanToggleOnOff>().LightSources.Length >0) {
                     //check if the `WhatControlsThis component is already here or not
                     foreach(Light l in sop.GetComponent<CanToggleOnOff>().LightSources) {
-                        //no pre cached `WhatControlsThis` component? Then this is not a prefab's light it is a scene light so lets goooooo
-                        if(!l.GetComponent<WhatControlsThis>()) {
-                            WhatControlsThis wct = l.gameObject.AddComponent<WhatControlsThis>();
-                            wct.SimObjsThatControlsMe = new SimObjPhysics[1] {sop};
+                        WhatControlsThis wct;
+                        if(!l.gameObject.GetComponent<WhatControlsThis>()) {
+                            wct = l.gameObject.AddComponent<WhatControlsThis>();
+
+                        }
+                        else {
+                            wct = l.gameObject.GetComponent<WhatControlsThis>();
+                            Array.Resize(ref wct.SimObjsThatControlsMe, wct.SimObjsThatControlsMe.Length + 1);
+                            wct.SimObjsThatControlsMe[wct.SimObjsThatControlsMe.Length - 1] = sop;
                         }
                     }
                 }
