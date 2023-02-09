@@ -350,9 +350,9 @@ public static class ActionDispatcher {
         } else {
             var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
             var argumentKeys = dynamicServerAction.ArgumentKeys().ToList();
-            if (usePhysicsSimulationParams) {
-                argumentKeys.Add(DynamicServerAction.physicsSimulationParamsVariable);
-            }
+            // if (usePhysicsSimulationParams) {
+            //     argumentKeys.Add(DynamicServerAction.physicsSimulationParamsVariable);
+            // }
             var invalidArgs = argumentKeys
                 .Where(argName => !paramDict.ContainsKey(argName))
                 .ToList();
@@ -405,23 +405,41 @@ public static class ActionDispatcher {
             throw new MissingArgumentsActionException(missingArguments);
         }
 
-        var methodReturn = method.Invoke(target, arguments);
-        Debug.Log($"-Methoth dispatch invoke {usePhysicsSimulationParams} method: {method.Name}");
+        IEnumerator action = null;
+        object methodReturn;
+        // TODO: deprecate, void action 
+        // if (usePhysicsSimulationParams &&  method.ReturnType == (typeof(void))) {
+        //     // TODO: remove once deprecated
+        //     action = DeprecatedActionWrapper(() => method.Invoke(target, arguments), new ActionFinished());
+        // }
+        // ActionFinishedWrapper2(() => {method.Invoke(target, arguments))
 
-        if (usePhysicsSimulationParams) {
+        // TODO: deprecated actions called in the old way without PhysicsSimulationParams
+        if (!usePhysicsSimulationParams && method.ReturnType == (typeof(void))) {
+            method.Invoke(target, arguments);
+            Debug.Log($"-Methoth dispatch invoke {usePhysicsSimulationParams} method: {method.Name}");
+        }
+        else {
+
+
             Debug.Log($"-- Invoke usePhysicsSimulationParams true autosim: {physicsSimulationProperties.autoSimulation}");
             var callActionFinished = true;
-            IEnumerator action = null;
+            
             var runAsCoroutine = false;
 
             if (method.ReturnType == (typeof(System.Collections.IEnumerator))) {
+                methodReturn = method.Invoke(target, arguments);
                 action = (System.Collections.IEnumerator)(methodReturn as IEnumerator);
                 if (physicsSimulationProperties.autoSimulation) {
                     runAsCoroutine = true;
                 }
             }
             else if (method.ReturnType == (typeof(ActionFinished))) {
-                action = ActionFinishedWrapper((ActionFinished)(methodReturn as ActionFinished));
+                // methodReturn = method.Invoke(target, arguments);
+                action =  ActionFinishedDelayActionWrapper(
+                    () => (ActionFinished)(method.Invoke(target, arguments) as ActionFinished)
+                );
+                // action = ActionFinishedWrapper((ActionFinished)(methodReturn as ActionFinished));
             }
             else {
                
@@ -429,11 +447,19 @@ public static class ActionDispatcher {
                 //     "Actions called with argument `physicsSimulationParams` must return IEnumerator or ActionFinished, if it is a legacy action call without `physicsSimulationParams` or change action to return IEnumerator or ActionFinished in source."
                 // );
                 callActionFinished = false;
+                action = ActionFinishedDelayActionWrapper(
+                     () => {
+                        method.Invoke(target, arguments);
+                        // TODO: deprecated void action returns dummy ActionFinished
+                        return new ActionFinished();
+                     }
+                );
+
                 // TODO: when migration is full remove callAction finished, add back exception for this branch
-                action = ActionFinishedWrapper(new ActionFinished()); 
+                // action = ActionFinishedWrapper(new ActionFinished()); 
             }
             if (!runAsCoroutine) { 
-                Debug.Log("-- did not Ran as coroutine");
+                Debug.Log("-- did not Run as coroutine");
                 var actionFinished = PhysicsSceneManager.runActionPhysicsSimulation(
                     action, 
                     physicsSimulationProperties
@@ -455,6 +481,11 @@ public static class ActionDispatcher {
 
     public static IEnumerator ActionFinishedWrapper(ActionFinished actionFinished) {
         yield return actionFinished;
+    }
+
+    public static IEnumerator ActionFinishedDelayActionWrapper(Func<ActionFinished> action) {
+        yield return null;
+        yield return action();
     }
 
     public static System.Collections.IEnumerator invokeActionUnderPhysicsSimulation<T>(

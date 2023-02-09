@@ -107,6 +107,10 @@ public class PhysicsSceneManager : MonoBehaviour {
         var startPhysicsSimulateCallTime = PhysicsSceneManager.PhysicsSimulateCallCount;
         ActionFinished actionFinished = null;
         while (enumerator.MoveNext()) {
+
+            if (enumerator.Current == null) {
+                continue;
+            }
             
             // ActionFinished was found but enumerator keeps moving forward, throw error
             if (actionFinished != null) {
@@ -124,6 +128,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                     PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
                 }
             }
+            // else if (enumerator.Current.GetType() == typeof)
             else if (enumerator.Current.GetType() == typeof(ActionFinished)) {
                 actionFinished = (ActionFinished)(enumerator.Current as ActionFinished);
             }
@@ -156,6 +161,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                 // currentSimulationCallCount < physicsSimulationParams.maxActionPhysicsSteps ||
                 PhysicsSimulateTimeSeconds*1000.0f < physicsSimulationParams.maxActionTimeMilliseconds
             ) {
+                Debug.Log($"-- Running simulate physics current {PhysicsSimulateTimeSeconds} to {physicsSimulationParams.maxActionTimeMilliseconds}");
                 PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
             }
         }

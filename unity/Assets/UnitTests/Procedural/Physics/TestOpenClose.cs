@@ -54,7 +54,8 @@ namespace Tests {
                     { "returnToStart", true},
                     { "stopAtNonStaticCol", false}
                 });
-            yield return new WaitForSeconds(2f);
+            // yield return new WaitUntil(() => getActiveAgent().agentState == AgentState.ActionComplete);
+            //yield return new WaitForSeconds(2f);
 
             Transform testCabinetDoor = GameObject.Find("Cabinet_67e9cbea").transform.Find("CabinetDoor");
             bool testCabinetDoorOpened = Mathf.Approximately((testCabinetDoor.localEulerAngles.y + 360) % 360, 270);
