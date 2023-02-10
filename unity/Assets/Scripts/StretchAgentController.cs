@@ -58,7 +58,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 //            fp_camera_2.fieldOfView = 75f;
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
-            // TODO bug failed here
             // set wrist-centric
             Camera fp_camera_3 = m_CharacterController.transform.Find("stretch_arm_rig_gripper/stretch_robot_lift_jnt/stretch_robot_arm_1_jnt/stretch_robot_arm_2_jnt/stretch_robot_arm_3_jnt/stretch_robot_arm_4_jnt/stretch_robot_arm_5_jnt/stretch_robot_wrist_1_jnt/stretch_robot_wrist_2_jnt/stretch_robot_wrist_2/GripperCamera").GetComponent<Camera>();
             fp_camera_3.gameObject.SetActive(true);
