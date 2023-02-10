@@ -1555,6 +1555,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "mgp": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+                    
+                    action["action"] = "MoveGoalPoint";
+                    action["newPosition"] = new Vector3(0.0f, 0.0f, 0.0f);
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
                 case "to": {
                         ServerAction action = new ServerAction();
                         action.action = "TeleportObject";

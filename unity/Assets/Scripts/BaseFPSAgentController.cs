@@ -4724,6 +4724,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, reachablePositions);
         }
 
+        //teleports a goal point object in exp room
+        public void MoveGoalPoint (Vector3 newPosition) {
+            GameObject gp = GameObject.Find("GoalPoint");
+
+            if (gp == null) {
+                throw new ArgumentException("no object named GoalPoint exists in this scene");
+            }
+
+            gp.transform.position = newPosition;
+            actionFinished(true);
+        }
+
         public void ObjectNavExpertAction(ServerAction action) {
             NavMeshPath path = new UnityEngine.AI.NavMeshPath();
             Func<bool> visibilityTest;
