@@ -1426,8 +1426,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 Rigidbody rb = sop.GetComponent<Rigidbody>();
                 rb.isKinematic = true;
-
                 sop.PrimaryProperty = SimObjPrimaryProperty.Static;
+            }
+
+
+#if UNITY_EDITOR
+            Debug.Log("Echoes! Three Freeze!");
+#endif
+
+            actionFinished(true);
+        }
+
+        public void MakeSpecificObjectStationary(string objectId) {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+                if(sop.objectID == objectId) {
+                Rigidbody rb = sop.GetComponent<Rigidbody>();
+                rb.isKinematic = true;
+                sop.PrimaryProperty = SimObjPrimaryProperty.Static;
+                }
             }
 
 #if UNITY_EDITOR
