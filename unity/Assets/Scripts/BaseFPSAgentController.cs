@@ -825,7 +825,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ColorChanger colorChangeComponent;
-            if (scene.StartsWith("Procedural")) {
+            if (scene.StartsWith("Procedural") || scene.EndsWith("_ExpRoom")) {
                 colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
                 colorChangeComponent.RandomizeMaterials(
                     useTrainMaterials: useTrainMaterials.HasValue ? useTrainMaterials.Value : true,
