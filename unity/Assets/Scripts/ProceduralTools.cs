@@ -1404,7 +1404,11 @@ namespace Thor.Procedural {
             }
 
             var lightingRoot = new GameObject(DefaultLightingRootName);
-            if (house.proceduralParameters.lights != null) {                
+            if (house.proceduralParameters.lights != null) {    
+
+                //gather all spawned sim objects to assign parents and toggle on/off controllers
+                SimObjPhysics[] allSimObjs = UnityEngine.Object.FindObjectsOfType<SimObjPhysics>(includeInactive: true);
+            
                 foreach (var lightParams in house.proceduralParameters.lights) {
                     //name light game object in format scene|<light type>|<instance count> in the house json
                     var go = new GameObject(lightParams.id);
@@ -1445,23 +1449,35 @@ namespace Thor.Procedural {
 
                         List<SimObjPhysics> thingsThatControlMe = new List<SimObjPhysics>();
 
-                        foreach(string controllerObject in lightParams.controllerSimObjIds) {
+                        foreach (string controllerObject in lightParams.controllerSimObjIds) {
                             //find the sim object that controllerObject specifies
-                            SimObjPhysics mySOP = GameObject.Find(controllerObject).GetComponent<SimObjPhysics>();
-                            if(!mySOP.GetComponent<CanToggleOnOff>()) {
-                                throw new ArgumentException ($"The controllerSimObjIds element {controllerObject} of {lightParams.id}'s light parameters is missing the toggleable functionality and can't be assigned to this light");
+                            //do this by objectID which, for procedural scenes, will be the same as the object name
+                            SimObjPhysics targetSOP = null;
+                            foreach (SimObjPhysics sop in allSimObjs) {
+                                if (sop.objectID == controllerObject) {
+                                    targetSOP = sop;
+                                }
                             }
 
-                            thingsThatControlMe.Add(mySOP);
+                            if (targetSOP == null) {
+                                throw new NullReferenceException($"{controllerObject} does not match objectID of any sim object in scene!");
+                            }
+
+                            if (!targetSOP.GetComponent<CanToggleOnOff>()) {
+                                throw new ArgumentException($"{controllerObject} is missing the toggleable functionality and can't be assigned to light {lightParams.id}");
+                            }
+
+                            thingsThatControlMe.Add(targetSOP);
 
                             //now update LightSources array with this
-                            CanToggleOnOff ctoo = mySOP.GetComponent<CanToggleOnOff>();
+                            CanToggleOnOff ctoo = targetSOP.GetComponent<CanToggleOnOff>();
 
                             Array.Resize(ref ctoo.LightSources, ctoo.LightSources.Length + 1);
                             ctoo.LightSources[ctoo.LightSources.Length - 1] = light;
                         }
-                            WhatControlsThis wct = light.gameObject.AddComponent<WhatControlsThis>();
-                            wct.SimObjsThatControlMe = thingsThatControlMe.ToArray();
+                        
+                        WhatControlsThis wct = light.gameObject.AddComponent<WhatControlsThis>();
+                        wct.SimObjsThatControlMe = thingsThatControlMe.ToArray();
                     }
 
                     go.transform.parent = lightingRoot.transform;

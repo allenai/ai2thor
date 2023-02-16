@@ -224,11 +224,13 @@ public class CanToggleOnOff : MonoBehaviour {
         if (isOn) {
             if (LightSources.Length > 0) {
                 for (int i = 0; i < LightSources.Length; i++) {
-                    if(LightSources[i].transform.gameObject.activeSelf == true) {
-                        LightSources[i].transform.gameObject.SetActive(false);
+                    if (LightSources[i] == null) {
+                        continue;
                     }
 
-                    else {
+                    if (LightSources[i].transform.gameObject.activeSelf == true) {
+                        LightSources[i].transform.gameObject.SetActive(false);
+                    } else {
                         LightSources[i].transform.gameObject.SetActive(true);
                     }
                 }
@@ -267,16 +269,19 @@ public class CanToggleOnOff : MonoBehaviour {
         else {
             if (LightSources.Length > 0) {
                 for (int i = 0; i < LightSources.Length; i++) {
-                    if(LightSources[i].transform.gameObject.activeSelf == true) {
-                        LightSources[i].transform.gameObject.SetActive(false);
+                    if (LightSources[i] == null) {
+                        continue;
                     }
 
-                    else {
+                    if (LightSources[i].transform.gameObject.activeSelf == true) {
+                        LightSources[i].transform.gameObject.SetActive(false);
+                    } else {
                         LightSources[i].transform.gameObject.SetActive(true);
-                    }                }
+                    }
+                }
             }
 
-            if(effects.Length > 0) {
+            if (effects.Length > 0) {
                 for (int i = 0; i< effects.Length; i++) {
                     if(effects[i].transform.gameObject.activeSelf == true) {
                         effects[i].SetActive(false);

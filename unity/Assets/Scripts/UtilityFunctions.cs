@@ -328,7 +328,7 @@ public static class UtilityFunctions {
 
                 lp.shadow = xemnas;
 
-                //linked sim object
+                //return objectID of sim objects that can toggle this light
                 if(hikari.GetComponent<WhatControlsThis>()) {
                     SimObjPhysics[] thingsThatControlsMe = hikari.GetComponent<WhatControlsThis>().SimObjsThatControlMe;
 
@@ -340,9 +340,6 @@ public static class UtilityFunctions {
 
                     lp.controllerSimObjIds = thingsThatControlMeToString.ToArray();
                 }
-
-                // else
-                // Debug.Log($"Light named: {hikari.gameObject.name} does not have a WhatControlsThis component");
 
                 lp.enabled = hikari.gameObject.activeSelf;
 
@@ -364,6 +361,9 @@ public static class UtilityFunctions {
         //ok first find all light objects in the scene and cache them so we also find any inactive lights
         Light[] allLightsInScene = UnityEngine.Object.FindObjectsOfType<Light>(includeInactive: true);
 
+        //search all simobjphysics in scene by object type to find potential inactive
+        SimObjPhysics[] allSimObjs = UnityEngine.Object.FindObjectsOfType<SimObjPhysics>(includeInactive: true);
+
         foreach (var lp in lightParams) {
 
             #if UNITY_EDITOR
@@ -379,6 +379,7 @@ public static class UtilityFunctions {
             foreach(Light lightInScene in allLightsInScene) {
                 if(lightInScene.name == lp.id) {
                     light = lightInScene;
+                    break;
                 }
             }
 
@@ -423,12 +424,11 @@ public static class UtilityFunctions {
                     throw new ArgumentException($"Light Parameter's `spotAngle` property is not in valid bounds. spotAngle must be [1-179]");
                 }            
             }
-
+            
             lightComponent.color = new Color(lp.rgb.r, lp.rgb.g, lp.rgb.b, lp.rgb.a);
             lightComponent.intensity = lp.intensity;
             lightComponent.bounceIntensity = lp.indirectMultiplier;
             lightComponent.range = lp.range;
-
 
             //culling mask and shadows both have default values in-scene, so not necessary to throw exceptions if no
             // mask or shadow values are passed in, instead lights will remain as they were before
@@ -448,14 +448,85 @@ public static class UtilityFunctions {
             }
 
             //change parent object if you want???
-            if(lp.parentSimObjObjectId != null) {
-
-                if(lp.parentSimObjObjectId == light.gameObject.name) {
+            if (lp.parentSimObjObjectId != null) {
+                if (lp.parentSimObjObjectId == light.gameObject.name) {
                     throw new ArgumentException($"Light Parameter's `parentSimObjObjectId` is the same name as {lp.id}. Cannot set parent to itself!");
                 }
 
-                GameObject go = GameObject.Find(lp.parentSimObjObjectId);
-                light.gameObject.transform.parent = go.transform;
+                SimObjPhysics targetSOP = null;
+                foreach (SimObjPhysics sop in allSimObjs) {
+                    if (sop.objectID == lp.parentSimObjObjectId) {
+                        targetSOP = sop;
+                    }
+                }
+
+                if (targetSOP == null) {
+                    throw new NullReferenceException($"{lp.parentSimObjObjectId} does not match objectID of any sim object in scene!");
+                }
+
+                light.gameObject.transform.parent = targetSOP.transform;
+            }
+
+            if (lp.controllerSimObjIds != null) {
+
+                List<SimObjPhysics> thingsThatControlMe = new List<SimObjPhysics>();
+
+                //to update LightSources, first we need to search all CanToggleOnOff objects in scene
+                CanToggleOnOff[] allToggleableObjectsInScene = UnityEngine.Object.FindObjectsOfType<CanToggleOnOff>(includeInactive: true);
+
+                List<CanToggleOnOff> toggleableObjectsToClear = new List<CanToggleOnOff>();
+
+                //if so, remove them from the CanToggleOnOff object's LightSources array
+                //now we update this light to be controlled by the controllerObject(s) specified
+
+                foreach(string controllerObject in lp.controllerSimObjIds) {
+                    foreach (CanToggleOnOff toggleableObject in allToggleableObjectsInScene) {
+                        //see if this light is controlled by any of these toggleable objects
+                        foreach(Light ls in toggleableObject.LightSources) {
+                            //ok we found a match to the current light we are trying to set properties for
+                            if(ls == light) {
+                                if(!toggleableObjectsToClear.Contains(toggleableObject)) {
+                                    toggleableObjectsToClear.Add(toggleableObject);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //now clear this light from all toggleable objects that have this light so we can cleanly
+                //assign the new controllerObject specified by lp
+                foreach(CanToggleOnOff c in toggleableObjectsToClear) {
+                    //use linq magic to remove all instances of this light from each toggleable object that references this light
+                    c.LightSources = c.LightSources.Where(val => val != light).ToArray();
+                }
+
+                foreach(string controllerObject in lp.controllerSimObjIds) {
+                    //find the sim object that controllerObject specifies
+                    SimObjPhysics targetSOP = null;
+                    foreach (SimObjPhysics sop in allSimObjs) {
+                        if (sop.objectID == controllerObject) {
+                            targetSOP = sop;
+                        }
+                    }
+
+                    if (targetSOP == null) {
+                        throw new NullReferenceException($"{controllerObject} does not match objectID of any sim object in scene!");
+                    }
+
+                    if(!targetSOP.GetComponent<CanToggleOnOff>()) {
+                        throw new ArgumentException ($"The controllerSimObjIds element {controllerObject} of {lp.id}'s light parameters is missing the toggleable functionality and can't be assigned to this light");
+                    }
+
+                    thingsThatControlMe.Add(targetSOP);
+
+                    //now update LightSources array with this
+                    CanToggleOnOff ctoo = targetSOP.GetComponent<CanToggleOnOff>();
+
+                    Array.Resize(ref ctoo.LightSources, ctoo.LightSources.Length + 1);
+                    ctoo.LightSources[ctoo.LightSources.Length - 1] = light;
+                }
+                    WhatControlsThis wct = light.gameObject.AddComponent<WhatControlsThis>();
+                    wct.SimObjsThatControlMe = thingsThatControlMe.ToArray();
             }
 
             light.gameObject.SetActive(lp.enabled);
