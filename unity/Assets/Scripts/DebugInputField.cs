@@ -471,6 +471,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+                case "inits-camera": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "stretch";
+                        action["agentControllerType"] = "stretch";
+                        action["renderInstanceSegmentation"] = true;
+                        action["cameraNearPlane"] = 0.05f;  
+                        if (splitcommand.Length >= 2) {
+                            action["cameraNearPlane"] = float.Parse(splitcommand[1]);
+                        }
+                        
+                        action["cameraFarPlane"] = 20.0f;
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
                 
                 case "getlights": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -3411,6 +3429,42 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             Debug.LogError("Target x y z args needed for command");
                         }
                         action.stopArmMovementOnContact = true;
+                        // action.stopArmMovementOnContact = true;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                // move mid level arm stop motion
+                case "mar": {
+                        // ServerAction action = new ServerAction();
+                        // action.action = "MoveArmRelative";
+                        // action.speed = 1.0f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveArmRelative";
+                        action["speed"] = 1.0f;
+                        // action.returnToStart = true;
+                        if (splitcommand.Length >= 4) {
+                            Debug.Log("4 >");
+                            action["offset"] = new Vector3(
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]),
+                                    float.Parse(splitcommand[3])
+                                );
+
+                            if (splitcommand.Length >= 5) {
+                                action["speed"] = float.Parse(splitcommand[4]);
+                            }
+
+                            if (splitcommand.Length >= 6) {
+                                action["returnToStart"] = bool.Parse(splitcommand[5]);
+                            }
+
+                            if (splitcommand.Length >= 7) {
+                                action["coordinateSpace"] = bool.Parse(splitcommand[6]);
+                            }
+                        } else {
+                            Debug.LogError("Target x y z args needed for command");
+                        }
+                        // action.stopArmMovementOnContact = true;
                         // action.stopArmMovementOnContact = true;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;

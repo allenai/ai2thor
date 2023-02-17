@@ -590,7 +590,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public abstract void InitializeBody();
+        public abstract void InitializeBody(ServerAction initializeAction);
 
          private bool ValidRotateStepDegreesWithSnapToGrid(float rotateDegrees) {
             // float eps = 0.00001f;
@@ -599,7 +599,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void Initialize(ServerAction action) {
 
-            this.InitializeBody();
+            this.InitializeBody(action);
             m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
 
             if (action.gridSize == 0) {

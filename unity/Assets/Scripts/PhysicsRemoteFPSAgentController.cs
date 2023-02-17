@@ -33,7 +33,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public PhysicsRemoteFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
-        public override void InitializeBody() {
+        public override void InitializeBody(ServerAction initializeAction) {
             VisibilityCapsule = TallVisCap;
             m_CharacterController.center = new Vector3(0, 0, 0);
             m_CharacterController.radius = 0.2f;

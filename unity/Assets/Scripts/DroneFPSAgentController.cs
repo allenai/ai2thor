@@ -32,7 +32,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void InitializeBody() {
+        public override void InitializeBody(ServerAction initializeAction) {
             VisibilityCapsule = DroneVisCap;
             m_CharacterController.center = new Vector3(0, 0, 0);
             m_CharacterController.radius = 0.2f;

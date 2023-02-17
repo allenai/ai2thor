@@ -144,7 +144,7 @@ public class AgentManager : MonoBehaviour {
         // auto set agentMode to default for the web demo
 #if UNITY_WEBGL
         physicsSceneManager.UnpausePhysicsAutoSim();
-        primaryAgent.InitializeBody();
+        primaryAgent.InitializeBody(null);
         JavaScriptInterface jsInterface = primaryAgent.GetComponent<JavaScriptInterface>();
         if (jsInterface != null) {
             jsInterface.enabled = true;

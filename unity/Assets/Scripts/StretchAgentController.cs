@@ -24,7 +24,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             agentManager.updateThirdPartyCameraImageSynthesis(status);
         }
 
-        public override void InitializeBody() {
+        public override void InitializeBody(ServerAction initializeAction) {
             VisibilityCapsule = StretchVisCap;
             m_CharacterController.center = new Vector3(0, -0.1821353f, -0.1092373f);
             m_CharacterController.radius = 0.1854628f;
@@ -54,6 +54,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             fp_camera_2.transform.localPosition = new Vector3(0.0353f, 0.5088f, -0.076f);
             fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
             fp_camera_2.fieldOfView = 90f;
+
+            if (initializeAction != null) {
+
+                if (initializeAction.cameraNearPlane > 0) {
+                    m_Camera.nearClipPlane = initializeAction.cameraNearPlane;
+                    fp_camera_2.nearClipPlane = initializeAction.cameraNearPlane;
+                }
+
+                if (initializeAction.cameraFarPlane > 0) {
+                    m_Camera.farClipPlane = initializeAction.cameraFarPlane;
+                    fp_camera_2.farClipPlane = initializeAction.cameraFarPlane;
+                }
+                
+            }
+
 //            fp_camera_2.fieldOfView = 75f;
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
