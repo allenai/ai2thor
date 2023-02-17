@@ -20,7 +20,6 @@ import time
 BENCHMARKING_S3_BUCKET = "ai2-thor-benchmark"
 
 FORMAT = '%(asctime)s %(message)s'
-# logging.basicConfig(level=logging.DEBUG, format=FORMAT)
 logger = logging.getLogger(__name__)
 
 
