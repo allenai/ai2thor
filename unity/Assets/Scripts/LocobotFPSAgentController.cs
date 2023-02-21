@@ -246,8 +246,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)]
         public void Teleport(
-            float x, float y, float z,
-            Vector3? rotation = null, float? horizon = null, bool forceAction = false
+            float x,
+            float y,
+            float z,
+            Vector3? rotation = null,
+            float? horizon = null,
+            bool forceAction = false
         ) {
             Teleport(
                 position: new Vector3(x, y, z), rotation: rotation, horizon: horizon, forceAction: forceAction
@@ -255,7 +259,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void Teleport(
-            Vector3? position = null, Vector3? rotation = null, float? horizon = null, bool forceAction = false
+            Vector3? position = null,
+            Vector3? rotation = null,
+            float? horizon = null,
+            bool forceAction = false
         ) {
             base.teleport(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
             base.assertTeleportedNearGround(targetPosition: position);
@@ -279,6 +286,186 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
             base.assertTeleportedNearGround(targetPosition: position);
             actionFinished(success: true);
+        }
+
+        // TODO: This is largely copied from the PhysicsRemoteFPSAgentController. This copying was easiest
+        // now as the locobot doesn't have the `standing` property which makes it a bit tricky
+        // to generalize things (especially as the the `PhysicsRemoteFPSAgentController` and this controller
+        // have different `Teleport` APIs. Ideally this would be refactored to be more general.
+        private List<Dictionary<string, object>> getInteractablePoses(
+            string objectId,
+            bool markActionFinished,
+            Vector3[] positions = null,
+            float[] rotations = null,
+            float[] horizons = null,
+            float? maxDistance = null,
+            int maxPoses = int.MaxValue  // works like infinity
+        ) {
+            if (360 % rotateStepDegrees != 0 && rotations != null) {
+                throw new InvalidOperationException($"360 % rotateStepDegrees (360 % {rotateStepDegrees} != 0) must be 0, unless 'rotations: float[]' is overwritten.");
+            }
+
+            if (maxPoses <= 0) {
+                throw new ArgumentOutOfRangeException("maxPoses must be > 0.");
+            }
+
+            // default "visibility" distance
+            float maxDistanceFloat;
+            if (maxDistance == null) {
+                maxDistanceFloat = maxVisibleDistance;
+            } else if ((float)maxDistance <= 0) {
+                throw new ArgumentOutOfRangeException("maxDistance must be >= 0 meters from the object.");
+            } else {
+                maxDistanceFloat = (float)maxDistance;
+            }
+
+            SimObjPhysics theObject = getSimObjectFromId(objectId: objectId);
+
+            // populate default horizons
+            if (horizons == null) {
+                horizons = new float[] { -30, 0, 30, 60 };
+            } else {
+                foreach (float horizon in horizons) {
+                    // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
+                    if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
+                        throw new ArgumentException(
+                            $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
+                        );
+                    }
+                }
+            }
+
+            // populate the positions by those that are reachable
+            if (positions == null) {
+                positions = getReachablePositions();
+            }
+
+            // populate the rotations based on rotateStepDegrees
+            if (rotations == null) {
+                // Consider the case where one does not want to move on a perfect grid, and is currently moving
+                // with an offsetted set of rotations like {10, 100, 190, 280} instead of the default {0, 90, 180, 270}.
+                // This may happen if the agent starts by teleports with the rotation of 10 degrees.
+                int offset = (int)Math.Round(transform.eulerAngles.y % rotateStepDegrees);
+
+                // Examples:
+                // if rotateStepDegrees=10 and offset=70, then the paths would be [70, 80, ..., 400, 410, 420].
+                // if rotateStepDegrees=90 and offset=10, then the paths would be [10, 100, 190, 280]
+                rotations = new float[(int)Math.Round(360 / rotateStepDegrees)];
+                int i = 0;
+                for (float rotation = offset; rotation < 360 + offset; rotation += rotateStepDegrees) {
+                    rotations[i++] = rotation;
+                }
+            }
+
+            if (horizons.Length == 0 || rotations.Length == 0 || positions.Length == 0) {
+                throw new InvalidOperationException("Every degree of freedom must have at least 1 valid value.");
+            }
+
+            // save current agent pose
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            Vector3 oldHorizon = m_Camera.transform.localEulerAngles;
+            if (ItemInHand != null) {
+                ItemInHand.gameObject.SetActive(false);
+            }
+
+            // Don't want to consider all positions in the scene, just those from which the object
+            // is plausibly visible. The following computes a "fudgeFactor" (radius of the object)
+            // which is then used to filter the set of all reachable positions to just those plausible positions.
+            Bounds objectBounds = UtilityFunctions.CreateEmptyBounds();
+            objectBounds.Encapsulate(theObject.transform.position);
+            foreach (Transform vp in theObject.VisibilityPoints) {
+                objectBounds.Encapsulate(vp.position);
+            }
+            float fudgeFactor = objectBounds.extents.magnitude;
+            List<Vector3> filteredPositions = positions.Where(
+                p => (Vector3.Distance(a: p, b: theObject.transform.position) <= maxDistanceFloat + fudgeFactor + gridSize)
+            ).ToList();
+
+            // set each key to store a list
+            List<Dictionary<string, object>> validAgentPoses = new List<Dictionary<string, object>>();
+            string[] keys = { "x", "y", "z", "rotation", "horizon" };
+
+            // iterate over each reasonable agent pose
+            bool stopEarly = false;
+            foreach (float horizon in horizons) {
+                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
+
+                foreach (float rotation in rotations) {
+                    Vector3 rotationVector = new Vector3(x: 0, y: rotation, z: 0);
+                    transform.rotation = Quaternion.Euler(rotationVector);
+
+                    foreach (Vector3 position in filteredPositions) {
+                        transform.position = position;
+
+                        // Each of these values is directly compatible with TeleportFull
+                        // and should be used with .step(action='TeleportFull', **interactable_positions[0])
+                        if (objectIsCurrentlyVisible(theObject, maxDistanceFloat)) {
+                            validAgentPoses.Add(new Dictionary<string, object> {
+                                ["x"] = position.x,
+                                ["y"] = position.y,
+                                ["z"] = position.z,
+                                ["rotation"] = rotation,
+                                ["horizon"] = horizon
+                            });
+
+                            if (validAgentPoses.Count >= maxPoses) {
+                                stopEarly = true;
+                                break;
+                            }
+#if UNITY_EDITOR
+                            // In the editor, draw lines indicating from where the object was visible.
+                            Debug.DrawLine(position, position + transform.forward * (gridSize * 0.5f), Color.red, 20f);
+#endif
+                        }
+                    }
+                    if (stopEarly) {
+                        break;
+                    }
+                }
+                if (stopEarly) {
+                    break;
+                }
+            }
+
+            transform.position = oldPosition;
+            transform.rotation = oldRotation;
+            m_Camera.transform.localEulerAngles = oldHorizon;
+            if (ItemInHand != null) {
+                ItemInHand.gameObject.SetActive(true);
+            }
+
+#if UNITY_EDITOR
+            Debug.Log(validAgentPoses.Count);
+            Debug.Log(validAgentPoses);
+#endif
+
+            if (markActionFinished) {
+                actionFinishedEmit(success: true, actionReturn: validAgentPoses);
+            }
+
+            return validAgentPoses;
+        }
+
+        // Get the poses with which the agent can interact with 'objectId'
+        // @rotations: if rotation is not specified, we use rotateStepDegrees, which results in [0, 90, 180, 270] by default.
+        public void GetInteractablePoses(
+            string objectId,
+            Vector3[] positions = null,
+            float[] rotations = null,
+            float[] horizons = null,
+            float? maxDistance = null,
+            int maxPoses = int.MaxValue  // works like infinity
+        ) {
+            getInteractablePoses(
+                objectId: objectId,
+                markActionFinished: true,
+                positions: positions,
+                rotations: rotations,
+                horizons: horizons,
+                maxDistance: maxDistance,
+                maxPoses: maxPoses
+            );
         }
 
         public void MoveAhead(

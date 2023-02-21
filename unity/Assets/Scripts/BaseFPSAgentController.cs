@@ -153,6 +153,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private Dictionary<int, Dictionary<string, object>> originalLightingValues = null;
 
+        protected Dictionary<string, Dictionary<int, Material[]>> maskedObjects = new Dictionary<string, Dictionary<int, Material[]>>();
+        protected bool transparentStructureObjectsHidden = false; // Used to track if we have hidden transparent structure objects, e.g. during masking
+
         public AgentState agentState = AgentState.Emit;
 
         // Use this instead of constructing a new System.Random() so that its
@@ -961,6 +964,241 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ResetColors() {
             agentManager.resetColors();
             actionFinished(true);
+        }
+
+        public void HideTransparentStructureObjects() {
+            transparentStructureObjectsHidden = true;
+
+            GameObject structObj = GameObject.Find("Structure");
+            GameObject lightObj = GameObject.Find("Lighting");
+
+            List<Renderer> renderers = new List<Renderer>();
+            if (structObj != null) {
+                renderers.AddRange(structObj.GetComponentsInChildren<Renderer>());
+            }
+            if (lightObj != null) {
+                renderers.AddRange(lightObj.GetComponentsInChildren<Renderer>());
+            }
+
+            foreach (Renderer r in renderers) {
+                bool transparent = true;
+                foreach (Material m in r.materials) {
+                    if (
+                        !(m.IsKeywordEnabled("_ALPHATEST_ON") ||
+                          m.IsKeywordEnabled("_ALPHABLEND_ON") ||
+                          m.IsKeywordEnabled("_ALPHAPREMULTIPLY_ON")
+                        ) || m.color.a == 1.0f
+                        ) {
+                        transparent = false;
+                        break;
+                    }
+                }
+                if (transparent) {
+                    UpdateDisplayGameObject(r.gameObject, false);
+                }
+            }
+        }
+
+        public void UnhideStructureObjects() {
+            transparentStructureObjectsHidden = false;
+
+            GameObject structObj = GameObject.Find("Structure");
+            GameObject lightObj = GameObject.Find("Lighting");
+
+            List<Transform> transforms = new List<Transform>();
+            if (structObj != null) {
+                transforms.AddRange(structObj.GetComponentsInChildren<Transform>());
+            }
+            if (lightObj != null) {
+                transforms.AddRange(lightObj.GetComponentsInChildren<Transform>());
+            }
+
+            foreach (Transform transform in transforms) {
+                UpdateDisplayGameObject(transform.gameObject, true);
+            }
+        }
+
+        protected void MaskSimObj(SimObjPhysics so, Material mat) {
+            if (!transparentStructureObjectsHidden) {
+                HideTransparentStructureObjects();
+            }
+            HashSet<MeshRenderer> renderersToSkip = new HashSet<MeshRenderer>();
+            foreach (SimObjPhysics childSo in so.GetComponentsInChildren<SimObjPhysics>()) {
+                if (so.ObjectID != childSo.ObjectID) {
+                    foreach (MeshRenderer mr in childSo.GetComponentsInChildren<MeshRenderer>()) {
+                        renderersToSkip.Add(mr);
+                    }
+                }
+            }
+            Dictionary<int, Material[]> dict = new Dictionary<int, Material[]>();
+            foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
+                if (!renderersToSkip.Contains(r)) {
+                    dict[r.GetInstanceID()] = r.materials;
+                    Material[] newMaterials = new Material[r.materials.Length];
+                    for (int i = 0; i < newMaterials.Length; i++) {
+                        newMaterials[i] = new Material(mat);
+                    }
+                    r.materials = newMaterials;
+                }
+            }
+            if (!maskedObjects.ContainsKey(so.ObjectID)) {
+                maskedObjects[so.ObjectID] = dict;
+            }
+        }
+
+        public void ScaleObject(
+            string objectId,
+            float scale,
+            float scaleOverSeconds = 1.0f,
+            bool forceAction = false
+        ) {
+
+            // if object is in the scene and visible, assign it to 'target'
+            SimObjPhysics target = getSimObjectFromId(objectId: objectId);
+
+            // neither objectId nor coordinates found an object
+            if (target == null) {
+                errorMessage = $"Object with ID {objectId} does not appear to be interactable.";
+                actionFinished(false);
+                return;
+            } else {
+                StartCoroutine(scaleObject(gameObject.transform.localScale * scale, target, scaleOverSeconds));
+            }
+        }
+
+        public void ScaleObject(
+            float x,
+            float y,
+            float scale,
+            float scaleOverSeconds = 1.0f,
+            bool forceAction = false
+        ) {
+            SimObjPhysics target = getInteractableSimObjectFromXY(
+                x: x,
+                y: y,
+                forceAction: forceAction
+            );
+            StartCoroutine(scaleObject(gameObject.transform.localScale * scale, target, scaleOverSeconds));
+        }
+
+        protected IEnumerator scaleObject(
+            float scale,
+            SimObjPhysics target,
+            float scaleOverSeconds,
+            bool skipActionFinished = false
+        ) {
+            return scaleObject(
+                targetScale: this.transform.localScale * scale,
+                target: target,
+                scaleOverSeconds: scaleOverSeconds,
+                skipActionFinished: skipActionFinished
+            );
+        }
+
+        protected IEnumerator scaleObject(
+            Vector3 targetScale,
+            SimObjPhysics target,
+            float scaleOverSeconds,
+            bool skipActionFinished = false
+        ) {
+            Vector3 originalScale = target.transform.localScale;
+            float currentTime = 0.0f;
+
+            if (scaleOverSeconds <= 0f) {
+                target.transform.localScale = targetScale;
+            } else {
+                yield return new WaitForFixedUpdate();
+                do {
+                    target.transform.localScale = Vector3.Lerp(
+                        originalScale,
+                        targetScale,
+                        currentTime / scaleOverSeconds
+                    );
+                    currentTime += Time.deltaTime;
+                    yield return null;
+                } while (currentTime <= scaleOverSeconds);
+            }
+
+            // store reference to all children
+            Transform[] children = new Transform[target.transform.childCount];
+
+            for (int i = 0; i < target.transform.childCount; i++) {
+                children[i] = target.transform.GetChild(i);
+            }
+
+            // detach all children
+            target.transform.DetachChildren();
+            // zero out object transform to be 1, 1, 1
+            target.transform.transform.localScale = Vector3.one;
+            // reparent all children
+            foreach (Transform t in children) {
+                t.SetParent(target.transform);
+            }
+
+            autoSyncTransforms();
+
+            target.ContextSetUpBoundingBox(forceCacheReset: true);
+
+            if (!skipActionFinished) {
+                actionFinished(true);
+            }
+        }
+
+        protected void MaskSimObj(SimObjPhysics so, Color color, string shaderName) {
+            if (!transparentStructureObjectsHidden) {
+                HideTransparentStructureObjects();
+            }
+            Material material = new Material(Shader.Find(shaderName));
+            material.color = color;
+            MaskSimObj(so, material);
+        }
+
+        protected void UnmaskSimObj(SimObjPhysics so) {
+            if (transparentStructureObjectsHidden) {
+                UnhideStructureObjects();
+            }
+
+            if (maskedObjects.ContainsKey(so.ObjectID)) {
+                foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
+                    if (r != null) {
+                        if (maskedObjects[so.ObjectID].ContainsKey(r.GetInstanceID())) {
+                            r.materials = maskedObjects[so.ObjectID][r.GetInstanceID()];
+                        }
+                    }
+                }
+                maskedObjects.Remove(so.ObjectID);
+            }
+        }
+
+        public void MaskObject(
+            string objectId,
+            float r = 1.0f,
+            float g = 0.0f,
+            float b = 1.0f,
+            float a = 1.0f,
+            string shaderName = "Unlit/Color"
+        ) {
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                MaskSimObj(
+                    physicsSceneManager.ObjectIdToSimObjPhysics[objectId],
+                    new Color(r: r, g: g, b: b, a: a),
+                    shaderName: shaderName
+                );
+                actionFinished(true);
+            } else {
+                errorMessage = "No such object with id: " + objectId;
+                actionFinished(false);
+            }
+        }
+
+        public void UnmaskObject(string objectId) {
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                UnmaskSimObj(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
+                actionFinished(true);
+            } else {
+                errorMessage = "No such object with id: " + objectId;
+                actionFinished(false);
+            }
         }
 
         /**
@@ -4226,6 +4464,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) {
+            if (sop.VisibilityPoints.Length > 0) {
+                Transform[] visPoints = sop.VisibilityPoints;
+                updateAllAgentCollidersForVisibilityCheck(false);
+                foreach (Transform point in visPoints) {
+                    Vector3 tmp = point.position;
+                    tmp.y = transform.position.y;
+                    if (Vector3.Distance(tmp, transform.position) < maxDistance) {
+                        if ((CheckIfVisibilityPointInViewport(sop, point, m_Camera, false).visible ||
+                            CheckIfVisibilityPointInViewport(sop, point, m_Camera, true).visible)) {
+                            updateAllAgentCollidersForVisibilityCheck(true);
+                            return true;
+                        }
+                    }
+                }
+            } else {
+                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+            }
+            updateAllAgentCollidersForVisibilityCheck(true);
+            return false;
+        }
+
         public void GetVisibleObjects(float? maxDistance = null, string visibilityScheme = null) {
             VisibilityScheme visSchemeEnum;
             if (visibilityScheme != null) {
@@ -6461,6 +6721,80 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 Physics.SyncTransforms();
             }
+        }
+
+        public void CreateObjectAtLocation(
+            string objectType,
+            bool randomizeObjectAppearance,
+            int objectVariation,
+            Vector3 position,
+            Vector3 rotation,
+            bool forceAction = false
+        ) {
+
+            if (!forceAction && !agentManager.SceneBounds.Contains(position)) {
+                errorMessage = "Target position is out of bounds!";
+                actionFinished(false);
+                return;
+            }
+
+            if (objectType == null) {
+                errorMessage = "Please give valid Object Type from SimObjType enum list";
+                actionFinished(false);
+                return;
+            }
+
+            // spawn the object at the agent's hand position
+            InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
+            SimObjPhysics so = script.SpawnObject(
+                objectType,
+                randomizeObjectAppearance,
+                objectVariation,
+                position,
+                rotation,
+                false,
+                forceAction
+            );
+
+            if (so == null) {
+                errorMessage = "Failed to create object, are you sure it can be spawned?";
+                actionFinished(false);
+                return;
+            } else {
+                // also update the Physics Scene Manager with this new object
+                physicsSceneManager.AddToObjectsInScene(so);
+            }
+
+            actionFinished(true, so.ObjectID);
+        }
+
+        protected SimObjPhysics createObjectAtLocation(
+            string objectType, Vector3 targetPosition, Vector3 targetRotation, int objectVariation = 1
+        ) {
+            if (!agentManager.SceneBounds.Contains(targetPosition)) {
+                errorMessage = "Target position is out of bounds!";
+                return null;
+            }
+
+            if (objectType == null) {
+                errorMessage = "Please give valid Object Type from SimObjType enum list";
+                return null;
+            }
+
+            // spawn the object at the agent's hand position
+            InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
+            SimObjPhysics so = script.SpawnObject(objectType, false, objectVariation,
+                targetPosition, targetRotation, false);
+
+            if (so == null) {
+                errorMessage = "Failed to create object, are you sure it can be spawned?";
+                return null;
+            } else {
+                // also update the PHysics Scene Manager with this new object
+                physicsSceneManager.AddToObjectsInScene(so);
+            }
+
+            return so;
         }
 
         // Pass in paths to the textures on each side. From the Python side,

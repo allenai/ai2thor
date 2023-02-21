@@ -26,8 +26,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     }
 
     public partial class PhysicsRemoteFPSAgentController : BaseFPSAgentController {
-        protected Dictionary<string, Dictionary<int, Material[]>> maskedObjects = new Dictionary<string, Dictionary<int, Material[]>>();
-        bool transparentStructureObjectsHidden = false;
         // face swap stuff here
 
         public PhysicsRemoteFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
@@ -1529,26 +1527,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //////////////// TELEPORT /////////////////
         ///////////////////////////////////////////
 
-        // [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)] 
-        // public void Teleport(
-        //     float x, float y, float z,
-        //     float? rotation = null,
-        //     float? horizon = null,
-        //     bool? standing = null,
-        //     bool forceAction = false
-        // ) {
-        //     Teleport(
-        //         position: new Vector3(x, y, z),
-        //         rotation: rotation,
-        //         horizon: horizon,
-        //         standing: standing,
-        //         forceAction: forceAction
-        //     );
-        // }
-
         [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)]
         public void Teleport(
-            float x, float y, float z,
+            float x,
+            float y,
+            float z,
             Vector3? rotation = null,
             float? horizon = null,
             bool? standing = null,
@@ -1562,24 +1545,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 forceAction: forceAction
             );
         }
-
-        // keep undocumented until float: rotation is added to Stochastic
-        // DO NOT add float: rotation to base.
-        // public void Teleport(
-        //     Vector3? position = null,
-        //     float? rotation = null,
-        //     float? horizon = null,
-        //     bool? standing = null,
-        //     bool forceAction = false
-        // ) {
-        //     Teleport(
-        //         position: position,
-        //         rotation: rotation == null ? m_Camera.transform.localEulerAngles : new Vector3(0, (float) rotation, 0),
-        //         horizon: horizon,
-        //         standing: standing,
-        //         forceAction: forceAction
-        //     );
-        // }
 
         public void Teleport(
             Vector3? position = null,
@@ -2752,103 +2717,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        public void ScaleObject(
-            string objectId,
-            float scale,
-            float scaleOverSeconds = 1.0f,
-            bool forceAction = false
-        ) {
-
-            // if object is in the scene and visible, assign it to 'target'
-            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
-
-            // neither objectId nor coordinates found an object
-            if (target == null) {
-                errorMessage = $"Object with ID {objectId} does not appear to be interactable.";
-                actionFinished(false);
-                return;
-            } else {
-                StartCoroutine(scaleObject(gameObject.transform.localScale * scale, target, scaleOverSeconds));
-            }
-        }
-
-        public void ScaleObject(
-            float x,
-            float y,
-            float scale,
-            float scaleOverSeconds = 1.0f,
-            bool forceAction = false
-        ) {
-            SimObjPhysics target = getInteractableSimObjectFromXY(
-                x: x,
-                y: y,
-                forceAction: forceAction
-            );
-            StartCoroutine(scaleObject(gameObject.transform.localScale * scale, target, scaleOverSeconds));
-        }
-
-        private IEnumerator scaleObject(
-            float scale,
-            SimObjPhysics target,
-            float scaleOverSeconds,
-            bool skipActionFinished = false
-        ) {
-            return scaleObject(
-                targetScale: this.transform.localScale * scale,
-                target: target,
-                scaleOverSeconds: scaleOverSeconds,
-                skipActionFinished: skipActionFinished
-            );
-        }
-
-        private IEnumerator scaleObject(
-            Vector3 targetScale,
-            SimObjPhysics target,
-            float scaleOverSeconds,
-            bool skipActionFinished = false
-        ) {
-            Vector3 originalScale = target.transform.localScale;
-            float currentTime = 0.0f;
-
-            if (scaleOverSeconds <= 0f) {
-                target.transform.localScale = targetScale;
-            } else {
-                yield return new WaitForFixedUpdate();
-                do {
-                    target.transform.localScale = Vector3.Lerp(
-                        originalScale,
-                        targetScale,
-                        currentTime / scaleOverSeconds
-                    );
-                    currentTime += Time.deltaTime;
-                    yield return null;
-                } while (currentTime <= scaleOverSeconds);
-            }
-
-            // store reference to all children
-            Transform[] children = new Transform[target.transform.childCount];
-
-            for (int i = 0; i < target.transform.childCount; i++) {
-                children[i] = target.transform.GetChild(i);
-            }
-
-            // detach all children
-            target.transform.DetachChildren();
-            // zero out object transform to be 1, 1, 1
-            target.transform.transform.localScale = Vector3.one;
-            // reparent all children
-            foreach (Transform t in children) {
-                t.SetParent(target.transform);
-            }
-
-            autoSyncTransforms();
-
-            target.ContextSetUpBoundingBox(forceCacheReset: true);
-
-            if (!skipActionFinished) {
-                actionFinished(true);
-            }
-        }
 
         // uncomment this to debug draw valid points
         // private List<Vector3> validpointlist = new List<Vector3>();
@@ -4577,59 +4445,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void HideTransparentStructureObjects() {
-            transparentStructureObjectsHidden = true;
-
-            GameObject structObj = GameObject.Find("Structure");
-            GameObject lightObj = GameObject.Find("Lighting");
-
-            List<Renderer> renderers = new List<Renderer>();
-            if (structObj != null) {
-                renderers.AddRange(structObj.GetComponentsInChildren<Renderer>());
-            }
-            if (lightObj != null) {
-                renderers.AddRange(lightObj.GetComponentsInChildren<Renderer>());
-            }
-            // renderers.AddRange(GameObject.FindObjectsOfType<Renderer>());
-
-            foreach (Renderer r in renderers) {
-                bool transparent = true;
-                foreach (Material m in r.materials) {
-                    if (
-                        !(m.IsKeywordEnabled("_ALPHATEST_ON") ||
-                          m.IsKeywordEnabled("_ALPHABLEND_ON") ||
-                          m.IsKeywordEnabled("_ALPHAPREMULTIPLY_ON")
-                        ) || m.color.a == 1.0f
-                        ) {
-                        transparent = false;
-                        break;
-                    }
-                }
-                if (transparent) {
-                    UpdateDisplayGameObject(r.gameObject, false);
-                }
-            }
-        }
-
-        public void UnhideStructureObjects() {
-            transparentStructureObjectsHidden = false;
-
-            GameObject structObj = GameObject.Find("Structure");
-            GameObject lightObj = GameObject.Find("Lighting");
-
-            List<Transform> transforms = new List<Transform>();
-            if (structObj != null) {
-                transforms.AddRange(structObj.GetComponentsInChildren<Transform>());
-            }
-            if (lightObj != null) {
-                transforms.AddRange(lightObj.GetComponentsInChildren<Transform>());
-            }
-
-            foreach (Transform transform in transforms) {
-                UpdateDisplayGameObject(transform.gameObject, true);
-            }
-        }
-
         public void HideBlueObjects(ServerAction action) {
             foreach (Renderer r in UnityEngine.Object.FindObjectsOfType<Renderer>()) {
                 foreach (Material m in r.materials) {
@@ -4739,60 +4554,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        protected void MaskSimObj(SimObjPhysics so, Material mat) {
-            if (!transparentStructureObjectsHidden) {
-                HideTransparentStructureObjects();
-            }
-            HashSet<MeshRenderer> renderersToSkip = new HashSet<MeshRenderer>();
-            foreach (SimObjPhysics childSo in so.GetComponentsInChildren<SimObjPhysics>()) {
-                if (so.ObjectID != childSo.ObjectID) {
-                    foreach (MeshRenderer mr in childSo.GetComponentsInChildren<MeshRenderer>()) {
-                        renderersToSkip.Add(mr);
-                    }
-                }
-            }
-            Dictionary<int, Material[]> dict = new Dictionary<int, Material[]>();
-            foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
-                if (!renderersToSkip.Contains(r)) {
-                    dict[r.GetInstanceID()] = r.materials;
-                    Material[] newMaterials = new Material[r.materials.Length];
-                    for (int i = 0; i < newMaterials.Length; i++) {
-                        newMaterials[i] = new Material(mat);
-                    }
-                    r.materials = newMaterials;
-                }
-            }
-            if (!maskedObjects.ContainsKey(so.ObjectID)) {
-                maskedObjects[so.ObjectID] = dict;
-            }
-        }
-
-        protected void MaskSimObj(SimObjPhysics so, Color color) {
-            if (!transparentStructureObjectsHidden) {
-                HideTransparentStructureObjects();
-            }
-            Material material = new Material(Shader.Find("Unlit/Color"));
-            material.color = color;
-            MaskSimObj(so, material);
-        }
-
-        protected void UnmaskSimObj(SimObjPhysics so) {
-            if (transparentStructureObjectsHidden) {
-                UnhideStructureObjects();
-            }
-
-            if (maskedObjects.ContainsKey(so.ObjectID)) {
-                foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
-                    if (r != null) {
-                        if (maskedObjects[so.ObjectID].ContainsKey(r.GetInstanceID())) {
-                            r.materials = maskedObjects[so.ObjectID][r.GetInstanceID()];
-                        }
-                    }
-                }
-                maskedObjects.Remove(so.ObjectID);
-            }
-        }
-
         public void EmphasizeObject(ServerAction action) {
 #if UNITY_EDITOR
             foreach (KeyValuePair<string, SimObjPhysics> entry in physicsSceneManager.ObjectIdToSimObjPhysics) {
@@ -4804,7 +4565,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 HideAll();
                 UpdateDisplayGameObject(physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId].gameObject, true);
-                MaskSimObj(physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId], Color.magenta);
+                MaskSimObj(physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId], Color.magenta, shaderName: "Unlit/Color");
                 actionFinished(true);
             } else {
                 errorMessage = "No object with id: " + action.objectId;
@@ -4820,25 +4581,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void MaskObject(ServerAction action) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                MaskSimObj(physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId], Color.magenta);
-                actionFinished(true);
-            } else {
-                errorMessage = "No such object with id: " + action.objectId;
-                actionFinished(false);
-            }
-        }
-
-        public void UnmaskObject(ServerAction action) {
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                UnmaskSimObj(physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId]);
-                actionFinished(true);
-            } else {
-                errorMessage = "No such object with id: " + action.objectId;
-                actionFinished(false);
-            }
-        }
 
         ///////////////////////////////////////////
         ///// GETTING DISTANCES, NORMALS, ETC /////
@@ -4980,7 +4722,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, 100f)) {
                 int i = (10 * k) / 256;
                 int j = (10 * k) % 256;
-                MaskSimObj(so, new Color32(Convert.ToByte(i), Convert.ToByte(j), 255, 255));
+                MaskSimObj(so, new Color32(Convert.ToByte(i), Convert.ToByte(j), 255, 255), shaderName: "Unlit/Color");
                 objectIds.Add(so.ObjectID);
                 k++;
             }
@@ -5119,30 +4861,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
             }
 
-            return false;
-        }
-
-        public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) {
-            if (sop.VisibilityPoints.Length > 0) {
-                Transform[] visPoints = sop.VisibilityPoints;
-                updateAllAgentCollidersForVisibilityCheck(false);
-                foreach (Transform point in visPoints) {
-                    Vector3 tmp = point.position;
-                    tmp.y = transform.position.y;
-                    // Debug.Log(Vector3.Distance(tmp, transform.position));
-                    if (Vector3.Distance(tmp, transform.position) < maxDistance) {
-                        // if this particular point is in view...
-                        if ((CheckIfVisibilityPointInViewport(sop, point, m_Camera, false).visible ||
-                            CheckIfVisibilityPointInViewport(sop, point, m_Camera, true).visible)) {
-                            updateAllAgentCollidersForVisibilityCheck(true);
-                            return true;
-                        }
-                    }
-                }
-            } else {
-                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
-            }
-            updateAllAgentCollidersForVisibilityCheck(true);
             return false;
         }
 
@@ -5514,42 +5232,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 maxDistance: maxDistance,
                 maxPoses: maxPoses
             );
-        }
-
-        [ObsoleteAttribute(message: "This action is deprecated. Call GetInteractablePoses instead.", error: false)]
-        public void PositionsFromWhichItemIsInteractable(string objectId, float horizon = 30, Vector3[] positions = null) {
-            // set horizons using the horizon as an increment
-            List<float> horizons = new List<float>();
-            for (float h = -maxUpwardLookAngle; h <= maxDownwardLookAngle; h += horizon) {
-                horizons.Add(h);
-            }
-            List<Dictionary<string, object>> interactablePoses = getInteractablePoses(
-                objectId: objectId,
-                markActionFinished: false,
-                positions: positions,
-                horizons: horizons.ToArray()
-            );
-
-            // for backwards compatibility, PositionsFromWhichItemIsInteractable returns
-            // Dictionary<string, float> instead of List<Dictionary<string, object>>,
-            // where the latter is cleaner in python.
-            Dictionary<string, List<float>> d = new Dictionary<string, List<float>>();
-            string[] keys = { "x", "y", "z", "rotation", "standing", "horizon" };
-            foreach (string key in keys) {
-                d[key] = new List<float>();
-            }
-            foreach (Dictionary<string, object> pose in interactablePoses) {
-                foreach (string key in keys) {
-                    if (key == "standing") {
-                        // standing is converted from true => 1 to false => 0, for backwards compatibility
-                        d[key].Add((bool)pose[key] ? 1 : 0);
-                    } else {
-                        // all other keys have float outputs
-                        d[key].Add((float)pose[key]);
-                    }
-                }
-            }
-            actionFinishedEmit(true, d);
         }
 
         // private helper for NumberOfPositionsFromWhichItemIsVisible
@@ -5926,77 +5608,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void CreateObjectAtLocation(ServerAction action) {
-            Vector3 targetPosition = action.position;
-            Vector3 targetRotation = action.rotation;
 
-            if (!action.forceAction && !agentManager.SceneBounds.Contains(targetPosition)) {
-                errorMessage = "Target position is out of bounds!";
-                actionFinished(false);
-                return;
-            }
-
-            if (action.objectType == null) {
-                errorMessage = "Please give valid Object Type from SimObjType enum list";
-                actionFinished(false);
-                return;
-            }
-
-            // spawn the object at the agent's hand position
+        public void CreateObjectOnFloor(
+            string objectType,
+            bool randomizeObjectAppearance,
+            int objectVariation,
+            float x,
+            float z,
+            Vector3 rotation = default(Vector3),
+            bool forceAction = false
+        ) {
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.objectVariation,
-                targetPosition, targetRotation, false, action.forceAction);
-
-            if (so == null) {
-                errorMessage = "Failed to create object, are you sure it can be spawned?";
-                actionFinished(false);
-                return;
-            } else {
-                // also update the PHysics Scene Manager with this new object
-                physicsSceneManager.AddToObjectsInScene(so);
-            }
-
-            actionFinished(true, so.ObjectID);
-        }
-
-        protected SimObjPhysics createObjectAtLocation(string objectType, Vector3 targetPosition, Vector3 targetRotation, int objectVariation = 1) {
-            if (!agentManager.SceneBounds.Contains(targetPosition)) {
-                errorMessage = "Target position is out of bounds!";
-                return null;
-            }
-
-            if (objectType == null) {
-                errorMessage = "Please give valid Object Type from SimObjType enum list";
-                return null;
-            }
-
-            // spawn the object at the agent's hand position
-            InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            SimObjPhysics so = script.SpawnObject(objectType, false, objectVariation,
-                targetPosition, targetRotation, false);
-
-            if (so == null) {
-                errorMessage = "Failed to create object, are you sure it can be spawned?";
-                return null;
-            } else {
-                // also update the PHysics Scene Manager with this new object
-                physicsSceneManager.AddToObjectsInScene(so);
-            }
-
-            return so;
-        }
-
-
-        public void CreateObjectOnFloor(ServerAction action) {
-            InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            Bounds b = script.BoundsOfObject(action.objectType, 1);
+            Bounds b = script.BoundsOfObject(objectType, objectVariation);
             if (b.min.x == float.PositiveInfinity) {
                 errorMessage = "Could not get bounds for the object to be created on the floor";
                 actionFinished(false);
             } else {
-                action.y = b.extents.y + getFloorY(action.x, action.z) + 0.1f;
-                action.position = new Vector3(action.x, action.y, action.z);
-                CreateObjectAtLocation(action);
+                float y = b.extents.y + getFloorY(x, z) + 0.1f;
+                CreateObjectAtLocation(
+                    objectType: objectType,
+                    randomizeObjectAppearance: randomizeObjectAppearance,
+                    objectVariation: objectVariation,
+                    position: new Vector3(x, y, z),
+                    rotation: rotation,
+                    forceAction: forceAction
+                );
             }
         }
 

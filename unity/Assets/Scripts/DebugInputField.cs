@@ -1746,7 +1746,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "gip": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetInteractablePoses";
-                        action["objectId"] = "Fridge|-02.10|+00.00|+01.09";
+                        action["objectId"] = "Fridge|-01.76|+00.00|00.00";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -1937,27 +1937,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "spawnat": {
-                        ServerAction action = new ServerAction();
 
-                        if (splitcommand.Length > 1) {
-                            action.objectType = splitcommand[1];
-                            action.position = new Vector3(float.Parse(splitcommand[2]), float.Parse(splitcommand[3]), float.Parse(splitcommand[4]));
-                            action.rotation = new Vector3(float.Parse(splitcommand[5]), float.Parse(splitcommand[6]), float.Parse(splitcommand[7]));
-                            // action.rotation?
-                        }
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "CreateObjectAtLocation";
 
-                        // default to zeroed out rotation tomato
-                        else {
-                            action.objectType = "Tomato";// default to spawn debug tomato
-                            action.position = Vector3.zero;
-                            action.rotation = Vector3.zero;
-                        }
-                        action.action = "CreateObjectAtLocation";
+                        action["objectType"] = splitcommand[1];
+                        action["position"] = new Vector3(float.Parse(splitcommand[2]), float.Parse(splitcommand[3]), float.Parse(splitcommand[4]));
+                        action["rotation"] = new Vector3(float.Parse(splitcommand[5]), float.Parse(splitcommand[6]), float.Parse(splitcommand[7]));
+                        action["randomizeObjectAppearance"] = false;// pick randomly from available or not?
+                        action["objectVariation"] = 0; // if random false, which version of the object to spawn? (there are only 3 of each type atm)
+                        action["forceAction"] = true;
 
-                        action.randomizeObjectAppearance = false;// pick randomly from available or not?
-                        action.objectVariation = 1; // if random false, which version of the object to spawn? (there are only 3 of each type atm)
-
-                        CurrentActiveController().ProcessControlCommand(action);
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
                 case "grpfo": {
@@ -2613,8 +2604,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // drop object
                 case "dr": {
-                        ServerAction action = new ServerAction();
-                        action.action = "DropHandObject";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "DropHandObject";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -3552,17 +3543,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "scale": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "ScaleObject";
-                        action["objectId"] = "Box|+00.00|+01.33|-00.44";
-                        action["scale"] = 0.6746510624885559f;
-                        action["scaleOverSeconds"] = 0f;
-                        action["forceAction"] = true;
 
-                        if (splitcommand.Length > 1) {
-                            action["scale"] = float.Parse(splitcommand[1]);
-                        }
-                        if (splitcommand.Length > 2) {
-                            action["scaleOverSeconds"] = float.Parse(splitcommand[2]);
-                        }
+                        action["objectId"] = splitcommand[1];
+                        action["scale"] = float.Parse(splitcommand[2]);
+                        action["scaleOverSeconds"] = float.Parse(splitcommand[3]);
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -3895,6 +3879,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+
+                case "mask": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MaskObject";
+
+                        action["objectId"] = splitcommand[1];
+                        action["r"] = float.Parse(splitcommand[2]);
+                        action["g"] = float.Parse(splitcommand[3]);
+                        action["b"] = float.Parse(splitcommand[4]);
+                        action["a"] = float.Parse(splitcommand[5]);
+                        action["shaderName"] = "Standard";
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                }
 
                 case "obj": {
                         // AssetDatabase.Refresh();
