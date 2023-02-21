@@ -3861,7 +3861,7 @@ def generate_pytest_utf(test_results_path):
 
     class_tests = defaultdict(list)
     for test_case in root.findall(".//test-case"):
-        # print(test_case.attrib['methodname'])
+        # print( test_case.attrib['methodname'])
         class_tests[test_case.attrib["classname"]].append(test_case)
 
     class_data = []
