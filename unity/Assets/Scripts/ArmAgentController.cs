@@ -12,8 +12,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public ArmAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
-        public override void InitializeBody() {
-            base.InitializeBody();
+        public override void InitializeBody(ServerAction initializeAction) {
+            base.InitializeBody(initializeAction);
             Debug.Log("initializing arm");
             IKArm.SetActive(true);
             Arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
