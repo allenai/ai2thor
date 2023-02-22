@@ -50,7 +50,7 @@ content_types = {
     ".data": "application/octet-stream",
     ".unityweb": "application/octet-stream",
     ".json": "application/json",
-}
+} 
 
 
 class ForcedFailure(Exception):
