@@ -5793,7 +5793,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void MakeAllObjectsUnbreakable() {
+            UpdateBreakabilityOfAllObjects(true);
 
+        }
+
+        public void MakeAllObjectsBreakable() {
+            UpdateBreakabilityOfAllObjects(false);
+        }
+
+        private void UpdateBreakabilityOfAllObjects(bool isUnbreakable) {
+            SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
+            if (simObjs != null) {
+                foreach (SimObjPhysics sop in simObjs) {
+                    if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
+                        sop.GetComponentInChildren<Break>().Unbreakable = isUnbreakable;
+                    }
+                }
+            }
+            actionFinished(true);
+        }
+        
         public void RandomizeSmoothness(string objectId) {
             randomizeSmoothness(objectId: objectId);
             actionFinished(success: true);

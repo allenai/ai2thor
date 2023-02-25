@@ -3185,27 +3185,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void MakeAllObjectsUnbreakable() {
-            UpdateBreakabilityOfAllObjects(true);
-
-        }
-
-        public void MakeAllObjectsBreakable() {
-            UpdateBreakabilityOfAllObjects(false);
-        }
-
-        private void UpdateBreakabilityOfAllObjects(bool isUnbreakable) {
-            SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            if (simObjs != null) {
-                foreach (SimObjPhysics sop in simObjs) {
-                    if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
-                        sop.GetComponentInChildren<Break>().Unbreakable = isUnbreakable;
-                    }
-                }
-            }
-            actionFinished(true);
-        }
-
         public void MakeObjectBreakable(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 throw new ArgumentException($"Object ID {objectId} appears to be invalid.");
