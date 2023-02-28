@@ -1429,7 +1429,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 sop.PrimaryProperty = SimObjPrimaryProperty.Static;
             }
 
-
 #if UNITY_EDITOR
             Debug.Log("Echoes! Three Freeze!");
 #endif
@@ -1449,6 +1448,48 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
             Debug.Log("Echoes! Three Freeze!");
 #endif
+
+            actionFinished(true);
+        }
+
+        public void SetRigidbodyConstraints(
+            string objectId,
+            bool freezeX = false,
+            bool freezeY = false,
+            bool freezeZ = false,
+            bool freezeXRotation = false,
+            bool freezeYRotation = false,
+            bool freezeZRotation = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
+                return;
+            }
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            Rigidbody rb = target.GetComponent<Rigidbody>();
+            rb.constraints = RigidbodyConstraints.None;
+
+            if (freezeX) {
+                rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionX;
+            }
+            if (freezeY) {
+                rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionY;
+            }
+            if (freezeZ) {
+                rb.constraints = rb.constraints | RigidbodyConstraints.FreezePositionZ;
+            }
+
+            if (freezeXRotation) {
+                rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationX;
+            }
+            if (freezeYRotation) {
+                rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationY;
+            }
+            if (freezeZRotation) {
+                rb.constraints = rb.constraints | RigidbodyConstraints.FreezeRotationZ;
+            }
 
             actionFinished(true);
         }
