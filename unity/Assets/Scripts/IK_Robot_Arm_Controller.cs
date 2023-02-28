@@ -674,6 +674,7 @@ public partial class IK_Robot_Arm_Controller : MonoBehaviour {
             }
 
             // TODO: Ignore all collisions between arm/held object colliders (for efficiency)!
+            // TODO2: Remove first loop when wanting heldobject->arm collision events
             var colliders = this.GetComponentsInChildren<Collider>();
             foreach (Collider c0 in colliders) {
                 foreach (Collider c1 in cols) {

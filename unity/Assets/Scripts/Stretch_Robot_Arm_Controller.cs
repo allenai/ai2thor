@@ -528,6 +528,9 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             // and parent them to the correct joint
             HashSet<Collider> cols = new HashSet<Collider>();
 
+            // var colliderContainer = new GameObject();
+            // colliderContainer.transform.parent = FinalJoint;
+
             foreach (Collider c in sop.MyColliders) {
                 // One set of colliders are used to check collisions
                 // with kinematic objects
@@ -560,12 +563,13 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             }
 
             // TODO: Ignore all collisions between arm/held object colliders (for efficiency)!
+            // Removed first loop because of  wanting heldobject->arm collision events
             var colliders = this.GetComponentsInChildren<Collider>();
-            foreach (Collider c0 in colliders) {
-                foreach (Collider c1 in cols) {
-                    Physics.IgnoreCollision(c0, c1);
-                }
-            }
+            // foreach (Collider c0 in colliders) {
+            //     foreach (Collider c1 in cols) {
+            //         Physics.IgnoreCollision(c0, c1);
+            //     }
+            // }
             foreach (Collider c0 in cols) {
                 foreach (Collider c1 in cols) {
                     Physics.IgnoreCollision(c0, c1);
