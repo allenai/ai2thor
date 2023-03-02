@@ -16,6 +16,7 @@ import platform
 import random
 import sys
 import time
+from typing import Dict, List, Set, Tuple, Union, TYPE_CHECKING, Any, Optional
 
 BENCHMARKING_S3_BUCKET = "ai2-thor-benchmark"
 
@@ -26,29 +27,34 @@ logger = logging.getLogger(__name__)
 class BenchmarkConfig:
     def __init__(
             self,
-            benchmarker_class_names,
-            init_params,
-            name="",
+            benchmarker_class_names: List[str],
+            init_params: Dict[str, Any],
+            name: str ="",
 
-            scenes=None,
-            procedural_houses=None,
+            scenes: Optional[List[str]]=None,
+            procedural_houses: Optional[List[Dict[str, Any]]]=None,
 
-            action_group_sample_count=1,
-            experiment_sample_count = 100,
-            filter_object_types=None,
-            random_teleport_before_action_group=False,
+            action_group_sample_count: int=1,
+            experiment_sample_count: int = 100,
+            filter_object_types: Union[None, str, List[str]]=None,
+            random_teleport_before_action_group: bool=False,
 
-            include_per_action_breakdown=False,
-            only_transformed_aggregates=True,
+            include_per_action_breakdown: bool=False,
+            only_transformed_aggregates: bool=True,
 
-            verbose=False,
-            output_file="benchmark.json",
+            verbose: bool=False,
+            output_file: str="benchmark.json",
 
         ):
         if verbose:
             logger.setLevel(logging.DEBUG)
         else:
             logger.setLevel(logging.WARNING)
+        subclasses = [cls.__name__ for cls in Benchmarker.__subclasses__()]
+        subclasses_set = set(subclasses)
+        if len(subclasses) != len(subclasses_set):
+            duplicated = [x for x in subclasses_set if subclasses.count(x) > 1]
+            logger.warning(f"Duplicated subclasses of Benchmarker '{duplicated}'")
         benchmarker_map = {cls.__name__: cls for cls in Benchmarker.__subclasses__()}
         self.benchmarkers = []
         for benchmarker_class in benchmarker_class_names:
@@ -141,9 +147,9 @@ class SimsPerSecondBenchmarker(Benchmarker):
         return "Simulations Per Second"
 
     def benchmark(self, env, action_config, add_key_values={}):
-        start = time.time()
+        start = time.perf_counter()
         env.step(dict(action=action_config["action"], **action_config["args"]))
-        end = time.time()
+        end = time.perf_counter()
         frame_time = end - start
 
         record = {
@@ -162,24 +168,18 @@ class SimsPerSecondBenchmarker(Benchmarker):
         return report
 
 class UnityActionBenchmarkRunner(BenchmarkConfig):
-    def __init__(self, **benchmarker_kwargs):
-        super().__init__(**benchmarker_kwargs)
+
+    def __clean_action(self, action: Union[str, Dict[str, Any]])):
+        if isinstance(action, str):
+            return {"action": action, "args": {}}
+        return {**action, "args": action.get("args", {})}
 
     def __get_complete_action_dict(self, action_group):
         group_copy = copy.deepcopy(action_group)
         actions_copy = group_copy["actions"]
 
-        for i in range(len(actions_copy)):
-            a = actions_copy[i]
-            if isinstance(a, str):
-                actions_copy[i] = {"action": a}
-            if isinstance(a, dict):
-                if "action" not in a:
-                    actions_copy[i] = None
-                elif "args" not in a:
-                    actions_copy[i]["args"] = {}
+        group_copy["actions"] = [self.__clean_action(a) for a in actions_copy if (not isinstance(a, Dict)) or "action" not in a]
 
-        group_copy["actions"] = [a for a in actions_copy if a is not None]
         if "sample_count" not in group_copy:
             group_copy["sample_count"] = self.action_sample_count
 
@@ -205,28 +205,25 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             return evt.metadata["lastActionSuccess"]
         else:
             return False
-
+    
+    def __set_object_filter(self, env):
         if self.filter_object_types is not None and self.filter_object_types != "":
             if self.filter_object_types == "*":
                 logger.info("-- Filter All Objects From Metadata")
                 env.step(action="SetObjectFilter", objectIds=[])
             elif isinsatance(self.filter_object_types, str):
                 evt = env.step(action="SetObjectFilterForType", objectTypes=[self.filter_object_types])
-                logger.info("Filter action, Success: {}, error: {}".format(evt.metadata["lastActionSuccess"],
-                                                                           evt.metadata["errorMessage"]))
+                logger.info("Filter action, Success: {}, error: {}".format(evt.metadata["lastActionSuccess"],                                                 evt.metadata["errorMessage"]))
             elif isinsatance(self.filter_object_types, list):
                 types = self.filter_object_types
                 evt = env.step(action="SetObjectFilterForType", objectTypes=types)
-                logger.info("Filter action, Success: {}, error: {}".format(evt.metadata["lastActionSuccess"],
-                                                                           evt.metadata["errorMessage"]))
+                logger.info("Filter action, Success: {}, error: {}".format(evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]))
 
-        return house
-
-    def __telerport_to_random_reachable(self, env, house=None):
+    def __teleport_to_random_reachable(self, env, house=None):
         evt = env.step(action="GetReachablePositions")
         if house is not None and "metadata" in house and not evt.metadata["lastActionSuccess"]:
             if "agent" in house["metadata"]:
-                logger.info("Teleporting ")
+                logger.info("Teleporting")
                 evt = env.step(
                     dict(
                         action="TeleportFull",
@@ -360,11 +357,11 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                     logger.warn(f"Procedural house creation failed for house {house['id']}")
                     continue
                 house_id = house["id"]
-            logger.info("------ Scene: '{}', house={}".format(scene, house_id))
-
+            logger.info(f"------ Scene: '{scene}', house={house_id}")
+            self.__set_object_filter(env)
             for action_group_name, action_group in action_map.items():
 
-                self.__telerport_to_random_reachable(env, house)
+                self.__teleport_to_random_reachable(env, house)
                 for i in range(action_group["sample_count"]):
                     action_config = action_group["selector"](action_group["actions"])
                     record = benchmarker.benchmark(
