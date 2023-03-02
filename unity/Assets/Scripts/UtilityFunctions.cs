@@ -409,6 +409,10 @@ public static class UtilityFunctions {
             //parse to light type enum
             var lightParamType = (LightType)Enum.Parse(typeof(LightType), lp.type, ignoreCase: true);
 
+            if(lightParamType == LightType.Area || lightParamType == LightType.Disc || lightParamType == LightType.Rectangle) {
+                throw new ArgumentException($"Light type cannot be of type [Area] [Disc] or [Rectangle] as these only affect baked lighting and cannot be modified at runtime");
+            }
+
             //if the type of this light is not the same as the property type passed in, we need a new light component
             if(lightComponent.type != lightParamType) {
                 lightComponent.type = lightParamType;
@@ -421,13 +425,39 @@ public static class UtilityFunctions {
                     lightComponent.spotAngle = lp.spotAngle;
                 }
                 else {
-                    throw new ArgumentException($"Light Parameter's `spotAngle` property is not in valid bounds. spotAngle must be [1-179]");
+                    throw new ArgumentException($"Light Parameter's `spotAngle` property is not in valid bounds. spotAngle must be in range [1,179]");
                 }            
             }
             
+            //check that rgba values are [0, 1]
+            if(lp.rgb.r < 0 || lp.rgb.r > 1) {
+                throw new ArgumentException($"Light Parameter's rgb values must be in range [0,1]");
+            }
+
+            if(lp.rgb.g < 0 || lp.rgb.g > 1) {
+                throw new ArgumentException($"Light Parameter's rgb values must be in range [0,1]");
+            }
+
+            if(lp.rgb.b < 0 || lp.rgb.b > 1) {
+                throw new ArgumentException($"Light Parameter's rgb values must be in range [0,1]");
+            }
+
+            if(lp.rgb.a < 0 || lp.rgb.a > 1) {
+                throw new ArgumentException($"Light Parameter's rgb values must be in range [0,1]");
+            }
+
             lightComponent.color = new Color(lp.rgb.r, lp.rgb.g, lp.rgb.b, lp.rgb.a);
             lightComponent.intensity = lp.intensity;
+
+            //must be >0
+            if(lp.indirectMultiplier < 0) {
+                throw new ArgumentException($"Light Parameter's `indirectMultiplier` value cannot be negative");
+            }
             lightComponent.bounceIntensity = lp.indirectMultiplier;
+
+            if(lp.range < 0) {
+                throw new ArgumentException($"Light Parameter's `range` value cannot be negative");
+            }
             lightComponent.range = lp.range;
 
             //culling mask and shadows both have default values in-scene, so not necessary to throw exceptions if no
@@ -525,10 +555,17 @@ public static class UtilityFunctions {
                     Array.Resize(ref ctoo.LightSources, ctoo.LightSources.Length + 1);
                     ctoo.LightSources[ctoo.LightSources.Length - 1] = light;
                 }
+
+                //ok now assign to WhatControlsThis component
+                if (!light.gameObject.GetComponent<WhatControlsThis>()) {
                     WhatControlsThis wct = light.gameObject.AddComponent<WhatControlsThis>();
                     wct.SimObjsThatControlMe = thingsThatControlMe.ToArray();
+                } else {
+                    WhatControlsThis wct = light.gameObject.GetComponent<WhatControlsThis>();
+                    wct.SimObjsThatControlMe = thingsThatControlMe.ToArray();
+                }
             }
-
+            
             light.gameObject.SetActive(lp.enabled);
         }
     }

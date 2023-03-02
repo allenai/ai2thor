@@ -1417,7 +1417,15 @@ namespace Thor.Procedural {
                         go.transform.rotation = lightParams.rotation.toQuaternion();
                     }
                     var light = go.AddComponent<Light>();
-                    light.type = (LightType)Enum.Parse(typeof(LightType), lightParams.type, ignoreCase: true);
+
+                    
+                    var lightParamType = (LightType)Enum.Parse(typeof(LightType), lightParams.type, ignoreCase: true);
+
+                    if(lightParamType == LightType.Area || lightParamType == LightType.Disc || lightParamType == LightType.Rectangle) {
+                        throw new ArgumentException($"Light type cannot be of type [Area] [Disc] or [Rectangle] as these only affect baked lighting and cannot be modified at runtime");
+                    }
+
+                    light.type = lightParamType;
 
                     if(light.type == LightType.Spot) {
                         //spot angle must be in range [1-179]
@@ -1475,7 +1483,7 @@ namespace Thor.Procedural {
                             Array.Resize(ref ctoo.LightSources, ctoo.LightSources.Length + 1);
                             ctoo.LightSources[ctoo.LightSources.Length - 1] = light;
                         }
-                        
+
                         WhatControlsThis wct = light.gameObject.AddComponent<WhatControlsThis>();
                         wct.SimObjsThatControlMe = thingsThatControlMe.ToArray();
                     }
