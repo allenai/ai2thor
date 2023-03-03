@@ -59,12 +59,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
             // set wrist-centric
-            Camera fp_camera_3 = m_CharacterController.transform.Find("stretch_arm_rig_gripper/stretch_robot_lift_jnt/stretch_robot_arm_1_jnt/stretch_robot_arm_2_jnt/stretch_robot_arm_3_jnt/stretch_robot_arm_4_jnt/stretch_robot_arm_5_jnt/stretch_robot_wrist_1_jnt/stretch_robot_wrist_2_jnt/stretch_robot_wrist_2/GripperCamera").GetComponent<Camera>();
+//            Camera fp_camera_3 = m_CharacterController.transform.Find("stretch_arm_rig_gripper/stretch_robot_lift_jnt/stretch_robot_arm_1_jnt/stretch_robot_arm_2_jnt/stretch_robot_arm_3_jnt/stretch_robot_arm_4_jnt/stretch_robot_arm_5_jnt/stretch_robot_wrist_1_jnt/stretch_robot_wrist_2_jnt/stretch_robot_wrist_2/GripperCamera").GetComponent<Camera>();
+//            fp_camera_3.gameObject.SetActive(true);
+////            fp_camera_3.transform.localPosition = new Vector3(0f, -0.09862678f, 0f);
+////            fp_camera_3.transform.localEulerAngles = new Vector3(0f, 0f, 0f);
+////            fp_camera_3.fieldOfView = 90f;
+//            fp_camera_3.fieldOfView = 75f;
+//            agentManager.registerAsThirdPartyCamera(fp_camera_3);
+
+            // set forearm-centric
+            Camera fp_camera_3 = m_CharacterController.transform.Find("stretch_arm_rig_gripper/stretch_robot_lift_jnt/stretch_robot_arm_1_jnt/stretch_robot_arm_2_jnt/stretch_robot_arm_3_jnt/stretch_robot_arm_4_jnt/stretch_robot_arm_5_jnt/stretch_robot_forearm_camera").GetComponent<Camera>();
             fp_camera_3.gameObject.SetActive(true);
 //            fp_camera_3.transform.localPosition = new Vector3(0f, -0.09862678f, 0f);
 //            fp_camera_3.transform.localEulerAngles = new Vector3(0f, 0f, 0f);
 //            fp_camera_3.fieldOfView = 90f;
-            fp_camera_3.fieldOfView = 75f;
+            fp_camera_3.fieldOfView = 60f;
             agentManager.registerAsThirdPartyCamera(fp_camera_3);
 
             // limit camera from looking too far down
