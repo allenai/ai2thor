@@ -22,12 +22,10 @@ public class FK_IK_Solver : MonoBehaviour {
         IKHint = IKPole.GetChild(0);
     }
 
-#if UNITY_EDITOR
     // Uncomment this when testing in Unity
     void Update() {
         ManipulateArm();
     }
-#endif
 
     public void ManipulateArm() {
         // Check if arm is driven by IK or FK
