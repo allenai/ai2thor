@@ -135,7 +135,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if ((string)action["action"] != "") {
                             if (
-                                ((string)action["action"]).Contains("Move") && CurrentActiveController().GetType() == typeof(ArmAgentController)
+                                ((string)action["action"]).Contains("Move") && CurrentActiveController().GetType() == typeof(KinovaArmAgentController)
                             ) {
                                 action["returnToStart"] = false;
                             }
