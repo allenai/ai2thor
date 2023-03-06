@@ -4284,6 +4284,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             AgentHand.transform.rotation = this.transform.rotation;
         }
 
+        public void ApproximateAgentRadius(int n = 12) {
+            Quaternion oldRot = this.transform.rotation;
+
+            float radius = 0.0f;
+            for (int i = 0; i < n; i++) {
+                this.transform.Rotate(0.0f, 360.0f / n, 0.0f);
+                Physics.SyncTransforms();
+
+                Bounds b = UtilityFunctions.CreateEmptyBounds();
+                foreach (Collider c in this.GetComponentsInChildren<Collider>()) {
+                    if (c.enabled && !c.isTrigger) {
+                        b.Encapsulate(c.bounds);
+                    }
+                }
+                #if UNITY_EDITOR
+                Debug.Log(Mathf.Sqrt(b.extents.x * b.extents.x + b.extents.z * b.extents.z));
+                #endif
+                radius = Mathf.Max(
+                    radius,
+                    Mathf.Max(b.extents.x, b.extents.z)
+                );
+            }
+            this.transform.rotation = oldRot;
+            Physics.SyncTransforms();
+
+                #if UNITY_EDITOR
+                Debug.Log("Final radius");
+                Debug.Log(radius);
+                #endif
+            actionFinishedEmit(true, radius);
+        }
+
+        public void SetAgentCapsuleRadius(float radius) {
+            if (radius < 0.0f) {
+                errorMessage = "Radius must be greater than 0.0";
+                actionFinishedEmit(false);
+                return;
+            }
+            CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+            cc.radius = radius;
+            Physics.SyncTransforms();
+
+            actionFinishedEmit(true);
+        }
+
         // set random seed used by unity
         public void SetRandomSeed(int seed) {
             UnityEngine.Random.InitState(seed);
