@@ -870,6 +870,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "changecolor": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ChangeColorOfSimObject";
+                        action["objectId"] = "Fridge|+00.95|+00.06|+02.07";
+                        action["r"] = 255f;
+                        action["g"] = 10f;
+                        action["b"] = 59f;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "floormaterial": {
                         ServerAction action = new ServerAction();
 

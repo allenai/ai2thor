@@ -789,6 +789,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, colorChangeComponent.GetMaterials());
         }
 
+        public void ChangeColorOfSimObject(string objectId, float r, float g, float b) {
+            Color c = hexColor(r, g, b);
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+
+            Renderer[] renderersInTarget = target.gameObject.GetComponentsInChildren<Renderer>();
+
+            foreach (Renderer re in renderersInTarget) {
+                foreach (Material m in re.materials) {
+                    m.SetColor("_Color", c);
+                }
+            }
+
+            actionFinished(true);
+        }
+
+        public static Vector4 hexColor(float r, float g, float b){
+                Vector4 color = new Vector4(r/255, g/255, b/255);
+                return color;
+        }
+
         /**
          * @inRoomTypes assumes all room types by default. Valid room types include
          * {"Bedroom", "Bathroom", "LivingRoom", "Kitchen", "RoboTHOR"}. Casing is ignored.
