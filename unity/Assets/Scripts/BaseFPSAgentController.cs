@@ -5189,19 +5189,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public string objectNavExpertAction(
             string objectId = null,
             string objectType = null,
-            Vector3? position = null
+            Vector3? position = null,
+            int? agentId = null
         ) {
             NavMeshPath path = new UnityEngine.AI.NavMeshPath();
             Func<bool> visibilityTest;
             if (!String.IsNullOrEmpty(objectType) || !String.IsNullOrEmpty(objectId)) {
                 SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
-                path = getShortestPath(sop, true);
+                path = getShortestPath(sop, true, agentId: agentId);
                 visibilityTest = () => objectIsWithinViewport(sop);
             }
             else {
                 var startPosition = this.transform.position;
                 var startRotation = this.transform.rotation;
-                SafelyComputeNavMeshPath(startPosition, position.Value, path, DefaultAllowedErrorInShortestPath);
+                SafelyComputeNavMeshPath(startPosition, position.Value, path, DefaultAllowedErrorInShortestPath, agentId);
                 visibilityTest = () => true;
             }
 
@@ -5323,9 +5324,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ObjectNavExpertAction(
             string objectId = null,
             string objectType = null,
-            Vector3? position = null
+            Vector3? position = null,
+            int? agentId = null
         ) {
-            string action = objectNavExpertAction(objectId, objectType, position);
+            string action = objectNavExpertAction(objectId, objectType, position, agentId: agentId);
 
             if (action != null) {
                 actionFinished(true, action);
@@ -5336,7 +5338,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public UnityEngine.AI.NavMeshPath getShortestPath(SimObjPhysics sop, bool useAgentTransform, ServerAction action = null) {
+        public UnityEngine.AI.NavMeshPath getShortestPath(SimObjPhysics sop, bool useAgentTransform, ServerAction action = null, int? agentId = null) {
             var startPosition = this.transform.position;
             var startRotation = this.transform.rotation;
             if (!useAgentTransform) {
@@ -5344,7 +5346,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 startRotation = Quaternion.Euler(action.rotation);
             }
 
-            return GetSimObjectNavMeshTarget(sop, startPosition, startRotation, DefaultAllowedErrorInShortestPath);
+            return GetSimObjectNavMeshTarget(sop, startPosition, startRotation, DefaultAllowedErrorInShortestPath, agentId: agentId);
         }
 
 
@@ -5353,10 +5355,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectId,
             Vector3 startPosition,
             Quaternion startRotation,
-            float allowedError
+            float allowedError,
+            int? agentId = null
         ) {
             SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
-            var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation, allowedError);
+            var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation, allowedError, agentId: agentId);
             // VisualizePath(startPosition, path);
             actionFinishedEmit(success: true, actionReturn: path);
         }
@@ -5366,26 +5369,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 rotation,
             string objectType = null,
             string objectId = null,
-            float allowedError = DefaultAllowedErrorInShortestPath
+            float allowedError = DefaultAllowedErrorInShortestPath,
+            int? agentId = null
         ) {
-            getShortestPath(objectType, objectId, position, Quaternion.Euler(rotation), allowedError);
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(rotation), allowedError, agentId);
         }
 
         public void GetShortestPath(
             Vector3 position,
             string objectType = null,
             string objectId = null,
-            float allowedError = DefaultAllowedErrorInShortestPath
+            float allowedError = DefaultAllowedErrorInShortestPath,
+            int? agentId = null
         ) {
-            getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero), allowedError);
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero), allowedError, agentId);
         }
 
         public void GetShortestPath(
             string objectType = null,
             string objectId = null,
-            float allowedError = DefaultAllowedErrorInShortestPath
+            float allowedError = DefaultAllowedErrorInShortestPath,
+            int? agentId = null
         ) {
-            getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation, allowedError);
+            getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation, allowedError, agentId);
         }
 
         private bool GetPathFromReachablePositions(
@@ -5673,7 +5679,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 initialPosition,
             Quaternion initialRotation,
             float allowedError,
-            bool visualize = false
+            bool visualize = false,
+            int? agentId = null
         ) {
             var targetTransform = targetSOP.transform;
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
@@ -5706,7 +5713,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 start: initialPosition,
                 target: fixedPosition,
                 path: path,
-                allowedError: allowedError
+                allowedError: allowedError,
+                agentId: agentId
             );
 
             var pathDistance = 0.0f;
@@ -5929,15 +5937,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void GetShortestPathToPoint(
             Vector3 target,
-            float allowedError = DefaultAllowedErrorInShortestPath
-        ) {
-            var startPosition = this.transform.position;
-            GetShortestPathToPoint(startPosition, target, allowedError);
-        }
-        public void GetShortestPathToPointN(
-            Vector3 target,
             float allowedError = DefaultAllowedErrorInShortestPath,
-            int? agentId = null
+             int? agentId = null
         ) {
             var startPosition = this.transform.position;
             GetShortestPathToPoint(startPosition, target, allowedError, agentId);
