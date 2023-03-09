@@ -10,6 +10,7 @@ using Thor.Procedural.Data;
 using Thor.Procedural;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using UnityEngine.AI;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class DebugInputField : MonoBehaviour {
@@ -3227,6 +3228,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+                    case "shortest_path_p": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetShortestPathToPointN";
+
+                        // pass in a min range, max range, delay
+                        if (splitcommand.Length > 1) {
+                            // ID of spawner
+                            // action.objectId = splitcommand[1];
+
+                            if (splitcommand.Length >= 4) {
+                                
+                                var target = new Vector3(float.Parse(splitcommand[1]), float.Parse(splitcommand[2]),  float.Parse(splitcommand[3]));
+                                action["target"] = target;
+                            }
+                            
+                            if (splitcommand.Length > 4) {
+                                action["allowedError"] = float.Parse(splitcommand[4]);
+                            }
+
+                            if (splitcommand.Length > 5) {
+                                action["agentId"] = int.Parse(splitcommand[5]);
+                            }
+
+
+                            if (splitcommand.Length < 4) {
+                                throw new ArgumentException("need to provide 6 floats, first 3 source position second 3 target position");
+                            }
+                        } else {
+                            throw new ArgumentException("need to provide at least 3 floats for target position");
+                        }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
                 case "visualize_path": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "VisualizePath",
@@ -4194,6 +4228,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         f.WriteLine(prefabsStr);
                         break;
                     }
+                case "nma": {
+                    var navMeshAgent = GameObject.FindObjectOfType<NavMeshAgent>();
+                    Debug.Log($"Navmeshagent typeID: {navMeshAgent.agentTypeID}");
+                    break;
+                }
                 case "proc_arr": {
                     var arr = new int[][] {
                         new int[]{2, 2, 2, 2},
