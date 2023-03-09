@@ -139,6 +139,7 @@ namespace Thor.Procedural.Data {
             tilingDivisorY = 1.0f
         };
 
+        // TODO: deprecate
         public float navmeshVoxelSize { get; set; }
         public bool ceilingBackFaces { get; set; }
 
@@ -383,11 +384,28 @@ namespace Thor.Procedural.Data {
         public HouseMetadata metadata { get; set; }
     }
 
+     [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class NavMeshConfig {
+
+        public int agentTypeID;
+        public float agentRadius;
+        public int? tileSize;
+        public float? agentHeight;
+        public float? agentSlope;
+        public float? agentClimb;
+        public float? voxelSize;
+        public bool? overrideVoxelSize;
+
+    }
+
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class HouseMetadata {
         public Dictionary<string, AgentPose> agentPoses { get; set; }
         public string schema { get; set; } = null;
+
+        public List<NavMeshConfig> navMeshes { get; set; }
     }
 
     [Serializable]

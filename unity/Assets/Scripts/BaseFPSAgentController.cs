@@ -5750,7 +5750,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 start,
             Vector3 target,
             UnityEngine.AI.NavMeshPath path,
-            float allowedError
+            float allowedError,
+            int? agentId = null
         ) {
             float floorY = Math.Min(
                 getFloorY(start.x, start.y, start.z),
@@ -5759,7 +5760,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 startPosition = new Vector3(start.x, floorY, start.z);
             Vector3 targetPosition = new Vector3(target.x, floorY, target.z);
 
-            this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = true;
+            var navMeshAgent = this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>();
+            navMeshAgent.enabled = true;
 
             NavMeshHit startHit;
             bool startWasHit = UnityEngine.AI.NavMesh.SamplePosition(
@@ -5784,7 +5786,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     );
                 }
             }
-
+            
             float startOffset = Vector3.Distance(
                 startHit.position,
                 new Vector3(startPosition.x, startHit.position.y, startPosition.z)
@@ -5806,10 +5808,52 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 #if UNITY_EDITOR
             Debug.Log($"Attempting to find path from {startHit.position} to {targetHit.position}.");
+            Debug.Log($"NavmeshAgent start position {navMeshAgent.transform.position}");
 #endif
+
+            var prevPosition = this.transform.position;
+            var prevId = navMeshAgent.agentTypeID;
+            this.transform.position = startHit.position;
+            navMeshAgent.radius = 2.0f;
+            // navMeshAgent.agentTypeID = 
+
+            var queryAgentId = getNavMeshAgentId(agentId);
+
+            // var useNavmeshSurface = queryAgentId.HasValue;
+
+            var navMesh = getNavMeshSurfaceForAgentId(queryAgentId);
+
+            
+
+
+            // bool pathSuccess = navMeshAgent.CalculatePath(
+            //     targetHit.position, path
+            // );
+            var navmeshSurfaces = GameObject.FindObjectsOfType<NavMeshSurfaceExtended>();
+
+            foreach (var nvms in navmeshSurfaces) {
+                if (nvms != navMesh) {
+                    nvms.enabled = false; 
+                }
+            }
+            // Debug.Log($"-----Navmesh  Query {queryAgentId} navmesh count: {navmeshSurfaces.Count()}");
+            // Useless more of unity's broken APIS for runtime >:(
+            NavMeshQueryFilter queryFilter = new NavMeshQueryFilter() {
+                agentTypeID = queryAgentId,
+                areaMask = navMesh.layerMask
+            };
             bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
-                startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
+                startHit.position, targetHit.position, navMesh.layerMask, path
             );
+
+            foreach(var nvms in navmeshSurfaces) {
+                nvms.enabled = true;
+            }
+
+            this.transform.position = prevPosition;
+            // bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
+            //     startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
+            // );
             if (path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                 this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 throw new InvalidOperationException(
@@ -5821,6 +5865,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             VisualizePath(startHit.position, path);
 #endif
             this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
+            
         }
 
         private void randomizeSmoothness(string objectId) {
@@ -5875,10 +5920,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetShortestPathToPoint(
-            Vector3 position, Vector3 target, float allowedError = DefaultAllowedErrorInShortestPath
+            Vector3 position, Vector3 target, float allowedError = DefaultAllowedErrorInShortestPath, int? agentId = null
         ) {
             var path = new UnityEngine.AI.NavMeshPath();
-            SafelyComputeNavMeshPath(position, target, path, allowedError);
+            SafelyComputeNavMeshPath(position, target, path, allowedError, agentId);
             actionFinished(success: true, actionReturn: path);
         }
 
@@ -5888,6 +5933,42 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             var startPosition = this.transform.position;
             GetShortestPathToPoint(startPosition, target, allowedError);
+        }
+        public void GetShortestPathToPointN(
+            Vector3 target,
+            float allowedError = DefaultAllowedErrorInShortestPath,
+            int? agentId = null
+        ) {
+            var startPosition = this.transform.position;
+            GetShortestPathToPoint(startPosition, target, allowedError, agentId);
+        }
+
+        public int getNavMeshAgentId(int? agentId = null) {
+            var idSet = new HashSet<int>(NavMeshSurfaceExtended.activeSurfaces.Select(n => n.agentTypeID));
+            if (!agentId.HasValue) {
+                if (NavMeshSurfaceExtended.activeSurfaces.Count > 0) {
+                    return NavMeshSurfaceExtended.activeSurfaces[0].agentTypeID;
+                }
+                // TODO consider IthorScenes, not sure we use NavMeshSurface
+                // else {
+                //     return null;
+                // }
+            }
+            else if (!idSet.Contains(agentId.GetValueOrDefault()))  {
+                // actionFinished(success: false, errorMessage: $"Invalid agent id: '{agentId.GetValueOrDefault()}' provide a valid agent id for using with the NavMeshes available or bake a new NavMesh. Available: '{string.Join(", ",idSet.Select(i => i.ToString()) )}'");
+                // errorMessage = $"Invalid agent id: '{agentId.GetValueOrDefault()}' provide a valid agent id for using with the NavMeshes available or bake a new NavMesh. Available: '{string.Join(", ",idSet.Select(i => i.ToString()) )}'";
+                throw new InvalidOperationException(
+                        $"Invalid agent id: '{agentId.GetValueOrDefault()}' provide a valid agent id for using with the NavMeshes available or bake a new NavMesh. Available: '{string.Join(", ",idSet.Select(i => i.ToString()) )}'"
+                
+                );
+                
+                // return null;
+            }
+            return agentId.GetValueOrDefault();
+        } 
+
+        public NavMeshSurfaceExtended getNavMeshSurfaceForAgentId(int agentId) {
+            return NavMeshSurface.activeSurfaces.Find(s => s.agentTypeID == agentId) as NavMeshSurfaceExtended;
         }
 
         public void VisualizeShortestPaths(ServerAction action) {
@@ -6878,6 +6959,90 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             ProceduralTools.tagObjectNavmesh(this.gameObject, ignore: true);
             navmesh.BuildNavMesh();
+            actionFinished(true);
+        }
+
+        public void OverwriteNavMeshes(List<NavMeshConfig> navMeshConfigs) {
+            var navmesh = GameObject.FindObjectOfType<NavMeshSurfaceExtended>();
+            Transform parent;
+            if (navmesh == null) { 
+                var go = GameObject.Find(ProceduralTools.NavMeshSurfaceParent());
+                if (go == null) {
+                    actionFinished(false, null, $"No '{ProceduralTools.NavMeshSurfaceParent()}' gameobject found, make sure scene was proceduraly created by `CreateHouse`.");
+                    return;
+                }
+                parent = go.transform;
+            }
+            else {
+                parent = navmesh.transform.parent;
+            }
+            var floorGo = parent.parent;
+
+            for (var i =0; i< parent.transform.childCount;  i++) {
+                var navmeshObj = parent.transform.GetChild(i);
+                var navMeshSurf = navmeshObj.GetComponent<NavMeshSurfaceExtended>();
+                navMeshSurf.RemoveData();
+                Destroy(navmeshObj.gameObject);
+            }
+            Destroy(parent.gameObject);
+
+            
+            ProceduralTools.buildNavMeshes(floorGo.gameObject, navMeshConfigs);
+            actionFinished(success: true);
+
+        }
+
+        public void ReBakeNavMeshes(List<NavMeshConfig> navMeshConfigs = null) {
+            var navmeshes = GameObject.FindObjectsOfType<NavMeshSurfaceExtended>();
+            if (navmeshes == null || navmeshes.Count() == 0) {
+                actionFinished(false, null, "No NavMeshSurfaceExtended component found, make sure scene was proceduraly created by `CreateHouse`.");
+                return;
+            }
+            if (navMeshConfigs != null && navMeshConfigs.Count != navmeshes.Count()) {
+                actionFinished(success: false, errorMessage: $"Provided `navMeshConfigs` count does not match active navmeshSurfaces, provided: {navMeshConfigs.Count} current: {navmeshes.Count()}");
+            } 
+            else if (navMeshConfigs != null){
+                for (var i = 0; i < navmeshes.Count(); i++) {
+                    navmeshes[i].BuildNavMesh(ProceduralTools.navMeshConfigToBuildSettings(navMeshConfigs[i]));
+                }
+            }
+            else {
+                foreach (var navmesh in navmeshes) {
+                    navmesh.BuildNavMesh(navmesh.buildSettings);
+                }
+            }
+            actionFinished(success: true);
+        }
+
+        public void GetNavMeshConfigs() {
+            var navmeshes = GameObject.FindObjectsOfType<NavMeshSurfaceExtended>();
+            if (navmeshes == null || navmeshes.Count() == 0) {
+                actionFinished(false, null, "No NavMeshSurfaceExtended component found, make sure scene was proceduraly created by `CreateHouse`.");
+                return;
+            }
+            actionFinished(success: true, actionReturn: navmeshes.Select(n => ProceduralTools.navMeshBuildSettingsToConfig(n.buildSettings)).ToList());
+
+        }
+
+
+        public void CreateNewNavMesh(NavMeshConfig navMeshConfig) {
+            
+            var navmesh = GameObject.FindObjectOfType<NavMeshSurfaceExtended>();
+             if (navmesh == null) {
+                actionFinished(false, null, "No NavMeshSurfaceExtended component found, make sure scene was proceduraly created by `CreateHouse`.");
+                return;
+            }
+            var navMeshParent = navmesh.transform.parent;
+
+            var id = NavMeshSurfaceExtended.activeSurfaces.Count();
+            
+
+            var go = ProceduralTools.buildNavMeshSurface(navMeshConfig, id);
+            go.transform.parent = navMeshParent.transform;
+
+           
+            // ProceduralTools.tagObjectNavmesh(this.gameObject, ignore: true);
+            // navmesh.BuildNavMesh();
             actionFinished(true);
         }
 

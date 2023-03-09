@@ -1454,7 +1454,10 @@ namespace Thor.Procedural {
                 }
             }
 
-            buildNavMesh(floorGameObject, house.proceduralParameters.navmeshVoxelSize);
+            // buildNavMesh(floorGameObject, house.proceduralParameters.navmeshVoxelSize);
+            // Debug.Log($"Navmeshes {string.Join(", ", house.metadata.navMeshes.Select(n => $"{n.agentTypeID} radius {n.agentRadius}"))}");
+            Debug.Log($"schema {house.metadata.schema}");
+            buildNavMeshes(floorGameObject, house.metadata.navMeshes);
 
             RenderSettings.skybox = materialDb.getAsset(house.proceduralParameters.skyboxId);
             DynamicGI.UpdateEnvironment();
@@ -1548,19 +1551,141 @@ namespace Thor.Procedural {
         }
 
 
+        public static string NavMeshSurfaceName(int index) {
+            return $"NavMeshSurface_{index}";
+        }
+
+        public static GameObject buildNavMeshSurface(NavMeshBuildSettings buildSettings, int index) {
+            var go = new GameObject(NavMeshSurfaceName(index));
+            var navMeshSurface = go.AddComponent<NavMeshSurfaceExtended>();
+            navMeshSurface.agentTypeID = buildSettings.agentTypeID;
+            navMeshSurface.voxelSize = buildSettings.voxelSize;
+            navMeshSurface.overrideVoxelSize = buildSettings.overrideVoxelSize;
+            navMeshSurface.BuildNavMesh(buildSettings);
+            Debug.Log($"Created navmesh w agentType id {navMeshSurface.agentTypeID}");
+            return go;
+        }
+
+        public static GameObject buildNavMeshSurface(NavMeshConfig navMeshConfig, int index) {
+
+            var go = new GameObject(NavMeshSurfaceName(index));
+
+            var navMeshSurface = go.AddComponent<NavMeshSurfaceExtended>();
+            var buildSettings = navMeshConfigToBuildSettings(navMeshConfig, NavMesh.GetSettingsByIndex(0));
+            navMeshSurface.agentTypeID = buildSettings.agentTypeID;
+            navMeshSurface.voxelSize = buildSettings.voxelSize;
+            navMeshSurface.overrideVoxelSize = buildSettings.overrideVoxelSize;
+            navMeshSurface.BuildNavMesh(buildSettings);
+            Debug.Log($"Created navmesh w agentType id {navMeshSurface.agentTypeID}");
+            return go;
+        }
+
+        public static NavMeshBuildSettings navMeshConfigToBuildSettings(NavMeshConfig config, NavMeshBuildSettings defaultBuildSettings) {
+            defaultBuildSettings.agentTypeID = config.agentTypeID;
+            defaultBuildSettings.agentRadius = config.agentRadius;
+            defaultBuildSettings.tileSize = config.tileSize.GetValueOrDefault(defaultBuildSettings.tileSize);
+            defaultBuildSettings.agentClimb = config.agentClimb.GetValueOrDefault(defaultBuildSettings.agentClimb);
+            defaultBuildSettings.agentHeight = config.agentHeight.GetValueOrDefault(defaultBuildSettings.agentHeight);
+            defaultBuildSettings.agentSlope = config.agentSlope.GetValueOrDefault(defaultBuildSettings.agentSlope);
+            defaultBuildSettings.voxelSize = config.voxelSize.GetValueOrDefault(defaultBuildSettings.voxelSize);
+            defaultBuildSettings.overrideVoxelSize = config.overrideVoxelSize.GetValueOrDefault(defaultBuildSettings.overrideVoxelSize);
+            return defaultBuildSettings;
+        }
+
+        public static NavMeshConfig navMeshBuildSettingsToConfig(NavMeshBuildSettings navMeshBuildSettings) {
+            var navMeshConfig = new NavMeshConfig();
+            navMeshConfig.agentTypeID = navMeshBuildSettings.agentTypeID;
+            navMeshConfig.agentRadius = navMeshBuildSettings.agentRadius;
+            navMeshConfig.tileSize = navMeshBuildSettings.tileSize;
+            navMeshConfig.agentClimb = navMeshBuildSettings.agentClimb;
+            navMeshConfig.agentHeight = navMeshBuildSettings.agentHeight;
+            navMeshConfig.agentSlope = navMeshBuildSettings.agentSlope;
+            navMeshConfig.voxelSize = navMeshBuildSettings.voxelSize;
+            navMeshConfig.overrideVoxelSize = navMeshBuildSettings.overrideVoxelSize;
+            return navMeshConfig;
+        }
+
+        public static NavMeshBuildSettings navMeshConfigToBuildSettings(NavMeshConfig config) {
+            return navMeshConfigToBuildSettings(config, NavMesh.GetSettingsByIndex(0));
+        }
+
+        public static string NavMeshSurfaceParent() { return  "NavMeshSurfaces"; }
+
+
+        public static void buildNavMeshes(GameObject floorGameObject, List<NavMeshConfig> navMeshes) {
+
+             var navMeshAgent = GameObject.FindObjectOfType<NavMeshAgent>();
+             tagObjectNavmesh(navMeshAgent.gameObject, ignore: true);
+
+             var navmeshesGameObject = new GameObject($"NavMeshSurfaces");
+
+             navmeshesGameObject.transform.parent = floorGameObject.transform;
+
+             var defaultSettings = NavMesh.GetSettingsByIndex(0);
+
+             var newConfigs = navMeshes.Select(c => defaultSettings).Select((c, i) => {
+                return navMeshConfigToBuildSettings(navMeshes[i], c);
+             });
+
+            Debug.Log($"Creating Navmeshes for Configs: {string.Join(", ", newConfigs.Select(c => $"{c.agentTypeID}: {c.agentRadius}, {c.voxelSize}"))}");
+
+            var count = 0;
+            foreach (var config in newConfigs) {
+                var go = buildNavMeshSurface(config, count);
+                go.transform.parent = navmeshesGameObject.transform;
+                count++;
+            }
+        }
+
+
+        // TODO: Old navmesh build function
         public static void buildNavMesh(GameObject floorGameObject, float? voxelSize = null) {
 
-            var navMesh = floorGameObject.AddComponent<NavMeshSurface>();
-            // TODO multiple agents
-            var navMeshAgent = GameObject.FindObjectOfType<NavMeshAgent>();
 
-            tagObjectNavmesh(navMeshAgent.gameObject, ignore: true);
+             var navMeshAgent = GameObject.FindObjectOfType<NavMeshAgent>();
+             tagObjectNavmesh(navMeshAgent.gameObject, ignore: true);
+
+            
+            var navMesh = floorGameObject.AddComponent<NavMeshSurfaceExtended>();
+            // TODO multiple agents
+           
+            // navMeshAgent.agentTypeID = 1;
+
+            // var settingsNew = NavMesh.CreateSettings();
+
+            // var sett = NavMesh.GetSettingsByIndex(1);
+            // navMeshAgent.agentTypeID = sett.agentTypeID;
+            // Debug.Log($"Radius navmesh build {sett.agentRadius} id {sett.agentTypeID}");
+
+            
+            // // settingsNew.
+            // // settingsNew.agentTypeID = 1;
+            // settingsNew.agentRadius = 0.1f;
+
+            // //settingsNew.
+            // navMeshAgent.agentTypeID = settingsNew.agentTypeID;
+
+
+            ///NavMeshBuildSettings s = ref NavMesh.GetSettingsByID(navMeshAgent.agentTypeID);
+            //s.agentRadius = 0.2f;
+            
+
+            //Debug.Log($"--- NAVMESH AGENT type {navMeshAgent.agentTypeID}, settings id {settingsNew.agentTypeID} settings count {NavMesh.GetSettingsCount()} radius {NavMesh.GetSettingsByID(navMeshAgent.agentTypeID).agentRadius}");
+
+            // navMeshAgent.radius = 0.2f;
+
+            
 
             navMesh.agentTypeID = navMeshAgent.agentTypeID;
+            // navMesh.agentTypeID = 1;
             var settings = navMesh.GetBuildSettings();
+
+            Debug.Log($"Current navmesh build settings, id {settings.agentTypeID} radius {settings.agentRadius}");
             
             navMesh.overrideVoxelSize = voxelSize != null;
             navMesh.voxelSize = voxelSize.GetValueOrDefault(0.0f);
+
+            // navMesh.
 
             navMesh.BuildNavMesh();
 
