@@ -1614,6 +1614,13 @@ namespace Thor.Procedural {
 
         public static void buildNavMeshes(GameObject floorGameObject, List<NavMeshConfig> navMeshes) {
 
+            var defaultSettings = NavMesh.GetSettingsByIndex(0);
+            if (navMeshes == null || navMeshes.Count == 0) {
+                navMeshes = new List<NavMeshConfig>() {
+                    navMeshBuildSettingsToConfig(defaultSettings)
+                };
+            }
+
              var navMeshAgent = GameObject.FindObjectOfType<NavMeshAgent>();
              tagObjectNavmesh(navMeshAgent.gameObject, ignore: true);
 
@@ -1621,7 +1628,7 @@ namespace Thor.Procedural {
 
              navmeshesGameObject.transform.parent = floorGameObject.transform;
 
-             var defaultSettings = NavMesh.GetSettingsByIndex(0);
+             
 
              var newConfigs = navMeshes.Select(c => defaultSettings).Select((c, i) => {
                 return navMeshConfigToBuildSettings(navMeshes[i], c);

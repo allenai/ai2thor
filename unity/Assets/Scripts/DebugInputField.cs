@@ -3242,6 +3242,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+                case "shortest_test": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        var agentId = 1;
+                        if (splitcommand.Length == 2) {
+                            // ID of spawner
+                            agentId = int.Parse(splitcommand[1]);
+                        }
+                        action["action"] = "GetShortestPath";
+
+                        action["objectId"] = "Apple|surface|2|0";
+                        action["position"] = new Vector3(x: 3.0f, y: 0.9009921550750732f,z: 1.75f);
+                        action["rotation"] = new Vector3(-0.0f,  0.0f, 0.0f);
+                        action["agentId"] = agentId;
+
+                        CurrentActiveController().ProcessControlCommand(action);
+
+                        break;
+                    }
                 case "shortest_path_type": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetShortestPath";
