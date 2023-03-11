@@ -5308,12 +5308,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             Debug.Log($"-----Navmesh  Query {queryAgentId} navmesh count: {navmeshSurfaces.Count()}");
             // Useless more of unity's broken APIS for runtime >:(
-            NavMeshQueryFilter queryFilter = new NavMeshQueryFilter() {
-                agentTypeID = queryAgentId,
-                areaMask = navMesh.layerMask
-            };
+            // NavMeshQueryFilter queryFilter = new NavMeshQueryFilter() {
+            //     agentTypeID = queryAgentId,
+            //     areaMask = navMesh.layerMask
+            // };
             bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
-                startHit.position, targetHit.position, navMesh.layerMask, path
+                startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
             );
 
             Debug.Log($"-----Navmesh  Pathsuccess {pathSuccess}");

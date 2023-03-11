@@ -388,7 +388,7 @@ namespace Thor.Procedural.Data {
     [MessagePackObject(keyAsPropertyName: true)]
     public class NavMeshConfig {
 
-        public int agentTypeID;
+        public int id;
         public float agentRadius;
         public int? tileSize;
         public float? agentHeight;

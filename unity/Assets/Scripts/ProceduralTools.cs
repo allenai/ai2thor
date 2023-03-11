@@ -1581,7 +1581,7 @@ namespace Thor.Procedural {
         }
 
         public static NavMeshBuildSettings navMeshConfigToBuildSettings(NavMeshConfig config, NavMeshBuildSettings defaultBuildSettings) {
-            defaultBuildSettings.agentTypeID = config.agentTypeID;
+            defaultBuildSettings.agentTypeID = config.id;
             defaultBuildSettings.agentRadius = config.agentRadius;
             defaultBuildSettings.tileSize = config.tileSize.GetValueOrDefault(defaultBuildSettings.tileSize);
             defaultBuildSettings.agentClimb = config.agentClimb.GetValueOrDefault(defaultBuildSettings.agentClimb);
@@ -1594,7 +1594,7 @@ namespace Thor.Procedural {
 
         public static NavMeshConfig navMeshBuildSettingsToConfig(NavMeshBuildSettings navMeshBuildSettings) {
             var navMeshConfig = new NavMeshConfig();
-            navMeshConfig.agentTypeID = navMeshBuildSettings.agentTypeID;
+            navMeshConfig.id = navMeshBuildSettings.agentTypeID;
             navMeshConfig.agentRadius = navMeshBuildSettings.agentRadius;
             navMeshConfig.tileSize = navMeshBuildSettings.tileSize;
             navMeshConfig.agentClimb = navMeshBuildSettings.agentClimb;
