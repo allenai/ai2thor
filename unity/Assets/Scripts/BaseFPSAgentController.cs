@@ -599,6 +599,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void Initialize(ServerAction action) {
 
+            // limit camera from looking too far down/up
+            //default max are 30 up and 60 down, different agent types may overwrite this
+            if (Mathf.Approximately(action.maxUpwardLookAngle, 0.0f)) {
+                this.maxUpwardLookAngle = 30f;
+            } else {
+                this.maxUpwardLookAngle = action.maxUpwardLookAngle;
+            }
+
+            if (Mathf.Approximately(action.maxDownwardLookAngle, 0.0f)) {
+                this.maxDownwardLookAngle = 60f;
+            } else {
+                this.maxDownwardLookAngle = action.maxDownwardLookAngle;
+            }
+            
             this.InitializeBody(action);
             m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
 
@@ -653,6 +667,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
+
+            if(action.maxDownwardLookAngle < 0) {
+                errorMessage = "maxDownwardLookAngle must be a non-negative float";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            if(action.maxUpwardLookAngle < 0) {
+                errorMessage = "maxUpwardLookAngle must be a non-negative float";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
 
             this.snapToGrid = action.snapToGrid;
 

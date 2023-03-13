@@ -69,12 +69,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 
             }
 
-//            fp_camera_2.fieldOfView = 75f;
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
-            // limit camera from looking too far down
-            this.maxDownwardLookAngle = 90f;
-            this.maxUpwardLookAngle = 25f;
+            // limit camera from looking too far down/up
+            if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f)) {
+                this.maxUpwardLookAngle = 25f;
+            } else {
+                this.maxUpwardLookAngle = initializeAction.maxUpwardLookAngle;
+            }
+
+            if (Mathf.Approximately(initializeAction.maxDownwardLookAngle, 0.0f)) {
+                this.maxDownwardLookAngle = 90f;
+            } else {
+                this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
+            }
 
             // enable stretch arm component
             Debug.Log("initializing stretch arm");
