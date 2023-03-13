@@ -938,22 +938,13 @@ def pending_travis_build(branch=None):
         if b["tag"]:
             tag = b["tag"]["name"]
 
-        if branch is None:
+        if branch is None or branch == b["branch"]["name"]:
             return {
                 "branch": b["branch"]["name"],
                 "commit_id": b["commit"]["sha"],
                 "tag": tag,
                 "id": b["id"],
                 "latest_build_commit_id": b['branch']['last_build']['commit']['sha'] if "last_build" in b['branch'] and 'commit' in b['branch']['last_build'] else b["commit"]["sha"]
-            }
-        elif branch == b["branch"]["name"]:
-            return {
-                "branch": b["branch"]["name"],
-                "commit_id": b["commit"]["sha"],
-                "tag": tag,
-                "id": b["id"],
-                "latest_build_commit_id": b['branch']['last_build']['commit']['sha'] if "last_build" in b[
-                    'branch'] and 'commit' in b['branch']['last_build'] else b["commit"]["sha"]
             }
     return None
 
