@@ -230,7 +230,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 foreach (Renderer r in VisibilityCapsule.GetComponentsInChildren<Renderer>()) {
                     r.enabled = value;
                 }
-
                 isVisible = value;
             }
         }
