@@ -3166,9 +3166,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 // Will fail if navmeshes are not setup
-                case "shortest_path": {
+                case "sp": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetShortestPath";
+                        action["objectType"] = "Bowl";
+                        //for spraybottle on FloorPlan_Train9_5
+                        //action["position"] = new Vector3(7.149451732635498f, 0.9009996652603146f, -2.4680588245391846f);
+
+                        //for bowl on FloorPlan_Train1_3
+                        action["position"] = new Vector3(5.039496421813965f, 0.9009997248649597f, -3.127098560333252f);
 
                         // pass in a min range, max range, delay
                         if (splitcommand.Length > 1) {
