@@ -280,7 +280,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
         public string errorMessage;
         protected ServerActionErrorCode errorCode;
-
+        public float actionSimulationSeconds = 0.0f;
+        public float? actionFixedDeltaTime;
 
         public System.Object actionReturn;
         protected Vector3 standingLocalCameraPosition;
@@ -377,11 +378,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.LogError("ActionFinished called with agentState not in processing ");
             }
 
+            float simulationSeconds = this.actionSimulationSeconds;
+            float fixedDeltaTime = this.actionFixedDeltaTime.HasValue ? this.actionFixedDeltaTime.Value : 0.02f;
+            this.actionSimulationSeconds = 0.0f;
+            this.actionFixedDeltaTime = null;
+
             if (
                 (!Physics.autoSyncTransforms)
                 && lastActionInitialPhysicsSimulateCount == PhysicsSceneManager.PhysicsSimulateCallCount
             ) {
                 Physics.SyncTransforms();
+            }
+
+            while (simulationSeconds > 1e-6) {
+                float deltaTime = Mathf.Min(fixedDeltaTime, simulationSeconds);
+                PhysicsSceneManager.PhysicsSimulateTHOR(deltaTime);
+                simulationSeconds -= deltaTime;
             }
 
             lastActionSuccess = success;
@@ -654,6 +666,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
+            }
+
+            if (action.headless) {
+                if (action.height > 0 && action.width > 0) {
+                    RenderTexture rt = new RenderTexture(action.width, action.height, 24);
+                    rt.Create();
+                    m_Camera.targetTexture = rt;
+                } else {
+                    errorMessage = "height/width must be specified when running in headless mode";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    return;
+                }
             }
 
             // default is 90 defined in the ServerAction class, specify whatever you want the default to be
@@ -1327,10 +1352,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // remove a given sim object from the scene. Pass in the object's objectID string to remove it.
         public void RemoveFromScene(string objectId) {
-            SimObjPhysics sop = getSimObjectFromId(objectId: objectId);
-            Destroy(sop.transform.gameObject);
-            physicsSceneManager.SetupScene(generateObjectIds: false);
-            actionFinished(success: true);
+            string[] objectIds = {objectId};
+            RemoveFromScene(objectIds);
         }
 
         [ObsoleteAttribute(message: "This action is deprecated. Call RemoveFromScene instead.", error: false)]
@@ -1340,24 +1363,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // remove a list of given sim object from the scene.
         public void RemoveFromScene(string[] objectIds) {
-            if (objectIds == null || objectIds.Length == 0) {
-                actionFinished(
-                    success: false,
-                    errorMessage: "objectIds must not be empty!"
-                );
+            if (objectIds == null || objectIds[0] == null) {
+                errorMessage = "objectIds was not initialized correctly. Please make sure each element in the objectIds list is initialized.";
+                actionFinished(false);
+                return;
             }
-
-            // make sure all objectIds are valid before destorying any
-            GameObject[] gameObjects = new GameObject[objectIds.Length];
-            for (int i = 0; i < objectIds.Length; i++) {
-                GameObject go = getSimObjectFromId(objectId: objectIds[i]).transform.gameObject;
-                gameObjects[i] = go;
-            }
-            foreach (GameObject go in gameObjects) {
-                Destroy(go);
+            bool fail = false;
+            foreach (string objIds in objectIds) {
+                if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objIds)) {
+                    physicsSceneManager.ObjectIdToSimObjPhysics[objIds].transform.gameObject.SetActive(false);
+                } else {
+                    fail = true;
+                }
             }
             physicsSceneManager.SetupScene(generateObjectIds: false);
-            actionFinished(success: true);
+            if (fail) {
+                errorMessage = "some objectsin objectIds were not removed correctly.";
+                actionFinished(false);
+            } else {
+                actionFinished(true);
+            }
         }
 
         // Sweeptest to see if the object Agent is holding will prohibit movement
@@ -1834,6 +1859,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             metaMessage.cameraOrthSize = cameraOrthSize;
             cameraOrthSize = -1f;
             metaMessage.fov = m_Camera.fieldOfView;
+            metaMessage.physicsAutoSimulation = Physics.autoSimulation;
             metaMessage.lastAction = lastAction;
             metaMessage.lastActionSuccess = lastActionSuccess;
             metaMessage.errorMessage = errorMessage;
@@ -1971,6 +1997,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             lastAction = controlCommand.action;
             lastActionSuccess = false;
             lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+
+
+            actionSimulationSeconds = controlCommand.GetValue("actionSimulationSeconds", 0.0f);
+            controlCommand.Remove("actionSimulationSeconds");
+            if (controlCommand.ContainsKey("fixedDeltaTime")) {
+                actionFixedDeltaTime = (float) controlCommand.GetValue("fixedDeltaTime");
+                controlCommand.Remove("fixedDeltaTime");
+            }
+
             this.agentState = AgentState.Processing;
 
             try {
@@ -2813,23 +2848,61 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void SetObjectPoses(ServerAction action) {
-            // make sure objectPoses and also the Object Pose elements inside are initialized correctly
-            if (action.objectPoses == null || action.objectPoses[0] == null) {
+        public void MakeObjectBreakable(string objectId) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Object ID {objectId} appears to be invalid.";
+                actionFinishedEmit(false);
+                return;
+            }
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            if (sop.GetComponent<Break>()) {
+                sop.GetComponent<Break>().Unbreakable = false;
+            }
+            actionFinishedEmit(true);
+        }
+
+        public void SetObjectPoses(
+            List<ObjectPose> objectPoses,
+            bool placeStationary = false,
+            bool enablePhysicsJitter = true,
+            bool forceRigidbodySleep = false,
+            bool skipMoveable = false
+        ) {
+            //make sure objectPoses and also the Object Pose elements inside are initialized correctly
+            if (objectPoses == null || objectPoses[0] == null) {
                 errorMessage = "objectPoses was not initialized correctly. Please make sure each element in the objectPoses list is initialized.";
                 actionFinished(false);
                 return;
             }
-            StartCoroutine(setObjectPoses(action.objectPoses, action.placeStationary));
+            StartCoroutine(setObjectPoses(
+                objectPoses: objectPoses.ToArray(),
+                placeStationary: placeStationary,
+                enablePhysicsJitter: enablePhysicsJitter,
+                forceRigidbodySleep: forceRigidbodySleep,
+                skipMoveable: skipMoveable
+            ));
         }
 
         // SetObjectPoses is performed in a coroutine otherwise if
         // a frame does not pass prior to this AND the imageSynthesis
         // is enabled for say depth or normals, Unity will crash on 
         // a subsequent scene reset()
-        protected IEnumerator setObjectPoses(ObjectPose[] objectPoses, bool placeStationary) {
+        protected IEnumerator setObjectPoses(
+            ObjectPose[] objectPoses,
+            bool placeStationary,
+            bool enablePhysicsJitter,
+            bool forceRigidbodySleep,
+            bool skipMoveable = false
+        ) {
             yield return new WaitForEndOfFrame();
-            bool success = physicsSceneManager.SetObjectPoses(objectPoses, out errorMessage, placeStationary);
+            bool success = physicsSceneManager.SetObjectPoses(
+                objectPoses: objectPoses,
+                errorMessage: out errorMessage,
+                placeStationary: placeStationary,
+                enablePhysicsJitter: enablePhysicsJitter,
+                forceRigidbodySleep: forceRigidbodySleep,
+                skipMoveable: skipMoveable
+            );
 
             //update image synthesis since scene has changed
             if (this.imageSynthesis && this.imageSynthesis.enabled) {

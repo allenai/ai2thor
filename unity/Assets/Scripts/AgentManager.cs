@@ -1005,6 +1005,8 @@ public class AgentManager : MonoBehaviour {
             if (!this.canEmit()) {
                 continue;
             }
+
+            Physics.SyncTransforms();
             MultiAgentMetadata multiMeta = new MultiAgentMetadata();
 
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
@@ -1624,6 +1626,7 @@ public struct MetadataWrapper {
     public HandMetadata heldObjectPose;
     public ArmMetadata arm;
     public float fov;
+    public bool physicsAutoSimulation;
     public Vector3 cameraPosition;
     public float cameraOrthSize;
     public ThirdPartyCameraMetadata[] thirdPartyCameras;
@@ -1703,6 +1706,18 @@ public class DynamicServerAction {
     public string action {
         get {
             return this.jObject["action"].ToString();
+        }
+    }
+
+    public bool Remove(string name) {
+        return this.jObject.Remove(name);
+    }
+
+    public float GetValue(string name, float defaultValue) {
+        if (this.ContainsKey(name)) {
+            return (float)this.GetValue(name);
+        } else {
+            return defaultValue;
         }
     }
 
@@ -1875,6 +1890,9 @@ public class ServerAction {
     public string agentMode = "default"; // mode of Agent, valid values are "default" "locobot" "drone", note certain modes are only compatible with certain controller types
 
     public float agentRadius = 2.0f;
+    public bool headless;
+    public int height;
+    public int width;
     public int maxStepCount;
     public float rotateStepDegrees = 90.0f; // default rotation amount for RotateRight/RotateLeft actions
 

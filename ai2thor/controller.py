@@ -526,6 +526,14 @@ class Controller(object):
 
             self.initialization_parameters = unity_initialization_parameters
 
+            if self.headless:
+                # we need to pass in the height/width with headless
+                # mode since we have to create a RenderTexture for the camera
+                # to render to since no display exists
+                self.initialization_parameters["headless"] = True
+                self.initialization_parameters["width"] = self.width
+                self.initialization_parameters["height"] = self.height
+
             if "continuous" in self.initialization_parameters:
                 warnings.warn(
                     "Warning: 'continuous' is deprecated and will be ignored,"
