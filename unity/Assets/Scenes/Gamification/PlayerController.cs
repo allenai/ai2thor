@@ -8,14 +8,17 @@ public class PlayerController : MonoBehaviour {
     public Transform playerArmManip;
     public Transform cameraThirdPersonReference;
     public Transform cameraLookAtReference;
+    public Transform audioManager;
     public float swapTime = 0.25f;
     public float armSpeed = 0.5f;
     public float forwardSpeed = 1f;
     public float rotationTime = 0.25f;
+    public float dioramaModeFOV = 60f;
+    public float FPSModeFOV = 70f;
 
     bool isRotating;
-    public bool isViewSwapping;
-    public bool inFPSMode;
+    bool isViewSwapping;
+    bool inFPSMode;
 
     private void Update()
     {
@@ -31,7 +34,7 @@ public class PlayerController : MonoBehaviour {
         }
 
         // View-swap Inputs
-        if (Input.GetKey(KeyCode.F) && isViewSwapping == false) {
+        if (Input.GetKey(KeyCode.Space) && isViewSwapping == false) {
             isViewSwapping = !isViewSwapping;
             StartCoroutine(SwapView(swapTime));
         }
@@ -41,24 +44,22 @@ public class PlayerController : MonoBehaviour {
         {
             // Movement inputs
             if (!isRotating) {
-                if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
-                {
+                if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W)) {
+                    audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
                     transform.position += transform.forward * forwardSpeed * Time.deltaTime;
                 }
-                if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
-                {
+                if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S)) {
+                    audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
                     transform.position -= transform.forward * forwardSpeed * Time.deltaTime;
                 }
             }
 
             // Rotation Inputs
-            if ((Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A) ) && !isRotating)
-            {
+            if ((Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A) ) && !isRotating) {
                 isRotating = !isRotating;
                 StartCoroutine(RotateSmooth(transform, -45, rotationTime));
             }
-            if ((Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D) ) && !isRotating)
-            {
+            if ((Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D) ) && !isRotating) {
                 isRotating = !isRotating;
                 StartCoroutine(RotateSmooth(transform, 45, rotationTime));
             }
@@ -67,48 +68,45 @@ public class PlayerController : MonoBehaviour {
         } else {
             // Movement inputs
             if (!isRotating) {
-                if (Input.GetKey(KeyCode.W))
-                {
-                    playerArmManip.position += transform.forward * armSpeed * Time.deltaTime;
-                }
-                if (Input.GetKey(KeyCode.S))
-                {
-                    playerArmManip.position -= transform.forward * armSpeed * Time.deltaTime;
-                }
-                if (Input.GetKey(KeyCode.A))
-                {
-                    playerArmManip.position -= transform.right * armSpeed * Time.deltaTime;
-                }
-                if (Input.GetKey(KeyCode.D))
-                {
-                    playerArmManip.position += transform.right * armSpeed * Time.deltaTime;
-                }
-                if (Input.GetKey(KeyCode.UpArrow))
-                {
-                    playerArmManip.position += transform.up * armSpeed * Time.deltaTime;
-                }
-                if (Input.GetKey(KeyCode.DownArrow))
-                {
-                    playerArmManip.position -= transform.up * armSpeed * Time.deltaTime;
-                }
-                if (Input.GetKey(KeyCode.LeftArrow))
-                {
+                if (Input.GetKey(KeyCode.W)) {
+                    audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
+                    playerArmManip.position += playerArmManip.forward * armSpeed * Time.deltaTime;
+                } if (Input.GetKey(KeyCode.S)) {
+                    audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
+                    playerArmManip.position -= playerArmManip.forward * armSpeed * Time.deltaTime;
+                } if (Input.GetKey(KeyCode.A)) {
+                    audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
+                    playerArmManip.position -= playerArmManip.right * armSpeed * Time.deltaTime;
+                } if (Input.GetKey(KeyCode.D)) {
+                    audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
+                    playerArmManip.position += playerArmManip.right * armSpeed * Time.deltaTime;
+                } if (Input.GetKey(KeyCode.UpArrow)) {
+                    audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
+                    playerArmManip.position += playerArmManip.up * armSpeed * Time.deltaTime;
+                } if (Input.GetKey(KeyCode.DownArrow)) {
+                    audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
+                    playerArmManip.position -= playerArmManip.up * armSpeed * Time.deltaTime;
+                } if (Input.GetKey(KeyCode.LeftArrow)) {
                     isRotating = !isRotating;
                     StartCoroutine(RotateSmooth(playerArmManip, -45, rotationTime/2));
-                }
-                if (Input.GetKey(KeyCode.RightArrow))
-                {
+                } if (Input.GetKey(KeyCode.RightArrow)) {
                     isRotating = !isRotating;
                     StartCoroutine(RotateSmooth(playerArmManip, 45, rotationTime/2));
                 }
-
             }
+        }
+
+        if (Input.GetKeyUp(KeyCode.W) || Input.GetKeyUp(KeyCode.S) || Input.GetKeyUp(KeyCode.A) || Input.GetKeyUp(KeyCode.D) ||
+            Input.GetKeyUp(KeyCode.UpArrow) || Input.GetKeyUp(KeyCode.DownArrow) || Input.GetKeyUp(KeyCode.LeftArrow) || Input.GetKeyUp(KeyCode.RightArrow)) {
+            audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = false;
+            audioManager.transform.Find("Arm_Out").GetComponent<AudioSource>().Play();
         }
     }
 
      // Coroutine for rotating the player over time.
     IEnumerator RotateSmooth(Transform subject, float rotationAmount, float rotationTime)
     {
+        audioManager.transform.Find("Shutter").GetComponent<AudioSource>().Play();
         float initialYRotation = subject.eulerAngles.y;
         float currentYRotation;
         for (float i = 0; i < 1; i += Time.deltaTime / rotationTime)
@@ -125,21 +123,27 @@ public class PlayerController : MonoBehaviour {
 
     IEnumerator SwapView(float swapTime)
     {
+        audioManager.transform.Find("Zoom").GetComponent<AudioSource>().Play();
         playerCamera.transform.parent = null;
         Transform destination;
         Vector3 startPosition = playerCamera.transform.position;
         Quaternion startRotation = playerCamera.transform.rotation;
+        float startFOV = playerCamera.fieldOfView;
+        float endFOV;
 
         if (inFPSMode == true) {
             destination = cameraThirdPersonReference;
+            endFOV = dioramaModeFOV;
         } else {
             destination = cameraLookAtReference;
+            endFOV = FPSModeFOV;
         }
 
         for (float i = 0; i < 1; i += Time.deltaTime / swapTime)
         {
             playerCamera.transform.position = Vector3.Lerp(startPosition, destination.position, Mathf.SmoothStep(0f, 1f, i));
             playerCamera.transform.rotation = Quaternion.Lerp(startRotation, destination.rotation, Mathf.SmoothStep(0f, 1f, i));
+            playerCamera.fieldOfView = Mathf.Lerp(startFOV, endFOV, Mathf.SmoothStep(0f, 1f, i));
             yield return null;
         }
 
@@ -147,9 +151,9 @@ public class PlayerController : MonoBehaviour {
         inFPSMode = !inFPSMode;
 
         if (inFPSMode == true) {
-            playerCamera.transform.parent = cameraThirdPersonReference;
-        } else {
             playerCamera.transform.parent = cameraLookAtReference;
+        } else {
+            playerCamera.transform.parent = cameraThirdPersonReference;
         }
 
         yield return null;
