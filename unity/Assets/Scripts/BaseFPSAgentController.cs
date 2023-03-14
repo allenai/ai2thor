@@ -4903,7 +4903,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Quaternion startRotation,
             float allowedError
         ) {
-            Debug.Log("now calling getShortestPath");
             SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation, allowedError);
             // VisualizePath(startPosition, path);
@@ -4917,7 +4916,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectId = null,
             float allowedError = DefaultAllowedErrorInShortestPath
         ) {
-            Debug.Log("calling GetShortestPath with both pos and rot");
             getShortestPath(objectType, objectId, position, Quaternion.Euler(rotation), allowedError);
         }
 
@@ -4927,7 +4925,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectId = null,
             float allowedError = DefaultAllowedErrorInShortestPath
         ) {
-            Debug.Log("calling GetShortestPath with just pos and maybe objectType???");
             getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero), allowedError);
         }
 
@@ -4936,7 +4933,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectId = null,
             float allowedError = DefaultAllowedErrorInShortestPath
         ) {
-            Debug.Log("calling GetShortestPath with only objectType no position");
             getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation, allowedError);
         }
 
@@ -5115,8 +5111,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float gridMultiplier = 1.0f,
             int maxStepCount = 10000
         ) {
-
-            Debug.Log("calling getReachablePositionToObjectVisible");
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
             float sw = m_CharacterController.skinWidth;
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
@@ -5229,7 +5223,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float allowedError,
             bool visualize = false
         ) {
-            Debug.Log($"calling GetSimObjectNavMeshTarget");
             var targetTransform = targetSOP.transform;
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
             var agentTransform = this.transform;
@@ -5243,15 +5236,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             agentTransform.position = initialPosition;
             agentTransform.rotation = initialRotation;
 
-            bool uhhh = false;
-            uhhh = getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
-
-            Debug.Log("what did getReachablePositionToObjectVisible return?: " + uhhh);
-            Debug.Log($"ok is fixedPosition updated or not uhhhh: {fixedPosition}");
+            bool wasObjectVisible = getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
 
             agentTransform.position = originalAgentPosition;
             agentTransform.rotation = originalAgentRotation;
             m_Camera.transform.rotation = originalCameraRotation;
+
+            if(!wasObjectVisible) {
+                throw new InvalidOperationException(
+                    $"Target object {targetSOP.objectID} is not visible on navigation path given current agent parameters: maxVisibleDistance ({maxVisibleDistance}), gridSize ({gridSize}), fieldOfView ({m_Camera.fieldOfView}), camera width ({Screen.width}), camera height ({Screen.height})"
+                );
+            }
 
             var path = new UnityEngine.AI.NavMeshPath();
 
@@ -5265,7 +5260,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var pathDistance = 0.0f;
             for (int i = 0; i < path.corners.Length - 1; i++) {
 #if UNITY_EDITOR
-                // Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
                 Debug.Log("Corner " + i + ": " + path.corners[i]);
 #endif
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
@@ -5274,19 +5269,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected float getFloorY(float x, float start_y, float z) {
-            Debug.Log($"trying to pass in {x}, {start_y} and {z}");
             int layerMask = ~LayerMask.GetMask("Agent", "SimObjInvisible");
-
             float y = start_y;
+
             RaycastHit hit;
             Ray ray = new Ray(new Vector3(x, y, z), -transform.up);
             if (!Physics.Raycast(ray, out hit, 100f, layerMask)) {
-                Debug.Log("what did we hit?: " + hit.transform.name);
                 throw new InvalidOperationException(
-                    "Raycast could not find the floor!"
+                    $"Raycast could not find the floor from position: {x},{start_y},{z}"
                 );
             }
-            Debug.Log("what was hit?: " + hit.point);
             return hit.point.y;
         }
 
@@ -5308,9 +5300,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             UnityEngine.AI.NavMeshPath path,
             float allowedError
         ) {
-            Debug.Log($"start vector3 is {start}");
-            Debug.Log($"target vector3 is {target}");
-
             float floorY = Math.Min(
                 getFloorY(start.x, start.y, start.z),
                 getFloorY(target.x, target.y, target.z)
