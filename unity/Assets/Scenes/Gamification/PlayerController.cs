@@ -70,16 +70,20 @@ public class PlayerController : MonoBehaviour {
             if (!isRotating) {
                 if (Input.GetKey(KeyCode.W)) {
                     audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
-                    playerArmManip.position += playerArmManip.forward * armSpeed * Time.deltaTime;
+                    transform.position += transform.right * Vector3.Dot(transform.right, playerArmManip.forward) * armSpeed * Time.deltaTime;
+                    playerArmManip.position += (playerArmManip.forward - transform.right * Vector3.Dot(transform.right, playerArmManip.forward)) * armSpeed * Time.deltaTime;
                 } if (Input.GetKey(KeyCode.S)) {
                     audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
-                    playerArmManip.position -= playerArmManip.forward * armSpeed * Time.deltaTime;
+                    transform.position -= transform.right * Vector3.Dot(transform.right, playerArmManip.forward) * armSpeed * Time.deltaTime;
+                    playerArmManip.position -= (playerArmManip.forward - transform.right * Vector3.Dot(transform.right, playerArmManip.forward)) * armSpeed * Time.deltaTime;
                 } if (Input.GetKey(KeyCode.A)) {
                     audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
-                    playerArmManip.position -= playerArmManip.right * armSpeed * Time.deltaTime;
+                    transform.position -= transform.right * Vector3.Dot(transform.right, playerArmManip.right) * armSpeed * Time.deltaTime;
+                    playerArmManip.position -= (playerArmManip.right - transform.right * Vector3.Dot(transform.right, playerArmManip.right)) * armSpeed * Time.deltaTime;
                 } if (Input.GetKey(KeyCode.D)) {
                     audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
-                    playerArmManip.position += playerArmManip.right * armSpeed * Time.deltaTime;
+                    transform.position += transform.right * Vector3.Dot(transform.right, playerArmManip.right) * armSpeed * Time.deltaTime;
+                    playerArmManip.position += ( playerArmManip.right - transform.right * Vector3.Dot(transform.right, playerArmManip.right)) * armSpeed * Time.deltaTime;
                 } if (Input.GetKey(KeyCode.UpArrow)) {
                     audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
                     playerArmManip.position += playerArmManip.up * armSpeed * Time.deltaTime;
