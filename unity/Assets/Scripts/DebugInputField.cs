@@ -280,16 +280,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // by default the gridsize is 0.25, so only moving in increments of .25 will work
                         // so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
                         // grid size!
-                        if (splitcommand.Length == 2) {
-                            action["gridSize"] = float.Parse(splitcommand[1]);
-                        } else if (splitcommand.Length == 3) {
-                            action["gridSize"] = float.Parse(splitcommand[1]);
-                            action["agentCount"] = int.Parse(splitcommand[2]);
-                        } else if (splitcommand.Length == 4) {
-                            action["gridSize"] = float.Parse(splitcommand[1]);
-                            action["agentCount"] = int.Parse(splitcommand[2]);
-                            action["makeAgentsVisible"] = int.Parse(splitcommand[3]) == 1;
-                        }
+                        // if (splitcommand.Length == 2) {
+                        //     action["gridSize"] = float.Parse(splitcommand[1]);
+                        // } else if (splitcommand.Length == 3) {
+                        //     action["gridSize"] = float.Parse(splitcommand[1]);
+                        //     action["agentCount"] = int.Parse(splitcommand[2]);
+                        // } else if (splitcommand.Length == 4) {
+                        //     action["gridSize"] = float.Parse(splitcommand[1]);
+                        //     action["agentCount"] = int.Parse(splitcommand[2]);
+                        //     action["makeAgentsVisible"] = int.Parse(splitcommand[3]) == 1;
+                        // }
 
                         // action.renderNormalsImage = true;
                         // action.renderDepthImage = true;
@@ -300,21 +300,69 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "Initialize";
                         action["agentMode"] = "locobot";
                         // action["gridSize"] = 0.25f;
-                        // action["visibilityDistance"] = 1.0f;
-                        action["rotateStepDegrees"] = 45;
+                        action["visibilityDistance"] = 1.0f;
+                        action["rotateStepDegrees"] = 30;
                         // action["agentControllerType"] = "stochastic";
                         // action["applyActionNoise"] = true;
-                        // action["snapToGrid"] = false;
-                        // action["fieldOfView"] = 90;
-                        // action["gridSize"] = 0.25f;
+                        action["width"] = 400;
+                        action["height"] = 300;
+                        action["snapToGrid"] = false;
+                        action["fieldOfView"] = 79;
+                        action["gridSize"] = 0.25f;
 
 
                         action["applyActionNoise"] = true;
+                        action["continuousMode"] = true;
+                        //action["snapToGrid"] = false;
+                        //action["action"] = "Initialize";
+                        //action["fieldOfView"] = 90;
+                        //action["gridSize"] = 0.25f;
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+                case "initb1": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        // if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
+                        // by default the gridsize is 0.25, so only moving in increments of .25 will work
+                        // so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
+                        // grid size!
+                        // if (splitcommand.Length == 2) {
+                        //     action["gridSize"] = float.Parse(splitcommand[1]);
+                        // } else if (splitcommand.Length == 3) {
+                        //     action["gridSize"] = float.Parse(splitcommand[1]);
+                        //     action["agentCount"] = int.Parse(splitcommand[2]);
+                        // } else if (splitcommand.Length == 4) {
+                        //     action["gridSize"] = float.Parse(splitcommand[1]);
+                        //     action["agentCount"] = int.Parse(splitcommand[2]);
+                        //     action["makeAgentsVisible"] = int.Parse(splitcommand[3]) == 1;
+                        // }
 
-                        action["snapToGrid"] = false;
+                        // action.renderNormalsImage = true;
+                        // action.renderDepthImage = true;
+                        // action.renderSemanticSegmentation = true;
+                        // action.renderInstanceSegmentation = true;
+                        // action.renderFlowImage = true;
+
                         action["action"] = "Initialize";
+                        action["agentMode"] = "locobot";
+                        // action["gridSize"] = 0.25f;
+                        action["visibilityDistance"] = 1.5f;
+                        action["rotateStepDegrees"] = 30;
+                        // action["agentControllerType"] = "stochastic";
+                        // action["applyActionNoise"] = true;
+                        action["width"] = 400;
+                        action["height"] = 300;
+                        action["snapToGrid"] = false;
                         action["fieldOfView"] = 90;
                         action["gridSize"] = 0.25f;
+
+
+                        action["applyActionNoise"] = true;
+                        action["continuousMode"] = true;
+                        //action["snapToGrid"] = false;
+                        //action["action"] = "Initialize";
+                        //action["fieldOfView"] = 90;
+                        //action["gridSize"] = 0.25f;
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
                     }
@@ -3166,9 +3214,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 // Will fail if navmeshes are not setup
-                case "shortest_path": {
+                case "sp": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetShortestPath";
+                        action["objectType"] = "Bowl";
+                        action["allowedError"] = 0.05f;
+                        //for spraybottle on FloorPlan_Train9_5
+                        //action["position"] = new Vector3(7.149451732635498f, 0.9009996652603146f, -2.4680588245391846f);
+
+                        //for bowl on FloorPlan_Train1_3
+                        action["position"] = new Vector3(5.039496421813965f, 0.9009997248649597f, -3.127098560333252f);
 
                         // pass in a min range, max range, delay
                         if (splitcommand.Length > 1) {
