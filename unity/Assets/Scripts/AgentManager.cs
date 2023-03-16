@@ -202,6 +202,7 @@ public class AgentManager : MonoBehaviour {
             }
         }
 
+        //initialize primary agent now that its controller component has been added
         primaryAgent.ProcessControlCommand(action.dynamicServerAction);
         Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         if (action.targetFrameRate > 0) {
@@ -1932,6 +1933,9 @@ public class ServerAction {
     // the mass threshold for how massive a pickupable/moveable sim object needs to be
     // for the arm to detect collisions and stop moving
     public float? massThreshold;
+
+    public float maxUpwardLookAngle = 0.0f;
+    public float maxDownwardLookAngle = 0.0f;
 
 
     public SimObjType ReceptableSimObjType() {
