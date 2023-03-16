@@ -118,6 +118,7 @@ namespace Tests {
             
             action["action"] = "SetLights";
 
+            //now to see if light properties were set according to exportedLightParams_FloorPlan1_TestSet.json
             string path = Application.dataPath + "/DebugTextFiles/exportedLightParams_FloorPlan1_TestSet.json";
 
             var jsonStr = System.IO.File.ReadAllText(path);
@@ -195,10 +196,8 @@ namespace Tests {
                     Assert.AreEqual(lp.cullingMaskOff, nu);
 
                     Assert.AreEqual(lp.enabled, false);
-                    Debug.Log($"size of controllerSimObjIds array: {lp.controllerSimObjIds.Length}");
-                    Debug.Log($"{lp.controllerSimObjIds[0]}");
-                    //      "LightSwitch|+02.33|+01.31|-00.16",
-                    //Assert.AreEqual(lp.controllerSimObjIds, "LightSwitch|+02.33|+01.31|-00.16");
+                    Assert.AreEqual(lp.controllerSimObjIds[0], "CoffeeMachine|-01.98|+00.90|-00.19");
+                    Assert.AreEqual(lp.controllerSimObjIds[1], "LightSwitch|+02.33|+01.31|-00.16");
                     Assert.AreEqual(lp.parentSimObjObjectId, null);
 
                     result = Mathf.Approximately(lp.indirectMultiplier, 10.0f);
@@ -220,28 +219,28 @@ namespace Tests {
                     result = Mathf.Approximately(lp.shadow.nearPlane, 0.2f);
                     Assert.AreEqual(result, true);
                 }
+                if (lp.id == "scene|Point|0") {
+                    //check type changed to Spot
+                    var lightParamType = (LightType)Enum.Parse(typeof(LightType), lp.type, ignoreCase: true);
+                    if (lightParamType == LightType.Spot) {
+                        result = true;
+                    }
+                    Assert.AreEqual(result, true);
+
+                    Assert.AreEqual(lp.controllerSimObjIds[0], "LightSwitch|+02.33|+01.31|-00.16");
+                    //assert that it is now parented to lettuce cause you know, why not
+                    Assert.AreEqual(lp.parentSimObjObjectId, "Lettuce|-01.81|+00.97|-00.94");
+                }
+                if (lp.id == "scene|Point|1") {
+                    //check type changed to Directional
+                    var lightParamType = (LightType)Enum.Parse(typeof(LightType), lp.type, ignoreCase: true);
+                    if (lightParamType == LightType.Directional) {
+                        result = true;
+                    }
+                    Assert.AreEqual(result, true);
+                }
+
             }
-            //check for scene|Spot|0 changes
-            //position//
-            //rotation
-            //degrees
-            //enabled
-            //spot angle
-            //range
-            //rgb
-            //indirectMultiplier
-            //shadow type -None, Hard, Soft
-            //controllerSimObjIds - check that both "LightSwitch|+02.33|+01.31|-00.16" and "CoffeeMachine|-01.98|+00.90|-00.19" 
-
-
-            //check for scene|Point|0 changes
-            //parentsimObjObjectId to "Lettuce|-01.81|+00.97|-00.94"
-            //change to spotlight, change spot angle to 10
-
-            //change scene|Point|1 to directional light
-
-            //now to see if light properties were set according to exportedLightParams_FloorPlan1_TestSet.json
         } 
-
     }
 }

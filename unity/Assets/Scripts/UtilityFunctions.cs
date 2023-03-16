@@ -558,14 +558,16 @@ public static class UtilityFunctions {
 
                 //ok now assign to WhatControlsThis component
                 if (!light.gameObject.GetComponent<WhatControlsThis>()) {
+                    //add component if it doesn't already have one, cause some lights aren't controlled by anything by defualt
                     WhatControlsThis wct = light.gameObject.AddComponent<WhatControlsThis>();
                     wct.SimObjsThatControlMe = thingsThatControlMe.ToArray();
                 } else {
+                    //if this light was controlled by somethig already, no need to add component again cause THAT CAUSES PROBLEMS
                     WhatControlsThis wct = light.gameObject.GetComponent<WhatControlsThis>();
                     wct.SimObjsThatControlMe = thingsThatControlMe.ToArray();
                 }
             }
-            
+
             light.gameObject.SetActive(lp.enabled);
         }
     }
