@@ -12,6 +12,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     public partial class StretchAgentController : PhysicsRemoteFPSAgentController {
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
+        GameObject CameraGimbal2;
 
         public override void updateImageSynthesis(bool status) {
             base.updateImageSynthesis(status);
@@ -34,7 +35,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cc.center = m_CharacterController.center;
             cc.radius = m_CharacterController.radius;
             cc.height = m_CharacterController.height;
-
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
@@ -83,6 +83,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
             }
+
+            // rehierchize camera to rotation gimbals, to accurately reflect real-life camera rotation
+            CameraGimbal2 = CameraGimbals.transform.GetChild(0).gameObject;
+            m_Camera.transform.SetParent(CameraGimbal2.transform);
 
             // enable stretch arm component
             Debug.Log("initializing stretch arm");

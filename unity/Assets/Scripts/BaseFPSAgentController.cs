@@ -59,6 +59,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             get => this.baseAgentComponent.DebugPointPrefab;
         }
 
+        public GameObject CameraGimbals {
+            get => this.baseAgentComponent.CameraGimbals;
+        }
+
         public GameObject VisibilityCapsule {
             get => this.baseAgentComponent.VisibilityCapsule;
             set => this.baseAgentComponent.VisibilityCapsule = value;
@@ -190,7 +194,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // this hides renderers not used in tall mode, and also sets renderer
             // culling in FirstPersonCharacterCull.cs to ignore tall mode renderers
             HideAllAgentRenderers();
-
             // default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
             this.GetComponentInChildren<NavMeshAgent>().enabled = false;
 
@@ -2198,6 +2201,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             agentMeta.rotation = transform.eulerAngles;
 
             float cameraX = m_Camera.transform.rotation.eulerAngles.x;
+            // agentMeta.cameraMeridian = // HALLO!!!!!;
             agentMeta.cameraHorizon = cameraX > 180 ? cameraX - 360 : cameraX;
             agentMeta.inHighFrictionArea = inHighFrictionArea;
 

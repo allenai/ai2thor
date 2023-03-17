@@ -266,7 +266,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
         // checks if a float is a multiple of 0.1f
-        private bool CheckIfFloatIsMultipleOfOneTenth(float f) {
+        private protected bool CheckIfFloatIsMultipleOfOneTenth(float f) {
             if (((decimal)f % 0.1M == 0) == false) {
                 return false;
             } else {
@@ -3710,7 +3710,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             bool onlyPointsCloseToAgent = !forceAction;
-
             // if the target is something like a pot or bowl on a table, return all valid points instead of ONLY visible points since
             // the Agent can't see the bottom of the receptacle if it's placed too high on a table
             if (ReceptacleRestrictions.ReturnAllPoints.Contains(targetReceptacle.ObjType)) {
