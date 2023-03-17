@@ -12,6 +12,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     public partial class StretchAgentController : PhysicsRemoteFPSAgentController {
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
+        GameObject CameraGimbal2;
 
         public override void updateImageSynthesis(bool status) {
             base.updateImageSynthesis(status);
@@ -34,7 +35,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cc.center = m_CharacterController.center;
             cc.radius = m_CharacterController.radius;
             cc.height = m_CharacterController.height;
-
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
@@ -51,15 +51,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // set secondary arm-camera
             Camera fp_camera_2 = m_CharacterController.transform.Find("SecondaryCamera").GetComponent<Camera>();
             fp_camera_2.gameObject.SetActive(true);
-            fp_camera_2.transform.localPosition = new Vector3(0.0353f, 0.5088f, -0.076f);
-            fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
-            fp_camera_2.fieldOfView = 90f;
-//            fp_camera_2.fieldOfView = 75f;
+            fp_camera_2.transform.localPosition = new Vector3(-0.02787972f, 0.5371301f, -0.06696343f);
+            fp_camera_2.transform.localEulerAngles = new Vector3(30f, 0f, 0f);
+            fp_camera_2.fieldOfView = 65f;
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
             // limit camera from looking too far down
             this.maxDownwardLookAngle = 90f;
             this.maxUpwardLookAngle = 25f;
+
+            // rehierchize camera to rotation gimbals, to accurately reflect real-life camera rotation
+            CameraGimbal2 = CameraGimbals.transform.GetChild(0).gameObject;
+            m_Camera.transform.SetParent(CameraGimbal2.transform);
 
             // enable stretch arm component
             Debug.Log("initializing stretch arm");

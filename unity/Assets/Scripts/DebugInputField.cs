@@ -2287,6 +2287,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "ll": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "LookLeft";
+
+                        if (splitcommand.Length > 1) {
+                            action["degrees"] = float.Parse(splitcommand[1]);
+                        }
+
+                        // action.manualInteract = true;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
                 // look up
                 case "lu": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
