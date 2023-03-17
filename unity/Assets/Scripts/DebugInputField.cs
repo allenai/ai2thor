@@ -877,7 +877,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         var ROOM_BASE_PATH = "/DebugTextFiles/";
 
                         //path = Application.dataPath + "/DebugTextFiles/exportedLightParams.json";
-                        path = Application.dataPath + "/DebugTextFiles/exportedLightParams_FloorPlan1_TestSet.json";
+                        //path = Application.dataPath + "/DebugTextFiles/exportedLightParams_FloorPlan1_TestSet.json";
+                        path = Application.dataPath + "/DebugTextFiles/exportedLightParams_Procedural_TestSet_lighthouse_test.json";
+
 
                         if (splitcommand.Length == 2) {
                             // uses ./debug/{splitcommand[1]}[.json]
