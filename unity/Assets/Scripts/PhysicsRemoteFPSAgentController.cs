@@ -266,7 +266,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
         // checks if a float is a multiple of 0.1f
-        private protected bool CheckIfFloatIsMultipleOfOneTenth(float f) {
+        protected bool CheckIfFloatIsMultipleOfOneTenth(float f) {
             if (((decimal)f % 0.1M == 0) == false) {
                 return false;
             } else {
