@@ -6,7 +6,6 @@ using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 
-
 public class TestCabinetVisibility : MonoBehaviour {
 #if UNITY_EDITOR
     public float MinDistance = 0.75f;
