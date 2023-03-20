@@ -187,6 +187,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.m_CharacterController = GetComponent<CharacterController>();
             collidedObjects = new string[0];
             collisionsInAction = new List<string>();
+            
             // set agent initial states
             targetRotation = transform.rotation;
 
