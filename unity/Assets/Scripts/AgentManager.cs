@@ -721,6 +721,8 @@ public class AgentManager : MonoBehaviour {
 
     private void captureScreenAsync(List<KeyValuePair<string, byte[]>> payload, string key, Camera camera) {
         RenderTexture tt = camera.targetTexture;
+        // RenderTexture.active
+        Debug.Log($"captureScreenAsync -- {camera.targetTexture} camera.targetTexture == null? {camera.targetTexture == null} RenderTexture.active{RenderTexture.active} active null? {RenderTexture.active==null}");
         RenderTexture.active = tt;
         camera.Render();
         AsyncGPUReadback.Request(tt, 0, (request) =>
@@ -752,6 +754,8 @@ public class AgentManager : MonoBehaviour {
 #if PLATFORM_CLOUD_RENDERING
         captureScreenAsync(payload, "image-thirdParty-camera", camera);
 #else
+        Debug.Log($"captureScreenAsync -- {camera.targetTexture} camera.targetTexture == null? {camera.targetTexture == null} RenderTexture.active{RenderTexture.active} active null? {RenderTexture.active==null}");
+       
         RenderTexture.active = camera.activeTexture;
         camera.Render();
         payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreen()));
