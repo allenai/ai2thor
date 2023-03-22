@@ -369,6 +369,9 @@ public class AgentManager : MonoBehaviour {
 
     public void registerAsThirdPartyCamera(Camera camera) {
         this.thirdPartyCameras.Add(camera);
+        #if PLATFORM_CLOUD_RENDERING
+        camera.targetTexture = createRenderTexture(this.primaryAgent.m_Camera.pixelWidth, this.primaryAgent.m_Camera.targetTexture.height);
+        #endif
         // camera.gameObject.AddComponent(typeof(ImageSynthesis));
     }
 
