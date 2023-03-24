@@ -3144,7 +3144,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // final position to place on surface
             Vector3 finalPos = GetSurfacePointBelowPosition(position) + new Vector3(0, offset, 0);
 
-
             // check spawn area, if its clear, then place object at finalPos
             InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             if (ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false)) {
