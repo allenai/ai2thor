@@ -3138,7 +3138,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             b.enabled = false;
 
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
-
             float offset = distFromSopToBottomPoint;
 
             // final position to place on surface
