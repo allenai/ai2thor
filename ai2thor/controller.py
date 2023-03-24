@@ -707,7 +707,7 @@ class Controller(object):
         # update the resolution if they are different
         # if Python is running against the Unity Editor then
         # ChangeResolution won't have an affect, so it gets skipped
-        if (self.server.unity_proc is not None) and (
+        if (not self.headless) and (self.server.unity_proc is not None) and (
             target_width != self.last_event.screen_width
             or target_height != self.last_event.screen_height
         ):
@@ -1136,6 +1136,12 @@ class Controller(object):
             self._build.platform.launch_env(self.width, self.height, self.x_display)
         )
 
+        if self.headless:
+            if self.x_display is not None:
+                raise NotImplementedError("`x_display` must be none when `headless` is `True`.")
+            if "DISPLAY" in env:
+                del env["DISPLAY"]
+
         makedirs(self.log_dir)
         self.server.unity_proc = proc = subprocess.Popen(
             command,
@@ -1447,7 +1453,7 @@ class Controller(object):
         self.last_event = self.server.receive(timeout=self.server_start_timeout)
 
         # we should be able to get rid of this since we check the resolution in .reset()
-        if self.server.unity_proc is not None and (height < 300 or width < 300):
+        if (not self.headless) and self.server.unity_proc is not None and (height < 300 or width < 300):
             self.last_event = self.step("ChangeResolution", x=width, y=height)
 
         return self.last_event
