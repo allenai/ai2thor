@@ -40,6 +40,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // camera position
             m_Camera.transform.localPosition = new Vector3(0, 0.378f, 0.0453f);
+            // camera looking at arm
+            m_Camera.transform.localEulerAngles = new Vector3(0f, 90f, 0f);
 
             // camera FOV
             m_Camera.fieldOfView = 69f;
