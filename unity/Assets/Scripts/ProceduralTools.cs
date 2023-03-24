@@ -1510,7 +1510,9 @@ namespace Thor.Procedural {
                     bfps.transform.rotation = Quaternion.Euler(newRotation);
                 }
                 if (newHorizon != null) {
-                    bfps.m_Camera.transform.localEulerAngles = new Vector3(newHorizon, 0, 0);
+                    bfps.m_Camera.transform.localEulerAngles = new Vector3(
+                        newHorizon, bfps.m_Camera.transform.localEulerAngles.y, 0
+                    );
                 }
                 if (agentManager.agentMode != "locobot" && newStanding != null) {
                     PhysicsRemoteFPSAgentController pfps = bfps as PhysicsRemoteFPSAgentController;
