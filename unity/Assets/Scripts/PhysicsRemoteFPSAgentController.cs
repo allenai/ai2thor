@@ -5030,7 +5030,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////////////////////////
         ///// Crouch and Stand /////
         ////////////////////////////
-        public void crouch() {
+        virtual public void crouch() {
             m_Camera.transform.localPosition = new Vector3(
                 standingLocalCameraPosition.x,
                 crouchingLocalCameraPosition.y,
@@ -5038,7 +5038,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void stand() {
+        virtual public void stand() {
             m_Camera.transform.localPosition = standingLocalCameraPosition;
         }
 
@@ -5049,11 +5049,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else if (!CheckIfItemBlocksAgentStandOrCrouch()) {
                 actionFinished(false);
             } else {
-                m_Camera.transform.localPosition = new Vector3(
-                    standingLocalCameraPosition.x,
-                    crouchingLocalCameraPosition.y,
-                    standingLocalCameraPosition.z
-                );
+                crouch();
                 actionFinished(true);
             }
         }
@@ -5065,7 +5061,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else if (!CheckIfItemBlocksAgentStandOrCrouch()) {
                 actionFinished(false);
             } else {
-                m_Camera.transform.localPosition = standingLocalCameraPosition;
+                stand();
                 actionFinished(true);
             }
         }
