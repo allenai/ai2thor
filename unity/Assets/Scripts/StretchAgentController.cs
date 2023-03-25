@@ -38,11 +38,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
-            // camera position
-            m_Camera.transform.localPosition = new Vector3(0, 0.378f, 0.0453f);
-            // camera looking at arm
-            m_Camera.transform.localEulerAngles = new Vector3(0f, 90f, 0f);
-
             // camera FOV
             m_Camera.fieldOfView = 69f;
 
@@ -65,6 +60,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // rehierchize camera to rotation gimbals, to accurately reflect real-life camera rotation
             CameraGimbal2 = CameraGimbals.transform.GetChild(0).gameObject;
             m_Camera.transform.SetParent(CameraGimbal2.transform);
+
+            // camera position
+            m_Camera.transform.localPosition = new Vector3(0.03f, 0.007f, 0.044f);
+            // camera looking at arm
+            m_Camera.transform.localEulerAngles = new Vector3(0f, 90f, 0f);
 
             // enable stretch arm component
             Debug.Log("initializing stretch arm");
@@ -322,6 +322,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             arm.SetHandSphereRadius(radius);
             actionFinished(true);
         }
+
+        override public void crouch() {
+            throw new System.InvalidOperationException("You cannot crouch as the stretch agent!");
+        }
+
+        override public void stand() {
+            throw new System.InvalidOperationException("You cannot stand as the stretch agent!");
+        }
+
 
         public void MoveAgent(
             float ahead = 0,

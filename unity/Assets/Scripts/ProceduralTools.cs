@@ -1487,11 +1487,15 @@ namespace Thor.Procedural {
                 BaseFPSAgentController bfps = agentManager.primaryAgent;
                 Vector3 newPosition = house.metadata.agentPoses[agentManager.agentMode].position;
                 Vector3 newRotation = house.metadata.agentPoses[agentManager.agentMode].rotation;
-                float newHorizon = house.metadata.agentPoses[agentManager.agentMode].horizon;
+                float? newHorizon = house.metadata.agentPoses[agentManager.agentMode].horizon;
                 bool? newStanding = house.metadata.agentPoses[agentManager.agentMode].standing;
+
+                // make sure to sync transforms after teleporting to ensure rigidbody/transforms are all updated even if a frame hasn't passed
+                bool savedAutoSyncTransforms = Physics.autoSyncTransforms;
+                Physics.autoSyncTransforms = true;
+
                 if (newPosition != null) {
                     bfps.transform.position = newPosition;
-                    bfps.autoSyncTransforms();//make sure to sync transforms after teleporting to ensure rigidbody/transforms are all updated even if a frame hasn't passed
 
                     Vector3 target = new Vector3(
                         newPosition.x,
@@ -1509,12 +1513,12 @@ namespace Thor.Procedural {
                 if (newRotation != null) {
                     bfps.transform.rotation = Quaternion.Euler(newRotation);
                 }
-                if (newHorizon != null) {
+                if (newHorizon.HasValue) {
                     bfps.m_Camera.transform.localEulerAngles = new Vector3(
-                        newHorizon, bfps.m_Camera.transform.localEulerAngles.y, 0
+                        newHorizon.Value, bfps.m_Camera.transform.localEulerAngles.y, 0
                     );
                 }
-                if (agentManager.agentMode != "locobot" && newStanding != null) {
+                if (agentManager.agentMode != "locobot" && agentManager.agentMode != "stretch" && newStanding != null) {
                     PhysicsRemoteFPSAgentController pfps = bfps as PhysicsRemoteFPSAgentController;
                     if (newStanding == true) {
                         pfps.stand();
@@ -1522,6 +1526,7 @@ namespace Thor.Procedural {
                         pfps.crouch();
                     }
                 }
+                Physics.autoSyncTransforms = savedAutoSyncTransforms;
             }
         }
 
