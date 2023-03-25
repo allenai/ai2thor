@@ -348,11 +348,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         override public void crouch() {
-            throw new System.InvalidOperationException("You cannot crouch as the stretch agent!");
+            errorMessage = "You cannot crouch as the stretch agent! This is a no-op.";
         }
 
         override public void stand() {
-            throw new System.InvalidOperationException("You cannot stand as the stretch agent!");
+            errorMessage = "You cannot stand as the stretch agent! This is a no-op.";
         }
 
 
