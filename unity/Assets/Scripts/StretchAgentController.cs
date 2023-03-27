@@ -38,57 +38,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
-            // camera FOV
-            m_Camera.fieldOfView = 69f;
-
             // set camera stand/crouch local positions for Tall mode
             standingLocalCameraPosition = m_Camera.transform.localPosition;
             crouchingLocalCameraPosition = m_Camera.transform.localPosition;
 
-            // set secondary arm-camera
+            // set up main camera parameters
+            m_Camera.transform.localPosition = new Vector3(-0.02787972f, 0.5371301f, 0.06696343f);
+            m_Camera.transform.localEulerAngles = new Vector3(30f, 0f, 0f);
+            m_Camera.fieldOfView = 65f;
+
+            // activate arm-camera
             Camera fp_camera_2 = m_CharacterController.transform.Find("SecondaryCamera").GetComponent<Camera>();
             fp_camera_2.gameObject.SetActive(true);
-            fp_camera_2.transform.localPosition = new Vector3(0.0353f, 0.5088f, -0.076f);
-            fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
-            fp_camera_2.fieldOfView = 90f;
-
-            if (initializeAction != null) {
-
-                if (initializeAction.cameraNearPlane > 0) {
-                    m_Camera.nearClipPlane = initializeAction.cameraNearPlane;
-                    fp_camera_2.nearClipPlane = initializeAction.cameraNearPlane;
-                }
-
-                if (initializeAction.cameraFarPlane > 0) {
-                    m_Camera.farClipPlane = initializeAction.cameraFarPlane;
-                    fp_camera_2.farClipPlane = initializeAction.cameraFarPlane;
-                }
-                
-            }
-
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
-            // limit camera from looking too far down/up
-            if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f)) {
-                this.maxUpwardLookAngle = 25f;
+            if (UseCameraGimbals == true) {
+                // rehierchize arm-camera to rotation gimbals, to accurately reflect real-life camera rotation
+                CameraGimbal2 = CameraGimbals.transform.GetChild(0).gameObject;
+                fp_camera_2.transform.SetParent(CameraGimbal2.transform);
+
+                // set up arm-camera parameters
+                fp_camera_2.transform.localPosition = new Vector3(0.03f, 0.007f, 0.044f);
+                CameraGimbals.transform.localEulerAngles = new Vector3(0f, 90f, 0f);
+                fp_camera_2.fieldOfView = 69f;
             } else {
-                this.maxUpwardLookAngle = initializeAction.maxUpwardLookAngle;
+                // set up arm-camera parameters
+                fp_camera_2.transform.localPosition = new Vector3(0.06292081f, 0.5371169f, -0.03319014f);
+                fp_camera_2.transform.localEulerAngles = new Vector3(30f, 90f, 0f);
+                fp_camera_2.fieldOfView = 65f;
             }
 
-            if (Mathf.Approximately(initializeAction.maxDownwardLookAngle, 0.0f)) {
-                this.maxDownwardLookAngle = 90f;
-            } else {
-                this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
-            }
-
-            // rehierchize camera to rotation gimbals, to accurately reflect real-life camera rotation
-            CameraGimbal2 = CameraGimbals.transform.GetChild(0).gameObject;
-            m_Camera.transform.SetParent(CameraGimbal2.transform);
-
-            // camera position
-            m_Camera.transform.localPosition = new Vector3(0.03f, 0.007f, 0.044f);
-            // camera looking at arm
-            m_Camera.transform.localEulerAngles = new Vector3(0f, 90f, 0f);
+            // This will need to be changed when we add proper pitch and yaw to the Stretch Robot camera (i.e. start using the built-in, gimbaled camera again)
+            // limit camera from looking too far down
+            this.maxDownwardLookAngle = 90f;
+            this.maxUpwardLookAngle = 25f;
 
             // enable stretch arm component
             Debug.Log("initializing stretch arm");
