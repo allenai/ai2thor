@@ -7,6 +7,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
         protected List<Bounds> gizmobounds = new List<Bounds>();
 #endif
+        public GameObject AgentCamera = null;
         public GameObject AgentHand = null;
         public GameObject DefaultHandPosition = null;
         public Transform rotPoint;
@@ -27,6 +28,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Material[] ScreenFaces; // 0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
         public GameObject[] TargetCircles = null;
+        public bool UseCameraGimbals = false;
 
         [HideInInspector]
         public BaseFPSAgentController agent;

@@ -35,6 +35,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public SimObjPhysics[] VisibleSimObjPhysics;
 
+        public GameObject AgentCamera {
+            get => this.baseAgentComponent.AgentCamera;
+        }
+
         public GameObject AgentHand {
             get => this.baseAgentComponent.AgentHand;
         }
@@ -119,6 +123,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
         public GameObject[] TargetCircles {
             get => this.baseAgentComponent.TargetCircles;
+        }
+
+        public bool UseCameraGimbals {
+            get => this.baseAgentComponent.UseCameraGimbals;
         }
 
 

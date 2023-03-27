@@ -3533,20 +3533,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["y"] = 0.9009995460510254f;
                         action["z"] = -1.5f;
                         Vector3 rotation = new Vector3(0, 135.0f, 0);
-                        int horizon = 0;
+                        float horizon = Agent.GetComponent<BaseAgentComponent>().AgentCamera.transform.eulerAngles.x;
                         bool standing = true;
 
-                        if (splitcommand.Length > 1 && splitcommand.Length < 5) {
+                        if (splitcommand.Length > 1 && splitcommand.Length < 6) {
                             action["x"] = float.Parse(splitcommand[1]);
                             action["y"] = float.Parse(splitcommand[2]);
                             action["z"] = float.Parse(splitcommand[3]);
-                            // rotation = float.Parse(splitcommand[4]);
-                        } else if (splitcommand.Length > 5) {
+                            rotation = new Vector3(0, float.Parse(splitcommand[4]), 0);
+                        } else if (splitcommand.Length >= 6) {
                             action["x"] = float.Parse(splitcommand[1]);
                             action["y"] = float.Parse(splitcommand[2]);
                             action["z"] = float.Parse(splitcommand[3]);
-                            // rotation = float.Parse(splitcommand[4]);
-                            horizon = int.Parse(splitcommand[5]);
+                            rotation = new Vector3(0, float.Parse(splitcommand[4]), 0);
+                            horizon = float.Parse(splitcommand[5]);
                         }
 
                         action["rotation"] = rotation;
