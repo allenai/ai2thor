@@ -16,7 +16,6 @@ using UnityEditor.SceneManagement;
 #endif
 
 public static class UtilityFunctions {
-
     //store the max number of layers unity supports in its layer system. By default this is 32
     //and will likely not change but here it is just in case
     public const int maxUnityLayerCount = 32;
