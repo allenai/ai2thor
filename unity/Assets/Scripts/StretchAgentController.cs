@@ -52,6 +52,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             fp_camera_2.gameObject.SetActive(true);
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
+            // This will need to be expanded upon when we add proper pitch and yaw to the Stretch Robot camera (i.e. start using the built-in, gimbaled camera again)
             if (UseCameraGimbals == true) {
                 // rehierchize arm-camera to rotation gimbals, to accurately reflect real-life camera rotation
                 CameraGimbal2 = CameraGimbals.transform.GetChild(0).gameObject;
@@ -68,10 +69,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fp_camera_2.fieldOfView = 65f;
             }
 
-            // This will need to be changed when we add proper pitch and yaw to the Stretch Robot camera (i.e. start using the built-in, gimbaled camera again)
-            // limit camera from looking too far down
-            this.maxDownwardLookAngle = 90f;
-            this.maxUpwardLookAngle = 25f;
+            // limit camera from looking too far down/up
+            if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f)) {
+                this.maxUpwardLookAngle = 25f;
+            } else {
+                this.maxUpwardLookAngle = initializeAction.maxUpwardLookAngle;
+            }
+
+            if (Mathf.Approximately(initializeAction.maxDownwardLookAngle, 0.0f)) {
+                this.maxDownwardLookAngle = 90f;
+            } else {
+                this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
+            }
 
             // enable stretch arm component
             Debug.Log("initializing stretch arm");

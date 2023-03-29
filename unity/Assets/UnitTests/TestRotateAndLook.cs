@@ -123,7 +123,7 @@ namespace Tests {
             action.Clear();
 
             action["action"] = "LookUp";
-            action["degrees"] = 25.0f;
+            action["degrees"] = 55.0f;
             yield return step(action);
 
             Assert.AreEqual((int)agentCamera.transform.localRotation.eulerAngles.x, 335);
@@ -313,6 +313,7 @@ namespace Tests {
             action.Clear();
 
             action["action"] = "LookUp";
+            action["degrees"] = 40f;
             yield return step(action);
             yield return step(action);
             yield return step(action);
