@@ -352,7 +352,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "Initialize";
 
                         action["agentMode"] = "arm";
-                        action["agentControllerType"] = "mid-level";
+                        action["agentControllerType"] = "arm";
                         action["renderInstanceSegmentation"] = true;
 
                         // action.useMassThreshold = true;
