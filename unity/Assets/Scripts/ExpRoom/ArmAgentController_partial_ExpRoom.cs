@@ -14,7 +14,7 @@ using UnityStandardAssets.Utility;
 using RandomExtensions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-    public partial class ArmAgentController : PhysicsRemoteFPSAgentController {
+    public partial class KinovaArmAgentController : ArmAgentController {
 
         public void AttachObjectToArmWithFixedJoint(string objectId) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
@@ -24,11 +24,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
-            actionFinished(getArm().AttachObjectToArmWithFixedJoint(target));
+            actionFinished(getArmImplementation().AttachObjectToArmWithFixedJoint(target));
         }
 
         public void BreakFixedJoints() {
-            actionFinished(getArm().BreakFixedJoints());
+            actionFinished(getArmImplementation().BreakFixedJoints());
         }
 
     }

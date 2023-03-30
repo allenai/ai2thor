@@ -278,7 +278,7 @@ public class AgentManager : MonoBehaviour {
     private void SetUpArmController(bool midLevelArm) {
         this.agents.Clear();
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
-        primaryAgent = createAgentType(typeof(ArmAgentController), baseAgentComponent);
+        primaryAgent = createAgentType(typeof(KinovaArmAgentController), baseAgentComponent);
         var handObj = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "robot_arm_rig_gripper");
         handObj.gameObject.SetActive(true);
     }

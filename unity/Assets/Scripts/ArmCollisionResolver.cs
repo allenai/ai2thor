@@ -15,6 +15,7 @@ public class ArmCollisionResolver : CollisionEventResolver {
         base.Start();
         arm = this.GetComponent<Stretch_Robot_Arm_Controller>();
         var collisionListener = this.GetComponentInParent<CollisionListener>();
+        Debug.Log("-------- ArmCollisionResolver Start");
     }
 
     public override StaticCollision resolveToStaticCollision(Collider externalCollider, HashSet<Collider> internalColliders) {
@@ -22,6 +23,7 @@ public class ArmCollisionResolver : CollisionEventResolver {
         if (externalCollider.transform.parent != null) {
             if (externalCollider.transform.parent.gameObject.Equals(bodyCollidersParent)) {
                 // Collision with body
+                Debug.Log("-------- RESOLVED COLLISION WITH BODY");
                 return new StaticCollision() {
                     gameObject = externalCollider.transform.parent.gameObject
                 };
@@ -38,6 +40,7 @@ public class ArmCollisionResolver : CollisionEventResolver {
 
                     if (objectColliderSet.Contains(externalCollider)) {
                         // Held-Object collision with aram
+                        Debug.Log("-------- RESOLVED COLLISION WITH ARm");
                         return new StaticCollision() {
                             gameObject = externalCollider.gameObject
                         };

@@ -204,47 +204,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Func<Transform, T> getProp,
             Action<Transform, T> setProp,
             Func<Transform, T, T> nextProp,
+            // Main update after new property value
+            // Action? update,
             // We could remove this one, but it is a speedup to not compute direction for position update calls at every addToProp call and just outside while
             Func<T, T, T> getDirection,
             Func<T, T, float> distanceMetric,
             float fixedDeltaTime,
             bool returnToStartPropIfFailed,
             double epsilon
+            
         ) {
             T originalProperty = getProp(moveTransform);
             var previousProperty = originalProperty;
 
-            IK_Robot_Arm_Controller ikArm;
-            FK_IK_Solver ikArmSolver;
-            Stretch_Robot_Arm_Controller stretchArm;
-            Stretch_Arm_Solver stretchArmSolver;
-            if (controller.GetType() == typeof(StretchAgentController)) {
-                ikArm = null;
-                ikArmSolver = null;
-                stretchArm = controller.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
-                //Debug.Log("This is the stretchArm: " + stretchArm.name);
-                stretchArmSolver = stretchArm.gameObject.GetComponentInChildren<Stretch_Arm_Solver>();
-                //Debug.Log("This is the stretchArmSolver: " + stretchArmSolver.name);
-            }
-
-            else {
-                ikArm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
-                //Debug.Log("This is the ikArm: " + ikArm.name);
-                ikArmSolver = ikArm.gameObject.GetComponentInChildren<FK_IK_Solver>();
-                //Debug.Log("This is the ikArmSolver: " + ikArmSolver.name);
-                stretchArm = null;
-                stretchArmSolver = null;
-            }
-
-#if UNITY_EDITOR
-        Debug.Log("ContinuousMovement arm ->");
-        if (controller.GetType() == typeof(ArmAgentController)) {
-	        Debug.Log(ikArm);
-        }
-        else if (controller.GetType() == typeof(StretchAgentController)) {
-            Debug.Log(stretchArm);
-        }
-#endif
+            // TODO: do not pass controller, and pass a lambda for the update function or an
+            // interface 
+            var arm = controller.GetComponentInChildren<ArmController>();
 
             // commenting out the WaitForEndOfFrame here since we shoudn't need 
             // this as we already wait for a frame to pass when we execute each action
@@ -274,16 +249,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     setProp(moveTransform, next);
                 }
 
-                // this will be a NOOP for Rotate/Move/Height actions
-                if (controller.GetType() == typeof(ArmAgentController)) {
-                    ikArmSolver.ManipulateArm();
-                }
+                // update?.Invoke();
 
-                // TODO: why have two different Manipulate methods, this introduces dependencies to two different
-                // arm classes. We should make these arm classes a non-mono behavior inheriting a common interface
-                else if (controller.GetType() == typeof(StretchAgentController)) {
-                    stretchArmSolver.ManipulateStretchArm();
-                }
+                // this will be a NOOP for Rotate/Move/Height actions
+                arm.manipulateArm();
                 
                 if (!Physics.autoSimulation) {
                     if (fixedDeltaTime == 0f) {
@@ -322,12 +291,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             // we call this one more time in the event that the arm collided and was reset
-            if (controller.GetType() == typeof(ArmAgentController)) {
-                ikArmSolver.ManipulateArm();
-            }
-            else if (controller.GetType() == typeof(StretchAgentController)) {
-                stretchArmSolver.ManipulateStretchArm();
-            }
+            arm.manipulateArm();
 
             if (!Physics.autoSimulation) {
                 if (fixedDeltaTime == 0f) {
@@ -348,7 +312,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             bool actionSuccess = true;
             string debugMessage = "";
-            IK_Robot_Arm_Controller arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
             var staticCollisions = collisionListener.StaticCollisions().ToList();
 
