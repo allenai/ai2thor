@@ -64,8 +64,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fp_camera_2.fieldOfView = 69f;
             } else {
                 // set up arm-camera parameters
-                fp_camera_2.transform.localPosition = new Vector3(0.06292081f, 0.5371169f, -0.03319014f);
-                fp_camera_2.transform.localEulerAngles = new Vector3(30f, 90f, 0f);
+                fp_camera_2.transform.localPosition = new Vector3(0.05220348f, 0.5237237f, -0.03124857f);
+                fp_camera_2.transform.localEulerAngles = new Vector3(50f, 90f, 0f);
                 fp_camera_2.fieldOfView = 65f;
             }
 
