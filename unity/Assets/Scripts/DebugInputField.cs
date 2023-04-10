@@ -520,6 +520,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+                 case "inits-cp": {
+                     Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "Initialize";
+                    action["agentMode"] = "stretch";
+                    action["agentControllerType"] = "stretch";
+                    action["renderInstanceSegmentation"] = true;
+
+                    action["thirdPartyCameraParameters"] = new Dictionary<string, object>() {
+                        {"SecondaryCamera", new CameraParameters() 
+                            {
+                                fieldOfView = 130f,
+                                localEulerAngles = new Vector3(-20f, 0f, 0.0f)
+                            } 
+                        }
+                    }; 
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        
+                    
+                    break;
+                 }
                 case "inits-camera": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 

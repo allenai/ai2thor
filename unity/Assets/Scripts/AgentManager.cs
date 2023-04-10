@@ -1801,6 +1801,29 @@ public class DynamicServerAction {
 }
 
 [Serializable]
+public class CameraParameters {
+    public float? fieldOfView;
+    public Vector3? localEulerAngles;
+    public float? nearPlane;
+    public float? farPlane;
+
+    public static void setCameraParameters(Camera camera, CameraParameters parameters) {
+        if (parameters.fieldOfView.HasValue) {
+            camera.fieldOfView = parameters.fieldOfView.Value;
+        }
+        if (parameters.nearPlane.HasValue) {
+            camera.nearClipPlane = parameters.nearPlane.Value;
+        }
+        if (parameters.farPlane.HasValue) {
+            camera.farClipPlane = parameters.farPlane.Value;
+        }
+        if (parameters.localEulerAngles.HasValue) {
+            camera.transform.localEulerAngles = parameters.localEulerAngles.Value;
+        }
+    }
+}
+
+[Serializable]
 public class ServerAction {
     public string action;
     public int agentCount = 1;
@@ -1952,6 +1975,8 @@ public class ServerAction {
 
     public float maxUpwardLookAngle = 0.0f;
     public float maxDownwardLookAngle = 0.0f;
+
+    public Dictionary<string, CameraParameters> thirdPartyCameraParameters;
 
 
     public SimObjType ReceptableSimObjType() {

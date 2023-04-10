@@ -47,8 +47,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera.transform.localEulerAngles = new Vector3(30f, 0f, 0f);
             m_Camera.fieldOfView = 65f;
 
+            var secondaryCameraName = "SecondaryCamera";
+
             // activate arm-camera
-            Camera fp_camera_2 = m_CharacterController.transform.Find("SecondaryCamera").GetComponent<Camera>();
+            Camera fp_camera_2 = m_CharacterController.transform.Find(secondaryCameraName).GetComponent<Camera>();
             fp_camera_2.gameObject.SetActive(true);
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
@@ -80,6 +82,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.maxDownwardLookAngle = 90f;
             } else {
                 this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
+            }
+
+            var secondaryCameraParams = new CameraParameters();
+            var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(secondaryCameraName, out secondaryCameraParams);
+
+            if (setSecondaryParams.GetValueOrDefault()) {
+                CameraParameters.setCameraParameters(fp_camera_2, secondaryCameraParams);
             }
 
             // enable stretch arm component
