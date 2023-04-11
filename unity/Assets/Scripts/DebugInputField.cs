@@ -544,6 +544,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     
                     break;
                  }
+                 case "rcm": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "RotateCameraMount";
+                    action["degrees"] = 20.0f;
+                    if (splitcommand.Length > 1) {
+                        action["degrees"] = float.Parse(splitcommand[1]);
+                    }
+                    if (splitcommand.Length == 3) {
+                        action["secondary"] = bool.Parse(splitcommand[2]);
+                    }
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                 }
+                 case "mabd": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "MoveArmBaseDown";
+                    action["distance"] = 0.4f;
+                    
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                 }
                 case "inits-camera": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
@@ -2125,13 +2148,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "fov": {
-                        ServerAction action = new ServerAction();
-                        action.action = "ChangeFOV";
-                        action.fieldOfView = float.Parse(splitcommand[1]);
-                        CurrentActiveController().ProcessControlCommand(action);
+                        Dictionary<string, object> comm = new Dictionary<string, object>();
+                        comm["action"] = "ChangeFOV";
+                        comm["fieldOfView"] = float.Parse(splitcommand[1]);
+                        if (splitcommand.Length > 2) {
+                            comm["camera"]  = splitcommand[2];
+                        }
+
+                        CurrentActiveController().ProcessControlCommand(comm);
                         break;
                     }
-
                 case "teles": {
                         ServerAction action = new ServerAction();
                         action.action = "TeleportFull";

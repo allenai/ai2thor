@@ -5075,11 +5075,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void ChangeFOV(ServerAction action) {
-
-            if (action.fieldOfView > 0 && action.fieldOfView < 180) {
-                m_Camera.fieldOfView = action.fieldOfView;
-                actionFinished(true);
+        public void ChangeFOV(float fieldOfView, string camera="") {
+            
+            if (fieldOfView > 0 && fieldOfView < 180) {
+                if (string.IsNullOrEmpty(camera)) {
+                    m_Camera.fieldOfView = fieldOfView;
+                    actionFinished(true);
+                }
+                else {
+                    var cameras = new List<Camera>(){m_Camera}.Concat(this.agentManager.thirdPartyCameras);
+                    var matches = cameras.Where(cam => cam.name == camera);
+                    if (matches.Count() == 0) {
+                         errorMessage = $"Camera '{camera}' is not present in the agent, make sure the agent was initialized correctly or camera was added via 'AddThirdPartyCamera'.";
+                        actionFinished(false);
+                    }
+                    else {
+                        foreach (var cam in matches) {
+                            cam.fieldOfView = fieldOfView;
+                        }
+                        actionFinished(true);
+                    }
+                }
             } else {
                 errorMessage = "fov must be in (0, 180) noninclusive.";
                 Debug.Log(errorMessage);

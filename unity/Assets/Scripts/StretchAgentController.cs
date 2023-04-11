@@ -10,6 +10,12 @@ using UnityEngine.Rendering.PostProcessing;
 namespace UnityStandardAssets.Characters.FirstPerson {
         
     public partial class StretchAgentController : PhysicsRemoteFPSAgentController {
+
+        protected Transform primaryGimbal;
+        protected Transform secondaryGimbal;
+
+        protected float primaryStartingXRotation;
+        protected float secondaryStartingXRotation;
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
         GameObject CameraGimbal2;
@@ -46,6 +52,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera.fieldOfView = 65f;
 
             var secondaryCameraName = "SecondaryCamera";
+
+            
+            var primaryGimbalName = "FixedCameraGimbalPrimary";
+            var secondaryGimbalName = "FixedCameraGimbalSecondary";
+
+            this.primaryGimbal = m_CharacterController.transform.FirstChildOrDefault(x => x.name == primaryGimbalName);
+            this.secondaryGimbal = m_CharacterController.transform.FirstChildOrDefault(x => x.name == secondaryGimbalName);
+
+            primaryStartingXRotation = primaryGimbal.transform.localEulerAngles.x;
+            secondaryStartingXRotation = secondaryGimbal.transform.localEulerAngles.x;
 
             // activate arm-camera
             Camera fp_camera_2 = m_CharacterController.transform.Find(secondaryCameraName).GetComponent<Camera>();
@@ -716,6 +732,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 returnToStart: returnToStart,
                 disableRendering: disableRendering
             );
+        }
+
+
+        public void RotateCameraMount(float degrees, bool secondary = false) {
+            var target = !secondary ? primaryGimbal : secondaryGimbal;
+            var startingXRotation = !secondary ? primaryStartingXRotation : secondaryStartingXRotation;
+            var minDegree = Mathf.Round(startingXRotation - 15.0001f);
+            var maxDegree = Mathf.Round(startingXRotation + 15.0001f);
+            if (degrees >= minDegree && degrees <= maxDegree) {
+                target.localEulerAngles = new Vector3(degrees, target.localEulerAngles.y, target.localEulerAngles.z);
+                actionFinished(true);
+            }
+            else {
+                errorMessage = $"Invalid value for `degrees`: '{degrees}'. Value should be between '{minDegree}' and '{maxDegree}'.";
+                actionFinished(false);
+            }
         }
 
 #if UNITY_EDITOR
