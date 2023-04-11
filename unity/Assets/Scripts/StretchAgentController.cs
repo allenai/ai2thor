@@ -55,19 +55,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
             // This will need to be expanded upon when we add proper pitch and yaw to the Stretch Robot camera (i.e. start using the built-in, gimbaled camera again)
-            if (UseCameraGimbals == true) {
-                // rehierchize arm-camera to rotation gimbals, to accurately reflect real-life camera rotation
-                CameraGimbal2 = CameraGimbals.transform.GetChild(0).gameObject;
-                fp_camera_2.transform.SetParent(CameraGimbal2.transform);
+            if (UseMotorCameraGimbals == true) {
+                CameraGimbal2 = MotorCameraGimbals.transform.GetChild(0).gameObject;
+
+                // rehierchize primary camera to motorized gimbals, to accurately reflect real-life camera rotation
+                m_Camera.transform.SetParent(CameraGimbal2.transform);
+
+                // set up primary camera parameters
+                m_Camera.transform.localPosition = new Vector3(0.03f, 0.007f, 0.044f);
+                m_Camera.transform.localEulerAngles = Vector3.zero;
+                fp_camera_2.fieldOfView = 69f;
 
                 // set up arm-camera parameters
-                fp_camera_2.transform.localPosition = new Vector3(0.03f, 0.007f, 0.044f);
-                CameraGimbals.transform.localEulerAngles = new Vector3(0f, 90f, 0f);
-                fp_camera_2.fieldOfView = 69f;
+                
             } else {
+                // rehierchize cameras to fixed gimbals
+                m_Camera.transform.SetParent(FixedCameraGimbalPrimary.transform);
+                fp_camera_2.transform.SetParent(FixedCameraGimbalSecondary.transform);
+
+                // set up primary camera parameters
+                m_Camera.transform.localPosition = new Vector3(-0.015f, 0.01129817f, 0.06644913f);
+                m_Camera.transform.localEulerAngles = Vector3.zero;
+                m_Camera.fieldOfView = 65f;
+
                 // set up arm-camera parameters
-                fp_camera_2.transform.localPosition = new Vector3(0.05220348f, 0.5237237f, -0.03124857f);
-                fp_camera_2.transform.localEulerAngles = new Vector3(50f, 90f, 0f);
+                fp_camera_2.transform.localPosition = new Vector3(-0.01500005f, 0.01832385f, 0.06322689f);
+                m_Camera.transform.localEulerAngles = Vector3.zero;
                 fp_camera_2.fieldOfView = 65f;
             }
 

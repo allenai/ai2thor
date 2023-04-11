@@ -63,8 +63,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             get => this.baseAgentComponent.DebugPointPrefab;
         }
 
-        public GameObject CameraGimbals {
-            get => this.baseAgentComponent.CameraGimbals;
+        public GameObject FixedCameraGimbalPrimary {
+            get => this.baseAgentComponent.FixedCameraGimbalPrimary;
+        }
+        
+        public GameObject FixedCameraGimbalSecondary {
+            get => this.baseAgentComponent.FixedCameraGimbalSecondary;
+        }
+
+        public GameObject MotorCameraGimbals {
+            get => this.baseAgentComponent.MotorCameraGimbals;
         }
 
         public GameObject VisibilityCapsule {
@@ -125,8 +133,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             get => this.baseAgentComponent.TargetCircles;
         }
 
-        public bool UseCameraGimbals {
-            get => this.baseAgentComponent.UseCameraGimbals;
+        public bool UseMotorCameraGimbals {
+            get => this.baseAgentComponent.UseMotorCameraGimbals;
         }
 
 

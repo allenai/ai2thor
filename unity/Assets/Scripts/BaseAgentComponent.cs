@@ -14,7 +14,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject DebugPointPrefab;
         public GameObject GridRenderer = null;
         public GameObject DebugTargetPointPrefab;
-        public GameObject CameraGimbals;
+        public GameObject FixedCameraGimbalPrimary;
+        public GameObject FixedCameraGimbalSecondary;
+        public GameObject MotorCameraGimbals;
         public GameObject VisibilityCapsule = null;// used to keep track of currently active VisCap: see different vis caps for modes below
         public GameObject TallVisCap;// meshes used for Tall mode
         public GameObject DroneVisCap;// meshes used for Drone mode
@@ -28,7 +30,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Material[] ScreenFaces; // 0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
         public GameObject[] TargetCircles = null;
-        public bool UseCameraGimbals = false;
+        public bool UseMotorCameraGimbals = false;
 
         [HideInInspector]
         public BaseFPSAgentController agent;
