@@ -43,8 +43,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             crouchingLocalCameraPosition = m_Camera.transform.localPosition;
 
             // set up main camera parameters
-            m_Camera.transform.localPosition = new Vector3(-0.02787972f, 0.5371301f, 0.06696343f);
-            m_Camera.transform.localEulerAngles = new Vector3(30f, 0f, 0f);
             m_Camera.fieldOfView = 65f;
 
             var secondaryCameraName = "SecondaryCamera";
@@ -54,7 +52,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             fp_camera_2.gameObject.SetActive(true);
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
-            // This will need to be expanded upon when we add proper pitch and yaw to the Stretch Robot camera (i.e. start using the built-in, gimbaled camera again)
+            // motor gimbals setup
             if (UseMotorCameraGimbals == true) {
                 CameraGimbal2 = MotorCameraGimbals.transform.GetChild(0).gameObject;
 
@@ -67,7 +65,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fp_camera_2.fieldOfView = 69f;
 
                 // set up arm-camera parameters
-                
+                // ???
+
+            // fixed gimbals setup
             } else {
                 // rehierchize cameras to fixed gimbals
                 m_Camera.transform.SetParent(FixedCameraGimbalPrimary.transform);

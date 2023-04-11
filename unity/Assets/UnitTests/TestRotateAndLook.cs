@@ -126,7 +126,7 @@ namespace Tests {
             action["degrees"] = 55.0f;
             yield return step(action);
 
-            Assert.AreEqual((int)agentCamera.transform.localRotation.eulerAngles.x, 335);
+            Assert.AreEqual((int)agentCamera.transform.eulerAngles.x, 335);
 
             //lookup again and hit limit
             yield return step(action);
@@ -145,7 +145,7 @@ namespace Tests {
             yield return step(action);
             yield return step(action);
 
-            Assert.AreEqual((int)agentCamera.transform.localRotation.eulerAngles.x, 90);
+            Assert.AreEqual((int)agentCamera.transform.eulerAngles.x, 90);
 
             yield return step(action);
             Assert.AreEqual(error, "can't look down beyond 90 degrees below the forward horizon");
@@ -318,7 +318,7 @@ namespace Tests {
             yield return step(action);
             yield return step(action);
 
-            Assert.AreEqual((int)agentCamera.transform.localRotation.eulerAngles.x, 270);
+            Assert.AreEqual((int)agentCamera.transform.eulerAngles.x, 270);
 
             //lookup again and hit limit
             yield return step(action);
@@ -335,7 +335,7 @@ namespace Tests {
             yield return step(action);
             yield return step(action);
 
-            Assert.AreEqual((int)agentCamera.transform.localRotation.eulerAngles.x, 90);
+            Assert.AreEqual((int)agentCamera.transform.eulerAngles.x, 90);
 
             //lookdown again and hit limit
             yield return step(action);
