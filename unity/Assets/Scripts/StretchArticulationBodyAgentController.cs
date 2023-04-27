@@ -9,16 +9,19 @@ using UnityEngine.Rendering.PostProcessing;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
         
-    public partial class StretchAgentController : ArmAgentController {
-        public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
+    public partial class StretchArticulationBodyAgentController : ArmAgentController {
+        public StretchArticulationBodyAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
         public override void InitializeBody(ServerAction initializeAction) {
+            // TODO; Articulation Body init
             VisibilityCapsule = StretchVisCap;
             m_CharacterController.center = new Vector3(0, -0.1821353f, -0.1092373f);
             m_CharacterController.radius = 0.1854628f;
             m_CharacterController.height = 1.435714f;
 
+
+            // TODO: REMOVE
             CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
             cc.center = m_CharacterController.center;
             cc.radius = m_CharacterController.radius;
@@ -66,24 +69,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.maxUpwardLookAngle = 25f;
 
             // enable stretch arm component
-            Debug.Log("initializing stretch arm");
+            Debug.Log("initializing stretch arm AB");
             StretchArm.SetActive(true);
             SArm = this.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
             var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
             Vector3 pos = armTarget.transform.localPosition;
             pos.z = 0.0f; // pulls the arm in to be fully contracted
             armTarget.transform.localPosition = pos;
-            var StretchSolver = this.GetComponentInChildren<Stretch_Arm_Solver>();
-            Debug.Log("running manipulate stretch arm");
-            StretchSolver.ManipulateStretchArm();
+
+
+            // var StretchSolver = this.GetComponentInChildren<Stretch_Arm_Solver>();
+            Debug.Log("running manipulate stretch arm AB");
+            // StretchSolver.ManipulateStretchArm();
+
+            getArmImplementation().manipulateArm();
         }
 
         private ArmController getArmImplementation() {
-            Stretch_Robot_Arm_Controller arm = GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+            StretchABRobotArmController arm = GetComponentInChildren<StretchABRobotArmController>();
             if (arm == null) {
                 throw new InvalidOperationException(
                     "Agent does not have Stretch arm or is not enabled.\n" +
-                    $"Make sure there is a '{typeof(Stretch_Robot_Arm_Controller).Name}' component as a child of this agent."
+                    $"Make sure there is a '{typeof(StretchABRobotArmController).Name}' component as a child of this agent."
                 );
             }
             return arm;
@@ -93,7 +100,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return getArmImplementation();
         }
 
-        
+        // TODO: IMPLEMENT WITH AB
         public void TeleportArm(
             Vector3? position = null,
             float? rotation = null,

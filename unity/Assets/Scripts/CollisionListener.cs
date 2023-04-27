@@ -172,7 +172,7 @@ public class CollisionListener : MonoBehaviour {
         return StaticCollisions(this.externalColliderToInternalCollisions.Keys);
     }
 
-    public bool ShouldHalt() {
+    public virtual bool ShouldHalt() {
         return StaticCollisions().GetEnumerator().MoveNext();
     }
 

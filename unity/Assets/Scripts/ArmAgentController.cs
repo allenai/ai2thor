@@ -27,6 +27,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public override void updateImageSynthesis(bool status) {
+            base.updateImageSynthesis(status);
+
+            // updateImageSynthesis is run in BaseFPSController's Initialize method after the
+            // Stretch Agent's unique secondary camera has been added to the list of third party
+            // cameras in InitializeBody, so a third-party camera image synthesis update is
+            // necessary if we want the secondary camera's image synthesis componenent to match
+            // the primary camera's
+            agentManager.updateThirdPartyCameraImageSynthesis(status);
+        }
+
        
         /*
         This function is identical to `MoveArm` except that rather than

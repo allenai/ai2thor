@@ -177,6 +177,10 @@ public class AgentManager : MonoBehaviour {
                 SetUpStretchController(action);
             } else if (agentMode == "arm") {
                 SetUpArmController(true);
+            }
+            else if (agentMode == "stretchAB") {
+                SetUpStretchABController(action);
+
             } else {
                 // Should not be possible but being very defensive.
                 throw new ArgumentException($"Invalid agentMode {action.agentMode}");
@@ -254,6 +258,14 @@ public class AgentManager : MonoBehaviour {
     }
 
     private void SetUpStretchController(ServerAction action) {
+        this.agents.Clear();
+        // force snapToGrid to be false
+        action.snapToGrid = false;
+        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
+        primaryAgent = createAgentType(typeof(StretchAgentController), baseAgentComponent);
+    }
+
+    private void SetUpStretchABController(ServerAction action) {
         this.agents.Clear();
         // force snapToGrid to be false
         action.snapToGrid = false;
