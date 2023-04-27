@@ -1,6 +1,6 @@
 public class CollisionListenerAB : CollisionListener {
 
-    public StretchABRobotArmController armController;
+    public ArticulatedArmController armController;
 
     public override bool ShouldHalt() {
         

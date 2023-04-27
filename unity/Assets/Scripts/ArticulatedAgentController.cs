@@ -9,8 +9,8 @@ using UnityEngine.Rendering.PostProcessing;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
         
-    public partial class StretchArticulationBodyAgentController : ArmAgentController {
-        public StretchArticulationBodyAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
+    public partial class ArticulatedAgentController : ArmAgentController {
+        public ArticulatedAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
         public override void InitializeBody(ServerAction initializeAction) {
@@ -86,11 +86,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private ArmController getArmImplementation() {
-            StretchABRobotArmController arm = GetComponentInChildren<StretchABRobotArmController>();
+            ArticulatedArmController arm = GetComponentInChildren<ArticulatedArmController>();
             if (arm == null) {
                 throw new InvalidOperationException(
                     "Agent does not have Stretch arm or is not enabled.\n" +
-                    $"Make sure there is a '{typeof(StretchABRobotArmController).Name}' component as a child of this agent."
+                    $"Make sure there is a '{typeof(ArticulatedArmController).Name}' component as a child of this agent."
                 );
             }
             return arm;

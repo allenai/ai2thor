@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Linq;
-public partial class StretchABRobotArmController : ArmController {
+public partial class ArticulatedArmController : ArmController {
     
     [SerializeField]
     private Transform armBase, handCameraTransform, FirstJoint;
@@ -40,7 +40,6 @@ public partial class StretchABRobotArmController : ArmController {
         // TODO: this is called after every physics update loop so solver update funcion should go here
 
         // Arm target class member is used to calculate distance
-
     }
 
     public override GameObject GetArmTarget() {
