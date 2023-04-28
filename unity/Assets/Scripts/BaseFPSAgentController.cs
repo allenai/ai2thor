@@ -192,6 +192,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             HideAllAgentRenderers();
 
             // default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
+            if(this.GetComponentInChildren<NavMeshAgent>())
             this.GetComponentInChildren<NavMeshAgent>().enabled = false;
 
             // Recording initially disabled renderers and scene bounds
@@ -341,27 +342,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // defaults all agent renderers, from all modes (tall, bot, drone), to hidden for initialization default
         protected void HideAllAgentRenderers() {
-            foreach (Renderer r in TallVisCap.GetComponentsInChildren<Renderer>()) {
-                if (r.enabled) {
-                    r.enabled = false;
+            if (TallVisCap != null && BotVisCap != null && DroneVisCap != null && StretchVisCap != null) {
+                foreach (Renderer r in TallVisCap.GetComponentsInChildren<Renderer>()) {
+                    if (r.enabled) {
+                        r.enabled = false;
+                    }
                 }
-            }
 
-            foreach (Renderer r in BotVisCap.GetComponentsInChildren<Renderer>()) {
-                if (r.enabled) {
-                    r.enabled = false;
+                foreach (Renderer r in BotVisCap.GetComponentsInChildren<Renderer>()) {
+                    if (r.enabled) {
+                        r.enabled = false;
+                    }
                 }
-            }
 
-            foreach (Renderer r in DroneVisCap.GetComponentsInChildren<Renderer>()) {
-                if (r.enabled) {
-                    r.enabled = false;
+                foreach (Renderer r in DroneVisCap.GetComponentsInChildren<Renderer>()) {
+                    if (r.enabled) {
+                        r.enabled = false;
+                    }
                 }
-            }
 
-            foreach (Renderer r in StretchVisCap.GetComponentsInChildren<Renderer>()) {
-                if (r.enabled) {
-                    r.enabled = false;
+                foreach (Renderer r in StretchVisCap.GetComponentsInChildren<Renderer>()) {
+                    if (r.enabled) {
+                        r.enabled = false;
+                    }
                 }
             }
         }

@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Linq;
 public partial class ArticulatedArmController : ArmController {
-    ArticulatedArmJointSolver[] joints;
+    public ArticulatedArmJointSolver[] joints;
 
     [SerializeField]
     private Transform armBase, handCameraTransform, FirstJoint;
