@@ -8,7 +8,7 @@ using UnityEngine.AI;
 using UnityEngine.Rendering.PostProcessing;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-        
+
     public partial class ArticulatedAgentController : ArmAgentController {
         public ArticulatedAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
@@ -60,10 +60,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     m_Camera.farClipPlane = initializeAction.cameraFarPlane;
                     fp_camera_2.farClipPlane = initializeAction.cameraFarPlane;
                 }
-                
+
             }
 
-//            fp_camera_2.fieldOfView = 75f;
+            //            fp_camera_2.fieldOfView = 75f;
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
             // limit camera from looking too far down
@@ -98,18 +98,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arm;
         }
 
-        protected override ArmController getArm() { 
+        protected override ArmController getArm() {
             return getArmImplementation();
         }
 
-       public override void MoveArmBaseUp(
-            float distance,
-            float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
-        ) {
-            var arm = (ArticulatedArmController) getArm();
+        public override void MoveArmBaseUp(
+             float distance,
+             float speed = 1,
+             float? fixedDeltaTime = null,
+             bool returnToStart = true,
+             bool disableRendering = true
+         ) {
+            var arm = (ArticulatedArmController)getArm();
             arm.moveArmBaseUp(
                 controller: this,
                 distance: distance,
@@ -137,15 +137,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override void MoveArm(
-            Vector3 position, 
-            float speed = 1, 
-            float? fixedDeltaTime = null, 
-            bool returnToStart = true, 
-            string coordinateSpace = "armBase", 
-            bool restrictMovement = false, 
+            Vector3 position,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            string coordinateSpace = "armBase",
+            bool restrictMovement = false,
             bool disableRendering = true
         ) {
-            var arm = (ArticulatedArmController) getArm();
+            var arm = (ArticulatedArmController)getArm();
             arm.moveArmTarget(
                 controller: this,
                 target: position,
@@ -155,8 +155,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 coordinateSpace: coordinateSpace,
                 restrictTargetPosition: restrictMovement,
                 disableRendering: disableRendering
-            );        
-            }
+            );
+        }
 
         // TODO: Eli implement MoveAgent and RotateAgent
 
@@ -261,10 +261,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // teleport arm!
             if (!worldRelative) {
                 posRotManip.transform.localPosition = (Vector3)position;
-                posRotManip.transform.localEulerAngles = new Vector3 (0, (float)rotation % 360, 0);
+                posRotManip.transform.localEulerAngles = new Vector3(0, (float)rotation % 360, 0);
             } else {
                 posRotManip.transform.position = (Vector3)position;
-                posRotManip.transform.eulerAngles = new Vector3 (0, (float)rotation % 360, 0);
+                posRotManip.transform.eulerAngles = new Vector3(0, (float)rotation % 360, 0);
             }
 
             if (SArm.IsArmColliding() && !forceAction) {

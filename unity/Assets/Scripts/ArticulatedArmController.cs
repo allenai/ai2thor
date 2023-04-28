@@ -13,17 +13,17 @@ public partial class ArticulatedArmController : ArmController {
     private PhysicsRemoteFPSAgentController PhysicsController;
 
     //Distance from joint containing gripper camera to armTarget
-    private Vector3 WristToManipulator = new Vector3 (0, -0.09872628f, 0);
+    private Vector3 WristToManipulator = new Vector3(0, -0.09872628f, 0);
 
     // private Stretch_Arm_Solver solver;
-    
+
 
     // TODO: Possibly reimplement this fucntions, if AB read of transform is ok then may not need to reimplement
     public override Transform pickupParent() {
         return magnetSphere.transform;
     }
 
-    public override Vector3  wristSpaceOffsetToWorldPos(Vector3 offset) {
+    public override Vector3 wristSpaceOffsetToWorldPos(Vector3 offset) {
         return handCameraTransform.TransformPoint(offset) - handCameraTransform.position + WristToManipulator;
     }
     public override Vector3 armBaseSpaceOffsetToWorldPos(Vector3 offset) {
@@ -38,10 +38,34 @@ public partial class ArticulatedArmController : ArmController {
     }
 
     public override void manipulateArm() {
-        // TODO: this is called after every physics update loop so solver update funcion should go here
+        //so assume each joint that needs to move has had its `currentArmMoveParams` set
+        //now we call `ControlJointFromAction` on all joints each physics update to get it to move...
 
-        // Arm target class member is used to calculate distance
+        foreach (ArticulatedArmJointSolver j in joints) {
+            j.ControlJointFromAction();
+        }
 
+        //ok now what about halt conditions..... those are already sort of built in to the solver at the moment
+        //so uhhh
+    }
+
+    public override bool shouldHalt() {
+
+        foreach (ArticulatedArmJointSolver j in joints) {
+            //only halt if all joints report back that shouldHalt = true
+            //joints that are idle and not moving will return shouldHalt = true by default
+            if (!j.shouldHalt(
+                distanceMovedSoFar: j.distanceMovedSoFar,
+                cachedPositions: j.currentArmMoveParams.cachedPositions,
+                tolerance: j.currentArmMoveParams.tolerance,
+                checkStandardDev: j.checkStandardDev
+            )) {
+                //if any single joint is still not halting, return false
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public override GameObject GetArmTarget() {
@@ -53,20 +77,10 @@ public partial class ArticulatedArmController : ArmController {
 
         //TODO: Initialization
 
-        
+
 
         // TODO: Replace Solver 
     }
-
-    public override bool shouldHalt() {
-        // TODO: Reimplement halting condition 
-        /// This is the halting condition in ContinuousMove, used to be the collision listener now can be the 
-        // new solver or whatever
-        // return collisionListener.ShouldHalt();
-
-        return false;
-    }
-
 
     //TODO: main functions to reimplement, use continuousMovement.moveAB/rotateAB
     public override void moveArmRelative(
@@ -78,9 +92,8 @@ public partial class ArticulatedArmController : ArmController {
         string coordinateSpace,
         bool restrictTargetPosition,
         bool disableRendering
-    ) { 
-        //not doing this one yet        
-
+    ) {
+        //not doing this one yet soooo uhhhhh ignore for now        
     }
 
     public override void moveArmTarget(
@@ -99,16 +112,14 @@ public partial class ArticulatedArmController : ArmController {
         float totalExtendDistance = 0.0f;
 
         //loop through all extending joints to get the total distance each joint can move
-        for(int i = 1; i <= 4; i++)
-        {
+        for (int i = 1; i <= 4; i++) {
             totalExtendDistance += GetDriveUpperLimit(joints[i]);
         }
 
         //loop through all extending joints and get the ratio of movement each joint is responsible for
-        for(int i = 1; i <= 4; i++)
-        {
+        for (int i = 1; i <= 4; i++) {
             ArticulatedArmJointSolver thisJoint = joints[i];
-            jointToArmDistanceRatios.Add(thisJoint, GetDriveUpperLimit(thisJoint)/totalExtendDistance);
+            jointToArmDistanceRatios.Add(thisJoint, GetDriveUpperLimit(thisJoint) / totalExtendDistance);
         }
 
         List<ArticulatedArmJointSolver> jointsThatAreMoving = new List<ArticulatedArmJointSolver>();
@@ -121,28 +132,25 @@ public partial class ArticulatedArmController : ArmController {
 
         //this will be fine to get the direction for now I guess
         int direction = 0;
-        if(distance < 0)
-        {
+        if (distance < 0) {
             direction = -1;
         }
-        if(distance > 0 )
-        {
+        if (distance > 0) {
             direction = 1;
         }
 
         //set each joint to move its specific distance
-        foreach (ArticulatedArmJointSolver joint in jointToArmDistanceRatios.Keys)
-        {
+        foreach (ArticulatedArmJointSolver joint in jointToArmDistanceRatios.Keys) {
             //assign each joint the distance it needs to move to have the entire arm
             float myDistance = distance * jointToArmDistanceRatios[joint];
 
-            ArmMoveParams amp = new ArmMoveParams{
+            ArmMoveParams amp = new ArmMoveParams {
                 distance = myDistance,
                 speed = unitsPerSecond,
                 tolerance = tolerance,
                 maxTimePassed = maxTimePassed,
                 positionCacheSize = positionCacheSize,
-                direction = direction 
+                direction = direction
             };
 
             //keep track of joints that are moving
@@ -153,23 +161,20 @@ public partial class ArticulatedArmController : ArmController {
         }
 
         //start coroutine to check if all joints have become idle and the action is finished
-        
+
         //I think this should move to the halt condition
         StartCoroutine(AreAllTheJointsBackToIdle(jointsThatAreMoving, controller));
     }
-    
-    public float GetDriveUpperLimit(ArticulatedArmJointSolver joint, JointAxisType jointAxisType = JointAxisType.Extend)
-    {
+
+    public float GetDriveUpperLimit(ArticulatedArmJointSolver joint, JointAxisType jointAxisType = JointAxisType.Extend) {
         float upperLimit = 0.0f;
 
-        if(jointAxisType == JointAxisType.Extend)
-        {
+        if (jointAxisType == JointAxisType.Extend) {
             //z drive
             upperLimit = joint.myAB.zDrive.upperLimit;
         }
 
-        if(jointAxisType == JointAxisType.Lift)
-        {
+        if (jointAxisType == JointAxisType.Lift) {
             //y drive
             upperLimit = joint.myAB.yDrive.upperLimit;
         }
@@ -177,25 +182,18 @@ public partial class ArticulatedArmController : ArmController {
         return upperLimit;
     }
 
-    private IEnumerator AreAllTheJointsBackToIdle(List<ArticulatedArmJointSolver> jointsThatAreMoving, PhysicsRemoteFPSAgentController controller)
-    {
+    private IEnumerator AreAllTheJointsBackToIdle(List<ArticulatedArmJointSolver> jointsThatAreMoving, PhysicsRemoteFPSAgentController controller) {
         bool hasEveryoneStoppedYet = false;
 
         //keep checking if things are all idle yet
         //all individual joints should have a max timeout so this won't hang infinitely (i hope)
-        while(hasEveryoneStoppedYet == false)
-        {
+        while (hasEveryoneStoppedYet == false) {
             yield return new WaitForFixedUpdate();
 
-            foreach(ArticulatedArmJointSolver joint in jointsThatAreMoving)
-            {
-                if(joint.extendState == ArmExtendState.Idle)
-                {
+            foreach (ArticulatedArmJointSolver joint in jointsThatAreMoving) {
+                if (joint.extendState == ArmExtendState.Idle) {
                     hasEveryoneStoppedYet = true;
-                }
-
-                else
-                {
+                } else {
                     hasEveryoneStoppedYet = false;
                 }
             }
@@ -205,7 +203,7 @@ public partial class ArticulatedArmController : ArmController {
         controller.actionFinished(true);
         yield return null;
     }
-    
+
     public override void moveArmBase(
         PhysicsRemoteFPSAgentController controller,
         float distance,
@@ -214,28 +212,26 @@ public partial class ArticulatedArmController : ArmController {
         bool returnToStartPositionIfFailed,
         bool disableRendering,
         bool normalizedY
-    ) { 
+    ) {
         float tolerance = 1e-3f;
         float maxTimePassed = 10.0f;
         int positionCacheSize = 10;
-        
+
         int direction = 0;
-        if(distance < 0)
-        {
+        if (distance < 0) {
             direction = -1;
         }
-        if(distance > 0 )
-        {
+        if (distance > 0) {
             direction = 1;
         }
 
-        ArmMoveParams amp = new ArmMoveParams{
+        ArmMoveParams amp = new ArmMoveParams {
             distance = distance,
             speed = unitsPerSecond,
             tolerance = tolerance,
             maxTimePassed = maxTimePassed,
             positionCacheSize = positionCacheSize,
-            direction = direction 
+            direction = direction
         };
 
         ArticulatedArmJointSolver liftJoint = joints[0];
@@ -290,7 +286,7 @@ public partial class ArticulatedArmController : ArmController {
 
         // TODO: Reimplement, low prio for benchmark
         ArmMetadata meta = new ArmMetadata();
-        
+
         return meta;
     }
 
