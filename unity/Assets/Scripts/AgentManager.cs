@@ -270,7 +270,7 @@ public class AgentManager : MonoBehaviour {
         // force snapToGrid to be false
         action.snapToGrid = false;
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
-        primaryAgent = createAgentType(typeof(StretchAgentController), baseAgentComponent);
+        primaryAgent = createAgentType(typeof(ArticulatedAgentController), baseAgentComponent);
     }
 
     // note: this doesn't take a ServerAction because we don't have to force the snpToGrid bool

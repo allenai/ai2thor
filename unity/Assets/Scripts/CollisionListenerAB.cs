@@ -1,8 +1,6 @@
 public class CollisionListenerAB : CollisionListener {
 
-    // TODO: no longer needed
-
-    // public StretchABArmController armController;
+    // public ArticulatedArmController armController;
 
     public override bool ShouldHalt() {
         
