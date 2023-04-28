@@ -59,7 +59,7 @@ public abstract class ArmController : MonoBehaviour, Arm {
     public abstract GameObject GetArmTarget();
     public abstract ArmMetadata GenerateMetadata();
 
-    public bool shouldHalt() {
+    public virtual bool shouldHalt() {
         return collisionListener.ShouldHalt();
     }
 
@@ -164,7 +164,7 @@ public abstract class ArmController : MonoBehaviour, Arm {
     }
 
 
-    public void moveArmRelative(
+    public virtual void moveArmRelative(
         PhysicsRemoteFPSAgentController controller,
         Vector3 offset,
         float unitsPerSecond,
@@ -206,7 +206,7 @@ public abstract class ArmController : MonoBehaviour, Arm {
 
     
 
-    public void moveArmTarget(
+    public virtual void moveArmTarget(
         PhysicsRemoteFPSAgentController controller,
         Vector3 target,
         float unitsPerSecond,
@@ -273,7 +273,7 @@ public abstract class ArmController : MonoBehaviour, Arm {
     }
 
 
-    public void moveArmBase(
+    public virtual void moveArmBase(
         PhysicsRemoteFPSAgentController controller,
         float height,
         float unitsPerSecond,
@@ -331,7 +331,7 @@ public abstract class ArmController : MonoBehaviour, Arm {
         minY = capsuleWorldCenter.y + (-cc.height / 2f) / 2f;
     }
 
-    public void moveArmBaseUp(
+    public virtual void moveArmBaseUp(
         PhysicsRemoteFPSAgentController controller,
         float distance,
         float unitsPerSecond,
@@ -360,7 +360,7 @@ public abstract class ArmController : MonoBehaviour, Arm {
         );
     }
 
-    public void rotateWrist(
+    public virtual void rotateWrist(
         PhysicsRemoteFPSAgentController controller,
         Quaternion rotation,
         float degreesPerSecond,
@@ -428,7 +428,7 @@ public abstract class ArmController : MonoBehaviour, Arm {
         return gameObjectToScale;
     }
 
-   public bool PickupObject(List<string> objectIds, ref string errorMessage) {
+   public virtual bool PickupObject(List<string> objectIds, ref string errorMessage) {
         // var at = this.transform.InverseTransformPoint(armTarget.position) - new Vector3(0, 0, originToShoulderLength);
         // Debug.Log("Pickup " + at.magnitude);
         bool pickedUp = false;
@@ -529,7 +529,7 @@ public abstract class ArmController : MonoBehaviour, Arm {
         return pickedUp;
     }
 
-    public void DropObject() {
+    public virtual void DropObject() {
         // grab all sim objects that are currently colliding with magnet sphere
         foreach (KeyValuePair<SimObjPhysics, HashSet<Collider>> sop in heldObjects) {
             Rigidbody rb = sop.Key.GetComponent<Rigidbody>();

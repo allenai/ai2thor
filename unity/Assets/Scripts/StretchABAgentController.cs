@@ -9,10 +9,12 @@ using UnityEngine.Rendering.PostProcessing;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
         
-    public partial class StretchArticulationBodyAgentController : ArmAgentController {
-        public StretchArticulationBodyAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
+    public partial class StretchABAgentController : ArmAgentController {
+        public StretchABAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
+
+        // TODO: Reimplemebt for Articulation body
         public override void InitializeBody(ServerAction initializeAction) {
             // TODO; Articulation Body init
             VisibilityCapsule = StretchVisCap;
@@ -86,11 +88,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private ArmController getArmImplementation() {
-            StretchABRobotArmController arm = GetComponentInChildren<StretchABRobotArmController>();
+            StretchABArmController arm = GetComponentInChildren<StretchABArmController>();
             if (arm == null) {
                 throw new InvalidOperationException(
                     "Agent does not have Stretch arm or is not enabled.\n" +
-                    $"Make sure there is a '{typeof(StretchABRobotArmController).Name}' component as a child of this agent."
+                    $"Make sure there is a '{typeof(StretchABArmController).Name}' component as a child of this agent."
                 );
             }
             return arm;
@@ -98,6 +100,85 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected override ArmController getArm() { 
             return getArmImplementation();
+        }
+
+
+        // TODO: Eli implement MoveAgent and RotateAgent
+
+        public override void MoveAgent(
+            float ahead = 0,
+            float right = 0,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+
+            // Use Continuous move
+
+            // if (ahead == 0 && right == 0) {
+            //     throw new ArgumentException("Must specify ahead or right!");
+            // }
+            // Vector3 direction = new Vector3(x: right, y: 0, z: ahead);
+            // float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+
+            // CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
+
+            // Vector3 directionWorld = transform.TransformDirection(direction);
+            // Vector3 targetPosition = transform.position + directionWorld;
+
+            // collisionListener.Reset();
+
+            // IEnumerator move = ContinuousMovement.moveAB(
+            //     controller: this,
+            //     collisionListener: collisionListener,
+            //     moveTransform: this.transform,
+            //     targetPosition: targetPosition,
+            //     fixedDeltaTime: fixedDeltaTimeFloat,
+            //     unitsPerSecond: speed,
+            //     returnToStartPropIfFailed: returnToStart,
+            //     localPosition: false
+            // );
+
+            // if (disableRendering) {
+            //     unrollSimulatePhysics(
+            //         enumerator: move,
+            //         fixedDeltaTime: fixedDeltaTimeFloat
+            //     );
+            // } else {
+            //     StartCoroutine(move);
+            // }
+        }
+
+        public override void RotateAgent(
+            float degrees,
+            float speed = 1.0f,
+            bool waitForFixedUpdate = false,
+            bool returnToStart = true,
+            bool disableRendering = true,
+            float fixedDeltaTime = 0.02f
+        ) {
+
+            // Something like below
+
+            //  IEnumerator rotate = ContinuousMovement.rotateAB(
+            //     controller: this,
+            //     collisionListener: this.GetComponentInParent<CollisionListener>(),
+            //     moveTransform: this.transform,
+            //     targetRotation: this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
+            //     fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+            //     radiansPerSecond: speed,
+            //     returnToStartPropIfFailed: returnToStart
+            // );
+
+            // if (disableRendering) {
+            //     unrollSimulatePhysics(
+            //         enumerator: rotate,
+            //         fixedDeltaTime: fixedDeltaTime
+            //     );
+            // } else {
+            //     StartCoroutine(rotate);
+            // }
         }
 
         // TODO: IMPLEMENT WITH AB

@@ -145,7 +145,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void MoveAgent(
+        public virtual void MoveAgent(
             float ahead = 0,
             float right = 0,
             float speed = 1,
@@ -311,7 +311,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void RotateAgent(
+        public virtual void RotateAgent(
             float degrees,
             float speed = 1.0f,
             bool waitForFixedUpdate = false,
