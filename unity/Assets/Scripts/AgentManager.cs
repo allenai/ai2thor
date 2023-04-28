@@ -172,15 +172,13 @@ public class AgentManager : MonoBehaviour {
             SetUpLocobotController(action);
         } else if (action.agentMode.ToLower() == "drone") {
             SetUpDroneController(action);
-        } else if (agentMode == "stretch" || agentMode == "arm") {
+        } else if (agentMode == "stretch" || agentMode == "arm" || agentMode == "stretchab") {
             if (agentMode == "stretch") {
                 SetUpStretchController(action);
             } else if (agentMode == "arm") {
                 SetUpArmController(true);
-            }
-            else if (agentMode == "stretchAB") {
+            } else if (agentMode == "stretchab") {
                 SetUpStretchABController(action);
-
             } else {
                 // Should not be possible but being very defensive.
                 throw new ArgumentException($"Invalid agentMode {action.agentMode}");

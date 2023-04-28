@@ -18,7 +18,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public override void InitializeBody(ServerAction initializeAction) {
             // TODO; Articulation Body init
             VisibilityCapsule = StretchVisCap;
-            m_CharacterController.center = new Vector3(0, -0.1821353f, -0.1092373f);
+            m_CharacterController.center = new Vector3(0, 0.7188572f, -0.1092373f);
             m_CharacterController.radius = 0.1854628f;
             m_CharacterController.height = 1.435714f;
 
@@ -42,29 +42,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             standingLocalCameraPosition = m_Camera.transform.localPosition;
             crouchingLocalCameraPosition = m_Camera.transform.localPosition;
 
-            // set secondary arm-camera
-            Camera fp_camera_2 = m_CharacterController.transform.Find("SecondaryCamera").GetComponent<Camera>();
-            fp_camera_2.gameObject.SetActive(true);
-            fp_camera_2.transform.localPosition = new Vector3(0.0353f, 0.5088f, -0.076f);
-            fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
-            fp_camera_2.fieldOfView = 90f;
+            // // set secondary arm-camera
+            // Camera fp_camera_2 = m_CharacterController.transform.Find("SecondaryCamera").GetComponent<Camera>();
+            // fp_camera_2.gameObject.SetActive(true);
+            // fp_camera_2.transform.localPosition = new Vector3(0.0353f, 0.5088f, -0.076f);
+            // fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
+            // fp_camera_2.fieldOfView = 90f;
 
             if (initializeAction != null) {
 
                 if (initializeAction.cameraNearPlane > 0) {
                     m_Camera.nearClipPlane = initializeAction.cameraNearPlane;
-                    fp_camera_2.nearClipPlane = initializeAction.cameraNearPlane;
+                    // fp_camera_2.nearClipPlane = initializeAction.cameraNearPlane;
                 }
 
                 if (initializeAction.cameraFarPlane > 0) {
                     m_Camera.farClipPlane = initializeAction.cameraFarPlane;
-                    fp_camera_2.farClipPlane = initializeAction.cameraFarPlane;
+                    // fp_camera_2.farClipPlane = initializeAction.cameraFarPlane;
                 }
 
             }
 
-            //            fp_camera_2.fieldOfView = 75f;
-            agentManager.registerAsThirdPartyCamera(fp_camera_2);
+            // //            fp_camera_2.fieldOfView = 75f;
+            // agentManager.registerAsThirdPartyCamera(fp_camera_2);
 
             // limit camera from looking too far down
             this.maxDownwardLookAngle = 90f;
@@ -72,12 +72,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // enable stretch arm component
             Debug.Log("initializing stretch arm AB");
-            StretchArm.SetActive(true);
-            SArm = this.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
-            var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
-            Vector3 pos = armTarget.transform.localPosition;
-            pos.z = 0.0f; // pulls the arm in to be fully contracted
-            armTarget.transform.localPosition = pos;
+            // StretchArm.SetActive(true);
+            // SArm = this.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+            // var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
+            // Vector3 pos = armTarget.transform.localPosition;
+            // pos.z = 0.0f; // pulls the arm in to be fully contracted
+            // armTarget.transform.localPosition = pos;
 
 
             // var StretchSolver = this.GetComponentInChildren<Stretch_Arm_Solver>();
