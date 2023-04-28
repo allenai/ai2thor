@@ -79,7 +79,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void MoveArm(
+        public virtual void MoveArm(
             Vector3 position,
             float speed = 1,
             float? fixedDeltaTime = null,

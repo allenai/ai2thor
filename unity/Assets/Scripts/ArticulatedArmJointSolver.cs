@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityStandardAssets.Characters.FirstPerson;
 
 public enum ArmLiftState { Idle = 0, MovingDown = -1, MovingUp = 1 };
 public enum ArmExtendState {Idle = 0, MovingBackward = -1, MovingForward = 1};
@@ -10,7 +11,7 @@ public enum JointAxisType {Unassigned, Extend, Lift, Rotate};
 
 public class ArmMoveParams
 {
-    //distance to move either in meters or radians?
+    public ArticulatedAgentController controller;
     public float distance;
     public float speed;
     public float tolerance;
@@ -25,11 +26,10 @@ public class ArmMoveParams
     public float initialJointPosition;
 }
 
-public class TestABArmJointController : MonoBehaviour
+public class ArticulatedArmJointSolver : MonoBehaviour
 {
     [Header("What kind of joint is this?")]
     public JointAxisType jointAxisType = JointAxisType.Unassigned;
-
     [Header("State of this joint's movements")]
     [SerializeField]
     public ArmRotateState rotateState = ArmRotateState.Idle;
@@ -41,32 +41,14 @@ public class TestABArmJointController : MonoBehaviour
     //pass in arm move parameters for Action based movement
     private ArmMoveParams currentArmMoveParams;
 
+    //reference for this joint's articulation body
     public ArticulationBody myAB;
 
     void Start() 
     {
         myAB = this.GetComponent<ArticulationBody>();
-        //Debug.Log(myAB.linearLockX);
-    }    
+    }  
 
-    private void Update()
-    {
-        // if(Input.GetKeyDown(KeyCode.Space))
-        // {
-        //     if(jointAxisType == JointAxisType.Lift)
-        //     {
-        //         var drive = myAB.yDrive;
-        //         float targetPosition = 0.5f;
-        //         drive.target = targetPosition;
-        //         drive.targetVelocity = 10f;
-        //         myAB.yDrive = drive;
-
-        //         Debug.Log($"target position of lift: {targetPosition}");
-        //     }
-        // }
-    }
-
-    //do all this stuff once before we start moving this body
     public void PrepToControlJointFromAction(ArmMoveParams armMoveParams)
     {
         if(Mathf.Approximately(armMoveParams.distance, 0.0f))
@@ -158,11 +140,6 @@ public class TestABArmJointController : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
-    { 
-        ControlJointFromAction();
-    }
-
     public void ControlJointFromAction()
     {
         //we are a lift type joint
@@ -171,16 +148,11 @@ public class TestABArmJointController : MonoBehaviour
             //if instead we are moving up or down actively
             if(liftState != ArmLiftState.Idle)
             {
-                //////////////////////////////////////////////////////////////////////////////////
-                //moving up/down so get the yDrive
                 var drive = myAB.yDrive;
                 float currentPosition = myAB.jointPosition[0];
                 float targetPosition = currentPosition + (float)liftState * Time.fixedDeltaTime * currentArmMoveParams.speed;    
                 drive.target = targetPosition;
-
-                //this sets the drive to begin moving to the new target position
                 myAB.yDrive = drive;
-                ///////////////////////////////////////////////////////////////////////////////////
 
                 //begin checks to see if we have stopped moving or if we need to stop moving
                 //cache the position at the moment
@@ -201,9 +173,9 @@ public class TestABArmJointController : MonoBehaviour
                     //by the {tolerance} deviation then we have presumably stopped moving
                     if(CheckArrayWithinStandardDeviation(currentArmMoveParams.cachedPositions, currentArmMoveParams.tolerance))
                     {
-                        Debug.Log($"last {currentArmMoveParams.positionCacheSize} positions were within tolerance, stop moving now!");
+                        //Debug.Log($"last {currentArmMoveParams.positionCacheSize} positions were within tolerance, stop moving now!");
                         liftState = ArmLiftState.Idle;
-                        PretendToBeInTHOR.actionFinished(true);
+                        //actionFinished(true);
                         return;
                     }
                 }
@@ -213,7 +185,7 @@ public class TestABArmJointController : MonoBehaviour
                     Debug.Log($"distance we were trying to move was: {currentArmMoveParams.distance}");
                     Debug.Log($"max distance exceeded, distance {myAB} moved this distance: {distanceMovedSoFar}");
                     liftState = ArmLiftState.Idle;
-                    PretendToBeInTHOR.actionFinished(true);
+                    //PretendToBeInTHOR.actionFinished(true);
                     return;
                 }
                 
@@ -224,7 +196,7 @@ public class TestABArmJointController : MonoBehaviour
                 {
                     Debug.Log($"{currentArmMoveParams.timePassed} seconds have passed. Time out happening, stop moving!");
                     liftState = ArmLiftState.Idle;
-                    PretendToBeInTHOR.actionFinished(true);
+                    //PretendToBeInTHOR.actionFinished(true);
                     return;
                 }
             }
@@ -332,7 +304,7 @@ public class TestABArmJointController : MonoBehaviour
                     {
                         Debug.Log($"last {currentArmMoveParams.positionCacheSize} rotations were within tolerance, stop rotating now!");
                         rotateState = ArmRotateState.Idle;
-                        PretendToBeInTHOR.actionFinished(true);
+                        //PretendToBeInTHOR.actionFinished(true);
                         return;
                     }
                 }
@@ -342,7 +314,7 @@ public class TestABArmJointController : MonoBehaviour
                     Debug.Log($"degrees we were trying to rotate was: {currentArmMoveParams.distance}");
                     Debug.Log($"max degrees exceeded, {myAB} rotated {distanceMovedSoFar} degrees");
                     rotateState = ArmRotateState.Idle;
-                    PretendToBeInTHOR.actionFinished(true);
+                    //PretendToBeInTHOR.actionFinished(true);
                     return;
                 }
                 
@@ -353,7 +325,7 @@ public class TestABArmJointController : MonoBehaviour
                 {
                     Debug.Log($"{currentArmMoveParams.timePassed} seconds have passed. Time out happening, stop moving!");
                     rotateState = ArmRotateState.Idle;
-                    PretendToBeInTHOR.actionFinished(true);
+                    //PretendToBeInTHOR.actionFinished(true);
                     return;
                 }            
             }

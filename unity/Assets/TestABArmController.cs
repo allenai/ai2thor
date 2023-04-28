@@ -31,11 +31,7 @@ public class TestABArmController : MonoBehaviour
 
     void Start()
     {
-        //assign this controller as a reference in all joints
-        foreach (Joint j in joints)
-        {
-            j.joint.GetComponent<TestABArmJointController>().myABArmControllerComponent = this.GetComponent<TestABArmController>();
-        }
+        
     }
 
     //Server Action format to move the base of the arm up

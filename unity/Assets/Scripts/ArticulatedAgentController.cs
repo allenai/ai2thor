@@ -88,11 +88,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private ArmController getArmImplementation() {
-
             ArticulatedArmController arm = GetComponentInChildren<ArticulatedArmController>();
             if (arm == null) {
                 throw new InvalidOperationException(
-                    "Agent does not have Stretch arm or is not enabled.\n" +
+                    "Agent does not havSe Stretch arm or is not enabled.\n" +
                     $"Make sure there is a '{typeof(ArticulatedArmController).Name}' component as a child of this agent."
                 );
             }
@@ -103,6 +102,61 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return getArmImplementation();
         }
 
+       public override void MoveArmBaseUp(
+            float distance,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            var arm = (ArticulatedArmController) getArm();
+            arm.moveArmBaseUp(
+                controller: this,
+                distance: distance,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart,
+                disableRendering: disableRendering
+            );
+        }
+
+        public override void MoveArmBaseDown(
+            float distance,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            MoveArmBaseUp(
+                distance: -distance,
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
+        }
+
+        public override void MoveArm(
+            Vector3 position, 
+            float speed = 1, 
+            float? fixedDeltaTime = null, 
+            bool returnToStart = true, 
+            string coordinateSpace = "armBase", 
+            bool restrictMovement = false, 
+            bool disableRendering = true
+        ) {
+            var arm = (ArticulatedArmController) getArm();
+            arm.moveArmTarget(
+                controller: this,
+                target: position,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStart: returnToStart,
+                coordinateSpace: coordinateSpace,
+                restrictTargetPosition: restrictMovement,
+                disableRendering: disableRendering
+            );        
+            }
 
         // TODO: Eli implement MoveAgent and RotateAgent
 
