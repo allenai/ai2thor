@@ -272,6 +272,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected Vector2 m_Input;
         protected Vector3 m_MoveDir = Vector3.zero;
         public CharacterController m_CharacterController;
+        public BoxCollider abFloorCollider;
         public CollisionFlags m_CollisionFlags;
         protected Vector3 lastPosition;
 

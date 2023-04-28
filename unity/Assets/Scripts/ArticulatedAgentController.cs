@@ -13,14 +13,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public ArticulatedAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
-
         // TODO: Reimplemebt for Articulation body
         public override void InitializeBody(ServerAction initializeAction) {
             // TODO; Articulation Body init
             VisibilityCapsule = StretchVisCap;
-            m_CharacterController.center = new Vector3(0, 0.7188572f, -0.1092373f);
-            m_CharacterController.radius = 0.1854628f;
-            m_CharacterController.height = 1.435714f;
+            m_CharacterController.center = new Vector3(0, 0, 0);
+            m_CharacterController.radius = 0.01f;
+            m_CharacterController.height = 0.02f;
+            m_CharacterController.skinWidth = 0.01f;
 
 
             // TODO: REMOVE
@@ -70,8 +70,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.maxDownwardLookAngle = 90f;
             this.maxUpwardLookAngle = 25f;
 
-            // enable stretch arm component
-            Debug.Log("initializing stretch arm AB");
+            // // enable stretch arm component
+            // Debug.Log("initializing stretch arm AB");
             // StretchArm.SetActive(true);
             // SArm = this.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
             // var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
@@ -81,8 +81,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
             // var StretchSolver = this.GetComponentInChildren<Stretch_Arm_Solver>();
-            Debug.Log("running manipulate stretch arm AB");
-            // StretchSolver.ManipulateStretchArm();
+            // Debug.Log("running manipulate stretch arm AB");
+            // // StretchSolver.ManipulateStretchArm();
 
             getArmImplementation().manipulateArm();
         }
