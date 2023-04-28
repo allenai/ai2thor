@@ -377,7 +377,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // constrain arm's y position based on the agent's current capsule collider center and extents
         // valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
         // arm constrained by the agent's capsule
-        public void MoveArmBase(
+        public virtual void MoveArmBase(
             float y,
             float speed = 1,
             float? fixedDeltaTime = null,
@@ -402,7 +402,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void MoveArmBaseUp(
+        public virtual void MoveArmBaseUp(
             float distance,
             float speed = 1,
             float? fixedDeltaTime = null,
@@ -420,7 +420,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void MoveArmBaseDown(
+        public virtual void MoveArmBaseDown(
             float distance,
             float speed = 1,
             float? fixedDeltaTime = null,
