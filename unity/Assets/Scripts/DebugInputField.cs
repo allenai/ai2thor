@@ -3580,33 +3580,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
-                case "mmlah": {
+                case "mau": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "MoveArmBase";
-                        action["disableRendering"] = false;
-
-                        if (splitcommand.Length > 1) {
-                            action["y"] = float.Parse(splitcommand[1]);
-
-                            if (splitcommand.Length > 2) {
-                                action["speed"] = float.Parse(splitcommand[2]);
-                            }
-                            if (splitcommand.Length > 3) {
-                                action["returnToStart"] = bool.Parse(splitcommand[3]);
-                            }
-
-                            if (splitcommand.Length > 4) {
-                                action["disableRendering"] = bool.Parse(splitcommand[4]);
-                            }
-
-                            if (splitcommand.Length > 5) {
-                                action["restrictMovement"] = bool.Parse(splitcommand[5]);
-                            }
-                        } else {
-                            action["y"] = 0.9f;
-                            action["speed"] = 1.0f;
-                        }
-                        action["disableRendering"] = true;
+                        action["action"] = "MoveArmBaseUp";
+                        action["distance"] = 0.5f;
+                        action["speed"] = 1.0f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }

@@ -40,7 +40,7 @@ public partial class ArticulatedArmController : ArmController {
     public override void manipulateArm() {
         //so assume each joint that needs to move has had its `currentArmMoveParams` set
         //now we call `ControlJointFromAction` on all joints each physics update to get it to move...
-
+        Debug.Log("starting ArticulatedArmController.manipulateArm");
         foreach (ArticulatedArmJointSolver j in joints) {
             j.ControlJointFromAction();
         }
@@ -50,7 +50,7 @@ public partial class ArticulatedArmController : ArmController {
     }
 
     public override bool shouldHalt() {
-
+        Debug.Log("checking ArticulatedArmController shouldHalt");
         foreach (ArticulatedArmJointSolver j in joints) {
             //only halt if all joints report back that shouldHalt = true
             //joints that are idle and not moving will return shouldHalt = true by default

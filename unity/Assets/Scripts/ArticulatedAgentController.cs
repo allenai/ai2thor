@@ -109,6 +109,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
              bool returnToStart = true,
              bool disableRendering = true
          ) {
+            Debug.Log("MoveArmBaseUp from ArticulatedAgentController");
             var arm = (ArticulatedArmController)getArm();
             arm.moveArmBaseUp(
                 controller: this,

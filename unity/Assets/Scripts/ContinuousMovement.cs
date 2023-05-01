@@ -304,6 +304,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             double epsilon
             
         ) {
+            Debug.Log("starting ContinuousMovement in updateTransformPropertyFixedUpdate");
             T originalProperty = getProp(moveTransform);
             var previousProperty = originalProperty;
 
