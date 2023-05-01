@@ -75,12 +75,19 @@ public class Break : MonoBehaviour {
             //before disabling things, if this object is a receptacle, unparent all objects contained
             if (gameObject.GetComponent<SimObjPhysics>().IsReceptacle) {
                 foreach (GameObject go in gameObject.GetComponent<SimObjPhysics>().ContainedGameObjects()) {
-                    go.transform.SetParent(objectsTransform);
-                    Rigidbody childrb = go.GetComponent<Rigidbody>();
-                    childrb.isKinematic = false;
-                    childrb.useGravity = true;
-                    childrb.constraints = RigidbodyConstraints.None;
-                    childrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+                    //only reset rigidbody properties if contained object was pickupable/moveable
+                    if (go.GetComponentInParent<SimObjPhysics>()) {
+                        SimObjPhysics containedSOP = go.GetComponentInParent<SimObjPhysics>();
+                        if (containedSOP.IsMoveable || containedSOP.IsPickupable) {
+                            go.transform.SetParent(objectsTransform);
+                            Rigidbody childrb = go.GetComponent<Rigidbody>();
+                            childrb.isKinematic = false;
+                            childrb.useGravity = true;
+                            childrb.constraints = RigidbodyConstraints.None;
+                            childrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                        }
+                    }
                 }
             }
 

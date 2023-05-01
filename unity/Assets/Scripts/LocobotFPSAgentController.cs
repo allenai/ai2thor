@@ -53,9 +53,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.2206f, 0);// smaller y offset if Bot
 
             // limit camera from looking too far down/up
-            this.maxDownwardLookAngle = 60f;
-            this.maxUpwardLookAngle = 30f;
-            // this.horizonAngles = new float[] { 30.0f, 0.0f, 330.0f };
+            if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f)) {
+                this.maxUpwardLookAngle = 30f;
+            } else {
+                this.maxUpwardLookAngle = initializeAction.maxUpwardLookAngle;
+            }
+
+            if (Mathf.Approximately(initializeAction.maxDownwardLookAngle, 0.0f)) {
+                this.maxDownwardLookAngle = 30f;
+            } else {
+                this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
+            }
         }
 
         public new void Initialize(ServerAction action) {

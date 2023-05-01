@@ -1,0 +1,72 @@
+{
+    "benchmarker_class_names": [
+        "SimsPerSecondBenchmarker"
+    ],
+    "init_params": {
+        "local_executable_path": null,
+        "local_build": false,
+        "start_unity": true,
+        "commit_id": null,
+        "gridSize": 0.25,
+        "width": 600,
+        "height": 600,
+        "fieldOfView": 45,
+        "server_type": "WSGI",
+        "visibilityScheme": "Collider"
+    },
+    "name": "Sims Per Second",
+    "scenes": [
+        "FloorPlan1_physics"
+    ],
+    "procedural_houses": ["train_3.json"],
+    "action_group_sample_count": 100,
+    "experiment_sample_count": 1,
+    "filter_object_types": "",
+    "random_teleport_before_action_group": false,
+    "verbose": false,
+    "output_file": "benchmark.json",
+
+    "action_groups": {
+            "move": {
+                "actions": [
+                    {"action": "MoveAhead", "args": {}},
+                    {"action": "MoveBack", "args": {}},
+                    {"action": "MoveLeft", "args": {}},
+                    {"action": "MoveRight", "args": {}}
+                ],
+                "sample_count": 100,
+                "selector": "random"
+            },
+            "rotate": {
+                "actions": [
+                    {"action": "RotateRight", "args": {}},
+                    {"action": "RotateLeft", "args": {}}
+                ],
+                "sample_count": 100,
+                "selector": "random"
+            },
+            "look": {
+                "actions": [
+                    {"action": "LookUp", "args": {}},
+                    {"action": "LookDown", "args": {}}
+                ],
+                "sample_count": 100,
+                "selector": "random"
+            },
+            "all": {
+                "actions": [
+                    {"action": "MoveAhead", "args": {}},
+                    {"action": "MoveBack", "args": {}},
+                    {"action": "MoveLeft", "args": {}},
+                    {"action": "MoveRight", "args": {}},
+                    {"action": "RotateRight", "args": {}},
+                    {"action": "RotateLeft", "args": {}},
+                    {"action": "LookUp", "args": {}},
+                    {"action": "LookDown", "args": {}}
+                ],
+                "sample_count": 100,
+                "selector": "random"
+            }
+        }
+
+}

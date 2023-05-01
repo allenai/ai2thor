@@ -1,6 +1,7 @@
 import os
 import sys
-import fcntl
+if os.name != 'nt':
+    import fcntl
 import datetime
 import json
 import re
@@ -1963,240 +1964,6 @@ def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
                                     forceVisible=True,
                                 )
                             )
-
-
-@task
-def benchmark(
-    ctx,
-    width=600,
-    height=600,
-    editor_mode=False,
-    out="benchmark.json",
-    verbose=False,
-    local_build=False,
-    number_samples=100,
-    gridSize=0.25,
-    scenes=None,
-    house_json_path=None,
-    filter_object_types="",
-    teleport_random_before_actions=False,
-    commit_id=ai2thor.build.COMMIT_ID,
-    distance_visibility_scheme=False,
-    title=""
-):
-    import ai2thor.controller
-    import random
-    import platform
-    import time
-    from functools import reduce
-    from pprint import pprint
-
-    import os
-    curr = os.path.dirname(os.path.abspath(__file__))
-
-    move_actions = ["MoveAhead", "MoveBack", "MoveLeft", "MoveRight"]
-    rotate_actions = ["RotateRight", "RotateLeft"]
-    look_actions = ["LookUp", "LookDown"]
-    all_actions = move_actions + rotate_actions + look_actions
-
-    def test_routine(env, test_actions, n=100):
-        average_frame_time = 0
-        for i in range(n):
-            action = random.choice(test_actions)
-            start = time.time()
-            env.step(dict(action=action))
-            end = time.time()
-            frame_time = end - start
-            average_frame_time += frame_time
-
-        average_frame_time = average_frame_time / float(n)
-        return average_frame_time
-
-    def benchmark_actions(env, action_name, actions, n=100):
-        if verbose:
-            print("--- Actions {}".format(actions))
-        frame_time = test_routine(env, actions)
-        if verbose:
-            print("{} average: {}".format(action_name, 1 / frame_time))
-        return 1 / frame_time
-
-    procedural = False
-    if house_json_path:
-        procedural = True
-
-    def create_procedural_house(procedural_house_path):
-        house = None
-        if procedural_house_path:
-            if verbose:
-                print("Loading house from path: '{}'. cwd: '{}'".format(procedural_house_path, curr))
-            with open(procedural_house_path, "r") as f:
-                house = json.load(f)
-                env.step(
-                    action="CreateHouse",
-                    house=house
-                )
-
-        if filter_object_types != "":
-            if filter_object_types == "*":
-                if verbose:
-                    print("-- Filter All Objects From Metadata")
-                env.step(action="SetObjectFilter", objectIds=[])
-            else:
-                types = filter_object_types.split(",")
-                evt = env.step(action="SetObjectFilterForType", objectTypes=types)
-                if verbose:
-                    print("Filter action, Success: {}, error: {}".format(evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]))
-        return house
-
-    def telerport_to_random_reachable(env, house=None):
-
-        # teleport within scene for reachable positions to work
-        def centroid(poly):
-            n = len(poly)
-            total = reduce(lambda acc, e: {'x':acc['x']+e['x'], 'y': acc['y']+e['y'], 'z': acc['z']+e['z']}, poly, {'x':0, 'y': 2, 'z': 0})
-            return {'x':total['x']/n, 'y': total['y']/n, 'z': total['z']/n}
-
-        if procedural:
-            pos = {'x':0, 'y': 2, 'z': 0}
-
-            if house['rooms'] and len(house['rooms']) > 0 :
-                poly = house['rooms'][0]['floorPolygon']
-                pos = centroid(poly)
-
-                print("poly center: {0}".format(pos))
-            evt = env.step(
-                dict(
-                    action="TeleportFull",
-                    x=pos['x'],
-                    y=pos['y'],
-                    z=pos['z'],
-                    rotation=dict(x=0, y=0, z=0),
-                    horizon=0.0,
-                    standing=True,
-                    forceAction=True
-                )
-            )
-            if verbose:
-                print("--Teleport, " +  " err: " + evt.metadata["errorMessage"])
-
-        evt = env.step(action="GetReachablePositions")
-
-        # print("After GetReachable AgentPos: {}".format(evt.metadata["agent"]["position"]))
-        if verbose:
-            print("-- GetReachablePositions success: {}, message: {}".format(evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]))
-
-        reachable_pos = evt.metadata["actionReturn"]
-
-        # print(evt.metadata["actionReturn"])
-        pos = random.choice(reachable_pos)
-        rot = random.choice([0, 90, 180, 270])
-
-        evt = env.step(
-            dict(
-                action="TeleportFull",
-                x=pos['x'],
-                y=pos['y'],
-                z=pos['z'],
-                rotation=dict(x=0, y=rot, z=0),
-                horizon=0.0,
-                standing=True
-            )
-        )
-
-    args = {}
-    if editor_mode:
-        args["port"] = 8200
-        args["start_unity"] = False
-    elif local_build:
-        args["local_build"] = local_build
-    else:
-        args["commit_id"] = commit_id
-
-    args['width'] = width
-    args['height'] = height
-    args['gridSize'] = gridSize
-    args['snapToGrid'] = True
-    args['visibilityScheme'] = 'Distance' if distance_visibility_scheme else 'Collider'
-
-    env = ai2thor.controller.Controller(
-        **args
-    )
-
-    # Kitchens:       FloorPlan1 - FloorPlan30
-    # Living rooms:   FloorPlan201 - FloorPlan230
-    # Bedrooms:       FloorPlan301 - FloorPlan330
-    # Bathrooms:      FloorPLan401 - FloorPlan430
-
-    room_ranges = [(1, 30), (201, 230), (301, 330), (401, 430)]
-    if scenes:
-        scene_list = scenes.split(",")
-    else:
-        scene_list = [["FloorPlan{}_physics".format(i) for i in range(room_range[0], room_range[1])] for room_range in room_ranges]
-
-    procedural_json_filenames = None
-    if house_json_path:
-        scene_list = house_json_path.split(",")
-
-    # inv_args = locals()
-    # del inv_args['ctx']
-    # inv_args['platform'] =platform.system()
-
-    benchmark_map = {"scenes": {}, "controller_params": {**args}, "benchmark_params": { "platform": platform.system(), "filter_object_types": filter_object_types, "action_sample_number": number_samples}}
-    if title != '':
-        benchmark_map['title'] = title
-    total_average_ft = 0
-    scene_count = 0
-
-    for scene in scene_list:
-            scene_benchmark = {}
-            if verbose:
-                print("Loading scene {}".format(scene))
-            if not procedural:
-                 env.reset(scene)
-            else:
-                if verbose:
-                    print("------ RESET")
-                env.reset("procedural")
-
-            # env.step(dict(action="Initialize", gridSize=0.25))
-
-            if verbose:
-                print("------ {}".format(scene))
-
-            # initial_teleport(env)
-            sample_number = number_samples
-            action_tuples = [
-                ("move", move_actions, sample_number),
-                ("rotate", rotate_actions, sample_number),
-                ("look", look_actions, sample_number),
-                ("all", all_actions, sample_number),
-            ]
-            scene_average_fr = 0
-            procedural_house_path = scene if procedural else None
-
-            house = create_procedural_house(procedural_house_path) if procedural else None
-
-            for action_name, actions, n in action_tuples:
-
-                telerport_to_random_reachable(env, house)
-                ft = benchmark_actions(env, action_name, actions, n)
-                scene_benchmark[action_name] = ft
-                scene_average_fr += ft
-
-            scene_average_fr = scene_average_fr / float(len(action_tuples))
-            total_average_ft += scene_average_fr
-
-            if verbose:
-                print("Total average frametime: {}".format(scene_average_fr))
-
-            benchmark_map["scenes"][scene] = scene_benchmark
-            scene_count += 1
-
-    benchmark_map["average_framerate_seconds"] = total_average_ft / scene_count
-    with open(out, "w") as f:
-        f.write(json.dumps(benchmark_map, indent=4, sort_keys=True))
-
-    env.stop()
 
 
 def list_objects_with_metadata(bucket):
@@ -4445,3 +4212,253 @@ def plot(
     plt.legend()
 
     plt.savefig('{}.png'.format(output_filename.replace(".png", "")))
+
+@task
+def run_benchmark(
+        ctx,
+        width=600,
+        height=600,
+        fov=45,
+        editor_mode=False,
+        out="benchmark.json",
+        verbose=False,
+        local_build=False,
+        number_samples=100,
+        gridSize=0.25,
+        scenes=None,
+        house_json_path=None,
+        filter_object_types="",
+        teleport_random_before_actions=False,
+        commit_id=ai2thor.build.COMMIT_ID,
+        distance_visibility_scheme=False,
+        title=""
+):
+
+    import json
+    import os
+    import ai2thor.wsgi_server as ws
+    import ai2thor.fifo_server as fs
+    path = os.path.abspath(fs.__file__)
+    print(path)
+    import ai2thor.benchmarking as benchmark
+    args = dict(
+        local_executable_path = None,
+        local_build = local_build,
+        start_unity = False if editor_mode else True,
+        commit_id = commit_id,
+        gridSize = 0.25,
+        width = width,
+        height = height,
+        fieldOfView = fov,
+        server_type = ai2thor.wsgi_server.WsgiServer.server_type,
+        visibilityScheme = 'Distance' if distance_visibility_scheme else 'Collider'
+    )
+    if editor_mode:
+        args["port"] = 8200
+        args["start_unity"] = False
+    elif local_build:
+        args["local_build"] = local_build
+    else:
+        args["commit_id"] = commit_id
+
+    house_json_paths = []
+    if house_json_path:
+        house_json_paths = house_json_path.split(",")
+    houses = []
+    for house_json_filename in house_json_paths:
+        with open(house_json_filename, "r") as f:
+            house = json.load(f)
+
+    if scenes:
+        scenes = scenes.split(",")
+    else:
+        scenes = []
+
+    if "Procedural" not in scenes and len(house_json_paths):
+        scenes.append("Procedural")
+
+    runner = benchmark.UnityActionBenchmarkRunner(
+        benchmarker_class_names=["SimsPerSecondBenchmarker"],
+        init_params=args,
+        name=title,
+
+        scenes=scenes,
+        procedural_houses=houses,
+
+        action_sample_count=number_samples,
+        experiment_sample_count=1,
+        filter_object_types=filter_object_types,
+        teleport_random_before_actions=teleport_random_before_actions,
+
+        verbose=verbose,
+        output_file=out,
+    )
+    result = runner.benchmark(
+        {
+            "move": {
+                "actions": [
+                    {"action": "MoveAhead", "args": {}},
+                    {"action": "MoveBack", "args": {}},
+                    {"action": "MoveLeft", "args": {}},
+                    {"action": "MoveRight", "args": {}}
+                ],
+                "sample_count": number_samples, # optional field, will be added from action_sample_count param if not present
+                "selector": "random"
+            },
+            "rotate": {
+                "actions": [
+                    {"action": "RotateRight", "args": {}},
+                    {"action": "RotateLeft", "args": {}}
+                ],
+                "sample_count": number_samples,
+                "selector": "random"
+            },
+            "look": {
+                "actions": [
+                    {"action": "LookUp", "args": {}},
+                    {"action": "LookDown", "args": {}}
+                ],
+                "sample_count": number_samples,
+                "selector": "random"
+            },
+            "all": {
+                "actions": [
+                    {"action": "MoveAhead", "args": {}},
+                    {"action": "MoveBack", "args": {}},
+                    {"action": "MoveLeft", "args": {}},
+                    {"action": "MoveRight", "args": {}},
+                    {"action": "RotateRight", "args": {}},
+                    {"action": "RotateLeft", "args": {}},
+                    {"action": "LookUp", "args": {}},
+                    {"action": "LookDown", "args": {}}
+                ],
+                "sample_count": number_samples,
+                "selector": "random"
+            }
+        }
+    )
+
+    with open(out, "w") as f:
+        json.dump(result, r, indent=4, sort_keys=True)
+
+
+@task
+def run_benchmark_from_s3_config(ctx):
+    import copy
+    from datetime import datetime, date, timezone
+    from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET, UnityActionBenchmarkRunner
+    client = boto3.client('s3')
+
+    response = client.list_objects_v2(
+        Bucket=BENCHMARKING_S3_BUCKET,
+        Prefix='benchmark_jobs/'
+    )
+
+    s3 = boto3.resource("s3", region_name="us-west-2")
+    benchmark_runs = []
+    for content in response.get('Contents', []):
+        key = content['Key']
+        if key.split(".")[-1] == "json":
+            print(key)
+            obj = s3.Object(BENCHMARKING_S3_BUCKET, content['Key'])
+            benchmark_run_config = json.loads(obj.get()['Body'].read().decode('utf-8'))
+            procedural_houses_transformed = []
+            if 'procedural_houses' in benchmark_run_config:
+                for procedural_house in benchmark_run_config['procedural_houses']:
+                    if isinstance(procedural_house, str):
+                        house_obj = s3.Object(BENCHMARKING_S3_BUCKET, f"procedural_houses/{procedural_house}")
+                        house_json = json.loads(house_obj.get()['Body'].read().decode('utf-8'))
+                        if "id" not in house_json:
+                            house_json["id"] = procedural_house.split(".")[0]
+                        procedural_houses_transformed.append(house_json)
+                    elif isinstance(procedural_house, dict):
+                        procedural_houses_transformed.append(procedural_house)
+            benchmark_run_config['procedural_houses'] = procedural_houses_transformed
+            # benchmark_run_config['verbose'] = True
+
+            action_groups = copy.deepcopy(benchmark_run_config["action_groups"])
+            del benchmark_run_config["action_groups"]
+            benchmark_runs.append(
+                (
+                    UnityActionBenchmarkRunner(
+                        **benchmark_run_config
+                    ),
+                    action_groups
+                )
+            )
+    report_nowutc = datetime.now(timezone.utc)
+    report_name = f"{round(report_nowutc.timestamp())}_benchmark.json"
+    benchmark_results = []
+    for (benchmark_runner, action_group) in benchmark_runs:
+        benchmark_nowutc = datetime.now(timezone.utc)
+        benchmark_result = benchmark_runner.benchmark(action_group)
+        benchmark_result["datetime_utc"] =  str(report_nowutc)
+        benchmark_results.append(benchmark_result)
+
+    try:
+        logger.info(f"Pushing benchmark result '{report_name}'")
+        s3.Object(BENCHMARKING_S3_BUCKET, f"benchmark_results/{report_name}").put(
+            Body=json.dumps(dict(timestamp_utc=round(report_nowutc.timestamp()), benchmark_results=benchmark_results), indent=4, sort_keys=True),
+            ContentType="application/json",
+        )
+    except botocore.exceptions.ClientError as e:
+        logger.error(f"Caught error uploading archive '{report_name}': {e}")
+
+    s3_aggregate_benchmark_results(BENCHMARKING_S3_BUCKET)
+
+    #TODO remove older benchmarks
+
+@task
+def add_daily_benchmark_config(ctx, benchmark_config_filename):
+    import json
+    import os
+    from jsonschema import validate
+    from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET
+    path = os.path.dirname(os.path.realpath(__file__))
+
+    benchmark_config_basename = os.path.basename(benchmark_config_filename)
+    print(path)
+    benchmarking_config_schema = None
+    s3 = boto3.resource("s3", region_name="us-west-2")
+    with open(os.path.join(path, "ai2thor", "benchmarking", "benchmark_config_schema.json"), "r") as f:
+        benchmarking_config_schema = json.load(f)
+
+    with open(benchmark_config_filename, "r") as f:
+        benchmark_config = json.load(f)
+    # Validation broken, giving false negative
+    # validate(benchmark_config, schema=benchmarking_config_schema)
+    try:
+        logger.info(f"Pushing benchmark config '{benchmark_config_basename}'")
+        s3.Object(BENCHMARKING_S3_BUCKET, f"benchmark_jobs/{benchmark_config_basename}").put(
+            Body=json.dumps(benchmark_config, indent=4),
+            ContentType="application/json",
+        )
+    except botocore.exceptions.ClientError as e:
+        logger.error(f"Caught error uploading archive '{benchmark_config_basename}': {e}")
+
+
+def s3_aggregate_benchmark_results(bucket):
+    client = boto3.client('s3')
+    response = client.list_objects_v2(
+        Bucket=bucket,
+        Prefix='benchmark_results/'
+    )
+
+    s3 = boto3.resource("s3", region_name="us-west-2")
+    history = []
+    for content in response.get('Contents', []):
+        key = content['Key']
+        if key.split(".")[-1] == "json":
+            obj = s3.Object(bucket, content['Key'])
+            benchmark_run = json.loads(obj.get()['Body'].read().decode('utf-8'))
+            history.append(benchmark_run)
+
+    history_name = "history.json"
+    try:
+        logger.info(f"Pushing benchmark result '{history_name}'")
+        s3.Object(bucket, f"benchmark_results/{history_name}").put(
+            Body=json.dumps(history, indent=4),
+            ContentType="application/json",
+        )
+    except botocore.exceptions.ClientError as e:
+        logger.error(f"Caught error uploading archive '{report_name}': {e}")

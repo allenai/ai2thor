@@ -219,10 +219,14 @@ class CloudRendering(BaseLinuxPlatform):
 class WebGL(BasePlatform):
     pass
 
+class StandaloneWindows64(BasePlatform):
+    @classmethod
+    def executable_path(cls, base_dir, name):
+        return os.path.join(base_dir, name)
 
 def select_platforms(request):
     candidates = []
-    system_platform_map = dict(Linux=(Linux64,), Darwin=(OSXIntel64,))
+    system_platform_map = dict(Linux=(Linux64,), Darwin=(OSXIntel64,), Windows=(StandaloneWindows64,))
     for p in system_platform_map.get(request.system, ()):
         if not p.enabled:
             continue
@@ -234,5 +238,5 @@ def select_platforms(request):
 
 
 STR_PLATFORM_MAP = dict(
-    CloudRendering=CloudRendering, Linux64=Linux64, OSXIntel64=OSXIntel64, WebGL=WebGL
+    CloudRendering=CloudRendering, Linux64=Linux64, OSXIntel64=OSXIntel64, WebGL=WebGL, StandaloneWindows64=StandaloneWindows64
 )

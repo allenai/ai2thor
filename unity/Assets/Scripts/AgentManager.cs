@@ -204,6 +204,7 @@ public class AgentManager : MonoBehaviour {
             }
         }
 
+        //initialize primary agent now that its controller component has been added
         primaryAgent.ProcessControlCommand(action.dynamicServerAction);
         Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         if (action.targetFrameRate > 0) {
@@ -378,7 +379,9 @@ public class AgentManager : MonoBehaviour {
 
     public void registerAsThirdPartyCamera(Camera camera) {
         this.thirdPartyCameras.Add(camera);
-        // camera.gameObject.AddComponent(typeof(ImageSynthesis));
+        #if PLATFORM_CLOUD_RENDERING
+        camera.targetTexture = createRenderTexture(this.primaryAgent.m_Camera.pixelWidth, this.primaryAgent.m_Camera.targetTexture.height);
+        #endif
     }
 
     // If fov is <= min or > max, return defaultVal, else return fov
@@ -1942,6 +1945,9 @@ public class ServerAction {
     // the mass threshold for how massive a pickupable/moveable sim object needs to be
     // for the arm to detect collisions and stop moving
     public float? massThreshold;
+
+    public float maxUpwardLookAngle = 0.0f;
+    public float maxDownwardLookAngle = 0.0f;
 
 
     public SimObjType ReceptableSimObjType() {

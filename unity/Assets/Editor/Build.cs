@@ -49,6 +49,10 @@ public class Build {
         build(GetBuildName(), BuildTargetGroup.WebGL, BuildTarget.WebGL, new string[]{"USIM_USE_BUILTIN_JPG_ENCODER", "USIM_USE_BUILTIN_PNG_ENCODER"});
     }
 
+    static void StandaloneWindows64()  {
+        build(GetBuildName(), BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64);
+    }
+
     static void buildResourceAssetJson() {
         ResourceAssetManager manager = new ResourceAssetManager();
         manager.BuildCatalog();
