@@ -182,7 +182,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         group_copy["actions"] = [
             self.__clean_action(a)
             for a in actions_copy
-            if (not isinstance(a, Dict)) or "action" not in a
+            # if (not isinstance(a, Dict)) or "action" not in a
         ]
 
         if "sample_count" not in group_copy:
