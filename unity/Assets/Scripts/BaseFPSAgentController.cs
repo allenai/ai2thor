@@ -233,7 +233,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 foreach (Renderer r in VisibilityCapsule.GetComponentsInChildren<Renderer>()) {
                     r.enabled = value;
                 }
-
                 isVisible = value;
             }
         }
@@ -398,7 +397,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             targetTeleport = Vector3.zero;
 
 #if UNITY_EDITOR
-            Debug.Log($"lastAction: '{this.lastAction}'");            Debug.Log($"lastActionSuccess: '{success}'");
+            Debug.Log($"lastAction: '{this.lastAction}'");
+            Debug.Log($"lastActionSuccess: '{success}'");
             if (!success) {
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
             } else if (actionReturn != null) {
@@ -606,6 +606,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void Initialize(ServerAction action) {
 
             Debug.Log("RUNNING B");
+            // limit camera from looking too far down/up
+            //default max are 30 up and 60 down, different agent types may overwrite this
+            if (Mathf.Approximately(action.maxUpwardLookAngle, 0.0f)) {
+                this.maxUpwardLookAngle = 30f;
+            } else {
+                this.maxUpwardLookAngle = action.maxUpwardLookAngle;
+            }
+
+            if (Mathf.Approximately(action.maxDownwardLookAngle, 0.0f)) {
+                this.maxDownwardLookAngle = 60f;
+            } else {
+                this.maxDownwardLookAngle = action.maxDownwardLookAngle;
+            }
+
             this.InitializeBody(action);
             m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
 
@@ -660,6 +674,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
+
+            if(action.maxDownwardLookAngle < 0) {
+                errorMessage = "maxDownwardLookAngle must be a non-negative float";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            if(action.maxUpwardLookAngle < 0) {
+                errorMessage = "maxUpwardLookAngle must be a non-negative float";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
 
             this.snapToGrid = action.snapToGrid;
 
@@ -5208,7 +5237,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3[] reachablePos = new Vector3[goodPoints.Count];
             goodPoints.CopyTo(reachablePos);
 #if UNITY_EDITOR
-            Debug.Log(reachablePos.Length);
+            Debug.Log($"number of reachable positions found: {reachablePos.Length}");
 #endif
             return false;
         }
@@ -5233,11 +5262,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             agentTransform.position = initialPosition;
             agentTransform.rotation = initialRotation;
 
-            getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
+            bool wasObjectVisible = getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
 
             agentTransform.position = originalAgentPosition;
             agentTransform.rotation = originalAgentRotation;
             m_Camera.transform.rotation = originalCameraRotation;
+
+            if(!wasObjectVisible) {
+                throw new InvalidOperationException(
+                    $"Target object {targetSOP.objectID} is not visible on navigation path given current agent parameters: maxVisibleDistance ({maxVisibleDistance}), gridSize ({gridSize}), fieldOfView ({m_Camera.fieldOfView}), camera width ({Screen.width}), camera height ({Screen.height})"
+                );
+            }
 
             var path = new UnityEngine.AI.NavMeshPath();
 
@@ -5251,7 +5286,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var pathDistance = 0.0f;
             for (int i = 0; i < path.corners.Length - 1; i++) {
 #if UNITY_EDITOR
-                // Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
                 Debug.Log("Corner " + i + ": " + path.corners[i]);
 #endif
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
@@ -5261,13 +5296,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected float getFloorY(float x, float start_y, float z) {
             int layerMask = ~LayerMask.GetMask("Agent", "SimObjInvisible");
-
             float y = start_y;
+
             RaycastHit hit;
             Ray ray = new Ray(new Vector3(x, y, z), -transform.up);
             if (!Physics.Raycast(ray, out hit, 100f, layerMask)) {
                 throw new InvalidOperationException(
-                    "Raycast could not find the floor!"
+                    $"Raycast could not find the floor from position: {x},{start_y},{z}"
                 );
             }
             return hit.point.y;

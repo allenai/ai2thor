@@ -50,6 +50,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
     }
 
     public void PrepToControlJointFromAction(ArmMoveParams armMoveParams) {
+        Debug.Log("preparing joint to move");
         if (Mathf.Approximately(armMoveParams.distance, 0.0f)) {
             Debug.Log("Error! distance to move must be nonzero");
             return;
