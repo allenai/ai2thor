@@ -3983,6 +3983,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     $"Visibility scheme {visSchemeEnum} is not implemented. Must be 'distance' or 'collider'."
                 );
             }
+
             #if UNITY_EDITOR
                 foreach (SimObjPhysics sop in visible) {
                     Debug.Log("Visible: " + sop.name);
