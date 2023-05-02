@@ -208,7 +208,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // On start, activate gravity
             Vector3 movement = Vector3.zero;
             movement.y = Physics.gravity.y * m_GravityMultiplier;
-            m_CharacterController.Move(movement);
+            if (this.gameObject.name != "ArticulatedFPSController") {
+                m_CharacterController.Move(movement);
+            }
 
 #if UNITY_WEBGL
             this.jsInterface = this.GetComponent<JavaScriptInterface>();
@@ -603,6 +605,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void Initialize(ServerAction action) {
 
+            Debug.Log("RUNNING B");
             this.InitializeBody(action);
             m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
 
@@ -706,72 +709,91 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             this.visibilityScheme = action.GetVisibilityScheme();
             this.originalLightingValues = null;
+            // Physics.autoSimulation = true;
+            // Debug.Log("True if physics is auto-simulating: " + Physics.autoSimulation);
         }
 
         public IEnumerator checkInitializeAgentLocationAction() {
             yield return null;
+            
+            if (agentManager.agentMode != "stretchab") {
+                Vector3 startingPosition = this.transform.position;
+                // move ahead
+                // move back
 
-            Vector3 startingPosition = this.transform.position;
-            // move ahead
-            // move back
+                float mult = 1 / gridSize;
+                float grid_x1 = Convert.ToSingle(Math.Floor(this.transform.position.x * mult) / mult);
+                float grid_z1 = Convert.ToSingle(Math.Floor(this.transform.position.z * mult) / mult);
 
-            float mult = 1 / gridSize;
-            float grid_x1 = Convert.ToSingle(Math.Floor(this.transform.position.x * mult) / mult);
-            float grid_z1 = Convert.ToSingle(Math.Floor(this.transform.position.z * mult) / mult);
+                float[] xs = new float[] { grid_x1, grid_x1 + gridSize };
+                float[] zs = new float[] { grid_z1, grid_z1 + gridSize };
+                List<Vector3> validMovements = new List<Vector3>();
+                Debug.Log("STAGE 1. Starting position is (" + this.transform.position.x + ", " + this.transform.position.y + ", " + this.transform.position.z + ")");
+                foreach (float x in xs) {
+                    foreach (float z in zs) {
+                        this.transform.position = startingPosition;
+                        autoSyncTransforms();
 
-            float[] xs = new float[] { grid_x1, grid_x1 + gridSize };
-            float[] zs = new float[] { grid_z1, grid_z1 + gridSize };
-            List<Vector3> validMovements = new List<Vector3>();
-
-            foreach (float x in xs) {
-                foreach (float z in zs) {
-                    this.transform.position = startingPosition;
-                    autoSyncTransforms();
-
-                    yield return null;
-
-                    Vector3 target = new Vector3(x, this.transform.position.y, z);
-                    Vector3 dir = target - this.transform.position;
-                    Vector3 movement = dir.normalized * 100.0f;
-                    if (movement.magnitude > dir.magnitude) {
-                        movement = dir;
-                    }
-
-                    movement.y = Physics.gravity.y * this.m_GravityMultiplier;
-
-                    m_CharacterController.Move(movement);
-
-                    for (int i = 0; i < actionDuration; i++) {
                         yield return null;
-                        Vector3 diff = this.transform.position - target;
 
-
-                        if ((Math.Abs(diff.x) < 0.005) && (Math.Abs(diff.z) < 0.005)) {
-                            validMovements.Add(movement);
-                            break;
+                        Vector3 target = new Vector3(x, this.transform.position.y, z);
+                        
+                        Vector3 dir = target - this.transform.position;
+                        Vector3 movement = dir.normalized * 100.0f;
+                        Debug.Log("Target is at " + target + ", dir is at " + dir.y + ", and movement is " + movement);
+                        if (movement.magnitude > dir.magnitude) {
+                            movement = dir;
                         }
+                        Debug.Log("PRE: movement-y is " + movement.y);
+                        movement.y = Physics.gravity.y * this.m_GravityMultiplier;
+                        Debug.Log("POST: movement-y is  " + movement.y);
+                    if (agentManager.agentMode != "stretchab") {
+                        m_CharacterController.Move(movement);
+                        Debug.Log("THIS SHOULDN'T BE SHOWING, but somehow agentMode is " + agentManager.agentMode);
                     }
+                        for (int i = 0; i < actionDuration; i++) {
+                            yield return null;
+                            Vector3 diff = this.transform.position - target;
 
+
+                            if ((Math.Abs(diff.x) < 0.005) && (Math.Abs(diff.z) < 0.005)) {
+                                validMovements.Add(movement);
+                                break;
+                            }
+                        }
+                        Debug.Log("STAGE 2. Starting position is (" + this.transform.position.x + ", " + this.transform.position.y + ", " + this.transform.position.z + ")");
+                    }
                 }
-            }
+                this.transform.position = startingPosition;
+                autoSyncTransforms();
+                yield return null;
+                
+                if (validMovements.Count > 0) {
+                    Debug.Log("Initialize: got total valid initial targets: " + validMovements.Count);
+                    Vector3 firstMove = validMovements[0];
+                    Debug.Log("First move is this: " + firstMove);
+                    Debug.Log("STAGE 3. Starting position is (" + this.transform.position.x + ", " + this.transform.position.y + ", " + this.transform.position.z + ")");
+                    
+                    firstMove.y = Physics.gravity.y * this.m_GravityMultiplier;
 
-            this.transform.position = startingPosition;
-            autoSyncTransforms();
-            yield return null;
-            if (validMovements.Count > 0) {
-                Debug.Log("Initialize: got total valid initial targets: " + validMovements.Count);
-                Vector3 firstMove = validMovements[0];
-                firstMove.y = Physics.gravity.y * this.m_GravityMultiplier;
-
-                m_CharacterController.Move(firstMove);
-                snapAgentToGrid();
+                    m_CharacterController.Move(firstMove);
+                    Debug.Log("STAGE 4. Starting position is (" + this.transform.position.x + ", " + this.transform.position.y + ", " + this.transform.position.z + ")");
+                    snapAgentToGrid();
+                    
+                    actionFinished(true, new InitializeReturn {
+                        cameraNearPlane = m_Camera.nearClipPlane,
+                        cameraFarPlane = m_Camera.farClipPlane
+                    });
+                } else {
+                    Debug.Log("Initialize: no valid starting positions found");
+                    actionFinished(false);
+                }
+            } else {
+                yield return null;
                 actionFinished(true, new InitializeReturn {
                     cameraNearPlane = m_Camera.nearClipPlane,
                     cameraFarPlane = m_Camera.farClipPlane
                 });
-            } else {
-                Debug.Log("Initialize: no valid starting positions found");
-                actionFinished(false);
             }
         }
 

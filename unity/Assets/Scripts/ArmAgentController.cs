@@ -149,6 +149,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float ahead = 0,
             float right = 0,
             float speed = 1,
+            float acceleration = 1,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
             bool disableRendering = true

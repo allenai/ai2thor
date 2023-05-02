@@ -15,25 +15,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // TODO: Reimplemebt for Articulation body
         public override void InitializeBody(ServerAction initializeAction) {
-            // TODO; Articulation Body init
-            VisibilityCapsule = StretchVisCap;
-            m_CharacterController.center = new Vector3(0, 0, 0);
-            m_CharacterController.radius = 0.01f;
-            m_CharacterController.height = 0.02f;
-            m_CharacterController.skinWidth = 0.01f;
+            // // TODO; Articulation Body init
+            // VisibilityCapsule = StretchVisCap;
+            // m_CharacterController.center = new Vector3(0, 1, 0);
+            // m_CharacterController.radius = 0.01f;
+            // m_CharacterController.height = 0.02f;
+            // m_CharacterController.skinWidth = 0.01f;
 
 
-            // TODO: REMOVE
-            CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
-            cc.center = m_CharacterController.center;
-            cc.radius = m_CharacterController.radius;
-            cc.height = m_CharacterController.height;
+            // // TODO: REMOVE
+            // CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+            // cc.center = m_CharacterController.center;
+            // cc.radius = m_CharacterController.radius;
+            // cc.height = m_CharacterController.height;
 
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
-            // camera position
-            m_Camera.transform.localPosition = new Vector3(0, 0.378f, 0.0453f);
+            // // camera position
+            // m_Camera.transform.localPosition = new Vector3(0, 0.378f, 0.0453f);
 
             // camera FOV
             m_Camera.fieldOfView = 69f;
@@ -161,13 +161,62 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // TODO: Eli implement MoveAgent and RotateAgent
 
         public override void MoveAgent(
-            float ahead = 0,
+            float ahead = 1,
             float right = 0,
             float speed = 1,
+            float acceleration = 1,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
             bool disableRendering = true
         ) {
+            Vector3 agentDirection = transform.TransformDirection(Vector3.forward);
+            this.transform.GetComponent<ArticulationBody>().AddForce(17f * agentDirection);
+
+            // float distance = ahead;
+            // ArticulationBody ab = transform.GetComponent<ArticulationBody>();
+            // Vector3 initialPosition = ab.transform.position;
+            // Vector3 finalPosition = ab.transform.TransformPoint(Vector3.forward * distance);
+
+            // // determine if agent can even accelerate to max velocity and decelerate to 0 before reaching target position
+            // float accelerationDistance = Mathf.Pow(speed,2) / (2 * acceleration);
+
+            // if (2 * accelerationDistance > distance) {
+            //     speed = Mathf.Sqrt(distance * acceleration);
+            // }
+
+            // float accelerationTime = speed / acceleration;
+
+
+
+
+
+
+
+
+            // Vector3 currentPosition = ab.transform.position;
+            // // Debug.Log($"position of agent: {currentPosition}");
+            
+            // Vector3 forceDirection = new Vector3(0,0,acceleration);
+            
+            // if (finalPosition.magnitude - currentPosition.magnitude < 1e-3f) {
+            //     ab.AddForce(ab.mass * Vector3.back * ab.velocity.magnitude * Time.fixedDeltaTime);
+            //     moveState = MoveState.Idle;
+            //     Debug.Log("STOP!");
+            // } 
+
+            // // Apply acceleration over acceleration-time
+            // if (timePassed < accelerationTime) {
+            //     ab.AddForce(ab.mass * forceDirection);
+            //     Debug.Log("Accelerating!");
+            // }
+
+            // if (accelerationDistance >= (finalPosition - currentPosition).magnitude) {
+            //     ab.AddForce(ab.mass * -forceDirection);
+            //     Debug.Log("Decelerating!");
+            // }
+
+            // timePassed += Time.fixedDeltaTime;
+
 
             // Use Continuous move
 

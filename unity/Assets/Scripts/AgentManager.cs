@@ -184,7 +184,11 @@ public class AgentManager : MonoBehaviour {
                 throw new ArgumentException($"Invalid agentMode {action.agentMode}");
             }
 
-            action.autoSimulation = false;
+            if (action.agentMode != "stretchab") {
+                action.autoSimulation = false;
+            } else {
+                action.autoSimulation = true;
+            }
             physicsSceneManager.MakeAllObjectsMoveable();
         } else {
             var error = $"Invalid agentMode {action.agentMode}";
@@ -204,6 +208,7 @@ public class AgentManager : MonoBehaviour {
             }
         }
 
+        Debug.Log("RUNNING A");
         primaryAgent.ProcessControlCommand(action.dynamicServerAction);
         Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         if (action.targetFrameRate > 0) {
