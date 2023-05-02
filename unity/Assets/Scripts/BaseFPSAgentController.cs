@@ -3919,7 +3919,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void GetVisibleObjects(float? maxDistance = null, string visibilityScheme = null) {
+        protected VisibilityScheme getVisibilityScheme(string visibilityScheme = null) {
             VisibilityScheme visSchemeEnum;
             if (visibilityScheme != null) {
                 visibilityScheme = visibilityScheme.ToLower();
@@ -3940,27 +3940,70 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 visSchemeEnum = this.visibilityScheme;
             }
+            return visSchemeEnum;
+        }
+
+        public void GetVisibleObjects(
+            float? maxDistance = null,
+            string visibilityScheme = null,
+            int? thirdPartyCameraIndex = null
+        ) {
+            VisibilityScheme visSchemeEnum = getVisibilityScheme(visibilityScheme);
+
+            Camera camera;
+            if (thirdPartyCameraIndex.HasValue) {
+                camera = agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value];
+                if (visSchemeEnum != VisibilityScheme.Distance) {
+                    throw new System.NotImplementedException(
+                        $"Visibility scheme {visSchemeEnum} is not implemented for third party cameras. Must be 'distance'."
+                    );
+                }
+            } else {
+                camera = m_Camera;
+            }
 
             SimObjPhysics[] interactable;
             SimObjPhysics[] visible;
             if (visSchemeEnum == VisibilityScheme.Collider) {
                 visible = GetAllVisibleSimObjPhysicsCollider(
-                    camera: m_Camera,
+                    camera: camera,
+                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
+                    filterSimObjs: null,
+                    interactable: out interactable
+                );
+            } else if (visSchemeEnum == VisibilityScheme.Distance) {
+                visible = GetAllVisibleSimObjPhysicsDistance(
+                    camera: camera,
                     maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
                     filterSimObjs: null,
                     interactable: out interactable
                 );
             } else {
-                visible = GetAllVisibleSimObjPhysicsDistance(
-                    camera: m_Camera,
-                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
-                    filterSimObjs: null,
-                    interactable: out interactable
+                throw new System.NotImplementedException(
+                    $"Visibility scheme {visSchemeEnum} is not implemented. Must be 'distance' or 'collider'."
                 );
             }
+            #if UNITY_EDITOR
+                foreach (SimObjPhysics sop in visible) {
+                    Debug.Log("Visible: " + sop.name);
+                }
+            #endif
 
             // Return only the ObjectIds of the visible objects
             actionFinishedEmit(true, visible.Select(sop => sop.ObjectID).ToList());
+        }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call GetVisibleObjects instead.", error: false)]
+        public void ObjectsVisibleFromThirdPartyCamera(
+            int thirdPartyCameraIndex,
+            float? maxDistance = null,
+            string visibilityScheme = null
+        ) {
+            GetVisibleObjects(
+                maxDistance: maxDistance,
+                visibilityScheme: visibilityScheme,
+                thirdPartyCameraIndex: thirdPartyCameraIndex
+            );
         }
 
         // this is a faster version of the visibility check, but is not entirely
