@@ -360,7 +360,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // if we hit a sim object
                 if (sc.isSimObj) {
-                    debugMessage = "Collided with static sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
+                    debugMessage = "Collided with static/kinematic sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
                 }
 
                 // if we hit a structural object that isn't a sim object but still has static collision
