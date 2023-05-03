@@ -30,6 +30,7 @@ class BenchmarkConfig:
         benchmarker_class_names: List[str],
         init_params: Dict[str, Any],
         name: str = "",
+        config_name: str = "",
         scenes: Optional[List[str]] = None,
         procedural_houses: Optional[List[Dict[str, Any]]] = None,
         action_group_sample_count: int = 1,
@@ -78,6 +79,8 @@ class BenchmarkConfig:
         self.filter_object_types = filter_object_types
         self.teleport_random_before_actions = random_teleport_before_action_group
         self.name = name
+
+        self.config_name = config_name
 
 
 class Benchmarker(ABC):
@@ -168,22 +171,31 @@ class SimsPerSecondBenchmarker(Benchmarker):
             del report[self.aggregate_key()]
         return report
 
-
 class UnityActionBenchmarkRunner(BenchmarkConfig):
     def __clean_action(self, action: Union[str, Dict[str, Any]]):
-        if isinstance(action, str):
+        print(f"__clean_action: {action}")
+        if isinstance(action, str):           
             return {"action": action, "args": {}}
-        return {**action, "args": action.get("args", {})}
+        if "args" not in action:
+            action_name = action.pop('action', None)
+            return {"action":action_name, "args":{**action}}
+        else:
+            return {**action, "args": action.get("args", {})}
 
     def __get_complete_action_dict(self, action_group):
         group_copy = copy.deepcopy(action_group)
         actions_copy = group_copy["actions"]
-
+        for a in actions_copy:
+            print(f"Action {a}")
+        
+        print(f"groupc {group_copy}")
+        
         group_copy["actions"] = [
             self.__clean_action(a)
             for a in actions_copy
             # if (not isinstance(a, Dict)) or "action" not in a
         ]
+        print(f"groupc {group_copy}")
 
         if "sample_count" not in group_copy:
             group_copy["sample_count"] = self.action_sample_count
@@ -192,6 +204,10 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         if isinstance(group_copy["selector"], str):
             if group_copy["selector"] == "random":
                 group_copy["selector"] = default_selector
+            elif group_copy["selector"] == "sequence":
+                it = iter(group_copy["actions"])
+                group_copy["selector"] = lambda x: next(it)
+                group_copy["sample_count"] = len(group_copy["actions"])
             # TODO: potentially add more selectors
         if group_copy["selector"] is None:
             group_copy["selector"] = default_selector
@@ -312,9 +328,11 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             )
 
     def benchmark(self, action_map={}):
+        print(action_map)
         action_map = {
             k: self.__get_complete_action_dict(group) for k, group in action_map.items()
         }
+        print(action_map)
 
         args = self.init_params
         controller_params = copy.deepcopy(args)
@@ -367,6 +385,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
 
         benchmark_map = {
             "title": self.name,
+            "config": self.config_name,
             "benchmarks": defaultdict(lambda: defaultdict(lambda: {})),
             "controller_params": controller_params,
             "benchmark_params": {
@@ -381,6 +400,8 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         scene_count = 0
 
         records = []
+        print("Exp list")
+        print(experiment_list)
         for scene, procedural_house, benchmarker, experiment_index in experiment_list:
             logger.info("Loading scene '{}'.".format(scene))
             env.reset(scene)
@@ -400,7 +421,9 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             for action_group_name, action_group in action_map.items():
                 self.__teleport_to_random_reachable(env, house)
                 for i in range(action_group["sample_count"]):
+                    # print(f"Selector {action_group['selector']} action_g? {action_group} actions {action_group['actions']}")
                     action_config = action_group["selector"](action_group["actions"])
+                    print(f"---- benchmarking action: {action_config}")
                     record = benchmarker.benchmark(
                         env,
                         action_config,
