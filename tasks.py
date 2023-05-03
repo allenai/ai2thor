@@ -4359,7 +4359,7 @@ def run_benchmark_from_s3_config(ctx):
     for content in response.get('Contents', []):
         key = content['Key']
         if key.split(".")[-1] == "json":
-            print(key)
+            print(f"Key: {key}")
             obj = s3.Object(BENCHMARKING_S3_BUCKET, content['Key'])
             benchmark_run_config = json.loads(obj.get()['Body'].read().decode('utf-8'))
             procedural_houses_transformed = []
@@ -4374,6 +4374,7 @@ def run_benchmark_from_s3_config(ctx):
                     elif isinstance(procedural_house, dict):
                         procedural_houses_transformed.append(procedural_house)
             benchmark_run_config['procedural_houses'] = procedural_houses_transformed
+            benchmark_run_config["config_name"] = os.path.basename(key)
             # benchmark_run_config['verbose'] = True
 
             action_groups = copy.deepcopy(benchmark_run_config["action_groups"])
@@ -4404,7 +4405,72 @@ def run_benchmark_from_s3_config(ctx):
     except botocore.exceptions.ClientError as e:
         logger.error(f"Caught error uploading archive '{report_name}': {e}")
 
-    s3_aggregate_benchmark_results(BENCHMARKING_S3_BUCKET)
+    s3_aggregate_benchmark_results(ctx)
+
+    #TODO remove older benchmarks
+
+@task
+def run_benchmark_from_local_config(ctx, config_path, house_from_s3=True, houses_path="./unity/Assets/Resources/rooms"):
+    import copy
+    from datetime import datetime, date, timezone
+    from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET, UnityActionBenchmarkRunner
+    client = boto3.client('s3')
+
+    response = client.list_objects_v2(
+        Bucket=BENCHMARKING_S3_BUCKET,
+        Prefix='benchmark_jobs/'
+    )
+    s3 = boto3.resource("s3", region_name="us-west-2")
+    benchmark_runs = []
+    key = config_path
+    if key.split(".")[-1] == "json":
+        print(key)
+        procedural_houses_transformed = []
+        with open(config_path, 'r') as f:
+            benchmark_run_config = json.load(f)
+        if 'procedural_houses' in benchmark_run_config:
+
+            if not house_from_s3:
+                for procedural_house in benchmark_run_config['procedural_houses']:
+                    if isinstance(procedural_house, str):
+                        house_path = os.path.join(houses_path, procedural_house)
+                        with open(house_path, 'r') as f:
+                            house_json = json.load(f)
+                            house_json["id"] = procedural_house
+                            procedural_houses_transformed.append(house_json)
+                    elif isinstance(procedural_house, dict):
+                        procedural_houses_transformed.append(procedural_house)
+            else:
+                for procedural_house in benchmark_run_config['procedural_houses']:
+                    if isinstance(procedural_house, str):
+                        house_obj = s3.Object(BENCHMARKING_S3_BUCKET, f"procedural_houses/{procedural_house}")
+                        house_json = json.loads(house_obj.get()['Body'].read().decode('utf-8'))
+                        if "id" not in house_json:
+                            house_json["id"] = procedural_house.split(".")[0]
+                        procedural_houses_transformed.append(house_json)
+                    elif isinstance(procedural_house, dict):
+                        procedural_houses_transformed.append(procedural_house)
+        benchmark_run_config['procedural_houses'] = procedural_houses_transformed
+        # benchmark_run_config['verbose'] = True
+
+        action_groups = copy.deepcopy(benchmark_run_config["action_groups"])
+        del benchmark_run_config["action_groups"]
+        benchmark_runs.append(
+            (
+                UnityActionBenchmarkRunner(
+                    **benchmark_run_config
+                ),
+                action_groups
+            )
+        )
+    benchmark_results = []
+    for (benchmark_runner, action_group) in benchmark_runs:
+        benchmark_result = benchmark_runner.benchmark(action_group)
+        benchmark_results.append(benchmark_result)
+    print(benchmark_result)
+
+    with open("out_3.json", 'w') as f:
+        json.dump(benchmark_results[0], f, indent=4)
 
     #TODO remove older benchmarks
 
@@ -4437,7 +4503,10 @@ def add_daily_benchmark_config(ctx, benchmark_config_filename):
         logger.error(f"Caught error uploading archive '{benchmark_config_basename}': {e}")
 
 
-def s3_aggregate_benchmark_results(bucket):
+@task
+def s3_aggregate_benchmark_results(ctx):
+    from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET
+    bucket = BENCHMARKING_S3_BUCKET
     client = boto3.client('s3')
     response = client.list_objects_v2(
         Bucket=bucket,
@@ -4448,7 +4517,8 @@ def s3_aggregate_benchmark_results(bucket):
     history = []
     for content in response.get('Contents', []):
         key = content['Key']
-        if key.split(".")[-1] == "json":
+        if key.split(".")[-1] == "json" and os.path.basename(key) != "history.json":
+            print(f"Key: {key}")
             obj = s3.Object(bucket, content['Key'])
             benchmark_run = json.loads(obj.get()['Body'].read().decode('utf-8'))
             history.append(benchmark_run)
