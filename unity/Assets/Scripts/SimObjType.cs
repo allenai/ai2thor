@@ -27,7 +27,10 @@ public enum SimObjPrimaryProperty : int // EACH SimObjPhysics MUST HAVE 1 Primar
     // all scenes have their walls/floor/ceiling meshes split apart correctly (thanks Eli!)
     Wall = 4,
     Floor = 5,
-    Ceiling = 6
+    Ceiling = 6,
+
+    // Objaverse, uncategorized
+    Objaverse = 7,
 }
 
 [Serializable]

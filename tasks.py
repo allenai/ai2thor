@@ -4532,3 +4532,38 @@ def s3_aggregate_benchmark_results(ctx):
         )
     except botocore.exceptions.ClientError as e:
         logger.error(f"Caught error uploading archive '{report_name}': {e}")
+
+@task
+def test_create_prefab(ctx, json_path):
+    import json
+    import ai2thor.controller
+    controller = ai2thor.controller.Controller(
+        local_executable_path=None,
+        local_build=True,
+        # commit_id="2853447e90775ca4e6714ab4a6a8d4a1e36524e9",
+        start_unity=True,
+        scene="Procedural",
+        gridSize=0.25,
+        width=300,
+        height=300,
+        server_class=ai2thor.fifo_server.FifoServer,
+        visibilityScheme='Distance'
+    )
+    with open(json_path, "r") as f:
+        create_prefab_action = json.load(f)
+
+    print(f"build dirs: {controller._build.base_dir} {controller._build.tmp_dir}")
+
+    evt = controller.step(**(create_prefab_action[0]))
+
+    
+    print(f"Action success: {evt.metadata['lastActionSuccess']}")
+    print(f'Error: {evt.metadata["errorMessage"]}')
+
+    print(f"ActionReturn: {evt.metadata['actionReturn']}")
+
+   
+
+
+    
+    

@@ -1979,6 +1979,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public ObjectMetadata setReceptacleMetadata(ObjectMetadata meta) {
+
+
+            return meta;
+        }
+
         public virtual ObjectMetadata[] generateObjectMetadata(SimObjPhysics[] simObjects) {
             if (simObjects == null) {
                 throw new NullReferenceException("null SimObjPhysics passed to generateObjectMetadata");
@@ -6446,7 +6452,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string name,
             int[] triangles,
             Vector2[]? uvs = null,
-            string texturePath = null,
+            string albedoTexturePath = null,
+            string normalTexturePath = null,
             SerializableCollider[]? colliders = null,
             PhysicalProperties physicalProperties = null,
             Vector3[]? visibilityPoints = null,
@@ -6474,18 +6481,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MeshFilter meshFilter = meshObj.AddComponent<MeshFilter>();
             meshFilter.mesh = mesh;
 
+            Material mat = null;
+
             // load image from disk
-            if (texturePath != null) {
+            if (albedoTexturePath != null) {
                 // textures aren't saved as part of the prefab, so we load them from disk
                 RuntimePrefab runtimePrefab = go.AddComponent<RuntimePrefab>();
-                runtimePrefab.localTexturePath = texturePath;
+                runtimePrefab.localTexturePath = albedoTexturePath;
 
-                byte[] imageBytes = File.ReadAllBytes(texturePath);
+                byte[] imageBytes = File.ReadAllBytes(albedoTexturePath);
+                // Is this size right?
                 Texture2D tex = new Texture2D(2, 2);
                 tex.LoadImage(imageBytes);
 
                 // create a new material
-                Material mat = new Material(Shader.Find("Standard"));
+                mat = new Material(Shader.Find("Standard"));
                 mat.mainTexture = tex;
                 
                 // assign the material to the game object
@@ -6493,8 +6503,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 runtimePrefab.sharedMaterial = mat;
             } else {
                 // create a new material
-                Material mat = new Material(Shader.Find("Standard"));
+                mat = new Material(Shader.Find("Standard"));
                 meshObj.GetComponent<Renderer>().material = mat;
+            }
+
+            if (normalTexturePath != null) {
+                byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
+                Texture2D tex = new Texture2D(2, 2);
+                tex.LoadImage(imageBytes);
+                mat.SetTexture("_BumpMap", tex);
             }
 
             // have the mesh refer to the mesh at meshPath
@@ -6638,8 +6655,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 prefabParentTransform = prefabParent.transform;
             }
             go.transform.parent = prefabParentTransform;
+            
 
-            actionFinished(success: true);
+            var meta = ObjectMetadataFromSimObjPhysics(sop, true, true);
+            actionFinished(success: true, actionReturn: new Dictionary<string, object>{
+                {"assetMetadata", getAssetMetadata(sop.gameObject)},
+                {"objectMetadata", meta}
+            });
         }
 
         public void CreateHouse(ProceduralHouse house) {
@@ -6730,6 +6752,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, house);
         }
 
+        protected Dictionary<string, object> getAssetMetadata(GameObject asset) {
+
+            if (asset.GetComponent<SimObjPhysics>() == null) {
+                return null;
+            }
+
+            var simObj = asset.GetComponent<SimObjPhysics>();
+            var bb = simObj.AxisAlignedBoundingBox;
+
+            return new Dictionary<string, object>() {
+                ["name"] = simObj.gameObject.name,
+                ["objectType"] = simObj.Type.ToString(),
+                ["primaryProperty"] = simObj.PrimaryProperty.ToString(),
+                ["secondaryProperties"] = simObj.SecondaryProperties.Select(s => s.ToString()).ToList(),
+                ["boundingBox"] = new BoundingBox() {
+                    min = bb.center - bb.size / 2.0f,
+                    max = bb.center + bb.size / 2.0f
+                }
+            };
+        }
+
         public void GetAssetDatabase() {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
@@ -6740,29 +6783,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var metadata = new Dictionary<string, Dictionary<string, object>>();
             foreach (GameObject p in assetDb.prefabs) {
-                if (p.GetComponent<SimObjPhysics>() == null) {
+
+                var meta = getAssetMetadata(p);
+                if (meta == null) {
                     continue;
                 }
 
-                var simObj = p.GetComponent<SimObjPhysics>();
-                var bb = simObj.AxisAlignedBoundingBox;
-
-                if (metadata.ContainsKey(simObj.gameObject.name)) {
+                var name = meta["name"].ToString();
+                if (metadata.ContainsKey(name)) {
                     throw new InvalidOperationException(
-                        $"There are duplicate assets with the name {simObj.gameObject.name}."
+                        $"There are duplicate assets with the name '{name}'."
                     );
-                    continue;
                 }
 
-                metadata.Add(simObj.gameObject.name, new Dictionary<string, object>() {
-                    ["objectType"] = simObj.Type.ToString(),
-                    ["primaryProperty"] = simObj.PrimaryProperty.ToString(),
-                    ["secondaryProperties"] = simObj.SecondaryProperties.Select(s => s.ToString()).ToList(),
-                    ["boundingBox"] = new BoundingBox() {
-                        min = bb.center - bb.size / 2.0f,
-                        max = bb.center + bb.size / 2.0f
-                    }
-                });
+                metadata.Add(name, meta);
             }
 
             actionFinished(true, metadata);
