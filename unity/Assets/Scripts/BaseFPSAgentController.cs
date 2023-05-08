@@ -181,6 +181,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public bool clearRandomizeMaterialsOnReset = false;
 
+        private List<DebugSphere> debugSpheres = new List<DebugSphere>();
+            
+            
+
         // these object types can have a placeable surface mesh associated ith it
         // this is to be used with screenToWorldTarget to filter out raycasts correctly
         protected List<SimObjType> hasPlaceableSurface = new List<SimObjType>() {
@@ -6997,7 +7001,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             });
         }
 
-        public void LookAtObjectCenter(string objectId = "asset_0", Color? skyboxColor = null, Vector3? position = null) {
+        public void LookAtObjectCenter(string objectId = "asset_0", Vector3? position = null) {
             var obj = GameObject.Find(objectId);
             if (obj == null) {
                 errorMessage = $"Object does not exist in scene.";
@@ -7031,8 +7035,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // var size = 2.0f * Mathf.Tan(m_Camera.fieldOfView / 2.0f) * bounds.extents.magnitude;
             var radius = bounds.extents.magnitude;
             var dist = radius / Mathf.Tan(m_Camera.fieldOfView / 2.0f);
+            // Debug.Log($"Center: {bounds.center} radius: {radius} dist: {dist} sum: {radius + dist}");
             m_CharacterController.transform.rotation = Quaternion.identity;
             m_CharacterController.transform.position = bounds.center + Vector3.forward * (radius + dist);
+            #if UNITY_EDITOR
+                debugSpheres.Add(new DebugSphere() {
+                    color = Color.yellow,
+                    radius = radius,
+                    worldSpaceCenter = bounds.center
+                });
+            #endif
 
             m_Camera.transform.localPosition = Vector3.zero;
             m_Camera.transform.LookAt(bounds.center, Vector3.up);
@@ -7285,6 +7297,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Gizmos.color = Color.yellow;
             // Gizmos.DrawWireSphere(objectBounds.center, objectBounds.extents.magnitude);
+            foreach (var sphere in debugSpheres) {
+                Gizmos.color = sphere.color;
+                Gizmos.DrawWireSphere(sphere.worldSpaceCenter, sphere.radius);
+            }
         }
 #endif
 

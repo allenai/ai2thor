@@ -4354,6 +4354,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "LookAtObjectCenter";
                         action["objectId"] = "asset_0";
 
+                        if (splitcommand.Length == 2) {
+                            action["objectId"] = splitcommand[1];
+                        }
+
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
@@ -4374,7 +4378,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
-
                 case "g3d": {
 
                         Dictionary<string, object> action = new Dictionary<string, object>();

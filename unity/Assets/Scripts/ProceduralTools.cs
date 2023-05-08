@@ -1459,7 +1459,23 @@ namespace Thor.Procedural {
             Debug.Log($"schema {house.metadata.schema}");
             buildNavMeshes(floorGameObject, house.metadata.navMeshes);
 
-            RenderSettings.skybox = materialDb.getAsset(house.proceduralParameters.skyboxId);
+           
+            if (string.IsNullOrEmpty(house.proceduralParameters.skyboxId) || !materialDb.ContainsKey(house.proceduralParameters.skyboxId)) {
+                var mat = new Material(Shader.Find("Standard"));
+                Debug.Log("--------- Working");
+                mat.color = house.proceduralParameters.skyboxColor.toUnityColor();
+                RenderSettings.skybox = mat;
+                
+                // var cam = GameObject.FindObjectOfType<Camera>();
+                var cam = GameObject.Find("FirstPersonCharacter").GetComponent<Camera>();
+                cam.clearFlags = CameraClearFlags.SolidColor;
+                cam.backgroundColor = mat.color;
+                
+                // RenderSettings.ambientSkyColor =
+            }
+            else {
+                RenderSettings.skybox = materialDb.getAsset(house.proceduralParameters.skyboxId);
+            }
             DynamicGI.UpdateEnvironment();
             GameObject.FindObjectOfType<ReflectionProbe>().GetComponent<ReflectionProbe>().RenderProbe();
 

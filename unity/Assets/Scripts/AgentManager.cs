@@ -2044,6 +2044,12 @@ public class ObjectSphereBounds {
     public float radius;
 }
 
+public class DebugSphere {
+    public Vector3 worldSpaceCenter;
+    public float radius;
+    public Color color;
+}
+
 public enum ServerActionErrorCode {
     Undefined,
     ReceptacleNotVisible,

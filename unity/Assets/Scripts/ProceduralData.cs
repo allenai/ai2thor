@@ -129,6 +129,7 @@ namespace Thor.Procedural.Data {
         public float minWallColliderThickness { get; set; }
         public float receptacleHeight { get; set; }
         public string skyboxId { get; set; }
+        public SerializableColor skyboxColor { get; set; } 
         public string datetime { get; set; }
         public List<LightParameters> lights { get; set; }
 
