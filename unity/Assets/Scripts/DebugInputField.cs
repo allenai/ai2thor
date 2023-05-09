@@ -865,7 +865,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // Example: 'run simple', where simple.json exists in unity/debug/.
                 // This works best with Unity's Debugger for vscode (or other supported Unity IDEs).
                 case "run":
-                    // parse the file path
+                    // parse the file path 
                     const string BASE_PATH = "./debug/";
                     string file = "";
                     string path;
