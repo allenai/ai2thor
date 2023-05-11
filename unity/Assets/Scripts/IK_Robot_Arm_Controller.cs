@@ -48,6 +48,7 @@ public partial class IK_Robot_Arm_Controller : ArmController {
     }
 
     public override void manipulateArm() {
+        Debug.Log("manipulate Arm called from IK_Robot_Arm_Controller");
         solver.ManipulateArm();
     }
 

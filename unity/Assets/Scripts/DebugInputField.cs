@@ -3589,6 +3589,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "maus": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveArmBaseUp";
+                        action["distance"] = 0.5f;
+                        action["speed"] = 1.0f;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "gcfr": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetCoordinateFromRaycast";

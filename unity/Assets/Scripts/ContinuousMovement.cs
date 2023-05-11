@@ -108,7 +108,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool localPosition = false
         ) {
             bool teleport = (unitsPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
-
+            Debug.Log("starting ContinuousMovement.move()");
             Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>, IEnumerator> moveClosure =
                 (get, set, next) => updateTransformPropertyFixedUpdate(
                     controller: controller,

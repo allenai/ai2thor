@@ -45,8 +45,19 @@ public partial class ArticulatedArmController : ArmController {
             j.ControlJointFromAction();
         }
 
-        //ok now what about halt conditions..... those are already sort of built in to the solver at the moment
-        //so uhhh
+        //now call moveAB
+        //ContinuousMovement.moveAB();
+        // IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
+        //     ContinuousMovement.move(
+        //         controller,
+        //         collisionListener,
+        //         armTarget,
+        //         targetWorldPos,
+        //         disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+        //         unitsPerSecond,
+        //         returnToStart,
+        //         false
+        //     )
     }
 
     public override bool shouldHalt() {
@@ -213,6 +224,7 @@ public partial class ArticulatedArmController : ArmController {
         bool disableRendering,
         bool normalizedY
     ) {
+        Debug.Log("starting moveArmBase in ArticulatedArmController");
         float tolerance = 1e-3f;
         float maxTimePassed = 10.0f;
         int positionCacheSize = 10;
@@ -235,7 +247,32 @@ public partial class ArticulatedArmController : ArmController {
         };
 
         ArticulatedArmJointSolver liftJoint = joints[0];
+        //preset the joint's movement parameters ahead of time
         liftJoint.PrepToControlJointFromAction(amp);
+
+        Vector3 target = new Vector3(this.transform.position.x, distance, this.transform.position.z);
+
+        //now need to do move call here I think
+        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
+                ContinuousMovement.moveAB(
+                controller: controller,
+                moveTransform: this.transform,
+                targetPosition: target,
+                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                unitsPerSecond: unitsPerSecond,
+                returnToStartPropIfFailed: returnToStartPositionIfFailed,
+                localPosition: false
+            )
+        );
+
+        if (disableRendering) {
+            controller.unrollSimulatePhysics(
+                enumerator: moveCall,
+                fixedDeltaTime: fixedDeltaTime
+            );
+        } else {
+            StartCoroutine(moveCall);
+        }
     }
 
     public override void moveArmBaseUp(

@@ -3,27 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public enum ArmLiftState { Idle = 0, MovingDown = -1, MovingUp = 1 };
-public enum ArmExtendState {Idle = 0, MovingBackward = -1, MovingForward = 1};
-public enum ArmRotateState {Idle = 0, Negative = -1, Positive = 1};
-public enum JointAxisType {Unassigned, Extend, Lift, Rotate};
+//public enum ArmLiftState { Idle = 0, MovingDown = -1, MovingUp = 1 };
+//public enum ArmExtendState {Idle = 0, MovingBackward = -1, MovingForward = 1};
+//public enum ArmRotateState {Idle = 0, Negative = -1, Positive = 1};
+//public enum JointAxisType {Unassigned, Extend, Lift, Rotate};
 
-public class ArmMoveParams
-{
-    //distance to move either in meters or radians?
-    public float distance;
-    public float speed;
-    public float tolerance;
-    public float maxTimePassed;
-    public int positionCacheSize;
+// public class ArmMoveParams
+// {
+//     //distance to move either in meters or radians?
+//     public float distance;
+//     public float speed;
+//     public float tolerance;
+//     public float maxTimePassed;
+//     public int positionCacheSize;
 
-    //these are used during movement in fixed update
-    public int direction;
-    public float timePassed = 0.0f;
-    public float[] cachedPositions;
-    public int oldestCachedIndex;
-    public float initialJointPosition;
-}
+//     //these are used during movement in fixed update
+//     public int direction;
+//     public float timePassed = 0.0f;
+//     public float[] cachedPositions;
+//     public int oldestCachedIndex;
+//     public float initialJointPosition;
+// }
 
 public class TestABArmJointController : MonoBehaviour
 {
