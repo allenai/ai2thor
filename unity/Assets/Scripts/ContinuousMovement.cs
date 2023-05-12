@@ -161,7 +161,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
 
              // TODO: Change accordingly for AB
-            
+            Debug.Log("starting ContinuousMovement.moveAB");
             bool teleport = (unitsPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
 
             Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>, IEnumerator> moveClosure =
@@ -304,7 +304,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             double epsilon
             
         ) {
-            Debug.Log("starting ContinuousMovement in updateTransformPropertyFixedUpdate");
+            Debug.Log("starting updateTransformPropertyFixedUpdate");
             T originalProperty = getProp(moveTransform);
             var previousProperty = originalProperty;
 
@@ -339,23 +339,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 } else {
                     setProp(moveTransform, next);
                 }
-
+                Debug.Log("1");
                 // update?.Invoke();
 
                 // this will be a NOOP for Rotate/Move/Height actions
                 arm.manipulateArm();
-                
+                Debug.Log("2");
+
                 if (!Physics.autoSimulation) {
+                Debug.Log("3.1");
                     if (fixedDeltaTime == 0f) {
                         Physics.SyncTransforms();
                     } else {
                         PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
                     }
                 }
+                Debug.Log("3.2");
 
                 yield return new WaitForFixedUpdate();
 
                 currentDistance = distanceMetric(target, getProp(moveTransform));
+                Debug.Log("3.3");
 
                 if (currentDistance <= epsilon) {
                     // This logic is a bit unintuitive but it ensures we run the
@@ -366,12 +370,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         haveGottenWithinEpsilon = true;
                     }
                 }
+                Debug.Log("3.4");
+
             }
 
+            Debug.Log("4");
             T resetProp = previousProperty;
             if (returnToStartPropIfFailed) {
                 resetProp = originalProperty;
             }
+            Debug.Log("about to continuousMoveFinish");
             continuousMoveFinish(
                 controller,
                 arm,
@@ -401,6 +409,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             T target,
             T resetProp
         ) {
+            Debug.Log("starting continuousMoveFinish");
             bool actionSuccess = true;
             string debugMessage = "";
 

@@ -128,6 +128,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         if (jointAxisType == JointAxisType.Lift) {
             //if instead we are moving up or down actively
             if (liftState != ArmLiftState.Idle) {
+                Debug.Log("start ControlJointFromAction for axis type Lift");
                 var drive = myAB.yDrive;
                 float currentPosition = myAB.jointPosition[0];
                 float targetPosition = currentPosition + (float)liftState * Time.fixedDeltaTime * currentArmMoveParams.speed;
@@ -154,13 +155,6 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
 
                 //otherwise we have a hard timer to stop movement so we don't move forever and crash unity
                 currentArmMoveParams.timePassed += Time.deltaTime;
-
-                // shouldHalt(
-                //     distanceMovedSoFar: distanceMovedSoFar,
-                //     cachedPositions: currentArmMoveParams.cachedPositions,
-                //     tolerance: currentArmMoveParams.tolerance,
-                //     checkStandardDev: checkStandardDev
-                // );
             }
 
             //we are set to be in an idle state so return and do nothing
@@ -283,6 +277,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
             if (CheckArrayWithinStandardDeviation(cachedPositions, tolerance)) {
                 shouldHalt = true;
                 IdleAllStates();
+                Debug.Log("halt due to position tolerance");
                 return shouldHalt;
             }
         }
@@ -291,6 +286,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         else if (distanceMovedSoFar >= currentArmMoveParams.distance) {
             shouldHalt = true;
             IdleAllStates();
+            Debug.Log("halt due to distance reached/exceeded");
             return shouldHalt;
         }
 
@@ -299,6 +295,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         else if (currentArmMoveParams.timePassed >= currentArmMoveParams.maxTimePassed) {
             shouldHalt = true;
             IdleAllStates();
+            Debug.Log("halt from timeout");
             return shouldHalt;
         }
 

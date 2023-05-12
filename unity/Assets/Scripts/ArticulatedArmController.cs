@@ -44,20 +44,6 @@ public partial class ArticulatedArmController : ArmController {
         foreach (ArticulatedArmJointSolver j in joints) {
             j.ControlJointFromAction();
         }
-
-        //now call moveAB
-        //ContinuousMovement.moveAB();
-        // IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
-        //     ContinuousMovement.move(
-        //         controller,
-        //         collisionListener,
-        //         armTarget,
-        //         targetWorldPos,
-        //         disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-        //         unitsPerSecond,
-        //         returnToStart,
-        //         false
-        //     )
     }
 
     public override bool shouldHalt() {
@@ -72,10 +58,18 @@ public partial class ArticulatedArmController : ArmController {
                 checkStandardDev: j.checkStandardDev
             )) {
                 //if any single joint is still not halting, return false
+                Debug.Log("still not done, don't halt yet");
                 return false;
+            }
+
+            else
+            {
+                Debug.Log("halted!");
+                return true;
             }
         }
 
+        Debug.Log("halted, return true!");
         return true;
     }
 
