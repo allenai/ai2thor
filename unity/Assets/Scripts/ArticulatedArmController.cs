@@ -64,7 +64,7 @@ public partial class ArticulatedArmController : ArmController {
 
             else
             {
-                Debug.Log("halted!");
+                Debug.Log($"halted! Distance moved: {j.distanceMovedSoFar}");
                 return true;
             }
         }
@@ -250,23 +250,23 @@ public partial class ArticulatedArmController : ArmController {
         IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
                 ContinuousMovement.moveAB(
                 controller: controller,
-                moveTransform: this.transform,
-                targetPosition: target,
-                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-                unitsPerSecond: unitsPerSecond,
-                returnToStartPropIfFailed: returnToStartPositionIfFailed,
-                localPosition: false
+                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
             )
         );
 
-        if (disableRendering) {
-            controller.unrollSimulatePhysics(
-                enumerator: moveCall,
-                fixedDeltaTime: fixedDeltaTime
-            );
-        } else {
-            StartCoroutine(moveCall);
-        }
+        StartCoroutine(moveCall);
+
+        //not quite sure how to integrate with disableRendering mode... 
+        //we default to AutoSimulate on for the AB but maybe that can be done differently?
+
+        // if (disableRendering) {
+        //     controller.unrollSimulatePhysics(
+        //         enumerator: moveCall,
+        //         fixedDeltaTime: fixedDeltaTime
+        //     );
+        // } else {
+        //     StartCoroutine(moveCall);
+        // }
     }
 
     public override void moveArmBaseUp(
@@ -307,10 +307,10 @@ public partial class ArticulatedArmController : ArmController {
     protected override void resetArmTarget() {
 
         // TODO: Reimplement
-        Vector3 pos = handCameraTransform.transform.position + WristToManipulator;
-        Quaternion rot = handCameraTransform.transform.rotation;
-        armTarget.position = pos;
-        armTarget.rotation = rot;
+        // Vector3 pos = handCameraTransform.transform.position + WristToManipulator;
+        // Quaternion rot = handCameraTransform.transform.rotation;
+        // armTarget.position = pos;
+        // armTarget.rotation = rot;
     }
 
     public override ArmMetadata GenerateMetadata() {

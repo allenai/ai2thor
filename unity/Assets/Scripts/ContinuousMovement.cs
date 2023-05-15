@@ -6,8 +6,9 @@ using System;
 using System.Linq;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-    public class ContinuousMovement {
+    public class ContinuousMovement : MonoBehaviour{
         public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
+            Debug.Log("ContinuousMovement.unrollSimulatePhysics()");
             int count = 0;
             var previousAutoSimulate = Physics.autoSimulation;
             Physics.autoSimulation = false;
@@ -152,55 +153,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
        
         public static IEnumerator moveAB(
             PhysicsRemoteFPSAgentController controller,
-            Transform moveTransform,
-            Vector3 targetPosition,
-            float fixedDeltaTime,
-            float unitsPerSecond,
-            bool returnToStartPropIfFailed = false,
-            bool localPosition = false
+            float fixedDeltaTime
         ) {
 
-             // TODO: Change accordingly for AB
+            // TODO: Change accordingly for AB
             Debug.Log("starting ContinuousMovement.moveAB");
-            bool teleport = (unitsPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
+            //bool teleport = (unitsPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
 
-            Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>, IEnumerator> moveClosure =
-                (get, set, next) => updateTransformPropertyFixedUpdate(
-                    controller: controller,
-                    moveTransform: moveTransform,
-                    target: targetPosition,
-                    getProp: get,
-                    setProp: set,
-                    nextProp: next,
-                    getDirection: (target, current) => (target - current).normalized,
-                    distanceMetric: (target, current) => Vector3.SqrMagnitude(target - current),
-                    fixedDeltaTime: fixedDeltaTime,
-                    returnToStartPropIfFailed: returnToStartPropIfFailed,
-                    epsilon: 1e-6 // Since the distance metric uses SqrMagnitude this amounts to a distance of 1 millimeter
+            return updateFixedUpdateForAB(
+                controller: controller,
+                fixedDeltaTime: fixedDeltaTime
             );
 
-            Func<Transform, Vector3> getPosFunc;
-            Action<Transform, Vector3> setPosFunc;
-            Func<Transform, Vector3, Vector3> nextPosFunc;
-            if (localPosition) {
-                getPosFunc = (t) => t.localPosition;
-                setPosFunc = (t, pos) => t.localPosition = pos;
-                nextPosFunc = (t, direction) => t.localPosition + direction * unitsPerSecond * fixedDeltaTime;
-            } else {
-                getPosFunc = (t) => t.position;
-                setPosFunc = (t, pos) => t.position = pos;
-                nextPosFunc = (t, direction) => t.position + direction * unitsPerSecond * fixedDeltaTime;
-            }
+            // Func<Transform, Vector3> getPosFunc;
+            // Action<Transform, Vector3> setPosFunc;
+            // Func<Transform, Vector3, Vector3> nextPosFunc;
+            // if (localPosition) {
+            //     getPosFunc = (t) => t.localPosition;
+            //     setPosFunc = (t, pos) => t.localPosition = pos;
+            //     nextPosFunc = (t, direction) => t.localPosition + direction * unitsPerSecond * fixedDeltaTime;
+            // } else {
+            //     getPosFunc = (t) => t.position;
+            //     setPosFunc = (t, pos) => t.position = pos;
+            //     nextPosFunc = (t, direction) => t.position + direction * unitsPerSecond * fixedDeltaTime;
+            // }
 
-            if (teleport) {
-                nextPosFunc = (t, direction) => targetPosition;
-            }
+            // if (teleport) {
+            //     nextPosFunc = (t, direction) => targetPosition;
+            // }
 
-            return moveClosure(
-                getPosFunc,
-                setPosFunc,
-                nextPosFunc
-            );
+            // return moveClosure(
+            //     getPosFunc,
+            //     setPosFunc,
+            //     nextPosFunc
+            // );
         }
 
         protected static IEnumerator finallyDestroyGameObjects(
@@ -285,6 +271,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 )
             );
 
+        }
+
+        public static IEnumerator updateFixedUpdateForAB(            
+            PhysicsRemoteFPSAgentController controller,
+            float fixedDeltaTime
+        )
+        {
+            Debug.Log("in updateFixedUpdateForAB");
+            var arm = controller.GetComponentInChildren<ArmController>();
+
+            while(!arm.shouldHalt())
+            {
+                arm.manipulateArm();
+
+                if (!Physics.autoSimulation) {
+                    Debug.Log("manual simulate from PhysicsManager");
+                    PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+                }
+
+                yield return new WaitForFixedUpdate();
+            }
+
+            //continuous move finish for AB should go here???
+            Debug.Log("about to start continuousMoveFinish for AB");
+
+            yield return null;
         }
 
         public static IEnumerator updateTransformPropertyFixedUpdate<T>(

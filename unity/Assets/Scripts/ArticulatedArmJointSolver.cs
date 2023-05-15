@@ -273,6 +273,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         bool shouldHalt = false;
 
         //halt if positions/rotations are within tolerance and effectively not changing
+        Debug.Log($"checkStandardDev is: {checkStandardDev}");
         if (checkStandardDev) {
             if (CheckArrayWithinStandardDeviation(cachedPositions, tolerance)) {
                 shouldHalt = true;
