@@ -53,12 +53,7 @@ def create_asset(controller, asset_id, asset_directory, asset_symlink=True, verb
     
     get_existing_thor_asset_file_path(out_dir=asset_directory, asset_id=asset_id)
 
-    if (not hasattr(controller._build, "base_dir")) or getattr(controller._build, "base_dir"):
-        controller._build.base_dir = os.path.dirname(
-            os.path.dirname(os.path.dirname(os.path.dirname(controller._build.executable_path)))
-        )
-
-    save_dir = os.path.join(controller._build.base_dir, "processed_models")
+    save_dir = os.path.join(controller._build.base_dir, "procedural_assets")
     os.makedirs(save_dir, exist_ok=True)
 
     if verbose:

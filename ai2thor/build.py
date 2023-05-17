@@ -88,6 +88,16 @@ class ExternalBuild(object):
     def lock_sh(self):
         pass
 
+    @property
+    def base_dir(self):
+       return os.path.dirname(
+           os.path.dirname(
+            os.path.dirname(
+                os.path.dirname(self.executable_path)
+           )
+        )
+    )
+
 
 class Build(object):
     def __init__(self, platform, commit_id, include_private_scenes, releases_dir=None):
