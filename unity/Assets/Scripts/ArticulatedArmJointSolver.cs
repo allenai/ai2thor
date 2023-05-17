@@ -56,6 +56,9 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
             return;
         }
 
+        //zero out distance delta tracking
+        distanceMovedSoFar = 0.0f;
+
         //we are a lift type joint, moving along the local y axis
         if (jointAxisType == JointAxisType.Lift) {
             if (liftState == ArmLiftState.Idle) {

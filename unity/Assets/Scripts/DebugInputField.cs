@@ -3592,8 +3592,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "maus": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveArmBaseUp";
-                        action["distance"] = 0.5f;
-                        action["speed"] = 1.0f;
+                        action["distance"] = 0.05f;
+                        action["speed"] = 5.0f;
+                        action["fixedDeltaTime"] = 5.0f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }

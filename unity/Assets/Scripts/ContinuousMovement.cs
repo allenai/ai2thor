@@ -284,7 +284,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             while(!arm.shouldHalt())
             {
                 arm.manipulateArm();
-
+                Debug.Log($"what is autosim state: {Physics.autoSimulation}");
                 if (!Physics.autoSimulation) {
                     Debug.Log("manual simulate from PhysicsManager");
                     PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
@@ -295,7 +295,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //continuous move finish for AB should go here???
             Debug.Log("about to start continuousMoveFinish for AB");
-
+            continuousMoveFinishAB(controller: controller);
             yield return null;
         }
 
@@ -411,6 +411,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
                 }
             }
+        }
+
+        private static void continuousMoveFinishAB(            
+            PhysicsRemoteFPSAgentController controller
+        ) {
+            Debug.Log("starting continuousMoveFinishAB");
+            bool actionSuccess = true;
+            string debugMessage = "I guess everything is fine?";
+
+            controller.errorMessage = debugMessage;
+            controller.actionFinished(actionSuccess, debugMessage);
         }
 
         private static void continuousMoveFinish<T>(

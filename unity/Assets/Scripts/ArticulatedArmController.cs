@@ -51,6 +51,7 @@ public partial class ArticulatedArmController : ArmController {
         foreach (ArticulatedArmJointSolver j in joints) {
             //only halt if all joints report back that shouldHalt = true
             //joints that are idle and not moving will return shouldHalt = true by default
+            Debug.Log($"distance moved so far for this joint is: {j.distanceMovedSoFar}");
             if (!j.shouldHalt(
                 distanceMovedSoFar: j.distanceMovedSoFar,
                 cachedPositions: j.currentArmMoveParams.cachedPositions,
@@ -244,7 +245,7 @@ public partial class ArticulatedArmController : ArmController {
         //preset the joint's movement parameters ahead of time
         liftJoint.PrepToControlJointFromAction(amp);
 
-        Vector3 target = new Vector3(this.transform.position.x, distance, this.transform.position.z);
+        //Vector3 target = new Vector3(this.transform.position.x, distance, this.transform.position.z);
 
         //now need to do move call here I think
         IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
