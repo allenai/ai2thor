@@ -4599,7 +4599,6 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
             "layer": "Procedural2",
             "material": None,
         }]
-
     evt = controller.step(action="CreateHouse", house=house)
 
     print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
