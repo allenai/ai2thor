@@ -4562,8 +4562,44 @@ def test_create_prefab(ctx, json_path):
 
     print(f"ActionReturn: {evt.metadata['actionReturn']}")
 
-   
+@task
+def procedural_asset_hook_test(ctx, asset_dir, house_path):
+    import json
+    import ai2thor.controller
+    from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
+    hook_runner = ProceduralAssetHookRunner(
+        asset_directory=asset_dir,
+        asset_symlink=True,
+        verbose=True
+    )
+    controller = ai2thor.controller.Controller(
+        local_executable_path=None,
+        local_build=True,
+        # commit_id="2853447e90775ca4e6714ab4a6a8d4a1e36524e9",
+        start_unity=True,
+        scene="Procedural",
+        gridSize=0.25,
+        width=300,
+        height=300,
+        server_class=ai2thor.fifo_server.FifoServer,
+        visibilityScheme='Distance',
+        action_hook_runner=hook_runner
+    )
 
+    with open(house_path, "r") as f:
+        house = json.load(f)
+    
+    evt = controller.step(action="CreateHouse", house=house)
 
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
+    print(f'Error: {evt.metadata["errorMessage"]}')
+
+    evt = controller.step( dict(
+            action="LookAtObjectCenter",
+            objectId="asset_0"
+        )
+    )
     
-    
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
+    print(f'Error: {evt.metadata["errorMessage"]}')
+

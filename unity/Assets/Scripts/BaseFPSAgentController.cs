@@ -6123,6 +6123,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void SimObjPhysicsTypeIsReceptacle(float receptacleRatioTolerance = 0.001f) {
+
+            var sops = GameObject.FindObjectOfType<ProceduralAssetDatabase>()
+                .prefabs
+                .Select(a => a.GetComponent<SimObjPhysics>())
+                .Where(sop => sop != null);
+            
+
+            var categoriesCount = sops.GroupBy(sop => sop.ObjType).ToDictionary(g => g.Key, g => g.Count());
+
+            var result = sops
+                .Where(sop => sop.SecondaryProperties.Contains(SimObjSecondaryProperty.Receptacle))
+                .GroupBy(sop => sop.ObjType)
+                .Select(g => new {
+                    simObjType = g.Key.ToString(),
+                    totalInCategory = categoriesCount[g.Key],
+                    totalIsReceptacle = categoriesCount[g.Key]
+                })
+                .Where(
+                    s => s.totalIsReceptacle / (0.0f + s.totalIsReceptacle) > receptacleRatioTolerance
+                )
+                .Select(s => s.simObjType);
+
+            Debug.Log(result);
+            actionFinished(
+                true,
+                actionReturn: result.ToList()
+            );
+        }
+
         public static void TryToAddReceptacleTriggerBox(SimObjPhysics sop, float yThresMax = 0.075f, float worldOffset=-100f) {
             if (sop == null) {
                 throw new NotImplementedException(
@@ -6804,6 +6834,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             actionFinished(true, metadata);
+        }
+
+        public void AssetInDatabase(string assetId) {
+            var assetMap = ProceduralTools.getAssetMap();
+
+            actionFinished(
+                success: true,
+                actionReturn: assetMap.ContainsKey(assetId)
+            );
+        }
+
+        public void AssetsInDatabase(List<string> assetIds) {
+            var assetMap = ProceduralTools.getAssetMap();
+
+            actionFinished(
+                success: true,
+                actionReturn: assetIds.Select(id => (id, inDatabase: assetMap.ContainsKey(id))).ToDictionary(it => it.id, it => it.inDatabase)
+            );
         }
 
         // returns manually annotated "hole" metadata for connectors like doors of windows, to generate

@@ -909,7 +909,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                     StartCoroutine(executeBatch(jActions: actions));
                     break;
+                case "cwr": {
+                    CurrentActiveController().SimObjPhysicsTypeIsReceptacle();
+                    var obj = CurrentActiveController().actionReturn;
+                    var jsonResolver = new ShouldSerializeContractResolver();
+                    var str = Newtonsoft.Json.JsonConvert.SerializeObject(
+                    obj,
+                    Newtonsoft.Json.Formatting.None,
+                    new Newtonsoft.Json.JsonSerializerSettings() {
+                        ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                        ContractResolver = jsonResolver
+                    });
+                    Debug.Log(str);
 
+                    break;
+                }
                 case "exp": {
                         ServerAction action = new ServerAction();
 

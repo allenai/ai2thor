@@ -41,6 +41,9 @@ from ai2thor.interact import DefaultActions, InteractiveControllerPrompt
 from ai2thor.server import DepthFormat
 from ai2thor.util import atomic_write, makedirs
 from ai2thor.util.lock import LockEx
+from ai2thor.util.runtime_assets import (
+    create_assets
+)
 
 logger = logging.getLogger(__name__)
 
@@ -397,6 +400,10 @@ class Controller(object):
         platform=None,
         server_timeout: Optional[float] = 100.0,
         server_start_timeout: float = 300.0,
+        runtime_assets_dir="",
+        runtime_asset_ids=[],
+        # objaverse_asset_ids=[], TODO add and implement when objaverse.load_thor_objects is available
+        action_hook_runner=None,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -436,6 +443,9 @@ class Controller(object):
                 ),
             )
         )
+
+        self.action_hook_runner = action_hook_runner
+        self.action_hooks =  {func for func in dir(action_hook_runner) if callable(getattr(action_hook_runner, func)) and not func.startswith("__")} if self.action_hook_runner is not None else None
 
         if self.gpu_device is not None:
 
@@ -597,6 +607,13 @@ class Controller(object):
             if init_return:
                 self.server.set_init_params(init_return)
                 logging.info(f"Initialize return: {init_return}")
+            
+            if len(runtime_asset_ids):
+                create_assets(
+                    self, 
+                    asset_ids=runtime_asset_ids, 
+                    asset_directory=runtime_assets_dir
+                )
 
     def _build_server(self, host, port, width, height):
 
@@ -947,6 +964,26 @@ class Controller(object):
                 break
 
         return events
+    
+    def run_action_hook(self, action):
+        if action['action'] in self.action_hooks:
+            try:
+                print(f"action hooks: {self.action_hooks}")
+                method = getattr(self.action_hook_runner, action['action'])
+                event = method(action, self)
+                if isinstance(event, list):
+                    self.last_event = event[-1]
+                elif isinstance(event, object):
+                     self.last_event = event
+            except AttributeError:
+                traceback.print_stack()
+                raise NotImplementedError(
+                    "Action Hook Runner `{}` does not implement method `{}`,"
+                    " actions hooks are meant to run before an action, make sure that `action_hook_runner`"
+                    " passed to the controller implements a method for the desired action."
+                    .format(self.action_hook_runner.__class__.__name__, action['action']))
+            return True
+        return False
 
     def step(self, action: Union[str, Dict[str, Any]]=None, **action_args):
 
@@ -991,6 +1028,8 @@ class Controller(object):
                 action[new] = action[old]
                 # not deleting to allow for older builds to continue to work
                 # del action[old]
+
+        self.run_action_hook(action)
 
         self.server.send(action)
         try:
