@@ -966,7 +966,7 @@ class Controller(object):
         return events
     
     def run_action_hook(self, action):
-        if action['action'] in self.action_hooks:
+        if self.action_hooks is not None and action['action'] in self.action_hooks:
             try:
                 print(f"action hooks: {self.action_hooks}")
                 method = getattr(self.action_hook_runner, action['action'])
