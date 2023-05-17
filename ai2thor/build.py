@@ -9,7 +9,7 @@ import logging
 from ai2thor.util.lock import LockSh, LockEx
 from ai2thor.util import atomic_write
 import io
-from ai2thor.platform import STR_PLATFORM_MAP, OSXIntel64, Linux64, CloudRendering
+from ai2thor.platform import STR_PLATFORM_MAP, OSXIntel64, Linux64, CloudRendering, StandaloneWindows64
 import platform
 
 logger = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class EditorBuild(object):
         self.server_types = ["FIFO", "WSGI"]
         self.url = None
         self.unity_proc = None
-        external_system_platforms = dict(Linux=Linux64, Darwin=OSXIntel64)
+        external_system_platforms = dict(Linux=Linux64, Darwin=OSXIntel64, Windows=StandaloneWindows64)
         self.platform = external_system_platforms[platform.system()]
 
     def download(self):
