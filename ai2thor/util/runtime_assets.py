@@ -53,26 +53,34 @@ def create_asset(controller, asset_id, asset_directory, asset_symlink=True, verb
     
     get_existing_thor_asset_file_path(out_dir=asset_directory, asset_id=asset_id)
 
+    if (not hasattr(controller._build, "base_dir")) or getattr(controller._build, "base_dir"):
+        controller._build.base_dir = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.dirname(controller._build.executable_path)))
+        )
+
+    save_dir = os.path.join(controller._build.base_dir, "processed_models")
+    os.makedirs(save_dir, exist_ok=True)
+
     if verbose:
         logger.info(
-            f"Copying asset to THOR build dir: {controller._build.base_dir}."
+            f"Copying asset to THOR build dir: {save_dir}."
         )
 
     if asset_symlink:
-        build_target_dir = os.path.join(controller._build.base_dir, asset_id)
+        build_target_dir = os.path.join(save_dir, asset_id)
         if os.path.exists(build_target_dir):
             if not os.path.islink(build_target_dir):
                 if verbose:
                     logger.info(f"Deleting old asset dir: {build_target_dir}")
                 shutil.rmtree(build_target_dir)
             else:
-                tmp_symlink = os.path.join(controller._build.base_dir, "tmp")
+                tmp_symlink = os.path.join(save_dir, "tmp")
                 os.symlink(asset_directory, tmp_symlink)
                 os.replace(tmp_symlink, build_target_dir)
         else:
             os.symlink(asset_directory, build_target_dir)
     else:
-        build_target_dir = os.path.join(controller._build.base_dir, asset_id)
+        build_target_dir = os.path.join(save_dir, asset_id)
 
         if verbose:
             logger.info("Starting copy and reference modification...")
@@ -118,6 +126,8 @@ def create_asset(controller, asset_id, asset_directory, asset_symlink=True, verb
             logger.info("Copy finished.")
 
     create_prefab_action = load_existing_thor_asset_file(out_dir=asset_directory, object_name=asset_id)
+    create_prefab_action['normalTexturePath'] = create_prefab_action['normalTexturePath'].replace("/root/", "")
+    create_prefab_action['albedoTexturePath'] = create_prefab_action['albedoTexturePath'].replace("/root/", "")
     evt = controller.step(**create_prefab_action)
 
     if not evt.metadata["lastActionSuccess"]:

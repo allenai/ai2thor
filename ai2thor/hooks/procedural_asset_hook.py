@@ -26,7 +26,7 @@ class ProceduralAssetHookRunner(object):
 
     def CreateHouse(self, action, controller):
         house = action["house"]
-        asset_ids = [obj["assetId"] for obj in house["objects"]]
+        asset_ids = list(set(obj["assetId"] for obj in house["objects"]))
         evt = controller.step(action="AssetsInDatabase", assetIds=asset_ids)
         asset_in_db = evt.metadata["actionReturn"]
         assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db]
@@ -46,6 +46,29 @@ class ProceduralAssetHookRunner(object):
                 return evt
         return evt
 
+    def SpawnAsset(self, action, controller):
+        asset_ids = [action["assetId"]]
+        evt = controller.step(action="AssetsInDatabase", assetIds=asset_ids)
+        asset_in_db = evt.metadata["actionReturn"]
+        assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db]
+        for asset_id in assets_not_created:
+            asset_dir = os.path.abspath(os.path.join(self.asset_directory, asset_id))
+            evt = create_asset(
+                controller=controller,
+                asset_id=asset_id,
+                asset_directory=asset_dir,
+                asset_symlink=self.asset_symlink,
+                verbose=True
+            )
+            if not evt.metadata["lastActionSuccess"]:
+                logger.info(
+                    f"Could not create asset `{get_existing_thor_asset_file_path(out_dir=self.asset_directory, asset_id=asset_id)}`.")
+                logger.info(f"Error: {evt.metadata['errorMessage']}")
+            if self.stop_if_fail:
+                return evt
+        return evt
+
+
 class ObjaverseAssetHookRunner(object):
     def __init__(self):
         import objaverse
@@ -55,7 +78,7 @@ class ObjaverseAssetHookRunner(object):
         raise NotImplemented("Not yet implemented.")
     
         house = action["house"]
-        asset_ids = [obj["assetId"] for obj in house["objects"]]
+        asset_ids = list(set(obj["assetId"] for obj in house["objects"]))
         evt = controller.step(action="AssetsInDatabase", assetIds=asset_ids)
         asset_in_db = evt.metadata["actionReturn"]
         assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if in_db]
