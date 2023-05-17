@@ -127,7 +127,7 @@ public class CollisionListener : MonoBehaviour {
             if (collider.GetComponentInParent<SimObjPhysics>()) {
                 // how does this handle nested sim objects? maybe it's fine?
                 SimObjPhysics sop = collider.GetComponentInParent<SimObjPhysics>();
-                if (sop.PrimaryProperty == SimObjPrimaryProperty.Static) {
+                if (sop.PrimaryProperty == SimObjPrimaryProperty.Static || sop.GetComponent<Rigidbody>().isKinematic == true) {
                     // #if UNITY_EDITOR
                     // Debug.Log("Collided with static sim obj " + sop.name);
                     // #endif
