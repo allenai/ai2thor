@@ -4563,7 +4563,7 @@ def test_create_prefab(ctx, json_path):
     print(f"ActionReturn: {evt.metadata['actionReturn']}")
 
 @task
-def procedural_asset_hook_test(ctx, asset_dir, house_path):
+def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
@@ -4588,7 +4588,18 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path):
 
     with open(house_path, "r") as f:
         house = json.load(f)
-    
+    instance_id = "asset_0"
+    if asset_id != "":
+        house["objects"] = [{
+            "assetId": asset_id,
+            "id": instance_id,
+            "kinematic": True,
+            "position": {"x": 0, "y": 0, "z": 0},
+            "rotation": {"x": 0, "y": 0, "z": 0},
+            "layer": "Procedural2",
+            "material": None,
+        }]
+
     evt = controller.step(action="CreateHouse", house=house)
 
     print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
@@ -4596,7 +4607,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path):
 
     evt = controller.step( dict(
             action="LookAtObjectCenter",
-            objectId="asset_0"
+            objectId=instance_id
         )
     )
     
