@@ -233,7 +233,7 @@ public partial class ArticulatedArmController : ArmController {
         }
 
         ArmMoveParams amp = new ArmMoveParams {
-            distance = distance,
+            distance = Mathf.Abs(distance),
             speed = unitsPerSecond,
             tolerance = tolerance,
             maxTimePassed = maxTimePassed,

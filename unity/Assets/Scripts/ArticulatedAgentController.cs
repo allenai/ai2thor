@@ -127,7 +127,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? fixedDeltaTime = null,
             bool returnToStart = true,
             bool disableRendering = true
-        ) {
+        ) {            
+            Debug.Log("MoveArmBaseDown from ArticulatedAgentController (pass negative distance to MoveArmBaseUp)");
             MoveArmBaseUp(
                 distance: -distance,
                 speed: speed,

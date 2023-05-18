@@ -281,7 +281,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
             if (CheckArrayWithinStandardDeviation(cachedPositions, tolerance)) {
                 shouldHalt = true;
                 IdleAllStates();
-                Debug.Log("halt due to position tolerance");
+                Debug.Log("halt due to position delta within tolerance");
                 return shouldHalt;
             }
         }
