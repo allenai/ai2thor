@@ -8,6 +8,7 @@ controller.step to locally run some local code
 """
 import logging
 import os
+from typing import Dict, Any, List
 
 from ai2thor.util.runtime_assets import (
     create_asset,
@@ -15,6 +16,21 @@ from ai2thor.util.runtime_assets import (
 )
 
 logger = logging.getLogger(__name__)
+
+def get_all_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List[str]) -> List[str]:
+    """
+    Get all asset IDs in a house.
+    """
+    for obj in objects:
+        asset_ids.append(obj["assetId"])
+        if "children" in obj:
+            get_all_asset_ids_recursively(obj["children"], asset_ids)
+    assets_set = set(asset_ids)
+    if "" in assets_set:
+        assets_set.remove("")
+    return list(assets_set)
+
+
 
 class ProceduralAssetHookRunner(object):
 
@@ -26,7 +42,7 @@ class ProceduralAssetHookRunner(object):
 
     def CreateHouse(self, action, controller):
         house = action["house"]
-        asset_ids = list(set(obj["assetId"] for obj in house["objects"]))
+        asset_ids = get_all_asset_ids_recursively(house["objects"], [])
         evt = controller.step(action="AssetsInDatabase", assetIds=asset_ids)
         asset_in_db = evt.metadata["actionReturn"]
         assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db]
@@ -40,7 +56,7 @@ class ProceduralAssetHookRunner(object):
                 verbose=True
             )
             if not evt.metadata["lastActionSuccess"]:
-                logger.info(f"Could not create asset `{get_existing_thor_asset_file_path(out_dir=self.asset_directory, asset_id=asset_id)}`.")
+                logger.info(f"Could not create asset `{get_existing_thor_asset_file_path(out_dir=asset_dir, asset_id=asset_id)}`.")
                 logger.info(f"Error: {evt.metadata['errorMessage']}")
             if self.stop_if_fail:
                 return evt
@@ -62,7 +78,7 @@ class ProceduralAssetHookRunner(object):
             )
             if not evt.metadata["lastActionSuccess"]:
                 logger.info(
-                    f"Could not create asset `{get_existing_thor_asset_file_path(out_dir=self.asset_directory, asset_id=asset_id)}`.")
+                    f"Could not create asset `{get_existing_thor_asset_file_path(out_dir=asset_dir, asset_id=asset_id)}`.")
                 logger.info(f"Error: {evt.metadata['errorMessage']}")
             if self.stop_if_fail:
                 return evt
