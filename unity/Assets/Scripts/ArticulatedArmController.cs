@@ -83,8 +83,6 @@ public partial class ArticulatedArmController : ArmController {
 
         //TODO: Initialization
 
-
-
         // TODO: Replace Solver 
     }
 
@@ -104,7 +102,7 @@ public partial class ArticulatedArmController : ArmController {
 
     public override void moveArmTarget(
         PhysicsRemoteFPSAgentController controller,
-        Vector3 target,
+        Vector3 target, //distance + direction
         float unitsPerSecond,
         float fixedDeltaTime,
         bool returnToStart,
@@ -112,64 +110,77 @@ public partial class ArticulatedArmController : ArmController {
         bool restrictTargetPosition,
         bool disableRendering
     ) {
-        Dictionary<ArticulatedArmJointSolver, float> jointToArmDistanceRatios = new Dictionary<ArticulatedArmJointSolver, float>();
-
-        //get the total distance each joint can move based on the upper limits
-        float totalExtendDistance = 0.0f;
-
-        //loop through all extending joints to get the total distance each joint can move
-        for (int i = 1; i <= 4; i++) {
-            totalExtendDistance += GetDriveUpperLimit(joints[i]);
-        }
-
-        //loop through all extending joints and get the ratio of movement each joint is responsible for
-        for (int i = 1; i <= 4; i++) {
-            ArticulatedArmJointSolver thisJoint = joints[i];
-            jointToArmDistanceRatios.Add(thisJoint, GetDriveUpperLimit(thisJoint) / totalExtendDistance);
-        }
-
-        List<ArticulatedArmJointSolver> jointsThatAreMoving = new List<ArticulatedArmJointSolver>();
-
+        Debug.Log("starting moveArmTarget in ArticulatedArmController");
         float tolerance = 1e-3f;
         float maxTimePassed = 10.0f;
         int positionCacheSize = 10;
-        //just use position's z to get the distance for now, since we are no longer setting world position
-        float distance = target.z;
 
-        //this will be fine to get the direction for now I guess
-        int direction = 0;
-        if (distance < 0) {
-            direction = -1;
-        }
-        if (distance > 0) {
-            direction = 1;
-        }
+        // int direction = 0;
+        // if (distance < 0) {
+        //     direction = -1;
+        // }
+        // if (distance > 0) {
+        //     direction = 1;
+        // }
 
-        //set each joint to move its specific distance
-        foreach (ArticulatedArmJointSolver joint in jointToArmDistanceRatios.Keys) {
-            //assign each joint the distance it needs to move to have the entire arm
-            float myDistance = distance * jointToArmDistanceRatios[joint];
+        // Dictionary<ArticulatedArmJointSolver, float> jointToArmDistanceRatios = new Dictionary<ArticulatedArmJointSolver, float>();
 
-            ArmMoveParams amp = new ArmMoveParams {
-                distance = myDistance,
-                speed = unitsPerSecond,
-                tolerance = tolerance,
-                maxTimePassed = maxTimePassed,
-                positionCacheSize = positionCacheSize,
-                direction = direction
-            };
+        // //get the total distance each joint can move based on the upper limits
+        // float totalExtendDistance = 0.0f;
 
-            //keep track of joints that are moving
-            jointsThatAreMoving.Add(joint);
+        // //loop through all extending joints to get the total distance each joint can move
+        // for (int i = 1; i <= 4; i++) {
+        //     totalExtendDistance += GetDriveUpperLimit(joints[i]);
+        // }
 
-            //start moving this joint
-            joint.PrepToControlJointFromAction(amp);
-        }
+        // //loop through all extending joints and get the ratio of movement each joint is responsible for
+        // for (int i = 1; i <= 4; i++) {
+        //     ArticulatedArmJointSolver thisJoint = joints[i];
+        //     jointToArmDistanceRatios.Add(thisJoint, GetDriveUpperLimit(thisJoint) / totalExtendDistance);
+        // }
 
-        //start coroutine to check if all joints have become idle and the action is finished
+        // List<ArticulatedArmJointSolver> jointsThatAreMoving = new List<ArticulatedArmJointSolver>();
 
-        //I think this should move to the halt condition
-        StartCoroutine(AreAllTheJointsBackToIdle(jointsThatAreMoving, controller));
+        // float tolerance = 1e-3f;
+        // float maxTimePassed = 10.0f;
+        // int positionCacheSize = 10;
+        // //just use position's z to get the distance for now, since we are no longer setting world position
+        // float distance = target.z;
+
+        // //this will be fine to get the direction for now I guess
+        // int direction = 0;
+        // if (distance < 0) {
+        //     direction = -1;
+        // }
+        // if (distance > 0) {
+        //     direction = 1;
+        // }
+
+        // //set each joint to move its specific distance
+        // foreach (ArticulatedArmJointSolver joint in jointToArmDistanceRatios.Keys) {
+        //     //assign each joint the distance it needs to move to have the entire arm
+        //     float myDistance = distance * jointToArmDistanceRatios[joint];
+
+        //     ArmMoveParams amp = new ArmMoveParams {
+        //         distance = myDistance,
+        //         speed = unitsPerSecond,
+        //         tolerance = tolerance,
+        //         maxTimePassed = maxTimePassed,
+        //         positionCacheSize = positionCacheSize,
+        //         direction = direction
+        //     };
+
+        //     //keep track of joints that are moving
+        //     jointsThatAreMoving.Add(joint);
+
+        //     //start moving this joint
+        //     joint.PrepToControlJointFromAction(amp);
+        // }
+
+        // //start coroutine to check if all joints have become idle and the action is finished
+
+        // //I think this should move to the halt condition
+        // StartCoroutine(AreAllTheJointsBackToIdle(jointsThatAreMoving, controller));
     }
 
     public float GetDriveUpperLimit(ArticulatedArmJointSolver joint, JointAxisType jointAxisType = JointAxisType.Extend) {
