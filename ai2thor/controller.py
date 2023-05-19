@@ -968,7 +968,7 @@ class Controller(object):
     def run_action_hook(self, action):
         if self.action_hooks is not None and action['action'] in self.action_hooks:
             try:
-                print(f"action hooks: {self.action_hooks}")
+                # print(f"action hooks: {self.action_hooks}")
                 method = getattr(self.action_hook_runner, action['action'])
                 event = method(action, self)
                 if isinstance(event, list):
@@ -985,10 +985,13 @@ class Controller(object):
             return True
         return False
 
-    def step(self, action: Union[str, Dict[str, Any]]=None, **action_args):
+    def step(self, action: Union[str, Dict[str, Any]] = None, **action_args):
 
         if isinstance(action, Dict):
-            action = copy.deepcopy(action)  # prevent changes from leaking
+            # We attempt to prevent changes from leaking, doing a deep copy
+            # isn't a good idea as the action may have huge arguments (e.g. when
+            # generating a house)
+            action = {**action}
         else:
             action = dict(action=action)
 
@@ -997,9 +1000,6 @@ class Controller(object):
 
         if self.headless:
             action["renderImage"] = False
-
-        # prevent changes to the action from leaking
-        action = copy.deepcopy(action)
 
         # XXX should be able to get rid of this with some sort of deprecation warning
         if "AI2THOR_VISIBILITY_DISTANCE" in os.environ:

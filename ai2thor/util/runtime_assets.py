@@ -82,22 +82,27 @@ def create_asset(
 
     if asset_symlink:
         build_target_dir = os.path.join(save_dir, asset_id)
-        if os.path.exists(build_target_dir):
-            if not os.path.islink(build_target_dir):
-                if verbose:
-                    logger.info(f"Deleting old asset dir: {build_target_dir}")
-                shutil.rmtree(build_target_dir)
-            else:
-                tmp_symlink = os.path.join(save_dir, "tmp")
-                os.symlink(asset_directory, tmp_symlink)
-                os.replace(tmp_symlink, build_target_dir)
-        else:
+        exists = os.path.exists(build_target_dir)
+        is_link = os.path.islink(build_target_dir)
+        if exists and not is_link:
+            # If not a link, delete the full directory
+            if verbose:
+                logger.info(f"Deleting old asset dir: {build_target_dir}")
+            shutil.rmtree(build_target_dir)
+        elif is_link:
+            # If not a link, delete it only if its not pointing to the right place
+            if os.path.realpath(build_target_dir) != os.path.realpath(asset_directory):
+                os.remove(build_target_dir)
+
+        if not os.path.islink(build_target_dir):
+            # Add symlink if it doesn't already exist
             os.symlink(asset_directory, build_target_dir)
     else:
         build_target_dir = os.path.join(save_dir, asset_id)
 
         if verbose:
             logger.info("Starting copy and reference modification...")
+
         if os.path.exists(build_target_dir):
             if verbose:
                 logger.info(f"Deleting old asset dir: {build_target_dir}")
@@ -108,27 +113,6 @@ def create_asset(
             build_target_dir,
             ignore=shutil.ignore_patterns("images", "*.obj", "thor_metadata.json"),
         )
-        if os.path.isabs(asset_directory):
-
-            json_asset = load_existing_thor_asset_file(
-                out_dir=build_target_dir, object_name=asset_id
-            )
-            # Changes reference to textures
-            json_asset["albedoTexturePath"] = os.path.join(
-                asset_id, os.path.basename(json_asset["albedoTexturePath"])
-            )
-            json_asset["normalTexturePath"] = os.path.join(
-                asset_id, os.path.basename(json_asset["normalTexturePath"])
-            )
-            save_thor_asset_file(
-                json_asset,
-                get_existing_thor_asset_file_path(
-                    out_dir=build_target_dir, asset_id=asset_id
-                ),
-            )
-            if verbose:
-                logger.info("Reference modification finished.")
-
         if verbose:
             logger.info("Copy finished.")
 
@@ -136,10 +120,14 @@ def create_asset(
         out_dir=asset_directory, object_name=asset_id
     )
     create_prefab_action["normalTexturePath"] = os.path.join(
-        "processed_models", asset_id, os.path.basename(create_prefab_action["normalTexturePath"])
+        "processed_models",
+        asset_id,
+        os.path.basename(create_prefab_action["normalTexturePath"]),
     )
     create_prefab_action["albedoTexturePath"] = os.path.join(
-        "processed_models", asset_id, os.path.basename(create_prefab_action["albedoTexturePath"])
+        "processed_models",
+        asset_id,
+        os.path.basename(create_prefab_action["albedoTexturePath"]),
     )
 
     thor_obj_md = load_existing_thor_metadata_file(out_dir=asset_directory)
