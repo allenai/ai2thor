@@ -1604,7 +1604,6 @@ namespace Thor.Procedural {
                 if (
                     assetPath.Contains("SceneSetupPrefabs")
                     || assetPath.Contains("Entryway Objects")
-                    || assetPath.Contains("Custom Project Objects")
                     || assetPath.Contains("Assets/Resources")
                 ) {
                     continue;
