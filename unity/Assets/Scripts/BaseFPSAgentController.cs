@@ -3254,7 +3254,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (this.imageSynthesis && this.imageSynthesis.enabled) {
                 this.imageSynthesis.OnSceneChange();
             }
-
             actionFinished(success, errorMessage);
         }
 
