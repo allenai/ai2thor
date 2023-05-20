@@ -3250,6 +3250,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
+
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(childId)) {
                 errorMessage = $"No parent object with ID {childId}";
                 actionFinished(false);
