@@ -52,10 +52,13 @@ public partial class ArticulatedArmController : ArmController {
 
     public override bool shouldHalt() {
         Debug.Log("checking ArticulatedArmController shouldHalt");
+        bool ZaWarudo = false;
         foreach (ArticulatedArmJointSolver j in joints) {
             //only halt if all joints report back that shouldHalt = true
             //joints that are idle and not moving will return shouldHalt = true by default
             Debug.Log($"distance moved so far for this joint is: {j.distanceMovedSoFar}");
+
+            //if shouldHalt == false, continue moving
             if (!j.shouldHalt(
                 distanceMovedSoFar: j.distanceMovedSoFar,
                 cachedPositions: j.currentArmMoveParams.cachedPositions,
@@ -63,18 +66,21 @@ public partial class ArticulatedArmController : ArmController {
             )) {
                 //if any single joint is still not halting, return false
                 Debug.Log("still not done, don't halt yet");
-                return false;
+                ZaWarudo = false;
+                return ZaWarudo;
             }
 
+            //this joint returns that it should stop! Now we must wait to see if there rest
             else
             {
                 Debug.Log($"halted! Distance moved: {j.distanceMovedSoFar}");
-                return true;
+                ZaWarudo = true;
+                continue;
             }
         }
 
         Debug.Log("halted, return true!");
-        return true;
+        return ZaWarudo;
     }
 
     public override GameObject GetArmTarget() {
@@ -151,11 +157,11 @@ public partial class ArticulatedArmController : ArmController {
             jointToArmDistanceRatios.Add(thisJoint, GetDriveUpperLimit(thisJoint) / totalExtendDistance);
         }
 
-        List<ArticulatedArmJointSolver> jointsThatAreMoving = new List<ArticulatedArmJointSolver>();
-
         //set each joint to move its specific distance
         foreach (ArticulatedArmJointSolver joint in jointToArmDistanceRatios.Keys) {
+
         //assign each joint the distance it needs to move to have the entire arm
+        //this means the distance each joint moves may be slightly different due to proportion of movement this joint is responsible for
         float myDistance = distance * jointToArmDistanceRatios[joint];
 
         ArmMoveParams amp = new ArmMoveParams {
@@ -167,17 +173,19 @@ public partial class ArticulatedArmController : ArmController {
             direction = direction
         };
 
-            //keep track of joints that are moving
-            jointsThatAreMoving.Add(joint);
-
-            //start moving this joint
+            //assign movement params to this joint
             joint.PrepToControlJointFromAction(amp);
         }
 
-        //start coroutine to check if all joints have become idle and the action is finished
+        //now need to do move call here I think
+        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
+                ContinuousMovement.moveAB(
+                controller: controller,
+                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
+            )
+        );
 
-        //I think this should move to the halt condition
-        StartCoroutine(AreAllTheJointsBackToIdle(jointsThatAreMoving, controller));
+        StartCoroutine(moveCall);
     }
 
     public float GetDriveUpperLimit(ArticulatedArmJointSolver joint, JointAxisType jointAxisType = JointAxisType.Extend) {
@@ -193,30 +201,32 @@ public partial class ArticulatedArmController : ArmController {
             upperLimit = joint.myAB.yDrive.upperLimit;
         }
 
+        //no revolute limit because it revolves in a circle forever
+
         return upperLimit;
     }
 
-    private IEnumerator AreAllTheJointsBackToIdle(List<ArticulatedArmJointSolver> jointsThatAreMoving, PhysicsRemoteFPSAgentController controller) {
-        bool hasEveryoneStoppedYet = false;
+    // private IEnumerator AreAllTheJointsBackToIdle(List<ArticulatedArmJointSolver> jointsThatAreMoving, PhysicsRemoteFPSAgentController controller) {
+    //     bool hasEveryoneStoppedYet = false;
 
-        //keep checking if things are all idle yet
-        //all individual joints should have a max timeout so this won't hang infinitely (i hope)
-        while (hasEveryoneStoppedYet == false) {
-            yield return new WaitForFixedUpdate();
+    //     //keep checking if things are all idle yet
+    //     //all individual joints should have a max timeout so this won't hang infinitely (i hope)
+    //     while (hasEveryoneStoppedYet == false) {
+    //         yield return new WaitForFixedUpdate();
 
-            foreach (ArticulatedArmJointSolver joint in jointsThatAreMoving) {
-                if (joint.extendState == ArmExtendState.Idle) {
-                    hasEveryoneStoppedYet = true;
-                } else {
-                    hasEveryoneStoppedYet = false;
-                }
-            }
-        }
+    //         foreach (ArticulatedArmJointSolver joint in jointsThatAreMoving) {
+    //             if (joint.extendState == ArmExtendState.Idle) {
+    //                 hasEveryoneStoppedYet = true;
+    //             } else {
+    //                 hasEveryoneStoppedYet = false;
+    //             }
+    //         }
+    //     }
 
-        //done!
-        controller.actionFinished(true);
-        yield return null;
-    }
+    //     //done!
+    //     controller.actionFinished(true);
+    //     yield return null;
+    // }
 
     public override void moveArmBase(
         PhysicsRemoteFPSAgentController controller,
@@ -264,18 +274,6 @@ public partial class ArticulatedArmController : ArmController {
         );
 
         StartCoroutine(moveCall);
-
-        //not quite sure how to integrate with disableRendering mode... 
-        //we default to AutoSimulate on for the AB but maybe that can be done differently?
-
-        // if (disableRendering) {
-        //     controller.unrollSimulatePhysics(
-        //         enumerator: moveCall,
-        //         fixedDeltaTime: fixedDeltaTime
-        //     );
-        // } else {
-        //     StartCoroutine(moveCall);
-        // }
     }
 
     public override void moveArmBaseUp(
