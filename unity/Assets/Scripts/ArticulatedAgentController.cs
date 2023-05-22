@@ -15,19 +15,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // TODO: Reimplemebt for Articulation body
         public override void InitializeBody(ServerAction initializeAction) {
-            // // TODO; Articulation Body init
-            // VisibilityCapsule = StretchVisCap;
-            // m_CharacterController.center = new Vector3(0, 1, 0);
-            // m_CharacterController.radius = 0.01f;
-            // m_CharacterController.height = 0.02f;
-            // m_CharacterController.skinWidth = 0.01f;
+            // TODO; Articulation Body init
+            VisibilityCapsule = StretchVisCap;
+            m_CharacterController.center = new Vector3(0, 1, 0);
+            m_CharacterController.radius = 0.01f;
+            m_CharacterController.height = 0.02f;
+            m_CharacterController.skinWidth = 0.01f;
 
 
-            // // TODO: REMOVE
-            // CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
-            // cc.center = m_CharacterController.center;
-            // cc.radius = m_CharacterController.radius;
-            // cc.height = m_CharacterController.height;
+            // TODO: REMOVE
+            CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+            cc.center = m_CharacterController.center;
+            cc.radius = m_CharacterController.radius;
+            cc.height = m_CharacterController.height;
 
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
