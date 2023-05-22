@@ -6487,6 +6487,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector2[]? uvs = null,
             string albedoTexturePath = null,
             string normalTexturePath = null,
+            string emissionTexturePath = null,
             SerializableCollider[]? colliders = null,
             PhysicalProperties physicalProperties = null,
             Vector3[]? visibilityPoints = null,
@@ -6540,11 +6541,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 meshObj.GetComponent<Renderer>().material = mat;
             }
 
+            mat.SetFloat("_Glossiness", 0f);
+
             if (normalTexturePath != null) {
+                mat.EnableKeyword("_NORMALMAP");
                 byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
                 Texture2D tex = new Texture2D(2, 2);
                 tex.LoadImage(imageBytes);
                 mat.SetTexture("_BumpMap", tex);
+            }
+
+            if (emissionTexturePath != null) {
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+                mat.EnableKeyword("_EMISSION");
+                byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);
+                Texture2D tex = new Texture2D(2, 2);
+                tex.LoadImage(imageBytes);
+                mat.SetTexture("_EmissionMap", tex);
+                mat.SetColor("_EmissionColor", Color.white);
             }
 
             // have the mesh refer to the mesh at meshPath
