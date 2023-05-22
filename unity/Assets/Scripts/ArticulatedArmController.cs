@@ -59,8 +59,7 @@ public partial class ArticulatedArmController : ArmController {
             if (!j.shouldHalt(
                 distanceMovedSoFar: j.distanceMovedSoFar,
                 cachedPositions: j.currentArmMoveParams.cachedPositions,
-                tolerance: j.currentArmMoveParams.tolerance,
-                checkStandardDev: j.checkStandardDev
+                tolerance: j.currentArmMoveParams.tolerance
             )) {
                 //if any single joint is still not halting, return false
                 Debug.Log("still not done, don't halt yet");
