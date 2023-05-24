@@ -17,7 +17,8 @@ public class ArmMoveParams {
     public float maxTimePassed;
     public int positionCacheSize;
 
-    //these are used during movement in fixed update
+    //these are used during movement in fixed update (or whenever physics step executes)
+    //can probably move these out of this class and into the joint solver class iself????
     public int direction;
     public float timePassed = 0.0f;
     public float[] cachedPositions;
@@ -131,7 +132,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         if (jointAxisType == JointAxisType.Lift) {
             //if instead we are moving up or down actively
             if (liftState != ArmLiftState.Idle) {
-                Debug.Log("start ControlJointFromAction for axis type Lift");
+                Debug.Log("start ControlJointFromAction for axis type LIFT");
                 var drive = myAB.yDrive;
                 float currentPosition = myAB.jointPosition[0];
                 float targetPosition = currentPosition + (float)liftState * Time.fixedDeltaTime * currentArmMoveParams.speed;
@@ -172,11 +173,12 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
             return;
         }
 
-        //for extending arm joints, don't set actionFinished here, instead we have a coroutine in the
-        //TestABArmController component that will check each arm joint to see if all arm joints have either
-        //finished moving their required distance, or if they have stopped moving, or if they have timed out
+        //for extending arm joints, assume all extending joints will be in some state of movement based on input distance
+        //the shouldHalt function in ArticulatedAgentController will wait for all individual extending joints to go back to
+        //idle before actionFinished is called
         else if (jointAxisType == JointAxisType.Extend) {
             if (extendState != ArmExtendState.Idle) {
+                Debug.Log("start ControlJointFromAction for axis type EXTEND");
                 var drive = myAB.zDrive;
                 float currentPosition = myAB.jointPosition[0];
                 float targetPosition = currentPosition + (float)extendState * Time.fixedDeltaTime * currentArmMoveParams.speed;

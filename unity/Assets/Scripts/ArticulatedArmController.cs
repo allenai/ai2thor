@@ -56,6 +56,7 @@ public partial class ArticulatedArmController : ArmController {
         foreach (ArticulatedArmJointSolver j in joints) {
             //only halt if all joints report back that shouldHalt = true
             //joints that are idle and not moving will return shouldHalt = true by default
+            Debug.Log($"checking joint: {j.transform.name}");
             Debug.Log($"distance moved so far for this joint is: {j.distanceMovedSoFar}");
 
             //if shouldHalt == false, continue moving
@@ -163,7 +164,7 @@ public partial class ArticulatedArmController : ArmController {
         //assign each joint the distance it needs to move to have the entire arm
         //this means the distance each joint moves may be slightly different due to proportion of movement this joint is responsible for
         float myDistance = distance * jointToArmDistanceRatios[joint];
-
+        Debug.Log($"joint {joint.transform.name} is moving ({myDistance}) out of total distance ({distance})");
         ArmMoveParams amp = new ArmMoveParams {
             distance = myDistance,
             speed = unitsPerSecond,
