@@ -5281,7 +5281,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
 
-                int parts = (int)Math.Round(360f / rotateStepDegrees);
+                int parts = (int) Math.Round(360f / rotateStepDegrees);
                 if (Math.Abs((parts * 1.0f) - 360f / rotateStepDegrees) > 1e-5) {
                     errorMessage = "Invalid rotate step degrees for agent, must divide 360 without a remainder.";
                     return null;
