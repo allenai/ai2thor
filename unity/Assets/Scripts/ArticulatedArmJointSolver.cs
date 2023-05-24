@@ -324,6 +324,9 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
 
         if (jointAxisType == JointAxisType.Rotate)
             rotateState = ArmRotateState.Idle;
+
+        //reset current movement params
+        this.currentArmMoveParams = null;
     }
 
     //check if all values in the array are within a standard deviation or not

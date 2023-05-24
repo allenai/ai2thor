@@ -59,24 +59,27 @@ public partial class ArticulatedArmController : ArmController {
             Debug.Log($"checking joint: {j.transform.name}");
             Debug.Log($"distance moved so far for this joint is: {j.distanceMovedSoFar}");
 
-            //if shouldHalt == false, continue moving
-            if (!j.shouldHalt(
-                distanceMovedSoFar: j.distanceMovedSoFar,
-                cachedPositions: j.currentArmMoveParams.cachedPositions,
-                tolerance: j.currentArmMoveParams.tolerance
-            )) {
-                //if any single joint is still not halting, return false
-                Debug.Log("still not done, don't halt yet");
-                ZaWarudo = false;
-                return ZaWarudo;
-            }
-
-            //this joint returns that it should stop! Now we must wait to see if there rest
-            else
+            //check all joints that have had movement params set to see if they have halted or not
+            if(j.currentArmMoveParams != null)
             {
-                Debug.Log($"halted! Distance moved: {j.distanceMovedSoFar}");
-                ZaWarudo = true;
-                continue;
+                if (!j.shouldHalt(
+                    distanceMovedSoFar: j.distanceMovedSoFar,
+                    cachedPositions: j.currentArmMoveParams.cachedPositions,
+                    tolerance: j.currentArmMoveParams.tolerance
+                )) {
+                    //if any single joint is still not halting, return false
+                    Debug.Log("still not done, don't halt yet");
+                    ZaWarudo = false;
+                    return ZaWarudo;
+                }
+
+                //this joint returns that it should stop! Now we must wait to see if there rest
+                else
+                {
+                    Debug.Log($"halted! Distance moved: {j.distanceMovedSoFar}");
+                    ZaWarudo = true;
+                    continue;
+                }
             }
         }
 
