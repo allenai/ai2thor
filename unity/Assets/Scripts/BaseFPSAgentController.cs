@@ -5286,6 +5286,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     errorMessage = "Invalid rotate step degrees for agent, must divide 360 without a remainder.";
                     return null;
                 }
+
                 int numLeft = parts / 2;
                 int numRight = numLeft + (parts % 2 == 0 ? 1 : 0);
                 Vector3 startPosition = this.transform.position;
