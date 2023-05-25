@@ -2551,7 +2551,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        protected void teleportFull(
+        protected virtual void teleportFull(
             Vector3 position, Vector3 rotation, float horizon, bool forceAction
         ) {
             // Note: using Mathf.Approximately uses Mathf.Epsilon, which is significantly

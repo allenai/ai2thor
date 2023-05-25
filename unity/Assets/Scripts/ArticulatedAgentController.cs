@@ -172,6 +172,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        //helper functions to set physics material values
         public void SetFloorColliderToSlippery(){
             FloorColliderPhysicsMaterial.staticFriction = 0;
             FloorColliderPhysicsMaterial.dynamicFriction = 0;
@@ -181,7 +182,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FloorColliderPhysicsMaterial.staticFriction = 1;
             FloorColliderPhysicsMaterial.dynamicFriction = 1;
         }
-        // TODO: Eli implement MoveAgent and RotateAgent
+
+        // TODO: Eli implement MoveAgent and RotateAgent and teleportFull calls
+        protected override void teleportFull(Vector3 position, Vector3 rotation, float horizon, bool forceAction){
+            //uhhhhhhh
+        }
 
         public override void MoveAgent(
             float ahead = 1,
@@ -208,13 +213,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // }
 
             // float accelerationTime = speed / acceleration;
-
-
-
-
-
-
-
 
             // Vector3 currentPosition = ab.transform.position;
             // // Debug.Log($"position of agent: {currentPosition}");
@@ -308,7 +306,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // }
         }
 
-        // TODO: IMPLEMENT WITH AB
+        // not doing these for benchmark yet cause no
         public void TeleportArm(
             Vector3? position = null,
             float? rotation = null,
