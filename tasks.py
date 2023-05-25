@@ -1070,6 +1070,8 @@ def ci_build(context):
                 if _unity_version() == "2020.3.25f1":
                     build_archs.append("CloudRendering")
 
+                build_archs.reverse() # Let's do CloudRendering first as it's more likely to fail
+
                 has_any_build_failed = False
                 for include_private_scenes in private_scene_options:
                     for arch in build_archs:
