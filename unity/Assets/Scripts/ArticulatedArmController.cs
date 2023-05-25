@@ -19,9 +19,6 @@ public partial class ArticulatedArmController : ArmController {
     //Distance from joint containing gripper camera to armTarget
     private Vector3 WristToManipulator = new Vector3(0, -0.09872628f, 0);
 
-    // private Stretch_Arm_Solver solver;
-
-
     // TODO: Possibly reimplement this fucntions, if AB read of transform is ok then may not need to reimplement
     public override Transform pickupParent() {
         return magnetSphere.transform;
@@ -115,8 +112,8 @@ public partial class ArticulatedArmController : ArmController {
         //not doing this one yet soooo uhhhhh ignore for now        
     }
 
-    public override void moveArmTarget(
-        PhysicsRemoteFPSAgentController controller,
+    public void moveArmTarget(
+        ArticulatedAgentController controller,
         Vector3 target, //distance + direction
         float unitsPerSecond,
         float fixedDeltaTime,
@@ -138,10 +135,12 @@ public partial class ArticulatedArmController : ArmController {
         Debug.Log($"actual distance to move: {distance}");
 
         int direction = 0;
-        if (distance < 0) {
+
+        //this is sort of a wonky way to detect direction but it'll work for noooooow
+        if (target.z < 0) {
             direction = -1;
         }
-        if (distance > 0) {
+        if (target.z > 0) {
             direction = 1;
         }
 
@@ -178,7 +177,8 @@ public partial class ArticulatedArmController : ArmController {
         };
 
             //assign movement params to this joint
-            joint.PrepToControlJointFromAction(amp);
+            //joint.PrepToControlJointFromAction(amp);
+            prepAllTheThingsBeforeJointMoves(joint, amp);
         }
 
         //now need to do move call here I think
@@ -232,8 +232,8 @@ public partial class ArticulatedArmController : ArmController {
     //     yield return null;
     // }
 
-    public override void moveArmBase(
-        PhysicsRemoteFPSAgentController controller,
+    public void moveArmBase(
+        ArticulatedAgentController controller,
         float distance,
         float unitsPerSecond,
         float fixedDeltaTime,
@@ -265,7 +265,8 @@ public partial class ArticulatedArmController : ArmController {
 
         ArticulatedArmJointSolver liftJoint = joints[0];
         //preset the joint's movement parameters ahead of time
-        liftJoint.PrepToControlJointFromAction(amp);
+        prepAllTheThingsBeforeJointMoves(liftJoint, amp);
+        //liftJoint.PrepToControlJointFromAction(amp);
 
         //Vector3 target = new Vector3(this.transform.position.x, distance, this.transform.position.z);
 
@@ -280,8 +281,8 @@ public partial class ArticulatedArmController : ArmController {
         StartCoroutine(moveCall);
     }
 
-    public override void moveArmBaseUp(
-        PhysicsRemoteFPSAgentController controller,
+    public void moveArmBaseUp(
+        ArticulatedAgentController controller,
         float distance,
         float unitsPerSecond,
         float fixedDeltaTime,
@@ -300,6 +301,10 @@ public partial class ArticulatedArmController : ArmController {
 
     }
 
+    private void prepAllTheThingsBeforeJointMoves(ArticulatedArmJointSolver joint, ArmMoveParams armMoveParams) {
+        //FloorCollider.material = sticky;
+        joint.PrepToControlJointFromAction(armMoveParams);
+    }
 
     // TODO??? not sure if ready
     // public override void rotateWrist(

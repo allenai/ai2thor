@@ -13,6 +13,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public ArticulatedAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
+        [SerializeField]
+        private Collider FloorCollider;
+
+        [SerializeField]
+        private PhysicMaterial FloorColliderPhysicsMaterial;
+
         // TODO: Reimplemebt for Articulation body
         public override void InitializeBody(ServerAction initializeAction) {
             // TODO; Articulation Body init
@@ -84,6 +90,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Debug.Log("running manipulate stretch arm AB");
             // // StretchSolver.ManipulateStretchArm();
 
+            //get references to floor collider and physica material to change when moving arm
+            FloorCollider = this.gameObject.transform.Find("abFloorCollider").GetComponent<Collider>();
+            FloorColliderPhysicsMaterial = FloorCollider.material;
+
             getArmImplementation().manipulateArm();
         }
 
@@ -110,6 +120,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
              bool disableRendering = true
          ) {
             Debug.Log("MoveArmBaseUp from ArticulatedAgentController");
+            SetFloorColliderToHighFriction();
             var arm = (ArticulatedArmController)getArm();
             arm.moveArmBaseUp(
                 controller: this,
@@ -148,6 +159,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool disableRendering = true
         ) {
             var arm = (ArticulatedArmController)getArm();
+            SetFloorColliderToHighFriction();
             arm.moveArmTarget(
                 controller: this,
                 target: position,
@@ -160,6 +172,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public void SetFloorColliderToSlippery(){
+            FloorColliderPhysicsMaterial.staticFriction = 0;
+            FloorColliderPhysicsMaterial.dynamicFriction = 0;
+        }
+
+        public void SetFloorColliderToHighFriction(){
+            FloorColliderPhysicsMaterial.staticFriction = 1;
+            FloorColliderPhysicsMaterial.dynamicFriction = 1;
+        }
         // TODO: Eli implement MoveAgent and RotateAgent
 
         public override void MoveAgent(

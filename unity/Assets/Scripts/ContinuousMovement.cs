@@ -152,7 +152,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
        
         public static IEnumerator moveAB(
-            PhysicsRemoteFPSAgentController controller,
+            ArticulatedAgentController controller,
             float fixedDeltaTime
         ) {
 
@@ -274,7 +274,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public static IEnumerator updateFixedUpdateForAB(            
-            PhysicsRemoteFPSAgentController controller,
+            ArticulatedAgentController controller,
             float fixedDeltaTime
         )
         {
@@ -293,7 +293,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 yield return new WaitForFixedUpdate();
             }
 
-            //continuous move finish for AB should go here???
             Debug.Log("about to start continuousMoveFinish for AB");
             continuousMoveFinishAB(controller: controller);
             yield return null;
@@ -414,11 +413,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private static void continuousMoveFinishAB(            
-            PhysicsRemoteFPSAgentController controller
+            ArticulatedAgentController controller
         ) {
             Debug.Log("starting continuousMoveFinishAB");
             bool actionSuccess = true;
             string debugMessage = "I guess everything is fine?";
+
+            //maybe needs to switch back to slippery here to prep for movement???
+            //or maybe we default to high friction, and only change to no friction when moving body
+            //controller.SetFloorColliderToSlippery();
 
             controller.errorMessage = debugMessage;
             controller.actionFinished(actionSuccess, debugMessage);
