@@ -144,6 +144,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arm;
         }
 
+
         /*
         Toggles the visibility of the magnet sphere at the end of the arm.
         */
