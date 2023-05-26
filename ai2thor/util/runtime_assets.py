@@ -129,6 +129,11 @@ def create_asset(
         asset_id,
         os.path.basename(create_prefab_action["albedoTexturePath"]),
     )
+    create_prefab_action["emissionTexturePath"] = os.path.join(
+        "processed_models",
+        asset_id,
+        os.path.basename(create_prefab_action["emissionTexturePath"]),
+    )
 
     thor_obj_md = load_existing_thor_metadata_file(out_dir=asset_directory)
     if thor_obj_md is None:
