@@ -123,7 +123,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void TeleportArm(
             Vector3? position = null,
-            float? rotation = null,
+            float? rotationFloat = null,
             bool worldRelative = false,
             bool forceAction = false
         ) {
@@ -138,17 +138,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 position = new Vector3(0f, 0.1f, 0f);
             }
 
-            if (rotation == null) {
-                rotation = -180f;
+            if (rotationFloat == null) {
+                rotationFloat = -180f;
             }
 
             // teleport arm!
             if (!worldRelative) {
                 posRotManip.transform.localPosition = (Vector3)position;
-                posRotManip.transform.localEulerAngles = new Vector3 (0, (float)rotation % 360, 0);
+                posRotManip.transform.localEulerAngles = new Vector3 (0, (float)rotationFloat % 360, 0);
             } else {
                 posRotManip.transform.position = (Vector3)position;
-                posRotManip.transform.eulerAngles = new Vector3 (0, (float)rotation % 360, 0);
+                posRotManip.transform.eulerAngles = new Vector3 (0, (float)rotationFloat % 360, 0);
             }
 
             if (SArm.IsArmColliding() && !forceAction) {
