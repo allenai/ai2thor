@@ -465,6 +465,7 @@ public class AgentManager : MonoBehaviour {
                 throw new ArgumentException($"Invalid skyboxColor: {skyboxColor}! Cannot be parsed as an HTML color.");
             }
         }
+
         this.activeAgent().actionFinished(success: true);
     }
 
