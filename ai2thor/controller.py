@@ -1041,8 +1041,11 @@ class Controller(object):
             # is only thrown from the FifoServer, start_unity is also
             # not passed since Unity would have to have been started
             # for this to be thrown
+            action_as_str = str(action)
+            if len(action_as_str) > 1000:
+                action_as_str = action_as_str[:950] + " ... " + action_as_str[-50:]
             message = (
-                f"Restarting unity due to crash when when running action {action}"
+                f"Restarting unity due to crash when when running action {action_as_str}"
                 f" in scene {self.last_event.metadata['sceneName']}:\n{traceback.format_exc()}"
             )
             warnings.warn(message)
@@ -1051,8 +1054,11 @@ class Controller(object):
             raise RestartError(message)
         except Exception as e:
             self.server.stop()
+            action_as_str = str(action)
+            if len(action_as_str) > 1000:
+                action_as_str = action_as_str[:950] + " ... " + action_as_str[-50:]
             raise (TimeoutError if isinstance(e, TimeoutError) else RuntimeError)(
-                f"Error encountered when running action {action}"
+                f"Error encountered when running action {action_as_str}"
                 f" in scene {self.last_event.metadata['sceneName']}."
             )
 
