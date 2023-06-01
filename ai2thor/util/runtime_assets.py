@@ -120,17 +120,17 @@ def create_asset(
         out_dir=asset_directory, object_name=asset_id
     )
     create_prefab_action["normalTexturePath"] = os.path.join(
-        "processed_models",
+        save_dir,
         asset_id,
         os.path.basename(create_prefab_action["normalTexturePath"]),
     )
     create_prefab_action["albedoTexturePath"] = os.path.join(
-        "processed_models",
+        save_dir,
         asset_id,
         os.path.basename(create_prefab_action["albedoTexturePath"]),
     )
     create_prefab_action["emissionTexturePath"] = os.path.join(
-        "processed_models",
+        save_dir,
         asset_id,
         os.path.basename(create_prefab_action["emissionTexturePath"]),
     )
