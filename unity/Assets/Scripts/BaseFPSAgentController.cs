@@ -6125,7 +6125,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void SimObjPhysicsTypeIsReceptacle(float receptacleRatioTolerance = 0.001f) {
 
             var sops = GameObject.FindObjectOfType<ProceduralAssetDatabase>()
-                .prefabs
+                .GetPrefabs()
                 .Select(a => a.GetComponent<SimObjPhysics>())
                 .Where(sop => sop != null);
             
@@ -6689,7 +6689,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Add the asset to the procedural asset database
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb != null) {
-                assetDb.prefabs.Add(go);
+                assetDb.addAsset(go, procedural: true);
             }
 
             // get child object on assetDb's game object that's called "Prefabs"
@@ -6829,7 +6829,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             var metadata = new Dictionary<string, Dictionary<string, object>>();
-            foreach (GameObject p in assetDb.prefabs) {
+            foreach (GameObject p in assetDb.GetPrefabs()) {
 
                 var meta = getAssetMetadata(p);
                 if (meta == null) {
@@ -6858,9 +6858,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void AssetsInDatabase(List<string> assetIds) {
-            var assetMap = ProceduralTools.getAssetMap();
+        public void TouchProceduralLRUCache(List<string> assetIds) {
+            var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            assetDB.touchProceduralLRUCache(assetIds);
+            actionFinished(success: true);
+        }
 
+        public void DeleteLRUFromProceduralCache(int assetLimit) {
+            var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            assetDB.removeLRUItems(assetLimit);
+            actionFinished(success: true);
+        }
+
+        public void GetLRUCacheKeys() {
+            var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            actionFinished(
+                success: true,
+                actionReturn: assetDB.assetMap.proceduralAssetQueue.ToList()
+            );
+        }
+
+
+        public void AssetsInDatabase(List<string> assetIds, bool updataProceduralLRUCache = false) {
+            var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            
+            if (updataProceduralLRUCache) {
+                assetDB.touchProceduralLRUCache(assetIds);
+            }
+            var assetMap = assetDB.assetMap;
             actionFinished(
                 success: true,
                 actionReturn: assetIds.Select(id => (id, inDatabase: assetMap.ContainsKey(id))).ToDictionary(it => it.id, it => it.inDatabase)

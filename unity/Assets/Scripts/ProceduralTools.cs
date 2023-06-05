@@ -21,26 +21,34 @@ namespace Thor.Procedural {
     [ExecuteInEditMode]
     [Serializable]
     public class AssetMap<T> {
-        private Dictionary<string, T> assetMap;
+        protected Dictionary<string, T> assetMap;
         public AssetMap(Dictionary<string, T> assetMap) {
             this.assetMap = assetMap;
         }
 
-        public T getAsset(string name) {
+        public virtual T getAsset(string name) {
             return assetMap[name];
         }
 
-        public bool ContainsKey(string key) {
+        public virtual bool ContainsKey(string key) {
             return assetMap.ContainsKey(key);
         }
 
-        public int Count() {
+        public virtual int Count() {
             return assetMap.Count;
         }
 
 
-        public IEnumerable<string> Keys() {
+        public virtual IEnumerable<string> Keys() {
             return assetMap.Keys;
+        }
+
+        public virtual IEnumerable<T> Values() {
+            return assetMap.Values;
+        }
+
+        public virtual void Clear() {
+            assetMap.Clear();
         }
     }
 
@@ -1781,7 +1789,8 @@ namespace Thor.Procedural {
         //not sure if this is needed, a helper function like this might exist somewhere already?
         public static AssetMap<GameObject> getAssetMap() {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
-            return new AssetMap<GameObject>(assetDB.prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
+            return assetDB.assetMap;
+            // return new AssetMap<GameObject>(assetDB.prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
         }
 
         //generic function to spawn object in scene. No bounds or collision checks done
@@ -2204,7 +2213,7 @@ namespace Thor.Procedural {
         public static AssetMap<GameObject> GetPrefabs() {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDB != null) {
-                return new AssetMap<GameObject>(assetDB.prefabs.GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+                return new AssetMap<GameObject>(assetDB.GetPrefabs().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
             }
             return null;
         }

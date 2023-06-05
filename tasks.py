@@ -4613,3 +4613,108 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
 
+@task
+def procedural_asset_cache_test(ctx, asset_dir, house_path, asset_ids="", cache_limit=1):
+    import json
+    import ai2thor.controller
+    from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
+    hook_runner = ProceduralAssetHookRunner(
+        asset_directory=asset_dir,
+        asset_symlink=True,
+        verbose=True,
+        asset_limit=1
+    )
+    controller = ai2thor.controller.Controller(
+        # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",
+        local_build=True,
+        # commit_id="3a4efefd5de1f2d455bd11c3d53da020c7a76f3b",
+        start_unity=True,
+        scene="Procedural",
+        gridSize=0.25,
+        width=300,
+        height=300,
+        server_class=ai2thor.fifo_server.FifoServer,
+        visibilityScheme='Distance',
+        action_hook_runner=hook_runner
+    )
+    asset_ids = asset_ids.split(",")
+    with open(house_path, "r") as f:
+        house = json.load(f)
+    instance_id = "asset_0"
+
+    house["objects"] = []
+    middle = int(len(asset_ids) / 2)
+    i = 0
+    # print(asset_ids[:middle])
+    for asset_id in asset_ids[middle:]:
+        
+        house["objects"].append({
+            "assetId": asset_id,
+            "id": f"{instance_id}_{i}",
+            "kinematic": True,
+            "position": {"x": 0, "y": 0, "z": i*10},
+            "rotation": {"x": 0, "y": 0, "z": 0},
+            "layer": "Procedural2",
+            "material": None,
+        })
+        i += 1
+    
+    evt = controller.step(action="CreateHouse", house=house)
+
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
+    print(f'Error: {evt.metadata["errorMessage"]}')
+
+    evt = controller.step( dict(
+            action="LookAtObjectCenter",
+            objectId=f"{instance_id}_0"
+        )
+    )
+    
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
+    print(f'Error: {evt.metadata["errorMessage"]}')
+
+
+
+    evt = controller.step(action="GetLRUCacheKeys")
+
+    
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
+    print(f'Error: {evt.metadata["errorMessage"]}')
+    print(f'return {evt.metadata["actionReturn"]}')
+
+    controller.reset()
+
+    print(f"mid: {middle} ")
+
+    # house["objects"] = house["objects"][middle:]
+
+    i = 0
+    # print(asset_ids[:middle])
+    for asset_id in asset_ids[:middle]:
+        
+        house["objects"].append({
+            "assetId": asset_id,
+            "id": f"{instance_id}_{i}",
+            "kinematic": True,
+            "position": {"x": 0, "y": 0, "z": i*10},
+            "rotation": {"x": 0, "y": 0, "z": 0},
+            "layer": "Procedural2",
+            "material": None,
+        })
+        i += 1
+
+    evt = controller.step(action="CreateHouse", house=house)
+
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
+    print(f'Error: {evt.metadata["errorMessage"]}')
+
+    controller.reset()
+    evt = controller.step(action="GetLRUCacheKeys")
+
+    
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
+    print(f'Error: {evt.metadata["errorMessage"]}')
+    print(f'return {evt.metadata["actionReturn"]}')
+    
+
+    
