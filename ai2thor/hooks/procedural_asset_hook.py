@@ -30,59 +30,72 @@ def get_all_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List
         assets_set.remove("")
     return list(assets_set)
 
-
+def create_assets_if_not_exist(controller, asset_ids, asset_directory, asset_symlink, stop_if_fail):
+    evt = controller.step(action="AssetsInDatabase", assetIds=asset_ids, updataProceduralLRUCache=True)
+    
+    asset_in_db = evt.metadata["actionReturn"]
+    assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db]
+    for asset_id in assets_not_created:
+        asset_dir = os.path.abspath(os.path.join(asset_directory, asset_id))
+        print(f"Create {asset_id}")
+        evt = create_asset(
+            controller=controller,
+            asset_id=asset_id,
+            asset_directory=asset_dir,
+            asset_symlink=asset_symlink,
+            verbose=True
+        )
+        if not evt.metadata["lastActionSuccess"]:
+            logger.info(f"Could not create asset `{get_existing_thor_asset_file_path(out_dir=asset_dir, asset_id=asset_id)}`.")
+            logger.info(f"Error: {evt.metadata['errorMessage']}")
+        if stop_if_fail:
+            return evt
+    return evt
 
 class ProceduralAssetHookRunner(object):
 
-    def __init__(self, asset_directory, asset_symlink=True, stop_if_fail=False, verbose=False):
+    def __init__(self, asset_directory, asset_symlink=True, stop_if_fail=False, asset_limit=-1, verbose=False):
         self.asset_directory = asset_directory
         self.asset_symlink = asset_symlink
         self.stop_if_fail = stop_if_fail
-        
+        self.asset_limit = asset_limit
+
+    
+    def Initialize(self, action, controller):
+        if self.asset_limit > 0:
+            return controller.step(action="DeleteLRUFromProceduralCache", assetLimit=self.asset_limit)
 
     def CreateHouse(self, action, controller):
         house = action["house"]
         asset_ids = get_all_asset_ids_recursively(house["objects"], [])
-        evt = controller.step(action="AssetsInDatabase", assetIds=asset_ids)
-        asset_in_db = evt.metadata["actionReturn"]
-        assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db]
-        for asset_id in assets_not_created:
-            asset_dir = os.path.abspath(os.path.join(self.asset_directory, asset_id))
-            evt = create_asset(
-                controller=controller,
-                asset_id=asset_id,
-                asset_directory=asset_dir,
-                asset_symlink=self.asset_symlink,
-                verbose=True
-            )
-            if not evt.metadata["lastActionSuccess"]:
-                logger.info(f"Could not create asset `{get_existing_thor_asset_file_path(out_dir=asset_dir, asset_id=asset_id)}`.")
-                logger.info(f"Error: {evt.metadata['errorMessage']}")
-            if self.stop_if_fail:
-                return evt
-        return evt
+        return create_assets_if_not_exist(
+            controller=controller, 
+            asset_ids=asset_ids, 
+            asset_directory=self.asset_directory, 
+            asset_symlink=self.asset_symlink,
+            stop_if_fail=self.stop_if_fail
+        )
 
     def SpawnAsset(self, action, controller):
         asset_ids = [action["assetId"]]
-        evt = controller.step(action="AssetsInDatabase", assetIds=asset_ids)
-        asset_in_db = evt.metadata["actionReturn"]
-        assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db]
-        for asset_id in assets_not_created:
-            asset_dir = os.path.abspath(os.path.join(self.asset_directory, asset_id))
-            evt = create_asset(
-                controller=controller,
-                asset_id=asset_id,
-                asset_directory=asset_dir,
-                asset_symlink=self.asset_symlink,
-                verbose=True
-            )
-            if not evt.metadata["lastActionSuccess"]:
-                logger.info(
-                    f"Could not create asset `{get_existing_thor_asset_file_path(out_dir=asset_dir, asset_id=asset_id)}`.")
-                logger.info(f"Error: {evt.metadata['errorMessage']}")
-            if self.stop_if_fail:
-                return evt
-        return evt
+        return create_assets_if_not_exist(
+            controller=controller, 
+            asset_ids=asset_ids, 
+            asset_directory=self.asset_directory, 
+            asset_symlink=self.asset_symlink,
+            stop_if_fail=self.stop_if_fail
+        )
+    
+    def GetHouseFromTemplate(self, action, controller):
+        template = action["template"]
+        asset_ids = get_all_asset_ids_recursively([v for (k,v) in template["objects"].items()], [])
+        return create_assets_if_not_exist(
+            controller=controller, 
+            asset_ids=asset_ids, 
+            asset_directory=self.asset_directory, 
+            asset_symlink=self.asset_symlink,
+            stop_if_fail=self.stop_if_fail
+        )
 
 
 class ObjaverseAssetHookRunner(object):
