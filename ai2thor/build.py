@@ -71,8 +71,11 @@ class EditorBuild(object):
 
     @property
     def base_dir(self):
-       return os.path.join(os.path.dirname(
-           os.path.realpath(__file__)
+       return os.path.join(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.realpath(__file__)
+            )
         ),
         "unity"
        )
