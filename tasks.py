@@ -4628,14 +4628,15 @@ def procedural_asset_cache_test(ctx, asset_dir, house_path, asset_ids="", cache_
     )
     controller = ai2thor.controller.Controller(
         # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",
-        local_build=True,
+        # local_build=True,
         # commit_id="3a4efefd5de1f2d455bd11c3d53da020c7a76f3b",
-        start_unity=True,
+        start_unity=False,
+        port =8200,
         scene="Procedural",
         gridSize=0.25,
         width=300,
         height=300,
-        server_class=ai2thor.fifo_server.FifoServer,
+        server_class=ai2thor.wsgi_server.WsgiServer,
         visibilityScheme='Distance',
         action_hook_runner=hook_runner
     )
@@ -4671,6 +4672,9 @@ def procedural_asset_cache_test(ctx, asset_dir, house_path, asset_ids="", cache_
             objectId=f"{instance_id}_0"
         )
     )
+
+    # while True:
+    #     pass
     
     print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')

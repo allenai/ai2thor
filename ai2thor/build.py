@@ -69,6 +69,14 @@ class EditorBuild(object):
     def lock_sh(self):
         pass
 
+    @property
+    def base_dir(self):
+       return os.path.join(os.path.dirname(
+           os.path.realpath(__file__)
+        ),
+        "unity"
+       )
+
 
 class ExternalBuild(object):
     def __init__(self, executable_path):
