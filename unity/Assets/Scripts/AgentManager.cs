@@ -61,7 +61,7 @@ public class AgentManager : MonoBehaviour {
     private bool fastActionEmit = true;
 
     // it is public to be accessible from the debug input field.
-    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera", "ChangeQuality" };
+    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "UpdateThirdPartyCameraToObject", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera", "ChangeQuality" };
 
     public bool doResetMaterials = false;
     public bool doResetColors = false;
@@ -607,6 +607,57 @@ public class AgentManager : MonoBehaviour {
             farClippingPlane: farClippingPlane
         );
     }
+
+    public void UpdateThirdPartyCameraToObject(
+        int thirdPartyCameraId = 0,
+        string objectId = null,
+        float? fieldOfView = null,
+        string skyboxColor = null,
+        bool? orthographic = null,
+        float? orthographicSize = null,
+        float? nearClippingPlane = null,
+        float? farClippingPlane = null
+    ) {
+        // adds error if fieldOfView is out of bounds
+        if (fieldOfView != null) {
+            assertFovInBounds(fov: (float)fieldOfView);
+        }
+
+        // count is out of bounds
+        if (thirdPartyCameraId >= thirdPartyCameras.Count || thirdPartyCameraId < 0) {
+            throw new ArgumentOutOfRangeException(
+                $"thirdPartyCameraId: {thirdPartyCameraId} (int: default=0) must in 0 <= thirdPartyCameraId < len(thirdPartyCameras)={thirdPartyCameras.Count}."
+            );
+        }
+
+        Camera thirdPartyCamera = thirdPartyCameras[thirdPartyCameraId];
+
+        // keeps positions at default values, if unspecified.
+        SimObjPhysics targetObject = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+        Vector3 ObjectPosition = targetObject.transform.position;
+        Quaternion ObjectRotation = targetObject.transform.rotation;
+        // Debug.Log("Rotation" + ObjectRotation.eulerAngles.y);
+
+        float offset = Mathf.Max(targetObject.AxisAlignedBoundingBox.size.z, targetObject.AxisAlignedBoundingBox.size.x);
+        for (int i=0; i<=20; i++){
+            offset += 0.1f;
+            Vector3 oldPosition = thirdPartyCamera.gameObject.transform.position;
+            Vector3 targetPosition = ObjectPosition + targetObject.transform.forward * offset;
+            targetPosition.y = targetObject.AxisAlignedBoundingBox.center.y;
+
+            // keeps rotations at default values, if unspecified.
+            Vector3 oldRotation = thirdPartyCamera.gameObject.transform.localEulerAngles;
+            Vector3 targetRotation = ObjectRotation.eulerAngles + 180f * Vector3.up;
+
+            updateCameraProperties(
+                camera: thirdPartyCamera,
+                position: targetPosition,
+                rotation: targetRotation,
+                fieldOfView: fieldOfView == null ? thirdPartyCamera.fieldOfView : (float)fieldOfView,
+                skyboxColor: skyboxColor,
+                orthographic: orthographic,
+                orthographicSize: orthographicSize,
 
     private void addAgent(ServerAction action) {
         Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
