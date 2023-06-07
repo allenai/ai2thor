@@ -184,8 +184,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // TODO: Eli implement MoveAgent and RotateAgent and teleportFull calls
-        protected override void teleportFull(Vector3 position, Vector3 rotation, float horizon, bool forceAction){
-            //uhhhhhhh
+        public void TeleportFull(Vector3 position, Vector3 rotation){
+            // cache old values in case there's a failure
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+
+            Quaternion realRotationAsQuaternionBecauseYes = Quaternion.Euler(rotation);
+
+            ArticulationBody myBody = this.GetComponent<ArticulationBody>();
+            myBody.TeleportRoot(position, realRotationAsQuaternionBecauseYes);
+            
+            actionFinished(true);
         }
 
         public override void MoveAgent(
