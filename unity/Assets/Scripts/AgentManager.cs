@@ -546,7 +546,6 @@ public class AgentManager : MonoBehaviour {
         if (optionalVector3 == null) {
             return defaultsOnNull;
         }
-
         return new Vector3(
             x: optionalVector3.x == null ? defaultsOnNull.x : (float)optionalVector3.x,
             y: optionalVector3.y == null ? defaultsOnNull.y : (float)optionalVector3.y,
