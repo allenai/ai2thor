@@ -3644,7 +3644,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "TeleportFull";
                         action["position"] = new Vector3(-1f, -50.01804f, 0f);
                         action["rotation"] = new Vector3(0f, 170f, 0f);
-
+                        action["horizon"] = -20f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }

@@ -183,20 +183,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FloorColliderPhysicsMaterial.dynamicFriction = 1;
         }
 
-        // TODO: Eli implement MoveAgent and RotateAgent and teleportFull calls
-        public void TeleportFull(Vector3 position, Vector3 rotation){
-            // cache old values in case there's a failure
-            Vector3 oldPosition = transform.position;
-            Quaternion oldRotation = transform.rotation;
+        public void TeleportFull(Vector3 position, Vector3 rotation, float? horizon = null, bool forceAction = false) {
+            //Vector3 oldPosition = transform.position;
+            //Quaternion oldRotation = transform.rotation;
+            //float oldHorizon = m_Camera.transform.localEulerAngles.x;
+            
+            if (horizon == null) {
+                horizon = m_Camera.transform.localEulerAngles.x;
+            }
+        
+            if (!forceAction && (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle)) {
+                throw new ArgumentOutOfRangeException(
+                    $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
+                );
+            }
+
+            float horizonf = (float)horizon;
 
             Quaternion realRotationAsQuaternionBecauseYes = Quaternion.Euler(rotation);
 
             ArticulationBody myBody = this.GetComponent<ArticulationBody>();
             myBody.TeleportRoot(position, realRotationAsQuaternionBecauseYes);
-            
+            m_Camera.transform.localEulerAngles = new Vector3(horizonf, 0, 0);
+
             actionFinished(true);
         }
 
+        // TODO: Eli implement MoveAgent and RotateAgent functions below
         public override void MoveAgent(
             float ahead = 1,
             float right = 0,
