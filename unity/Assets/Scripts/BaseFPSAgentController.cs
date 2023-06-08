@@ -218,6 +218,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
         }
 
+        void Start() {
+            Debug.Log("------------- BASE FPS Start");
+            
+        }
+
         // callback triggered by BaseAgentComponent
         public virtual void FixedUpdate() { }
 
@@ -6516,6 +6521,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //check that name of light specified exists in scene, if not throw exception
 
             actionFinished(true);
+        }
+
+        public void GetPhysicsSimulateCount() {
+            actionFinished(
+                success: true,
+                actionReturn: PhysicsSceneManager.PhysicsSimulateCallCount
+            );
         }
 
 #if UNITY_EDITOR

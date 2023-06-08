@@ -128,6 +128,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
     }
 
     public void ControlJointFromAction() {
+        // Debug.Log($"Type: {jointAxisType.ToString()} pos");
         //we are a lift type joint
         if (jointAxisType == JointAxisType.Lift) {
             //if instead we are moving up or down actively

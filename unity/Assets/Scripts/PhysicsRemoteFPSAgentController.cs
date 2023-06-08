@@ -31,6 +31,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // face swap stuff here
 
         public PhysicsRemoteFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
+
+            standingLocalCameraPosition = m_Camera.transform.localPosition;
+            
         }
 
         public override void InitializeBody(ServerAction initializeAction) {
@@ -52,7 +55,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // camera FOV
             m_Camera.fieldOfView = 90f;
-
+            
             // set camera stand/crouch local positions for Tall mode
             standingLocalCameraPosition = m_Camera.transform.localPosition;
             crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0); // bigger y offset if tall
@@ -1461,6 +1464,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool standing,
             bool forceAction = false
         ) {
+            Debug.Log($"------- Teleport Full physicsFPS type {this.GetType()}");
             // cache old values in case there's a failure
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;

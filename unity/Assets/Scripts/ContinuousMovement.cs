@@ -404,6 +404,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             arm.manipulateArm();
 
             if (!Physics.autoSimulation) {
+                PhysicsSceneManager.PhysicsSimulateCallCount = 0;
                 if (fixedDeltaTime == 0f) {
                     Physics.SyncTransforms();
                 } else {

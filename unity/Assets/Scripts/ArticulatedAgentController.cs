@@ -19,6 +19,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField]
         private PhysicMaterial FloorColliderPhysicsMaterial;
 
+        // void Awake() {
+        //     standingLocalCameraPosition = m_Camera.transform.localPosition;
+        //     Debug.Log($"------ AWAKE {standingLocalCameraPosition}");
+        // }
+
         // TODO: Reimplemebt for Articulation body
         public override void InitializeBody(ServerAction initializeAction) {
             // TODO; Articulation Body init
@@ -27,6 +32,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_CharacterController.radius = 0.01f;
             m_CharacterController.height = 0.02f;
             m_CharacterController.skinWidth = 0.01f;
+            Debug.Log($"prev Position {this.transform.position}");
+
+            var ab = this.GetComponent<ArticulationBody>();
+            ab.TeleportRoot(this.transform.position, this.transform.rotation);
 
 
             // TODO: REMOVE
@@ -95,9 +104,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FloorColliderPhysicsMaterial = FloorCollider.material;
 
             getArmImplementation().manipulateArm();
+
+            Debug.Log($"Position {this.transform.position}");
         }
 
-        private ArmController getArmImplementation() {
+        private ArticulatedArmController getArmImplementation() {
             ArticulatedArmController arm = GetComponentInChildren<ArticulatedArmController>();
             if (arm == null) {
                 throw new InvalidOperationException(
@@ -121,7 +132,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
          ) {
             Debug.Log("MoveArmBaseUp from ArticulatedAgentController");
             SetFloorColliderToHighFriction();
-            var arm = (ArticulatedArmController)getArm();
+            var arm = getArmImplementation();
             arm.moveArmBaseUp(
                 controller: this,
                 distance: distance,
@@ -158,7 +169,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool restrictMovement = false,
             bool disableRendering = true
         ) {
-            var arm = (ArticulatedArmController)getArm();
+            var arm = getArmImplementation();
             SetFloorColliderToHighFriction();
             arm.moveArmTarget(
                 controller: this,
@@ -275,6 +286,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // }
         }
 
+      
+
         public override void RotateAgent(
             float degrees,
             float speed = 1.0f,
@@ -283,6 +296,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool disableRendering = true,
             float fixedDeltaTime = 0.02f
         ) {
+            var ab = GetComponent<ArticulationBody>();
+            var axis = Vector3.up;
+            Vector3 target = Quaternion.Inverse(ab.anchorRotation) * axis * degrees;
+            ab.anchorRotation = Quaternion.Euler(0, degrees, 0);
+
+
+        // assign to the drive targets...
+        // ArticulationDrive xDrive = ab.xDrive;
+        // xDrive.target = target.x;
+        // ab.xDrive = xDrive;
+
+        // ArticulationDrive yDrive = ab.yDrive;
+        // yDrive.target = target.y;
+        // ab.yDrive = yDrive;
+
+        // ArticulationDrive zDrive = ab.zDrive;
+        // zDrive.target = target.z;
+        // ab.zDrive = zDrive;
+
+        actionFinished(true);
 
             // Something like below
 

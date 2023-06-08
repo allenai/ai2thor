@@ -3715,45 +3715,45 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 case "mc": {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveContinuous";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveAgent";
                         if (splitcommand.Length > 4) {
-                            action.direction = new Vector3(
+                            action["direction"] = new Vector3(
                                     float.Parse(splitcommand[1]),
                                     float.Parse(splitcommand[2]),
                                     float.Parse(splitcommand[3])
                                 );
 
                             if (splitcommand.Length >= 5) {
-                                action.speed = float.Parse(splitcommand[4]);
+                                action["speed"] = float.Parse(splitcommand[4]);
                             }
                         }
 
-                        action.disableRendering = true;
-                        action.restrictMovement = false;
-                        action.returnToStart = true;
-                        action.speed = 1;
+                        action["disableRendering"] = true;
+                        action["restrictMovement"] = false;
+                        action["returnToStart"] = true;
+                        action["speed"] = 1;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
                 case "rc": {
-                        dynamic action = new JObject();
-                        action.action = "RotateContinuous";
-                        if (splitcommand.Length > 2) {
-                            action.degrees = float.Parse(splitcommand[1]);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RotateAgent";
+                        // if (splitcommand.Length > 2) {
+                            action["degrees"] = float.Parse(splitcommand[1]);
 
-                            if (splitcommand.Length >= 3) {
-                                action.speed = float.Parse(splitcommand[2]);
-                            }
+                            // if (splitcommand.Length >= 3) {
+                            //     action.speed = float.Parse(splitcommand[2]);
+                            // }
 
-                            if (splitcommand.Length >= 4) {
-                                action.disableRendering = bool.Parse(splitcommand[3]);
-                            }
+                            // if (splitcommand.Length >= 4) {
+                            //     action.disableRendering = bool.Parse(splitcommand[3]);
+                            // }
 
-                            if (splitcommand.Length >= 5) {
-                                action.returnToStart = bool.Parse(splitcommand[4]);
-                            }
-                        }
+                            // if (splitcommand.Length >= 5) {
+                            //     action.returnToStart = bool.Parse(splitcommand[4]);
+                            // }
+                        // }
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;

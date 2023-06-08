@@ -128,6 +128,7 @@ public class AgentManager : MonoBehaviour {
     void Start() {
         // default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
         initializePrimaryAgent();
+        // primaryAgent.stand
         #if PLATFORM_CLOUD_RENDERING    
         // must wrap this in PLATFORM_CLOUDRENDERING
         // needed to ensure that the com.unity.simulation.capture package
@@ -184,11 +185,11 @@ public class AgentManager : MonoBehaviour {
                 throw new ArgumentException($"Invalid agentMode {action.agentMode}");
             }
 
-            if (action.agentMode != "stretchab") {
-                action.autoSimulation = false;
-            } else {
-                action.autoSimulation = true;
-            }
+            // if (action.agentMode != "stretchab") {
+            //     action.autoSimulation = false;
+            // } else {
+            //     action.autoSimulation = true;
+            // }
             physicsSceneManager.MakeAllObjectsMoveable();
         } else {
             var error = $"Invalid agentMode {action.agentMode}";
@@ -281,6 +282,7 @@ public class AgentManager : MonoBehaviour {
     public void SetUpPhysicsController() {
         this.agents.Clear();
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
+        Debug.Log("------- SetUpPhysicsController");
         primaryAgent = createAgentType(typeof(PhysicsRemoteFPSAgentController), baseAgentComponent);
     }
 

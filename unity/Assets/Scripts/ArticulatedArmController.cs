@@ -91,6 +91,9 @@ public partial class ArticulatedArmController : ArmController {
     void Start() {
         wristPlaceholderForwardOffset = wristPlaceholderTransform.transform.localPosition.z;
         Debug.Log($"wrist offset is: {wristPlaceholderForwardOffset}");
+
+        // standingLocalCameraPosition = m_Camera.transform.localPosition;
+        // Debug.Log($"------ AWAKE {standingLocalCameraPosition}");
         // this.collisionListener = this.GetComponentInParent<CollisionListener>();
 
         //TODO: Initialization
@@ -189,7 +192,17 @@ public partial class ArticulatedArmController : ArmController {
             )
         );
 
-        StartCoroutine(moveCall);
+        // StartCoroutine(moveCall);
+        if (disableRendering) {
+            controller.unrollSimulatePhysics(
+                moveCall,
+                fixedDeltaTime
+            );
+        } else {
+            StartCoroutine(
+                moveCall
+            );
+        }
     }
 
     public float GetDriveUpperLimit(ArticulatedArmJointSolver joint, JointAxisType jointAxisType = JointAxisType.Extend) {
@@ -278,7 +291,16 @@ public partial class ArticulatedArmController : ArmController {
             )
         );
 
-        StartCoroutine(moveCall);
+        if (disableRendering) {
+            controller.unrollSimulatePhysics(
+                moveCall,
+                fixedDeltaTime
+            );
+        } else {
+            StartCoroutine(
+                moveCall
+            );
+        }
     }
 
     public void moveArmBaseUp(

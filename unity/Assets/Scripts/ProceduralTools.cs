@@ -809,7 +809,7 @@ namespace Thor.Procedural {
 
             var collider = new GameObject("Col");
             // SimObjVisible
-            collider.layer = 8;
+            collider.layer = LayerMask.NameToLayer("Default");
             collider.tag = "SimObjPhysics";
             var box = collider.AddComponent<BoxCollider>();
 
@@ -825,7 +825,7 @@ namespace Thor.Procedural {
             var triggerColliders = new GameObject("TriggerColliders");
             var triggerCollider = new GameObject("Col");
 
-            triggerCollider.layer = 8;
+            triggerCollider.layer = LayerMask.NameToLayer("Default");
             triggerCollider.tag = "SimObjPhysics";
             var triggerBox = triggerCollider.AddComponent<BoxCollider>();
 
