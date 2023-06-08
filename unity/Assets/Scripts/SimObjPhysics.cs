@@ -120,6 +120,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     private BoundingBoxCacheKey boundingBoxCacheKey;
     private ObjectOrientedBoundingBox cachedObjectOrientedBoundingBox;
     private AxisAlignedBoundingBox cachedAxisAlignedBoundingBox;
+    private AxisAlignedReceptacleTriggerBox cachedAxisAlignedReceptacleTriggerBox;
 
     private bool forceCreateObjectOrientedBoundingBox = false;
     
@@ -212,6 +213,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
         this.cachedAxisAlignedBoundingBox = this.axisAlignedBoundingBox();
         this.cachedObjectOrientedBoundingBox = this.objectOrientedBoundingBox();
+        this.cachedAxisAlignedReceptacleTriggerBox = this.axisAlignedReceptacleTriggerBox();
         this.boundingBoxCacheKey = new BoundingBoxCacheKey();
         this.boundingBoxCacheKey.position = position;
         this.boundingBoxCacheKey.rotation = rotation;
@@ -423,6 +425,83 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         return null;
     }
+
+    private AxisAlignedReceptacleTriggerBox axisAlignedReceptacleTriggerBox() {
+        AxisAlignedReceptacleTriggerBox aartb = new AxisAlignedReceptacleTriggerBox();
+
+        // get all colliders on the sop, excluding colliders if they are not enabled
+        Collider[] cols = this.GetComponentsInChildren<Collider>();
+
+        // 0 colliders mean the object is despawned, so this will cause objects broken into pieces to not generate an axis aligned box
+        if (cols.Length == 0) {
+            SimObjPhysics sopc = this.GetComponent<SimObjPhysics>();
+            if (sopc.IsBroken || sopc.IsSliced) {
+#if UNITY_EDITOR
+                Debug.Log("Object is broken or sliced in pieces, no AxisAligned box generated: " + this.name);
+#endif
+                return aartb;
+            } else {
+#if UNITY_EDITOR
+                Debug.Log("Something went wrong, no Colliders were found on" + this.name);
+#endif
+                return aartb;
+            }
+        }
+
+        List<GameObject> receptacleTriggerBoxes = ContainedGameObjects();
+        List<AxisAlignedBoundingBox> bs = new List<AxisAlignedBoundingBox>();
+
+        foreach (GameObject rtb in receptacleTriggerBoxes){
+            AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
+
+            // get all colliders on the sop, excluding colliders if they are not enabled
+            cols = rtb.GetComponentsInChildren<Collider>();
+
+            Bounds bounding = UtilityFunctions.CreateEmptyBounds();
+            foreach (Collider c in cols) {
+                if (c.enabled && !c.isTrigger) {
+                    bounding.Encapsulate(c.bounds);
+                }
+            }
+
+            // bounding.Encapsulate(rtb.position);
+            // foreach (Transform visPoint in rtb.VisibilityPoints) {
+            //     bounding.Encapsulate(visPoint.position);
+            // }
+
+            // ok now we have a bounds that encapsulates all the colliders of the object, EXCLUDING trigger colliders
+            List<float[]> cornerPoints = new List<float[]>();
+            float[] xs = new float[]{
+                bounding.center.x + bounding.size.x / 2f,
+                bounding.center.x - bounding.size.x / 2f
+            };
+            float[] ys = new float[]{
+                bounding.center.y + bounding.size.y / 2f,
+                bounding.center.y - bounding.size.y / 2f
+            };
+            float[] zs = new float[]{
+                bounding.center.z + bounding.size.z / 2f,
+                bounding.center.z - bounding.size.z / 2f
+            };
+            foreach (float x in xs) {
+                foreach (float y in ys) {
+                    foreach (float z in zs) {
+                        cornerPoints.Add(new float[] { x, y, z });
+                    }
+                }
+            }
+            b.cornerPoints = cornerPoints.ToArray();
+
+            b.center = bounding.center; // also return the center of this bounding box in world coordinates
+            b.size = bounding.size; // also return the size in the x, y, z axes of the bounding box in world coordinates
+            bs.Add(b);
+        }
+
+        aartb.numReceptacleTriggerBoxes = receptacleTriggerBoxes.Count;
+        aartb.receptacleTriggerBox = bs.ToArray();
+        return aartb;
+    }
+
     public void DropContainedObjectsStationary() {
         this.DropContainedObjects(reparentContainedObjects: false, forceKinematic: true);
     }
@@ -471,6 +550,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         get {
             this.syncBoundingBoxes();
             return this.cachedObjectOrientedBoundingBox;
+        }
+    }
+
+    public AxisAlignedReceptacleTriggerBox AxisAlignedReceptacleTriggerBox{
+        get {
+            this.syncBoundingBoxes();
+            return this.cachedAxisAlignedReceptacleTriggerBox;
         }
     }
 

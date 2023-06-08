@@ -1539,6 +1539,7 @@ public class ObjectMetadata {
 
     public AxisAlignedBoundingBox axisAlignedBoundingBox;
     public ObjectOrientedBoundingBox objectOrientedBoundingBox;
+    public AxisAlignedReceptacleTriggerBox axisAlignedReceptacleTriggerBox;
 
     public ObjectMetadata() { }
 }
@@ -1583,6 +1584,14 @@ public class ObjectOrientedBoundingBox {
     // probably return these from the BoundingBox component of the object for now?
     // this means that it will only work for Pickupable objects at the moment
     public float[][] cornerPoints;
+}
+
+// for returning a world axis aligned coordinates of receptacle trigger boxes in a receptacle object
+[Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
+public class AxisAlignedReceptacleTriggerBox {
+    public int numReceptacleTriggerBoxes;
+    public AxisAlignedBoundingBox[] receptacleTriggerBox;
 }
 
 [Serializable]

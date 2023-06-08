@@ -1742,6 +1742,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.axisAlignedBoundingBox = simObj.AxisAlignedBoundingBox;
 
+            objMeta.axisAlignedReceptacleTriggerBox = simObj.AxisAlignedReceptacleTriggerBox;
+
             return objMeta;
         }
 
