@@ -3639,6 +3639,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "abtelefull": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "TeleportFull";
+                        action["position"] = new Vector3(-1f, -50.01804f, 0f);
+                        action["rotation"] = new Vector3(0f, 170f, 0f);
+                        action["horizon"] = -20f;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "telefull": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "TeleportFull";
