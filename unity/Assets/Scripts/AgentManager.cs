@@ -608,8 +608,6 @@ public class AgentManager : MonoBehaviour {
         );
     }
 
-    // note that using a using a Dictionary<string, float> allows for only x, y, or z
-    // to be passed in, individually, whereas using Vector3 would require each of x/y/z.
     public void UpdateThirdPartyCameraToObject(
         int thirdPartyCameraId = 0,
         string objectId = null,
