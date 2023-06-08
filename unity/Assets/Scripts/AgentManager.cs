@@ -608,6 +608,8 @@ public class AgentManager : MonoBehaviour {
         );
     }
 
+    // note that using a using a Dictionary<string, float> allows for only x, y, or z
+    // to be passed in, individually, whereas using Vector3 would require each of x/y/z.
     public void UpdateThirdPartyCameraToObject(
         int thirdPartyCameraId = 0,
         string objectId = null,
@@ -658,6 +660,29 @@ public class AgentManager : MonoBehaviour {
                 skyboxColor: skyboxColor,
                 orthographic: orthographic,
                 orthographicSize: orthographicSize,
+                nearClippingPlane: nearClippingPlane,
+                farClippingPlane: farClippingPlane
+            );
+            bool goodToGo = true;
+            targetObject = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            foreach (float[] p in targetObject.AxisAlignedBoundingBox.cornerPoints){
+                Vector3 worldP = new Vector3(p[0], p[1], p[2]);
+                Vector3 localP = thirdPartyCamera.WorldToScreenPoint(worldP);
+                if (localP.x <= 0 || localP.x >= thirdPartyCamera.pixelWidth){
+                    goodToGo = false;
+                }
+                if (localP.y <= 0 || localP.y >= thirdPartyCamera.pixelHeight){
+                    goodToGo = false;
+                }
+                if (!goodToGo){
+                    break;
+                }
+            }
+            if (goodToGo){
+                break;
+            }
+        }
+    }
 
     private void addAgent(ServerAction action) {
         Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
