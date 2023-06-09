@@ -228,7 +228,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
 
     private AxisAlignedBoundingBox axisAlignedBoundingBox() {
-
         AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
 
         // unparent child simobjects during bounding box generation
