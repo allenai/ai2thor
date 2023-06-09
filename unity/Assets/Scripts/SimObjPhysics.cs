@@ -448,7 +448,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             }
         }
 
-        List<GameObject> receptacleTriggerBoxes = ContainedGameObjects();
+        List<GameObject> receptacleTriggerBoxes = GetAllReceptacleTriggerBoxes();
         List<AxisAlignedBoundingBox> bs = new List<AxisAlignedBoundingBox>();
 
         foreach (GameObject rtb in receptacleTriggerBoxes){
@@ -459,7 +459,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
             Bounds bounding = UtilityFunctions.CreateEmptyBounds();
             foreach (Collider c in cols) {
-                if (c.enabled && !c.isTrigger) {
+                if (c.enabled && c.isTrigger) {
                     bounding.Encapsulate(c.bounds);
                 }
             }
@@ -1180,6 +1180,18 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         CurrentlyContains = objs;
 #endif
 
+        return objs;
+    }
+
+    public List<GameObject> GetAllReceptacleTriggerBoxes() {
+        List<GameObject> objs = new List<GameObject>();
+
+        // get box collider dimensions of ReceptacleTriggerBox if this is a receptacle
+        if (IsReceptacle) {
+            foreach (GameObject rtb in ReceptacleTriggerBoxes) {
+                objs.Add(rtb);
+            }
+        }
         return objs;
     }
 
