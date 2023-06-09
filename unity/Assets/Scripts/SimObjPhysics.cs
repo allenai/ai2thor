@@ -1186,7 +1186,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     public List<GameObject> GetAllReceptacleTriggerBoxes() {
         List<GameObject> objs = new List<GameObject>();
 
-        // get box collider dimensions of ReceptacleTriggerBox if this is a receptacle
         if (IsReceptacle) {
             foreach (GameObject rtb in ReceptacleTriggerBoxes) {
                 objs.Add(rtb);
