@@ -464,11 +464,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
                 }
             }
 
-            // bounding.Encapsulate(rtb.position);
-            // foreach (Transform visPoint in rtb.VisibilityPoints) {
-            //     bounding.Encapsulate(visPoint.position);
-            // }
-
             // ok now we have a bounds that encapsulates all the colliders of the object, EXCLUDING trigger colliders
             List<float[]> cornerPoints = new List<float[]>();
             float[] xs = new float[]{
