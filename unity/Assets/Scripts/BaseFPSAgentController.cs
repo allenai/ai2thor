@@ -6191,7 +6191,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 Physics.SyncTransforms();
-                
+
+                sop.syncBoundingBoxes(forceCacheReset: true);
                 AxisAlignedBoundingBox aabb = sop.AxisAlignedBoundingBox;
 
                 Vector3 center = aabb.center;
@@ -6308,6 +6309,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
 
+                // TODO: Improve this logic so that we get rectangles more intelligently
                 var groupToRectangles = new Dictionary<int, List<((int, int), (int, int))>>();
                 foreach (int group in groupToPos.Keys) {
                     var posSet = new HashSet<(int, int)>(groupToPos[group]);
@@ -6350,6 +6352,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
 
                         rectangles.Add(((startIX, startIZ), (endIX, endIZ)));
+                        // Debug.Log($"Group {group}: ({startIX}, {startIZ}), ({endIX}, {endIZ})");
                     }
                     groupToRectangles[group] = rectangles;
                 }
@@ -6490,12 +6493,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             PhysicalProperties physicalProperties = null,
             Vector3[]? visibilityPoints = null,
             ObjectAnnotations annotations = null,
-            bool receptacleCandidate = false
+            bool receptacleCandidate = false,
+            float yRotOffset = 0f
         ) {
             // create a new game object
-            GameObject go = new GameObject(name);
-            go.layer = LayerMask.NameToLayer("SimObjVisible");
-            go.tag = "SimObjPhysics";
+            GameObject go = new GameObject();
 
             // create a new mesh
             GameObject meshObj = new GameObject("mesh");
@@ -6512,55 +6514,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             meshObj.AddComponent<MeshRenderer>();
             MeshFilter meshFilter = meshObj.AddComponent<MeshFilter>();
             meshFilter.mesh = mesh;
-
-            Material mat = null;
-
-            // load image from disk
-            if (albedoTexturePath != null) {
-                // textures aren't saved as part of the prefab, so we load them from disk
-                RuntimePrefab runtimePrefab = go.AddComponent<RuntimePrefab>();
-                runtimePrefab.localTexturePath = albedoTexturePath;
-
-                byte[] imageBytes = File.ReadAllBytes(albedoTexturePath);
-                // Is this size right?
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
-
-                // create a new material
-                mat = new Material(Shader.Find("Standard"));
-                mat.mainTexture = tex;
-                
-                // assign the material to the game object
-                meshObj.GetComponent<Renderer>().material = mat;
-                runtimePrefab.sharedMaterial = mat;
-            } else {
-                // create a new material
-                mat = new Material(Shader.Find("Standard"));
-                meshObj.GetComponent<Renderer>().material = mat;
-            }
-
-            mat.SetFloat("_Glossiness", 0f);
-
-            if (normalTexturePath != null) {
-                mat.EnableKeyword("_NORMALMAP");
-                byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
-                mat.SetTexture("_BumpMap", tex);
-            }
-
-            if (emissionTexturePath != null) {
-                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-                mat.EnableKeyword("_EMISSION");
-                byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
-                mat.SetTexture("_EmissionMap", tex);
-                mat.SetColor("_EmissionColor", Color.white);
-            }
-
-            // have the mesh refer to the mesh at meshPath
-            meshObj.GetComponent<MeshFilter>().sharedMesh = mesh;
 
             // add the mesh colliders
             GameObject triggerCollidersObj = new GameObject("TriggerColliders");
@@ -6601,16 +6554,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            // add the rigidbody
-            Rigidbody rb = go.AddComponent<Rigidbody>();
-            if (physicalProperties != null) {
-                rb.mass = physicalProperties.mass;
-                rb.drag = physicalProperties.drag;
-                rb.angularDrag = physicalProperties.angularDrag;
-                rb.useGravity = physicalProperties.useGravity;
-                rb.isKinematic = physicalProperties.isKinematic;
-            }
-
             // add the visibility points
             GameObject visPoints = new GameObject("VisibilityPoints");
             visPoints.transform.parent = go.transform;
@@ -6621,6 +6564,82 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 visPoint.transform.localPosition = visibilityPoints[i];
                 visPointTransforms[i] = visPoint.transform;
                 visPoint.layer = LayerMask.NameToLayer("SimObjVisible");
+            }
+
+            // Rotate the object, this requires reassigning things to a new game object
+            go.transform.Rotate(Vector3.up, yRotOffset);
+            GameObject newGo = new GameObject();
+
+            foreach (Transform t in go.GetComponentsInChildren<Transform>()) {
+                if (t.parent == go.transform) {
+                    Debug.Log($"Moving transform of {t.gameObject.name}");
+                    t.parent = newGo.transform;
+                }
+            }
+            go.SetActive(false);
+            go = newGo;
+
+            go.name = name;
+            go.layer = LayerMask.NameToLayer("SimObjVisible");
+            go.tag = "SimObjPhysics";
+
+            Material mat = null;
+            // load image from disk
+            if (albedoTexturePath != null) {
+                // textures aren't saved as part of the prefab, so we load them from disk
+                RuntimePrefab runtimePrefab = go.AddComponent<RuntimePrefab>();
+                runtimePrefab.localTexturePath = albedoTexturePath;
+
+                byte[] imageBytes = File.ReadAllBytes(albedoTexturePath);
+                // Is this size right?
+                Texture2D tex = new Texture2D(2, 2);
+                tex.LoadImage(imageBytes);
+
+                // create a new material
+                mat = new Material(Shader.Find("Standard"));
+                mat.mainTexture = tex;
+
+                // assign the material to the game object
+                meshObj.GetComponent<Renderer>().material = mat;
+                runtimePrefab.sharedMaterial = mat;
+            } else {
+                // create a new material
+                mat = new Material(Shader.Find("Standard"));
+                meshObj.GetComponent<Renderer>().material = mat;
+            }
+
+            mat.SetFloat("_Glossiness", 0f);
+
+            if (normalTexturePath != null) {
+                mat.EnableKeyword("_NORMALMAP");
+                byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
+                Texture2D tex = new Texture2D(2, 2);
+                tex.LoadImage(imageBytes);
+                mat.SetTexture("_BumpMap", tex);
+            }
+
+            if (emissionTexturePath != null) {
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+                mat.EnableKeyword("_EMISSION");
+                byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);
+                Texture2D tex = new Texture2D(2, 2);
+                tex.LoadImage(imageBytes);
+                mat.SetTexture("_EmissionMap", tex);
+                mat.SetColor("_EmissionColor", Color.white);
+            }
+
+            // have the mesh refer to the mesh at meshPath
+            meshObj.GetComponent<MeshFilter>().sharedMesh = mesh;
+
+
+            // add the rigidbody
+            Rigidbody rb = go.AddComponent<Rigidbody>();
+            if (physicalProperties != null) {
+                rb.mass = physicalProperties.mass;
+                rb.drag = physicalProperties.drag;
+                rb.angularDrag = physicalProperties.angularDrag;
+                rb.useGravity = physicalProperties.useGravity;
+                rb.isKinematic = physicalProperties.isKinematic;
             }
 
             // add the SimObjPhysics component
@@ -6644,37 +6663,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             sop.SecondaryProperties = annotations.secondaryProperties.Select(
                 p => (SimObjSecondaryProperty)Enum.Parse(typeof(SimObjSecondaryProperty), p)
             ).ToArray();
-
-            // seutp the bounding box
-            GameObject boundingBox = new GameObject("BoundingBox");
-            boundingBox.transform.parent = go.transform;
-            BoxCollider boxCollider = boundingBox.AddComponent<BoxCollider>();
-            boxCollider.enabled = false;
-            float minX = float.MaxValue;
-            float minY = float.MaxValue;
-            float minZ = float.MaxValue;
-            float maxX = float.MinValue;
-            float maxY = float.MinValue;
-            float maxZ = float.MinValue;
-            foreach (var vertex in vertices) {
-                minX = Mathf.Min(minX, vertex.x);
-                minY = Mathf.Min(minY, vertex.y);
-                minZ = Mathf.Min(minZ, vertex.z);
-                maxX = Mathf.Max(maxX, vertex.x);
-                maxY = Mathf.Max(maxY, vertex.y);
-                maxZ = Mathf.Max(maxZ, vertex.z);
-            }
-            boxCollider.center = new Vector3(
-                x: (minX + maxX) / 2.0f,
-                y: (minY + maxY) / 2.0f,
-                z: (minZ + maxZ) / 2.0f
-            );
-            boxCollider.size = new Vector3(
-                x: maxX - minX,
-                y: maxY - minY,
-                z: maxZ - minZ
-            );
-            sop.BoundingBox = boundingBox;
+            sop.syncBoundingBoxes(forceCacheReset: true, forceCreateObjectOrientedBoundingBox: true);
 
             if (receptacleCandidate) {
                 BaseFPSAgentController.TryToAddReceptacleTriggerBox(sop: sop);

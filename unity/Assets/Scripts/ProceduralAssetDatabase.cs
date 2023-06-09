@@ -98,6 +98,10 @@ namespace Thor.Procedural {
         }
 
         public AsyncOperation removeLRU(int limit, bool deleteWithHighestPriority = true) {
+            if (proceduralAssetQueue.Count == 0) {
+                return null;
+            }
+
             var current = proceduralAssetQueue.First;
             var toDequeuePrio = proceduralAssetQueue.GetPriority(current);
             int dequeueCount = 0;
