@@ -6690,6 +6690,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 assetDb.addAsset(go, procedural: true);
             }
 
+            // Compute the object metadata
+            // IMPORTANT: this must happen before the object is added to the prefabParent object below,
+            //            otherwise the object's bounding box will be incorrect! This has something to do with how
+            //            our bounding box computation code works where it ignores some unactive components of an object
+            var assetMeta = getAssetMetadata(sop.gameObject);
+            var objectMeta = ObjectMetadataFromSimObjPhysics(sop, true, true);
+
             // get child object on assetDb's game object that's called "Prefabs"
             // and add the prefab to that
             var prefabParentTransform = assetDb.transform.Find("Prefabs");
@@ -6700,12 +6707,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 prefabParentTransform = prefabParent.transform;
             }
             go.transform.parent = prefabParentTransform;
-            
 
-            var meta = ObjectMetadataFromSimObjPhysics(sop, true, true);
             actionFinished(success: true, actionReturn: new Dictionary<string, object>{
-                {"assetMetadata", getAssetMetadata(sop.gameObject)},
-                {"objectMetadata", meta}
+                {"assetMetadata", assetMeta},
+                {"objectMetadata", objectMeta}
             });
         }
 
