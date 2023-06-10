@@ -41,6 +41,7 @@ class BenchmarkConfig:
         only_transformed_aggregates: bool = True,
         verbose: bool = False,
         output_file: str = "benchmark.json",
+        procedural_reset_scene="Procedural",
     ):
         if verbose:
             logger.setLevel(logging.DEBUG)
@@ -81,6 +82,8 @@ class BenchmarkConfig:
         self.name = name
 
         self.config_name = config_name
+
+        self.procedural_reset_scene = procedural_reset_scene
 
 
 class Benchmarker(ABC):
@@ -170,6 +173,43 @@ class SimsPerSecondBenchmarker(Benchmarker):
         if self.only_transformed_key:
             del report[self.aggregate_key()]
         return report
+    
+class PhysicsSimulateCountBenchmarker(Benchmarker):
+    def __init__(self, only_transformed_key=False):
+        self.only_transformed_key = only_transformed_key
+        pass
+
+    def aggregate_key(self):
+        return "physics_simulate_count"
+
+    def transformed_key(self):
+        return "average_physics_simulate_count"
+
+    def name(self):
+        return "Physics Simulate Count"
+
+    def benchmark(self, env, action_config, add_key_values={}):
+        env.step(dict(action=action_config["action"], **action_config["args"]))
+
+        evt = env.step(action="GetPhysicsSimulateCount")
+        physics_simultate_count = evt.metadata["actionReturn"]
+
+        record = {
+            "action": action_config["action"],
+            "count": 1,
+            self.aggregate_key(): physics_simultate_count,
+        }
+        record = {**record, **add_key_values}
+
+        return record
+
+    def transform_aggregate(self, report):
+        report[self.transformed_key()] = report[self.aggregate_key()]
+        if self.only_transformed_key:
+            del report[self.aggregate_key()]
+        return report
+    
+    
 
 class UnityActionBenchmarkRunner(BenchmarkConfig):
     def __clean_action(self, action: Union[str, Dict[str, Any]]):
@@ -353,10 +393,10 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             scene_list = []
 
         scene_list = [(scene, None) for scene in scene_list]
-
+        procedural_scene_reset = self.procedural_reset_scene if len(scene_list) > 0 else None
         if self.procedural_houses:
             scene_list = scene_list + [
-                ("Procedural", house) for house in self.procedural_houses
+                (procedural_scene_reset, house) for house in self.procedural_houses
             ]
 
         experiment_list = [
@@ -403,6 +443,8 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         print("Exp list")
         print(experiment_list)
         for scene, procedural_house, benchmarker, experiment_index in experiment_list:
+            if scene is None:
+                scene = env.scene
             logger.info("Loading scene '{}'.".format(scene))
             env.reset(scene)
 

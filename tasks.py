@@ -4410,7 +4410,7 @@ def run_benchmark_from_s3_config(ctx):
     #TODO remove older benchmarks
 
 @task
-def run_benchmark_from_local_config(ctx, config_path, house_from_s3=True, houses_path="./unity/Assets/Resources/rooms"):
+def run_benchmark_from_local_config(ctx, config_path, house_from_s3=False, houses_path="./unity/Assets/Resources/rooms"):
     import copy
     from datetime import datetime, date, timezone
     from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET, UnityActionBenchmarkRunner
