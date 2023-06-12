@@ -15,7 +15,7 @@ import shutil
 import subprocess
 import pprint
 import random
-from typing import Dict
+from typing import Dict, Optional
 
 from invoke import task
 import boto3
@@ -216,9 +216,7 @@ def _build(
             return False
 
         if elapsed // print_interval > (elapsed - print_interval) // print_interval:
-            logger.info(
-                f"Build has been running for {elapsed:.2f} seconds."
-            )
+            logger.info(f"Build has been running for {elapsed:.2f} seconds.")
 
     logger.info(f"Exited with code {process.returncode}")
 
@@ -1081,12 +1079,37 @@ def ci_pytest(branch, commit_id):
 
 
 @task
-def ci_build(context):
+def ci_build(
+    context,
+    commit_id: Optional[str] = None,
+    branch: Optional[str] = None,
+    skip_pip: bool = False,
+):
+    assert (commit_id is None) == (
+        branch is None
+    ), "must specify both commit_id and branch or neither"
+
+    is_travis_build = commit_id is None
+
+    assert is_travis_build or skip_pip, "Cannot create pip repo on non-travis build."
+
+    if not is_travis_build:
+        logger.info("Initiating a NON-TRAVIS build")
+
     with open(os.path.join(os.environ["HOME"], ".ci-build.lock"), "w") as lock_f:
         arch_temp_dirs = dict()
         try:
             fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            build = pending_travis_build()
+            if is_travis_build:
+                build = pending_travis_build()
+            else:
+                build = {
+                    "commit_id": commit_id,
+                    "branch": branch,
+                    "tag": None,
+                    "id": None,
+                }
+
             skip_branches = ["vids", "video", "erick/cloudrendering", "it_vr"]
             if build and build["branch"] not in skip_branches:
                 # disabling delete temporarily since it interferes with pip releases
@@ -1246,18 +1269,24 @@ def ci_build(context):
 
                 # must have this after all the procs are joined
                 # to avoid generating a _builds.py file that would affect pytest execution
-                build_pip_commit(context)
-                push_pip_commit(context)
-                generate_pypi_index(context)
+                if skip_pip:
+                    logger.info("Skipping pip build")
+                else:
+                    build_pip_commit(context)
+                    push_pip_commit(context)
+                    generate_pypi_index(context)
 
                 # give the travis poller time to see the result
-                for i in range(12):
-                    b = travis_build(build["id"])
-                    logger.info("build state for %s: %s" % (build["id"], b["state"]))
+                if is_travis_build:
+                    for i in range(12):
+                        b = travis_build(build["id"])
+                        logger.info(
+                            "build state for %s: %s" % (build["id"], b["state"])
+                        )
 
-                    if b["state"] != "started":
-                        break
-                    time.sleep(10)
+                        if b["state"] != "started":
+                            break
+                        time.sleep(10)
 
                 logger.info(
                     "build complete %s %s" % (build["branch"], build["commit_id"])
@@ -1265,7 +1294,7 @@ def ci_build(context):
 
             fcntl.flock(lock_f, fcntl.LOCK_UN)
 
-        except io.BlockingIOError as e:
+        except io.BlockingIOError:
             pass
 
         finally:
@@ -1406,6 +1435,7 @@ def ci_build_arch(
             return False
     finally:
         os.chdir(start_wd)
+
 
 @task
 def poll_ci_build(context):
