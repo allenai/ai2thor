@@ -1,0 +1,190 @@
+{
+    "benchmarker_class_names": [
+        "SimsPerSecondBenchmarker",
+        "PhysicsSimulateCountBenchmarker"
+    ],
+    "init_params": {
+        "local_executable_path": null,
+        "local_build": true,
+        "start_unity": true,
+        "gridSize": 0.25,
+        "width": 300,
+        "height": 300,
+        "agentMode": "stretch",
+        "scene": "Procedural",
+        "server_type": "FIFO"
+    },
+    "name": "Arm Benchmarker",
+    "scenes": [],
+    "procedural_houses": ["train_4.json"],
+    "action_group_sample_count": 1,
+    "experiment_sample_count": 1,
+    "filter_object_types": "",
+    "procedural_reset_scene": null,
+    "random_teleport_before_action_group": false,
+    "include_per_action_breakdown": true,
+    "include_individual_action_runs": true,
+    "verbose": true,
+    "output_file": "benchmark.json",
+
+    "action_groups": {
+          
+        "arm_knock_base_chunked": {
+            "actions": [
+
+                {"action": "TeleportFull", "position": {"x": 7.0, "y": 0.0, "z": 6.5}, "rotation": {"x": 0.0, "y": 180.0, "z": 0.0}, "forceAction": true, "horizon": 0.0, "standing": true},
+               
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": 1.0}, "disableRendering": true, "returnToStart": true, "speed": 5},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1}
+
+            ],
+            "sample_count": 1,
+            "selector": "sequence"
+        },
+        "arm_knock_chunked": {
+            "actions": [
+
+                {"action": "TeleportFull", "position": {"x": 7.0, "y": 0.0, "z": 6.5}, "rotation": {"x": 0.0, "y": 180.0, "z": 0.0}, "forceAction": true, "horizon": 0.0, "standing": true},
+               
+
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": 0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": 0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": 0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": 0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": 0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": 0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": 0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": 0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": 0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": 0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": -0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": -0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": -0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": -0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": -0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": -0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": -0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": -0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": -0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": -0.1}, "disableRendering": true, "returnToStart": true, "speed": 3},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1}
+            ],
+            "sample_count": 1,
+            "selector": "sequence"
+        },
+
+        "arm_knock": {
+            "actions": [
+
+                {"action": "TeleportFull", "position": {"x": 7.0, "y": 0.0, "z": 6.5}, "rotation": {"x": 0.0, "y": 180.0, "z": 0.0}, "forceAction": true, "horizon": 0.0, "standing": true},
+
+                {"action": "MoveArmBaseUp", "distance": 0.65, "disableRendering": true, "returnToStart": true, "speed": 5},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": 1.0}, "disableRendering": true, "returnToStart": true, "speed": 5},
+                {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": -1.0}, "disableRendering": false, "returnToStart": true, "speed": 5},
+                {"action": "MoveArmBaseDown", "distance": 0.65, "disableRendering": true, "returnToStart": true, "speed": 5}
+            ],
+            "sample_count": 1,
+            "selector": "sequence"
+        },
+
+        "arm_shelf_block": {
+            "actions": [
+
+                {"action": "TeleportFull", "position": {"x": 7.0, "y": 0.0, "z": 6.5}, "rotation": {"x": 0.0, "y": 180.0, "z": 0.0}, "forceAction": true, "horizon": 0.0, "standing": true},
+
+                    {"action": "MoveArmBaseUp", "distance": 0.65, "disableRendering": true, "returnToStart": true, "speed": 5},
+                    {"action": "MoveArm", "position": {"x": 0.0, "y": 0.0, "z": 1.0}, "disableRendering": true, "returnToStart": true, "speed": 5},
+                    
+                    {"action": "MoveArmBaseDown", "distance": 0.65, "disableRendering": true, "returnToStart": true, "speed": 5}
+            ],
+            "sample_count": 1,
+            "selector": "sequence"
+        },
+        "arm_shelf_block_chunked": {
+            "actions": [
+
+                {"action": "TeleportFull", "position": {"x": 7.0, "y": 0.0, "z": 6.5}, "rotation": {"x": 0.0, "y": 180.0, "z": 0.0}, "forceAction": true, "horizon": 0.0, "standing": true},
+
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseUp", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1},
+                {"action": "MoveArmBaseDown", "distance": 0.05, "disableRendering": true, "returnToStart": true, "speed": 1}
+            ],
+            "sample_count": 1,
+            "selector": "sequence"
+        }
+
+    }
+}

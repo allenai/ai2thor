@@ -125,8 +125,9 @@ public class Build {
             }
         }
 
+        return scenes.Where(x => x.Contains("FloorPlan1_") || x.Contains("Procedural") || x.Contains("ProceduralAB")).ToList();
         // uncomment for faster builds for testing
-        return scenes; //.Where(x => x.Contains("FloorPlan") || x.Contains("Procedural.unity")).ToList(); //.Where(x => x.Contains("FloorPlan1_") || x.Contains("Procedural")).ToList();
+        // return scenes; //.Where(x => x.Contains("FloorPlan") || x.Contains("Procedural.unity")).ToList(); //.Where(x => x.Contains("FloorPlan1_") || x.Contains("Procedural")).ToList();
     }
 
     private static List<string> GetScenesFromEnv() {

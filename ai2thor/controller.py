@@ -647,6 +647,7 @@ class Controller(object):
         try:
             event = self.step(action="GetScenesInBuild")
             self._scenes_in_build = set(event.metadata["actionReturn"])
+            print(f"----- scenes {len(self._scenes_in_build)} scenes {self._scenes_in_build}")
         except ValueError as e:
             # will happen for old builds without GetScenesInBuild
             self._scenes_in_build = set()
@@ -734,12 +735,13 @@ class Controller(object):
             warnings.warn(
                 "On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'."
             )
-
+        
         self.last_event = self.step(
             action="Initialize",
             raise_for_failure=True,
             **self.initialization_parameters,
         )
+        print(f'Last event {self.last_event.metadata["lastActionSuccess"]} error {self.last_event.metadata["errorMessage"]}')
 
         if is_procedural:
             self.last_event = self.step(action="CreateHouse", house=scene)
