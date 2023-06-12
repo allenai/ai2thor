@@ -870,14 +870,19 @@ def pre_test(context):
     )
 
 
-def clean():
+def clean(is_travis_build: bool = True):
     import scripts.update_private
 
     # a deploy key is used on the build server and an .ssh/config entry has been added
     # to point to the deploy key caclled ai2thor-private-github
-    scripts.update_private.private_repo_url = (
-        "git@ai2thor-private-github:allenai/ai2thor-private.git"
-    )
+    if is_travis_build:
+        scripts.update_private.private_repo_url = (
+            "git@ai2thor-private-github:allenai/ai2thor-private.git"
+        )
+    else:
+        scripts.update_private.private_repo_url = (
+            "git@github.com:allenai/ai2thor-private.git"
+        )
     subprocess.check_call("git reset --hard", shell=True)
     subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
@@ -1115,7 +1120,7 @@ def ci_build(
                 # disabling delete temporarily since it interferes with pip releases
                 # pytest_s3_object(build["commit_id"]).delete()
                 logger.info(f"pending build for {build['branch']} {build['commit_id']}")
-                clean()
+                clean(is_travis_build=is_travis_build)
                 subprocess.check_call("git fetch", shell=True)
                 subprocess.check_call(
                     "git checkout %s --" % build["branch"], shell=True
