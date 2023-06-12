@@ -4395,7 +4395,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinishedEmit(false);
                 return;
             }
-
             CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
             cc.radius = radius;
             Physics.SyncTransforms();
