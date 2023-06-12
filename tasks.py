@@ -1,6 +1,8 @@
 import os
+import signal
 import sys
-if os.name != 'nt':
+
+if os.name != "nt":
     import fcntl
 import datetime
 import json
@@ -13,8 +15,7 @@ import shutil
 import subprocess
 import pprint
 import random
-from queue import Empty
-from typing import Optional
+from typing import Dict
 
 from invoke import task
 import boto3
@@ -23,9 +24,6 @@ import multiprocessing
 import io
 import ai2thor.build
 import logging
-import glob
-
-from ai2thor.build import TEST_OUTPUT_DIRECTORY
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -63,11 +61,13 @@ def add_files(zipf, start_dir, exclude_ext=()):
         for f in files:
             fn = os.path.join(root, f)
             if any(map(lambda ext: fn.endswith(ext), exclude_ext)):
-                #print("skipping file %s" % fn)
+                # print("skipping file %s" % fn)
                 continue
 
             arcname = os.path.relpath(fn, start_dir)
-            if arcname.split("/")[0].endswith("_BackUpThisFolder_ButDontShipItWithYourGame"):
+            if arcname.split("/")[0].endswith(
+                "_BackUpThisFolder_ButDontShipItWithYourGame"
+            ):
                 # print("skipping %s" % arcname)
                 continue
             # print("adding %s" % arcname)
@@ -98,7 +98,11 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
     sha = hashlib.sha256(zip_data)
     try:
         logger.info("pushing build %s" % (key,))
-        s3.Object(bucket, key).put(Body=zip_data, ACL=acl, ChecksumSHA256=b64encode(sha.digest()).decode('ascii'))
+        s3.Object(bucket, key).put(
+            Body=zip_data,
+            ACL=acl,
+            ChecksumSHA256=b64encode(sha.digest()).decode("ascii"),
+        )
         logger.info("pushing sha256 %s" % (sha256_key,))
         s3.Object(bucket, sha256_key).put(
             Body=sha.hexdigest(), ACL=acl, ContentType="text/plain"
@@ -165,19 +169,26 @@ def _unity_path():
     return unity_path
 
 
-def _build(unity_path, arch, build_dir, build_name, env={}):
-    import yaml
-
+def _build(
+    unity_path: str,
+    arch: str,
+    build_dir: str,
+    build_name: str,
+    env: Dict[str, str],
+    timeout: int = 3600,
+    print_interval: int = 60,
+):
     project_path = os.path.join(os.getcwd(), unity_path)
-
-    # osxintel64 is not a BuildTarget
     build_target_map = dict(OSXIntel64="OSXUniversal")
 
-    # -buildTarget must be passed as an option for the CloudRendering target otherwise a clang error
-    # will get thrown complaining about missing features.h
     command = (
-        "%s -quit -batchmode -logFile %s/%s.log -projectpath %s -buildTarget %s -executeMethod Build.%s"
-        % (_unity_path(), os.getcwd(), build_name, project_path, build_target_map.get(arch, arch), arch)
+        f"{_unity_path()}"
+        f" -quit"
+        f" -batchmode"
+        f" -logFile {os.getcwd()}/{build_name}.log"
+        f" -projectpath {project_path}"
+        f" -buildTarget {build_target_map.get(arch, arch)}"
+        f" -executeMethod Build.{arch}"
     )
 
     target_path = os.path.join(build_dir, build_name)
@@ -185,16 +196,41 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
     full_env = os.environ.copy()
     full_env.update(env)
     full_env["UNITY_BUILD_NAME"] = target_path
-    result_code = subprocess.check_call(command, shell=True, env=full_env)
-    print(f"Exited with code {result_code}")
-    success = result_code == 0
+
+    process = subprocess.Popen(command, shell=True, env=full_env)
+
+    start = time.time()
+    while True:
+        time.sleep(10)  # Check for build completion every 10 seconds
+
+        if process.poll() is not None:  # Process has finished.
+            break
+
+        elapsed = time.time() - start
+        if elapsed > timeout:
+            logger.error(
+                f"Timeout occurred when running command:\n{command}\nKilling the process."
+            )
+            os.kill(process.pid, signal.SIGKILL)
+            os.waitpid(-1, os.WNOHANG)
+            return False
+
+        if elapsed // print_interval > (elapsed - print_interval) // print_interval:
+            print(
+                f"{print_interval}-second interval reached. Process is still running."
+            )
+
+    logger.info(f"Exited with code {process.returncode}")
+
+    success = process.returncode == 0
     if success:
         generate_build_metadata(os.path.join(project_path, build_dir, "metadata.json"))
+    else:
+        logger.error(f"Error occurred when running command:\n{command}")
     return success
 
 
-def generate_build_metadata(metadata_path):
-
+def generate_build_metadata(metadata_path: str):
     # this server_types metadata is maintained
     # to allow future versions of the Python API
     # to launch older versions of the Unity build
@@ -207,14 +243,13 @@ def generate_build_metadata(metadata_path):
     except Exception as e:
         pass
 
-    with open(os.path.join(metadata_path), "w") as f:
+    with open(metadata_path, "w") as f:
         f.write(json.dumps(dict(server_types=server_types)))
 
 
 def class_dataset_images_for_scene(scene_name):
     import ai2thor.controller
     from itertools import product
-    from collections import defaultdict
     import numpy as np
     import cv2
 
@@ -293,7 +328,6 @@ def class_dataset_images_for_scene(scene_name):
             visible_objects = []
 
             for o in event.metadata["objects"]:
-
                 if o["visible"] and o["objectId"] and o["pickupable"]:
                     color = event.object_id_to_color[o["objectId"]]
                     mask = (
@@ -667,7 +701,6 @@ def push_pip_commit(context):
 
 @task
 def build_pip_commit(context):
-
     commit_id = git_commit_id()
 
     if os.path.isdir("dist"):
@@ -745,7 +778,6 @@ def build_pip(context, version):
             and next_sub >= current_sub + 1
         )
     ):
-
         if os.path.isdir("dist"):
             shutil.rmtree("dist")
 
@@ -814,9 +846,9 @@ def archive_push(unity_path, build_path, build_dir, build_info, include_private_
     zip_buf = io.BytesIO()
     # Unity build is done with CompressWithLz4. Zip with compresslevel=1
     # results in smaller builds than Uncompressed Unity + zip comprseslevel=6 (default)
-    logger.info("building zip archive  %s %s" % (archive_name, os.path.join(unity_path, build_dir)))
+    logger.info(f"building zip archive  {archive_name} {build_dir}")
     zipf = zipfile.ZipFile(zip_buf, "w", zipfile.ZIP_DEFLATED, compresslevel=1)
-    add_files(zipf, os.path.join(unity_path, build_dir), exclude_ext=('.debug',))
+    add_files(zipf, os.path.join(unity_path, build_dir), exclude_ext=(".debug",))
     zipf.close()
     zip_buf.seek(0)
     zip_data = zip_buf.read()
@@ -877,7 +909,7 @@ def link_build_cache(root_dir, arch, branch):
     if os.path.lexists(library_path):
         os.unlink(library_path)
 
-    # this takes takes care of branches with '/' in it
+    # this takes care of branches with '/' in it
     # to avoid implicitly creating directories under the cache dir
     encoded_branch = re.sub(r"[^a-zA-Z0-9_\-.]", "_", re.sub("_", "__", branch))
 
@@ -956,11 +988,13 @@ def pytest_s3_object(commit_id):
 
     return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
 
+
 def pytest_s3_general_object(commit_id, filename):
     s3 = boto3.resource("s3")
     # TODO: Create a new bucket directory for test artifacts
     pytest_key = "builds/%s-%s" % (commit_id, filename)
     return s3.Object(ai2thor.build.PUBLIC_S3_BUCKET, pytest_key)
+
 
 # def pytest_s3_data_urls(commit_id):
 #     test_outputfiles = sorted(
@@ -988,16 +1022,18 @@ def pytest_s3_general_object(commit_id, filename):
 #             test_data_urls.append(s3_pytest_url)
 #     return test_data_urls
 
+
 @task
 def ci_merge_push_pytest_results(context, commit_id):
-
     s3_obj = pytest_s3_object(commit_id)
 
     s3_pytest_url = "http://s3-us-west-2.amazonaws.com/%s/%s" % (
         s3_obj.bucket_name,
         s3_obj.key,
     )
-    logger.info("ci_merge_push_pytest_results pytest before url check code change logging works")
+    logger.info(
+        "ci_merge_push_pytest_results pytest before url check code change logging works"
+    )
     logger.info("pytest url %s" % s3_pytest_url)
     logger.info("s3 obj is valid: {}".format(s3_obj))
 
@@ -1006,7 +1042,7 @@ def ci_merge_push_pytest_results(context, commit_id):
 
     for rf in result_files:
         with open(rf) as f:
-             result = json.loads(f.read())
+            result = json.loads(f.read())
 
         merged_result["success"] &= result["success"]
         merged_result["stdout"] += result["stdout"] + "\n"
@@ -1015,12 +1051,13 @@ def ci_merge_push_pytest_results(context, commit_id):
     # merged_result["test_data"] = pytest_s3_data_urls(commit_id)
 
     s3_obj.put(
-        Body=json.dumps(merged_result), ACL="public-read", ContentType="application/json"
+        Body=json.dumps(merged_result),
+        ACL="public-read",
+        ContentType="application/json",
     )
 
 
 def ci_pytest(branch, commit_id):
-    import requests
     logger.info(f"running pytest for {branch} {commit_id}")
 
     start_time = time.time()
@@ -1038,7 +1075,9 @@ def ci_pytest(branch, commit_id):
     with open("tmp/pytest_results.json", "w") as f:
         f.write(json.dumps(result))
 
-    logger.info(f"finished pytest for {branch} {commit_id} in {time.time() - start_time:.2f} seconds")
+    logger.info(
+        f"finished pytest for {branch} {commit_id} in {time.time() - start_time:.2f} seconds"
+    )
 
 
 @task
@@ -1052,13 +1091,15 @@ def ci_build(context):
             if build and build["branch"] not in skip_branches:
                 # disabling delete temporarily since it interferes with pip releases
                 # pytest_s3_object(build["commit_id"]).delete()
-                logger.info(
-                    f"pending build for {build['branch']} {build['commit_id']}"
-                )
+                logger.info(f"pending build for {build['branch']} {build['commit_id']}")
                 clean()
                 subprocess.check_call("git fetch", shell=True)
-                subprocess.check_call("git checkout %s --" % build["branch"], shell=True)
-                subprocess.check_call("git checkout -qf %s" % build["commit_id"], shell=True)
+                subprocess.check_call(
+                    "git checkout %s --" % build["branch"], shell=True
+                )
+                subprocess.check_call(
+                    "git checkout -qf %s" % build["commit_id"], shell=True
+                )
 
                 private_scene_options = [False]
 
@@ -1070,13 +1111,24 @@ def ci_build(context):
                 if _unity_version() == "2020.3.25f1":
                     build_archs.append("CloudRendering")
 
+                build_archs.reverse()  # Let's do CloudRendering first as it's more likely to fail
+
                 has_any_build_failed = False
                 for include_private_scenes in private_scene_options:
                     for arch in build_archs:
                         logger.info(
                             f"processing {arch} {build['branch']} {build['commit_id']}"
                         )
-                        temp_dir = arch_temp_dirs[arch] = os.path.join(os.environ["HOME"], "tmp/unity-%s-%s-%s-%s" % (arch, build["commit_id"], os.getpid(), random.randint(0, 2**32 - 1)))
+                        temp_dir = arch_temp_dirs[arch] = os.path.join(
+                            os.environ["HOME"],
+                            "tmp/unity-%s-%s-%s-%s"
+                            % (
+                                arch,
+                                build["commit_id"],
+                                os.getpid(),
+                                random.randint(0, 2**32 - 1),
+                            ),
+                        )
                         os.makedirs(temp_dir)
                         logger.info(f"copying unity data to {temp_dir}")
                         # -c uses MacOS clonefile
@@ -1099,48 +1151,37 @@ def ci_build(context):
                         else:
                             # this is done here so that when a tag build request arrives and the commit_id has already
                             # been built, we avoid bootstrapping the cache since we short circuited on the line above
-                            link_build_cache(temp_dir, arch, build["branch"])
-
-                            build_success_queue = multiprocessing.Queue()
-                            p = multiprocessing.Process(
-                                target=ci_build_arch,
-                                kwargs=dict(
-                                    root_dir=temp_dir,
-                                    arch=arch,
-                                    commit_id=build["commit_id"],
-                                    build_success_queue=build_success_queue,
-                                    include_private_scenes=include_private_scenes,
-                                    immediately_fail_and_push_log=has_any_build_failed, # Don't bother trying another build if one has already failed
-                                )
+                            link_build_cache(
+                                root_dir=temp_dir, arch=arch, branch=build["branch"]
                             )
-                            p.start()
 
-                            build_success = False
-                            minutes_to_wait = 120
-                            for i in range(minutes_to_wait):
-                                try:
-                                    build_success = build_success_queue.get(timeout=60)
-                                    break
-                                except (TimeoutError, Empty):
-                                    logger.info(f"Waiting for build to complete, have waited {i+1} minutes ({minutes_to_wait} max).")
+                            build_success = ci_build_arch(
+                                root_dir=temp_dir,
+                                arch=arch,
+                                commit_id=build["commit_id"],
+                                include_private_scenes=include_private_scenes,
+                                immediately_fail_and_push_log=has_any_build_failed,
+                                timeout=60 * 60
+                                # Don't bother trying another build if one has already failed
+                            )
 
-                            has_any_build_failed = has_any_build_failed or not build_success
+                            has_any_build_failed = (
+                                has_any_build_failed or not build_success
+                            )
                             if build_success:
                                 logger.info(
                                     f"Build success detected for {arch} {build['commit_id']}"
                                 )
                             else:
                                 logger.error(f"Build failed for {arch}")
-                                p.kill()
-
-                            p.join(10.0)
-
 
                 # the UnityLockfile is used as a trigger to indicate that Unity has closed
                 # the project and we can run the unit tests
                 # waiting for all builds to complete before starting tests
                 for arch in build_archs:
-                    lock_file_path = os.path.join(arch_temp_dirs[arch], "unity/Temp/UnityLockfile")
+                    lock_file_path = os.path.join(
+                        arch_temp_dirs[arch], "unity/Temp/UnityLockfile"
+                    )
                     if os.path.isfile(lock_file_path):
                         logger.info(f"attempting to lock {lock_file_path}")
                         lock_file = os.open(lock_file_path, os.O_RDWR)
@@ -1153,24 +1194,34 @@ def ci_build(context):
                 # for the branch commit
                 procs = []
                 if build["tag"] is None:
-
                     # its possible that the cache doesn't get linked if the builds
                     # succeeded during an earlier run
-                    link_build_cache(arch_temp_dirs["OSXIntel64"], "OSXIntel64", build["branch"])
+                    link_build_cache(
+                        arch_temp_dirs["OSXIntel64"], "OSXIntel64", build["branch"]
+                    )
 
                     # link builds directory so pytest can run
                     logger.info("current directory pre-symlink %s" % os.getcwd())
-                    os.symlink(os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"), "unity/builds")
-                    os.makedirs('tmp', exist_ok=True)
+                    os.symlink(
+                        os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"),
+                        "unity/builds",
+                    )
+                    os.makedirs("tmp", exist_ok=True)
                     # using threading here instead of multiprocessing since we must use the start_method of spawn, which
                     # causes the tasks.py to get reloaded, which may be different on a branch from main
                     utf_proc = threading.Thread(
                         target=ci_test_utf,
-                        args=(build["branch"], build["commit_id"], arch_temp_dirs["OSXIntel64"])
+                        args=(
+                            build["branch"],
+                            build["commit_id"],
+                            arch_temp_dirs["OSXIntel64"],
+                        ),
                     )
                     utf_proc.start()
                     procs.append(utf_proc)
-                    pytest_proc = threading.Thread(target=ci_pytest, args=(build["branch"], build["commit_id"]))
+                    pytest_proc = threading.Thread(
+                        target=ci_pytest, args=(build["branch"], build["commit_id"])
+                    )
                     pytest_proc.start()
                     procs.append(pytest_proc)
 
@@ -1181,7 +1232,6 @@ def ci_build(context):
                     and "#webgl-deploy" in git_commit_comment()
                 ):
                     ci_build_webgl(context, build["commit_id"])
-
 
                 for p in procs:
                     if p:
@@ -1209,8 +1259,9 @@ def ci_build(context):
                         break
                     time.sleep(10)
 
-                logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
-
+                logger.info(
+                    "build complete %s %s" % (build["branch"], build["commit_id"])
+                )
 
             fcntl.flock(lock_f, fcntl.LOCK_UN)
 
@@ -1223,24 +1274,32 @@ def ci_build(context):
                 shutil.rmtree(temp_dir)
 
 
-
 @task
 def install_cloudrendering_engine(context, force=False):
     if not sys.platform.startswith("darwin"):
         raise Exception("CloudRendering Engine can only be installed on Mac")
     s3 = boto3.resource("s3")
-    target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(_unity_version())
+    target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
+        _unity_version()
+    )
     full_dir = os.path.join(target_base_dir, "CloudRendering")
     if os.path.isdir(full_dir):
         if force:
             shutil.rmtree(full_dir)
-            logger.info("CloudRendering engine already installed - removing due to force")
+            logger.info(
+                "CloudRendering engine already installed - removing due to force"
+            )
         else:
-            logger.info("skipping installation - CloudRendering engine already installed")
+            logger.info(
+                "skipping installation - CloudRendering engine already installed"
+            )
             return
 
     print("packages/CloudRendering-%s.zip" % _unity_version())
-    res = s3.Object(ai2thor.build.PRIVATE_S3_BUCKET, "packages/CloudRendering-%s.zip" % _unity_version()).get()
+    res = s3.Object(
+        ai2thor.build.PRIVATE_S3_BUCKET,
+        "packages/CloudRendering-%s.zip" % _unity_version(),
+    ).get()
     data = res["Body"].read()
     z = zipfile.ZipFile(io.BytesIO(data))
     z.extractall(target_base_dir)
@@ -1256,68 +1315,100 @@ def ci_build_webgl(context, commit_id):
     arch = "WebGL"
     set_gi_cache_folder(arch)
     link_build_cache(os.getcwd(), arch, branch)
-    webgl_build_deploy_demo(context, verbose=True, content_addressable=False, force=True)
+    webgl_build_deploy_demo(
+        context, verbose=True, content_addressable=False, force=True
+    )
     logger.info("finished webgl build deploy %s %s" % (branch, commit_id))
     update_webgl_autodeploy_commit_id(commit_id)
 
 
 def set_gi_cache_folder(arch):
     gi_cache_folder = os.path.join(os.environ["HOME"], "GICache/%s" % arch)
-    plist_path = os.path.join(os.environ["HOME"], "Library/Preferences/com.unity3d.UnityEditor5.x.plist")
+    plist_path = os.path.join(
+        os.environ["HOME"], "Library/Preferences/com.unity3d.UnityEditor5.x.plist"
+    )
     # done to avoid race conditions when modifying GICache from more than one build
-    subprocess.check_call("plutil -replace GICacheEnableCustomPath -bool TRUE %s" % plist_path, shell=True)
-    subprocess.check_call("plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path), shell=True)
-    subprocess.check_call("plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,), shell=True)
+    subprocess.check_call(
+        "plutil -replace GICacheEnableCustomPath -bool TRUE %s" % plist_path, shell=True
+    )
+    subprocess.check_call(
+        "plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path),
+        shell=True,
+    )
+    subprocess.check_call(
+        "plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,),
+        shell=True,
+    )
+
 
 def ci_build_arch(
     root_dir: str,
     arch: str,
     commit_id: str,
-    build_success_queue: Optional[multiprocessing.Queue],
     include_private_scenes=False,
-    immediately_fail_and_push_log: bool = False
+    immediately_fail_and_push_log: bool = False,
+    timeout: int = 60 * 60,
 ):
-    os.chdir(root_dir)
-    unity_path = "unity"
-    build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes)
-    build_dir = os.path.join("builds", build_name)
-    build_path = build_dir + ".zip"
-    build_info = {}
-
-    start_time = time.time()
+    start_wd = os.getcwd()
     try:
-        build_info["log"] = f"{build_name}.log"
+        os.chdir(root_dir)
+        unity_path = "unity"
+        build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes)
+        build_dir = os.path.join("builds", build_name)
+        build_path = build_dir + ".zip"
+        build_info = {}
 
-        if immediately_fail_and_push_log:
-            raise ForcedFailure(
-                f"Build for {arch} {commit_id} was told to fail immediately, likely because a build for"
-                f" another architecture already failed."
+        start_time = time.time()
+        try:
+            build_info["log"] = f"{build_name}.log"
+
+            if immediately_fail_and_push_log:
+                raise ForcedFailure(
+                    f"Build for {arch} {commit_id} was told to fail immediately, likely because a build for"
+                    f" another architecture already failed."
+                )
+
+            env = {}
+            if include_private_scenes:
+                env["INCLUDE_PRIVATE_SCENES"] = "true"
+            set_gi_cache_folder(arch)
+
+            logger.info(f"Starting build for {arch} {commit_id}")
+            success = _build(
+                unity_path=unity_path,
+                arch=arch,
+                build_dir=build_dir,
+                build_name=build_name,
+                env=env,
+                timeout=timeout,
+            )
+            logger.info(
+                f"Finished build for {arch} {commit_id}, took {(time.time() - start_time) / 60:.2f} minutes. Success: {success}"
             )
 
-        env = {}
-        if include_private_scenes:
-            env["INCLUDE_PRIVATE_SCENES"] = "true"
-        set_gi_cache_folder(arch)
+            if not success:
+                raise Exception(f"Build for {arch} {commit_id} failed.")
 
-        logger.info(
-            f"starting build for {arch} {commit_id}"
-        )
-        _build(unity_path, arch, build_dir, build_name, env)
-        logger.info(f"finished build for {arch} {commit_id}, took {(time.time() - start_time) / 60:.2f} minutes")
-
-        archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes)
-        build_success_queue.put(True)
-    except Exception as e:
-        logger.info(f"Caught exception when building {arch} {commit_id} after {(time.time() - start_time) / 60:.2f} minutes: {e}")
-        build_info["build_exception"] = f"Exception building: {e}"
-        build_log_push(build_info, include_private_scenes)
-        build_success_queue.put(False)
-
-
+            archive_push(
+                unity_path=unity_path,
+                build_path=build_path,
+                build_dir=build_dir,
+                build_info=build_info,
+                include_private_scenes=include_private_scenes,
+            )
+            return True
+        except Exception as e:
+            logger.info(
+                f"Caught exception when building {arch} {commit_id} after {(time.time() - start_time) / 60:.2f} minutes: {e}"
+            )
+            build_info["build_exception"] = f"Exception building: {e}"
+            build_log_push(build_info, include_private_scenes)
+            return False
+    finally:
+        os.chdir(start_wd)
 
 @task
 def poll_ci_build(context):
-    import requests.exceptions
     import requests
     import datetime
 
@@ -1325,7 +1416,9 @@ def poll_ci_build(context):
     start_datetime = datetime.datetime.utcnow()
 
     hours_before_timeout = 2
-    print(f"WAITING FOR BUILDS TO COMPLETE ({hours_before_timeout} hours before timeout)")
+    print(
+        f"WAITING FOR BUILDS TO COMPLETE ({hours_before_timeout} hours before timeout)"
+    )
     start_time = time.time()
     last_emit_time = 0
     for i in range(360 * hours_before_timeout):
@@ -1341,9 +1434,11 @@ def poll_ci_build(context):
         for plat in check_platforms:
             commit_build = ai2thor.build.Build(plat, commit_id, False)
             try:
-                res = requests.head(commit_build.log_url)    
+                res = requests.head(commit_build.log_url)
                 if res.status_code == 200:
-                    last_modified = datetime.datetime.strptime(res.headers['Last-Modified'], '%a, %d %b %Y %H:%M:%S GMT')
+                    last_modified = datetime.datetime.strptime(
+                        res.headers["Last-Modified"], "%a, %d %b %Y %H:%M:%S GMT"
+                    )
                     # if a build is restarted, a log from a previous build will exist
                     # but its last-modified date will precede the start datetime
                     if last_modified > start_datetime or commit_build.exists():
@@ -1371,12 +1466,17 @@ def poll_ci_build(context):
         success = commit_build.exists()
         any_failures = any_failures or not success
         if not success:
-            print(f"\nBuild DOES NOT exist for arch {plat}, expected log url: {commit_build.log_url}")
+            print(
+                f"\nBuild DOES NOT exist for arch {plat}, expected log url: {commit_build.log_url}"
+            )
         else:
-            print(f"\nBuild DOES exist for arch {plat}, log url: {commit_build.log_url}")
+            print(
+                f"\nBuild DOES exist for arch {plat}, log url: {commit_build.log_url}"
+            )
 
     if any_failures:
-        raise Exception(f"Build failures detected")
+        print(f"\nERROR: BUILD FAILURES DETECTED")
+        sys.exit(1)
 
     print("\nRETRIEVING `pytest` RESULTS")
 
@@ -1407,17 +1507,18 @@ def poll_ci_build(context):
                 print(f"No test data url's in json '{s3_pytest_url}'.")
 
             if not pytest_result["success"]:
-                raise Exception("pytest failure")
+                print("ERROR: pytest FAILURE")
+                sys.exit(1)
             break
         time.sleep(10)
 
     if pytest_missing:
-        raise Exception("Missing pytest output")
+        print("\nERROR: MISSING pytest OUTPUT")
+        sys.exit(1)
 
 
 @task
 def build(context, local=False):
-
     version = datetime.datetime.now().strftime("%Y%m%d%H%M")
 
     builds = {"Docker": {"tag": version}}
@@ -1429,7 +1530,9 @@ def build(context, local=False):
             if include_private_scenes:
                 env["INCLUDE_PRIVATE_SCENES"] = "true"
             unity_path = "unity"
-            build_name = ai2thor.build.build_name(plat.name(), version, include_private_scenes)
+            build_name = ai2thor.build.build_name(
+                plat.name(), version, include_private_scenes
+            )
             build_dir = os.path.join("builds", build_name)
             build_path = build_dir + ".zip"
             build_info = builds[plat.name()] = {}
@@ -1575,7 +1678,6 @@ def get_depth(
         os.makedirs(image_directory)
 
     if scene is None:
-
         env = ai2thor.robot_controller.Controller(
             host=host,
             port=port,
@@ -1741,7 +1843,6 @@ def inspect_depth(
 def real_2_sim(
     ctx, source_dir, index, scene, output_dir, rotation=0, local_build=False, jet=False
 ):
-    import numpy as np
     import cv2
     from ai2thor.util.transforms import transform_real_2_sim
 
@@ -1931,7 +2032,6 @@ def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
                 )
                 for j in event.metadata["objects"]:
                     if j["receptacle"] and j["visible"] and j["openable"]:
-
                         controller.step(
                             action=dict(
                                 action="Replace",
@@ -2279,7 +2379,7 @@ def webgl_site_deploy(
     verbose=False,
 ):
     from pathlib import Path
-    from os.path import isfile, join, isdir
+    from os.path import isfile, join
 
     template_dir = Path("unity/Assets/WebGLTemplates/{}".format(template_name))
 
@@ -2495,7 +2595,7 @@ def create_robothor_dataset(
 
         eps = 0.0001
         counter = 0
-        for (x, y, z) in final_point_set:
+        for x, y, z in final_point_set:
             possible_orientations = [0, 90, 180, 270]
             pos_unity = dict(x=x, y=y, z=z)
             try:
@@ -2601,7 +2701,6 @@ def create_robothor_dataset(
         dataset["object_types"] = targets
         objects = []
         for objectType in targets:
-
             if filter_file is None or (
                 objectType in scene_object_filter
                 and scene in scene_object_filter[objectType]
@@ -2609,7 +2708,6 @@ def create_robothor_dataset(
                 dataset[scene][objectType] = []
                 obj = get_points(controller, objectType, scene)
                 if obj is not None:
-
                     objects = objects + obj
 
         dataset_flat = dataset_flat + objects
@@ -3105,7 +3203,6 @@ def fill_in_dataset(
 @task
 def test_teleport(ctx, editor_mode=False, local_build=False):
     import ai2thor.controller
-    import time
 
     controller = ai2thor.controller.Controller(
         rotateStepDegrees=30,
@@ -3141,7 +3238,6 @@ def test_teleport(ctx, editor_mode=False, local_build=False):
 
 @task
 def resort_dataset(ctx, dataset_path, output_path, editor_mode=False, local_build=True):
-
     with open(dataset_path, "r") as f:
         dataset = json.load(f)
 
@@ -3197,7 +3293,6 @@ def resort_dataset(ctx, dataset_path, output_path, editor_mode=False, local_buil
 
 @task
 def remove_dataset_spaces(ctx, dataset_dir):
-
     train = os.path.join(dataset_dir, "train.json")
     test = os.path.join(dataset_dir, "val.json")
 
@@ -3263,7 +3358,6 @@ def shortest_path_to_point(ctx, scene, x0, y0, z0, x1, y1, z1, editor_mode=False
 
 @task
 def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
-    import ai2thor.util.metrics as metrics
     import ai2thor.controller
 
     gridSize = 0.25
@@ -3373,6 +3467,7 @@ def get_physics_determinism(
             )
         )
 
+
 @task
 def generate_pypi_index(context):
     s3 = boto3.resource("s3")
@@ -3422,7 +3517,10 @@ def ci_test_utf(branch, commit_id, base_dir):
         f.write("\n".join(class_data))
 
     proc = subprocess.run(
-        "pytest %s" % test_path, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        "pytest %s" % test_path,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
 
     result = dict(
@@ -3434,11 +3532,7 @@ def ci_test_utf(branch, commit_id, base_dir):
     with open("tmp/test_utf_results.json", "w") as f:
         f.write(json.dumps(result))
 
-
-    logger.info(
-        "finished Unity Test framework runner for %s %s"
-        % (branch, commit_id)
-    )
+    logger.info("finished Unity Test framework runner for %s %s" % (branch, commit_id))
 
 
 @task
@@ -3505,7 +3599,6 @@ def install_dotnet(context, force=False):
 
 @task
 def format_py(context):
-
     try:
         import black
     except ImportError:
@@ -3517,14 +3610,18 @@ def format_py(context):
 
 
 @task
-def install_unity_hub(context, target_dir=os.path.join(os.path.expanduser("~"), "local/bin")):
+def install_unity_hub(
+    context, target_dir=os.path.join(os.path.expanduser("~"), "local/bin")
+):
     import stat
     import requests
 
     if not sys.platform.startswith("linux"):
         raise Exception("Installation only support for Linux")
-    
-    res = requests.get("https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage")
+
+    res = requests.get(
+        "https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage"
+    )
     res.raise_for_status()
     os.makedirs(target_dir, exist_ok=True)
 
@@ -3538,7 +3635,10 @@ def install_unity_hub(context, target_dir=os.path.join(os.path.expanduser("~"), 
         os.unlink(target_path)
 
     os.rename(tmp_path, target_path)
-    os.chmod(target_path, stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP  | stat.S_IROTH | stat.S_IXOTH)
+    os.chmod(
+        target_path,
+        stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH,
+    )
     print("Installed UnityHub at %s" % target_path)
 
 
@@ -3546,9 +3646,12 @@ def install_unity_hub(context, target_dir=os.path.join(os.path.expanduser("~"), 
 def install_unity_editor(context, version=None, changeset=None):
     import yaml
     import re
+
     unity_hub_path = None
     if sys.platform.startswith("linux"):
-        unity_hub_path = os.path.join(os.path.expanduser("~"), "local/bin/UnityHub.AppImage")
+        unity_hub_path = os.path.join(
+            os.path.expanduser("~"), "local/bin/UnityHub.AppImage"
+        )
     elif sys.platform.startswith("darwin"):
         unity_hub_path = "/Applications/Unity\ Hub.app/Contents/MacOS/Unity\ Hub --"
     else:
@@ -3557,12 +3660,18 @@ def install_unity_editor(context, version=None, changeset=None):
     if version is None:
         with open("unity/ProjectSettings/ProjectVersion.txt") as pf:
             project_version = yaml.load(pf.read(), Loader=yaml.FullLoader)
-        m = re.match(r'^([^\s]+)\s+\(([a-zAZ0-9]+)\)', project_version["m_EditorVersionWithRevision"])
+        m = re.match(
+            r"^([^\s]+)\s+\(([a-zAZ0-9]+)\)",
+            project_version["m_EditorVersionWithRevision"],
+        )
 
-        assert m, "Could not extract version/changeset from %s" % project_version["m_EditorVersionWithRevision"]
+        assert m, (
+            "Could not extract version/changeset from %s"
+            % project_version["m_EditorVersionWithRevision"]
+        )
         version = m.group(1)
         changeset = m.group(2)
-    command = "%s --headless install --version %s" % (unity_hub_path, version) 
+    command = "%s --headless install --version %s" % (unity_hub_path, version)
     if changeset:
         command += " --changeset %s" % changeset
 
@@ -3573,26 +3682,34 @@ def install_unity_editor(context, version=None, changeset=None):
     for m in platform_modules[sys.platform]:
         command += " -m %s" % m
 
-
     subprocess.check_call(command, shell=True)
+
 
 @task
 def generate_unity_alf(context):
-    # generates Unity License Acitivation file for use 
+    # generates Unity License Acitivation file for use
     # with manual activation https://docs.unity3d.com/Manual/ManualActivationGuide.html
 
     alf_path = "Unity_v%s.alf" % _unity_version()
-    subprocess.run("%s -batchmode -createManualActivationFile" % _unity_path(), shell=True)
+    subprocess.run(
+        "%s -batchmode -createManualActivationFile" % _unity_path(), shell=True
+    )
     assert os.path.isfile(alf_path), "ALF not found at %s" % alf_path
 
-    print("ALF created at %s. Activate license at: https://license.unity3d.com/manual" % alf_path)
-   
+    print(
+        "ALF created at %s. Activate license at: https://license.unity3d.com/manual"
+        % alf_path
+    )
+
+
 @task
 def activate_unity_license(context, ulf_path):
-
     assert os.path.isfile(ulf_path), "License file '%s' not found" % ulf_path
 
-    subprocess.run('%s -batchmode -manualLicenseFile "%s"' % (_unity_path(), ulf_path), shell=True)
+    subprocess.run(
+        '%s -batchmode -manualLicenseFile "%s"' % (_unity_path(), ulf_path), shell=True
+    )
+
 
 def test_utf(base_dir=None):
     """
@@ -3683,18 +3800,25 @@ class {encoded_class_name}:
 
     return class_data
 
+
 @task
-def create_room(ctx, file_path="unity/Assets/Resources/rooms/1.json", editor_mode=False, local_build=False):
+def create_room(
+    ctx,
+    file_path="unity/Assets/Resources/rooms/1.json",
+    editor_mode=False,
+    local_build=False,
+):
     import ai2thor.controller
-    import random
     import json
     import os
+
     print(os.getcwd())
     width = 300
     height = 300
     fov = 100
     n = 20
     import os
+
     controller = ai2thor.controller.Controller(
         local_executable_path=None,
         local_build=local_build,
@@ -3704,9 +3828,9 @@ def create_room(ctx, file_path="unity/Assets/Resources/rooms/1.json", editor_mod
         width=width,
         height=height,
         fieldOfView=fov,
-        agentControllerType='mid-level',
+        agentControllerType="mid-level",
         server_class=ai2thor.fifo_server.FifoServer,
-        visibilityScheme='Distance'
+        visibilityScheme="Distance",
     )
 
     # print(
@@ -3736,18 +3860,20 @@ def create_room(ctx, file_path="unity/Assets/Resources/rooms/1.json", editor_mod
                 walls=walls,
                 wallHeight=2.0,
                 wallMaterialId="DrywallOrange",
-                floorMaterialId="DarkWoodFloors"
+                floorMaterialId="DarkWoodFloors",
             )
         )
 
         for i in range(n):
             controller.step("MoveAhead")
 
+
 @task
 def test_render(ctx, editor_mode=False, local_build=False):
     import ai2thor.controller
     import cv2
     import numpy as np
+
     print(os.getcwd())
     width = 300
     height = 300
@@ -3764,7 +3890,7 @@ def test_render(ctx, editor_mode=False, local_build=False):
         fieldOfView=fov,
         agentCount=1,
         renderDepthImage=True,
-        server_class=ai2thor.fifo_server.FifoServer
+        server_class=ai2thor.fifo_server.FifoServer,
     )
 
     image_folder_path = "debug_img"
@@ -3777,8 +3903,8 @@ def test_render(ctx, editor_mode=False, local_build=False):
     from ai2thor.interact import InteractiveControllerPrompt
 
     obj = {
-      "id":"house_0",
-       "layout": """
+        "id": "house_0",
+        "layout": """
            0 0 0 0 0 0
            0 2 2 2 2 0
            0 2 2 2 2 0
@@ -3786,8 +3912,8 @@ def test_render(ctx, editor_mode=False, local_build=False):
            0 1 1 1 1 0
            0 0 0 0 0 0
         """,
-       "objectsLayouts":[
-          """
+        "objectsLayouts": [
+            """
             0 0 0 0 0 0
             0 2 2 2 2 0
             0 2 2 2 = 0
@@ -3795,94 +3921,79 @@ def test_render(ctx, editor_mode=False, local_build=False):
             0 1 1 1 + 0
             0 0 0 0 0 0
           """
-       ],
-       "rooms":{
-          "1":{
-             "wallTemplate":{
-                "unlit":False,
-                "color":{
-                   "r":1.0,
-                   "g":0.0,
-                   "b":0.0,
-                   "a":1.0
-                }
-             },
-             "floorTemplate":{
-                "roomType":"Bedroom",
-                "floorMaterial":"DarkWoodFloors",
-             },
-             "floorYPosition":0.0,
-             "wallHeight":3.0
-          },
-          "2":{
-             "wallTemplate":{
-                "unlit":False,
-                "color":{
-                   "r":0.0,
-                   "g":0.0,
-                   "b":1.0,
-                   "a":1.0
-                }
-             },
-             "floorTemplate":{
-                "roomType":"LivingRoom",
-                "floorMaterial":"RedBrick"
-             },
-             "floorYPosition":0.0,
-             "wallHeight":3.0
-          }
-       },
-       "holes":{
-          "=":{
-             "room0":"1",
-             "openness":1.0,
-             "assetId":"Doorway_1"
-          }
-       },
-       "objects":{
-          "+":{
-             "kinematic": True,
-             "assetId":"Chair_007_1"
-          }
-       },
-       "proceduralParameters":{
-          "floorColliderThickness":1.0,
-          "receptacleHeight":0.7,
-          "skyboxId":"Sky1",
-          "ceilingMaterial":"ps_mat"
-       }
-
+        ],
+        "rooms": {
+            "1": {
+                "wallTemplate": {
+                    "unlit": False,
+                    "color": {"r": 1.0, "g": 0.0, "b": 0.0, "a": 1.0},
+                },
+                "floorTemplate": {
+                    "roomType": "Bedroom",
+                    "floorMaterial": "DarkWoodFloors",
+                },
+                "floorYPosition": 0.0,
+                "wallHeight": 3.0,
+            },
+            "2": {
+                "wallTemplate": {
+                    "unlit": False,
+                    "color": {"r": 0.0, "g": 0.0, "b": 1.0, "a": 1.0},
+                },
+                "floorTemplate": {
+                    "roomType": "LivingRoom",
+                    "floorMaterial": "RedBrick",
+                },
+                "floorYPosition": 0.0,
+                "wallHeight": 3.0,
+            },
+        },
+        "holes": {"=": {"room0": "1", "openness": 1.0, "assetId": "Doorway_1"}},
+        "objects": {"+": {"kinematic": True, "assetId": "Chair_007_1"}},
+        "proceduralParameters": {
+            "floorColliderThickness": 1.0,
+            "receptacleHeight": 0.7,
+            "skyboxId": "Sky1",
+            "ceilingMaterial": "ps_mat",
+        },
     }
 
     pprint(obj)
 
     template = obj
 
-    evt = controller.step(
-        action="GetHouseFromTemplate",
-        template=template
-    )
+    evt = controller.step(action="GetHouseFromTemplate", template=template)
 
-    print("Action success {0}, message {1}".format( evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]))
+    print(
+        "Action success {0}, message {1}".format(
+            evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]
+        )
+    )
     house = evt.metadata["actionReturn"]
 
-    controller.step(
-        action="CreateHouse",
-        house=house
-    )
+    controller.step(action="CreateHouse", house=house)
 
-    evt = controller.step(dict(
-        action="TeleportFull", x=3.0, y=0.9010001, z=1.0, rotation=dict(x=0, y=0, z=0),
-        horizon=0, standing=True, forceAction=True
-    ))
+    evt = controller.step(
+        dict(
+            action="TeleportFull",
+            x=3.0,
+            y=0.9010001,
+            z=1.0,
+            rotation=dict(x=0, y=0, z=0),
+            horizon=0,
+            standing=True,
+            forceAction=True,
+        )
+    )
 
     cv2.namedWindow("image2")
     cv2.imshow("image2", evt.cv2img)
 
     if img is not None:
-
-        print(f'img r {img[0][0][0]} g {img[0][0][1]} b {img[0][0][2]}')
-        print(f'evt frame r {evt.cv2img[0][0][0]} g {evt.cv2img[0][0][1]} b {evt.cv2img[0][0][2]}')
+        print(f"img r {img[0][0][0]} g {img[0][0][1]} b {img[0][0][2]}")
+        print(
+            f"evt frame r {evt.cv2img[0][0][0]} g {evt.cv2img[0][0][1]} b {evt.cv2img[0][0][2]}"
+        )
 
         cv2.namedWindow("image")
 
@@ -3890,16 +4001,15 @@ def test_render(ctx, editor_mode=False, local_build=False):
 
         print(img.shape)
 
-
         print(np.allclose(evt.cv2img, img))
 
         raw_depth = np.load(os.path.join(image_folder_path, depth_filename))
 
-        print(f'depth evt {evt.depth_frame.shape} compare {raw_depth.shape}')
+        print(f"depth evt {evt.depth_frame.shape} compare {raw_depth.shape}")
 
         print(np.allclose(evt.depth_frame, raw_depth))
 
-        dx = np.where(~np.all(evt.cv2img == img,  axis=-1))
+        dx = np.where(~np.all(evt.cv2img == img, axis=-1))
 
         print(list(dx))
 
@@ -3913,17 +4023,13 @@ def test_render(ctx, editor_mode=False, local_build=False):
         print(img.shape)
         cv2.waitKey(0)
 
-
     else:
         cv2.waitKey(0)
 
     InteractiveControllerPrompt.write_image(
-        evt,
-        "debug_img",
-        "test",
-        depth_frame=True,
-        color_frame=True
+        evt, "debug_img", "test", depth_frame=True, color_frame=True
     )
+
 
 @task
 def create_json(ctx, file_path, output=None):
@@ -3939,84 +4045,88 @@ def create_json(ctx, file_path, output=None):
         return {"x": x, "y": y, "z": z}
 
     def point_wise_2(v1, v2, func):
-        return {k: func(v1[k], v2[k]) for k in ['x', 'y', 'z']}
+        return {k: func(v1[k], v2[k]) for k in ["x", "y", "z"]}
 
     def point_wise(v1, func):
-        return {k: func(v1[k]) for k in ['x', 'y', 'z']}
+        return {k: func(v1[k]) for k in ["x", "y", "z"]}
 
     def sum(vec):
         return functools.reduce(lambda a, b: a + b, vec.values())
 
     def sqr_dist(v1, v2):
-        return sum(point_wise(point_wise_2(v1, v2, sub), lambda x: x ** 2))
+        return sum(point_wise(point_wise_2(v1, v2, sub), lambda x: x**2))
 
     def wall_to_poly(wall):
-        return [ wall['p0'], wall['p1'], point_wise_2(wall['p1'], vec3(0, wall['height'], 0), add), point_wise_2(wall['p0'], vec3(0, wall['height'], 0), add)]
-
+        return [
+            wall["p0"],
+            wall["p1"],
+            point_wise_2(wall["p1"], vec3(0, wall["height"], 0), add),
+            point_wise_2(wall["p0"], vec3(0, wall["height"], 0), add),
+        ]
 
     def walls_to_floor_poly(walls):
         result = []
         wall_list = list(walls)
         eps = 1e-4
-        eps_sqr = eps ** 2
+        eps_sqr = eps**2
 
-        result.append(walls[0]['p0'])
+        result.append(walls[0]["p0"])
 
         while len(wall_list) != 0:
             wall = wall_list.pop(0)
-            p1 = wall['p1']
-            wall_list = sorted(wall_list, key=lambda w: sqr_dist(p1, w['p0']))
+            p1 = wall["p1"]
+            wall_list = sorted(wall_list, key=lambda w: sqr_dist(p1, w["p0"]))
             if len(wall_list) != 0:
                 closest = wall_list[0]
-                dist = sqr_dist(p1, closest['p0'])
+                dist = sqr_dist(p1, closest["p0"])
                 if dist < eps_sqr:
-                    result.append(closest['p0'])
+                    result.append(closest["p0"])
                 else:
                     return None
         return result
 
-
     with open(file_path, "r") as f:
         obj = json.load(f)
-        walls = \
-        [
+        walls = [
             [
                 {
                     "id": "wall_{}_{}".format(room_i, wall_indx),
                     "roomId": "room_{}".format(room_i),
-                    "material": wall['materialId'],
-                    "empty": wall['empty'] if 'empty' in wall else False,
-                    'polygon': wall_to_poly(wall)
-                } for (wall, wall_indx) in zip(room["walls"], range(0, len(room["walls"])))
-            ] for (room, room_i) in zip(obj["rooms"], range(len(obj["rooms"])))
+                    "material": wall["materialId"],
+                    "empty": wall["empty"] if "empty" in wall else False,
+                    "polygon": wall_to_poly(wall),
+                }
+                for (wall, wall_indx) in zip(
+                    room["walls"], range(0, len(room["walls"]))
+                )
+            ]
+            for (room, room_i) in zip(obj["rooms"], range(len(obj["rooms"])))
         ]
 
-
-        rooms = \
-        [
+        rooms = [
             {
                 "id": "room_{}".format(room_i),
                 "type": "",
-                "floorMaterial": room['rectangleFloor']['materialId'],
+                "floorMaterial": room["rectangleFloor"]["materialId"],
                 "children": [],
                 "ceilings": [],
-                "floorPolygon": walls_to_floor_poly(room["walls"])}
+                "floorPolygon": walls_to_floor_poly(room["walls"]),
+            }
             for (room, room_i) in zip(obj["rooms"], range(len(obj["rooms"])))
-
         ]
 
         walls = list(itertools.chain(*walls))
 
         house = {
-            'rooms': rooms,
-            'walls': walls,
-            'proceduralParameters': {
-                'ceilingMaterial': obj['ceilingMaterialId'],
+            "rooms": rooms,
+            "walls": walls,
+            "proceduralParameters": {
+                "ceilingMaterial": obj["ceilingMaterialId"],
                 "floorColliderThickness": 1.0,
                 "receptacleHeight": 0.7,
                 "skyboxId": "Sky1",
-                "lights": []
-            }
+                "lights": [],
+            },
         }
 
         pprint(house)
@@ -4029,7 +4139,6 @@ def create_json(ctx, file_path, output=None):
 @task
 def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False):
     import ai2thor.controller
-    import random
     import json
     import os
     import time
@@ -4041,6 +4150,7 @@ def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False
     n = 20
     import os
     from pprint import pprint
+
     controller = ai2thor.controller.Controller(
         local_executable_path=None,
         local_build=local_build,
@@ -4050,9 +4160,9 @@ def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False
         width=width,
         height=height,
         fieldOfView=fov,
-        agentControllerType='mid-level',
+        agentControllerType="mid-level",
         server_class=ai2thor.fifo_server.FifoServer,
-        visibilityScheme='Distance'
+        visibilityScheme="Distance",
     )
 
     # print(
@@ -4075,38 +4185,42 @@ def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False
     with open(file_path, "r") as f:
         obj = json.load(f)
 
-        obj['walls'] = [wall for wall in obj['walls'] if wall['roomId'] == room_id]
-        obj['rooms'] = [room for room in obj['rooms'] if room['id'] == room_id]
-        obj['objects'] = []
+        obj["walls"] = [wall for wall in obj["walls"] if wall["roomId"] == room_id]
+        obj["rooms"] = [room for room in obj["rooms"] if room["id"] == room_id]
+        obj["objects"] = []
 
         pprint(obj)
+        evt = controller.step(dict(action="CreateHouseFromJson", house=obj))
+
         evt = controller.step(
             dict(
-                action="CreateHouseFromJson",
-                house=obj
+                action="TeleportFull",
+                x=4.0,
+                y=0.9010001,
+                z=4.0,
+                rotation=dict(x=0, y=0, z=0),
+                horizon=30,
+                standing=True,
+                forceAction=True,
             )
         )
-
-        evt = controller.step(dict(
-            action="TeleportFull", x=4.0, y=0.9010001, z=4.0, rotation=dict(x=0, y=0, z=0),
-            horizon = 30, standing = True, forceAction = True
-        ))
         # dict("axis" = dict(x=0, y=1.0, z=0), "degrees": 90)
 
         # SpawnObjectInReceptacleRandomly(string objectId, string prefabName, string targetReceptacle, AxisAngleRotation rotation)
-        evt = controller.step(dict(
-            action="SpawnObjectInReceptacleRandomly",
-            objectId="table_1",
-            prefabName="Coffee_Table_211_1",
-            targetReceptacle="Floor|+00.00|+00.00|+00.00",
-
-            rotation=dict(axis=dict(x=0, y=1.0, z=0), degrees=90)
-        ))
-        print(evt.metadata['lastActionSuccess'])
-        print(evt.metadata['errorMessage'])
+        evt = controller.step(
+            dict(
+                action="SpawnObjectInReceptacleRandomly",
+                objectId="table_1",
+                prefabName="Coffee_Table_211_1",
+                targetReceptacle="Floor|+00.00|+00.00|+00.00",
+                rotation=dict(axis=dict(x=0, y=1.0, z=0), degrees=90),
+            )
+        )
+        print(evt.metadata["lastActionSuccess"])
+        print(evt.metadata["errorMessage"])
 
         # this is what you need
-        object_position = evt.metadata['actionReturn'];
+        object_position = evt.metadata["actionReturn"]
 
         print(object_position)
 
@@ -4117,41 +4231,42 @@ def spawn_obj_test(ctx, file_path, room_id, editor_mode=False, local_build=False
             controller.step("RotateRight")
             time.sleep(0.7)
 
+
 @task
 def plot(
-        ctx,
-        benchamrk_filenames,
-        plot_titles=None,
-        x_label="Rooms",
-        y_label="Actions Per Second",
-        title="Procedural Benchmark",
-        last_ithor=False,
-        output_filename="benchmark",
-        width=9.50,
-        height=7.5,
-        action_breakdown=False
+    ctx,
+    benchamrk_filenames,
+    plot_titles=None,
+    x_label="Rooms",
+    y_label="Actions Per Second",
+    title="Procedural Benchmark",
+    last_ithor=False,
+    output_filename="benchmark",
+    width=9.50,
+    height=7.5,
+    action_breakdown=False,
 ):
     import matplotlib.pyplot as plt
     from functools import reduce
     from matplotlib.lines import Line2D
 
-    filter = 'all'
+    filter = "all"
 
-    def get_data(benchmark, filter='all'):
-        keys = list(benchmark['scenes'].keys())
+    def get_data(benchmark, filter="all"):
+        keys = list(benchmark["scenes"].keys())
         if filter is not None:
-            y = [benchmark['scenes'][m][filter] for m in keys]
+            y = [benchmark["scenes"][m][filter] for m in keys]
         else:
-            y = [benchmark['scenes'][m] for m in keys]
+            y = [benchmark["scenes"][m] for m in keys]
         return keys, y
 
     def load_benchmark_filename(filename):
         with open(filename) as f:
             return json.load(f)
 
-    def get_benchmark_title(benchmark, default_title=''):
-        if 'title' in benchmark:
-            return benchmark['title']
+    def get_benchmark_title(benchmark, default_title=""):
+        if "title" in benchmark:
+            return benchmark["title"]
         else:
             return default_title
 
@@ -4163,22 +4278,39 @@ def plot(
     markers.pop(1)
     benchmarks = [load_benchmark_filename(filename) for filename in benchmark_filenames]
 
-    benchmark_titles = [get_benchmark_title(b, '') for (i, b) in zip(range(0, len(benchmarks)), benchmarks)]
+    benchmark_titles = [
+        get_benchmark_title(b, "")
+        for (i, b) in zip(range(0, len(benchmarks)), benchmarks)
+    ]
 
     if plot_titles is not None:
         titles = plot_titles.split(",")
     else:
-        titles = [''] * len(benchmark_titles)
+        titles = [""] * len(benchmark_titles)
 
-    plot_titles = [benchmark_titles[i] if title == '' else title for (i, title) in zip(range(0, len(titles)), titles)]
+    plot_titles = [
+        benchmark_titles[i] if title == "" else title
+        for (i, title) in zip(range(0, len(titles)), titles)
+    ]
 
-    filter = 'all' if not action_breakdown else None
+    filter = "all" if not action_breakdown else None
     all_data = [get_data(b, filter) for b in benchmarks]
 
-    import numpy as np
     if action_breakdown:
-        plot_titles = reduce(list.__add__, [["{} {}".format(title, action) for action in all_data[0][1][0]] for title in plot_titles])
-        all_data = reduce(list.__add__,[[(x, [y[action] for y in b]) for action in all_data[0][1][0]] for (x, b) in all_data])
+        plot_titles = reduce(
+            list.__add__,
+            [
+                ["{} {}".format(title, action) for action in all_data[0][1][0]]
+                for title in plot_titles
+            ],
+        )
+        all_data = reduce(
+            list.__add__,
+            [
+                [(x, [y[action] for y in b]) for action in all_data[0][1][0]]
+                for (x, b) in all_data
+            ],
+        )
 
     keys = [k for (k, y) in all_data]
     y = [y for (k, y) in all_data]
@@ -4190,14 +4322,19 @@ def plot(
     plt.rcParams["figure.autolayout"] = True
     fig = plt.figure()
 
-    for (i, (x, y)) in zip(range(0, len(all_data)), all_data):
+    for i, (x, y) in zip(range(0, len(all_data)), all_data):
         marker = markers[i] if i < len(markers) else "*"
 
         ithor_datapoint = last_ithor and i == len(all_data) - 1
 
-        x_a =  all_data[i-1][0] if ithor_datapoint else x
+        x_a = all_data[i - 1][0] if ithor_datapoint else x
 
-        plt.plot([x_s.split('/')[-1].split("_")[0] for x_s in x_a], y, marker=marker, label=plot_titles[i])
+        plt.plot(
+            [x_s.split("/")[-1].split("_")[0] for x_s in x_a],
+            y,
+            marker=marker,
+            label=plot_titles[i],
+        )
 
         if ithor_datapoint:
             for j in range(len(x)):
@@ -4211,47 +4348,49 @@ def plot(
     plt.title(title)
     plt.legend()
 
-    plt.savefig('{}.png'.format(output_filename.replace(".png", "")))
+    plt.savefig("{}.png".format(output_filename.replace(".png", "")))
+
 
 @task
 def run_benchmark(
-        ctx,
-        width=600,
-        height=600,
-        fov=45,
-        editor_mode=False,
-        out="benchmark.json",
-        verbose=False,
-        local_build=False,
-        number_samples=100,
-        gridSize=0.25,
-        scenes=None,
-        house_json_path=None,
-        filter_object_types="",
-        teleport_random_before_actions=False,
-        commit_id=ai2thor.build.COMMIT_ID,
-        distance_visibility_scheme=False,
-        title=""
+    ctx,
+    width=600,
+    height=600,
+    fov=45,
+    editor_mode=False,
+    out="benchmark.json",
+    verbose=False,
+    local_build=False,
+    number_samples=100,
+    gridSize=0.25,
+    scenes=None,
+    house_json_path=None,
+    filter_object_types="",
+    teleport_random_before_actions=False,
+    commit_id=ai2thor.build.COMMIT_ID,
+    distance_visibility_scheme=False,
+    title="",
 ):
-
     import json
     import os
     import ai2thor.wsgi_server as ws
     import ai2thor.fifo_server as fs
+
     path = os.path.abspath(fs.__file__)
     print(path)
     import ai2thor.benchmarking as benchmark
+
     args = dict(
-        local_executable_path = None,
-        local_build = local_build,
-        start_unity = False if editor_mode else True,
-        commit_id = commit_id,
-        gridSize = 0.25,
-        width = width,
-        height = height,
-        fieldOfView = fov,
-        server_type = ai2thor.wsgi_server.WsgiServer.server_type,
-        visibilityScheme = 'Distance' if distance_visibility_scheme else 'Collider'
+        local_executable_path=None,
+        local_build=local_build,
+        start_unity=False if editor_mode else True,
+        commit_id=commit_id,
+        gridSize=0.25,
+        width=width,
+        height=height,
+        fieldOfView=fov,
+        server_type=ai2thor.wsgi_server.WsgiServer.server_type,
+        visibilityScheme="Distance" if distance_visibility_scheme else "Collider",
     )
     if editor_mode:
         args["port"] = 8200
@@ -4281,15 +4420,12 @@ def run_benchmark(
         benchmarker_class_names=["SimsPerSecondBenchmarker"],
         init_params=args,
         name=title,
-
         scenes=scenes,
         procedural_houses=houses,
-
         action_sample_count=number_samples,
         experiment_sample_count=1,
         filter_object_types=filter_object_types,
         teleport_random_before_actions=teleport_random_before_actions,
-
         verbose=verbose,
         output_file=out,
     )
@@ -4300,26 +4436,26 @@ def run_benchmark(
                     {"action": "MoveAhead", "args": {}},
                     {"action": "MoveBack", "args": {}},
                     {"action": "MoveLeft", "args": {}},
-                    {"action": "MoveRight", "args": {}}
+                    {"action": "MoveRight", "args": {}},
                 ],
-                "sample_count": number_samples, # optional field, will be added from action_sample_count param if not present
-                "selector": "random"
+                "sample_count": number_samples,  # optional field, will be added from action_sample_count param if not present
+                "selector": "random",
             },
             "rotate": {
                 "actions": [
                     {"action": "RotateRight", "args": {}},
-                    {"action": "RotateLeft", "args": {}}
+                    {"action": "RotateLeft", "args": {}},
                 ],
                 "sample_count": number_samples,
-                "selector": "random"
+                "selector": "random",
             },
             "look": {
                 "actions": [
                     {"action": "LookUp", "args": {}},
-                    {"action": "LookDown", "args": {}}
+                    {"action": "LookDown", "args": {}},
                 ],
                 "sample_count": number_samples,
-                "selector": "random"
+                "selector": "random",
             },
             "all": {
                 "actions": [
@@ -4330,11 +4466,11 @@ def run_benchmark(
                     {"action": "RotateRight", "args": {}},
                     {"action": "RotateLeft", "args": {}},
                     {"action": "LookUp", "args": {}},
-                    {"action": "LookDown", "args": {}}
+                    {"action": "LookDown", "args": {}},
                 ],
                 "sample_count": number_samples,
-                "selector": "random"
-            }
+                "selector": "random",
+            },
         }
     )
 
@@ -4345,61 +4481,68 @@ def run_benchmark(
 @task
 def run_benchmark_from_s3_config(ctx):
     import copy
-    from datetime import datetime, date, timezone
+    from datetime import datetime, timezone
     from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET, UnityActionBenchmarkRunner
-    client = boto3.client('s3')
+
+    client = boto3.client("s3")
 
     response = client.list_objects_v2(
-        Bucket=BENCHMARKING_S3_BUCKET,
-        Prefix='benchmark_jobs/'
+        Bucket=BENCHMARKING_S3_BUCKET, Prefix="benchmark_jobs/"
     )
 
     s3 = boto3.resource("s3", region_name="us-west-2")
     benchmark_runs = []
-    for content in response.get('Contents', []):
-        key = content['Key']
+    for content in response.get("Contents", []):
+        key = content["Key"]
         if key.split(".")[-1] == "json":
             print(f"Key: {key}")
-            obj = s3.Object(BENCHMARKING_S3_BUCKET, content['Key'])
-            benchmark_run_config = json.loads(obj.get()['Body'].read().decode('utf-8'))
+            obj = s3.Object(BENCHMARKING_S3_BUCKET, content["Key"])
+            benchmark_run_config = json.loads(obj.get()["Body"].read().decode("utf-8"))
             procedural_houses_transformed = []
-            if 'procedural_houses' in benchmark_run_config:
-                for procedural_house in benchmark_run_config['procedural_houses']:
+            if "procedural_houses" in benchmark_run_config:
+                for procedural_house in benchmark_run_config["procedural_houses"]:
                     if isinstance(procedural_house, str):
-                        house_obj = s3.Object(BENCHMARKING_S3_BUCKET, f"procedural_houses/{procedural_house}")
-                        house_json = json.loads(house_obj.get()['Body'].read().decode('utf-8'))
+                        house_obj = s3.Object(
+                            BENCHMARKING_S3_BUCKET,
+                            f"procedural_houses/{procedural_house}",
+                        )
+                        house_json = json.loads(
+                            house_obj.get()["Body"].read().decode("utf-8")
+                        )
                         if "id" not in house_json:
                             house_json["id"] = procedural_house.split(".")[0]
                         procedural_houses_transformed.append(house_json)
                     elif isinstance(procedural_house, dict):
                         procedural_houses_transformed.append(procedural_house)
-            benchmark_run_config['procedural_houses'] = procedural_houses_transformed
+            benchmark_run_config["procedural_houses"] = procedural_houses_transformed
             benchmark_run_config["config_name"] = os.path.basename(key)
             # benchmark_run_config['verbose'] = True
 
             action_groups = copy.deepcopy(benchmark_run_config["action_groups"])
             del benchmark_run_config["action_groups"]
             benchmark_runs.append(
-                (
-                    UnityActionBenchmarkRunner(
-                        **benchmark_run_config
-                    ),
-                    action_groups
-                )
+                (UnityActionBenchmarkRunner(**benchmark_run_config), action_groups)
             )
     report_nowutc = datetime.now(timezone.utc)
     report_name = f"{round(report_nowutc.timestamp())}_benchmark.json"
     benchmark_results = []
-    for (benchmark_runner, action_group) in benchmark_runs:
+    for benchmark_runner, action_group in benchmark_runs:
         benchmark_nowutc = datetime.now(timezone.utc)
         benchmark_result = benchmark_runner.benchmark(action_group)
-        benchmark_result["datetime_utc"] =  str(report_nowutc)
+        benchmark_result["datetime_utc"] = str(report_nowutc)
         benchmark_results.append(benchmark_result)
 
     try:
         logger.info(f"Pushing benchmark result '{report_name}'")
         s3.Object(BENCHMARKING_S3_BUCKET, f"benchmark_results/{report_name}").put(
-            Body=json.dumps(dict(timestamp_utc=round(report_nowutc.timestamp()), benchmark_results=benchmark_results), indent=4, sort_keys=True),
+            Body=json.dumps(
+                dict(
+                    timestamp_utc=round(report_nowutc.timestamp()),
+                    benchmark_results=benchmark_results,
+                ),
+                indent=4,
+                sort_keys=True,
+            ),
             ContentType="application/json",
         )
     except botocore.exceptions.ClientError as e:
@@ -4407,18 +4550,20 @@ def run_benchmark_from_s3_config(ctx):
 
     s3_aggregate_benchmark_results(ctx)
 
-    #TODO remove older benchmarks
+    # TODO remove older benchmarks
+
 
 @task
-def run_benchmark_from_local_config(ctx, config_path, house_from_s3=False, houses_path="./unity/Assets/Resources/rooms"):
+def run_benchmark_from_local_config(
+    ctx, config_path, house_from_s3=True, houses_path="./unity/Assets/Resources/rooms"
+):
     import copy
-    from datetime import datetime, date, timezone
     from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET, UnityActionBenchmarkRunner
-    client = boto3.client('s3')
+
+    client = boto3.client("s3")
 
     response = client.list_objects_v2(
-        Bucket=BENCHMARKING_S3_BUCKET,
-        Prefix='benchmark_jobs/'
+        Bucket=BENCHMARKING_S3_BUCKET, Prefix="benchmark_jobs/"
     )
     s3 = boto3.resource("s3", region_name="us-west-2")
     benchmark_runs = []
@@ -4426,67 +4571,70 @@ def run_benchmark_from_local_config(ctx, config_path, house_from_s3=False, house
     if key.split(".")[-1] == "json":
         print(key)
         procedural_houses_transformed = []
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             benchmark_run_config = json.load(f)
-        if 'procedural_houses' in benchmark_run_config:
-
+        if "procedural_houses" in benchmark_run_config:
             if not house_from_s3:
-                for procedural_house in benchmark_run_config['procedural_houses']:
+                for procedural_house in benchmark_run_config["procedural_houses"]:
                     if isinstance(procedural_house, str):
                         house_path = os.path.join(houses_path, procedural_house)
-                        with open(house_path, 'r') as f:
+                        with open(house_path, "r") as f:
                             house_json = json.load(f)
                             house_json["id"] = procedural_house
                             procedural_houses_transformed.append(house_json)
                     elif isinstance(procedural_house, dict):
                         procedural_houses_transformed.append(procedural_house)
             else:
-                for procedural_house in benchmark_run_config['procedural_houses']:
+                for procedural_house in benchmark_run_config["procedural_houses"]:
                     if isinstance(procedural_house, str):
-                        house_obj = s3.Object(BENCHMARKING_S3_BUCKET, f"procedural_houses/{procedural_house}")
-                        house_json = json.loads(house_obj.get()['Body'].read().decode('utf-8'))
+                        house_obj = s3.Object(
+                            BENCHMARKING_S3_BUCKET,
+                            f"procedural_houses/{procedural_house}",
+                        )
+                        house_json = json.loads(
+                            house_obj.get()["Body"].read().decode("utf-8")
+                        )
                         if "id" not in house_json:
                             house_json["id"] = procedural_house.split(".")[0]
                         procedural_houses_transformed.append(house_json)
                     elif isinstance(procedural_house, dict):
                         procedural_houses_transformed.append(procedural_house)
-        benchmark_run_config['procedural_houses'] = procedural_houses_transformed
+        benchmark_run_config["procedural_houses"] = procedural_houses_transformed
         # benchmark_run_config['verbose'] = True
 
         action_groups = copy.deepcopy(benchmark_run_config["action_groups"])
         del benchmark_run_config["action_groups"]
         benchmark_runs.append(
-            (
-                UnityActionBenchmarkRunner(
-                    **benchmark_run_config
-                ),
-                action_groups
-            )
+            (UnityActionBenchmarkRunner(**benchmark_run_config), action_groups)
         )
     benchmark_results = []
-    for (benchmark_runner, action_group) in benchmark_runs:
+    for benchmark_runner, action_group in benchmark_runs:
         benchmark_result = benchmark_runner.benchmark(action_group)
         benchmark_results.append(benchmark_result)
     print(benchmark_result)
 
-    with open("out_3.json", 'w') as f:
+    with open("out_3.json", "w") as f:
         json.dump(benchmark_results[0], f, indent=4)
 
-    #TODO remove older benchmarks
+    # TODO remove older benchmarks
+
 
 @task
 def add_daily_benchmark_config(ctx, benchmark_config_filename):
     import json
     import os
-    from jsonschema import validate
     from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET
+
     path = os.path.dirname(os.path.realpath(__file__))
 
     benchmark_config_basename = os.path.basename(benchmark_config_filename)
     print(path)
     benchmarking_config_schema = None
     s3 = boto3.resource("s3", region_name="us-west-2")
-    with open(os.path.join(path, "ai2thor", "benchmarking", "benchmark_config_schema.json"), "r") as f:
+    with open(
+        os.path.join(path, "ai2thor", "benchmarking", "benchmark_config_schema.json"),
+        "r",
+    ) as f:
         benchmarking_config_schema = json.load(f)
 
     with open(benchmark_config_filename, "r") as f:
@@ -4495,32 +4643,34 @@ def add_daily_benchmark_config(ctx, benchmark_config_filename):
     # validate(benchmark_config, schema=benchmarking_config_schema)
     try:
         logger.info(f"Pushing benchmark config '{benchmark_config_basename}'")
-        s3.Object(BENCHMARKING_S3_BUCKET, f"benchmark_jobs/{benchmark_config_basename}").put(
+        s3.Object(
+            BENCHMARKING_S3_BUCKET, f"benchmark_jobs/{benchmark_config_basename}"
+        ).put(
             Body=json.dumps(benchmark_config, indent=4),
             ContentType="application/json",
         )
     except botocore.exceptions.ClientError as e:
-        logger.error(f"Caught error uploading archive '{benchmark_config_basename}': {e}")
+        logger.error(
+            f"Caught error uploading archive '{benchmark_config_basename}': {e}"
+        )
 
 
 @task
 def s3_aggregate_benchmark_results(ctx):
     from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET
+
     bucket = BENCHMARKING_S3_BUCKET
-    client = boto3.client('s3')
-    response = client.list_objects_v2(
-        Bucket=bucket,
-        Prefix='benchmark_results/'
-    )
+    client = boto3.client("s3")
+    response = client.list_objects_v2(Bucket=bucket, Prefix="benchmark_results/")
 
     s3 = boto3.resource("s3", region_name="us-west-2")
     history = []
-    for content in response.get('Contents', []):
-        key = content['Key']
+    for content in response.get("Contents", []):
+        key = content["Key"]
         if key.split(".")[-1] == "json" and os.path.basename(key) != "history.json":
             print(f"Key: {key}")
-            obj = s3.Object(bucket, content['Key'])
-            benchmark_run = json.loads(obj.get()['Body'].read().decode('utf-8'))
+            obj = s3.Object(bucket, content["Key"])
+            benchmark_run = json.loads(obj.get()["Body"].read().decode("utf-8"))
             history.append(benchmark_run)
 
     history_name = "history.json"
@@ -4532,3 +4682,200 @@ def s3_aggregate_benchmark_results(ctx):
         )
     except botocore.exceptions.ClientError as e:
         logger.error(f"Caught error uploading archive '{report_name}': {e}")
+
+
+@task
+def test_create_prefab(ctx, json_path):
+    import json
+    import ai2thor.controller
+
+    controller = ai2thor.controller.Controller(
+        local_executable_path=None,
+        local_build=True,
+        # commit_id="2853447e90775ca4e6714ab4a6a8d4a1e36524e9",
+        start_unity=True,
+        scene="Procedural",
+        gridSize=0.25,
+        width=300,
+        height=300,
+        server_class=ai2thor.fifo_server.FifoServer,
+        visibilityScheme="Distance",
+    )
+    with open(json_path, "r") as f:
+        create_prefab_action = json.load(f)
+
+    print(f"build dirs: {controller._build.base_dir} {controller._build.tmp_dir}")
+
+    evt = controller.step(**(create_prefab_action[0]))
+
+    print(f"Action success: {evt.metadata['lastActionSuccess']}")
+    print(f'Error: {evt.metadata["errorMessage"]}')
+
+    print(f"ActionReturn: {evt.metadata['actionReturn']}")
+
+
+@task
+def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
+    import json
+    import ai2thor.controller
+    from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
+
+    hook_runner = ProceduralAssetHookRunner(
+        asset_directory=asset_dir, asset_symlink=True, verbose=True
+    )
+    controller = ai2thor.controller.Controller(
+        # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",
+        local_build=True,
+        # commit_id="3a4efefd5de1f2d455bd11c3d53da020c7a76f3b",
+        start_unity=True,
+        scene="Procedural",
+        gridSize=0.25,
+        width=300,
+        height=300,
+        server_class=ai2thor.fifo_server.FifoServer,
+        visibilityScheme="Distance",
+        action_hook_runner=hook_runner,
+    )
+
+    with open(house_path, "r") as f:
+        house = json.load(f)
+    instance_id = "asset_0"
+    if asset_id != "":
+        house["objects"] = [
+            {
+                "assetId": asset_id,
+                "id": instance_id,
+                "kinematic": True,
+                "position": {"x": 0, "y": 0, "z": 0},
+                "rotation": {"x": 0, "y": 0, "z": 0},
+                "layer": "Procedural2",
+                "material": None,
+            }
+        ]
+    evt = controller.step(action="CreateHouse", house=house)
+
+    print(
+        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    )
+    print(f'Error: {evt.metadata["errorMessage"]}')
+
+    evt = controller.step(dict(action="LookAtObjectCenter", objectId=instance_id))
+
+    print(
+        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    )
+    print(f'Error: {evt.metadata["errorMessage"]}')
+
+
+@task
+def procedural_asset_cache_test(
+    ctx, asset_dir, house_path, asset_ids="", cache_limit=1
+):
+    import json
+    import ai2thor.controller
+    from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
+
+    hook_runner = ProceduralAssetHookRunner(
+        asset_directory=asset_dir, asset_symlink=True, verbose=True, asset_limit=1
+    )
+    controller = ai2thor.controller.Controller(
+        # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",
+        # local_build=True,
+        # commit_id="3a4efefd5de1f2d455bd11c3d53da020c7a76f3b",
+        start_unity=False,
+        port=8200,
+        scene="Procedural",
+        gridSize=0.25,
+        width=300,
+        height=300,
+        server_class=ai2thor.wsgi_server.WsgiServer,
+        visibilityScheme="Distance",
+        action_hook_runner=hook_runner,
+    )
+    asset_ids = asset_ids.split(",")
+    with open(house_path, "r") as f:
+        house = json.load(f)
+    instance_id = "asset_0"
+
+    house["objects"] = []
+    middle = int(len(asset_ids) / 2)
+    i = 0
+    # print(asset_ids[:middle])
+    for asset_id in asset_ids[middle:]:
+        house["objects"].append(
+            {
+                "assetId": asset_id,
+                "id": f"{instance_id}_{i}",
+                "kinematic": True,
+                "position": {"x": 0, "y": 0, "z": i * 10},
+                "rotation": {"x": 0, "y": 0, "z": 0},
+                "layer": "Procedural2",
+                "material": None,
+            }
+        )
+        i += 1
+
+    evt = controller.step(action="CreateHouse", house=house)
+
+    print(
+        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    )
+    print(f'Error: {evt.metadata["errorMessage"]}')
+
+    evt = controller.step(
+        dict(action="LookAtObjectCenter", objectId=f"{instance_id}_0")
+    )
+
+    # while True:
+    #     pass
+
+    print(
+        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    )
+    print(f'Error: {evt.metadata["errorMessage"]}')
+
+    evt = controller.step(action="GetLRUCacheKeys")
+
+    print(
+        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    )
+    print(f'Error: {evt.metadata["errorMessage"]}')
+    print(f'return {evt.metadata["actionReturn"]}')
+
+    controller.reset()
+
+    print(f"mid: {middle} ")
+
+    # house["objects"] = house["objects"][middle:]
+
+    i = 0
+    # print(asset_ids[:middle])
+    for asset_id in asset_ids[:middle]:
+        house["objects"].append(
+            {
+                "assetId": asset_id,
+                "id": f"{instance_id}_{i}",
+                "kinematic": True,
+                "position": {"x": 0, "y": 0, "z": i * 10},
+                "rotation": {"x": 0, "y": 0, "z": 0},
+                "layer": "Procedural2",
+                "material": None,
+            }
+        )
+        i += 1
+
+    evt = controller.step(action="CreateHouse", house=house)
+
+    print(
+        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    )
+    print(f'Error: {evt.metadata["errorMessage"]}')
+
+    controller.reset()
+    evt = controller.step(action="GetLRUCacheKeys")
+
+    print(
+        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    )
+    print(f'Error: {evt.metadata["errorMessage"]}')
+    print(f'return {evt.metadata["actionReturn"]}')
