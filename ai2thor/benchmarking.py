@@ -34,7 +34,7 @@ class BenchmarkConfig:
         scenes: Optional[List[str]] = None,
         procedural_houses: Optional[List[Dict[str, Any]]] = None,
         action_group_sample_count: int = 1,
-        experiment_sample_count: int = 100,
+        experiment_sample_count: int = 1,
         filter_object_types: Union[None, str, List[str]] = None,
         random_teleport_before_action_group: bool = False,
         include_per_action_breakdown: bool = False,

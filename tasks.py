@@ -4561,12 +4561,13 @@ def run_benchmark_from_local_config(
     import copy
     from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET, UnityActionBenchmarkRunner
 
-    client = boto3.client("s3")
+    if house_from_s3:
+        client = boto3.client("s3")
 
-    response = client.list_objects_v2(
-        Bucket=BENCHMARKING_S3_BUCKET, Prefix="benchmark_jobs/"
-    )
-    s3 = boto3.resource("s3", region_name="us-west-2")
+        response = client.list_objects_v2(
+            Bucket=BENCHMARKING_S3_BUCKET, Prefix="benchmark_jobs/"
+        )
+        s3 = boto3.resource("s3", region_name="us-west-2")
     benchmark_runs = []
     key = config_path
     if key.split(".")[-1] == "json":
