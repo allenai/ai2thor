@@ -10,6 +10,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
             Debug.Log("ContinuousMovement.unrollSimulatePhysics()");
             int count = 0;
+            PhysicsSceneManager.PhysicsSimulateCallCount = 0;
             var previousAutoSimulate = Physics.autoSimulation;
             Physics.autoSimulation = false;
             while (enumerator.MoveNext()) {
@@ -404,7 +405,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             arm.manipulateArm();
 
             if (!Physics.autoSimulation) {
-                PhysicsSceneManager.PhysicsSimulateCallCount = 0;
                 if (fixedDeltaTime == 0f) {
                     Physics.SyncTransforms();
                 } else {
