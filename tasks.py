@@ -4555,7 +4555,8 @@ def run_benchmark_from_s3_config(ctx):
 
 @task
 def run_benchmark_from_local_config(
-    ctx, config_path, house_from_s3=True, houses_path="./unity/Assets/Resources/rooms"
+    ctx, config_path, house_from_s3=False, houses_path="./unity/Assets/Resources/rooms",
+    output="out.json"
 ):
     import copy
     from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET, UnityActionBenchmarkRunner
@@ -4613,7 +4614,7 @@ def run_benchmark_from_local_config(
         benchmark_results.append(benchmark_result)
     print(benchmark_result)
 
-    with open("out_3.json", "w") as f:
+    with open(output, "w") as f:
         json.dump(benchmark_results[0], f, indent=4)
 
     # TODO remove older benchmarks
