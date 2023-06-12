@@ -216,8 +216,8 @@ def _build(
             return False
 
         if elapsed // print_interval > (elapsed - print_interval) // print_interval:
-            print(
-                f"{print_interval}-second interval reached. Process is still running."
+            logger.info(
+                f"Build has been running for {elapsed:.2f} seconds."
             )
 
     logger.info(f"Exited with code {process.returncode}")
