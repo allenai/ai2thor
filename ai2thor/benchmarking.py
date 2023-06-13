@@ -166,16 +166,19 @@ class Benchmarker(ABC):
                 for dimension, slice in groups
             }
         else:
-            aggregated_groups = {
-                dimension:
-                    {
-                        "count": len(slice),
-                        aggregate_out_key: np.sum([v[self.aggregate_key()] for v in slice])
-                        / len(slice),
-                        "index": slice[0]["index"] if len(slice) == 1 else 0
-                    }
-                for dimension, slice in groups
-            }
+            aggregated_groups = {}
+            for dimension, slice in groups:
+                aggregate = {
+                    "count": len(slice),
+                    aggregate_out_key: np.sum([v[self.aggregate_key()] for v in slice])
+                    / len(slice),
+                    "index": slice[0]["index"] if len(slice) == 1 else 0
+                }
+                if "timeout" in aggregate and aggregate["timeout"]:
+                    aggregate["timeout_message"] = aggregate["message"]
+                if len(slice) == 1:
+                     aggregate["index"] = slice[0]["index"]
+                aggregated_groups[dimension] = aggregate
         return aggregated_groups
 
     @abstractmethod
@@ -198,8 +201,14 @@ class SimsPerSecondBenchmarker(Benchmarker):
         return "Simulations Per Second"
 
     def benchmark(self, env, action_config, add_key_values={}):
+        timeout_error = False
+        timeout_error_msg = ""
         start = time.perf_counter()
-        env.step(dict(action=action_config["action"], **action_config["args"]))
+        try:
+            env.step(dict(action=action_config["action"], **action_config["args"]))
+        except TimeoutError as te:
+            timeout_error = True
+            timeout_error_msg = str(te)
         end = time.perf_counter()
         frame_time = end - start
 
@@ -208,6 +217,9 @@ class SimsPerSecondBenchmarker(Benchmarker):
             "count": 1,
             self.aggregate_key(): frame_time,
         }
+        if timeout_error:
+            record["timeout"] = True
+            record["message"] = timeout_error_msg
         record = {**record, **add_key_values}
 
         return record
@@ -407,8 +419,8 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                     standing=True,
                 )
             )
-
-    def benchmark(self, action_map={}):
+    
+    def __init_env(self):
         args = self.init_params
         controller_params = copy.deepcopy(args)
         if "server_class" in args:
@@ -416,9 +428,10 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                 "server_class"
             ].server_type
             del controller_params["server_class"]
-
         env = ai2thor.controller.Controller(**args)
+        return env, controller_params
 
+    def __create_experiments(self):
         if self.scenes:
             if isinstance(self.scenes, list):
                 scene_list = self.scenes
@@ -458,6 +471,13 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             if not (scene == "Procedural" and procedural_house is None)
         ]
 
+        return experiment_list
+
+    def benchmark(self, action_map={}):
+        
+        env, controller_params = self.__init_env()
+        experiment_list = self.__create_experiments()
+
         benchmark_map = {
             "title": self.name,
             "config": self.config_name,
@@ -475,9 +495,9 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         scene_count = 0
 
         records_by_benchmarker = {}
-        exp_d = [(scene, procedural_house["id"], benchmarker, experiment_index) for scene, procedural_house, benchmarker, experiment_index in experiment_list]
 
         for scene, procedural_house, benchmarker, experiment_index in experiment_list:
+            timeout = False
             if scene is None:
                 scene = env.scene
             logger.info("Loading scene '{}'.".format(scene))
@@ -501,7 +521,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             records = []
            
             for action_group_name, action_group in action_setup.items():
-                print(f"---- benchmarking action group: {action_group_name}")
+                print(f"---- Action group: {action_group_name}")
                 if self.teleport_random_before_actions:
                     self.__teleport_to_random_reachable(env, house)
                 for i in range(action_group["sample_count"]):
@@ -521,7 +541,17 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                         },
                     )
                     records.append(record)
+                    if "timeout" in record and record["timeout"]:
+                        timeout = True
+                        break
+                
+                if timeout:
+                    break
+
             records_by_benchmarker[benchmarker.name()] = records
+
+            if timeout:
+                env = self.__init_env()
 
         env.stop()
 

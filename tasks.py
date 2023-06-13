@@ -4609,6 +4609,7 @@ def run_benchmark_from_local_config(
         if local_build:
             benchmark_run_config["init_params"]["commit_id"] = None
             benchmark_run_config["init_params"]["local_build"] = True
+            del benchmark_run_config["init_params"]["platform"]
         # benchmark_run_config['verbose'] = True
 
         action_groups = copy.deepcopy(benchmark_run_config["action_groups"])
@@ -4620,7 +4621,7 @@ def run_benchmark_from_local_config(
     for benchmark_runner, action_group in benchmark_runs:
         benchmark_result = benchmark_runner.benchmark(action_group)
         benchmark_results.append(benchmark_result)
-    print(benchmark_result)
+    # print(benchmark_result)
 
     with open(output, "w") as f:
         json.dump(benchmark_results[0], f, indent=4)
