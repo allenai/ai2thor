@@ -475,10 +475,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             print(f"-------- Benchmarker {benchmarker.name()}, experiment: {experiment_index}")
             timeout = False
             if scene is None:
-                if hasattr(env, 'scene'):
-                    scene = env.scene
-                else:
-                    scene = controller_params["scene"]
+                scene = env.scene
             logger.info("Loading scene '{}'.".format(scene))
             env.reset(scene)
 
@@ -531,7 +528,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             records_by_benchmarker[benchmarker.name()] = records
 
             if timeout:
-                env = self.__init_env()
+                env, controller_params = self.__init_env()
 
         env.stop()
 
