@@ -109,7 +109,7 @@ class Benchmarker(ABC):
     def benchmark(self, env, action_config, add_key_values={}):
         raise NotImplementedError
     
-    def step(self, env, action_config, out_errors={}):
+    def step_for_config(self, env, action_config, out_errors):
         evt = None
         try:
             evt = env.step(dict(action=action_config["action"], **action_config["args"]))
@@ -119,7 +119,7 @@ class Benchmarker(ABC):
         # TODO catch runtime error
         return evt
     
-    def step(self, env, action, out_errors={}, **kwargs):
+    def step(self, env, action, out_errors, **kwargs):
         evt = None
         try:
             evt = env.step(dict(action=action, **kwargs))
@@ -196,7 +196,7 @@ class SimsPerSecondBenchmarker(Benchmarker):
     def benchmark(self, env, action_config, add_key_values={}):
         errors = {}
         start = time.perf_counter()
-        self.step(env, action_config=action_config, out_errors=errors)
+        self.step_for_config(env, action_config=action_config, out_errors=errors)
         end = time.perf_counter()
         frame_time = end - start
 
@@ -231,7 +231,7 @@ class PhysicsSimulateCountBenchmarker(Benchmarker):
 
     def benchmark(self, env, action_config, add_key_values={}):
         errors = {}
-        self.step(env, action_config=action_config, out_errors=errors)
+        self.step_for_config(env, action_config=action_config, out_errors=errors)
 
         evt = self.step(env, action="GetPhysicsSimulateCount", out_errors=errors)
         if evt is not None:
