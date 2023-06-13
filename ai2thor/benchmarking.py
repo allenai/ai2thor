@@ -109,32 +109,15 @@ class Benchmarker(ABC):
     def benchmark(self, env, action_config, add_key_values={}):
         raise NotImplementedError
     
-    # def group_by(self, records, dimensions, transform=True, aggregate_out_key=None):
-    #     if not isinstance(dimensions, list):
-    #         dimensions = [dimensions]
-
-    #     if aggregate_out_key is None:
-    #         aggregate_out_key = self.aggregate_key()
-
-    #     grouper = itemgetter(*dimensions)
-
-    #     transform = lambda x: self.transform_aggregate(x) if transform else lambda x: x
-
-    #     groups = itertools.groupby(sorted(records, key=grouper), grouper)
-
-    #     groups = [(dimension, list(slice)) for dimension, slice in groups]
-
-    #     aggregated_groups = {
-    #         dimension: transform(
-    #             {
-    #                 "count": len(slice),
-    #                 aggregate_out_key: np.sum([v[self.aggregate_key()] for v in slice])
-    #                 / len(slice),
-    #             }
-    #         )
-    #         for dimension, slice in groups
-    #     }
-    #     return aggregated_groups
+    def step(self, env, action_config, out_record):
+        evt = None
+        try:
+            evt = env.step(dict(action=action_config["action"], **action_config["args"]))
+        except TimeoutError as te:
+            out_record["timeout"] = True
+            out_record["message"] = str(te)
+        # TODO catch runtime error
+        return evt
 
     def same(self, x):
         return x
@@ -201,14 +184,9 @@ class SimsPerSecondBenchmarker(Benchmarker):
         return "Simulations Per Second"
 
     def benchmark(self, env, action_config, add_key_values={}):
-        timeout_error = False
-        timeout_error_msg = ""
+        errors = {}
         start = time.perf_counter()
-        try:
-            env.step(dict(action=action_config["action"], **action_config["args"]))
-        except TimeoutError as te:
-            timeout_error = True
-            timeout_error_msg = str(te)
+        self.step(env, action_config=action_config, out_record=errors)
         end = time.perf_counter()
         frame_time = end - start
 
@@ -217,10 +195,7 @@ class SimsPerSecondBenchmarker(Benchmarker):
             "count": 1,
             self.aggregate_key(): frame_time,
         }
-        if timeout_error:
-            record["timeout"] = True
-            record["message"] = timeout_error_msg
-        record = {**record, **add_key_values}
+        record = {**record, **add_key_values, **errors}
 
         return record
 
@@ -245,13 +220,8 @@ class PhysicsSimulateCountBenchmarker(Benchmarker):
         return "Physics Simulate Count"
 
     def benchmark(self, env, action_config, add_key_values={}):
-        timeout_error = False
-        timeout_error_msg = ""
-        try:
-            env.step(dict(action=action_config["action"], **action_config["args"]))
-        except TimeoutError as te:
-            timeout_error = True
-            timeout_error_msg = str(te)
+        errors = {}
+        self.step(env, action_config=action_config, out_record=errors)
 
         evt = env.step(action="GetPhysicsSimulateCount")
         physics_simultate_count = evt.metadata["actionReturn"]
@@ -261,10 +231,7 @@ class PhysicsSimulateCountBenchmarker(Benchmarker):
             "count": 1,
             self.aggregate_key(): physics_simultate_count,
         }
-        if timeout_error:
-            record["timeout"] = True
-            record["message"] = timeout_error_msg
-        record = {**record, **add_key_values}
+        record = {**record, **add_key_values, **errors}
 
         return record
 
