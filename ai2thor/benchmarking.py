@@ -245,7 +245,13 @@ class PhysicsSimulateCountBenchmarker(Benchmarker):
         return "Physics Simulate Count"
 
     def benchmark(self, env, action_config, add_key_values={}):
-        env.step(dict(action=action_config["action"], **action_config["args"]))
+        timeout_error = False
+        timeout_error_msg = ""
+        try:
+            env.step(dict(action=action_config["action"], **action_config["args"]))
+        except TimeoutError as te:
+            timeout_error = True
+            timeout_error_msg = str(te)
 
         evt = env.step(action="GetPhysicsSimulateCount")
         physics_simultate_count = evt.metadata["actionReturn"]
@@ -255,6 +261,9 @@ class PhysicsSimulateCountBenchmarker(Benchmarker):
             "count": 1,
             self.aggregate_key(): physics_simultate_count,
         }
+        if timeout_error:
+            record["timeout"] = True
+            record["message"] = timeout_error_msg
         record = {**record, **add_key_values}
 
         return record
