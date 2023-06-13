@@ -245,7 +245,6 @@ class PhysicsSimulateCountBenchmarker(Benchmarker):
 
 class UnityActionBenchmarkRunner(BenchmarkConfig):
     def __clean_action(self, action: Union[str, Dict[str, Any]]):
-        print(f"__clean_action: {action}")
         if isinstance(action, str):           
             return {"action": action, "args": {}}
         if "args" not in action:
@@ -274,7 +273,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                 group_copy["selector"] = default_selector
             elif group_copy["selector"] == "sequence":
                 group_copy['it'] = iter(group_copy["actions"])
-                print(f"------- sequence {group_copy['it']} ")
+                
                 group_copy["selector"] = lambda x: next(group_copy['it'])
                 group_copy["sample_count"] = len(group_copy["actions"])
             # TODO: potentially add more selectors
@@ -473,6 +472,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         records_by_benchmarker = {}
 
         for scene, procedural_house, benchmarker, experiment_index in experiment_list:
+            print(f"-------- Benchmarker {benchmarker.name()}, experiment: {experiment_index}")
             timeout = False
             if scene is None:
                 scene = env.scene
@@ -500,6 +500,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                 print(f"---- Action group: {action_group_name}")
                 if self.teleport_random_before_actions:
                     self.__teleport_to_random_reachable(env, house)
+                    
                 for i in range(action_group["sample_count"]):
                     # print(f"Selector {action_group['selector']} action_g? {action_group} actions {action_group['actions']}")
                     action_config = action_group["selector"](action_group["actions"])
@@ -540,7 +541,6 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         by_action_single = {}
 
         for benchmarker in self.benchmarkers:
-            print(f"---- benchamrker {benchmarker}")
             benchmarker_records = [r for r in records_by_benchmarker[benchmarker.name()] if  r["benchmarker"] == benchmarker.name()]
             # print(f"---- benc {benchmarker_records}")
             # print("-----------")

@@ -4559,7 +4559,8 @@ def run_benchmark_from_local_config(
     house_from_s3=False, 
     houses_path="./unity/Assets/Resources/rooms",
     output="out.json",
-    local_build=False
+    local_build=False,
+    arch=None
 ):
     import copy
     from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET, UnityActionBenchmarkRunner
@@ -4606,10 +4607,15 @@ def run_benchmark_from_local_config(
                         procedural_houses_transformed.append(procedural_house)
         benchmark_run_config["procedural_houses"] = procedural_houses_transformed
 
+        if arch is not None:
+            benchmark_results["init_params"]["platform"] = arch
+
         if local_build:
             benchmark_run_config["init_params"]["commit_id"] = None
             benchmark_run_config["init_params"]["local_build"] = True
             del benchmark_run_config["init_params"]["platform"]
+        
+        
         # benchmark_run_config['verbose'] = True
 
         action_groups = copy.deepcopy(benchmark_run_config["action_groups"])
@@ -4621,6 +4627,7 @@ def run_benchmark_from_local_config(
     for benchmark_runner, action_group in benchmark_runs:
         benchmark_result = benchmark_runner.benchmark(action_group)
         benchmark_results.append(benchmark_result)
+
     # print(benchmark_result)
 
     with open(output, "w") as f:
