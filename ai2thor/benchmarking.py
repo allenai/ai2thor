@@ -476,8 +476,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
 
         records_by_benchmarker = {}
         exp_d = [(scene, procedural_house["id"], benchmarker, experiment_index) for scene, procedural_house, benchmarker, experiment_index in experiment_list]
-        print(f"Exp list {len(experiment_list)} , {exp_d}")
-        # print(experiment_list)
+
         for scene, procedural_house, benchmarker, experiment_index in experiment_list:
             if scene is None:
                 scene = env.scene
@@ -500,13 +499,15 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                 k: self.__get_complete_action_dict(group) for k, group in action_map.items()
             }
             records = []
+           
             for action_group_name, action_group in action_setup.items():
+                print(f"---- benchmarking action group: {action_group_name}")
                 if self.teleport_random_before_actions:
                     self.__teleport_to_random_reachable(env, house)
                 for i in range(action_group["sample_count"]):
                     # print(f"Selector {action_group['selector']} action_g? {action_group} actions {action_group['actions']}")
                     action_config = action_group["selector"](action_group["actions"])
-                    print(f"---- benchmarking action i {i}: {action_config}")
+                    print(f"-- benchmarking action i {i}: {action_config}")
                     record = benchmarker.benchmark(
                         env,
                         action_config,
