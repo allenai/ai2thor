@@ -647,7 +647,6 @@ class Controller(object):
         try:
             event = self.step(action="GetScenesInBuild")
             self._scenes_in_build = set(event.metadata["actionReturn"])
-            print(f"----- scenes {len(self._scenes_in_build)} scenes {self._scenes_in_build}")
         except ValueError as e:
             # will happen for old builds without GetScenesInBuild
             self._scenes_in_build = set()
