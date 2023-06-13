@@ -6871,10 +6871,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
-        public void AssetsInDatabase(List<string> assetIds, bool updataProceduralLRUCache = false) {
+        public void AssetsInDatabase(List<string> assetIds, bool updateProceduralLRUCache = false) {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             
-            if (updataProceduralLRUCache) {
+            if (updateProceduralLRUCache) {
                 assetDB.touchProceduralLRUCache(assetIds);
             }
             var assetMap = assetDB.assetMap;

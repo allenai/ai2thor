@@ -35,7 +35,7 @@ def create_assets_if_not_exist(
     controller, asset_ids, asset_directory, asset_symlink, stop_if_fail
 ):
     evt = controller.step(
-        action="AssetsInDatabase", assetIds=asset_ids, updataProceduralLRUCache=True
+        action="AssetsInDatabase", assetIds=asset_ids, updateProceduralLRUCache=True
     )
 
     asset_in_db = evt.metadata["actionReturn"]
