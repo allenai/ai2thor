@@ -109,13 +109,23 @@ class Benchmarker(ABC):
     def benchmark(self, env, action_config, add_key_values={}):
         raise NotImplementedError
     
-    def step(self, env, action_config, out_record):
+    def step(self, env, action_config, out_errors={}):
         evt = None
         try:
             evt = env.step(dict(action=action_config["action"], **action_config["args"]))
         except TimeoutError as te:
-            out_record["timeout"] = True
-            out_record["message"] = str(te)
+            out_errors["timeout"] = True
+            out_errors["message"] = str(te)
+        # TODO catch runtime error
+        return evt
+    
+    def step(self, env, action, out_errors={}, **kwargs):
+        evt = None
+        try:
+            evt = env.step(dict(action=action, **kwargs))
+        except TimeoutError as te:
+            out_errors["timeout"] = True
+            out_errors["message"] = str(te)
         # TODO catch runtime error
         return evt
 
@@ -186,7 +196,7 @@ class SimsPerSecondBenchmarker(Benchmarker):
     def benchmark(self, env, action_config, add_key_values={}):
         errors = {}
         start = time.perf_counter()
-        self.step(env, action_config=action_config, out_record=errors)
+        self.step(env, action_config=action_config, out_errors=errors)
         end = time.perf_counter()
         frame_time = end - start
 
@@ -221,10 +231,13 @@ class PhysicsSimulateCountBenchmarker(Benchmarker):
 
     def benchmark(self, env, action_config, add_key_values={}):
         errors = {}
-        self.step(env, action_config=action_config, out_record=errors)
+        self.step(env, action_config=action_config, out_errors=errors)
 
-        evt = env.step(action="GetPhysicsSimulateCount")
-        physics_simultate_count = evt.metadata["actionReturn"]
+        evt = self.step(env, action="GetPhysicsSimulateCount", out_errors=errors)
+        if evt is not None:
+            physics_simultate_count = evt.metadata["actionReturn"]
+        else:
+            physics_simultate_count = -1
 
         record = {
             "action": action_config["action"],
