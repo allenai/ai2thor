@@ -200,8 +200,9 @@ def _build(
     process = subprocess.Popen(command, shell=True, env=full_env)
 
     start = time.time()
+    sleep_time = 10
     while True:
-        time.sleep(10)  # Check for build completion every 10 seconds
+        time.sleep(sleep_time)  # Check for build completion every `sleep_time` seconds
 
         if process.poll() is not None:  # Process has finished.
             break
@@ -215,7 +216,7 @@ def _build(
             os.waitpid(-1, os.WNOHANG)
             return False
 
-        if elapsed // print_interval > (elapsed - print_interval) // print_interval:
+        if elapsed // print_interval > (elapsed - sleep_time) // print_interval:
             logger.info(f"Build has been running for {elapsed:.2f} seconds.")
 
     logger.info(f"Exited with code {process.returncode}")
@@ -1095,8 +1096,6 @@ def ci_build(
     ), "must specify both commit_id and branch or neither"
 
     is_travis_build = commit_id is None
-
-    assert is_travis_build or skip_pip, "Cannot create pip repo on non-travis build."
 
     if not is_travis_build:
         logger.info("Initiating a NON-TRAVIS build")
