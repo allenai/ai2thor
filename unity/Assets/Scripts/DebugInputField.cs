@@ -514,6 +514,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["agentMode"] = "stretch";
                         action["agentControllerType"] = "stretch";
                         action["renderInstanceSegmentation"] = true;
+//                        action["antiAliasing"] = "smaa";
 
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);

@@ -408,7 +408,8 @@ public class AgentManager : MonoBehaviour {
         bool? orthographic,
         float? orthographicSize,
         float? nearClippingPlane,
-        float? farClippingPlane
+        float? farClippingPlane,
+        string antiAliasing
     ) {
         if (orthographic != true && orthographicSize != null) {
             throw new InvalidOperationException(
@@ -466,12 +467,45 @@ public class AgentManager : MonoBehaviour {
             }
         }
 
+        // Anti-aliasing
+        if (antiAliasing != null) {
+            updateAntiAliasing(
+                postProcessLayer: camera.gameObject.GetComponentInChildren<PostProcessLayer>(),
+                antiAliasing: antiAliasing
+            );
+        }
+
         this.activeAgent().actionFinished(success: true);
     }
 
     private void assertFovInBounds(float fov) {
         if (fov <= MIN_FOV || fov >= MAX_FOV) {
             throw new ArgumentOutOfRangeException($"fieldOfView: {fov} must be in {MIN_FOV} < fieldOfView > {MIN_FOV}.");
+        }
+    }
+
+    public void updateAntiAliasing(PostProcessLayer postProcessLayer, string antiAliasing) {
+        antiAliasing = antiAliasing.ToLower();
+        if (antiAliasing == "none") {
+            postProcessLayer.enabled = false;
+        } else {
+            postProcessLayer.enabled = true;
+            switch (antiAliasing) {
+                case "fxaa":
+                    postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.FastApproximateAntialiasing;
+                    break;
+                case "smaa":
+                    postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.SubpixelMorphologicalAntialiasing;
+                    break;
+                case "taa":
+                    postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.TemporalAntialiasing;
+                    break;
+                default:
+                    throw new InvalidOperationException(
+                        $"Uknown antiAliasing: {antiAliasing}! Must be one of: none, fxaa, smaa, taa."
+                    );
+                    break;
+            }
         }
     }
 
@@ -503,27 +537,6 @@ public class AgentManager : MonoBehaviour {
         camera.targetTexture = createRenderTexture(this.primaryAgent.m_Camera.pixelWidth, this.primaryAgent.m_Camera.targetTexture.height);
         #endif
 
-        antiAliasing = antiAliasing.ToLower();
-        PostProcessLayer postProcessLayer = gameObject.GetComponentInChildren<PostProcessLayer>();
-        if (antiAliasing == "none") {
-            postProcessLayer.enabled = false;
-        } else {
-            postProcessLayer.enabled = true;
-            switch (antiAliasing) {
-                case "fxaa":
-                    postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.FastApproximateAntialiasing;
-                    break;
-                case "smaa":
-                    postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.SubpixelMorphologicalAntialiasing;
-                    break;
-                case "taa":
-                    postProcessLayer.antialiasingMode = PostProcessLayer.Antialiasing.TemporalAntialiasing;
-                    break;
-                default:
-                    break;
-            }
-        }
-
         thirdPartyCameras.Add(camera);
         updateCameraProperties(
             camera: camera,
@@ -534,7 +547,8 @@ public class AgentManager : MonoBehaviour {
             orthographic: orthographic,
             orthographicSize: orthographicSize,
             nearClippingPlane: nearClippingPlane,
-            farClippingPlane: farClippingPlane
+            farClippingPlane: farClippingPlane,
+            antiAliasing: antiAliasing
         );
     }
 
@@ -571,7 +585,8 @@ public class AgentManager : MonoBehaviour {
         bool? orthographic = null,
         float? orthographicSize = null,
         float? nearClippingPlane = null,
-        float? farClippingPlane = null
+        float? farClippingPlane = null,
+        string antiAliasing = null
     ) {
         // adds error if fieldOfView is out of bounds
         if (fieldOfView != null) {
@@ -604,7 +619,8 @@ public class AgentManager : MonoBehaviour {
             orthographic: orthographic,
             orthographicSize: orthographicSize,
             nearClippingPlane: nearClippingPlane,
-            farClippingPlane: farClippingPlane
+            farClippingPlane: farClippingPlane,
+            antiAliasing: antiAliasing
         );
     }
 
@@ -1845,6 +1861,7 @@ public class ServerAction {
     public int thirdPartyCameraId;
     public float y;
     public float fieldOfView;
+    public string antiAliasing = null;
     public float cameraNearPlane;
     public float cameraFarPlane;
     public float x;

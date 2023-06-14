@@ -52,7 +52,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera.fieldOfView = 65f;
 
             var secondaryCameraName = "SecondaryCamera";
-
             
             var primaryGimbalName = "FixedCameraGimbalPrimary";
             var secondaryGimbalName = "FixedCameraGimbalSecondary";
@@ -67,6 +66,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Camera fp_camera_2 = m_CharacterController.transform.Find(secondaryCameraName).GetComponent<Camera>();
             fp_camera_2.gameObject.SetActive(true);
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
+            if (initializeAction.antiAliasing != null) {
+                agentManager.updateAntiAliasing(
+                    postProcessLayer: fp_camera_2.gameObject.GetComponentInChildren<PostProcessLayer>(),
+                    antiAliasing: initializeAction.antiAliasing
+                );
+            }
 
             // motor gimbals setup
             if (UseMotorCameraGimbals == true) {

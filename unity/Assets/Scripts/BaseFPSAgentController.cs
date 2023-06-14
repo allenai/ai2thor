@@ -7,6 +7,7 @@ using System.Reflection;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
 using Random = UnityEngine.Random;
 using UnityStandardAssets.ImageEffects;
 using System.Linq;
@@ -15,6 +16,7 @@ using Newtonsoft.Json.Linq;
 using MIConvexHull;
 using Thor.Procedural;
 using Thor.Procedural.Data;
+
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
@@ -638,6 +640,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             this.InitializeBody(action);
+            if (action.antiAliasing != null) {
+                agentManager.updateAntiAliasing(
+                    postProcessLayer: m_Camera.gameObject.GetComponentInChildren<PostProcessLayer>(),
+                    antiAliasing: action.antiAliasing
+                );
+            }
             m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
 
             if (action.gridSize == 0) {
