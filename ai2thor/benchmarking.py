@@ -642,10 +642,10 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                 benchmark_map["benchmarks"][benchmarker_name][
                     house_or_scene(scene, house_id)
                 ][action_group]["by_actions"][action]["individual"] = []
-            else:
-                benchmark_map["benchmarks"][benchmarker_name][
-                    house_or_scene(scene, house_id)
-                ][action_group]["by_actions"][action]["individual"].append(aggregate)
+            
+            benchmark_map["benchmarks"][benchmarker_name][
+                house_or_scene(scene, house_id)
+            ][action_group]["by_actions"][action]["individual"].append(aggregate)
 
 
         for (
