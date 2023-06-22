@@ -41,20 +41,20 @@ public partial class ArticulatedArmController : ArmController {
     public override void manipulateArm() {
         //so assume each joint that needs to move has had its `currentArmMoveParams` set
         //now we call `ControlJointFromAction` on all joints each physics update to get it to move...
-        Debug.Log("starting ArticulatedArmController.manipulateArm");
+        //Debug.Log("starting ArticulatedArmController.manipulateArm");
         foreach (ArticulatedArmJointSolver j in joints) {
             j.ControlJointFromAction();
         }
     }
 
     public override bool shouldHalt() {
-        Debug.Log("checking ArticulatedArmController shouldHalt");
+        //Debug.Log("checking ArticulatedArmController shouldHalt");
         bool ZaWarudo = false;
         foreach (ArticulatedArmJointSolver j in joints) {
             //only halt if all joints report back that shouldHalt = true
             //joints that are idle and not moving will return shouldHalt = true by default
-            Debug.Log($"checking joint: {j.transform.name}");
-            Debug.Log($"distance moved so far for this joint is: {j.distanceMovedSoFar}");
+            //Debug.Log($"checking joint: {j.transform.name}");
+            //Debug.Log($"distance moved so far for this joint is: {j.distanceMovedSoFar}");
 
             //check all joints that have had movement params set to see if they have halted or not
             if(j.currentArmMoveParams != null)
@@ -65,7 +65,7 @@ public partial class ArticulatedArmController : ArmController {
                     tolerance: j.currentArmMoveParams.tolerance
                 )) {
                     //if any single joint is still not halting, return false
-                    Debug.Log("still not done, don't halt yet");
+                    //Debug.Log("still not done, don't halt yet");
                     ZaWarudo = false;
                     return ZaWarudo;
                 }
@@ -73,14 +73,14 @@ public partial class ArticulatedArmController : ArmController {
                 //this joint returns that it should stop! Now we must wait to see if there rest
                 else
                 {
-                    Debug.Log($"halted! Distance moved: {j.distanceMovedSoFar}");
+                    //Debug.Log($"halted! Distance moved: {j.distanceMovedSoFar}");
                     ZaWarudo = true;
                     continue;
                 }
             }
         }
 
-        Debug.Log("halted, return true!");
+        //Debug.Log("halted, return true!");
         return ZaWarudo;
     }
 
@@ -90,7 +90,7 @@ public partial class ArticulatedArmController : ArmController {
 
     void Start() {
         wristPlaceholderForwardOffset = wristPlaceholderTransform.transform.localPosition.z;
-        Debug.Log($"wrist offset is: {wristPlaceholderForwardOffset}");
+        //Debug.Log($"wrist offset is: {wristPlaceholderForwardOffset}");
 
         // standingLocalCameraPosition = m_Camera.transform.localPosition;
         // Debug.Log($"------ AWAKE {standingLocalCameraPosition}");
@@ -125,17 +125,17 @@ public partial class ArticulatedArmController : ArmController {
         bool restrictTargetPosition,
         bool disableRendering
     ) {
-        Debug.Log("starting moveArmTarget in ArticulatedArmController");
+        //Debug.Log("starting moveArmTarget in ArticulatedArmController");
         float tolerance = 1e-3f;
         float maxTimePassed = 10.0f;
         int positionCacheSize = 10;
 
         float distance = Vector3.Distance(target, Vector3.zero);
-        Debug.Log($"raw distance value: {distance}");
+        //Debug.Log($"raw distance value: {distance}");
         //calculate distance to move offset by the wristPlaceholderTransform local z value
         //add the -z offset each time to actually move the same "distance" as the IK arm
         distance = distance + wristPlaceholderForwardOffset;
-        Debug.Log($"actual distance to move: {distance}");
+        //Debug.Log($"actual distance to move: {distance}");
 
         int direction = 0;
 
@@ -328,15 +328,59 @@ public partial class ArticulatedArmController : ArmController {
         joint.PrepToControlJointFromAction(armMoveParams);
     }
 
-    // TODO??? not sure if ready
-    // public override void rotateWrist(
-    //     PhysicsRemoteFPSAgentController controller,
-    //     Quaternion rotation,
-    //     float degreesPerSecond,
-    //     bool disableRendering,
-    //     float fixedDeltaTime,
-    //     bool returnToStartPositionIfFailed
-    // ) {}
+    public void rotateWrist(
+        ArticulatedAgentController controller,
+        float distance,
+        float degreesPerSecond,
+        bool disableRendering,
+        float fixedDeltaTime,
+        bool returnToStartPositionIfFailed
+    ) {
+        //Debug.Log("starting rotateWrist in ArticulatedArmController");
+        float tolerance = 1e-3f;
+        float maxTimePassed = 10.0f;
+        int positionCacheSize = 10;
+
+        int direction = 0;
+        if (distance < 0) {
+            direction = -1;
+        }
+        if (distance > 0) {
+            direction = 1;
+        }
+
+        ArmMoveParams amp = new ArmMoveParams {
+            distance = Mathf.Abs(distance),
+            speed = degreesPerSecond,
+            tolerance = tolerance,
+            maxTimePassed = maxTimePassed,
+            positionCacheSize = positionCacheSize,
+            direction = direction
+        };
+
+        ArticulatedArmJointSolver wristJoint = joints[5];
+        //preset the joint's movement parameters ahead of time
+        prepAllTheThingsBeforeJointMoves(wristJoint, amp);
+
+        //now need to do move call here I think
+        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
+                ContinuousMovement.moveAB(
+                controller: controller,
+                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
+            )
+        );
+
+        if (disableRendering) {
+            controller.unrollSimulatePhysics(
+                moveCall,
+                fixedDeltaTime
+            );
+        } else {
+            StartCoroutine(
+                moveCall
+            );
+        }
+    }
 
     // public override bool PickupObject(List<string> objectIds, ref string errorMessage) {}
 

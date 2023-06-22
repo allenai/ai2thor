@@ -416,14 +416,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
             }
 
-            base.RotateWristRelative(
-                pitch: 0f,
-                yaw: yaw,
-                roll: 0f,
-                speed: speed,
-                fixedDeltaTime: fixedDeltaTime,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering
+            Debug.Log("executing RotateWristRelative from ArticulatedAgentController");
+            var arm = getArmImplementation();
+            SetFloorColliderToHighFriction();
+            arm.rotateWrist(
+                controller: this,
+                distance: yaw,
+                //rotation: Quaternion.Euler(pitch, yaw, -roll),
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart
             );
         }
 

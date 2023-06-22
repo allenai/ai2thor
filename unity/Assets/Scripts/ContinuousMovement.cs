@@ -279,22 +279,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float fixedDeltaTime
         )
         {
-            Debug.Log("in updateFixedUpdateForAB");
+            //Debug.Log("in updateFixedUpdateForAB");
             var arm = controller.GetComponentInChildren<ArmController>();
 
             while(!arm.shouldHalt())
             {
                 arm.manipulateArm();
-                Debug.Log($"what is autosim state: {Physics.autoSimulation}");
+                //Debug.Log($"what is autosim state: {Physics.autoSimulation}");
                 if (!Physics.autoSimulation) {
-                    Debug.Log("manual simulate from PhysicsManager");
+                    //Debug.Log("manual simulate from PhysicsManager");
                     PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
                 }
 
                 yield return new WaitForFixedUpdate();
             }
 
-            Debug.Log("about to start continuousMoveFinish for AB");
+            //Debug.Log("about to start continuousMoveFinish for AB");
             continuousMoveFinishAB(controller: controller);
             yield return null;
         }
@@ -316,7 +316,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             double epsilon
             
         ) {
-            Debug.Log("starting updateTransformPropertyFixedUpdate");
+            //Debug.Log("starting updateTransformPropertyFixedUpdate");
             T originalProperty = getProp(moveTransform);
             var previousProperty = originalProperty;
 
@@ -391,7 +391,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (returnToStartPropIfFailed) {
                 resetProp = originalProperty;
             }
-            Debug.Log("about to continuousMoveFinish");
+            //Debug.Log("about to continuousMoveFinish");
             continuousMoveFinish(
                 controller,
                 arm,

@@ -3629,6 +3629,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "abrotatewrist": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RotateWristRelative";
+                        action["yaw"] = 90f;
+                        action["speed"] = 60f;
+                        action["disableRendering"] = false;
+                        //action["fixedDeltaTime"] = 5.0f;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "gcfr": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetCoordinateFromRaycast";

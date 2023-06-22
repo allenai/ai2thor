@@ -133,7 +133,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         if (jointAxisType == JointAxisType.Lift) {
             //if instead we are moving up or down actively
             if (liftState != ArmLiftState.Idle) {
-                Debug.Log("start ControlJointFromAction for axis type LIFT");
+                //Debug.Log("start ControlJointFromAction for axis type LIFT");
                 var drive = myAB.yDrive;
                 float currentPosition = myAB.jointPosition[0];
                 float targetPosition = currentPosition + (float)liftState * Time.fixedDeltaTime * currentArmMoveParams.speed;
@@ -155,15 +155,8 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 //ths is here so the first time, iterating through the [0] index we don't check, only the second time and beyond
                 //every time we loop back around the cached positions, check if we effectively stopped moving
                 if (currentArmMoveParams.oldestCachedIndex == 0) {
-                    //go ahead and update index 0 super quick so we don't miss it
-                    currentArmMoveParams.cachedPositions[currentArmMoveParams.oldestCachedIndex] = currentPosition;
-                    
                     //flag for shouldHalt to check if we should, in fact, halt
                     checkStandardDev = true;
-
-                    //iterate to next index in case we don't actually wanna stop
-                    currentArmMoveParams.oldestCachedIndex = (currentArmMoveParams.oldestCachedIndex + 1) % currentArmMoveParams.positionCacheSize;
-                    //Debug.Log($"current index after looped: {currentArmMoveParams.oldestCachedIndex}");
                 }
 
                 //otherwise we have a hard timer to stop movement so we don't move forever and crash unity
@@ -179,7 +172,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         //idle before actionFinished is called
         else if (jointAxisType == JointAxisType.Extend) {
             if (extendState != ArmExtendState.Idle) {
-                Debug.Log("start ControlJointFromAction for axis type EXTEND");
+                //Debug.Log("start ControlJointFromAction for axis type EXTEND");
                 var drive = myAB.zDrive;
                 float currentPosition = myAB.jointPosition[0];
                 float targetPosition = currentPosition + (float)extendState * Time.fixedDeltaTime * currentArmMoveParams.speed;
@@ -200,14 +193,8 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 //ths is here so the first time, iterating through the [0] index we don't check, only the second time and beyond
                 //every time we loop back around the cached positions, check if we effectively stopped moving
                 if (currentArmMoveParams.oldestCachedIndex == 0) {
-                    //go ahead and update index 0 super quick so we don't miss it
-                    currentArmMoveParams.cachedPositions[currentArmMoveParams.oldestCachedIndex] = currentPosition;
-                    
                     //flag for shouldHalt to check if we should, in fact, halt
                     checkStandardDev = true;
-
-                    //iterate to next index in case we don't actually wanna stop
-                    currentArmMoveParams.oldestCachedIndex = (currentArmMoveParams.oldestCachedIndex + 1) % currentArmMoveParams.positionCacheSize;
                 }
 
                 //otherwise we have a hard timer to stop movement so we don't move forever and crash unity
@@ -218,48 +205,41 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         }
 
         //if we are a revolute joint
-        // else if (jointAxisType == JointAxisType.Rotate) {
-        //     if (rotateState != ArmRotateState.Idle) {
-        //         //seems like revolute joints always only have an xDrive, and to change where its rotating
-        //         //you just rotate the anchor itself, but always access the xDrive
-        //         var drive = myAB.xDrive;
-        //         //somehow this is already in either meters or radians, so we are in radians here
-        //         float currentRotationRads = myAB.jointPosition[0];
-        //         //convert to degrees
-        //         float currentRotation = Mathf.Rad2Deg * currentRotationRads;
-        //         //i think this speed is in rads per second?????
-        //         float targetRotation = currentRotation + (float)rotateState * currentArmMoveParams.speed * Time.fixedDeltaTime;
-        //         drive.target = targetRotation;
-        //         myAB.xDrive = drive;
+        else if (jointAxisType == JointAxisType.Rotate) {
+            if (rotateState != ArmRotateState.Idle) {
+                //seems like revolute joints always only have an xDrive, and to change where its rotating
+                //you just rotate the anchor itself, but always access the xDrive
+                var drive = myAB.xDrive;
+                //somehow this is already in either meters or radians, so we are in radians here
+                float currentRotationRads = myAB.jointPosition[0];
+                //convert to degrees
+                float currentRotation = Mathf.Rad2Deg * currentRotationRads;
+                //i think this speed is in rads per second?????
+                float targetRotation = currentRotation + (float)rotateState * currentArmMoveParams.speed * Time.fixedDeltaTime;
+                drive.target = targetRotation;
+                myAB.xDrive = drive;
 
-        //         //begin checks to see if we have stopped moving or if we need to stop moving
-        //         //cache the rotation at the moment
-        //         currentArmMoveParams.cachedPositions[currentArmMoveParams.oldestCachedIndex] = currentRotation;
+                //begin checks to see if we have stopped moving or if we need to stop moving
+                //cache the rotation at the moment
+                currentArmMoveParams.cachedPositions[currentArmMoveParams.oldestCachedIndex] = currentRotation;
 
-        //         distanceMovedSoFar = Mathf.Abs(currentRotation - Mathf.Rad2Deg * currentArmMoveParams.initialJointPosition);
+                distanceMovedSoFar = Mathf.Abs(currentRotation - Mathf.Rad2Deg * currentArmMoveParams.initialJointPosition);
 
-        //         //iterate next index in cache, loop back to index 0 as we get newer positions
-        //         currentArmMoveParams.oldestCachedIndex = (currentArmMoveParams.oldestCachedIndex + 1) % currentArmMoveParams.positionCacheSize;
+                //iterate next index in cache, loop back to index 0 as we get newer positions
+                currentArmMoveParams.oldestCachedIndex = (currentArmMoveParams.oldestCachedIndex + 1) % currentArmMoveParams.positionCacheSize;
 
-        //         checkStandardDev = false;
-        //         //every time we loop back around the cached positions, check if we effectively stopped moving
-        //         if (currentArmMoveParams.oldestCachedIndex == 0) {
-        //             //go ahead and update index 0 super quick so we don't miss it
-        //             currentArmMoveParams.cachedPositions[currentArmMoveParams.oldestCachedIndex] = currentRotation;
-        //             checkStandardDev = true;
-        //         }
+                checkStandardDev = false;
+                //every time we loop back around the cached positions, check if we effectively stopped moving
+                if (currentArmMoveParams.oldestCachedIndex == 0) {
+                    checkStandardDev = true;                
+                }
 
-        //         //otherwise we have a hard timer to stop movement so we don't move forever and crash unity
-        //         currentArmMoveParams.timePassed += Time.deltaTime;
-
-        //         // shouldHalt(
-        //         //     distanceMovedSoFar: distanceMovedSoFar,
-        //         //     cachedPositions: currentArmMoveParams.cachedPositions,
-        //         //     tolerance: currentArmMoveParams.tolerance,
-        //         //     checkStandardDev: checkStandardDev
-        //         // );
-        //     }
-        // }
+                //otherwise we have a hard timer to stop movement so we don't move forever and crash unity
+                currentArmMoveParams.timePassed += Time.deltaTime;
+                Debug.Log($"time passed: {currentArmMoveParams.timePassed}");
+                return;
+            }
+        }
     }
 
     //do checks based on what sort of joint I am
@@ -285,7 +265,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         bool shouldHalt = false;
 
         //halt if positions/rotations are within tolerance and effectively not changing
-        Debug.Log($"checkStandardDev is: {checkStandardDev}");
+        //Debug.Log($"checkStandardDev is: {checkStandardDev}");
         if (checkStandardDev) {
             if (CheckArrayWithinStandardDeviation(cachedPositions, tolerance)) {
                 shouldHalt = true;
