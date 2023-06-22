@@ -608,9 +608,9 @@ public class AgentManager : MonoBehaviour {
         );
     }
 
-    // update thrid party camera to face the target object in object's forward direction.
     public void UpdateThirdPartyCameraToObject(
         int thirdPartyCameraId = 0,
+        OptionalVector3 position = null,
         string objectId = null,
         float? fieldOfView = null,
         string skyboxColor = null,
@@ -688,6 +688,20 @@ public class AgentManager : MonoBehaviour {
                 break;
             }
         }
+        Vector3 offsetPosition = parseOptionalVector3(optionalVector3: position, defaultsOnNull: new Vector3(0f, 0f, 0f));
+        offsetPosition = Quaternion.AngleAxis(thirdPartyCamera.gameObject.transform.localEulerAngles.y, Vector3.up) * offsetPosition;
+        offsetPosition += thirdPartyCamera.gameObject.transform.position;
+        updateCameraProperties(
+            camera: thirdPartyCamera,
+            position: offsetPosition,
+            rotation: thirdPartyCamera.gameObject.transform.localEulerAngles,
+            fieldOfView: fieldOfView == null ? thirdPartyCamera.fieldOfView : (float)fieldOfView,
+            skyboxColor: skyboxColor,
+            orthographic: orthographic,
+            orthographicSize: orthographicSize,
+            nearClippingPlane: nearClippingPlane,
+            farClippingPlane: farClippingPlane
+        );
     }
 
     private void addAgent(ServerAction action) {
