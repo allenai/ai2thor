@@ -608,6 +608,7 @@ public class AgentManager : MonoBehaviour {
         );
     }
 
+    // update thrid party camera to face the target object in object's forward direction.
     public void UpdateThirdPartyCameraToObject(
         int thirdPartyCameraId = 0,
         string objectId = null,
