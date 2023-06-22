@@ -2185,6 +2185,23 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         VisibilityPoints = vplist.ToArray();
     }
+
+    public Transform[] GetStaticsVisibilityPoints() {
+        List<Transform> vplist = new List<Transform>();
+        Transform vp = gameObject.transform.Find("StaticVisPoints");
+        if (vp != null){
+            foreach (Transform child in vp) {
+                vplist.Add(child);
+
+                // set correct tag and layer for each object
+                child.gameObject.tag = "Untagged";
+                child.gameObject.layer = 8;
+            }
+            return vplist.ToArray();
+        }else{
+            return null;
+        }
+    }
 #endif
 
     //[ContextMenu("Set Up Bounding Box")]

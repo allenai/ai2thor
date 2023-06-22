@@ -635,20 +635,27 @@ public class AgentManager : MonoBehaviour {
         // keeps positions at default values, if unspecified.
         SimObjPhysics targetObject = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
-        Vector3 ObjectPosition = targetObject.transform.position;
+        // Vector3 ObjectPosition = targetObject.transform.position;
+        Vector3 ObjectPosition = targetObject.AxisAlignedBoundingBox.center;
         Quaternion ObjectRotation = targetObject.transform.rotation;
-        // Debug.Log("Rotation" + ObjectRotation.eulerAngles.y);
+        Transform[] SVPs = targetObject.GetStaticsVisibilityPoints();
 
         float offset = Mathf.Max(targetObject.AxisAlignedBoundingBox.size.z, targetObject.AxisAlignedBoundingBox.size.x);
         for (int i=0; i<=20; i++){
             offset += 0.1f;
             Vector3 oldPosition = thirdPartyCamera.gameObject.transform.position;
             Vector3 targetPosition = ObjectPosition + targetObject.transform.forward * offset;
+            if (SVPs != null){
+                targetPosition = ObjectPosition + SVPs[0].forward * offset;
+            }
             targetPosition.y = targetObject.AxisAlignedBoundingBox.center.y;
 
             // keeps rotations at default values, if unspecified.
             Vector3 oldRotation = thirdPartyCamera.gameObject.transform.localEulerAngles;
             Vector3 targetRotation = ObjectRotation.eulerAngles + 180f * Vector3.up;
+            if (SVPs != null){
+                targetRotation = SVPs[0].eulerAngles + 180f * Vector3.up;
+            }
 
             updateCameraProperties(
                 camera: thirdPartyCamera,
