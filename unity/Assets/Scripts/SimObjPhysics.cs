@@ -2185,6 +2185,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         VisibilityPoints = vplist.ToArray();
     }
+#endif
 
     public Transform[] GetStaticsVisibilityPoints() {
         List<Transform> vplist = new List<Transform>();
@@ -2202,7 +2203,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             return null;
         }
     }
-#endif
 
     //[ContextMenu("Set Up Bounding Box")]
     public void ContextSetUpBoundingBox(bool forceCacheReset = false) {
