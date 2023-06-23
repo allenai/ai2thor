@@ -16,6 +16,7 @@ import platform
 import random
 import sys
 import time
+import subprocess
 from typing import Dict, List, Set, Tuple, Union, TYPE_CHECKING, Any, Optional
 
 BENCHMARKING_S3_BUCKET = "ai2-thor-benchmark"
@@ -465,19 +466,30 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         
         env, controller_params = self.__init_env()
         experiment_list = self.__create_experiments()
+        hostname = ""
+        try:
+            hostname = (
+            subprocess.check_output("hostname -f", shell=True)
+            .decode("utf8")
+            .strip()
+        )
+        except Exception as e:
+            logger.exception(f"Could not run 'hostname -f' {str(e)}")
+            pass
 
         benchmark_map = {
             "title": self.name,
             "config": self.config_name,
-            "benchmarks": defaultdict(lambda: defaultdict(lambda: {})),
             "controller_params": controller_params,
             "benchmark_params": {
                 "platform": platform.system(),
                 "arch": env._build.platform.__name__,
                 "commit_id": env._build.commit_id,
                 "filter_object_types": self.filter_object_types,
-                "action_sample_number": self.action_sample_count,
+                "experiment_sample_count": self.experiment_sample_count,
             },
+            "hostname": hostname,
+            "benchmarks": defaultdict(lambda: defaultdict(lambda: {})),
         }
         total_average_ft = 0
         scene_count = 0
@@ -552,7 +564,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         by_action_group = {}
 
         by_action_single = {}
-
+        i = 0
         for benchmarker in self.benchmarkers:
             benchmarker_records = [r for r in records_by_benchmarker[benchmarker.name()] if  r["benchmarker"] == benchmarker.name()]
             # print(f"---- benc {benchmarker_records}")
@@ -587,6 +599,11 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                     benchmarker_records, ["scene", "house", "benchmarker", "action_group"]
                 )
             )
+            if i == 0:
+                with open("debug.json", "w") as f:
+                    json.dump(benchmarker_records, f)
+            i+=1
+
 
         house_or_scene = lambda scene, house: scene if scene != "Procedural" or scene == "ProceduralAB" else house
         benchmark_map["action_groups"] = {
@@ -663,9 +680,13 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                 house_or_scene(scene, house_id)
             ]["scene"] = aggregate
             if scene == "Procedural" or scene == "ProceduralAB":
+                print(f"----- house or scene: {house_or_scene(scene, house_id)}")
                 benchmark_map["benchmarks"][benchmarker_name][
                     house_or_scene(scene, house_id)
                 ]["scene"]["procedural"] = True
+                benchmark_map["benchmarks"][benchmarker_name][
+                    house_or_scene(scene, house_id)
+                ]["scene"]["house_id"] = house_id
 
         for benchmarker_name, aggregate in by_benchmarker.items():
             benchmark_map["benchmarks"][benchmarker_name]["global"] = aggregate
