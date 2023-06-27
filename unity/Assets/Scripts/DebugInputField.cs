@@ -2545,21 +2545,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                // manual pickup object- test hand
-                case "pum": {
-                        ServerAction action = new ServerAction();
-                        action.action = "PickupObject";
-                        if (splitcommand.Length > 1) {
-                            action.objectId = splitcommand[1];
-                        } else {
-                            action.objectId = closestVisibleObjectId();
-                        }
-
-                        action.manualInteract = true;
-                        CurrentActiveController().ProcessControlCommand(action);
-                        break;
-                    }
-
                 case "slice": {
                         ServerAction action = new ServerAction();
                         action.action = "SliceObject";
@@ -3641,9 +3626,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "RotateWristRelative";
                         action["yaw"] = 90f;
-                        action["speed"] = 60f;
+                        action["speed"] = 200f;
                         action["disableRendering"] = false;
                         //action["fixedDeltaTime"] = 5.0f;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                // manual pickup object- test hand
+                case "abpickup": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "PickupObject";
+                        if (splitcommand.Length > 1) {
+                            List <string> objectIds = new List<string>();
+                            objectIds.Add(splitcommand[1]);
+                            action["objectIdCandidates"] = objectIds;
+                        }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "abdrop": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ReleaseObject";
+
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }

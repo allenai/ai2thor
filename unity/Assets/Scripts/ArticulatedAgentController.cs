@@ -220,6 +220,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        // public void PickupObject(List<string> objectIdCandidates = null) {
+        //     var arm = getArm();
+        //     actionFinished(arm.PickupObject(objectIdCandidates, ref errorMessage), errorMessage);
+        // }
+
+        // public void ReleaseObject() {
+        //     var arm = getArm();
+        //     arm.DropObject();
+
+        //     // TODO: only return after object(s) dropped have finished moving
+        //     // currently this will return the frame the object is released
+        //     actionFinished(true);
+        // }
+
         // TODO: Eli implement MoveAgent and RotateAgent functions below
         public override void MoveAgent(
             float ahead = 1,

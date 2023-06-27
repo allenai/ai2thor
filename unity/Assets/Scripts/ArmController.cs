@@ -392,6 +392,7 @@ public abstract class ArmController : MonoBehaviour, Arm {
     }
 
     public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphereAsSOP(bool onlyPickupable) {
+        //Debug.Log("calling WhatObjectsAreInsideMagnetSphereAsSOP");
         return magnetSphereComp.CurrentlyContainedSimObjects(onlyPickupable: onlyPickupable);
     }
 

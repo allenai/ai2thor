@@ -19,6 +19,9 @@ public partial class ArticulatedArmController : ArmController {
     //Distance from joint containing gripper camera to armTarget
     private Vector3 WristToManipulator = new Vector3(0, -0.09872628f, 0);
 
+    //held objects, don't need a reference to colliders since we are "attaching" via fixed joints instead of cloning
+    public new List <SimObjPhysics> heldObjects;
+
     // TODO: Possibly reimplement this fucntions, if AB read of transform is ok then may not need to reimplement
     public override Transform pickupParent() {
         return magnetSphere.transform;
@@ -382,9 +385,71 @@ public partial class ArticulatedArmController : ArmController {
         }
     }
 
-    // public override bool PickupObject(List<string> objectIds, ref string errorMessage) {}
+    public override bool PickupObject(List<string> objectIds, ref string errorMessage) {
+        //Debug.Log("calling PickupObject from ArticulatedArmController");
+        bool pickedUp = false;
 
-    //public override void DropObject() { }
+        foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP(onlyPickupable: true)) {
+            //Debug.Log($"sop named: {sop.objectID} found inside sphere");
+            if (objectIds != null) {
+                //only grab objects specified by objectIds
+                if (!objectIds.Contains(sop.objectID)) {
+                    continue;
+                }
+            }
+
+            Rigidbody rb = sop.GetComponent<Rigidbody>();
+
+            //make sure rigidbody of object is not kinematic
+            rb.isKinematic = false;
+
+            //add a fixed joint to this picked up object
+            FixedJoint ultraHand = sop.transform.gameObject.AddComponent<FixedJoint>();
+            //add reference to the wrist joint as connected articulated body 
+            ultraHand.connectedArticulationBody = FinalJoint.GetComponent<ArticulationBody>();
+            ultraHand.enableCollision = true;
+            //add to heldObjects list so we know when to drop
+            pickedUp = true;
+            heldObjects.Add(sop);
+        }
+
+        if (!pickedUp) {
+            errorMessage = (
+                objectIds != null
+                ? "No objects (specified by objectId) were valid to be picked up by the arm"
+                : "No objects were valid to be picked up by the arm"
+            );
+        }
+
+        return pickedUp;
+    }
+
+    public override void DropObject() { 
+        foreach (SimObjPhysics sop in heldObjects)
+        {
+            //remove the joint component
+            //may need a null check for if we decide to break joints via force at some poine.
+            //look into the OnJointBreak callback if needed
+            Destroy(sop.transform.GetComponent<FixedJoint>());
+
+            GameObject topObject = GameObject.Find("Objects");
+
+            if (topObject != null) {
+                sop.transform.parent = topObject.transform;
+            } else {
+                sop.transform.parent = null;
+            }
+
+            Rigidbody rb = sop.GetComponent<Rigidbody>();
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            rb.isKinematic = false;
+            rb.useGravity = true;
+            rb.detectCollisions = true;
+            rb.WakeUp();
+        }
+        
+        heldObjects.Clear();
+    }
 
     protected override void resetArmTarget() {
 
