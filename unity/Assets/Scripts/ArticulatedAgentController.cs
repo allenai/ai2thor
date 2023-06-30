@@ -8,10 +8,10 @@ using UnityEngine.AI;
 using UnityEngine.Rendering.PostProcessing;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-
     public partial class ArticulatedAgentController : ArmAgentController {
         public ArticulatedAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
+        public ArticulatedAgentSolver agent;
 
         [SerializeField]
         private Collider FloorCollider;
@@ -24,7 +24,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //     Debug.Log($"------ AWAKE {standingLocalCameraPosition}");
         // }
 
-        // TODO: Reimplemebt for Articulation body
+        public bool shouldHalt() {
+            // Debug.Log("checking ArticulatedAgentController shouldHalt");
+            bool shouldStop = false;
+            ArticulatedAgentSolver a = this.transform.GetComponent<ArticulatedAgentSolver>();
+            // Debug.Log($"checking agent: {a.transform.name}");
+            Debug.Log($"distance moved so far is: {a.distanceMovedSoFar}");
+            Debug.Log($"current velocity is: {this.transform.GetComponent<ArticulationBody>().velocity.magnitude}");
+            
+            //check agent to see if it has halted or not
+            if (!a.shouldHalt(
+                distanceMovedSoFar: a.distanceMovedSoFar,
+                cachedPositions: a.currentAgentMoveParams.cachedPositions,
+                tolerance: a.currentAgentMoveParams.tolerance
+            )) {
+                //if any single joint is still not halting, return false
+//                Debug.Log("still not done, don't halt yet");
+                shouldStop = false;
+                return shouldStop;
+            } else {
+                //this joint returns that it should stop!
+                Debug.Log($"halted! Return shouldStop! Distance moved: {a.distanceMovedSoFar}");
+                shouldStop = true;
+                return shouldStop;
+            }
+        }
+
+        // TODO: Reimplement for Articulation body
         public override void InitializeBody(ServerAction initializeAction) {
             // TODO; Articulation Body init
             VisibilityCapsule = StretchVisCap;
@@ -220,159 +246,202 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        // public void PickupObject(List<string> objectIdCandidates = null) {
-        //     var arm = getArm();
-        //     actionFinished(arm.PickupObject(objectIdCandidates, ref errorMessage), errorMessage);
-        // }
-
-        // public void ReleaseObject() {
-        //     var arm = getArm();
-        //     arm.DropObject();
-
-        //     // TODO: only return after object(s) dropped have finished moving
-        //     // currently this will return the frame the object is released
-        //     actionFinished(true);
-        // }
-
-        // TODO: Eli implement MoveAgent and RotateAgent functions below
-        public override void MoveAgent(
-            float ahead = 1,
-            float right = 0,
+        public void MoveAgent(
+            float moveMagnitude = 1,
             float speed = 1,
             float acceleration = 1,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
             bool disableRendering = true
         ) {
-            Vector3 agentDirection = transform.TransformDirection(Vector3.forward);
-            this.transform.GetComponent<ArticulationBody>().AddForce(17f * agentDirection);
+            // Debug.Log("(3) ArticulatedAgentController: PREPPING MOVEAGENT COMMAND");
+            int direction = 0;
+            if (moveMagnitude < 0) {
+                direction = -1;
+            }
+            if (moveMagnitude > 0) {
+                direction = 1;
+            }
 
-            // float distance = ahead;
-            // ArticulationBody ab = transform.GetComponent<ArticulationBody>();
-            // Vector3 initialPosition = ab.transform.position;
-            // Vector3 finalPosition = ab.transform.TransformPoint(Vector3.forward * distance);
-
-            // // determine if agent can even accelerate to max velocity and decelerate to 0 before reaching target position
-            // float accelerationDistance = Mathf.Pow(speed,2) / (2 * acceleration);
-
-            // if (2 * accelerationDistance > distance) {
-            //     speed = Mathf.Sqrt(distance * acceleration);
-            // }
-
-            // float accelerationTime = speed / acceleration;
-
-            // Vector3 currentPosition = ab.transform.position;
-            // // Debug.Log($"position of agent: {currentPosition}");
+            moveMagnitude = 1;
+            Debug.Log("Move magnitude is now officially " + moveMagnitude);
+            // Debug.Log($"preparing agent {this.transform.name} to move");
+            if (Mathf.Approximately(moveMagnitude, 0.0f)) {
+                Debug.Log("Error! distance to move must be nonzero");
+                return;
+            }
             
-            // Vector3 forceDirection = new Vector3(0,0,acceleration);
+            AgentMoveParams amp = new AgentMoveParams {
+                agentState = ABAgentState.Moving,
+                distance = Mathf.Abs(moveMagnitude),
+                speed = speed,
+                acceleration = acceleration,
+                agentMass = CalculateTotalMass(this.transform),
+                tolerance = 1e-6f,
+                maxTimePassed = 10.0f,
+                positionCacheSize = 10,
+                direction = direction
+            };
+        
+            float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
             
-            // if (finalPosition.magnitude - currentPosition.magnitude < 1e-3f) {
-            //     ab.AddForce(ab.mass * Vector3.back * ab.velocity.magnitude * Time.fixedDeltaTime);
-            //     moveState = MoveState.Idle;
-            //     Debug.Log("STOP!");
-            // } 
+            this.GetComponent<ArticulatedAgentSolver>().PrepToControlAgentFromAction(amp);
 
-            // // Apply acceleration over acceleration-time
-            // if (timePassed < accelerationTime) {
-            //     ab.AddForce(ab.mass * forceDirection);
-            //     Debug.Log("Accelerating!");
-            // }
+            // now that move call happens
+            IEnumerator move = ContinuousMovement.moveAB(
+                controller: this,
+                fixedDeltaTime: fixedDeltaTimeFloat,
+                unitsPerSecond: speed,
+                acceleration: acceleration
+            );
 
-            // if (accelerationDistance >= (finalPosition - currentPosition).magnitude) {
-            //     ab.AddForce(ab.mass * -forceDirection);
-            //     Debug.Log("Decelerating!");
-            // }
-
-            // timePassed += Time.fixedDeltaTime;
-
-
-            // Use Continuous move
-
-            // if (ahead == 0 && right == 0) {
-            //     throw new ArgumentException("Must specify ahead or right!");
-            // }
-            // Vector3 direction = new Vector3(x: right, y: 0, z: ahead);
-            // float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
-
-            // CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
-
-            // Vector3 directionWorld = transform.TransformDirection(direction);
-            // Vector3 targetPosition = transform.position + directionWorld;
-
-            // collisionListener.Reset();
-
-            // IEnumerator move = ContinuousMovement.moveAB(
-            //     controller: this,
-            //     collisionListener: collisionListener,
-            //     moveTransform: this.transform,
-            //     targetPosition: targetPosition,
-            //     fixedDeltaTime: fixedDeltaTimeFloat,
-            //     unitsPerSecond: speed,
-            //     returnToStartPropIfFailed: returnToStart,
-            //     localPosition: false
-            // );
-
-            // if (disableRendering) {
-            //     unrollSimulatePhysics(
-            //         enumerator: move,
-            //         fixedDeltaTime: fixedDeltaTimeFloat
-            //     );
-            // } else {
-            //     StartCoroutine(move);
-            // }
+            if (disableRendering) {
+                unrollSimulatePhysics(
+                    enumerator: move,
+                    fixedDeltaTime: fixedDeltaTimeFloat
+                );
+            } else {
+                StartCoroutine(move);
+            }
         }
 
-      
 
-        public override void RotateAgent(
-            float degrees,
-            float speed = 1.0f,
+        public void MoveAhead(
+            float? moveMagnitude = null,
+            float speed = 1,
+            float acceleration = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = false
+        ) {
+            // Debug.Log("(2) ArticulatedAgentController: CONVERTING TO MOVEAGENT FUNCTION");
+            SetFloorColliderToSlippery();
+            MoveAgent(
+                moveMagnitude: moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                acceleration: acceleration,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
+        }
+
+
+        public void MoveBack(
+            float? moveMagnitude = null,
+            float speed = 1,
+            float acceleration = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = false
+        ) {
+            Debug.Log("MoveBack from ArticulatedAgentController");
+            SetFloorColliderToSlippery();
+            MoveAgent(
+                moveMagnitude: -moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                acceleration: acceleration,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
+            );
+        }
+
+        public override void RotateRight(
+            float? degrees = null,
+            bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
+            float speed = 22.5f,
             bool waitForFixedUpdate = false,
             bool returnToStart = true,
-            bool disableRendering = true,
+            bool disableRendering = false,
             float fixedDeltaTime = 0.02f
         ) {
-            var ab = GetComponent<ArticulationBody>();
-            var axis = Vector3.up;
-            Vector3 target = Quaternion.Inverse(ab.anchorRotation) * axis * degrees;
-            ab.anchorRotation = Quaternion.Euler(0, degrees, 0);
+            RotateAgent(
+                degrees: degrees.GetValueOrDefault(rotateStepDegrees),
+                speed: speed,
+                waitForFixedUpdate: waitForFixedUpdate,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime
+            );
+        }
 
+        public override void RotateLeft(
+            float? degrees = null,
+            bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
+            float speed = 22.5f,
+            bool waitForFixedUpdate = false,
+            bool returnToStart = true,
+            bool disableRendering = false,
+            float fixedDeltaTime = 0.02f
+        ) {
+            RotateAgent(
+                degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
+                speed: speed,
+                waitForFixedUpdate: waitForFixedUpdate,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime
+            );
+        }
 
-        // assign to the drive targets...
-        // ArticulationDrive xDrive = ab.xDrive;
-        // xDrive.target = target.x;
-        // ab.xDrive = xDrive;
+        public void RotateAgent(
+            float degrees,
+            float speed = 22.5f,
+            float acceleration = 22.5f,
+            float? fixedDeltaTime = null,
+            bool waitForFixedUpdate = false,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            int direction = 0;
+            if (degrees < 0) {
+                direction = -1;
+            }
+            if (degrees > 0) {
+                direction = 1;
+            }
 
-        // ArticulationDrive yDrive = ab.yDrive;
-        // yDrive.target = target.y;
-        // ab.yDrive = yDrive;
+            Debug.Log($"preparing agent {this.transform.name} to rotate");
+            if (Mathf.Approximately(degrees, 0.0f)) {
+                Debug.Log("Error! distance to rotate must be nonzero");
+                return;
+            }
 
-        // ArticulationDrive zDrive = ab.zDrive;
-        // zDrive.target = target.z;
-        // ab.zDrive = zDrive;
+            AgentMoveParams amp = new AgentMoveParams {
+                agentState = ABAgentState.Rotating,
+                distance = Mathf.Abs(Mathf.Deg2Rad * degrees),
+                speed = Mathf.Deg2Rad * speed,
+                acceleration = Mathf.Deg2Rad * acceleration,
+                agentMass = CalculateTotalMass(this.transform),
+                tolerance = 1e-6f,
+                maxTimePassed = 10.0f,
+                positionCacheSize = 10,
+                direction = direction
+            };
 
-        actionFinished(true);
+            float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
 
-            // Something like below
+            this.GetComponent<ArticulatedAgentSolver>().PrepToControlAgentFromAction(amp);
 
-            //  IEnumerator rotate = ContinuousMovement.rotateAB(
-            //     controller: this,
-            //     collisionListener: this.GetComponentInParent<CollisionListener>(),
-            //     moveTransform: this.transform,
-            //     targetRotation: this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
-            //     fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-            //     radiansPerSecond: speed,
-            //     returnToStartPropIfFailed: returnToStart
-            // );
+            // now that rotate call happens
+            IEnumerator rotate = ContinuousMovement.rotateAB(
+                controller: this,
+                fixedDeltaTime: fixedDeltaTimeFloat,
+                radiansPerSecond: speed,
+                acceleration: acceleration
+            );
 
-            // if (disableRendering) {
-            //     unrollSimulatePhysics(
-            //         enumerator: rotate,
-            //         fixedDeltaTime: fixedDeltaTime
-            //     );
-            // } else {
-            //     StartCoroutine(rotate);
-            // }
+            if (disableRendering) {
+                unrollSimulatePhysics(
+                    enumerator: rotate,
+                    fixedDeltaTime: fixedDeltaTimeFloat
+                );
+            } else {
+                StartCoroutine(rotate);
+            }
         }
 
         // not doing these for benchmark yet cause no
@@ -430,19 +499,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
             }
 
-            Debug.Log("executing RotateWristRelative from ArticulatedAgentController");
-            var arm = getArmImplementation();
-            SetFloorColliderToHighFriction();
-            arm.rotateWrist(
-                controller: this,
-                distance: yaw,
-                //rotation: Quaternion.Euler(pitch, yaw, -roll),
-                degreesPerSecond: speed,
-                disableRendering: disableRendering,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
-                returnToStartPositionIfFailed: returnToStart
+            base.RotateWristRelative(
+                pitch: 0f,
+                yaw: yaw,
+                roll: 0f,
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering
             );
         }
 
+        private float CalculateTotalMass(Transform rootTransform)
+            {
+                float totalMass = 0f;
+                ArticulationBody rootBody = rootTransform.GetComponent<ArticulationBody>();
+                if (rootBody != null)
+                {
+                    totalMass += rootBody.mass;
+                }
+
+                foreach (Transform childTransform in rootTransform)
+                {
+                    totalMass += CalculateTotalMass(childTransform);
+                }
+
+                return totalMass;
+            }
     }
 }
