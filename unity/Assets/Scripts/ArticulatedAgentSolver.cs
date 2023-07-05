@@ -96,7 +96,6 @@ public class ArticulatedAgentSolver : MonoBehaviour {
         if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
             // Debug.Log("(7) ArticulatedAgentSolver: ACTUAL LOGIC. Also, distanceMovedSoFar is " + distanceMovedSoFar + ", and decelerationDistance is " + decelerationDistance);
             if (myAB.velocity.magnitude < currentAgentMoveParams.speed && currentAgentMoveParams.distance - distanceMovedSoFar > accelerationDistance) {
-                Debug.Log("AAAAAAAAAAAAAAAAAAAAAAAAAA");
                 // since the acceleration is distance-based,
                     Vector3 relativeForce = ( (1.0f * currentAgentMoveParams.agentMass * currentAgentMoveParams.acceleration) + (myAB.velocity.magnitude * myAB.linearDamping)) * currentAgentMoveParams.direction * Vector3.forward;
                     myAB.AddRelativeForce(relativeForce);
@@ -118,10 +117,8 @@ public class ArticulatedAgentSolver : MonoBehaviour {
                 // Debug.Log("Agent's traveled this far: " + distanceMovedSoFar + ". Applying relative force of " + relativeDecForce + " to delecerate " + currentAgentMoveParams.agentMass + " kg of agent! Velocity is currently " + myAB.velocity.magnitude);
                 // myAB.AddRelativeForce(relativeDecForce);
                 Vector3 relativeForce = ((1.0f * currentAgentMoveParams.agentMass * currentAgentMoveParams.acceleration) - (myAB.velocity.magnitude * myAB.linearDamping)) * currentAgentMoveParams.direction * -Vector3.forward;
-                Debug.Log("DDDDDDDDDDDDDDDDDDDDDDDDDDDDD AT " + relativeForce.z);
                 myAB.AddRelativeForce(relativeForce);
             } else {
-                Debug.Log("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC");
                 // if (maxedOut == false) {
                 //     maxedOut = true;
                 //     speedupTime = Time.fixedTime - startTime;
@@ -144,11 +141,11 @@ public class ArticulatedAgentSolver : MonoBehaviour {
             if (myAB.angularVelocity.magnitude < currentAgentMoveParams.speed && currentAgentMoveParams.distance - distanceMovedSoFar > accelerationDistance) {
                 float relativeTorque = ((1.0f * myAB.inertiaTensor.y * currentAgentMoveParams.acceleration) + (myAB.angularVelocity.magnitude * myAB.angularDamping)) * currentAgentMoveParams.direction;
                 myAB.AddRelativeTorque(new Vector3(0, relativeTorque, 0));
-                Debug.Log("AAAAAAAAAAAAAAAAAAAAAAApplying torque force of " + relativeTorque);
+                // Debug.Log("AAAAAAAAAAAAAAAAAAAAAAApplying torque force of " + relativeTorque);
 
             // CASE: Decelerate
             } else if (distanceMovedSoFar >= currentAgentMoveParams.distance - accelerationDistance) {
-                Debug.Log("Okay, DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD distanceMovedSoFar is " + Mathf.Rad2Deg * distanceMovedSoFar);
+                // Debug.Log("Okay, DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD distanceMovedSoFar is " + Mathf.Rad2Deg * distanceMovedSoFar);
                 if(beginDeceleration == false) {
                     beginDeceleration = true;
                     beginDecelerationSpeed = myAB.angularVelocity[1];
@@ -163,7 +160,7 @@ public class ArticulatedAgentSolver : MonoBehaviour {
                 //Debug.Log("Agent's traveled this far: " + distanceMovedSoFar + ". Applying relative force of " + relativeDecTorque + " to delecerate " + currentAgentMoveParams.agentMass + " kg of agent! Velocity is currently " + myAB.velocity.magnitude);
             // CASE: Cruise
             } else {
-                Debug.Log("CCCCCCCCCCCCCCCCCCCCCCCCCCCC");
+                // Debug.Log("CCCCCCCCCCCCCCCCCCCCCCCCCCCC");
                 float relativeTorque = (((currentAgentMoveParams.speed - myAB.angularVelocity.magnitude) * myAB.inertiaTensor.y) + (myAB.angularVelocity.magnitude * myAB.angularDamping)) * currentAgentMoveParams.direction;
                 myAB.AddRelativeTorque(new Vector3(0, relativeTorque, 0));
             }

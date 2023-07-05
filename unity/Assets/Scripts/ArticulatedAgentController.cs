@@ -291,8 +291,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             IEnumerator move = ContinuousMovement.moveAB(
                 controller: this,
                 fixedDeltaTime: fixedDeltaTimeFloat,
-                unitsPerSecond: speed,
-                acceleration: acceleration
+                isAgent: true
             );
 
             if (disableRendering) {
@@ -430,8 +429,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             IEnumerator rotate = ContinuousMovement.rotateAB(
                 controller: this,
                 fixedDeltaTime: fixedDeltaTimeFloat,
-                radiansPerSecond: speed,
-                acceleration: acceleration
+                isAgent: true
             );
 
             if (disableRendering) {

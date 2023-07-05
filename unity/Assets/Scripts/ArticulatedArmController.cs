@@ -191,7 +191,8 @@ public partial class ArticulatedArmController : ArmController {
         IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
                 ContinuousMovement.moveAB(
                 controller: controller,
-                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
+                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                isAgent: false
             )
         );
 
@@ -290,7 +291,8 @@ public partial class ArticulatedArmController : ArmController {
         IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
                 ContinuousMovement.moveAB(
                 controller: controller,
-                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
+                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                isAgent: false
             )
         );
 
@@ -369,7 +371,8 @@ public partial class ArticulatedArmController : ArmController {
         IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
                 ContinuousMovement.moveAB(
                 controller: controller,
-                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
+                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                isAgent: false
             )
         );
 

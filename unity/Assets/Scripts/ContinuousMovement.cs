@@ -63,12 +63,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public static IEnumerator rotateAB(
             ArticulatedAgentController controller,
             float fixedDeltaTime,
-            float radiansPerSecond = 0,
-            float acceleration = 0
+            bool isAgent
         ) {
             return updateFixedUpdateForAB(
                 controller: controller,
-                fixedDeltaTime: fixedDeltaTime
+                fixedDeltaTime: fixedDeltaTime,
+                isAgent: isAgent
             );
         }
 
@@ -126,15 +126,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public static IEnumerator moveAB(
             ArticulatedAgentController controller,
             float fixedDeltaTime,
-            float unitsPerSecond = 0,
-            float acceleration = 0
+            bool isAgent = true
         ) {
             // Debug.Log("(5) ContinuousMovement: STARTING CONTINUOUS MOVEMENT COROUTINE");
             //bool teleport = (unitsPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
 
             return updateFixedUpdateForAB(
                 controller: controller,
-                fixedDeltaTime: fixedDeltaTime
+                fixedDeltaTime: fixedDeltaTime,
+                isAgent: isAgent
             );
 
             // Func<Transform, Vector3> getPosFunc;
@@ -245,13 +245,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         }
 
-        public static IEnumerator updateFixedUpdateForAB(            
+        public static IEnumerator updateFixedUpdateForAB(
             ArticulatedAgentController controller,
-            float fixedDeltaTime
+            float fixedDeltaTime,
+            bool isAgent
         ) {
-            // Debug.Log("(5A) ContinuousMovement: CROSSROADS FOR AGENT AND ARM");
+            Debug.Log("My joint-name is " + controller.gameObject.name);
+            Debug.Log("(5A) ContinuousMovement: CROSSROADS FOR AGENT AND ARM");
             // Determine whether it's agent or arm AB
-            if (controller.GetComponent<ArticulationBody>().isRoot) {
+            if (isAgent == true) {
                 // Debug.Log("It's the root!");
                 // int i = 0;
                 // while(i < 1)
@@ -269,22 +271,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     yield return new WaitForFixedUpdate();
                 }
+            } else {
+                Debug.Log("in updateFixedUpdateForAB");
+                var arm = controller.GetComponentInChildren<ArmController>();
 
-            // } else {
-            //     Debug.Log("in updateFixedUpdateForAB");
-            //     var arm = controller.GetComponentInChildren<ArmController>();
+                while(!arm.shouldHalt())
+                {
+                    arm.manipulateArm();
+                    Debug.Log($"what is autosim state: {Physics.autoSimulation}");
+                    if (!Physics.autoSimulation) {
+                        Debug.Log("manual simulate from PhysicsManager");
+                        PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+                    }
 
-            //     while(!arm.shouldHalt())
-            //     {
-            //         arm.manipulateArm();
-            //         Debug.Log($"what is autosim state: {Physics.autoSimulation}");
-            //         if (!Physics.autoSimulation) {
-            //             Debug.Log("manual simulate from PhysicsManager");
-            //             PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
-            //         }
-
-            //         yield return new WaitForFixedUpdate();
-            //     }
+                    yield return new WaitForFixedUpdate();
+                }
             }
 
             Debug.Log("about to start continuousMoveFinish for AB");
