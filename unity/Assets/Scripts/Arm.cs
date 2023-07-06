@@ -5,9 +5,9 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public interface Arm {
 
-    void manipulateArm();
+    // void ContinuousUpdate();
     bool IsArmColliding();
-    bool shouldHalt();
+    // bool ShouldHalt();
     GameObject GetArmTarget();
 
     ArmMetadata GenerateMetadata();

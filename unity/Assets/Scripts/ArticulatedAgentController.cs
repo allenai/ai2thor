@@ -19,37 +19,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField]
         private PhysicMaterial FloorColliderPhysicsMaterial;
 
-        // void Awake() {
-        //     standingLocalCameraPosition = m_Camera.transform.localPosition;
-        //     Debug.Log($"------ AWAKE {standingLocalCameraPosition}");
-        // }
-
-        public bool shouldHalt() {
-            // Debug.Log("checking ArticulatedAgentController shouldHalt");
-            bool shouldStop = false;
-            ArticulatedAgentSolver a = this.transform.GetComponent<ArticulatedAgentSolver>();
-            // Debug.Log($"checking agent: {a.transform.name}");
-            Debug.Log($"distance moved so far is: {a.distanceMovedSoFar}");
-            Debug.Log($"current velocity is: {this.transform.GetComponent<ArticulationBody>().velocity.magnitude}");
-            
-            //check agent to see if it has halted or not
-            if (!a.shouldHalt(
-                distanceMovedSoFar: a.distanceMovedSoFar,
-                cachedPositions: a.currentAgentMoveParams.cachedPositions,
-                tolerance: a.currentAgentMoveParams.tolerance
-            )) {
-                //if any single joint is still not halting, return false
-//                Debug.Log("still not done, don't halt yet");
-                shouldStop = false;
-                return shouldStop;
-            } else {
-                //this joint returns that it should stop!
-                Debug.Log($"halted! Return shouldStop! Distance moved: {a.distanceMovedSoFar}");
-                shouldStop = true;
-                return shouldStop;
-            }
-        }
-
         // TODO: Reimplement for Articulation body
         public override void InitializeBody(ServerAction initializeAction) {
             // TODO; Articulation Body init
@@ -129,7 +98,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FloorCollider = this.gameObject.transform.Find("abFloorCollider").GetComponent<Collider>();
             FloorColliderPhysicsMaterial = FloorCollider.material;
 
-            getArmImplementation().manipulateArm();
+            getArmImplementation().ContinuousUpdate();
 
             Debug.Log($"Position {this.transform.position}");
         }
@@ -289,6 +258,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // now that move call happens
             IEnumerator move = ContinuousMovement.moveAB(
+                movable: this.getBodyMovable(),
                 controller: this,
                 fixedDeltaTime: fixedDeltaTimeFloat,
                 unitsPerSecond: speed,
@@ -296,7 +266,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             if (disableRendering) {
-                unrollSimulatePhysics(
+                ContinuousMovement.unrollSimulatePhysics(
                     enumerator: move,
                     fixedDeltaTime: fixedDeltaTimeFloat
                 );
@@ -427,15 +397,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.GetComponent<ArticulatedAgentSolver>().PrepToControlAgentFromAction(amp);
 
             // now that rotate call happens
-            IEnumerator rotate = ContinuousMovement.rotateAB(
+            IEnumerator rotate = ContinuousMovement.moveAB(
+                movable: this.getBodyMovable(),
                 controller: this,
                 fixedDeltaTime: fixedDeltaTimeFloat,
-                radiansPerSecond: speed,
+                unitsPerSecond: speed,
                 acceleration: acceleration
             );
 
             if (disableRendering) {
-                unrollSimulatePhysics(
+                ContinuousMovement.unrollSimulatePhysics(
                     enumerator: rotate,
                     fixedDeltaTime: fixedDeltaTimeFloat
                 );
@@ -526,5 +497,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 return totalMass;
             }
+
+        private MovableContinuous getBodyMovable() {
+            return this.transform.GetComponent<ArticulatedAgentSolver>();
+        }
     }
 }

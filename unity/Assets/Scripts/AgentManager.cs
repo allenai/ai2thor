@@ -27,6 +27,9 @@ using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
 using UnityStandardAssets.ImageEffects;
 
+public interface ActionFinisher {
+    void actionFinished(bool success, object actionReturn = null, string errorMessage = null);
+}
 
 public class AgentManager : MonoBehaviour {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();

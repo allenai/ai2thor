@@ -36,7 +36,7 @@ public partial class StretchABArmController : ArmController {
         return armBase.transform.TransformPoint(point);
     }
 
-    public override void manipulateArm() {
+    public override void ContinuousUpdate() {
         // TODO: this is called after every physics update loop so solver update funcion should go here
 
         // Arm target class member is used to calculate distance
@@ -57,7 +57,7 @@ public partial class StretchABArmController : ArmController {
         // TODO: Replace Solver 
     }
 
-    public override bool shouldHalt() {
+    public override bool ShouldHalt() {
         // TODO: Reimplement halting condition 
         /// This is the halting condition in ContinuousMove, used to be the collision listener now can be the 
         // new solver or whatever
@@ -120,7 +120,7 @@ public partial class StretchABArmController : ArmController {
         // );
 
         // if (disableRendering) {
-        //     controller.unrollSimulatePhysics(
+        //     ContinuousMovement.unrollSimulatePhysics(
         //         enumerator: moveCall,
         //         fixedDeltaTime: fixedDeltaTime
         //     );

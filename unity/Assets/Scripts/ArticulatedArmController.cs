@@ -6,6 +6,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Linq;
 public partial class ArticulatedArmController : ArmController {
     public ArticulatedArmJointSolver[] joints;
+    
 
     [SerializeField]
     //this wrist placeholder represents the posrot manipulator's position on the IK Stretch so we can match the distance magnitudes
@@ -41,7 +42,7 @@ public partial class ArticulatedArmController : ArmController {
         return armBase.transform.TransformPoint(point);
     }
 
-    public override void manipulateArm() {
+    public override void ContinuousUpdate() {
         //so assume each joint that needs to move has had its `currentArmMoveParams` set
         //now we call `ControlJointFromAction` on all joints each physics update to get it to move...
         //Debug.Log("starting ArticulatedArmController.manipulateArm");
@@ -50,9 +51,35 @@ public partial class ArticulatedArmController : ArmController {
         }
     }
 
-    public override bool shouldHalt() {
+    /*public bool shouldHalt() {
+            // Debug.Log("checking ArticulatedAgentController shouldHalt");
+            bool shouldStop = false;
+            ArticulatedAgentSolver a = this.transform.GetComponent<ArticulatedAgentSolver>();
+            // Debug.Log($"checking agent: {a.transform.name}");
+            Debug.Log($"distance moved so far is: {a.distanceMovedSoFar}");
+            Debug.Log($"current velocity is: {this.transform.GetComponent<ArticulationBody>().velocity.magnitude}");
+            
+            //check agent to see if it has halted or not
+            if (!a.shouldHalt(
+                distanceMovedSoFar: a.distanceMovedSoFar,
+                cachedPositions: a.currentAgentMoveParams.cachedPositions,
+                tolerance: a.currentAgentMoveParams.tolerance
+            )) {
+                //if any single joint is still not halting, return false
+//                Debug.Log("still not done, don't halt yet");
+                shouldStop = false;
+                return shouldStop;
+            } else {
+                //this joint returns that it should stop!
+                Debug.Log($"halted! Return shouldStop! Distance moved: {a.distanceMovedSoFar}");
+                shouldStop = true;
+                return shouldStop;
+            }
+        }*/
+
+    public override bool ShouldHalt() {
         //Debug.Log("checking ArticulatedArmController shouldHalt");
-        bool ZaWarudo = false;
+        bool shouldHalt = false;
         foreach (ArticulatedArmJointSolver j in joints) {
             //only halt if all joints report back that shouldHalt = true
             //joints that are idle and not moving will return shouldHalt = true by default
@@ -69,22 +96,31 @@ public partial class ArticulatedArmController : ArmController {
                 )) {
                     //if any single joint is still not halting, return false
                     //Debug.Log("still not done, don't halt yet");
-                    ZaWarudo = false;
-                    return ZaWarudo;
+                    shouldHalt = false;
+                    return shouldHalt;
                 }
 
                 //this joint returns that it should stop! Now we must wait to see if there rest
                 else
                 {
                     //Debug.Log($"halted! Distance moved: {j.distanceMovedSoFar}");
-                    ZaWarudo = true;
+                    shouldHalt = true;
                     continue;
                 }
             }
         }
 
         //Debug.Log("halted, return true!");
-        return ZaWarudo;
+        return shouldHalt;
+    }
+
+    public override void FinishContinuousMove(BaseFPSAgentController controller) {
+            Debug.Log("starting continuousMoveFinishAB");
+            bool actionSuccess = true;
+            string debugMessage = "";
+
+            controller.errorMessage = debugMessage;
+            controller.actionFinished(actionSuccess, debugMessage);
     }
 
     public override GameObject GetArmTarget() {
@@ -190,14 +226,15 @@ public partial class ArticulatedArmController : ArmController {
         //now need to do move call here I think
         IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
                 ContinuousMovement.moveAB(
-                controller: controller,
-                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
+                    movable: this,
+                    controller: controller,
+                    fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
             )
         );
 
         // StartCoroutine(moveCall);
         if (disableRendering) {
-            controller.unrollSimulatePhysics(
+            ContinuousMovement.unrollSimulatePhysics(
                 moveCall,
                 fixedDeltaTime
             );
@@ -289,13 +326,14 @@ public partial class ArticulatedArmController : ArmController {
         //now need to do move call here I think
         IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
                 ContinuousMovement.moveAB(
-                controller: controller,
-                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
+                    movable: this,
+                    controller: controller,
+                    fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
             )
         );
 
         if (disableRendering) {
-            controller.unrollSimulatePhysics(
+            ContinuousMovement.unrollSimulatePhysics(
                 moveCall,
                 fixedDeltaTime
             );
@@ -368,13 +406,14 @@ public partial class ArticulatedArmController : ArmController {
         //now need to do move call here I think
         IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
                 ContinuousMovement.moveAB(
-                controller: controller,
-                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
+                    movable: this,
+                    controller: controller,
+                    fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
             )
         );
 
         if (disableRendering) {
-            controller.unrollSimulatePhysics(
+            ContinuousMovement.unrollSimulatePhysics(
                 moveCall,
                 fixedDeltaTime
             );

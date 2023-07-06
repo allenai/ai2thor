@@ -809,7 +809,7 @@ namespace Thor.Procedural {
 
             var collider = new GameObject("Col");
             // SimObjVisible
-            collider.layer = LayerMask.NameToLayer("Default");
+            collider.layer = LayerMask.NameToLayer("FloorAgent");
             collider.tag = "SimObjPhysics";
             var box = collider.AddComponent<BoxCollider>();
 

@@ -47,7 +47,7 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         return this.transform.Find("robot_arm_FK_IK_rig").transform.TransformPoint(point);
     }
 
-    public override void manipulateArm() {
+    public override void ContinuousUpdate() {
         Debug.Log("manipulate Arm called from IK_Robot_Arm_Controller");
         solver.ManipulateArm();
     }
@@ -157,7 +157,7 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         );
 
         if (disableRendering) {
-            controller.unrollSimulatePhysics(
+            ContinuousMovement.unrollSimulatePhysics(
                 rotate,
                 fixedDeltaTime
             );
@@ -190,7 +190,7 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         );
 
         if (disableRendering) {
-            controller.unrollSimulatePhysics(
+            ContinuousMovement.unrollSimulatePhysics(
                 rotate,
                 fixedDeltaTime
             );

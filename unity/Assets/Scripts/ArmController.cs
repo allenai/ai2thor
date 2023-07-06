@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public abstract class ArmController : MonoBehaviour, Arm {
+public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
 
     [SerializeField]
@@ -55,13 +55,18 @@ public abstract class ArmController : MonoBehaviour, Arm {
     public abstract Vector3 pointToWristSpace(Vector3 point);
     public abstract Vector3 pointToArmBaseSpace(Vector3 point);
 
-    public abstract void manipulateArm();
+    public abstract void ContinuousUpdate();
     public abstract GameObject GetArmTarget();
     public abstract ArmMetadata GenerateMetadata();
 
-    public virtual bool shouldHalt() {
+    public virtual bool ShouldHalt() {
         return collisionListener.ShouldHalt();
     }
+
+
+   public virtual void FinishContinuousMove(BaseFPSAgentController controller) {
+        
+   }
 
     public bool IsArmColliding() {
         HashSet<Collider> colliders = this.currentArmCollisions();
@@ -261,7 +266,7 @@ public abstract class ArmController : MonoBehaviour, Arm {
         );
 
         if (disableRendering) {
-            controller.unrollSimulatePhysics(
+            ContinuousMovement.unrollSimulatePhysics(
                 moveCall,
                 fixedDeltaTime
             );
@@ -314,7 +319,7 @@ public abstract class ArmController : MonoBehaviour, Arm {
         );
 
         if (disableRendering) {
-            controller.unrollSimulatePhysics(
+            ContinuousMovement.unrollSimulatePhysics(
                 enumerator: moveCall,
                 fixedDeltaTime: fixedDeltaTime
             );
@@ -382,7 +387,7 @@ public abstract class ArmController : MonoBehaviour, Arm {
         );
 
         if (disableRendering) {
-            controller.unrollSimulatePhysics(
+            ContinuousMovement.unrollSimulatePhysics(
                 rotate,
                 fixedDeltaTime
             );

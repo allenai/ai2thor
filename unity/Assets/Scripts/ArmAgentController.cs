@@ -179,7 +179,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             if (disableRendering) {
-                unrollSimulatePhysics(
+                ContinuousMovement.unrollSimulatePhysics(
                     enumerator: move,
                     fixedDeltaTime: fixedDeltaTimeFloat
                 );
@@ -335,7 +335,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             if (disableRendering) {
-                unrollSimulatePhysics(
+                ContinuousMovement.unrollSimulatePhysics(
                     enumerator: rotate,
                     fixedDeltaTime: fixedDeltaTime
                 );

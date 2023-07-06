@@ -5,8 +5,16 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System;
 using System.Linq;
 
+    public interface MovableContinuous {
+        public bool ShouldHalt();
+        public void ContinuousUpdate();
+        public void FinishContinuousMove(BaseFPSAgentController controller);
+    }
+
+
 namespace UnityStandardAssets.Characters.FirstPerson {
-    public class ContinuousMovement : MonoBehaviour{
+
+    public class ContinuousMovement {
         public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
             Debug.Log("ContinuousMovement.unrollSimulatePhysics()");
             int count = 0;
@@ -59,19 +67,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 epsilon: 1e-3
             );
         }
-
-        public static IEnumerator rotateAB(
-            ArticulatedAgentController controller,
-            float fixedDeltaTime,
-            float radiansPerSecond = 0,
-            float acceleration = 0
-        ) {
-            return updateFixedUpdateForAB(
-                controller: controller,
-                fixedDeltaTime: fixedDeltaTime
-            );
-        }
-
+        
         public static IEnumerator move(
             PhysicsRemoteFPSAgentController controller,
             CollisionListener collisionListener,
@@ -122,45 +118,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 nextPosFunc
             );
         }
-       
+
         public static IEnumerator moveAB(
+            MovableContinuous movable,
             ArticulatedAgentController controller,
             float fixedDeltaTime,
             float unitsPerSecond = 0,
             float acceleration = 0
         ) {
-            // Debug.Log("(5) ContinuousMovement: STARTING CONTINUOUS MOVEMENT COROUTINE");
-            //bool teleport = (unitsPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
-
             return updateFixedUpdateForAB(
+                movable: movable,
                 controller: controller,
                 fixedDeltaTime: fixedDeltaTime
             );
-
-            // Func<Transform, Vector3> getPosFunc;
-            // Action<Transform, Vector3> setPosFunc;
-            // Func<Transform, Vector3, Vector3> nextPosFunc;
-            // if (localPosition) {
-            //     getPosFunc = (t) => t.localPosition;
-            //     setPosFunc = (t, pos) => t.localPosition = pos;
-            //     nextPosFunc = (t, direction) => t.localPosition + direction * unitsPerSecond * fixedDeltaTime;
-            // } else {
-            //     getPosFunc = (t) => t.position;
-            //     setPosFunc = (t, pos) => t.position = pos;
-            //     nextPosFunc = (t, direction) => t.position + direction * unitsPerSecond * fixedDeltaTime;
-            // }
-
-            // if (teleport) {
-            //     nextPosFunc = (t, direction) => targetPosition;
-            // }
-
-            // return moveClosure(
-            //     getPosFunc,
-            //     setPosFunc,
-            //     nextPosFunc
-            // );
         }
-
+    
         protected static IEnumerator finallyDestroyGameObjects(
             List<GameObject> gameObjectsToDestroy,
             IEnumerator steps
@@ -246,49 +218,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public static IEnumerator updateFixedUpdateForAB(            
-            ArticulatedAgentController controller,
+            MovableContinuous movable,
+            BaseFPSAgentController controller,
             float fixedDeltaTime
-        ) {
-            // Debug.Log("(5A) ContinuousMovement: CROSSROADS FOR AGENT AND ARM");
-            // Determine whether it's agent or arm AB
-            if (controller.GetComponent<ArticulationBody>().isRoot) {
-                // Debug.Log("It's the root!");
-                // int i = 0;
-                // while(i < 1)
-                while(!controller.shouldHalt())
-                {
-                    // i++;
-                    // Debug.Log("(6) ContinuousMovement: RUNNING THROUGH SHOULDHALT WHILE LOOP");
-                    // Put this in object when you find where ArticulatedAgentController is!!!
-                    controller.transform.GetComponent<ArticulatedAgentSolver>().ControlAgentFromAction();
-                    // Debug.Log($"what is autosim state: {Physics.autoSimulation}");
-                    if (!Physics.autoSimulation) {
-                        Debug.Log("manual simulate from PhysicsManager");
-                        PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
-                    }
+        )
+        {
 
-                    yield return new WaitForFixedUpdate();
+            while(!movable.ShouldHalt())
+            {
+                movable.ContinuousUpdate();
+                //Debug.Log($"what is autosim state: {Physics.autoSimulation}");
+                if (!Physics.autoSimulation) {
+                    //Debug.Log("manual simulate from PhysicsManager");
+                    PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
                 }
 
-            // } else {
-            //     Debug.Log("in updateFixedUpdateForAB");
-            //     var arm = controller.GetComponentInChildren<ArmController>();
-
-            //     while(!arm.shouldHalt())
-            //     {
-            //         arm.manipulateArm();
-            //         Debug.Log($"what is autosim state: {Physics.autoSimulation}");
-            //         if (!Physics.autoSimulation) {
-            //             Debug.Log("manual simulate from PhysicsManager");
-            //             PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
-            //         }
-
-            //         yield return new WaitForFixedUpdate();
-            //     }
+                yield return new WaitForFixedUpdate();
             }
 
-            Debug.Log("about to start continuousMoveFinish for AB");
-            continuousMoveFinishAB(controller: controller);
+            //Debug.Log("about to start continuousMoveFinish for AB");
+            movable.FinishContinuousMove(controller);
             yield return null;
         }
 
@@ -327,7 +276,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             T directionToTarget = getDirection(target, currentProperty);
 
             bool haveGottenWithinEpsilon = currentDistance <= epsilon;
-            while (!arm.shouldHalt()) {
+            while (!arm.ShouldHalt()) {
                 previousProperty = getProp(moveTransform);
 
                 T next = nextProp(moveTransform, directionToTarget);
@@ -348,7 +297,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // update?.Invoke();
 
                 // this will be a NOOP for Rotate/Move/Height actions
-                arm.manipulateArm();
+                arm.ContinuousUpdate();
                 Debug.Log("2");
 
                 if (!Physics.autoSimulation) {
@@ -395,7 +344,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             // we call this one more time in the event that the arm collided and was reset
-            arm.manipulateArm();
+            arm.ContinuousUpdate();
 
             if (!Physics.autoSimulation) {
                 if (fixedDeltaTime == 0f) {

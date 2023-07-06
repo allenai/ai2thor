@@ -6484,15 +6484,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-
-
-        public void unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
-            ContinuousMovement.unrollSimulatePhysics(
-                enumerator,
-                fixedDeltaTime
-            );
-        }
-
         public void GetSceneBounds() {
             Vector3[] positions = new Vector3[2];
             positions[0] = agentManager.SceneBounds.min;

@@ -25,7 +25,7 @@ public class AgentMoveParams {
     public Vector3 initialTransformation;
 }
 
-public class ArticulatedAgentSolver : MonoBehaviour {
+public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
     //pass in arm move parameters for Action based movement
     public AgentMoveParams currentAgentMoveParams = new AgentMoveParams();
     //reference for this joint's articulation body
@@ -92,7 +92,7 @@ public class ArticulatedAgentSolver : MonoBehaviour {
     }
     
     // bool maxedOut = false;
-    public void ControlAgentFromAction() {
+    public void ContinuousUpdate() {
         if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
             // Debug.Log("(7) ArticulatedAgentSolver: ACTUAL LOGIC. Also, distanceMovedSoFar is " + distanceMovedSoFar + ", and decelerationDistance is " + decelerationDistance);
             if (myAB.velocity.magnitude < currentAgentMoveParams.speed && currentAgentMoveParams.distance - distanceMovedSoFar > accelerationDistance) {
@@ -194,6 +194,48 @@ public class ArticulatedAgentSolver : MonoBehaviour {
 
         // we are set to be in an idle state so return and do nothing
         return;
+    }
+
+    public bool ShouldHalt() {
+            // Debug.Log("checking ArticulatedAgentController shouldHalt");
+            bool shouldStop = false;
+            ArticulatedAgentSolver a = this;
+            // Debug.Log($"checking agent: {a.transform.name}");
+            Debug.Log($"distance moved so far is: {a.distanceMovedSoFar}");
+            Debug.Log($"current velocity is: {this.transform.GetComponent<ArticulationBody>().velocity.magnitude}");
+            
+            //check agent to see if it has halted or not
+            if (!a.shouldHalt(
+                distanceMovedSoFar: a.distanceMovedSoFar,
+                cachedPositions: a.currentAgentMoveParams.cachedPositions,
+                tolerance: a.currentAgentMoveParams.tolerance
+            )) {
+                //if any single joint is still not halting, return false
+//                Debug.Log("still not done, don't halt yet");
+                shouldStop = false;
+                return shouldStop;
+            } else {
+                //this joint returns that it should stop!
+                Debug.Log($"halted! Return shouldStop! Distance moved: {a.distanceMovedSoFar}");
+                shouldStop = true;
+                return shouldStop;
+            }
+        }
+
+    public void FinishContinuousMove(BaseFPSAgentController controller) {
+        Debug.Log("starting continuousMoveFinishAB");
+        controller.transform.GetComponent<ArticulationBody>().velocity = Vector3.zero;
+        controller.transform.GetComponent<ArticulationBody>().angularVelocity = Vector3.zero;
+        controller.transform.GetComponent<ArticulatedAgentSolver>().currentAgentMoveParams.agentState = ABAgentState.Idle;
+        bool actionSuccess = true;
+        string debugMessage = "I guess everything is fine?";
+
+        //maybe needs to switch back to slippery here to prep for movement???
+        //or maybe we default to high friction, and only change to no friction when moving body
+        //controller.SetFloorColliderToSlippery();
+
+        controller.errorMessage = debugMessage;
+        controller.actionFinished(actionSuccess, debugMessage);
     }
 
     //do checks based on what sort of joint I am
