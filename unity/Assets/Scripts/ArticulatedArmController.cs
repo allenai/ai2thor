@@ -51,7 +51,7 @@ public partial class ArticulatedArmController : ArmController {
         }
     }
 
-    public override bool shouldHalt() {
+    public bool shouldHalt() {
         //Debug.Log("checking ArticulatedArmController shouldHalt");
         bool shouldHalt = false;
         foreach (ArticulatedArmJointSolver j in joints) {

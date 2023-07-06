@@ -124,7 +124,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ArticulatedAgentController controller,
             float fixedDeltaTime,
             float unitsPerSecond = 0,
-            float acceleration = 0
+            float acceleration = 0,
+            bool isAgent = true
         ) {
             return updateFixedUpdateForAB(
                 movable: movable,
