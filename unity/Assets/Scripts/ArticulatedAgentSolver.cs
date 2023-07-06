@@ -102,7 +102,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                     Debug.Log("Applying acceleration force of " + relativeForce.z);
             } else if (distanceMovedSoFar >= currentAgentMoveParams.distance - accelerationDistance) {
                 
-                if(beginDeceleration == false) {
+                if (beginDeceleration == false) {
                     beginDeceleration = true;
                     // not necessary, since speed is kept constant, but 
                     beginDecelerationSpeed = myAB.velocity.magnitude;

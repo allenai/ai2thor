@@ -232,7 +232,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 direction = 1;
             }
 
-            moveMagnitude = 1;
             Debug.Log("Move magnitude is now officially " + moveMagnitude);
             // Debug.Log($"preparing agent {this.transform.name} to move");
             if (Mathf.Approximately(moveMagnitude, 0.0f)) {
