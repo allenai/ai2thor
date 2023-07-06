@@ -92,7 +92,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
     }
     
     // bool maxedOut = false;
-    public void ContinuousUpdate() {
+    public void ContinuousUpdate(float fixedDeltaTime)  {
         if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
             // Debug.Log("(7) ArticulatedAgentSolver: ACTUAL LOGIC. Also, distanceMovedSoFar is " + distanceMovedSoFar + ", and decelerationDistance is " + decelerationDistance);
             if (myAB.velocity.magnitude < currentAgentMoveParams.speed && currentAgentMoveParams.distance - distanceMovedSoFar > accelerationDistance) {

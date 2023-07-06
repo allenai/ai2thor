@@ -127,7 +127,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         }
     }
 
-    public void ControlJointFromAction() {
+    public void ControlJointFromAction(float fixedDeltaTime) {
         // Debug.Log($"Type: {jointAxisType.ToString()} pos");
         //we are a lift type joint
         if (jointAxisType == JointAxisType.Lift) {
@@ -136,7 +136,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 //Debug.Log("start ControlJointFromAction for axis type LIFT");
                 var drive = myAB.yDrive;
                 float currentPosition = myAB.jointPosition[0];
-                float targetPosition = currentPosition + (float)liftState * Time.fixedDeltaTime * currentArmMoveParams.speed;
+                float targetPosition = currentPosition + (float)liftState * fixedDeltaTime * currentArmMoveParams.speed;
                 drive.target = targetPosition;
                 myAB.yDrive = drive;
 
@@ -160,7 +160,8 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 }
 
                 //otherwise we have a hard timer to stop movement so we don't move forever and crash unity
-                currentArmMoveParams.timePassed += Time.deltaTime;
+                Debug.Log($"------ Time passed: {fixedDeltaTime}");
+                currentArmMoveParams.timePassed += fixedDeltaTime;
             }
 
             //we are set to be in an idle state so return and do nothing
@@ -175,7 +176,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 //Debug.Log("start ControlJointFromAction for axis type EXTEND");
                 var drive = myAB.zDrive;
                 float currentPosition = myAB.jointPosition[0];
-                float targetPosition = currentPosition + (float)extendState * Time.fixedDeltaTime * currentArmMoveParams.speed;
+                float targetPosition = currentPosition + (float)extendState * fixedDeltaTime * currentArmMoveParams.speed;
                 drive.target = targetPosition;
                 myAB.zDrive = drive;
 
@@ -198,7 +199,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 }
 
                 //otherwise we have a hard timer to stop movement so we don't move forever and crash unity
-                currentArmMoveParams.timePassed += Time.deltaTime;
+                currentArmMoveParams.timePassed += fixedDeltaTime;
 
                 return;
             }
@@ -215,7 +216,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 //convert to degrees
                 float currentRotation = Mathf.Rad2Deg * currentRotationRads;
                 //i think this speed is in rads per second?????
-                float targetRotation = currentRotation + (float)rotateState * currentArmMoveParams.speed * Time.fixedDeltaTime;
+                float targetRotation = currentRotation + (float)rotateState * currentArmMoveParams.speed * fixedDeltaTime;
                 drive.target = targetRotation;
                 myAB.xDrive = drive;
 
@@ -235,7 +236,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 }
 
                 //otherwise we have a hard timer to stop movement so we don't move forever and crash unity
-                currentArmMoveParams.timePassed += Time.deltaTime;
+                currentArmMoveParams.timePassed += fixedDeltaTime;
                 Debug.Log($"time passed: {currentArmMoveParams.timePassed}");
                 return;
             }

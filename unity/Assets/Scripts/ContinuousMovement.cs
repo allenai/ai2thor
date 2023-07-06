@@ -7,7 +7,7 @@ using System.Linq;
 
     public interface MovableContinuous {
         public bool ShouldHalt();
-        public void ContinuousUpdate();
+        public void ContinuousUpdate(float fixedDeltaTime);
         public void FinishContinuousMove(BaseFPSAgentController controller);
     }
 
@@ -226,7 +226,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             while(!movable.ShouldHalt())
             {
-                movable.ContinuousUpdate();
+                movable.ContinuousUpdate(fixedDeltaTime);
                 //Debug.Log($"what is autosim state: {Physics.autoSimulation}");
                 if (!Physics.autoSimulation) {
                     //Debug.Log("manual simulate from PhysicsManager");
@@ -297,7 +297,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // update?.Invoke();
 
                 // this will be a NOOP for Rotate/Move/Height actions
-                arm.ContinuousUpdate();
+                arm.ContinuousUpdate(fixedDeltaTime);
                 Debug.Log("2");
 
                 if (!Physics.autoSimulation) {
@@ -344,7 +344,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             // we call this one more time in the event that the arm collided and was reset
-            arm.ContinuousUpdate();
+            arm.ContinuousUpdate(fixedDeltaTime);
 
             if (!Physics.autoSimulation) {
                 if (fixedDeltaTime == 0f) {

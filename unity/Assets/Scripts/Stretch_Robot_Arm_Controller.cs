@@ -34,7 +34,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
         return armBase.transform.TransformPoint(point);
     }
 
-    public override void ContinuousUpdate() {
+    public override void ContinuousUpdate(float fixedDeltaTime) {
         solver.ManipulateStretchArm();
     }
 

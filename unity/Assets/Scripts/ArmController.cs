@@ -55,7 +55,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
     public abstract Vector3 pointToWristSpace(Vector3 point);
     public abstract Vector3 pointToArmBaseSpace(Vector3 point);
 
-    public abstract void ContinuousUpdate();
+    public abstract void ContinuousUpdate(float fixedDeltaTime);
     public abstract GameObject GetArmTarget();
     public abstract ArmMetadata GenerateMetadata();
 

@@ -47,7 +47,7 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         return this.transform.Find("robot_arm_FK_IK_rig").transform.TransformPoint(point);
     }
 
-    public override void ContinuousUpdate() {
+    public override void ContinuousUpdate(float fixedDeltaTime) {
         Debug.Log("manipulate Arm called from IK_Robot_Arm_Controller");
         solver.ManipulateArm();
     }

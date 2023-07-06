@@ -42,12 +42,12 @@ public partial class ArticulatedArmController : ArmController {
         return armBase.transform.TransformPoint(point);
     }
 
-    public override void ContinuousUpdate() {
+    public override void ContinuousUpdate(float fixedDeltaTime) {
         //so assume each joint that needs to move has had its `currentArmMoveParams` set
         //now we call `ControlJointFromAction` on all joints each physics update to get it to move...
         //Debug.Log("starting ArticulatedArmController.manipulateArm");
         foreach (ArticulatedArmJointSolver j in joints) {
-            j.ControlJointFromAction();
+            j.ControlJointFromAction(fixedDeltaTime);
         }
     }
 

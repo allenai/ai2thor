@@ -98,7 +98,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FloorCollider = this.gameObject.transform.Find("abFloorCollider").GetComponent<Collider>();
             FloorColliderPhysicsMaterial = FloorCollider.material;
 
-            getArmImplementation().ContinuousUpdate();
+            getArmImplementation().ContinuousUpdate(Time.fixedDeltaTime);
 
             Debug.Log($"Position {this.transform.position}");
         }

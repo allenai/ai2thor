@@ -36,7 +36,7 @@ public partial class StretchABArmController : ArmController {
         return armBase.transform.TransformPoint(point);
     }
 
-    public override void ContinuousUpdate() {
+    public override void ContinuousUpdate(float fixedDeltaTime) {
         // TODO: this is called after every physics update loop so solver update funcion should go here
 
         // Arm target class member is used to calculate distance
