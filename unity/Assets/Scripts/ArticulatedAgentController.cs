@@ -261,8 +261,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 movable: this.getBodyMovable(),
                 controller: this,
                 fixedDeltaTime: fixedDeltaTimeFloat,
-                unitsPerSecond: speed,
-                acceleration: acceleration
+                isAgent: true
             );
 
             if (disableRendering) {

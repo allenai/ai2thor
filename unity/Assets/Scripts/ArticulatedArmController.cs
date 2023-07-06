@@ -51,33 +51,7 @@ public partial class ArticulatedArmController : ArmController {
         }
     }
 
-    /*public bool shouldHalt() {
-            // Debug.Log("checking ArticulatedAgentController shouldHalt");
-            bool shouldStop = false;
-            ArticulatedAgentSolver a = this.transform.GetComponent<ArticulatedAgentSolver>();
-            // Debug.Log($"checking agent: {a.transform.name}");
-            Debug.Log($"distance moved so far is: {a.distanceMovedSoFar}");
-            Debug.Log($"current velocity is: {this.transform.GetComponent<ArticulationBody>().velocity.magnitude}");
-            
-            //check agent to see if it has halted or not
-            if (!a.shouldHalt(
-                distanceMovedSoFar: a.distanceMovedSoFar,
-                cachedPositions: a.currentAgentMoveParams.cachedPositions,
-                tolerance: a.currentAgentMoveParams.tolerance
-            )) {
-                //if any single joint is still not halting, return false
-//                Debug.Log("still not done, don't halt yet");
-                shouldStop = false;
-                return shouldStop;
-            } else {
-                //this joint returns that it should stop!
-                Debug.Log($"halted! Return shouldStop! Distance moved: {a.distanceMovedSoFar}");
-                shouldStop = true;
-                return shouldStop;
-            }
-        }*/
-
-    public override bool ShouldHalt() {
+    public override bool shouldHalt() {
         //Debug.Log("checking ArticulatedArmController shouldHalt");
         bool shouldHalt = false;
         foreach (ArticulatedArmJointSolver j in joints) {
