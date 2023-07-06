@@ -259,8 +259,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             IEnumerator move = ContinuousMovement.moveAB(
                 movable: this.getBodyMovable(),
                 controller: this,
-                fixedDeltaTime: fixedDeltaTimeFloat,
-                isAgent: true
+                fixedDeltaTime: fixedDeltaTimeFloat
             );
 
             if (disableRendering) {
