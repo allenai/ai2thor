@@ -181,12 +181,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //helper functions to set physics material values
         public void SetFloorColliderToSlippery(){
             FloorColliderPhysicsMaterial.staticFriction = 0;
-            FloorColliderPhysicsMaterial.dynamicFriction = 0;
+            FloorColliderPhysicsMaterial.frictionCombine = PhysicMaterialCombine.Minimum; //ensure min friction take priority
+
+            //FloorColliderPhysicsMaterial.dynamicFriction = 0;
         }
 
         public void SetFloorColliderToHighFriction(){
             FloorColliderPhysicsMaterial.staticFriction = 1;
-            FloorColliderPhysicsMaterial.dynamicFriction = 1;
+            FloorColliderPhysicsMaterial.frictionCombine = PhysicMaterialCombine.Maximum; //ensure max friction takes priority
+            //FloorColliderPhysicsMaterial.dynamicFriction = 1;
         }
 
         public void TeleportFull(Vector3 position, Vector3 rotation, float? horizon = null, bool forceAction = false) {
