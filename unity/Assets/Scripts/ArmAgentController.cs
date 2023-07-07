@@ -364,7 +364,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool disableRendering = true
         ) {
             var arm = getArm();
-
             arm.rotateWrist(
                 controller: this,
                 rotation: Quaternion.Euler(pitch, yaw, -roll),

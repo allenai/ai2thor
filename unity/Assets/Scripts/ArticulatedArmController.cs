@@ -351,7 +351,7 @@ public partial class ArticulatedArmController : ArmController {
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed
     ) {
-        //Debug.Log("starting rotateWrist in ArticulatedArmController");
+        Debug.Log("starting rotateWrist in ArticulatedArmController");
         float tolerance = 1e-3f;
         float maxTimePassed = 10.0f;
         int positionCacheSize = 10;
