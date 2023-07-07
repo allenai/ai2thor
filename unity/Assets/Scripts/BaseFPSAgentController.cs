@@ -3254,6 +3254,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 foreach (Collider c in this.GetComponentsInChildren<Collider>()) {
+                    if(c.transform.gameObject.layer == LayerMask.NameToLayer("ArticulatedAgent") || c.transform.gameObject.layer == LayerMask.NameToLayer("FloorAgent")) {
+                        continue;
+                    }
+
                     if (!collidersToNotDisable.Contains(c)) {
                         collidersDisabledForVisbilityCheck.Add(c);
                         c.enabled = false;

@@ -47,9 +47,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // editor
 #if UNITY_EDITOR
-            // if (this.agent.agentState == AgentState.ActionComplete) {
-            //     this.agent.VisibleSimObjPhysics = this.agent.VisibleSimObjs(false);
-            // }
+            if (this.agent.agentState == AgentState.ActionComplete) {
+                this.agent.VisibleSimObjPhysics = this.agent.VisibleSimObjs(false);
+            }
 #endif
 
         }
