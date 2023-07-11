@@ -3838,7 +3838,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public VisibilityCheck isSimObjVisible(Camera camera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
             // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
             VisibilityCheck visCheck = new VisibilityCheck();
-            if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
+
+            if (sop.VisibilityPoints != null
+                && sop.VisibilityPoints.Length > 0
+            ) {
+                AxisAlignedBoundingBox aabb = sop.AxisAlignedBoundingBox;
+                if (!GeometryUtility.TestPlanesAABB(
+                    planes: planes,
+                    bounds: new Bounds(center: aabb.center, size:aabb.size)
+                )) {
+                    return visCheck;
+                }
                 Transform[] visPoints = sop.VisibilityPoints;
                 float maxDistanceSquared = maxDistance * maxDistance;
                 foreach (Transform point in visPoints) {
@@ -3853,7 +3863,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (outsidePlane) {
                         continue;
                     }
-
 
                     float xdelta = Math.Abs(camera.transform.position.x - point.position.x);
                     if (xdelta > maxDistance) {
