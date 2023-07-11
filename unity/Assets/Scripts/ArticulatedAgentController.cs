@@ -327,6 +327,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool disableRendering = false,
             float fixedDeltaTime = 0.02f
         ) {
+            SetFloorColliderToSlippery();
             RotateAgent(
                 degrees: degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
@@ -347,6 +348,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool disableRendering = false,
             float fixedDeltaTime = 0.02f
         ) {
+            SetFloorColliderToSlippery();
             RotateAgent(
                 degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
