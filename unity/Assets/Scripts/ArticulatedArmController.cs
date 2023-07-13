@@ -399,11 +399,11 @@ public partial class ArticulatedArmController : ArmController {
     }
 
     public override bool PickupObject(List<string> objectIds, ref string errorMessage) {
-        //Debug.Log("calling PickupObject from ArticulatedArmController");
+        Debug.Log("calling PickupObject from ArticulatedArmController");
         bool pickedUp = false;
 
         foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP(onlyPickupable: true)) {
-            //Debug.Log($"sop named: {sop.objectID} found inside sphere");
+            Debug.Log($"sop named: {sop.objectID} found inside sphere");
             if (objectIds != null) {
                 //only grab objects specified by objectIds
                 if (!objectIds.Contains(sop.objectID)) {
@@ -411,17 +411,20 @@ public partial class ArticulatedArmController : ArmController {
                 }
             }
 
-            Rigidbody rb = sop.GetComponent<Rigidbody>();
+            sop.BeingPickedUpByArticulatedAgent(this);
 
-            //make sure rigidbody of object is not kinematic
-            rb.isKinematic = false;
+            // Rigidbody rb = sop.GetComponent<Rigidbody>();
 
-            //add a fixed joint to this picked up object
-            FixedJoint ultraHand = sop.transform.gameObject.AddComponent<FixedJoint>();
-            //add reference to the wrist joint as connected articulated body 
-            ultraHand.connectedArticulationBody = FinalJoint.GetComponent<ArticulationBody>();
-            ultraHand.enableCollision = true;
+            // //make sure rigidbody of object is not kinematic
+            // rb.isKinematic = false;
+
+            // //add a fixed joint to this picked up object
+            // FixedJoint ultraHand = sop.transform.gameObject.AddComponent<FixedJoint>();
+            // //add reference to the wrist joint as connected articulated body 
+            // ultraHand.connectedArticulationBody = FinalJoint.GetComponent<ArticulationBody>();
+            // ultraHand.enableCollision = true;
             //add to heldObjects list so we know when to drop
+
             pickedUp = true;
             heldObjects.Add(sop);
         }
@@ -437,6 +440,7 @@ public partial class ArticulatedArmController : ArmController {
         return pickedUp;
     }
 
+    //called by ArmAgentController ReleaseObject
     public override void DropObject() { 
         foreach (SimObjPhysics sop in heldObjects)
         {
@@ -445,20 +449,7 @@ public partial class ArticulatedArmController : ArmController {
             //look into the OnJointBreak callback if needed
             Destroy(sop.transform.GetComponent<FixedJoint>());
 
-            GameObject topObject = GameObject.Find("Objects");
-
-            if (topObject != null) {
-                sop.transform.parent = topObject.transform;
-            } else {
-                sop.transform.parent = null;
-            }
-
-            Rigidbody rb = sop.GetComponent<Rigidbody>();
-            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-            rb.isKinematic = false;
-            rb.useGravity = true;
-            rb.detectCollisions = true;
-            rb.WakeUp();
+            sop.BeingDropped();
         }
         
         heldObjects.Clear();

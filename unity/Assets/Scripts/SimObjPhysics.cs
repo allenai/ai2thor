@@ -103,6 +103,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     // reference to this gameobject's rigidbody
     private Rigidbody myRigidbody;
 
+    private ArticulatedArmController articulatedArmHoldingMe;
+
     // properties initialized during Start()
     public bool IsReceptacle;
     public bool IsPickupable;
@@ -1132,6 +1134,46 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
                 MyColliders[i].material.bounciness = OriginalPhysicsMaterialValuesForAllMyColliders[i].Bounciness;
             }
         }
+    }
+
+    //note breakForce and breakTorque are exposed here so we may use that later I guess
+    public void BeingPickedUpByArticulatedAgent(ArticulatedArmController arm, float breakForce = 2.0f, float breakTorque = 2.0f)
+    {
+        articulatedArmHoldingMe = arm;
+        myRigidbody.isKinematic = false;
+
+        //add fixed joint
+        //add a fixed joint to this picked up object
+        FixedJoint ultraHand = this.transform.gameObject.AddComponent<FixedJoint>();
+        //add reference to the wrist joint as connected articulated body 
+        ultraHand.connectedArticulationBody = arm.FinalJoint.GetComponent<ArticulationBody>();
+        ultraHand.breakForce = breakForce;
+        ultraHand.breakTorque = breakTorque;
+        ultraHand.enableCollision = true;
+    }
+
+    //callback for when joint breaks due to force
+    public void OnJointBreak(float breakForce) {
+        Debug.Log("A joint has just been broken!, force: " + breakForce);
+        BeingDropped();
+        //remove just this from held objects in case like, we picked up multiple things
+        //but just one thing got hit and needs to be dropped
+        articulatedArmHoldingMe.heldObjects.Remove(this);
+    }
+
+    public void BeingDropped() {
+        GameObject topObject = GameObject.Find("Objects");
+        if (topObject != null) {
+            this.transform.parent = topObject.transform;
+        } else {
+            this.transform.parent = null;
+        }
+
+        myRigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        myRigidbody.isKinematic = false;
+        myRigidbody.useGravity = true;
+        myRigidbody.detectCollisions = true;
+        myRigidbody.WakeUp();
     }
 
 #if UNITY_EDITOR

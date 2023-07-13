@@ -9,7 +9,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
 
     [SerializeField]
-    protected Transform FinalJoint;
+    public Transform FinalJoint;
 
     [SerializeField]
     protected Transform armTarget;
