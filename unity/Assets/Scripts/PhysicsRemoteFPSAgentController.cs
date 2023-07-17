@@ -1453,6 +1453,99 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //     );
         // }
 
+        public void CheckTeleportFullSuccess(
+            Vector3 position,
+            Vector3 rotation,
+            float horizon,
+            bool standing,
+            bool forceAction = false
+        ) {
+            Debug.Log("trying CheckTeleportFullSuccess in PhysicsRemoteFPSAgentController");
+            //temporarily disable collision matrix so teleport doesn't move anything
+            Physics.IgnoreLayerCollision(LayerMask.NameToLayer("Agent"), LayerMask.NameToLayer("SimObjVisible"),true);
+
+            //List<Collider> allAgentColliders = new List<Collider>();
+
+            // var allAgentColliders = this.transform.gameObject.GetComponentsInChildren<Collider>();
+            // foreach (Collider c in allAgentColliders) {
+            //     if(c.isTrigger == false)
+            // }
+
+            // cache old values in case there's a failure
+            bool wasStanding = isStanding();
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
+
+            Vector3 oldLocalHandPosition = new Vector3();
+            Quaternion oldLocalHandRotation = new Quaternion();
+            if (ItemInHand != null) {
+                oldLocalHandPosition = ItemInHand.transform.localPosition;
+                oldLocalHandRotation = ItemInHand.transform.localRotation;
+            }
+
+            try {
+                // default high level hand when teleporting
+                DefaultAgentHand();
+                base.teleportFull(
+                    position: position,
+                    rotation: rotation,
+                    horizon: horizon,
+                    forceAction: forceAction,
+                    ignoreEdgeCases: true 
+                );
+                string errorMessage = "";
+
+                if (standing) {
+                    stand();
+                } else {
+                    crouch();
+                }
+
+                // add arm value cases
+                if (!forceAction) {
+                    if (isHandObjectColliding(ignoreAgent: true)) {
+                        throw new InvalidOperationException("Cannot teleport due to hand object collision.");
+                    }
+                    if (Arm != null && Arm.IsArmColliding()) {
+                        throw new InvalidOperationException(
+                            "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull fails in this position."
+                        );
+                    } else if (SArm != null && SArm.IsArmColliding()) {
+                        throw new InvalidOperationException(
+                            "Stretch Arm is actively clipping with some geometry in the environment. TeleportFull fails in this position."
+                        );
+                    }
+                    //base.assertTeleportedNearGround(targetPosition: position);
+                }
+            } catch (InvalidOperationException e) {
+                errorMessage = e.Message;
+            }
+
+            if (errorMessage == "") {
+                errorMessage = $"there is free space to teleport to position:{position} at rotation:{rotation} with horizon:{horizon}";
+            }
+
+            if (wasStanding) {
+                stand();
+            } else {
+                crouch();
+            }
+            if (ItemInHand != null) {
+                ItemInHand.transform.localPosition = oldLocalHandPosition;
+                ItemInHand.transform.localRotation = oldLocalHandRotation;
+            }
+
+            transform.position = oldPosition;
+            transform.rotation = oldRotation;
+            m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
+
+            Debug.Log("switch collision back");
+            //return collision matrix to normal
+            Physics.IgnoreLayerCollision(LayerMask.NameToLayer("Agent"), LayerMask.NameToLayer("SimObjVisible"), false);
+            actionFinished(true, errorMessage);
+        }
+
         // has to consider both the arm and standing
         public void TeleportFull(
             Vector3 position,

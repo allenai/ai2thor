@@ -1237,6 +1237,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, dist);
         }
 
+        public bool SweepTestInDirection() {
+            bool result = false;
+            //Physics.IgnoreLayerCollision();
+            return result;
+        }
+
         public bool CheckIfAgentCanMove(
             Vector3 offset,
             HashSet<Collider> ignoreColliders = null
@@ -2526,7 +2532,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected void teleportFull(
-            Vector3 position, Vector3 rotation, float horizon, bool forceAction
+            Vector3 position, Vector3 rotation, float horizon, bool forceAction, bool ignoreEdgeCases = false
         ) {
             // Note: using Mathf.Approximately uses Mathf.Epsilon, which is significantly
             // smaller than 1e-2f. I'm not confident that will work in many cases.
@@ -2537,23 +2543,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
 
-            // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
-            if (!forceAction && (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle)) {
-                throw new ArgumentOutOfRangeException(
-                    $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
-                );
-            }
+            //allows filtering edge cases beyond all or nothing via forceAction
+            if (!ignoreEdgeCases){
+                // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
+                if (!forceAction && (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle)) {
+                    throw new ArgumentOutOfRangeException(
+                        $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
+                    );
+                }
 
-            if (!forceAction && !agentManager.SceneBounds.Contains(position)) {
-                throw new ArgumentOutOfRangeException(
-                    $"Teleport position {position.ToString("F6")} out of scene bounds! Ignore this by setting forceAction=true."
-                );
-            }
+                if (!forceAction && !agentManager.SceneBounds.Contains(position)) {
+                    throw new ArgumentOutOfRangeException(
+                        $"Teleport position {position.ToString("F6")} out of scene bounds! Ignore this by setting forceAction=true."
+                    );
+                }
 
-            if (!forceAction && !isPositionOnGrid(position)) {
-                throw new ArgumentOutOfRangeException(
-                    $"Teleport position {position.ToString("F6")} is not on the grid of size {gridSize}."
-                );
+                if (!forceAction && !isPositionOnGrid(position)) {
+                    throw new ArgumentOutOfRangeException(
+                        $"Teleport position {position.ToString("F6")} is not on the grid of size {gridSize}."
+                    );
+                }
             }
 
             // cache old values in case there's a failure
@@ -5070,6 +5079,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             HashSet<Collider> collidersToIgnore = null,
             bool includeErrorMessage = false
         ) {
+
+            Debug.Log("isAgentCapsuleColliding in BaseFPSAgentController");
             int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             foreach (
                 Collider c in PhysicsExtensions.OverlapCapsule(
@@ -5078,7 +5089,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ) {
                 if ((!hasAncestor(c.transform.gameObject, gameObject)) && (
                     collidersToIgnore == null || !collidersToIgnoreDuringMovement.Contains(c))
-                ) {
+                ) { 
                     if (includeErrorMessage) {
                         SimObjPhysics sop = ancestorSimObjPhysics(c.gameObject);
                         String collidedWithName;

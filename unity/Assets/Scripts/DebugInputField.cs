@@ -2107,12 +2107,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                case "teles": {
-                        ServerAction action = new ServerAction();
-                        action.action = "TeleportFull";
-                        action.x = 4.42f;
-                        action.y = 0.9009f;
-                        action.z = -1.05f;
+                case "tele": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "TeleportFull";
+                        action["position"] = GameObject.Find("TargetPosition").transform.position;
+                        action["rotation"] = GameObject.Find("FPSController").transform.rotation.eulerAngles;
+                        action["horizon"] = 0.0f;
+                        action["standing"] = true;
+                        action["forceAction"] = true;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "checktele": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "CheckTeleportFullSuccess";
+                        action["position"] = GameObject.Find("TargetPosition").transform.position;
+                        action["rotation"] = GameObject.Find("FPSController").transform.rotation.eulerAngles;
+                        action["horizon"] = 0.0f;
+                        action["standing"] = true;
+                        //action["forceAction"] = true;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
