@@ -27,7 +27,7 @@ from functools import lru_cache
 from itertools import product
 from platform import architecture as platform_architecture
 from platform import system as platform_system
-from typing import Dict, Any, Union, Optional
+from typing import Dict, Any, Union, Optional, List
 
 import numpy as np
 
@@ -400,7 +400,7 @@ class Controller(object):
         server_timeout: Optional[float] = 100.0,
         server_start_timeout: float = 300.0,
         runtime_assets_dir="",
-        runtime_asset_ids=[],
+        runtime_asset_ids: Optional[List] = None,
         # objaverse_asset_ids=[], TODO add and implement when objaverse.load_thor_objects is available
         action_hook_runner=None,
         metadata_hook: Optional[MetadataHook] = None,
@@ -443,6 +443,9 @@ class Controller(object):
                 ),
             )
         )
+
+        if runtime_asset_ids is None:
+            runtime_asset_ids = []
 
         self.action_hook_runner = action_hook_runner
         self.action_hooks = (

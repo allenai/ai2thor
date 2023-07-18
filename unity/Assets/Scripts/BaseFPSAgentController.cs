@@ -6520,6 +6520,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             GameObject meshObj = new GameObject("mesh");
             meshObj.transform.parent = go.transform;
             Mesh mesh = new Mesh();
+            if (vertices.Length >= 65535) {
+                mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            }
             mesh.vertices = vertices;
             mesh.triangles = triangles;
             mesh.normals = normals;
