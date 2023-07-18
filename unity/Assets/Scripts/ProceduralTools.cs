@@ -1535,7 +1535,6 @@ namespace Thor.Procedural {
             if (!string.IsNullOrEmpty(houseObject.collisionDetectionMode)) {
                 Enum.TryParse(houseObject.collisionDetectionMode, true, out collDet);
             }
-
             // Debug.Log($"----- obj {houseObject.id} , {houseObject.collisionDetectionMode} procPar {proceduralParamsCollisionDetMode} final: {collDet}");
 
             var go = ProceduralTools.spawnHouseObject(ProceduralTools.getAssetMap(), houseObject, collDet);
