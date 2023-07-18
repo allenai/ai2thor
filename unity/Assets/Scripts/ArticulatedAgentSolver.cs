@@ -37,7 +37,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
     private float accelerationTorque;
     private float accelerationDistance, beginDecelerationSpeed, decelerationDistance, beginDecelerationTime; 
     private bool beginDeceleration, maxSpeed;
-    float deceleration, startTime, speedupTime;
+    float deceleration, speedupTime;
 
     void Start() {
         myAB = this.GetComponent<ArticulationBody>();
@@ -52,7 +52,6 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         }
         Debug.Log("DISTANCE IS " + agentMoveParams.distance);
         
-        startTime = Time.fixedTime;
         // Debug.Log("ArticulatedAgentController's inertiaTensor is (" + myAB.inertiaTensor.x + ", " + myAB.inertiaTensor.y + ", " + myAB.inertiaTensor.z + ")");
         // Debug.Log("(4) ArticulatedAgentSolver: SETTING UP EVERYTHING I NEED TO INFORM EACH FRAME OF MOVEMENT");
         //zero out distance delta tracking
@@ -187,7 +186,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         }
 
         // otherwise we have a hard timer to stop movement so we don't move forever and crash unity
-        currentAgentMoveParams.timePassed += Time.deltaTime;
+        currentAgentMoveParams.timePassed += fixedDeltaTime;
 
         // we are set to be in an idle state so return and do nothing
         return;

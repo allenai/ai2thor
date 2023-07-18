@@ -145,6 +145,7 @@ namespace Thor.Procedural.Data {
         public bool unlitCeiling { get; set; }
 
         public bool squareTiling = false;
+        public string collisionDetectionMode { get; set; }
     }
 
     [Serializable]
@@ -360,6 +361,8 @@ namespace Thor.Procedural.Data {
         
         public bool unlit;
         public MaterialProperties material;
+
+        public string collisionDetectionMode { get; set; }
     }
 
     [Serializable]

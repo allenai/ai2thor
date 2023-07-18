@@ -24,6 +24,8 @@ public class ArmMoveParams {
     public float[] cachedPositions;
     public int oldestCachedIndex;
     public float initialJointPosition;
+
+    public bool useLimits;
 }
 
 public class ArticulatedArmJointSolver : MonoBehaviour {
@@ -45,6 +47,10 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
 
     public float distanceMovedSoFar;
     public bool checkStandardDev;
+
+    public float lowerArmBaseLimit = -0.1832155f;
+    public float upperArmBaseLimit = 0.9177839f;
+
 
     void Start() {
         myAB = this.GetComponent<ArticulationBody>();
@@ -145,6 +151,65 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 currentArmMoveParams.cachedPositions[currentArmMoveParams.oldestCachedIndex] = currentPosition;
 
                 distanceMovedSoFar = Mathf.Abs(currentPosition - currentArmMoveParams.initialJointPosition);
+                if (currentArmMoveParams.useLimits) {
+                    float distanceRemaining = currentArmMoveParams.distance - distanceMovedSoFar;
+
+                    // New version of up-down drive
+                    float forceAppliedFromRest = 500f;
+                    float slowDownTime = 5 * fixedDeltaTime;
+                    drive.forceLimit = forceAppliedFromRest * 2;
+
+                    float direction = (float)liftState;
+                    targetPosition = currentPosition + direction * distanceRemaining;
+
+                    float offset = 1e-2f;
+                    if (liftState == ArmLiftState.MovingUp) {
+                        drive.upperLimit = Mathf.Min(upperArmBaseLimit, targetPosition + offset);
+                        drive.lowerLimit = Mathf.Min(Mathf.Max(lowerArmBaseLimit, currentPosition), targetPosition);
+                    } else if (liftState == ArmLiftState.MovingDown) {
+                        drive.lowerLimit = Mathf.Max(lowerArmBaseLimit, targetPosition);
+                        drive.upperLimit = Mathf.Max(Mathf.Min(upperArmBaseLimit, currentPosition + offset), targetPosition + offset);
+                    }
+
+                    drive.damping = forceAppliedFromRest / currentArmMoveParams.speed;
+
+                    float signedDistanceRemaining = direction * distanceRemaining;
+
+                    float maxSpeed = Mathf.Max(distanceRemaining / fixedDeltaTime, 0f); // Never move so fast we'll overshoot in 1 step
+                    currentArmMoveParams.speed = Mathf.Min(maxSpeed, currentArmMoveParams.speed);
+
+                    float curVelocity = myAB.velocity.y;
+                    float curSpeed = Mathf.Abs(curVelocity);
+
+                    float switchWhenThisClose = 0.01f;
+                    bool willReachTargetSoon = (
+                        distanceRemaining < switchWhenThisClose || (
+                            direction * curVelocity > 0f
+                            && distanceRemaining / Mathf.Max(curSpeed, 1e-7f) <= slowDownTime
+                        )
+                    );
+
+                    drive.target = targetPosition;
+
+                    if (willReachTargetSoon) {
+                        drive.stiffness = 10000f;
+                        drive.targetVelocity = -direction * (distanceRemaining / slowDownTime);
+                    } else {
+                        drive.stiffness = 0f;
+                        drive.targetVelocity = -direction * currentArmMoveParams.speed;
+                    }
+
+                    float curForceApplied = drive.stiffness * (targetPosition - currentPosition) + drive.damping * (drive.targetVelocity - curVelocity);
+
+                    Debug.Log($"position: {currentPosition} ({targetPosition} target) ({willReachTargetSoon} near target)");
+                    Debug.Log($"drive limits: {drive.lowerLimit}, {drive.upperLimit}");
+                    Debug.Log($"distance moved: {distanceMovedSoFar} ({currentArmMoveParams.distance} target)");
+                    Debug.Log($"velocity: {myAB.velocity.y} ({drive.targetVelocity} target)");
+                    Debug.Log($"current force applied: {curForceApplied}");
+
+                    //this sets the drive to begin moving to the new target position
+                    myAB.yDrive = drive;
+                }
 
                 //iterate next index in cache, loop back to index 0 as we get newer positions
                 currentArmMoveParams.oldestCachedIndex = (currentArmMoveParams.oldestCachedIndex + 1) % currentArmMoveParams.positionCacheSize;
@@ -160,7 +225,6 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 }
 
                 //otherwise we have a hard timer to stop movement so we don't move forever and crash unity
-                Debug.Log($"------ Time passed: {fixedDeltaTime}");
                 currentArmMoveParams.timePassed += fixedDeltaTime;
             }
 

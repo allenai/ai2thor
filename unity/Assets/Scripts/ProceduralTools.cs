@@ -1344,8 +1344,14 @@ namespace Thor.Procedural {
 
             }
 
+            CollisionDetectionMode collDet = CollisionDetectionMode.ContinuousSpeculative;
+            if (!string.IsNullOrEmpty(house.proceduralParameters.collisionDetectionMode)) {
+                Enum.TryParse(house.proceduralParameters.collisionDetectionMode, true, out collDet);
+            }
+            
+
             foreach (var obj in house.objects) {
-                spawnObjectHierarchy(obj);
+                spawnObjectHierarchy(obj, collDet);
             }
 
             var assetMap = ProceduralTools.getAssetMap();
@@ -1384,6 +1390,7 @@ namespace Thor.Procedural {
                         assetId: holeCover.assetId,
                         position: pos,
                         rotation: rotation,
+                        collisionDetectionMode: collDet,
                         kinematic: true,
                         materialProperties: holeCover.material,
                         positionBoundingBoxCenter: positionFromCenter,
@@ -1519,18 +1526,26 @@ namespace Thor.Procedural {
             }
         }
 
-        public static void spawnObjectHierarchy(HouseObject houseObject) {
+        public static void spawnObjectHierarchy(HouseObject houseObject, CollisionDetectionMode proceduralParamsCollisionDetMode) {
             if (houseObject == null) {
                 return;
             }
-            var go = ProceduralTools.spawnHouseObject(ProceduralTools.getAssetMap(), houseObject);
+
+            CollisionDetectionMode collDet = proceduralParamsCollisionDetMode;
+            if (!string.IsNullOrEmpty(houseObject.collisionDetectionMode)) {
+                Enum.TryParse(houseObject.collisionDetectionMode, true, out collDet);
+            }
+
+            // Debug.Log($"----- obj {houseObject.id} , {houseObject.collisionDetectionMode} procPar {proceduralParamsCollisionDetMode} final: {collDet}");
+
+            var go = ProceduralTools.spawnHouseObject(ProceduralTools.getAssetMap(), houseObject, collDet);
             if (go != null) {
                 tagObjectNavmesh(go, "Not Walkable");
             }
 
             if (houseObject.children != null) {
                 foreach (var child in houseObject.children) {
-                    spawnObjectHierarchy(child);
+                    spawnObjectHierarchy(child, proceduralParamsCollisionDetMode);
                 }
             }
 
@@ -1628,7 +1643,8 @@ namespace Thor.Procedural {
         //generic function to spawn object in scene. No bounds or collision checks done
         public static GameObject spawnHouseObject(
             AssetMap<GameObject> goDb,
-            HouseObject ho
+            HouseObject ho,
+            CollisionDetectionMode collisionDetectionMode
         ) {
             if (goDb.ContainsKey(ho.assetId)) {
 
@@ -1648,7 +1664,8 @@ namespace Thor.Procedural {
                     openness: ho.openness,
                     isOn: ho.isOn,
                     isDirty: ho.isDirty,
-                    layer: ho.layer
+                    layer: ho.layer,
+                    collisionDetectionMode: collisionDetectionMode
                 );
             } else {
 
@@ -1672,7 +1689,8 @@ namespace Thor.Procedural {
             bool? isOn = null,
             bool? isDirty = null,
             string layer = null,
-            Vector3? scale = null
+            Vector3? scale = null,
+            CollisionDetectionMode collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative
         ) {
             var go = prefab;
 
@@ -1707,7 +1725,7 @@ namespace Thor.Procedural {
                 }
             }
 
-            spawned.transform.parent = GameObject.Find("Objects").transform;
+            spawned.transform.parent = GameObject.Find(ProceduralTools.DefaultObjectsRootName).transform;
 
             // scale the object
             if (scale.HasValue) {
@@ -1743,10 +1761,15 @@ namespace Thor.Procedural {
             var toSpawn = spawned.GetComponent<SimObjPhysics>();
             Rigidbody rb = spawned.GetComponent<Rigidbody>();
             rb.isKinematic = kinematic;
-
+            if (!kinematic) {
+                rb.collisionDetectionMode = collisionDetectionMode;
+            }
             toSpawn.objectID = id;
             toSpawn.name = id;
             toSpawn.assetID = assetId;
+
+            // Debug.Log($"------ obj {spawned.gameObject.name} Set coll det mode {collisionDetectionMode}, o ");
+
 
             Shader unlitShader = null;
             if (unlit) {
@@ -1781,7 +1804,7 @@ namespace Thor.Procedural {
             // TODO (speed up): move to room creator class
             var sceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
             sceneManager.AddToObjectsInScene(toSpawn);
-            toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
+            toSpawn.transform.SetParent(GameObject.Find(DefaultObjectsRootName).transform);
 
             SimObjPhysics[] childSimObjects = toSpawn.transform.gameObject.GetComponentsInChildren<SimObjPhysics>();
             int childNumber = 0;
@@ -1815,7 +1838,7 @@ namespace Thor.Procedural {
                 position: initialSpawnPosition,
                 rotation: Quaternion.identity
             );
-            spawned.transform.parent = GameObject.Find("Objects").transform;
+            spawned.transform.parent = GameObject.Find(DefaultObjectsRootName).transform;
             if (rotation != null) {
                 Vector3 toRot = rotation.axis * rotation.degrees;
                 spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);
@@ -1871,7 +1894,7 @@ namespace Thor.Procedural {
                     toSpawn.objectID = objectId;
                     toSpawn.name = objectId;
                     sceneManager.AddToObjectsInScene(toSpawn);
-                    toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
+                    toSpawn.transform.SetParent(GameObject.Find(DefaultObjectsRootName).transform);
                 }
             }
 
@@ -1904,7 +1927,7 @@ namespace Thor.Procedural {
                 position: initialSpawnPosition,
                 rotation: Quaternion.identity
             );
-            spawned.transform.parent = GameObject.Find("Objects").transform;
+            spawned.transform.parent = GameObject.Find(DefaultObjectsRootName).transform;
             if (rotation != null) {
                 Vector3 toRot = rotation.axis * rotation.degrees;
                 spawned.transform.Rotate(toRot.x, toRot.y, toRot.z);
@@ -1964,7 +1987,7 @@ namespace Thor.Procedural {
                     toSpawn.objectID = objectId;
                     toSpawn.name = objectId;
                     sceneManager.AddToObjectsInScene(toSpawn);
-                    toSpawn.transform.SetParent(GameObject.Find("Objects").transform);
+                    toSpawn.transform.SetParent(GameObject.Find(DefaultObjectsRootName).transform);
                     break;
                 }
             }

@@ -266,7 +266,8 @@ public partial class ArticulatedArmController : ArmController {
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed,
         bool disableRendering,
-        bool normalizedY
+        bool normalizedY,
+        bool useLimits
     ) {
         Debug.Log("starting moveArmBase in ArticulatedArmController");
         float tolerance = 1e-3f;
@@ -287,7 +288,8 @@ public partial class ArticulatedArmController : ArmController {
             tolerance = tolerance,
             maxTimePassed = maxTimePassed,
             positionCacheSize = positionCacheSize,
-            direction = direction
+            direction = direction,
+            useLimits = useLimits
         };
 
         ArticulatedArmJointSolver liftJoint = joints[0];
@@ -324,7 +326,8 @@ public partial class ArticulatedArmController : ArmController {
         float unitsPerSecond,
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed,
-        bool disableRendering
+        bool disableRendering,
+        bool useLimits
     ) {
         moveArmBase(
             controller: controller,
@@ -333,7 +336,8 @@ public partial class ArticulatedArmController : ArmController {
             fixedDeltaTime: fixedDeltaTime,
             returnToStartPositionIfFailed: returnToStartPositionIfFailed,
             disableRendering: disableRendering,
-            normalizedY: false
+            normalizedY: false,
+            useLimits: useLimits
         );
 
     }

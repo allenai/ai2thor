@@ -2852,7 +2852,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //generic spawn object in scene, no physics resoultion or bounds/collision check
         public void SpawnObjectInScene(HouseObject ho) {
-            var spawnedObj = ProceduralTools.spawnHouseObject(ProceduralTools.getAssetMap(), ho);
+            CollisionDetectionMode collDet = CollisionDetectionMode.ContinuousSpeculative;
+            Enum.TryParse(ho.collisionDetectionMode, true, out collDet);
+            var spawnedObj = ProceduralTools.spawnHouseObject(ProceduralTools.getAssetMap(), ho, collDet);
             actionFinished(true);
         }
         //used to spawn in a new object at a given position, used with ProceduralTools.spawnObjectAtReceptacle

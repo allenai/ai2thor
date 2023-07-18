@@ -134,7 +134,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 unitsPerSecond: speed,
                 fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
                 returnToStartPositionIfFailed: returnToStart,
-                disableRendering: disableRendering
+                disableRendering: disableRendering,
+                useLimits: false
+            );
+        }
+
+        public void MoveArmBaseUp(
+             float distance,
+             bool useLimits,
+             float speed = 1,
+             float? fixedDeltaTime = null,
+             bool returnToStart = true,
+             bool disableRendering = true
+         ) {
+            Debug.Log("MoveArmBaseUp from ArticulatedAgentController");
+            SetFloorColliderToHighFriction();
+            var arm = getArmImplementation();
+            arm.moveArmBaseUp(
+                controller: this,
+                distance: distance,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart,
+                disableRendering: disableRendering,
+                useLimits: useLimits
             );
         }
 
@@ -151,7 +174,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 speed: speed,
                 fixedDeltaTime: fixedDeltaTime,
                 returnToStart: returnToStart,
-                disableRendering: disableRendering
+                disableRendering: disableRendering,
+                useLimits: false
+            );
+        }
+
+        public void MoveArmBaseDown(
+            float distance,
+            bool useLimits,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {            
+            Debug.Log("MoveArmBaseDown from ArticulatedAgentController (pass negative distance to MoveArmBaseUp)");
+            MoveArmBaseUp(
+                distance: -distance,
+                speed: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                disableRendering: disableRendering,
+                useLimits: useLimits
             );
         }
 

@@ -6302,7 +6302,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 id: generatedId,
                 assetId: assetId,
                 position: position.GetValueOrDefault(Vector3.zero),
-                rotation: rotation.HasValue ? Quaternion.Euler(rotation.Value) : Quaternion.identity
+                rotation: rotation.HasValue ? Quaternion.Euler(rotation.Value) : Quaternion.identity,
+                collisionDetectionMode: CollisionDetectionMode.ContinuousSpeculative
             );
 
             spawned.isStatic = true;
@@ -6522,6 +6523,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(
                 success: true,
                 actionReturn: PhysicsSceneManager.PhysicsSimulateCallCount
+            );
+        }
+
+        public void SetObjectsCollisionMode(string collisionDetectionMode) {
+            var rootObject = GameObject.Find(ProceduralTools.DefaultObjectsRootName);
+            if (rootObject == null) {
+                actionFinished(
+                    success: false,
+                    errorMessage: $"No root object '{ProceduralTools.DefaultObjectsRootName}', make sure it's a procedural scene and house created when running this action."
+                );
+            }
+            CollisionDetectionMode collDet = CollisionDetectionMode.ContinuousSpeculative;
+            
+            Enum.TryParse(collisionDetectionMode, true, out collDet);
+            for (var i = 0; i<rootObject.transform.childCount; i++) {
+                var obj = rootObject.transform.GetChild(i);
+                var rb = obj.GetComponent<Rigidbody>();
+                if  (!rb.isKinematic) {
+                    rb.collisionDetectionMode = collDet;
+                }
+            }
+            actionFinished(
+                success: true
             );
         }
 
