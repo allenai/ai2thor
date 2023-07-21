@@ -1892,7 +1892,7 @@ namespace Thor.Procedural {
             SimObjPhysics receptacleSimObj,
             FlexibleRotation rotation = null
         ) {
-            var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTopOfTriggerBox();
+            var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTriggerBox();
             var go = goDb.getAsset(prefabName);
             var pos = spawnCoordinates.Shuffle_().First();
             //to potentially support multiagent down the line, reference fpsAgent via agentManager's array of active agents

@@ -170,18 +170,20 @@ public class Contains : MonoBehaviour {
     }
 
     // returns a grid of points above the target receptacle
-    public List<Vector3> GetValidSpawnPointsFromTopOfTriggerBox() {
+    public List<Vector3> GetValidSpawnPointsFromTriggerBox(bool top = true) {
         Vector3 p1, p2, p4; // in case we need all the corners later for something...
 
         BoxCollider b = GetComponent<BoxCollider>();
 
+        var boxY = top ? b.size.y : -b.size.y;
+
         // get all the corners of the box and convert to world coordinates
         // top forward right
-        p1 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f);
+        p1 = transform.TransformPoint(b.center + new Vector3(b.size.x, boxY, b.size.z) * 0.5f);
         // top forward left
-        p2 = transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f);
+        p2 = transform.TransformPoint(b.center + new Vector3(-b.size.x, boxY, b.size.z) * 0.5f);
         // top back right
-        p4 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f);
+        p4 = transform.TransformPoint(b.center + new Vector3(b.size.x, boxY, -b.size.z) * 0.5f);
 
         // so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
         int gridsize = 20; // number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
@@ -214,6 +216,7 @@ public class Contains : MonoBehaviour {
 
         return gridpoints;
     }
+    
 
     // generate a grid of potential spawn points, set ReturnPointsClosestToAgent to true if
     // the list of points should be filtered closest to agent, if false

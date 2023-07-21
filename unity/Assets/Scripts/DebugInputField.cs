@@ -2546,7 +2546,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+                case "dirtyrec" : {
 
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MakeReceptacleDirty";
+                        action["density"] = 0.1f;
+                        action["scale"] = new Vector3(0.3f, 0.3f, 0.2f);
+                        if (splitcommand.Length > 1) {
+                            action["objectId"] = splitcommand[1];
+                        }
+                        if (splitcommand.Length > 2) {
+                            action["density"] =  float.Parse(splitcommand[1]);
+                        }
+
+                     CurrentActiveController().ProcessControlCommand(action);
+                     break;
+
+                }
                 case "cleanobject": {
                         ServerAction action = new ServerAction();
                         action.action = "CleanObject";
