@@ -974,14 +974,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         bool onlyForThisObject = objectID == "CoffeeTable|-01.09|+00.10|-00.74";
 
         if (onlyForThisObject) {
-
             if (sceneManager.placeDecalSurfaceOnReceptacles && this.IsReceptacle) {
                 foreach (GameObject go in ReceptacleTriggerBoxes) {
                 
                     var dgo = GameObject.Instantiate(sceneManager.receptaclesDirtyDecalSurface);
                     // unity provided quad's mesh is XY plane, repplace with custom XZ one and remove line below
+                    dgo.GetComponent<BoxCollider>().isTrigger = true;
                     dgo.transform.localEulerAngles = new Vector3(-90.0f, 0.0f, 0.0f);
                     dgo.transform.parent = go.transform;
+                    
 
                     // This is where the decal plane goes in y, if receptacle box is too high it could lead to 
                     // decals bleeding to other objects that are below it in y, so tune appropiately, should be
@@ -991,10 +992,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
                     var bc = go.GetComponent<BoxCollider>();
                     /// Same as above remove when using XZ plane mesh
                     dgo.transform.localScale = new Vector3(bc.size.x, bc.size.z, 1.0f);
-                    
                 }
-                
-
             }
         }
     }
