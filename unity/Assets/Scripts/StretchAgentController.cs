@@ -341,6 +341,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void ActivateSponge() {
+            Stretch_Robot_Arm_Controller arm = getArm();
+            arm.ActivateSponge();
+            actionFinished(true);
+        }
+
         public void MoveAgent(
             float ahead = 0,
             float right = 0,

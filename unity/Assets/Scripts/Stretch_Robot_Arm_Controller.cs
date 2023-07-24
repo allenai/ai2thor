@@ -637,6 +637,23 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         MagnetRenderer.transform.localPosition = new Vector3(0, 0, 0.01f + radius);
     }
 
+    public void ActivateSponge () {
+        //where is my sponge?
+        GameObject whereIsMySponge = this.GetComponentInChildren<SpongeClean>(includeInactive: true).transform.gameObject;
+        //oh ok thank you
+        whereIsMySponge.SetActive(true);
+        //you please go away though
+        hideHandSphereRenderer(false);
+    }
+
+    public void hideHandSphereRenderer(bool active = false) {
+        MagnetRenderer.GetComponent<MeshRenderer>().enabled = active;
+    }
+
+    public void ActivatePen () {
+
+    }
+
     public ArmMetadata GenerateMetadata() {
         ArmMetadata meta = new ArmMetadata();
         // meta.handTarget = armTarget.position;

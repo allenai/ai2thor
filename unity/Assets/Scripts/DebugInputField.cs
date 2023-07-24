@@ -1052,6 +1052,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;                
                     }
+                case "sponge": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ActivateSponge";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break; 
+                }
 
                 // initialize drone mode
                 case "initd": {
