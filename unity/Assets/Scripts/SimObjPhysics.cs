@@ -11,7 +11,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 
-public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
+public class SimObjPhysics : MonoBehaviour, SimpleSimObj {    
     [Header("Unique String ID of this Object In Scene")]
     [SerializeField]
     public string objectID = string.Empty;
@@ -971,7 +971,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         initializeProperties();
         // TODO: remove this debug bool, and if, so it applies to every object
-        bool onlyForThisObject = objectID == "CoffeeTable|-01.09|+00.10|-00.74";
+        bool onlyForThisObject = this.gameObject.GetComponent<DirtAndWrite>();
+        //objectID == "CoffeeTable|-01.09|+00.10|-00.74";
 
         if (onlyForThisObject) {
             if (sceneManager.placeDecalSurfaceOnReceptacles && this.IsReceptacle) {

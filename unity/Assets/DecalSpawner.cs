@@ -66,19 +66,49 @@ public class DecalSpawner : MonoBehaviour
     public void Update() {
         //test if the decals are spawning at all
         if (Input.GetKeyDown(KeyCode.Space)) {
-            //get spawn points for this 
-            SimObjPhysics myParentSimObj = this.transform.GetComponentInParent<SimObjPhysics>();
-            Vector3[] spawnPointsArray = myParentSimObj.FindMySpawnPointsFromTriggerBox().ToArray();
-
-            var randomPoint = Random.Range(0, spawnPointsArray.Length);
-
-            //generate random scale cause dirt
-            var randomScale = new Vector3(Random.Range (0.1f, 0.4f), Random.Range (0.1f, 0.4f), 0.2f);
-
-            spawnDecal(new Vector3(spawnPointsArray[randomPoint].x, this.transform.position.y, spawnPointsArray[randomPoint].z) + this.transform.rotation * transparentDecalSpawnOffset
-            , this.transform.rotation,
-            randomScale, DecalRotationAxis.FORWARD);
+            SpawnDirt();
         }
+    }
+
+    public void SpawnDirt() {
+        //get spawn points for this 
+        SimObjPhysics myParentSimObj = this.transform.GetComponentInParent<SimObjPhysics>();
+        Vector3[] spawnPointsArray = myParentSimObj.FindMySpawnPointsFromTriggerBox().ToArray();
+
+        float minX, maxX, minZ, maxZ;
+        minX = spawnPointsArray[0].x;
+        maxX = spawnPointsArray[0].x;
+        minZ = spawnPointsArray[0].z;
+        maxZ = spawnPointsArray[0].z;
+
+        foreach(Vector3 v in spawnPointsArray) {
+            if(v.x < minX) {
+                minX = v.x;
+            }
+
+            if(v.x > maxX) {
+                maxX = v.x;
+            }
+
+            if(v.z < minZ) {
+                minZ = v.z;
+            }
+
+            if(v.z > maxZ) {
+                maxZ = v.z;
+            }
+        }
+
+        //var randomPoint = Random.Range(0, spawnPointsArray.Length);
+        var randomX = Random.Range(minX, maxX);
+        var randomZ = Random.Range(minZ, maxZ);
+
+        //generate random scale cause dirt
+        var randomScale = new Vector3(Random.Range (0.1f, 0.4f), Random.Range (0.1f, 0.4f), 0.2f);
+
+        spawnDecal(new Vector3(randomX, this.transform.position.y, randomZ) + this.transform.rotation * transparentDecalSpawnOffset
+        , this.transform.rotation,
+        randomScale, DecalRotationAxis.FORWARD);
     }
 
     private void setStencilWriteValue(MeshRenderer mr) {
