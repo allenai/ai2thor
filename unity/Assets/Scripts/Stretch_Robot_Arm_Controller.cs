@@ -637,6 +637,16 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         MagnetRenderer.transform.localPosition = new Vector3(0, 0, 0.01f + radius);
     }
 
+    public void SetSpongeScale(float xScale, float yScale, float zScale) {
+        GameObject whereIsMySponge = this.GetComponentInChildren<SpongeClean>(includeInactive: true).transform.gameObject;
+        whereIsMySponge.transform.localScale = new Vector3(xScale, yScale, zScale);
+    }
+
+    public Vector3 GetSpongeScale() {
+        GameObject whereIsMySponge = this.GetComponentInChildren<SpongeClean>(includeInactive: true).transform.gameObject;
+        return whereIsMySponge.transform.localScale;
+    }
+
     public void ActivateSponge () {
         //where is my sponge?
         GameObject whereIsMySponge = this.GetComponentInChildren<SpongeClean>(includeInactive: true).transform.gameObject;

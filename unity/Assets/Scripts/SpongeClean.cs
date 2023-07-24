@@ -13,12 +13,12 @@ public class SpongeClean : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
     public void OnTriggerEnter(Collider other) {
-    if (other.CompareTag("Dirt")) {
-        Destroy(other.transform.gameObject);
-    }
-    
+        if (other.CompareTag("Dirt")) {
+            other.transform.position = other.transform.position + new Vector3(0, 1.0f, 0);
+            Destroy(other.transform.gameObject);
+        }
     }
 }
