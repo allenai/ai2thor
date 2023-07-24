@@ -970,9 +970,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         sceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
         initializeProperties();
-        // TODO: remove this debug bool, and if, so it applies to every object
+
+        // Spawn Dirt Decal Surface
         bool onlyForThisObject = this.gameObject.GetComponent<DirtAndWrite>();
-        //objectID == "CoffeeTable|-01.09|+00.10|-00.74";
 
         if (onlyForThisObject) {
             if (sceneManager.placeDecalSurfaceOnReceptacles && this.IsReceptacle) {
@@ -996,6 +996,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
                 }
             }
         }
+    }
+
+    //spawn dirt on receptacle 
+    public void SpawnDirtOnReceptacle(int howManyDirt, int randomSeed) {
+        DecalSpawner decalSpawner = this.gameObject.GetComponentInChildren<DecalSpawner>();
+        decalSpawner.SpawnDirt(howManyDirt, randomSeed);
     }
 
     public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop) {

@@ -1033,6 +1033,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "spawndirt": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SpawnDirt";
+                        action["objectId"] = "DiningTable|-00.96|+00.10|-00.73";
+                        action["howManyDirt"] = 100;
+                        action["randomSeed"] = 0;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;                
+                    }
+
+                case "spawndirt1": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SpawnDirt";
+                        action["objectId"] = "DiningTable|-00.96|+00.10|-00.73";
+                        action["howManyDirt"] = 100;
+                        action["randomSeed"] = 23849;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;                
+                    }
+
                 // initialize drone mode
                 case "initd": {
                         Dictionary<string, object> action = new Dictionary<string, object>();

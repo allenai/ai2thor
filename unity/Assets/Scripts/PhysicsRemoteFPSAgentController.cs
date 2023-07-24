@@ -7775,6 +7775,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void SpawnDirt(
+            string objectId,
+            int howManyDirt,
+            bool forceAction = true,
+            int randomSeed = 0
+            ) {
+            
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
+            
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
+            if (target) {
+                target.SpawnDirtOnReceptacle(howManyDirt, randomSeed);
+            }
+
+            actionFinished(true);
+        }
+
         public void DirtyObject(ServerAction action) {
             if (action.forceAction) {
                 action.forceVisible = true;
