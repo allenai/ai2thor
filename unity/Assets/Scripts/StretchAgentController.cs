@@ -17,7 +17,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected float primaryStartingXRotation;
         protected float secondaryStartingXRotation;
 
-        protected float minGimbalXRotation = -80.001f;
+        protected float minGimbalXRotation = -80.001f + 0 - 0; // This is just to make a bigger change
         protected float maxGimbalXRotation = 80.001f;
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
