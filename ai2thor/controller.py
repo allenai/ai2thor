@@ -746,7 +746,7 @@ class Controller(object):
                 raise_for_failure=True,
             )
             self.width = target_width
-            self.height = target_height
+            self.height = target_height  
 
         # the command line -quality parameter is not respected with the CloudRendering
         # engine, so the quality is manually changed after launch
