@@ -513,6 +513,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["agentMode"] = "stretch";
                         action["agentControllerType"] = "stretch";
                         action["renderInstanceSegmentation"] = true;
+                        action["massThreshold"] = 10.0f;
 
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
@@ -1036,7 +1037,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "spawndirt": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "SpawnDirt";
-                        action["objectId"] = "DiningTable|-00.96|+00.10|-00.73";
+                        action["objectId"] = "DiningTable|-00.96|+00.11|-00.73";
                         action["howManyDirt"] = 100;
                         action["randomSeed"] = 0;
                         CurrentActiveController().ProcessControlCommand(action);
@@ -1055,6 +1056,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "sponge": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "ActivateSponge";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break; 
+                }
+
+                case "pen": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ActivatePen";
                         CurrentActiveController().ProcessControlCommand(action);
                         break; 
                 }

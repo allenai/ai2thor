@@ -16,8 +16,8 @@ public class SpongeClean : MonoBehaviour
 
     }
     public void OnTriggerEnter(Collider other) {
-        if (other.CompareTag("Dirt")) {
-            other.transform.position = other.transform.position + new Vector3(0, 1.0f, 0);
+        if (other.CompareTag("Dirt") || other.CompareTag("Pen")) {
+            //other.transform.position = other.transform.position + new Vector3(0, 1.0f, 0);
             Destroy(other.transform.gameObject);
         }
     }

@@ -347,6 +347,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void ActivatePen() {
+            Stretch_Robot_Arm_Controller arm = getArm();
+            arm.ActivatePen();
+            actionFinished(true);
+        }
+
         public void MoveAgent(
             float ahead = 0,
             float right = 0,

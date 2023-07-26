@@ -652,6 +652,11 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         GameObject whereIsMySponge = this.GetComponentInChildren<SpongeClean>(includeInactive: true).transform.gameObject;
         //oh ok thank you
         whereIsMySponge.SetActive(true);
+        
+        GameObject whereIsMyPen = this.GetComponentInChildren<PenDraw>(includeInactive: true).transform.gameObject;
+        if(whereIsMyPen.activeSelf)
+        whereIsMyPen.SetActive(false);
+
         //you please go away though
         hideHandSphereRenderer(false);
     }
@@ -661,7 +666,14 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
     }
 
     public void ActivatePen () {
+        GameObject whereIsMyPen = this.GetComponentInChildren<PenDraw>(includeInactive: true).transform.gameObject;
+        whereIsMyPen.SetActive(true);
 
+        GameObject whereIsMySponge = this.GetComponentInChildren<SpongeClean>(includeInactive: true).transform.gameObject;
+        if(whereIsMyPen.activeSelf)
+        whereIsMySponge.SetActive(false);
+
+        hideHandSphereRenderer(false);
     }
 
     public ArmMetadata GenerateMetadata() {

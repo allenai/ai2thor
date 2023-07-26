@@ -65,9 +65,9 @@ public class DecalSpawner : MonoBehaviour
 
     public void Update() {
         //test if the decals are spawning at all
-        if (Input.GetKeyDown(KeyCode.Space)) {
-            SpawnDirt(200);
-        }
+        // if (Input.GetKeyDown(KeyCode.Space)) {
+        //     SpawnDirt(200);
+        // }
     }
 
     public void SpawnDirt(int howMany = 1, int randomSeed = 0) {

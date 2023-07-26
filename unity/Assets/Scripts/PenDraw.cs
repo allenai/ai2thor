@@ -29,7 +29,7 @@ public class PenDraw : MonoBehaviour
             if (Physics.Raycast(raycastOrigin.transform.position, raycastOrigin.transform.forward, out hit, Mathf.Infinity, LayerMask.GetMask("SimObjVisible", "Default"))) {
                 Debug.DrawRay(hit.point, Vector3.up * 10, Color.red);
 
-                if (hit.collider.tag == "Dirt") {
+                if (hit.collider.tag == "Pen") {
                     return;
                 } else {
                     Object.Instantiate(penDecal, hit.point, Quaternion.Euler(-90, 0, 0));
