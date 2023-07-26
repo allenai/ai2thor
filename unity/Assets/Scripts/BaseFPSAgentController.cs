@@ -3972,7 +3972,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetVisibleObjects(
             float? maxDistance = null,
             string visibilityScheme = null,
-            int? thirdPartyCameraIndex = null
+            int? thirdPartyCameraIndex = null,
+            List<string> objectIds = null
         ) {
             VisibilityScheme visSchemeEnum = getVisibilityScheme(visibilityScheme);
 
@@ -3988,20 +3989,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 camera = m_Camera;
             }
 
+            List<SimObjPhysics> filterSimObjs = null;
+            if (objectIds != null) {
+                foreach (string objectId in objectIds) {
+                    if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                        throw new ArgumentException($"Object with id {objectId} does not exist in scene.");
+                    }
+                }
+                filterSimObjs = objectIds.Select(
+                    objectId => physicsSceneManager.ObjectIdToSimObjPhysics[objectId]
+                ).ToList();
+            }
+
             SimObjPhysics[] interactable;
             SimObjPhysics[] visible;
             if (visSchemeEnum == VisibilityScheme.Collider) {
                 visible = GetAllVisibleSimObjPhysicsCollider(
                     camera: camera,
                     maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
-                    filterSimObjs: null,
+                    filterSimObjs: filterSimObjs,
                     interactable: out interactable
                 );
             } else if (visSchemeEnum == VisibilityScheme.Distance) {
                 visible = GetAllVisibleSimObjPhysicsDistance(
                     camera: camera,
                     maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
-                    filterSimObjs: null,
+                    filterSimObjs: filterSimObjs,
                     interactable: out interactable
                 );
             } else {
