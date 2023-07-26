@@ -1058,9 +1058,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break; 
                 }
 
-                case "getdirtmeta": {
+                case "getspongemeta": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "GetDirtMeta";
+                        action["action"] = "GetSpongeMeta";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                 }
@@ -1068,6 +1068,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "getpenmeta": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetPenMeta";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
+                case "getdirtmeta": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetDirtMeta";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
+                case "getpenmarkmeta": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetPenMarkMeta";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                 }

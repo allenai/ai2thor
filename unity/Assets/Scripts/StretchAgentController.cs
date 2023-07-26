@@ -353,6 +353,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void GetSpongeMeta () {
+            SpongeClean target = UnityEngine.Object.FindObjectOfType<SpongeClean>();
+            if (target != null) {
+                actionFinished(true, target.transform.position);
+            }
+            else {
+                errorMessage = "No Sponge arm attachment is active right now";
+                actionFinished(false, errorMessage);
+            }
+        }
+
+        public void GetPenMeta () {
+            PenDraw target = UnityEngine.Object.FindObjectOfType<PenDraw>();
+            if (target != null) {
+                actionFinished(true, target.transform.position);
+            }
+
+            else { 
+                errorMessage = "No Pen arm attachment is active right now";
+                actionFinished(false, errorMessage);
+            }
+        }
+
+        //return where the dirt decals are in world space
         public void GetDirtMeta() {
             List <Vector3> dirtPositions = new List<Vector3>();
 
@@ -376,16 +400,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, dirtPositions);
         }
 
-        public void GetPenMeta() {
-            List <Vector3> penPositions = new List<Vector3>();
+        //return pen marking positions in world space
+        public void GetPenMarkMeta() {
+            List<Vector3> penPositions = new List<Vector3>();
 
             foreach (DeferredDecal decal in UnityEngine.Object.FindObjectsOfType<DeferredDecal>()) {
-                if(decal.CompareTag("Pen")) {
+                if (decal.CompareTag("Pen")) {
                     penPositions.Add(decal.transform.position);
                 }
             }
 
-            if(penPositions.Count == 0) {
+            if (penPositions.Count == 0) {
                 actionFinished(false, "no pen mark objects in scene");
                 return;
             }
