@@ -353,6 +353,52 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void GetDirtMeta() {
+            List <Vector3> dirtPositions = new List<Vector3>();
+
+            foreach (DeferredDecal decal in UnityEngine.Object.FindObjectsOfType<DeferredDecal>()) {
+                if(decal.CompareTag("Dirt")) {
+                    dirtPositions.Add(decal.transform.position);
+                }
+            }
+
+            if(dirtPositions.Count == 0) {
+                actionFinished(false, "no dirt objects in scene");
+                return;
+            }
+
+            #if UNITY_EDITOR
+            foreach (Vector3 v in dirtPositions) {
+                Debug.Log(v);
+            }
+            #endif
+
+            actionFinished(true, dirtPositions);
+        }
+
+        public void GetPenMeta() {
+            List <Vector3> penPositions = new List<Vector3>();
+
+            foreach (DeferredDecal decal in UnityEngine.Object.FindObjectsOfType<DeferredDecal>()) {
+                if(decal.CompareTag("Pen")) {
+                    penPositions.Add(decal.transform.position);
+                }
+            }
+
+            if(penPositions.Count == 0) {
+                actionFinished(false, "no pen mark objects in scene");
+                return;
+            }
+
+            #if UNITY_EDITOR
+            foreach (Vector3 v in penPositions) {
+                Debug.Log(v);
+            }
+            #endif
+
+            actionFinished(true, penPositions);
+        }
+
         public void MoveAgent(
             float ahead = 0,
             float right = 0,

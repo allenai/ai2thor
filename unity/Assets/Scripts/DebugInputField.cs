@@ -1044,15 +1044,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;                
                     }
 
-                case "spawndirt1": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "SpawnDirt";
-                        action["objectId"] = "DiningTable|-00.96|+00.10|-00.73";
-                        action["howManyDirt"] = 100;
-                        action["randomSeed"] = 23849;
-                        CurrentActiveController().ProcessControlCommand(action);
-                        break;                
-                    }
                 case "sponge": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "ActivateSponge";
@@ -1065,6 +1056,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "ActivatePen";
                         CurrentActiveController().ProcessControlCommand(action);
                         break; 
+                }
+
+                case "getdirtmeta": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetDirtMeta";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
+                case "getpenmeta": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetPenMeta";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
                 }
 
                 // initialize drone mode
