@@ -1947,10 +1947,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ResetObjectFilter() {
             this.simObjFilter = null;
-            // this could technically be a FastEmit action
-            // but could cause confusion since the result of this
-            // action should return all the objects. Resetting the filter
-            // should cause all the objects to get returned, which FastEmit would not do.
+            // The result of this action should return all the objects. Thus we should NOT
+            // make this return a `actionFinishedEmit`
             actionFinished(true);
         }
         public void SetObjectFilter(string[] objectIds) {
@@ -1963,12 +1961,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
             simObjFilter = filter.ToArray();
-            // this could technically be a FastEmit action
-            // but could cause confusion since the result of this
-            // action should return a limited set of objects. Setting the filter
-            // should cause only the objects in the filter to get returned,
-            // which FastEmit would not do.
-            actionFinished(true);
+            // Could cause confusion since the result of this
+            // action will not initially filter the metadata (due to the actionFinishedEmit).
+            actionFinishedEmit(true);
         }
 
         public void SetObjectFilterForType(string[] objectTypes) {
@@ -1976,19 +1971,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             HashSet<SimObjPhysics> filter = new HashSet<SimObjPhysics>();
             HashSet<string> filterObjectTypes = new HashSet<string>(objectTypes);
             foreach (var simObj in simObjects) {
-
-
                 if (filterObjectTypes.Contains( Enum.GetName(typeof(SimObjType), simObj.Type) )) {
                     filter.Add(simObj);
                 }
             }
             simObjFilter = filter.ToArray();
-            // this could technically be a FastEmit action
-            // but could cause confusion since the result of this
-            // action should return a limited set of objects. Setting the filter
-            // should cause only the objects in the filter to get returned,
-            // which FastEmit would not do.
-            actionFinished(true);
+            // Could cause confusion since the result of this
+            // action will not initially filter the metadata (due to the actionFinishedEmit).
+            actionFinishedEmit(true);
         }
 
         public ObjectMetadata setReceptacleMetadata(ObjectMetadata meta) {
@@ -2022,7 +2012,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             for (int k = 0; k < numObj; k++) {
                 SimObjPhysics simObj = simObjects[k];
-                ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(simObj, visibleSimObjsHash.Contains(simObj), interactableSimObjsHash.Contains(simObj));
+                ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(
+                    simObj,
+                    visibleSimObjsHash.Contains(simObj),
+                    interactableSimObjsHash.Contains(simObj)
+                );
                 if (meta.toggleable) {
                     SimObjPhysics[] controlled = simObj.GetComponent<CanToggleOnOff>().ReturnControlledSimObjects();
                     List<string> controlledList = new List<string>();
@@ -2171,14 +2165,63 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return objMeta;
         }
 
-        public void GetObjectMetadata(List<string> objectIds) {
+
+        public virtual MinimalObjectMetadata[] generateMinimalObjectMetadata(SimObjPhysics[] simObjects) {
+            if (simObjects == null) {
+                throw new NullReferenceException("null SimObjPhysics passed to generateObjectMetadata");
+            }
+
+            int numObj = simObjects.Length;
+            List<MinimalObjectMetadata> metadata = new List<MinimalObjectMetadata>();
+
+            for (int k = 0; k < numObj; k++) {
+                SimObjPhysics simObj = simObjects[k];
+
+                MinimalObjectMetadata objMeta = new MinimalObjectMetadata();
+                GameObject o = simObj.gameObject;
+
+                objMeta.name = o.name;
+                objMeta.objectType = Enum.GetName(typeof(SimObjType), simObj.Type);
+                objMeta.objectId = simObj.ObjectID;
+                objMeta.assetId = simObj.assetID;
+
+                metadata.Add(objMeta);
+            }
+
+            return metadata.ToArray();
+        }
+
+        public void GetMinimalObjectMetadata(List<string> objectIds = null) {
             List<SimObjPhysics> sops = new List<SimObjPhysics>();
-            foreach (string objectId in objectIds) {
-                if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                    sops.Add(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
-                } else {
-                    Debug.Log($"Object ID {objectId} not found in scene.");
-                    continue;
+            if (objectIds == null) {
+                sops = physicsSceneManager.ObjectIdToSimObjPhysics.Values.ToList();
+            } else {
+                foreach (string objectId in objectIds) {
+                    if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                        sops.Add(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
+                    } else {
+                        Debug.Log($"Object ID {objectId} not found in scene.");
+                        continue;
+                    }
+                }
+            }
+
+            var objectMetadata = generateMinimalObjectMetadata(sops.ToArray());
+            actionFinishedEmit(true, objectMetadata);
+        }
+
+        public void GetObjectMetadata(List<string> objectIds = null) {
+            List<SimObjPhysics> sops = new List<SimObjPhysics>();
+            if (objectIds == null) {
+                sops = physicsSceneManager.ObjectIdToSimObjPhysics.Values.ToList();
+            } else {
+                foreach (string objectId in objectIds) {
+                    if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                        sops.Add(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
+                    } else {
+                        Debug.Log($"Object ID {objectId} not found in scene.");
+                        continue;
+                    }
                 }
             }
 

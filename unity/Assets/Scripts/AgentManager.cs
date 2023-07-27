@@ -1501,6 +1501,23 @@ public class ObjectMetadata {
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
+public class MinimalObjectMetadata {
+    public string name;
+
+    // what type of object is this?
+    public string objectType;
+
+    // uuid of the object in scene
+    public string objectId;
+
+    //name of this game object's prefab asset if it has one
+    public string assetId;
+
+    public MinimalObjectMetadata() { }
+}
+
+[Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
 public class SceneBounds {
     // 8 corners of the world axis aligned box that bounds a sim object
     // 8 rows - 8 corners, one per row
