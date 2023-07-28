@@ -1051,6 +1051,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break; 
                 }
 
+                case "getsponge": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetSpongeScale";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break; 
+                }
+                case "setsponge": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SetSpongeScale";
+                        action["x"] = 3.0f;
+                        action["y"] = 3.0f;
+                        action["z"] = 3.0f;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break; 
+                }
+
                 case "pen": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "ActivatePen";

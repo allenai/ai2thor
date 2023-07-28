@@ -347,6 +347,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void GetSpongeScale() {
+            Stretch_Robot_Arm_Controller arm = getArm();
+            actionFinished(true, arm.GetSpongeScale());
+        }
+
+        public void SetSpongeScale(float x, float y, float z) { 
+            Stretch_Robot_Arm_Controller arm = getArm();
+            arm.SetSpongeScale(x, y, z);
+            actionFinished(true);
+        }
+
         public void ActivatePen() {
             Stretch_Robot_Arm_Controller arm = getArm();
             arm.ActivatePen();
