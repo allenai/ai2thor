@@ -3956,6 +3956,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void GetDoorHandle(string objectId) {
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+            
+            List<Vector3> doorHandlePositions = new List<Vector3>();
+            foreach(GameObject go in GetChildObjectWithTag(target.transform, "Handle")) {
+                doorHandlePositions.Add(go.transform.position);
+            }
+
+            actionFinished(true, doorHandlePositions);
+        }
+
+        public List<GameObject> GetChildObjectWithTag(Transform parent, string tag) {
+            List<GameObject> thingsWithTag = new List<GameObject>();
+
+            for (int i = 0; i < parent.childCount; i++) {
+                Transform child = parent.GetChild(i);
+                if (child.tag == tag) {
+                    thingsWithTag.Add(child.gameObject);
+                }
+                if (child.childCount > 0) {
+                    GetChildObjectWithTag(child, tag);
+                }
+            }
+
+            return thingsWithTag;
+        }
+
         public virtual void PickupObject(float x, float y, bool forceAction = false, bool manualInteract = false) {
             SimObjPhysics target = getInteractableSimObjectFromXY(x: x, y: y, forceAction: forceAction);
             pickupObject(target: target, forceAction: forceAction, manualInteract: manualInteract, markActionFinished: true);
