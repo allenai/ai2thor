@@ -3960,11 +3960,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
             
             List<Vector3> doorHandlePositions = new List<Vector3>();
+
             foreach(GameObject go in GetChildObjectWithTag(target.transform, "Handle")) {
                 doorHandlePositions.Add(go.transform.position);
             }
 
             actionFinished(true, doorHandlePositions);
+        }
+
+        public void GetDoorHinge(string objectId) {
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+
+            List<Vector3> hingePositions = new List<Vector3>();
+
+            foreach(GameObject go in GetChildObjectWithTag(target.transform, "Handle")) {
+                hingePositions.Add(go.transform.position);
+            }
+
+            actionFinished(true, hingePositions);
         }
 
         public List<GameObject> GetChildObjectWithTag(Transform parent, string tag) {
