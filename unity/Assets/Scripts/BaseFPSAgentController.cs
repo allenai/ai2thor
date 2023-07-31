@@ -4910,7 +4910,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, toReturn);
         }
 
-        protected string whatObjectOn(SimObjPhysics sop, int divisions, float belowDistance) {
+        /// <summary>
+        /// Determines the objects on which a specified simulation object is resting.
+        /// </summary>
+        /// <param name="sop">The object for which the objects it rests on are to be determined.</param>
+        /// <param name="divisions">The number of divisions to consider for each dimension of the object's bounding box.</param>
+        /// <param name="belowDistance">The maximum distance to consider below the object's bounding box for possible resting objects.</param>
+        /// <param name="returnOnFirstHit">Whether to stop checking for further resting objects after the first is found.</param>
+        /// <returns>A set of IDs for simulation objects that the specified object is resting on. If no such objects are found, the set will be empty.</returns>
+        /// <remarks>
+        /// This method uses raycasting from points on the surface of the simulation object's bounding box downwards to detect resting objects.
+        /// For performance reasons, in non-Unity editor builds, the method may terminate early if <paramref name="returnOnFirstHit"/> is set to true.
+        /// </remarks>
+        protected HashSet<string> whatObjectOn(
+            SimObjPhysics sop,
+            int divisions,
+            float belowDistance,
+            bool returnOnFirstHit
+        ) {
             sop.syncBoundingBoxes(forceCreateObjectOrientedBoundingBox: true); // Ensures the sop has an object oriented bounding box attached
 
             List<Vector3> points = pointsOnSurfaceOfBoxCollider(
@@ -4933,7 +4950,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Debug.DrawLine(point + transform.up * 1e-3f, point - transform.up * belowDistance, Color.red, 10.0f);
 # endif
                     RaycastHit hit;
-                    if (Physics.Raycast(point + transform.up * 1e-3f, -transform.up, out hit, belowDistance + 1e-3f, LayerMask.GetMask("SimObjVisible"))) {
+                    if (
+                        Physics.Raycast(
+                            point + transform.up * 1e-3f, -transform.up,
+                            out hit,
+                            belowDistance + 1e-3f,
+                            LayerMask.GetMask("SimObjVisible"))
+                    ) {
                         SimObjPhysics onSop = ancestorSimObjPhysics(hit.collider.gameObject);
                         if (onSop != null) {
 # if UNITY_EDITOR
@@ -4944,7 +4967,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                             onObjectIds.Add(onSop.ObjectID);
 # if !UNITY_EDITOR
-                            break;
+                            if (returnOnFirstHit) {
+                                break;
+                            }
 # endif
                         }
                     }
@@ -4954,7 +4979,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     c.enabled = true;
                 }
             }
-            return (onObjectIds.Count != 0 ? onObjectIds.ToList()[0] : null);
+            return onObjectIds;
         }
 
         public void CheckWhatObjectOn(string objectId, int divisions=3, float belowDistance=1e-2f) {
@@ -4965,19 +4990,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             actionFinishedEmit(
                 true,
-                whatObjectOn(sop: sop, divisions: divisions, belowDistance: belowDistance)
+                whatObjectOn(sop: sop, divisions: divisions, belowDistance: belowDistance, returnOnFirstHit: false).ToList()
             );
         }
 
         public void CheckWhatObjectsOn(List<string> objectIds, int divisions=3, float belowDistance=1e-2f) {
-            Dictionary<string, string> objectIdToOnObjectId = new Dictionary<string, string>();
+            Dictionary<string, List<string>> objectIdToOnObjectId = new Dictionary<string, List<string>>();
             foreach (string objectId in objectIds) {
                 SimObjPhysics sop = getSimObjectFromId(objectId);
                 if (sop == null) {
                     actionFinishedEmit(false); // Error message set already by getSimObjectFromId
                     return;
                 }
-                objectIdToOnObjectId[objectId] = whatObjectOn(sop: sop, divisions: divisions, belowDistance: belowDistance);
+                objectIdToOnObjectId[objectId] = whatObjectOn(
+                    sop: sop, divisions: divisions, belowDistance: belowDistance, returnOnFirstHit: false
+                ).ToList();
             }
             actionFinishedEmit(
                 true,
