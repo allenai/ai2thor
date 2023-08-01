@@ -41,6 +41,7 @@ public class AgentManager : MonoBehaviour {
     private int currentSequenceId;
     private int activeAgentId;
     private bool renderImage = true;
+    private bool renderImageSynthesis = true;
     private bool renderDepthImage;
     private bool renderSemanticSegmentation;
     private bool renderInstanceSegmentation;
@@ -866,7 +867,11 @@ public class AgentManager : MonoBehaviour {
         StartCoroutine(WaitOnResolutionChange(width: x, height: y));
     }
 
-    private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
+    private void addObjectImage(
+        List<KeyValuePair<string, byte[]>> payload,
+        BaseFPSAgentController agent,
+        ref MetadataWrapper metadata
+    ) {
         if (this.renderInstanceSegmentation || this.renderSemanticSegmentation) {
             if (!agent.imageSynthesis.hasCapturePass("_id")) {
                 Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
@@ -898,8 +903,6 @@ public class AgentManager : MonoBehaviour {
             }
             byte[] bytes = synth.Encode(captureName);
             payload.Add(new KeyValuePair<string, byte[]>(fieldName, bytes));
-
-
         }
     }
 
@@ -922,7 +925,13 @@ public class AgentManager : MonoBehaviour {
         ProcessControlCommand(msg);
     }
 
-    public void createPayload(MultiAgentMetadata multiMeta, ThirdPartyCameraMetadata[] cameraMetadata, List<KeyValuePair<string, byte[]>> renderPayload, bool shouldRender) {
+    public void createPayload(
+        MultiAgentMetadata multiMeta,
+        ThirdPartyCameraMetadata[] cameraMetadata,
+        List<KeyValuePair<string, byte[]>> renderPayload,
+        bool shouldRender,
+        bool shouldRenderImageSynthesis
+    ) {
         multiMeta.agents = new MetadataWrapper[this.agents.Count];
         multiMeta.activeAgentId = this.activeAgentId;
         multiMeta.sequenceId = this.currentSequenceId;
@@ -939,13 +948,15 @@ public class AgentManager : MonoBehaviour {
                 cMetadata.rotation = camera.gameObject.transform.eulerAngles;
                 cMetadata.fieldOfView = camera.fieldOfView;
                 cameraMetadata[i] = cMetadata;
-                ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis>() as ImageSynthesis;
                 addThirdPartyCameraImage(renderPayload, camera);
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderInstanceSegmentation, "_id", "image_thirdParty_image_ids");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_class", "image_thirdParty_classes");
-                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_flow", "image_thirdParty_flow");// XXX fix this in a bit
+                if (shouldRenderImageSynthesis) {
+                    ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis>() as ImageSynthesis;
+                    addImageSynthesisImage(renderPayload, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
+                    addImageSynthesisImage(renderPayload, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
+                    addImageSynthesisImage(renderPayload, imageSynthesis, this.renderInstanceSegmentation, "_id", "image_thirdParty_image_ids");
+                    addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_class", "image_thirdParty_classes");
+                    addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_flow", "image_thirdParty_flow");// XXX fix this in a bit
+                 }
             }
         }
         for (int i = 0; i < this.agents.Count; i++) {
@@ -961,11 +972,13 @@ public class AgentManager : MonoBehaviour {
             
             if (shouldRender) {
                 addImage(renderPayload, agent);
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
-                addObjectImage(renderPayload, agent, ref metadata);
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderSemanticSegmentation, "_class", "image_classes");
-                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
+                if (shouldRenderImageSynthesis) {
+                    addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
+                    addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
+                    addObjectImage(renderPayload, agent, ref metadata);
+                    addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderSemanticSegmentation, "_class", "image_classes");
+                    addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
+                }
                 metadata.thirdPartyCameras = cameraMetadata;
             }
 
@@ -1021,6 +1034,7 @@ public class AgentManager : MonoBehaviour {
         while (true) {
            
             bool shouldRender = this.renderImage && serverSideScreenshot;
+            bool shouldRenderImageSynthesis = shouldRender && this.renderImageSynthesis;
             yield return new WaitForEndOfFrame();
 
             frameCounter += 1;
@@ -1041,7 +1055,7 @@ public class AgentManager : MonoBehaviour {
 
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
             List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
-            createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
+            createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender, shouldRenderImageSynthesis);
             Debug.Log("------ payload");
 #if UNITY_WEBGL
                 JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
@@ -1202,6 +1216,7 @@ public class AgentManager : MonoBehaviour {
         this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
         this.renderImage = controlCommand.renderImage;
+        this.renderImageSynthesis = controlCommand.renderImageSynthesis;
         this.activeAgentId = controlCommand.agentId;
 
         if (agentManagerActions.Contains(controlCommand.action)) {
@@ -1788,6 +1803,12 @@ public class DynamicServerAction {
     public bool renderImage {
         get {
             return this.GetValue("renderImage", true);
+        }
+    }
+
+    public bool renderImageSynthesis {
+        get {
+            return this.GetValue("renderImageSynthesis", true);
         }
     }
 

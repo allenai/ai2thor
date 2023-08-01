@@ -499,6 +499,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "testing": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+                    action["action"] = "CreateObjectPrefabObj";
+                    action["name"] = "TESTING";
+                    action["albedoTexturePath"] = "/Users/lucaw/tmp/debug/processed/637a8eb96f4b4de6a80de5fc9e693763/albedo.jpg";
+                    action["normalTexturePath"] = "/Users/lucaw/tmp/debug/processed/637a8eb96f4b4de6a80de5fc9e693763/normal.jpg";
+                    action["emissionTexturePath"] = "/Users/lucaw/tmp/debug/processed/637a8eb96f4b4de6a80de5fc9e693763/emission.jpg";
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
                 case "sim": {
                         var collisionListener = this.CurrentActiveController().GetComponent<CollisionListener>();
                         Physics.Simulate(0.02f);
@@ -513,7 +524,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "Initialize";
                         action["agentMode"] = "stretch";
                         action["agentControllerType"] = "stretch";
+                        action["visibilityScheme"] = "Distance";
                         action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
 //                        action["antiAliasing"] = "smaa";
 
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
@@ -545,6 +558,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     
                     break;
                  }
+                 case "obig": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "PlaceObjectIntoGripper";
+                    action["objectId"] = "Apple|-00.47|+01.15|+00.48";
+                    if (splitcommand.Length > 1) {
+                        action["objectId"] = splitcommand[1];
+                    }
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                 }
+//                 case "telearm": {
+//                        Dictionary<string, object> action = new Dictionary<string, object>();
+//                        action["action"] = "TeleportArm";
+//
+//                        CurrentActiveController().ProcessControlCommand(action);
+//                        break;
+//                }
+
                  case "rcm": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
