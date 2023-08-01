@@ -1739,6 +1739,7 @@ public class DynamicServerAction {
     public static readonly IReadOnlyCollection<string> AllowedExtraneousParameters = new HashSet<string>(){
         "sequenceId",
         "renderImage",
+        "renderImageSynthesis",
         "agentId",
         "renderObjectImage",
         "renderClassImage",
@@ -1941,6 +1942,7 @@ public class ServerAction {
     public int numPlacementAttempts;
     public bool randomizeObjectAppearance;
     public bool renderImage = true;
+    public bool renderImageSynthesis = true;
     public bool renderDepthImage;
     public bool renderSemanticSegmentation;
     public bool renderInstanceSegmentation;
