@@ -14,6 +14,7 @@ public class AgentMoveParams {
     public float agentMass;
     public float tolerance;
     public float maxTimePassed;
+    public float maxForce;
     public int positionCacheSize;
     
     //these are used during movement in fixed update (or whenever physics step executes)
@@ -32,6 +33,8 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
     public ArticulationBody myAB;
     public ABAgentState agentState = ABAgentState.Idle;
     public float distanceMovedSoFar;
+    public Vector3 prevStepTransformation;
+    public Vector3 prevStepForward;
     public bool checkStandardDev;
     //private Vector3 directionWorld;
     private float accelerationTorque;
@@ -50,10 +53,9 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             Debug.Log("Error! distance to move must be nonzero");
             return;
         }
-        Debug.Log("DISTANCE IS " + agentMoveParams.distance);
         
-        // Debug.Log("ArticulatedAgentController's inertiaTensor is (" + myAB.inertiaTensor.x + ", " + myAB.inertiaTensor.y + ", " + myAB.inertiaTensor.z + ")");
-        // Debug.Log("(4) ArticulatedAgentSolver: SETTING UP EVERYTHING I NEED TO INFORM EACH FRAME OF MOVEMENT");
+        Debug.Log("ArticulatedAgentController's inertiaTensor is (" + myAB.inertiaTensor.x + ", " + myAB.inertiaTensor.y + ", " + myAB.inertiaTensor.z + ")");
+
         //zero out distance delta tracking
         distanceMovedSoFar = 0.0f;
 
@@ -68,62 +70,82 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         
         if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
             // snapshot the initial agent position to compare with later during movement
-            currentAgentMoveParams.initialTransformation = this.transform.position;
-
-            // Vector3 directionWorld = transform.TransformDirection(new Vector3(0,0,currentAgentMoveParams.distance));
-            // Vector3 targetPosition = transform.position + directionWorld;
+            currentAgentMoveParams.initialTransformation = myAB.transform.position;
+            prevStepTransformation = myAB.transform.position;
 
         } else if (currentAgentMoveParams.agentState == ABAgentState.Rotating) {
-            currentAgentMoveParams.initialTransformation = this.transform.eulerAngles;
-            // float accelerationTorque = myAB.inertiaTensor.y * currentAgentMoveParams.acceleration * (180f / Mathf.PI);
+            currentAgentMoveParams.initialTransformation = myAB.transform.eulerAngles;
+            prevStepTransformation = myAB.transform.eulerAngles;
         }
         
         // determine if agent can even accelerate to max velocity and decelerate to 0 before reaching target position
         accelerationDistance = Mathf.Pow(currentAgentMoveParams.speed,2) / (2 * currentAgentMoveParams.acceleration);
         Debug.Log("accelerationDistance by default equals " + accelerationDistance);
-        // Debug.Log("accelerationDistance by default equals " + accelerationDistance * Mathf.Rad2Deg);
 
         if (2 * accelerationDistance > currentAgentMoveParams.distance) {
             accelerationDistance = currentAgentMoveParams.distance / 2;
-            Debug.Log("accelerationDistance equals " + accelerationDistance);
-            // Debug.Log("accelerationDistance equals " + accelerationDistance * Mathf.Rad2Deg);
+            Debug.Log("accelerationDistance now equals " + accelerationDistance);
         }
     }
     
-    // bool maxedOut = false;
     public void ContinuousUpdate(float fixedDeltaTime)  {
-        if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
-            // Debug.Log("(7) ArticulatedAgentSolver: ACTUAL LOGIC. Also, distanceMovedSoFar is " + distanceMovedSoFar + ", and decelerationDistance is " + decelerationDistance);
-            if (myAB.velocity.magnitude < currentAgentMoveParams.speed && currentAgentMoveParams.distance - distanceMovedSoFar > accelerationDistance) {
-                // since the acceleration is distance-based,
-                    Vector3 relativeForce = ( (1.0f * currentAgentMoveParams.agentMass * currentAgentMoveParams.acceleration) + (myAB.velocity.magnitude * myAB.linearDamping)) * currentAgentMoveParams.direction * Vector3.forward;
-                    myAB.AddRelativeForce(relativeForce);
-                    Debug.Log("Applying acceleration force of " + relativeForce.z);
-            } else if (distanceMovedSoFar >= currentAgentMoveParams.distance - accelerationDistance) {
-                
-                if (beginDeceleration == false) {
-                    beginDeceleration = true;
-                    // not necessary, since speed is kept constant, but 
-                    beginDecelerationSpeed = myAB.velocity.magnitude;
-                    decelerationDistance = currentAgentMoveParams.distance - distanceMovedSoFar;
-                    
-                    deceleration = myAB.velocity.magnitude / (currentAgentMoveParams.distance - distanceMovedSoFar);
-                    Debug.Log("DECELERATION RATE IS " + deceleration + " because " + myAB.velocity.magnitude + " over " + (currentAgentMoveParams.distance - distanceMovedSoFar) );
-                    // Debug.Log("Applying deceleration values, based on " + beginDecelerationSpeed + " and " + decelerationDistance);
-                }
+        Vector3 maxForce = currentAgentMoveParams.maxForce * currentAgentMoveParams.direction * Vector3.forward;
 
-                // Vector3 relativeDecForce = currentAgentMoveParams.agentMass * ( Mathf.Pow(beginDecelerationSpeed,2) / (2 * decelerationDistance) ) * -Vector3.forward;
-                // Debug.Log("Agent's traveled this far: " + distanceMovedSoFar + ". Applying relative force of " + relativeDecForce + " to delecerate " + currentAgentMoveParams.agentMass + " kg of agent! Velocity is currently " + myAB.velocity.magnitude);
-                // myAB.AddRelativeForce(relativeDecForce);
-                Vector3 relativeForce = ((1.0f * currentAgentMoveParams.agentMass * currentAgentMoveParams.acceleration) - (myAB.velocity.magnitude * myAB.linearDamping)) * currentAgentMoveParams.direction * -Vector3.forward;
-                myAB.AddRelativeForce(relativeForce);
-            } else {
-                // if (maxedOut == false) {
-                //     maxedOut = true;
-                //     speedupTime = Time.fixedTime - startTime;
-                //     Debug.Log("Reached max speed at " + speedupTime);
+        if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
+
+            float currentSpeed = Mathf.Abs(myAB.transform.InverseTransformDirection(myAB.velocity).z);
+            
+            // CASE: Accelerate - Apply force calculated from difference between intended distance and actual distance after amount of time that has passed
+            if (distanceMovedSoFar < accelerationDistance) {
+                float desiredDistance = 0.5f * currentAgentMoveParams.acceleration * Mathf.Pow(currentAgentMoveParams.timePassed,2);
+                float distanceDelta = desiredDistance - distanceMovedSoFar;
+                
+                // This shouldn't be the same formula as correcting for a velocityDelta, like in cruise-control mode, but for some reason, it's working great
+                Vector3 relativeForce = (distanceDelta / fixedDeltaTime) * currentAgentMoveParams.agentMass
+                    * currentAgentMoveParams.direction * Vector3.forward;
+
+                Debug.Log("1. distanceDelta is " + distanceDelta + ". Applying force of (2 * " + distanceDelta + " / " + Mathf.Pow(fixedDeltaTime,2) + ") minus "
+                 + currentSpeed + ", which equals " + ((2 * distanceDelta / Mathf.Pow(fixedDeltaTime,2)) - currentSpeed) + ", which is multiplied by mass, direction, and z-forward to make " + relativeForce.z);
+
+                // Use motor's max force in edge case where progress is halted, such as an obstacle in the way
+                // UGH, NEED TO ACCOUNT FOR SIGN CHANGE
+                // if (maxForce.sqrMagnitude > Mathf.Abs(relativeForce.sqrMagnitude)) {
+                //     relativeForce = maxForce;
                 // }
-                myAB.AddRelativeForce( (currentAgentMoveParams.agentMass * (currentAgentMoveParams.speed - myAB.velocity.magnitude) + (myAB.velocity.magnitude * myAB.linearDamping)) * currentAgentMoveParams.direction * Vector3.forward);
+                
+                myAB.AddRelativeForce(relativeForce);
+
+                // Debug.Log("Applying acceleration force of " + relativeForce.z);
+            
+            // CASE: Decelerate - Apply force calculated from difference between intended velocity and actual velocity at given distance from finish line
+            } else if (distanceMovedSoFar >= currentAgentMoveParams.distance - accelerationDistance) {
+                float remainingDistance = currentAgentMoveParams.distance - distanceMovedSoFar;
+                float desiredSpeed = currentAgentMoveParams.speed * (remainingDistance / accelerationDistance);
+                float speedDelta = desiredSpeed - currentSpeed;
+            
+                Vector3 relativeForce = (speedDelta / Time.fixedDeltaTime) * currentAgentMoveParams.agentMass
+                    * currentAgentMoveParams.direction * Vector3.forward;
+
+                Debug.Log("3. desiredSpeed is " + desiredSpeed + ", currentSpeed is " + currentSpeed + ", and distance remaining is " + remainingDistance + ". Applying force of " + relativeForce.z);
+
+                myAB.AddRelativeForce(relativeForce);
+            
+            // CASE: Cruise Control - Apply force calculated from difference between intended velocity and current velocity
+            } else {
+
+                float speedDelta = currentAgentMoveParams.speed - currentSpeed;
+
+                Vector3 relativeForce = (speedDelta / Time.fixedDeltaTime) * currentAgentMoveParams.agentMass
+                    * currentAgentMoveParams.direction * Vector3.forward;
+                
+                // Use motor's max force in edge case where progress is halted, such as an obstacle in the way
+                // UGH, NEED TO ACCOUNT FOR SIGN CHANGE
+                // if (relativeForce.sqrMagnitude > Mathf.Abs(maxForce.sqrMagnitude)) {
+                //     relativeForce = maxForce;
+                // }
+
+                myAB.AddRelativeForce(relativeForce);
+                Debug.Log("2. speedDelta is " + speedDelta + ". Applying force of " + relativeForce.z);
             }
 
             //begin checks to see if we have stopped moving or if we need to stop moving
@@ -131,44 +153,63 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             Vector3 currentPosition = myAB.transform.position;
             currentAgentMoveParams.cachedPositions[currentAgentMoveParams.oldestCachedIndex] = currentPosition;
 
-            distanceMovedSoFar = Mathf.Abs((currentPosition - currentAgentMoveParams.initialTransformation).magnitude);
+            // Average current and previous forward-vectors to get an averaged forward-vector over the course of the previous physics-step
+            Vector3 currentForward = (myAB.transform.forward + prevStepForward) / 2;
+
+            distanceMovedSoFar += Mathf.Clamp( Vector3.Dot(currentPosition - prevStepTransformation, currentForward), 0, Mathf.Infinity);
+
+            prevStepTransformation = currentPosition;
+            prevStepForward = myAB.transform.forward;
 
         } else if (currentAgentMoveParams.agentState == ABAgentState.Rotating) {
             
-            Debug.Log("Okay, distanceMovedSoFar is " + Mathf.Rad2Deg * distanceMovedSoFar + ", and accelerationDistance is " + Mathf.Rad2Deg * accelerationDistance);
-            // CASE: Accelerate
-            if (myAB.angularVelocity.magnitude < currentAgentMoveParams.speed && currentAgentMoveParams.distance - distanceMovedSoFar > accelerationDistance) {
-                float relativeTorque = ((1.0f * myAB.inertiaTensor.y * currentAgentMoveParams.acceleration) + (myAB.angularVelocity.magnitude * myAB.angularDamping)) * currentAgentMoveParams.direction;
+            float currentAngularSpeed = Mathf.Abs(myAB.angularVelocity.y);
+            
+            // CASE: Accelerate - Apply force calculated from difference between intended distance and actual distance after amount of time that has passed
+            if (distanceMovedSoFar < accelerationDistance) {
+                float desiredAngularDistance = 0.5f * currentAgentMoveParams.acceleration * Mathf.Pow(currentAgentMoveParams.timePassed,2);
+                float angularDistanceDelta = desiredAngularDistance - distanceMovedSoFar;
+                
+                float relativeTorque = (angularDistanceDelta / Time.fixedDeltaTime) * myAB.inertiaTensor.y * currentAgentMoveParams.direction;
+
+                Debug.Log("1. distanceDelta is " + angularDistanceDelta + ". Applying torque of " + relativeTorque);
+
+                // Use motor's max force in edge case where progress is halted, such as an obstacle in the way
+                // UGH, NEED TO ACCOUNT FOR SIGN CHANGE
+                // if (maxForce.sqrMagnitude > Mathf.Abs(relativeForce.sqrMagnitude)) {
+                //     relativeForce = maxForce;
+                // }
+
                 myAB.AddRelativeTorque(new Vector3(0, relativeTorque, 0));
-                // Debug.Log("AAAAAAAAAAAAAAAAAAAAAAApplying torque force of " + relativeTorque);
 
             // CASE: Decelerate
             } else if (distanceMovedSoFar >= currentAgentMoveParams.distance - accelerationDistance) {
-                // Debug.Log("Okay, DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD distanceMovedSoFar is " + Mathf.Rad2Deg * distanceMovedSoFar);
-                if(beginDeceleration == false) {
-                    beginDeceleration = true;
-                    beginDecelerationSpeed = myAB.angularVelocity[1];
-                    beginDecelerationTime = Time.time;
-                    decelerationDistance = currentAgentMoveParams.distance - distanceMovedSoFar;
-                    Debug.Log("APPLYING DECELERATION VALUES, based on " + beginDecelerationSpeed + " and " + decelerationDistance);
-                }
-                float relativeTorque = ((1.0f * myAB.inertiaTensor.y * currentAgentMoveParams.acceleration) - (myAB.angularVelocity.magnitude * myAB.angularDamping)) * currentAgentMoveParams.direction;
-                myAB.AddRelativeTorque(new Vector3(0, -relativeTorque, 0));
+                float remainingAngularDistance = currentAgentMoveParams.distance - distanceMovedSoFar;
+                float desiredAngularSpeed = currentAgentMoveParams.speed * (remainingAngularDistance / accelerationDistance);
+                float angularSpeedDelta = desiredAngularSpeed - currentAngularSpeed;
+                
+                float relativeTorque = (angularSpeedDelta / Time.fixedDeltaTime) * myAB.inertiaTensor.y
+                    * currentAgentMoveParams.direction;
 
-                //Vector3 relativeDecTorque = currentAgentMoveParams.agentMass * (Mathf.Pow(beginDecelerationSpeed,2) / (2 * decelerationDistance)) * -Vector3.forward;
-                //Debug.Log("Agent's traveled this far: " + distanceMovedSoFar + ". Applying relative force of " + relativeDecTorque + " to delecerate " + currentAgentMoveParams.agentMass + " kg of agent! Velocity is currently " + myAB.velocity.magnitude);
+                Debug.Log("3. desiredSpeed is " + desiredAngularSpeed + ", currentSpeed is " + currentAngularSpeed + ", angular distance remaining is " + remainingAngularDistance + ", and inertiaTensor is " + myAB.inertiaTensor + ". Applying torque of " + relativeTorque);
+
+                myAB.AddRelativeForce(new Vector3(0, relativeTorque, 0));
+
             // CASE: Cruise
             } else {
-                // Debug.Log("CCCCCCCCCCCCCCCCCCCCCCCCCCCC");
-                float relativeTorque = (((currentAgentMoveParams.speed - myAB.angularVelocity.magnitude) * myAB.inertiaTensor.y) + (myAB.angularVelocity.magnitude * myAB.angularDamping)) * currentAgentMoveParams.direction;
+                float angularSpeedDelta = currentAgentMoveParams.speed - currentAngularSpeed;
+
+                float relativeTorque = (angularSpeedDelta / Time.fixedDeltaTime) * myAB.inertiaTensor.y
+                    * currentAgentMoveParams.direction;
+
                 myAB.AddRelativeTorque(new Vector3(0, relativeTorque, 0));
+                Debug.Log("2. angularSpeedDelta is " + angularSpeedDelta + ". Applying torque of " + relativeTorque);
             }
             
             Vector3 currentRotation = myAB.transform.eulerAngles;
             currentAgentMoveParams.cachedPositions[currentAgentMoveParams.oldestCachedIndex] = currentRotation;
 
             distanceMovedSoFar = Mathf.Deg2Rad * Mathf.Abs(currentRotation.y - currentAgentMoveParams.initialTransformation.y);
-            // Debug.Log("MOOOOOOOOOVING TOWARDS " + currentAgentMoveParams.distance + ", CURRENTLY AT " + distanceMovedSoFar);
         }
 
         //iterate next index in cache, loop back to index 0 as we get newer positions
@@ -197,8 +238,8 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             bool shouldStop = false;
             ArticulatedAgentSolver a = this;
             // Debug.Log($"checking agent: {a.transform.name}");
-            Debug.Log($"distance moved so far is: {a.distanceMovedSoFar}");
-            Debug.Log($"current velocity is: {this.transform.GetComponent<ArticulationBody>().velocity.magnitude}");
+            // Debug.Log($"distance moved so far is: {a.distanceMovedSoFar}");
+            // Debug.Log($"current velocity is: {this.transform.GetComponent<ArticulationBody>().velocity.magnitude}");
             
             //check agent to see if it has halted or not
             if (!a.shouldHalt(
@@ -247,7 +288,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         //halt if positions/rotations are within tolerance and effectively not changing
         // Debug.Log($"checkStandardDev is: {checkStandardDev}");
         
-        Debug.Log("Distance moved is " + distanceMovedSoFar + ", and distance to exceed is " + currentAgentMoveParams.distance);
+        // Debug.Log("Distance moved is " + distanceMovedSoFar + ", and distance to exceed is " + currentAgentMoveParams.distance);
         if (checkStandardDev) {
             if (CheckArrayWithinStandardDeviation(cachedPositions, tolerance)) {
                 shouldHalt = true;
@@ -257,6 +298,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 return shouldHalt;
             }
         }
+
         //check if the amount moved/rotated exceeds this agents target
         else if (distanceMovedSoFar >= currentAgentMoveParams.distance) {
             shouldHalt = true;
