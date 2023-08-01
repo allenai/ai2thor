@@ -53,8 +53,6 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             Debug.Log("Error! distance to move must be nonzero");
             return;
         }
-        
-        Debug.Log("ArticulatedAgentController's inertiaTensor is (" + myAB.inertiaTensor.x + ", " + myAB.inertiaTensor.y + ", " + myAB.inertiaTensor.z + ")");
 
         //zero out distance delta tracking
         distanceMovedSoFar = 0.0f;
@@ -101,11 +99,11 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 float distanceDelta = desiredDistance - distanceMovedSoFar;
                 
                 // This shouldn't be the same formula as correcting for a velocityDelta, like in cruise-control mode, but for some reason, it's working great
-                Vector3 relativeForce = (distanceDelta / fixedDeltaTime) * currentAgentMoveParams.agentMass
-                    * currentAgentMoveParams.direction * Vector3.forward;
+                float relativeForce = (distanceDelta / fixedDeltaTime) * currentAgentMoveParams.agentMass
+                    * currentAgentMoveParams.direction;
 
                 Debug.Log("1. distanceDelta is " + distanceDelta + ". Applying force of (2 * " + distanceDelta + " / " + Mathf.Pow(fixedDeltaTime,2) + ") minus "
-                 + currentSpeed + ", which equals " + ((2 * distanceDelta / Mathf.Pow(fixedDeltaTime,2)) - currentSpeed) + ", which is multiplied by mass, direction, and z-forward to make " + relativeForce.z);
+                 + currentSpeed + ", which equals " + ((2 * distanceDelta / Mathf.Pow(fixedDeltaTime,2)) - currentSpeed) + ", which is multiplied by mass, direction, and z-forward to make " + relativeForce);
 
                 // Use motor's max force in edge case where progress is halted, such as an obstacle in the way
                 // UGH, NEED TO ACCOUNT FOR SIGN CHANGE
@@ -113,9 +111,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 //     relativeForce = maxForce;
                 // }
                 
-                myAB.AddRelativeForce(relativeForce);
-
-                // Debug.Log("Applying acceleration force of " + relativeForce.z);
+                myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));
             
             // CASE: Decelerate - Apply force calculated from difference between intended velocity and actual velocity at given distance from finish line
             } else if (distanceMovedSoFar >= currentAgentMoveParams.distance - accelerationDistance) {
@@ -123,20 +119,19 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 float desiredSpeed = currentAgentMoveParams.speed * (remainingDistance / accelerationDistance);
                 float speedDelta = desiredSpeed - currentSpeed;
             
-                Vector3 relativeForce = (speedDelta / Time.fixedDeltaTime) * currentAgentMoveParams.agentMass
-                    * currentAgentMoveParams.direction * Vector3.forward;
+                float relativeForce = (speedDelta / Time.fixedDeltaTime) * currentAgentMoveParams.agentMass
+                    * currentAgentMoveParams.direction;
 
-                Debug.Log("3. desiredSpeed is " + desiredSpeed + ", currentSpeed is " + currentSpeed + ", and distance remaining is " + remainingDistance + ". Applying force of " + relativeForce.z);
-
-                myAB.AddRelativeForce(relativeForce);
+                Debug.Log("3. desiredSpeed is " + desiredSpeed + ", currentSpeed is " + currentSpeed + ", and distance remaining is " + remainingDistance + ". Applying force of " + relativeForce);
+                myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));
             
             // CASE: Cruise Control - Apply force calculated from difference between intended velocity and current velocity
             } else {
 
                 float speedDelta = currentAgentMoveParams.speed - currentSpeed;
 
-                Vector3 relativeForce = (speedDelta / Time.fixedDeltaTime) * currentAgentMoveParams.agentMass
-                    * currentAgentMoveParams.direction * Vector3.forward;
+                float relativeForce = (speedDelta / Time.fixedDeltaTime) * currentAgentMoveParams.agentMass
+                    * currentAgentMoveParams.direction;
                 
                 // Use motor's max force in edge case where progress is halted, such as an obstacle in the way
                 // UGH, NEED TO ACCOUNT FOR SIGN CHANGE
@@ -144,19 +139,20 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 //     relativeForce = maxForce;
                 // }
 
-                myAB.AddRelativeForce(relativeForce);
-                Debug.Log("2. speedDelta is " + speedDelta + ". Applying force of " + relativeForce.z);
+                Debug.Log("2. speedDelta is " + speedDelta + ". Applying force of " + relativeForce);
+                myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));
             }
 
-            //begin checks to see if we have stopped moving or if we need to stop moving
-            //cache the position at the moment
+            // Begin checks to see if we have stopped moving or if we need to stop moving
+            // Cache the position at the moment
             Vector3 currentPosition = myAB.transform.position;
             currentAgentMoveParams.cachedPositions[currentAgentMoveParams.oldestCachedIndex] = currentPosition;
 
-            // Average current and previous forward-vectors to get an averaged forward-vector over the course of the previous physics-step
+            // Average current and previous forward-vectors to get an averaged forward-vector over the course of previous physics-step
             Vector3 currentForward = (myAB.transform.forward + prevStepForward) / 2;
 
-            distanceMovedSoFar += Mathf.Clamp( Vector3.Dot(currentPosition - prevStepTransformation, currentForward), 0, Mathf.Infinity);
+            // Determine (positive) distance covered based on forward progress, relative to previous physics-step's averaged forward-vector
+            distanceMovedSoFar += Mathf.Clamp( Vector3.Dot(currentPosition - prevStepTransformation, currentForward * currentAgentMoveParams.direction), 0, Mathf.Infinity);
 
             prevStepTransformation = currentPosition;
             prevStepForward = myAB.transform.forward;
@@ -191,10 +187,10 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 float relativeTorque = (angularSpeedDelta / Time.fixedDeltaTime) * myAB.inertiaTensor.y
                     * currentAgentMoveParams.direction;
 
-                Debug.Log("3. desiredSpeed is " + desiredAngularSpeed + ", currentSpeed is " + currentAngularSpeed + ", angular distance remaining is " + remainingAngularDistance + ", and inertiaTensor is " + myAB.inertiaTensor + ". Applying torque of " + relativeTorque);
+                Debug.Log("3. desiredAngularSpeed is " + desiredAngularSpeed + ". Applying torque of " + relativeTorque);
 
-                myAB.AddRelativeForce(new Vector3(0, relativeTorque, 0));
-
+                myAB.AddRelativeTorque(new Vector3(0, relativeTorque, 0));
+                
             // CASE: Cruise
             } else {
                 float angularSpeedDelta = currentAgentMoveParams.speed - currentAngularSpeed;
@@ -212,12 +208,12 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             distanceMovedSoFar = Mathf.Deg2Rad * Mathf.Abs(currentRotation.y - currentAgentMoveParams.initialTransformation.y);
         }
 
-        //iterate next index in cache, loop back to index 0 as we get newer positions
+        // Iterate next index in cache, loop back to index 0 as we get newer positions
         currentAgentMoveParams.oldestCachedIndex = (currentAgentMoveParams.oldestCachedIndex + 1) % currentAgentMoveParams.positionCacheSize;
         // Debug.Log($"current index: {currentAgentMoveParams.oldestCachedIndex}");
 
-        //this is here so the first time, iterating through the [0] index we don't check, only the second time and beyond
-        //every time we loop back around the cached positions, check if we effectively stopped moving
+        // This is here so the first time, iterating through the [0] index we don't check, only the second time and beyond
+        // every time we loop back around the cached positions, check if we effectively stopped moving
         if (currentAgentMoveParams.oldestCachedIndex == 0) {            
             //flag for shouldHalt to check if we should, in fact, halt
             checkStandardDev = true;
@@ -226,10 +222,10 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             checkStandardDev = false;
         }
 
-        // otherwise we have a hard timer to stop movement so we don't move forever and crash unity
+        // Otherwise we have a hard timer to stop movement so we don't move forever and crash unity
         currentAgentMoveParams.timePassed += fixedDeltaTime;
 
-        // we are set to be in an idle state so return and do nothing
+        // We are set to be in an idle state so return and do nothing
         return;
     }
 
@@ -247,8 +243,8 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 cachedPositions: a.currentAgentMoveParams.cachedPositions,
                 tolerance: a.currentAgentMoveParams.tolerance
             )) {
-                //if any single joint is still not halting, return false
-//                Debug.Log("still not done, don't halt yet");
+                // if any single joint is still not halting, return false
+                // Debug.Log("still not done, don't halt yet");
                 shouldStop = false;
                 return shouldStop;
             } else {
