@@ -1440,7 +1440,6 @@ def ci_build_arch(
     finally:
         os.chdir(start_wd)
 
-
 @task
 def poll_ci_build(context):
     import requests
