@@ -42,6 +42,7 @@ public class AgentManager : MonoBehaviour {
     private int activeAgentId;
     private bool renderImage = true;
     private bool renderImageSynthesis = true;
+    private bool renderImageSynthesisChanged = false;
     private bool renderDepthImage;
     private bool renderSemanticSegmentation;
     private bool renderInstanceSegmentation;
@@ -1034,7 +1035,18 @@ public class AgentManager : MonoBehaviour {
         while (true) {
            
             bool shouldRender = this.renderImage && serverSideScreenshot;
+
             bool shouldRenderImageSynthesis = shouldRender && this.renderImageSynthesis;
+            if (renderImageSynthesisChanged) {
+                foreach (BaseFPSAgentController agent in this.agents) {
+                    foreach (ImageSynthesis ims in agent.gameObject.GetComponentsInChildren<ImageSynthesis>()) {
+                        if (ims.enabled) {
+                            ims.updateCameraStatuses(this.renderImageSynthesis);
+                        }
+                    }
+                }
+            }
+
             yield return new WaitForEndOfFrame();
 
             frameCounter += 1;
@@ -1216,7 +1228,10 @@ public class AgentManager : MonoBehaviour {
         this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
         this.renderImage = controlCommand.renderImage;
+
+        this.renderImageSynthesisChanged = this.renderImageSynthesis != controlCommand.renderImageSynthesis;
         this.renderImageSynthesis = controlCommand.renderImageSynthesis;
+
         this.activeAgentId = controlCommand.agentId;
 
         if (agentManagerActions.Contains(controlCommand.action)) {

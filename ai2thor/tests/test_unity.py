@@ -450,12 +450,14 @@ def test_simobj_filter(controller):
     objects = controller.last_event.metadata["objects"]
     unfiltered_object_ids = sorted([o["objectId"] for o in objects])
     filter_object_ids = sorted([o["objectId"] for o in objects[0:3]])
-    e = controller.step(dict(action="SetObjectFilter", objectIds=filter_object_ids))
+    controller.step(dict(action="SetObjectFilter", objectIds=filter_object_ids))
+    e = controller.step("Pass") # Must pass for `SetObjectFilter` to take effect
     assert len(e.metadata["objects"]) == len(filter_object_ids)
     filtered_object_ids = sorted([o["objectId"] for o in e.metadata["objects"]])
     assert filtered_object_ids == filter_object_ids
 
-    e = controller.step(dict(action="SetObjectFilter", objectIds=[]))
+    controller.step(dict(action="SetObjectFilter", objectIds=[]))
+    e = controller.step("Pass")  # Must pass for `SetObjectFilter` to take effect
     assert len(e.metadata["objects"]) == 0
 
     e = controller.step(dict(action="ResetObjectFilter"))
@@ -765,6 +767,7 @@ def test_open_interactable_with_filter(controller):
     assert_near(controller.last_event.metadata["agent"]["position"], position)
 
     controller.step(dict(action="SetObjectFilter", objectIds=[]))
+    controller.step("Pass")  # Must pass for `SetObjectFilter` to take effect
     assert controller.last_event.metadata["objects"] == []
     controller.step(
         action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
