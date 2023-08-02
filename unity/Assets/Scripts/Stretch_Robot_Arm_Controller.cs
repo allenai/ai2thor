@@ -637,6 +637,45 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         MagnetRenderer.transform.localPosition = new Vector3(0, 0, 0.01f + radius);
     }
 
+    public void SetSpongeScale(float xScale, float yScale, float zScale) {
+        GameObject whereIsMySponge = this.GetComponentInChildren<SpongeClean>(includeInactive: true).transform.gameObject;
+        whereIsMySponge.transform.localScale = new Vector3(xScale, yScale, zScale);
+    }
+
+    public Vector3 GetSpongeScale() {
+        GameObject whereIsMySponge = this.GetComponentInChildren<SpongeClean>(includeInactive: true).transform.gameObject;
+        return whereIsMySponge.transform.localScale;
+    }
+
+    public void ActivateSponge () {
+        //where is my sponge?
+        GameObject whereIsMySponge = this.GetComponentInChildren<SpongeClean>(includeInactive: true).transform.gameObject;
+        //oh ok thank you
+        whereIsMySponge.SetActive(true);
+        
+        GameObject whereIsMyPen = this.GetComponentInChildren<PenDraw>(includeInactive: true).transform.gameObject;
+        if(whereIsMyPen.activeSelf)
+        whereIsMyPen.SetActive(false);
+
+        //you please go away though
+        hideHandSphereRenderer(false);
+    }
+
+    public void hideHandSphereRenderer(bool active = false) {
+        MagnetRenderer.GetComponent<MeshRenderer>().enabled = active;
+    }
+
+    public void ActivatePen () {
+        GameObject whereIsMyPen = this.GetComponentInChildren<PenDraw>(includeInactive: true).transform.gameObject;
+        whereIsMyPen.SetActive(true);
+
+        GameObject whereIsMySponge = this.GetComponentInChildren<SpongeClean>(includeInactive: true).transform.gameObject;
+        if(whereIsMyPen.activeSelf)
+        whereIsMySponge.SetActive(false);
+
+        hideHandSphereRenderer(false);
+    }
+
     public ArmMetadata GenerateMetadata() {
         ArmMetadata meta = new ArmMetadata();
         // meta.handTarget = armTarget.position;

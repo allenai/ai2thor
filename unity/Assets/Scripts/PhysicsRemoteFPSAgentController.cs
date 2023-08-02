@@ -2967,7 +2967,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // ok now get spawn points from target
             List<Vector3> targetPoints = new List<Vector3>();
-            targetPoints = target.FindMySpawnPointsFromTopOfTriggerBox();
+            targetPoints = target.FindMySpawnPointsFromTriggerBox();
 
             // by default, action.anywhere = false, so remove all targetPoints that are outside of agent's view
             // if anywhere true, don't do this and just return all points we got from above
@@ -2995,13 +2995,42 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // same as GetSpawnCoordinatesAboveReceptacle(Server Action) but takes a sim obj phys instead
         // returns a list of vector3 coordinates above a receptacle. These coordinates will make up a grid above the receptacle
-        public List<Vector3> getSpawnCoordinatesAboveReceptacle(SimObjPhysics t) {
+        public List<Vector3> getSpawnCoordinatesAboveReceptacle(SimObjPhysics t, bool fromReceptacleTop = true) {
             SimObjPhysics target = t;
             // ok now get spawn points from target
             List<Vector3> targetPoints = new List<Vector3>();
-            targetPoints = target.FindMySpawnPointsFromTopOfTriggerBox();
+            targetPoints = target.FindMySpawnPointsFromTriggerBox(top: fromReceptacleTop);
             return targetPoints;
         }
+
+
+        public void MakeReceptacleDirty(string objectId, float density, int seed = 0, Vector3? scale = null) {
+             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                actionFinished(success: false, errorMessage: $"Object ID {objectId} appears to be invalid.");
+            }
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            if (!sop.IsReceptacle) {
+                actionFinished(success: false, errorMessage: $"Object ID {objectId} is not a Receptacle.");
+
+            }
+
+            var dirtyDensityClamped = Mathf.Clamp(density, 0.0f, 1.0f);
+
+            var dc = sop.GetComponentInChildren<DecalCollision>();
+            var spawnCoordinates = getSpawnCoordinatesAboveReceptacle(sop, fromReceptacleTop: false);
+             // TODO adjust this value as it is to dense still as a percentage, probably base it on the scale and
+             // total receptacle area
+            var coordinateCount = Mathf.RoundToInt(density * spawnCoordinates.Count);
+           
+            Debug.Log($"--- total coords {spawnCoordinates.Count}, selected count {coordinateCount} ");
+            var selectedCoords = spawnCoordinates.Shuffle_(new System.Random(seed)).Take(coordinateCount);
+            foreach (var coord in selectedCoords) {
+                dc.SpawnDecal(position: coord, scale: scale, randomRotationAxis: DecalRotationAxis.FORWARD);
+
+            }
+             actionFinished(success: true);
+        }
+
 
         // instantiate a target circle, and then place it in a "SpawnOnlyOUtsideReceptacle" that is also within camera view
         // If fails, return actionFinished(false) and despawn target circle
@@ -3850,6 +3879,46 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (markActionFinished) {
                 actionFinished(success: true, actionReturn: target.ObjectID);
             }
+        }
+
+        public void GetDoorHandle(string objectId) {
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+            
+            List<Vector3> doorHandlePositions = new List<Vector3>();
+
+            foreach(GameObject go in GetChildObjectWithTag(target.transform, "Handle")) {
+                doorHandlePositions.Add(go.transform.position);
+            }
+
+            actionFinished(true, doorHandlePositions);
+        }
+
+        public void GetDoorHinge(string objectId) {
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+
+            List<Vector3> hingePositions = new List<Vector3>();
+
+            foreach(GameObject go in GetChildObjectWithTag(target.transform, "Handle")) {
+                hingePositions.Add(go.transform.position);
+            }
+
+            actionFinished(true, hingePositions);
+        }
+
+        public List<GameObject> GetChildObjectWithTag(Transform parent, string tag) {
+            List<GameObject> thingsWithTag = new List<GameObject>();
+
+            for (int i = 0; i < parent.childCount; i++) {
+                Transform child = parent.GetChild(i);
+                if (child.tag == tag) {
+                    thingsWithTag.Add(child.gameObject);
+                }
+                if (child.childCount > 0) {
+                    GetChildObjectWithTag(child, tag);
+                }
+            }
+
+            return thingsWithTag;
         }
 
         public virtual void PickupObject(float x, float y, bool forceAction = false, bool manualInteract = false) {
@@ -7360,6 +7429,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "object not found: " + action.objectId;
                 actionFinished(false);
             }
+        }
+
+        public void SpawnDirt(
+            string objectId,
+            int howManyDirt,
+            bool forceAction = true,
+            int randomSeed = 0
+            ) {
+            
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
+            
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
+            if (target) {
+                target.SpawnDirtOnReceptacle(howManyDirt, randomSeed);
+            }
+
+            actionFinished(true);
         }
 
         public void DirtyObject(ServerAction action) {

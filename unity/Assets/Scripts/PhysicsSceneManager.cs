@@ -44,6 +44,10 @@ public class PhysicsSceneManager : MonoBehaviour {
     public int AdvancePhysicsStepCount;
     public static uint PhysicsSimulateCallCount;
 
+    public bool placeDecalSurfaceOnReceptacles = false;
+
+    public GameObject receptaclesDirtyDecalSurface;
+
     private void OnEnable() {
         // must do this here instead of Start() since OnEnable gets triggered prior to Start
         // when the component is enabled.

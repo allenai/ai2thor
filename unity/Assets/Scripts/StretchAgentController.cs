@@ -394,6 +394,99 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             errorMessage = "You cannot stand as the stretch agent! This is a no-op.";
         }
 
+        public void ActivateSponge() {
+            Stretch_Robot_Arm_Controller arm = getArm();
+            arm.ActivateSponge();
+            actionFinished(true);
+        }
+
+        public void GetSpongeScale() {
+            Stretch_Robot_Arm_Controller arm = getArm();
+            actionFinished(true, arm.GetSpongeScale());
+        }
+
+        public void SetSpongeScale(float x, float y, float z) { 
+            Stretch_Robot_Arm_Controller arm = getArm();
+            arm.SetSpongeScale(x, y, z);
+            actionFinished(true);
+        }
+
+        public void ActivatePen() {
+            Stretch_Robot_Arm_Controller arm = getArm();
+            arm.ActivatePen();
+            actionFinished(true);
+        }
+
+        public void GetSpongeMeta () {
+            SpongeClean target = UnityEngine.Object.FindObjectOfType<SpongeClean>();
+            if (target != null) {
+                actionFinished(true, target.transform.position);
+            }
+            else {
+                errorMessage = "No Sponge arm attachment is active right now";
+                actionFinished(false, errorMessage);
+            }
+        }
+
+        public void GetPenMeta () {
+            PenDraw target = UnityEngine.Object.FindObjectOfType<PenDraw>();
+            if (target != null) {
+                actionFinished(true, target.transform.position);
+            }
+
+            else { 
+                errorMessage = "No Pen arm attachment is active right now";
+                actionFinished(false, errorMessage);
+            }
+        }
+
+        //return where the dirt decals are in world space
+        public void GetDirtMeta() {
+            List <Vector3> dirtPositions = new List<Vector3>();
+
+            foreach (DeferredDecal decal in UnityEngine.Object.FindObjectsOfType<DeferredDecal>()) {
+                if(decal.CompareTag("Dirt")) {
+                    dirtPositions.Add(decal.transform.position);
+                }
+            }
+
+            if(dirtPositions.Count == 0) {
+                actionFinished(false, "no dirt objects in scene");
+                return;
+            }
+
+            #if UNITY_EDITOR
+            foreach (Vector3 v in dirtPositions) {
+                Debug.Log(v);
+            }
+            #endif
+
+            actionFinished(true, dirtPositions);
+        }
+
+        //return pen marking positions in world space
+        public void GetPenMarkMeta() {
+            List<Vector3> penPositions = new List<Vector3>();
+
+            foreach (DeferredDecal decal in UnityEngine.Object.FindObjectsOfType<DeferredDecal>()) {
+                if (decal.CompareTag("Pen")) {
+                    penPositions.Add(decal.transform.position);
+                }
+            }
+
+            if (penPositions.Count == 0) {
+                actionFinished(false, "no pen mark objects in scene");
+                return;
+            }
+
+            #if UNITY_EDITOR
+            foreach (Vector3 v in penPositions) {
+                Debug.Log(v);
+            }
+            #endif
+
+            actionFinished(true, penPositions);
+        }
 
         public void MoveAgent(
             float ahead = 0,

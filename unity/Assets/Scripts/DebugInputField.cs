@@ -527,7 +527,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["visibilityScheme"] = "Distance";
                         action["renderInstanceSegmentation"] = true;
                         action["renderDepth"] = true;
-//                        action["antiAliasing"] = "smaa";
+//                      action["antiAliasing"] = "smaa";
+                        action["massThreshold"] = 10.0f;
 
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                         //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
@@ -1128,6 +1129,74 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+
+                case "spawndirt": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SpawnDirt";
+                        action["objectId"] = "DiningTable|-00.96|+00.11|-00.73";
+                        action["howManyDirt"] = 100;
+                        action["randomSeed"] = 0;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;                
+                    }
+
+                case "sponge": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ActivateSponge";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break; 
+                }
+
+                case "getsponge": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetSpongeScale";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break; 
+                }
+                case "setsponge": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SetSpongeScale";
+                        action["x"] = 3.0f;
+                        action["y"] = 3.0f;
+                        action["z"] = 3.0f;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break; 
+                }
+
+                case "pen": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ActivatePen";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break; 
+                }
+
+                case "getspongemeta": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetSpongeMeta";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
+                case "getpenmeta": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetPenMeta";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
+                case "getdirtmeta": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetDirtMeta";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
+                case "getpenmarkmeta": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetPenMarkMeta";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
 
                 // initialize drone mode
                 case "initd": {
@@ -2658,7 +2727,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+                case "dirtyrec" : {
 
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MakeReceptacleDirty";
+                        action["density"] = 0.1f;
+                        action["scale"] = new Vector3(0.3f, 0.3f, 0.2f);
+                        if (splitcommand.Length > 1) {
+                            action["objectId"] = splitcommand[1];
+                        }
+                        if (splitcommand.Length > 2) {
+                            action["density"] =  float.Parse(splitcommand[1]);
+                        }
+
+                     CurrentActiveController().ProcessControlCommand(action);
+                     break;
+
+                }
                 case "cleanobject": {
                         ServerAction action = new ServerAction();
                         action.action = "CleanObject";

@@ -43,6 +43,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private PhysicsRemoteFPSAgentController PhysicsController;
         private bool scroll2DEnabled = true;
 
+        private bool originalPhysicsAutosimulation = false;
+
         protected bool enableHighlightShader = true;
 
         private void Start() {
@@ -104,6 +106,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void OnEnable() {
             FPSEnabled = true;
+            originalPhysicsAutosimulation = Physics.autoSimulation;
+            Physics.autoSimulation = true;
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
 
@@ -132,6 +136,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FPSEnabled = true;
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
+            originalPhysicsAutosimulation = Physics.autoSimulation;
+            Physics.autoSimulation = true;
         }
 
         public void DisableMouseControl() {
@@ -141,6 +147,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FPSEnabled = false;
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
+            Physics.autoSimulation = originalPhysicsAutosimulation;
         }
 
         private void DebugKeyboardControls() {

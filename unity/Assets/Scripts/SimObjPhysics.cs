@@ -11,7 +11,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 
-public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
+public class SimObjPhysics : MonoBehaviour, SimpleSimObj {    
     [Header("Unique String ID of this Object In Scene")]
     [SerializeField]
     public string objectID = string.Empty;
@@ -689,10 +689,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
 
     // return spawn points for this receptacle objects based on the top part of all trigger boxes
-    public List<Vector3> FindMySpawnPointsFromTopOfTriggerBox(bool forceVisible = false) {
+    public List<Vector3> FindMySpawnPointsFromTriggerBox(bool forceVisible = false, bool top = false) {
         List<Vector3> points = new List<Vector3>();
         foreach (GameObject rtb in ReceptacleTriggerBoxes) {
-            points.AddRange(rtb.GetComponent<Contains>().GetValidSpawnPointsFromTopOfTriggerBox());
+            points.AddRange(rtb.GetComponent<Contains>().GetValidSpawnPointsFromTriggerBox(top: top));
         }
 
         return points;
@@ -970,6 +970,38 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         sceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
         initializeProperties();
+
+        // Spawn Dirt Decal Surface
+        bool onlyForThisObject = this.gameObject.GetComponent<DirtAndWrite>();
+
+        if (onlyForThisObject) {
+            if (sceneManager.placeDecalSurfaceOnReceptacles && this.IsReceptacle) {
+                foreach (GameObject go in ReceptacleTriggerBoxes) {
+                
+                    var dgo = GameObject.Instantiate(sceneManager.receptaclesDirtyDecalSurface);
+                    // unity provided quad's mesh is XY plane, repplace with custom XZ one and remove line below
+                    dgo.GetComponent<BoxCollider>().isTrigger = true;
+                    dgo.transform.localEulerAngles = new Vector3(-90.0f, 0.0f, 0.0f);
+                    dgo.transform.parent = go.transform;
+                    
+
+                    // This is where the decal plane goes in y, if receptacle box is too high it could lead to 
+                    // decals bleeding to other objects that are below it in y, so tune appropiately, should be
+                    // an annotation of prefab
+                    var yOffset = 0.001f;
+                    dgo.transform.localPosition = new Vector3(0.0f, yOffset, 0.0f);
+                    var bc = go.GetComponent<BoxCollider>();
+                    /// Same as above remove when using XZ plane mesh
+                    dgo.transform.localScale = new Vector3(bc.size.x, bc.size.z, 1.0f);
+                }
+            }
+        }
+    }
+
+    //spawn dirt on receptacle 
+    public void SpawnDirtOnReceptacle(int howManyDirt, int randomSeed) {
+        DecalSpawner decalSpawner = this.gameObject.GetComponentInChildren<DecalSpawner>();
+        decalSpawner.SpawnDirt(howManyDirt, randomSeed);
     }
 
     public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop) {
