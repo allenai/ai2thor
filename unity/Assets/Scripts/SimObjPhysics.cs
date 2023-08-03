@@ -971,7 +971,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
         initializeProperties();
 
-        // Spawn Dirt Decal Surface
+        // Spawn Dirt Decal Surface if this object is setup for cleaning
         bool onlyForThisObject = this.gameObject.GetComponent<DirtAndWrite>();
 
         if (onlyForThisObject) {
