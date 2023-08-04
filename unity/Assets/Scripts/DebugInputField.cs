@@ -2241,6 +2241,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "ma": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveAhead";
+                        action["speed"] = 0.14f;
+                        action["acceleration"] = 0.14f;
 
                         if (splitcommand.Length > 1) {
                             action["moveMagnitude"] = float.Parse(splitcommand[1]);
@@ -2253,6 +2255,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "mb": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveBack";
+                        action["speed"] = 0.14f;
+                        action["acceleration"] = 0.14f;
 
                         if (splitcommand.Length > 1) {
                             action["moveMagnitude"] = float.Parse(splitcommand[1]);
@@ -2460,7 +2464,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "rl": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "RotateLeft";
-
+                        action["speed"] = 22.5f;
+                        action["acceleration"] = 22.5f;
 
                         if (splitcommand.Length > 1) {
                             action["degrees"] = float.Parse(splitcommand[1]);
@@ -2488,7 +2493,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "rr": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "RotateRight";
-
+                        action["speed"] = 22.5f;
+                        action["acceleration"] = 22.5f;
 
                         if (splitcommand.Length > 1) {
                             action["degrees"] = float.Parse(splitcommand[1]);

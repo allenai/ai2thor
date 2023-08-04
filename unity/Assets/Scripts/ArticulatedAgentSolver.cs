@@ -84,10 +84,13 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             accelerationDistance = currentAgentMoveParams.distance / 2;
             Debug.Log("accelerationDistance now equals " + accelerationDistance);
         }
+
+        beginDeceleration = false;
     }
     
     public void ContinuousUpdate(float fixedDeltaTime)  {
         Vector3 maxForce = currentAgentMoveParams.maxForce * currentAgentMoveParams.direction * Vector3.forward;
+        float remainingDistance = currentAgentMoveParams.distance - distanceMovedSoFar;
 
         if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
 
@@ -102,8 +105,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 float relativeForce = (distanceDelta / fixedDeltaTime) * currentAgentMoveParams.agentMass
                     * currentAgentMoveParams.direction;
 
-                Debug.Log("1. distanceDelta is " + distanceDelta + ". Applying force of (2 * " + distanceDelta + " / " + Mathf.Pow(fixedDeltaTime,2) + ") minus "
-                 + currentSpeed + ", which equals " + ((2 * distanceDelta / Mathf.Pow(fixedDeltaTime,2)) - currentSpeed) + ", which is multiplied by mass, direction, and z-forward to make " + relativeForce);
+                Debug.Log("1. distanceDelta is " + distanceDelta + ". Applying force of " + relativeForce);
 
                 // Use motor's max force in edge case where progress is halted, such as an obstacle in the way
                 // UGH, NEED TO ACCOUNT FOR SIGN CHANGE
@@ -115,19 +117,22 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             
             // CASE: Decelerate - Apply force calculated from difference between intended velocity and actual velocity at given distance from finish line
             } else if (distanceMovedSoFar >= currentAgentMoveParams.distance - accelerationDistance) {
-                float remainingDistance = currentAgentMoveParams.distance - distanceMovedSoFar;
-                float desiredSpeed = currentAgentMoveParams.speed * (remainingDistance / accelerationDistance);
+                if (beginDeceleration == false) {
+                    beginDecelerationSpeed = currentSpeed;
+                    beginDeceleration = true;
+                }
+
+                float desiredSpeed = beginDecelerationSpeed * (remainingDistance / accelerationDistance);
                 float speedDelta = desiredSpeed - currentSpeed;
             
                 float relativeForce = (speedDelta / Time.fixedDeltaTime) * currentAgentMoveParams.agentMass
                     * currentAgentMoveParams.direction;
 
-                Debug.Log("3. desiredSpeed is " + desiredSpeed + ", currentSpeed is " + currentSpeed + ", and distance remaining is " + remainingDistance + ". Applying force of " + relativeForce);
+                Debug.Log("3. speedDelta is " + speedDelta + ". Applying force of " + relativeForce);
                 myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));
             
             // CASE: Cruise Control - Apply force calculated from difference between intended velocity and current velocity
             } else {
-
                 float speedDelta = currentAgentMoveParams.speed - currentSpeed;
 
                 float relativeForce = (speedDelta / Time.fixedDeltaTime) * currentAgentMoveParams.agentMass
@@ -180,8 +185,12 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
 
             // CASE: Decelerate
             } else if (distanceMovedSoFar >= currentAgentMoveParams.distance - accelerationDistance) {
-                float remainingAngularDistance = currentAgentMoveParams.distance - distanceMovedSoFar;
-                float desiredAngularSpeed = currentAgentMoveParams.speed * (remainingAngularDistance / accelerationDistance);
+                if (beginDeceleration == false) {
+                    beginDecelerationSpeed = currentAngularSpeed;
+                    beginDeceleration = true;
+                }
+                
+                float desiredAngularSpeed = beginDecelerationSpeed * (remainingDistance / accelerationDistance);
                 float angularSpeedDelta = desiredAngularSpeed - currentAngularSpeed;
                 
                 float relativeTorque = (angularSpeedDelta / Time.fixedDeltaTime) * myAB.inertiaTensor.y
@@ -330,6 +339,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
 
     //check if all values in the array are within a standard deviation or not
     bool CheckArrayWithinStandardDeviation(Vector3[] values, float standardDeviation) {
+        // Debug.Log("RUUUUUUUUUUUUUUUUUUUUUUUUUUUUN");
         float[] mags = new float[values.Length];
         
         // Calculate the mean value of the array
@@ -344,9 +354,11 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             //Debug.Log(value);
             sumOfSquares += (mag - mean) * (mag - mean);
         }
-
+        
         // Calculate the standard deviation of the array
         float arrayStdDev = (float)Mathf.Sqrt(sumOfSquares / values.Length);
+
+        Debug.Log("Calculated SD is " + arrayStdDev + ", against min SD of " + standardDeviation);
 
         // Check if the standard deviation of the array is within the specified range
         return arrayStdDev <= standardDeviation;

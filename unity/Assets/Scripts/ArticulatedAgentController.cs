@@ -291,7 +291,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 speed = speed,
                 acceleration = acceleration,
                 agentMass = CalculateTotalMass(this.transform),
-                tolerance = 1e-6f,
+                tolerance = 1e-10f,
                 maxTimePassed = 10.0f,
                 positionCacheSize = 10,
                 direction = direction
@@ -321,13 +321,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void MoveAhead(
             float? moveMagnitude = null,
-            float speed = 1,
-            float acceleration = 1,
+            float speed = 0.14f,
+            float acceleration = 0.14f,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
             bool disableRendering = false
         ) {
-            // Debug.Log("(2) ArticulatedAgentController: CONVERTING TO MOVEAGENT FUNCTION");
             SetFloorColliderToSlippery();
             MoveAgent(
                 moveMagnitude: moveMagnitude.GetValueOrDefault(gridSize),
@@ -339,16 +338,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-
         public void MoveBack(
             float? moveMagnitude = null,
-            float speed = 1,
-            float acceleration = 1,
+            float speed = 0.14f,
+            float acceleration = 0.14f,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
             bool disableRendering = false
         ) {
-            Debug.Log("MoveBack from ArticulatedAgentController");
             SetFloorColliderToSlippery();
             MoveAgent(
                 moveMagnitude: -moveMagnitude.GetValueOrDefault(gridSize),
@@ -360,11 +357,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public override void RotateRight(
+        public void RotateRight(
             float? degrees = null,
             bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
             bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
             float speed = 22.5f,
+            float acceleration = 22.5f,
             bool waitForFixedUpdate = false,
             bool returnToStart = true,
             bool disableRendering = false,
@@ -374,6 +372,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             RotateAgent(
                 degrees: degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
+                acceleration: acceleration,
                 waitForFixedUpdate: waitForFixedUpdate,
                 returnToStart: returnToStart,
                 disableRendering: disableRendering,
@@ -381,11 +380,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public override void RotateLeft(
+        public void RotateLeft(
             float? degrees = null,
             bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
             bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
             float speed = 22.5f,
+            float acceleration = 22.5f,
             bool waitForFixedUpdate = false,
             bool returnToStart = true,
             bool disableRendering = false,
@@ -395,6 +395,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             RotateAgent(
                 degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
+                acceleration: acceleration,
                 waitForFixedUpdate: waitForFixedUpdate,
                 returnToStart: returnToStart,
                 disableRendering: disableRendering,
@@ -431,7 +432,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 speed = Mathf.Deg2Rad * speed,
                 acceleration = Mathf.Deg2Rad * acceleration,
                 agentMass = CalculateTotalMass(this.transform),
-                tolerance = 1e-6f,
+                tolerance = 1e-10f,
                 maxTimePassed = 10.0f,
                 positionCacheSize = 10,
                 direction = direction
