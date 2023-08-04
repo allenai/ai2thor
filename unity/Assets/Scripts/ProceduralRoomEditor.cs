@@ -1058,9 +1058,9 @@ public class ProceduralRoomEditor : MonoBehaviour {
         // proceduralADB.prefabs = new AssetMap<GameObject>(ProceduralTools.FindPrefabsInAssets().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
         // proceduralADB.materials = new AssetMap<Material>(ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
         
-        var prefabs = ProceduralTools.FindPrefabsInAssets();
-        proceduralADB.assetMap.Clear();
-        proceduralADB.addAssets(prefabs);
+        proceduralADB.prefabs = ProceduralTools.FindPrefabsInAssets();
+        // proceduralADB.assetMap.Clear();
+        // proceduralADB.addAssets(prefabs);
 
         proceduralADB.materials = ProceduralTools.FindAssetsByType<Material>();
         proceduralADB.totalMats = proceduralADB.materials.Count();
