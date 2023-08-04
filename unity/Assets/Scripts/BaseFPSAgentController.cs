@@ -4661,6 +4661,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void SetMainCameraProperties(bool orthographic = false, float? orthographicSize = null, Vector3? position = null, string positionType = "absolute", FlexibleRotation rotation = null) {
+            m_Camera.orthographic = orthographic;
+            if (orthographicSize.HasValue) {
+                m_Camera.orthographicSize = orthographicSize.GetValueOrDefault();
+            }
+            if (position.HasValue) {
+                if (positionType == "absolute") {
+                    m_Camera.transform.position = position.GetValueOrDefault();
+                }
+                if (positionType == "offset") {
+                    m_Camera.transform.position += position.GetValueOrDefault();
+                }
+            }
+             if (rotation != null) {
+                m_Camera.transform.rotation = rotation.toQuaternion();
+             }
+            actionFinished(true);
+
+        }
+
         protected Dictionary<string, object> getMapViewCameraProperties() {
             StructureObject[] structureObjs = GameObject.FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
 
