@@ -1191,6 +1191,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                 }
 
+                case "getdoorhinge": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetDoorHinge";
+                        action["objectId"] = "door|1|3";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
+                case "getdoorhandle": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetDoorHandle";
+                        action["objectId"] = "door|1|3";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
                 case "getpenmarkmeta": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetPenMarkMeta";

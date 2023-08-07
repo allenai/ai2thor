@@ -3886,9 +3886,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
             List<Vector3> doorHandlePositions = new List<Vector3>();
 
-            foreach(GameObject go in GetChildObjectWithTag(target.transform, "Handle")) {
-                doorHandlePositions.Add(go.transform.position);
+            foreach (Transform child in target.transform.GetComponentsInChildren<Transform>()) {
+                if(child.CompareTag("Handle")) {
+                    doorHandlePositions.Add(child.transform.position);
+                }
             }
+
+            #if UNITY_EDITOR
+            foreach(Vector3 v in doorHandlePositions) {
+                Debug.Log(v);
+            }
+            #endif
 
             actionFinished(true, doorHandlePositions);
         }
@@ -3898,28 +3906,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             List<Vector3> hingePositions = new List<Vector3>();
 
-            foreach(GameObject go in GetChildObjectWithTag(target.transform, "Handle")) {
-                hingePositions.Add(go.transform.position);
+            foreach (Transform child in target.transform.GetComponentsInChildren<Transform>()) {
+                if(child.CompareTag("Hinge")) {
+                    hingePositions.Add(child.transform.position);
+                }
             }
+
+            #if UNITY_EDITOR
+            foreach(Vector3 v in hingePositions) {
+                Debug.Log(v);
+            }
+            #endif
 
             actionFinished(true, hingePositions);
         }
-
-        public List<GameObject> GetChildObjectWithTag(Transform parent, string tag) {
-            List<GameObject> thingsWithTag = new List<GameObject>();
-
-            for (int i = 0; i < parent.childCount; i++) {
-                Transform child = parent.GetChild(i);
-                if (child.tag == tag) {
-                    thingsWithTag.Add(child.gameObject);
-                }
-                if (child.childCount > 0) {
-                    GetChildObjectWithTag(child, tag);
-                }
-            }
-
-            return thingsWithTag;
-        }
+    
 
         public virtual void PickupObject(float x, float y, bool forceAction = false, bool manualInteract = false) {
             SimObjPhysics target = getInteractableSimObjectFromXY(x: x, y: y, forceAction: forceAction);
