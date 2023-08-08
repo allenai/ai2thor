@@ -7,7 +7,6 @@ using System.Linq;
 public partial class ArticulatedArmController : ArmController {
     public ArticulatedArmJointSolver[] joints;
     
-
     [SerializeField]
     //this wrist placeholder represents the posrot manipulator's position on the IK Stretch so we can match the distance magnitudes
     //it is weird because the origin point of the last joint in the AB is in a different offset, so we have to account for that for benchmarking
@@ -162,29 +161,8 @@ public partial class ArticulatedArmController : ArmController {
 
         Dictionary<ArticulatedArmJointSolver, float> jointToArmDistanceRatios = new Dictionary<ArticulatedArmJointSolver, float>();
 
-        //get the total distance each joint can move based on the upper limits
-        float totalExtendDistance = 0.0f;
-
-        //loop through all extending joints to get the total distance each joint can move
-        for (int i = 1; i <= 4; i++) {
-            totalExtendDistance += GetDriveUpperLimit(joints[i]);
-        }
-
-        //loop through all extending joints and get the ratio of movement each joint is responsible for
-        for (int i = 1; i <= 4; i++) {
-            ArticulatedArmJointSolver thisJoint = joints[i];
-            jointToArmDistanceRatios.Add(thisJoint, GetDriveUpperLimit(thisJoint) / totalExtendDistance);
-        }
-
-        //set each joint to move its specific distance
-        foreach (ArticulatedArmJointSolver joint in jointToArmDistanceRatios.Keys) {
-
-        //assign each joint the distance it needs to move to have the entire arm
-        //this means the distance each joint moves may be slightly different due to proportion of movement this joint is responsible for
-        float myDistance = distance * jointToArmDistanceRatios[joint];
-        Debug.Log($"joint {joint.transform.name} is moving ({myDistance}) out of total distance ({distance})");
         ArmMoveParams amp = new ArmMoveParams {
-            distance = myDistance,
+            distance = distance,
             speed = unitsPerSecond,
             tolerance = tolerance,
             maxTimePassed = maxTimePassed,
@@ -192,10 +170,42 @@ public partial class ArticulatedArmController : ArmController {
             direction = direction
         };
 
-            //assign movement params to this joint
-            //joint.PrepToControlJointFromAction(amp);
-            prepAllTheThingsBeforeJointMoves(joint, amp);
-        }
+        prepAllTheThingsBeforeJointMoves(joints[1], amp);
+
+        // //get the total distance each joint can move based on the upper limits
+        // float totalExtendDistance = 0.0f;
+
+        // //loop through all extending joints to get the total distance each joint can move
+        // for (int i = 1; i <= 4; i++) {
+        //     totalExtendDistance += GetDriveUpperLimit(joints[i]);
+        // }
+
+        // //loop through all extending joints and get the ratio of movement each joint is responsible for
+        // for (int i = 1; i <= 4; i++) {
+        //     ArticulatedArmJointSolver thisJoint = joints[i];
+        //     jointToArmDistanceRatios.Add(thisJoint, GetDriveUpperLimit(thisJoint) / totalExtendDistance);
+        // }
+
+        // //set each joint to move its specific distance
+        // foreach (ArticulatedArmJointSolver joint in jointToArmDistanceRatios.Keys) {
+
+        // //assign each joint the distance it needs to move to have the entire arm
+        // //this means the distance each joint moves may be slightly different due to proportion of movement this joint is responsible for
+        // float myDistance = distance * jointToArmDistanceRatios[joint];
+        // Debug.Log($"joint {joint.transform.name} is moving ({myDistance}) out of total distance ({distance})");
+        // ArmMoveParams amp = new ArmMoveParams {
+        //     distance = myDistance,
+        //     speed = unitsPerSecond,
+        //     tolerance = tolerance,
+        //     maxTimePassed = maxTimePassed,
+        //     positionCacheSize = positionCacheSize,
+        //     direction = direction
+        // };
+
+        //     //assign movement params to this joint
+        //     //joint.PrepToControlJointFromAction(amp);
+        //     prepAllTheThingsBeforeJointMoves(joint, amp);
+        // }
 
         //now need to do move call here I think
         IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
