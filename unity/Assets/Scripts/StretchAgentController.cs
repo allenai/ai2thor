@@ -440,6 +440,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void ClearAllDirt() {
+            int howManyDirtRemoved = 0;
+            foreach (DeferredDecal decal in UnityEngine.Object.FindObjectsOfType<DeferredDecal>()) {
+                if(decal.CompareTag("Dirt")) {
+                    GameObject.Destroy(decal.transform.gameObject);
+                    howManyDirtRemoved++;
+                }
+            }
+            actionFinished(true, $"removed {howManyDirtRemoved} dirt spots total");
+        }
+
+        public void ClearAllPenMarks() {
+            int howManyDirtRemoved = 0;
+            foreach (DeferredDecal decal in UnityEngine.Object.FindObjectsOfType<DeferredDecal>()) {
+                if(decal.CompareTag("Pen")) {
+                    GameObject.Destroy(decal.transform.gameObject);
+                    howManyDirtRemoved++;
+                }
+            }
+            actionFinished(true, $"removed {howManyDirtRemoved} dirt spots total");
+        }
+
         //return where the dirt decals are in world space
         public void GetDirtMeta() {
             List <Vector3> dirtPositions = new List<Vector3>();
