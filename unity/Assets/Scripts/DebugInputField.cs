@@ -3632,7 +3632,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "RotateWristRelative";
                         action["yaw"] = 90f;
-                        action["speed"] = 200f;
+                        action["speed"] = 400f;
                         action["disableRendering"] = false;
                         //action["fixedDeltaTime"] = 5.0f;
                         CurrentActiveController().ProcessControlCommand(action);

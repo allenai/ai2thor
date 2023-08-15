@@ -506,7 +506,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float pitch = 0f,
             float yaw = 0f,
             float roll = 0f,
-            float speed = 10f,
+            float speed = 400f,
             float? fixedDeltaTime = null,
             bool returnToStart = true,
             bool disableRendering = true
@@ -515,7 +515,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (pitch != 0f || roll != 0f) {
                 throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
             }
-            Debug.Log("executing RotateWristRelative from ArticulatedAgentController");
+            Debug.Log($"executing RotateWristRelative from ArticulatedAgentController with speed {speed}");
             var arm = getArmImplementation();
             SetFloorColliderToHighFriction();
             arm.rotateWrist(
