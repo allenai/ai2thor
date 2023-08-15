@@ -10,16 +10,16 @@ public class ScaleArmCollidersWithZ : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        initialZPos = this.gameObject.transform.position.z;
+        initialZPos = this.gameObject.transform.localPosition.z;
     }
 
     // Update is called once per frame
     void Update()
     {
-        var currentZPos = this.gameObject.transform.position.z;
+        var currentZPos = this.gameObject.transform.localPosition.z;
 
         foreach (Transform go in myColliders) {
-            go.localScale = new Vector3(go.localScale.x, go.localScale.y, 1 + (initialZPos - currentZPos) * scaleMultiplier);
+            go.localScale = new Vector3(go.localScale.x, go.localScale.y, 1 + (currentZPos - initialZPos) * scaleMultiplier);
         }
     }
 }
