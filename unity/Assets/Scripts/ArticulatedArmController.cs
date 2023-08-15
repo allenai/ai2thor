@@ -387,7 +387,7 @@ public partial class ArticulatedArmController : ArmController {
             direction = direction
         };
 
-        ArticulatedArmJointSolver wristJoint = joints[5];
+        ArticulatedArmJointSolver wristJoint = joints[2];
         //preset the joint's movement parameters ahead of time
         prepAllTheThingsBeforeJointMoves(wristJoint, amp);
 
