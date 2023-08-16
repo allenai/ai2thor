@@ -433,6 +433,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action["makeAgentsVisible"] = int.Parse(splitcommand[3]) == 1;
                         }
 
+                        action["agentMode"] = "stretch";
                         action["fieldOfView"] = 90f;
                         action["snapToGrid"] = true;
                         action["renderInstanceSegmentation"] = true;
@@ -2405,6 +2406,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+
+                // rotate wrist right
+                case "rwr": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+                    action["action"] = "RotateWristRelative";
+
+                    if (splitcommand.Length > 1) {
+                        action["yaw"] = float.Parse(splitcommand[1]);
+                    } else {
+                        action["yaw"] = 90f;
+                    }
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
 
                 // rotate left
                 case "rl": {
