@@ -683,10 +683,14 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             // Check that world-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
-                jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+                jointMeta.rotation = new Vector4(vectorRot.x, Mathf.Abs(vectorRot.y), vectorRot.z, ConvertAngleToZeroCentricRange(angleRot * Mathf.Sign(vectorRot.y)));
             } else {
                 jointMeta.rotation = new Vector4(1, 0, 0, 0);
             }
+
+            // if (joint.name =="stretch_robot_wrist_1_jnt") {
+            //     Debug.Log("stretch_robot_wrist_1_jnt's world-relative rotation: (" + jointMeta.rotation.x + ", " + jointMeta.rotation.y + ", " + jointMeta.rotation.z + ", " + jointMeta.rotation.w + ")");
+            // }
 
             // ROOT-JOINT RELATIVE ROTATION
             // Grab rotation of current joint's angler relative to root joint
@@ -695,10 +699,14 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             // Check that root-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
-                jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+                jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, Mathf.Abs(vectorRot.y), vectorRot.z, ConvertAngleToZeroCentricRange(angleRot * Mathf.Sign(vectorRot.y)));
             } else {
                 jointMeta.rootRelativeRotation = new Vector4(1, 0, 0, 0);
             }
+
+            // if (joint.name =="stretch_robot_wrist_1_jnt") {
+            //     Debug.Log("stretch_robot_wrist_1_jnt's root-relative rotation: (" + jointMeta.rootRelativeRotation.x + ", " + jointMeta.rootRelativeRotation.y + ", " + jointMeta.rootRelativeRotation.z + ", " + jointMeta.rootRelativeRotation.w + ")");
+            // }
 
             // PARENT-JOINT RELATIVE ROTATION
             if (i != 1) {
@@ -710,7 +718,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 // Check that parent-relative rotation is angle-axis-notation-compatible
                 if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                     currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
-                    jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+                    jointMeta.localRotation = new Vector4(vectorRot.x, Mathf.Abs(vectorRot.y), vectorRot.z, ConvertAngleToZeroCentricRange(angleRot * Mathf.Sign(vectorRot.y)));
                 } else {
                     jointMeta.localRotation = new Vector4(1, 0, 0, 0);
                 }
@@ -744,6 +752,16 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         meta.touchedNotHeldObjects = objectsInMagnet.Select(x => x.ObjectID).ToList();
         return meta;
     }
+
+float ConvertAngleToZeroCentricRange(float degrees) {
+    if (degrees < 0) {
+        degrees = (degrees % 360f) + 360f;
+    }
+    if (degrees > 180f) {
+        degrees = (degrees % 360f) - 360f;
+    }
+    return degrees;
+}
 
 #if UNITY_EDITOR
     public class GizmoDrawCapsule {
