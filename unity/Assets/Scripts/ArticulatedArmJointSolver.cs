@@ -26,6 +26,8 @@ public class ArmMoveParams {
     public float initialJointPosition;
 
     public bool useLimits;
+
+    public ArticulatedArmExtender armExtender;
 }
 
 public class ArticulatedArmJointSolver : MonoBehaviour {
@@ -101,6 +103,9 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 //snapshot the initial joint position to compare with later during movement
                 currentArmMoveParams.initialJointPosition = myAB.jointPosition[0];
 
+                currentArmMoveParams.armExtender = this.GetComponent<ArticulatedArmExtender>();
+                currentArmMoveParams.armExtender.Init();
+
                 //set if we are extending or retracting
                 if (armMoveParams.direction < 0) {
                     extendState = ArmExtendState.MovingBackward;
@@ -132,6 +137,22 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
             }
         }
     }
+
+    // public void AnimateArmExtend(float armExtensionLength) {
+        
+    //     var arm2 = this.gameObject.transform.parent.Find("stretch_robot_arm_2");
+    //     var arm3 = this.gameObject.transform.parent.Find("stretch_robot_arm_3");
+    //     var arm4 = this.gameObject.transform.parent.Find("stretch_robot_arm_4");
+    //     var arm5 = this.gameObject.transform.parent.Find("stretch_robot_arm_5");
+
+    //      //Extend each part of arm by one-quarter of extension length, in local z-direction
+    //     arm2.localPosition = new Vector3 (0, 0, 1 * (armExtensionLength / 4) + 0.01300028f);
+    //     arm3.localPosition = new Vector3 (0, 0, 2 * (armExtensionLength / 4) + 0.01300049f);
+    //     arm4.localPosition = new Vector3 (0, 0, 3 * (armExtensionLength / 4) + 0.01300025f);
+    //     arm5.localPosition = new Vector3 (0, 0, 4 * (armExtensionLength / 4) + 0.0117463f);
+
+
+    // }
 
     public void ControlJointFromAction(float fixedDeltaTime) {
         // Debug.Log($"Type: {jointAxisType.ToString()} pos");
@@ -250,6 +271,8 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
 
                 distanceMovedSoFar = Mathf.Abs(currentPosition - currentArmMoveParams.initialJointPosition);
 
+                currentArmMoveParams.armExtender.Extend(distanceMovedSoFar);
+
                 //iterate next index in cache, loop back to index 0 as we get newer positions
                 currentArmMoveParams.oldestCachedIndex = (currentArmMoveParams.oldestCachedIndex + 1) % currentArmMoveParams.positionCacheSize;
 
@@ -261,6 +284,9 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                     //flag for shouldHalt to check if we should, in fact, halt
                     checkStandardDev = true;
                 }
+
+                // AnimateArmExtend(distanceMovedSoFar);
+                // currentArmMoveParams.stretchExtendAnimation.Animate(distanceMovedSoFar);
 
                 //otherwise we have a hard timer to stop movement so we don't move forever and crash unity
                 currentArmMoveParams.timePassed += fixedDeltaTime;

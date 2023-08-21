@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.49753028, g: 0.587666, b: 0.76710796, a: 1}
+  m_IndirectSpecularColor: {r: 0.4975372, g: 0.5877081, b: 0.7671276, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -9940,6 +9940,7 @@ GameObject:
   - component: {fileID: 3338915182740644605}
   - component: {fileID: 3677101635177499255}
   - component: {fileID: 3338915182740644608}
+  - component: {fileID: 3338915182740644609}
   m_Layer: 18
   m_Name: stretch_robot_arm_5
   m_TagString: Untagged
@@ -9954,11 +9955,33 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3338915182740644607}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64ac8c78dccd3744f87a4bf83f0de175, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  myColliders:
+  - {fileID: 7620627817810315446}
+  - {fileID: 7620627817990358366}
+  - {fileID: 7620627817011248541}
+  - {fileID: 7620627817899180336}
+  initialZPos: 0
+  scaleMultiplier: 4.7
+--- !u!114 &3338915182740644609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3338915182740644607}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cfdf9bace5f64f11866cd8855e04ca7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  arm2: {fileID: 3338915183761503235}
+  arm3: {fileID: 3338915182320851416}
+  arm4: {fileID: 3338915182575767022}
   myColliders:
   - {fileID: 7620627817810315446}
   - {fileID: 7620627817990358366}
