@@ -21,7 +21,7 @@ public class ArmMoveParams {
     //can probably move these out of this class and into the joint solver class iself????
     public int direction;
     public float timePassed = 0.0f;
-    public float[] cachedPositions;
+    public double[] cachedPositions;
     public int oldestCachedIndex;
     public float initialJointPosition;
 
@@ -48,7 +48,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
     public ArticulationBody myAB;
 
     public float distanceMovedSoFar;
-    public bool checkStandardDev;
+    public bool checkForMotion;
 
     public float lowerArmBaseLimit = -0.1832155f;
     public float upperArmBaseLimit = 0.9177839f;
@@ -75,7 +75,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 currentArmMoveParams = armMoveParams;
 
                 //initialize the buffer to cache positions to check for later
-                currentArmMoveParams.cachedPositions = new float[currentArmMoveParams.positionCacheSize];
+                currentArmMoveParams.cachedPositions = new double[currentArmMoveParams.positionCacheSize];
 
                 //snapshot the initial joint position to compare with later during movement
                 currentArmMoveParams.initialJointPosition = myAB.jointPosition[0];
@@ -98,7 +98,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 currentArmMoveParams = armMoveParams;
 
                 //initialize the buffer to cache positions to check for later
-                currentArmMoveParams.cachedPositions = new float[currentArmMoveParams.positionCacheSize];
+                currentArmMoveParams.cachedPositions = new double[currentArmMoveParams.positionCacheSize];
 
                 //snapshot the initial joint position to compare with later during movement
                 currentArmMoveParams.initialJointPosition = myAB.jointPosition[0];
@@ -115,13 +115,15 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                     extendState = ArmExtendState.MovingForward;
                 }
             }
+        
+        //we are a rotating joint, rotating around the local y axis
         } else if (jointAxisType == JointAxisType.Rotate) {
             if (rotateState == ArmRotateState.Idle) {
                 //set current arm move params to prep for movement in fixed update
                 currentArmMoveParams = armMoveParams;
 
                 //initialize the buffer to cache rotations to check for later
-                currentArmMoveParams.cachedPositions = new float[currentArmMoveParams.positionCacheSize];
+                currentArmMoveParams.cachedPositions = new double[currentArmMoveParams.positionCacheSize];
 
                 //snapshot the initial joint "rotation" to compare with later during movement
                 currentArmMoveParams.initialJointPosition = myAB.jointPosition[0];
@@ -168,6 +170,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 myAB.yDrive = drive;
 
                 //begin checks to see if we have stopped moving or if we need to stop moving
+
                 //cache the position at the moment
                 currentArmMoveParams.cachedPositions[currentArmMoveParams.oldestCachedIndex] = currentPosition;
 
@@ -236,13 +239,13 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 currentArmMoveParams.oldestCachedIndex = (currentArmMoveParams.oldestCachedIndex + 1) % currentArmMoveParams.positionCacheSize;
                 //Debug.Log($"current index: {currentArmMoveParams.oldestCachedIndex}");
 
-                checkStandardDev = false;
+                checkForMotion = false;
 
                 //ths is here so the first time, iterating through the [0] index we don't check, only the second time and beyond
                 //every time we loop back around the cached positions, check if we effectively stopped moving
                 if (currentArmMoveParams.oldestCachedIndex == 0) {
                     //flag for shouldHalt to check if we should, in fact, halt
-                    checkStandardDev = true;
+                    checkForMotion = true;
                 }
 
                 //otherwise we have a hard timer to stop movement so we don't move forever and crash unity
@@ -276,13 +279,13 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 //iterate next index in cache, loop back to index 0 as we get newer positions
                 currentArmMoveParams.oldestCachedIndex = (currentArmMoveParams.oldestCachedIndex + 1) % currentArmMoveParams.positionCacheSize;
 
-                checkStandardDev = false;
+                checkForMotion = false;
 
                 //ths is here so the first time, iterating through the [0] index we don't check, only the second time and beyond
                 //every time we loop back around the cached positions, check if we effectively stopped moving
                 if (currentArmMoveParams.oldestCachedIndex == 0) {
                     //flag for shouldHalt to check if we should, in fact, halt
-                    checkStandardDev = true;
+                    checkForMotion = true;
                 }
 
                 // AnimateArmExtend(distanceMovedSoFar);
@@ -319,10 +322,10 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 //iterate next index in cache, loop back to index 0 as we get newer positions
                 currentArmMoveParams.oldestCachedIndex = (currentArmMoveParams.oldestCachedIndex + 1) % currentArmMoveParams.positionCacheSize;
 
-                checkStandardDev = false;
+                checkForMotion = false;
                 //every time we loop back around the cached positions, check if we effectively stopped moving
                 if (currentArmMoveParams.oldestCachedIndex == 0) {
-                    checkStandardDev = true;                
+                    checkForMotion = true;                
                 }
 
                 //otherwise we have a hard timer to stop movement so we don't move forever and crash unity
@@ -337,7 +340,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
     //have a bool or something to check if you should check std dev
     public bool shouldHalt(
         float distanceMovedSoFar,
-        float[] cachedPositions,
+        double[] cachedPositions,
         float tolerance) {
 
         //if we are already in an idle, state, immeidately return true
@@ -356,13 +359,13 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         bool shouldHalt = false;
 
         //halt if positions/rotations are within tolerance and effectively not changing
-        //Debug.Log($"checkStandardDev is: {checkStandardDev}");
-        if (checkStandardDev) {
-            if (CheckArrayWithinStandardDeviation(cachedPositions, tolerance)) {
+        //Debug.Log($"checkForMotion is: {checkForMotion}");
+        if (checkForMotion) {
+            if (CheckArrayForMotion(cachedPositions, tolerance)) {
                 shouldHalt = true;
                 IdleAllStates();
                 Debug.Log("halt due to position delta within tolerance");
-                checkStandardDev = false;
+                checkForMotion = false;
                 return shouldHalt;
             }
         }
@@ -388,35 +391,29 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
     }
 
     private void IdleAllStates() {
-        if (jointAxisType == JointAxisType.Lift)
+        if (jointAxisType == JointAxisType.Lift) {
             liftState = ArmLiftState.Idle;
-
-        if (jointAxisType == JointAxisType.Extend)
+        } if (jointAxisType == JointAxisType.Extend) {
             extendState = ArmExtendState.Idle;
-
-        if (jointAxisType == JointAxisType.Rotate)
+        } if (jointAxisType == JointAxisType.Rotate) {
             rotateState = ArmRotateState.Idle;
+        }
 
         //reset current movement params
         this.currentArmMoveParams = null;
     }
 
-    //check if all values in the array are within a standard deviation or not
-    bool CheckArrayWithinStandardDeviation(float[] values, float standardDeviation) {
-        // Calculate the mean value of the array
-        float mean = values.Average();
-
-        // Calculate the sum of squares of the differences between each value and the mean
-        float sumOfSquares = 0.0f;
-        foreach (float value in values) {
-            //Debug.Log(value);
-            sumOfSquares += (value - mean) * (value - mean);
+    //check if all values in the array are within a threshold of motion or not
+    bool CheckArrayForMotion(double[] values, double tolerance) {
+        // check whether any of previous n FixedUpdate deltas qualify agent for a continuation
+        bool noProgress = true;
+        foreach (double distanceDelta in values) {
+            Debug.Log("distanceDelta is " + distanceDelta);
+            if (distanceDelta >= tolerance) {
+                noProgress = false;
+            }
         }
-
-        // Calculate the standard deviation of the array
-        float arrayStdDev = (float)Mathf.Sqrt(sumOfSquares / values.Length);
-
-        // Check if the standard deviation of the array is within the specified range
-        return arrayStdDev <= standardDeviation;
+        
+        return noProgress;
     }
 }

@@ -21,7 +21,7 @@ public class AgentMoveParams {
     //can probably move these out of this class and into the joint solver class iself????
     public int direction;
     public float timePassed = 0.0f;
-    public Vector3[] cachedPositions;
+    public double[] cachedPositions;
     public int oldestCachedIndex;
     public Vector3 initialTransformation;
 }
@@ -33,9 +33,9 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
     public ArticulationBody myAB;
     public ABAgentState agentState = ABAgentState.Idle;
     public float distanceMovedSoFar;
-    public Vector3 prevStepTransformation;
-    public Vector3 prevStepForward;
-    public bool checkStandardDev;
+    public double distanceMovedThisFixedUpdate; 
+    public Vector3 prevStepTransformation, prevStepForward;
+    public bool checkForMotion;
     //private Vector3 directionWorld;
     private float accelerationTorque;
     private float accelerationDistance, beginDecelerationSpeed, decelerationDistance, beginDecelerationTime; 
@@ -64,16 +64,18 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         SetCenterOfMass(myAB.transform.position - (Vector3.up * 0.9f));
 
         //initialize the buffer to cache positions to check for later
-        currentAgentMoveParams.cachedPositions = new Vector3[currentAgentMoveParams.positionCacheSize];
+        currentAgentMoveParams.cachedPositions = new double[currentAgentMoveParams.positionCacheSize];
         
         if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
             // snapshot the initial agent position to compare with later during movement
             currentAgentMoveParams.initialTransformation = myAB.transform.position;
             prevStepTransformation = myAB.transform.position;
+            prevStepForward = myAB.transform.forward;
 
         } else if (currentAgentMoveParams.agentState == ABAgentState.Rotating) {
             currentAgentMoveParams.initialTransformation = myAB.transform.eulerAngles;
             prevStepTransformation = myAB.transform.eulerAngles;
+            prevStepForward = myAB.transform.forward;
         }
         
         // determine if agent can even accelerate to max velocity and decelerate to 0 before reaching target position
@@ -115,7 +117,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 
                 myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));
             
-            // CASE: Decelerate - Apply force calculated from difference between intended velocity and actual velocity at given distance from finish line
+            // CASE: Decelerate - Apply force calculated from difference between intended velocity and actual velocity at given distance remaining to travel
             } else if (distanceMovedSoFar >= currentAgentMoveParams.distance - accelerationDistance) {
                 if (beginDeceleration == false) {
                     beginDecelerationSpeed = currentSpeed;
@@ -149,16 +151,21 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             }
 
             // Begin checks to see if we have stopped moving or if we need to stop moving
+
             // Cache the position at the moment
             Vector3 currentPosition = myAB.transform.position;
-            currentAgentMoveParams.cachedPositions[currentAgentMoveParams.oldestCachedIndex] = currentPosition;
 
             // Average current and previous forward-vectors to get an averaged forward-vector over the course of previous physics-step
             Vector3 currentForward = (myAB.transform.forward + prevStepForward) / 2;
 
             // Determine (positive) distance covered based on forward progress, relative to previous physics-step's averaged forward-vector
-            distanceMovedSoFar += Mathf.Clamp( Vector3.Dot(currentPosition - prevStepTransformation, currentForward * currentAgentMoveParams.direction), 0, Mathf.Infinity);
+            distanceMovedThisFixedUpdate = Mathf.Clamp(Vector3.Dot(currentPosition - prevStepTransformation, currentForward * currentAgentMoveParams.direction), 0, Mathf.Infinity);
+            distanceMovedSoFar += (float)distanceMovedThisFixedUpdate;
 
+            // Cache data used to check if we have stopped moving or if we need to stop moving
+            currentAgentMoveParams.cachedPositions[currentAgentMoveParams.oldestCachedIndex] = distanceMovedThisFixedUpdate;
+
+            // Store current values for comparing with next FixedUpdate
             prevStepTransformation = currentPosition;
             prevStepForward = myAB.transform.forward;
 
@@ -211,10 +218,20 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 Debug.Log("2. angularSpeedDelta is " + angularSpeedDelta + ". Applying torque of " + relativeTorque);
             }
             
+            // Begin checks to see if we have stopped moving or if we need to stop moving
+            
+            // Cache the rotation at the moment
             Vector3 currentRotation = myAB.transform.eulerAngles;
-            currentAgentMoveParams.cachedPositions[currentAgentMoveParams.oldestCachedIndex] = currentRotation;
 
-            distanceMovedSoFar = Mathf.Deg2Rad * Mathf.Abs(currentRotation.y - currentAgentMoveParams.initialTransformation.y);
+            // Determine (positive) angular distance covered
+            distanceMovedThisFixedUpdate = Mathf.Deg2Rad * Mathf.Clamp((currentRotation.y - prevStepTransformation.y) * currentAgentMoveParams.direction, 0, Mathf.Infinity);
+            distanceMovedSoFar += (float)distanceMovedThisFixedUpdate;
+
+            // Cache data used to check if we have stopped rotating or if we need to stop rotating
+            currentAgentMoveParams.cachedPositions[currentAgentMoveParams.oldestCachedIndex] = distanceMovedThisFixedUpdate;
+
+            // Store current values for comparing with next FixedUpdate
+            prevStepTransformation = currentRotation;
         }
 
         // Iterate next index in cache, loop back to index 0 as we get newer positions
@@ -225,10 +242,10 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         // every time we loop back around the cached positions, check if we effectively stopped moving
         if (currentAgentMoveParams.oldestCachedIndex == 0) {            
             //flag for shouldHalt to check if we should, in fact, halt
-            checkStandardDev = true;
+            checkForMotion = true;
             // Debug.Log($"current index after looped: {currentAgentMoveParams.oldestCachedIndex}");
         } else {
-            checkStandardDev = false;
+            checkForMotion = false;
         }
 
         // Otherwise we have a hard timer to stop movement so we don't move forever and crash unity
@@ -284,22 +301,22 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
     //have a bool or something to check if you should check std dev
     public bool shouldHalt(
         float distanceMovedSoFar,
-        Vector3[] cachedPositions,
+        double[] cachedPositions,
         float tolerance) {
         
         bool shouldHalt = false;
 
         
         //halt if positions/rotations are within tolerance and effectively not changing
-        // Debug.Log($"checkStandardDev is: {checkStandardDev}");
+        // Debug.Log($"checkForMotion is: {checkForMotion}");
         
         // Debug.Log("Distance moved is " + distanceMovedSoFar + ", and distance to exceed is " + currentAgentMoveParams.distance);
-        if (checkStandardDev) {
-            if (CheckArrayWithinStandardDeviation(cachedPositions, tolerance)) {
+        if (checkForMotion) {
+            if (CheckArrayForMotion(cachedPositions, tolerance)) {
                 shouldHalt = true;
                 // IdleAllStates();
                 Debug.Log("halt due to position delta within tolerance");
-                checkStandardDev = false;
+                checkForMotion = false;
                 return shouldHalt;
             }
         }
@@ -337,31 +354,18 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         // this.currentArmMoveParams = null;
     // }
 
-    //check if all values in the array are within a standard deviation or not
-    bool CheckArrayWithinStandardDeviation(Vector3[] values, float standardDeviation) {
-        // Debug.Log("RUUUUUUUUUUUUUUUUUUUUUUUUUUUUN");
-        float[] mags = new float[values.Length];
-        
-        // Calculate the mean value of the array
-        for(int i = 0; i < mags.Length; i++) {
-            mags[i] = values[i].magnitude;
-        }
-        float mean = mags.Average();
-
-        // Calculate the sum of squares of the differences between each value and the mean
-        float sumOfSquares = 0.0f;
-        foreach (float mag in mags) {
-            //Debug.Log(value);
-            sumOfSquares += (mag - mean) * (mag - mean);
+    //check if all values in the array are within a threshold of motion or not
+    bool CheckArrayForMotion(double[] values, double tolerance) {
+        // check whether any of previous n FixedUpdate deltas qualify agent for a continuation
+        bool noProgress = true;
+        foreach (double distanceDelta in values) {
+            Debug.Log("distanceDelta is " + distanceDelta);
+            if (distanceDelta >= tolerance) {
+                noProgress = false;
+            }
         }
         
-        // Calculate the standard deviation of the array
-        float arrayStdDev = (float)Mathf.Sqrt(sumOfSquares / values.Length);
-
-        Debug.Log("Calculated SD is " + arrayStdDev + ", against min SD of " + standardDeviation);
-
-        // Check if the standard deviation of the array is within the specified range
-        return arrayStdDev <= standardDeviation;
+        return noProgress;
     }
 
     void SetCenterOfMass(Vector3 worldCenterOfMass)

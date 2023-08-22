@@ -32,7 +32,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var ab = this.GetComponent<ArticulationBody>();
             ab.TeleportRoot(this.transform.position, this.transform.rotation);
 
-
             // TODO: REMOVE
             CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
             cc.center = m_CharacterController.center;
@@ -291,7 +290,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 speed = speed,
                 acceleration = acceleration,
                 agentMass = CalculateTotalMass(this.transform),
-                tolerance = 1e-10f,
+                tolerance = 1e-6f,
                 maxTimePassed = 10.0f,
                 positionCacheSize = 10,
                 direction = direction
@@ -432,7 +431,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 speed = Mathf.Deg2Rad * speed,
                 acceleration = Mathf.Deg2Rad * acceleration,
                 agentMass = CalculateTotalMass(this.transform),
-                tolerance = 1e-10f,
+                tolerance = 1e-6f,
                 maxTimePassed = 10.0f,
                 positionCacheSize = 10,
                 direction = direction
