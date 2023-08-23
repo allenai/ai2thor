@@ -981,8 +981,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
                     var dgo = GameObject.Instantiate(sceneManager.receptaclesDirtyDecalSurface);
                     // unity provided quad's mesh is XY plane, repplace with custom XZ one and remove line below
                     dgo.GetComponent<BoxCollider>().isTrigger = true;
-                    dgo.transform.localEulerAngles = new Vector3(-90.0f, 0.0f, 0.0f);
                     dgo.transform.parent = go.transform;
+                    dgo.transform.localEulerAngles = new Vector3(-90.0f, 0.0f, 0.0f);
                     
 
                     // This is where the decal plane goes in y, if receptacle box is too high it could lead to 
