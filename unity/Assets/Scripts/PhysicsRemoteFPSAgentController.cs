@@ -7434,9 +7434,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void SpawnDirt(
             string objectId,
-            int howManyDirt,
+            int howManyDirt = 0,
             bool forceAction = true,
-            int randomSeed = 0
+            int randomSeed = 0,
+            Vector2[] spawnPoints = null
             ) {
             
             SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
@@ -7446,10 +7447,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (target) {
-                target.SpawnDirtOnReceptacle(howManyDirt, randomSeed);
+                target.SpawnDirtOnReceptacle(howManyDirt, randomSeed, spawnPoints);
             }
 
             actionFinished(true);
+        }
+
+        public void GetDirtCoordinateBounds(string objectId) {
+            DirtCoordinateBounds toReturn = null;
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, true);
+            
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
+            if (target) {
+                toReturn = target.GetDirtCoordinateBounds();
+            }
+
+            actionFinished(true, toReturn);
         }
 
         public void DirtyObject(ServerAction action) {

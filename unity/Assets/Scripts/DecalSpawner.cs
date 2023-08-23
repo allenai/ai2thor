@@ -2,6 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+public class DirtCoordinateBounds {
+    public float minX, maxX, minZ, maxZ;
+}
+
 public class DecalSpawner : MonoBehaviour
 {
  // If true Guarantees that other spawn planes under the same parent will have the same stencil value
@@ -64,53 +69,85 @@ public class DecalSpawner : MonoBehaviour
     }
 
     public void Update() {
-        //test if the decals are spawning at all
-        // if (Input.GetKeyDown(KeyCode.Space)) {
-        //     SpawnDirt(200);
-        // }
+
     }
 
-    public void SpawnDirt(int howMany = 1, int randomSeed = 0) {
-        //get spawn points for this 
-        SimObjPhysics myParentSimObj = this.transform.GetComponentInParent<SimObjPhysics>();
-        Vector3[] spawnPointsArray = myParentSimObj.FindMySpawnPointsFromTriggerBox().ToArray();
 
-        float minX, maxX, minZ, maxZ;
-        minX = spawnPointsArray[0].x;
-        maxX = spawnPointsArray[0].x;
-        minZ = spawnPointsArray[0].z;
-        maxZ = spawnPointsArray[0].z;
+    public DirtCoordinateBounds GetDirtCoordinateBounds() {
+
+        DirtCoordinateBounds coords = new DirtCoordinateBounds();
+
+        SimObjPhysics myParentSimObj = this.transform.GetComponentInParent<SimObjPhysics>();
+        Vector3[] spawnPointsArray = myParentSimObj.FindMySpawnPointsFromTriggerBoxInLocalSpace().ToArray();
+
+        coords.minX = spawnPointsArray[0].x;
+        coords.maxX = spawnPointsArray[0].x;
+        coords.minZ = spawnPointsArray[0].z;
+        coords.maxZ = spawnPointsArray[0].z;
 
         foreach (Vector3 v in spawnPointsArray) {
-            if (v.x < minX) {
-                minX = v.x;
+            if (v.x < coords.minX) {
+                coords.minX = v.x;
             }
 
-            if (v.x > maxX) {
-                maxX = v.x;
+            if (v.x > coords.maxX) {
+                coords.maxX = v.x;
             }
 
-            if (v.z < minZ) {
-                minZ = v.z;
+            if (v.z < coords.minZ) {
+                coords.minZ = v.z;
             }
 
-            if (v.z > maxZ) {
-                maxZ = v.z;
+            if (v.z > coords.maxZ) {
+                coords.maxZ = v.z;
             }
         }
 
-        Random.InitState(randomSeed);
+        #if UNITY_EDITOR
+        Debug.Log($"minX: {coords.minX}");
+        Debug.Log($"minZ: {coords.minZ}");
+        Debug.Log($"maxX: {coords.maxX}");
+        Debug.Log($"maxZ: {coords.maxZ}");
 
-        for (int i = 0; i < howMany; i++) {
-            //var randomPoint = Random.Range(0, spawnPointsArray.Length);
-            var randomX = Random.Range(minX, maxX);
-            var randomZ = Random.Range(minZ, maxZ);
+        #endif
+        return coords;
+    }
 
-            //generate random scale cause dirt
-            var randomScale = new Vector3(Random.Range(0.1f, 0.4f), Random.Range(0.1f, 0.4f), 0.2f);
-            spawnDecal(new Vector3(randomX, this.transform.position.y, randomZ) + this.transform.rotation * transparentDecalSpawnOffset
-            , this.transform.rotation,
-            randomScale, DecalRotationAxis.FORWARD);
+    public void SpawnDirt(int howMany = 1, int randomSeed = 0, Vector2[] spawnPointsArray = null) {
+        
+        if(spawnPointsArray == null) {
+            DirtCoordinateBounds c = GetDirtCoordinateBounds();
+
+            Random.InitState(randomSeed);
+
+            for (int i = 0; i < howMany; i++) {
+                //var randomPoint = Random.Range(0, spawnPointsArray.Length);
+                var randomX = Random.Range(c.minX, c.maxX);
+                var randomZ = Random.Range(c.minZ, c.maxZ);
+
+                //generate random scale cause dirt
+                var randomScale = new Vector3(Random.Range(0.1f, 0.4f), Random.Range(0.1f, 0.4f), 0.2f);
+                //this decalPosition is in local space relative to the trigger box
+                Vector3 decalPosition = new Vector3(randomX, 0.0f , randomZ);
+                //spawnDecal expects coordinates in world space, so TransformPoint
+                spawnDecal(this.transform.parent.transform.TransformPoint(decalPosition) + this.transform.rotation * transparentDecalSpawnOffset
+                , this.transform.rotation,
+                randomScale, DecalRotationAxis.FORWARD);
+            }
+        }
+
+        //instead pass in exact coordinates you want to spawn decals
+        //note this ignores the howMany variable, instead will spawn
+        //decals based on exactly what spawn points are passed in via spawnPointsArray
+        else {
+            Random.InitState(randomSeed);
+
+            for (int i = 0; i < spawnPointsArray.Length; i++) {
+                var randomScale = new Vector3(Random.Range(0.1f, 0.4f), Random.Range(0.1f, 0.4f), 0.2f);
+                Vector3 decalPosition = new Vector3(spawnPointsArray[i].x, 0.0f, spawnPointsArray[i].y);
+                spawnDecal(this.transform.parent.transform.TransformPoint(decalPosition) + this.transform.rotation * transparentDecalSpawnOffset
+                , this.transform.rotation, randomScale, DecalRotationAxis.FORWARD);
+            }
         }
     }
 

@@ -698,6 +698,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         return points;
     }
 
+    // return spawn points for this receptacle objects based on the top part of all trigger boxes
+    public List<Vector3> FindMySpawnPointsFromTriggerBoxInLocalSpace(bool forceVisible = false, bool top = false) {
+        List<Vector3> points = new List<Vector3>();
+        foreach (GameObject rtb in ReceptacleTriggerBoxes) {
+            points.AddRange(rtb.GetComponent<Contains>().GetValidSpawnPointsFromTriggerBoxLocalSpace(top: top));
+        }
+
+        return points;
+    }
+
     // set ReturnPointsCloseToAgent to true if only points near the agent are wanted
     // set to false if all potential points on the object are wanted
     public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(BaseFPSAgentController agent = null) {
@@ -983,7 +993,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
                     dgo.GetComponent<BoxCollider>().isTrigger = true;
                     dgo.transform.parent = go.transform;
                     dgo.transform.localEulerAngles = new Vector3(-90.0f, 0.0f, 0.0f);
-                    
 
                     // This is where the decal plane goes in y, if receptacle box is too high it could lead to 
                     // decals bleeding to other objects that are below it in y, so tune appropiately, should be
@@ -999,9 +1008,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
 
     //spawn dirt on receptacle 
-    public void SpawnDirtOnReceptacle(int howManyDirt, int randomSeed) {
+    public void SpawnDirtOnReceptacle(int howManyDirt, int randomSeed, Vector2[] spawnPoints = null) {
         DecalSpawner decalSpawner = this.gameObject.GetComponentInChildren<DecalSpawner>();
-        decalSpawner.SpawnDirt(howManyDirt, randomSeed);
+        decalSpawner.SpawnDirt(howManyDirt, randomSeed, spawnPoints);
+    }
+
+    public DirtCoordinateBounds GetDirtCoordinateBounds() {
+        DecalSpawner decalSpawner = this.gameObject.GetComponentInChildren<DecalSpawner>();
+        return decalSpawner.GetDirtCoordinateBounds();
     }
 
     public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop) {

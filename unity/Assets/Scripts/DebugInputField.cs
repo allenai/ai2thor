@@ -1130,11 +1130,50 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "dirtcoords": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetDirtCoordinateBounds";
+
+                        GameObject table = GameObject.FindObjectOfType<DirtAndWrite>().gameObject;
+
+                        if(table == null) {
+                            break;
+                        }
+
+                        action["objectId"] = table.GetComponent<SimObjPhysics>().objectID;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;                
+                    }
+
                 case "spawndirt": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "SpawnDirt";
-                        action["objectId"] = "DiningTable|-01.07|+00.10|-00.52";
+
+                        GameObject table = GameObject.FindObjectOfType<DirtAndWrite>().gameObject;
+
+                        if(table == null) {
+                            break;
+                        }
+
+                        action["objectId"] = table.GetComponent<SimObjPhysics>().objectID;
                         action["howManyDirt"] = 100;
+                        action["randomSeed"] = 0;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;                
+                    }
+
+                case "spawndirtarray": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "SpawnDirt";
+
+                        GameObject table = GameObject.FindObjectOfType<DirtAndWrite>().gameObject;
+
+                        if(table == null) {
+                            break;
+                        }
+
+                        action["objectId"] = table.GetComponent<SimObjPhysics>().objectID;
+                        action["spawnPoints"] = new Vector2[] {new Vector2(-1.728f, -0.9180f), new Vector2(1.728f, 0.9180f)};
                         action["randomSeed"] = 0;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;                
