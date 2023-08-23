@@ -1133,7 +1133,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "spawndirt": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "SpawnDirt";
-                        action["objectId"] = "DiningTable|-01.07|+00.10|-00.52";
+                        action["objectId"] = "DiningTable|+01.61|+00.00|+00.60";
                         action["howManyDirt"] = 100;
                         action["randomSeed"] = 0;
                         CurrentActiveController().ProcessControlCommand(action);
