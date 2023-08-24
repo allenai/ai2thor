@@ -1008,7 +1008,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
 
     //spawn dirt on receptacle 
-    public void SpawnDirtOnReceptacle(int howManyDirt, int randomSeed, Vector2[] spawnPoints = null) {
+    public void SpawnDirtOnReceptacle(int howManyDirt, int randomSeed, DirtSpawnPosition[] spawnPoints = null) {
         DecalSpawner decalSpawner = this.gameObject.GetComponentInChildren<DecalSpawner>();
         decalSpawner.SpawnDirt(howManyDirt, randomSeed, spawnPoints);
     }

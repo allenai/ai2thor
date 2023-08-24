@@ -7,6 +7,11 @@ public class DirtCoordinateBounds {
     public float minX, maxX, minZ, maxZ;
 }
 
+public class DirtSpawnPosition {
+    public float x;
+    public float z;
+}
+
 public class DecalSpawner : MonoBehaviour
 {
  // If true Guarantees that other spawn planes under the same parent will have the same stencil value
@@ -113,7 +118,7 @@ public class DecalSpawner : MonoBehaviour
         return coords;
     }
 
-    public void SpawnDirt(int howMany = 1, int randomSeed = 0, Vector2[] spawnPointsArray = null) {
+    public void SpawnDirt(int howMany = 1, int randomSeed = 0, DirtSpawnPosition[] spawnPointsArray = null) {
         
         if(spawnPointsArray == null) {
             DirtCoordinateBounds c = GetDirtCoordinateBounds();
@@ -144,7 +149,7 @@ public class DecalSpawner : MonoBehaviour
 
             for (int i = 0; i < spawnPointsArray.Length; i++) {
                 var randomScale = new Vector3(Random.Range(0.1f, 0.4f), Random.Range(0.1f, 0.4f), 0.2f);
-                Vector3 decalPosition = new Vector3(spawnPointsArray[i].x, 0.0f, spawnPointsArray[i].y);
+                Vector3 decalPosition = new Vector3(spawnPointsArray[i].x, 0.0f, spawnPointsArray[i].z);
                 spawnDecal(this.transform.parent.transform.TransformPoint(decalPosition) + this.transform.rotation * transparentDecalSpawnOffset
                 , this.transform.rotation, randomScale, DecalRotationAxis.FORWARD);
             }

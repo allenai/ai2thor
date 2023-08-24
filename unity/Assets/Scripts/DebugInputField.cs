@@ -1173,7 +1173,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
 
                         action["objectId"] = table.GetComponent<SimObjPhysics>().objectID;
-                        action["spawnPoints"] = new Vector2[] {new Vector2(-1.728f, -0.9180f), new Vector2(1.728f, 0.9180f)};
+                        action["spawnPositions"] = new DirtSpawnPosition[] {new DirtSpawnPosition(){x = -1.728f, z = -0.918f}, new DirtSpawnPosition(){x = 1.728f, z = 0.918f}};
                         action["randomSeed"] = 0;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;                

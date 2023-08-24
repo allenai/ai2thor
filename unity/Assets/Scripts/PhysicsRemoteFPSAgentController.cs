@@ -7437,7 +7437,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int howManyDirt = 0,
             bool forceAction = true,
             int randomSeed = 0,
-            Vector2[] spawnPoints = null
+            DirtSpawnPosition[] spawnPositions = null
             ) {
             
             SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
@@ -7447,7 +7447,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (target) {
-                target.SpawnDirtOnReceptacle(howManyDirt, randomSeed, spawnPoints);
+                target.SpawnDirtOnReceptacle(howManyDirt, randomSeed, spawnPositions);
             }
 
             actionFinished(true);
