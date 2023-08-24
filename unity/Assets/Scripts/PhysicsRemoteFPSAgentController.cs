@@ -7453,6 +7453,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        //currently only to be used with the Cleaning Table prefab
         public void GetDirtCoordinateBounds(string objectId) {
             DirtCoordinateBounds toReturn = null;
             SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, true);
