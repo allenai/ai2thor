@@ -68,17 +68,18 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         //zero out distance delta tracking
         distanceMovedSoFar = 0.0f;
 
+        //set current arm move params to prep for movement in fixed update
+        currentArmMoveParams = armMoveParams;
+
+        //initialize the buffer to cache positions to check for later
+        currentArmMoveParams.cachedPositions = new double[currentArmMoveParams.positionCacheSize];
+
+        //snapshot the initial joint position to compare with later during movement
+        currentArmMoveParams.initialJointPosition = myAB.jointPosition[0];
+
         //we are a lift type joint, moving along the local y axis
         if (jointAxisType == JointAxisType.Lift) {
             if (liftState == ArmLiftState.Idle) {
-                //set current arm move params to prep for movement in fixed update
-                currentArmMoveParams = armMoveParams;
-
-                //initialize the buffer to cache positions to check for later
-                currentArmMoveParams.cachedPositions = new double[currentArmMoveParams.positionCacheSize];
-
-                //snapshot the initial joint position to compare with later during movement
-                currentArmMoveParams.initialJointPosition = myAB.jointPosition[0];
 
                 //set if we are moving up or down based on sign of distance from input
                 if (armMoveParams.direction < 0) {
@@ -94,14 +95,6 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         //we are an extending joint, moving along the local z axis
         else if (jointAxisType == JointAxisType.Extend) {
             if (extendState == ArmExtendState.Idle) {
-                //set current arm move params to prep for movement in fixed update
-                currentArmMoveParams = armMoveParams;
-
-                //initialize the buffer to cache positions to check for later
-                currentArmMoveParams.cachedPositions = new double[currentArmMoveParams.positionCacheSize];
-
-                //snapshot the initial joint position to compare with later during movement
-                currentArmMoveParams.initialJointPosition = myAB.jointPosition[0];
 
                 currentArmMoveParams.armExtender = this.GetComponent<ArticulatedArmExtender>();
                 currentArmMoveParams.armExtender.Init();
@@ -109,9 +102,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 //set if we are extending or retracting
                 if (armMoveParams.direction < 0) {
                     extendState = ArmExtendState.MovingBackward;
-                }
-
-                if (armMoveParams.direction > 0) {
+                } else if (armMoveParams.direction > 0) {
                     extendState = ArmExtendState.MovingForward;
                 }
             }
@@ -119,21 +110,11 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         //we are a rotating joint, rotating around the local y axis
         } else if (jointAxisType == JointAxisType.Rotate) {
             if (rotateState == ArmRotateState.Idle) {
-                //set current arm move params to prep for movement in fixed update
-                currentArmMoveParams = armMoveParams;
-
-                //initialize the buffer to cache rotations to check for later
-                currentArmMoveParams.cachedPositions = new double[currentArmMoveParams.positionCacheSize];
-
-                //snapshot the initial joint "rotation" to compare with later during movement
-                currentArmMoveParams.initialJointPosition = myAB.jointPosition[0];
 
                 //set if we are rotating left or right
                 if (armMoveParams.direction < 0) {
                     rotateState = ArmRotateState.Negative;
-                }
-
-                if (armMoveParams.direction > 0) {
+                } else if (armMoveParams.direction > 0) {
                     rotateState = ArmRotateState.Positive;
                 }
             }
