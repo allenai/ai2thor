@@ -1083,13 +1083,13 @@ def ci_pytest(branch, commit_id):
         f"finished pytest for {branch} {commit_id} in {time.time() - start_time:.2f} seconds"
     )
 
-
+# Type hints break build server's invoke version
 @task
 def ci_build(
     context,
-    commit_id: Optional[str] = None,
-    branch: Optional[str] = None,
-    skip_pip: bool = False,
+    commit_id = None, # Optional[str] 
+    branch = None, # Optional[str] 
+    skip_pip = False, # bool
 ):
     assert (commit_id is None) == (
         branch is None
