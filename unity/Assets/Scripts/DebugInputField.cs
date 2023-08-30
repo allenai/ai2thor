@@ -3607,7 +3607,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "abextendarm": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveArm";
-                        action["position"] = new Vector3(0,0, 1.0f);
+                        action["position"] = new Vector3(0,0, 0.5f);
                         action["speed"] = 5.0f;
                         action["disableRendering"] = false;
 
@@ -3619,8 +3619,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "abretractarm": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveArm";
-                        action["position"] = new Vector3(0,0, -0.1f);
-                        action["speed"] = 1.0f;
+                        action["position"] = new Vector3(0,0, -0.5f);
+                        action["speed"] = 5.0f;
                         action["disableRendering"] = false;
 
                         //action["fixedDeltaTime"] = 5.0f;

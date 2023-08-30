@@ -99,7 +99,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
             if (extendState == ArmExtendState.Idle) {
 
                 currentArmMoveParams.armExtender = this.GetComponent<ArticulatedArmExtender>();
-                currentArmMoveParams.armExtender.Init();
+                //currentArmMoveParams.armExtender.Init();
 
                 //set if we are extending or retracting
                 if (armMoveParams.direction < 0) {
@@ -243,6 +243,9 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 drive.target = targetPosition;
                 myAB.zDrive = drive;
 
+                Debug.Log($"currentPosition: {currentPosition}");
+                Debug.Log($"targetPosition: {targetPosition}");
+
                 // Begin checks to see if we have stopped moving or if we need to stop moving
 
                 // Determine (positive) distance covered
@@ -255,7 +258,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 // Store current values for comparing with next FixedUpdate
                 prevStepTransformation = currentPosition;
 
-                currentArmMoveParams.armExtender.Extend(distanceMovedSoFar);
+                //currentArmMoveParams.armExtender.Extend(distanceMovedSoFar);
             }
         }
 
