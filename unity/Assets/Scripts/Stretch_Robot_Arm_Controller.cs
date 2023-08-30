@@ -432,12 +432,6 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         float fixedDeltaTime = 0.02f,
         bool returnToStartPositionIfFailed = false
     ) {
-        // float targetRotation = armTarget.transform.localEulerAngles.y + rotation.eulerAngles.y;
-        // CHECK FOR DEAD-ZONE TARGET
-        Debug.Log("MOVE-TRANSFORM: " + armTarget.transform.rotation.eulerAngles);
-        Debug.Log("TARGET QUATERNION: CURRENT " + armTarget.transform.localEulerAngles + " plus " + rotation.eulerAngles + " equals " + (armTarget.transform.localEulerAngles + rotation.eulerAngles));
-        Debug.Log("START ROTATION: " + armTarget.transform.localEulerAngles);
-
         // Check for whether rotation passes through (clockwiseLocalRotationLimit, counterClockwiseLocalRotationLimit) local-degree unreachable-zone
         float clockwiseLocalRotationLimit = 77.5f;
         float counterClockwiseLocalRotationLimit = 102.5f;
@@ -457,18 +451,14 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         } else {
             targetRelativeRotation = rotation.eulerAngles.y;
         }
-        // Debug.Log("Okay, targetRotation is " + targetRelativeRotation);
         
         // Check if rotation will reach past bounds
         boundsCenter = (clockwiseLocalRotationLimit + (counterClockwiseLocalRotationLimit + 360)) / 2;
         distanceFromBoundsCenter = Mathf.Abs((continuousRotation + targetRelativeRotation) - boundsCenter);
-        Debug.Log("Checking if " + continuousRotation + " + " + targetRelativeRotation + " is greater than " + (clockwiseLocalRotationLimit + 360) + " OR LESS THAN " + counterClockwiseLocalRotationLimit);
         if (distanceFromBoundsCenter > (boundsCenter - counterClockwiseLocalRotationLimit) ) {
-            Debug.Log("I can't do this, dumbass. The rotation ventures into the unreachable zone by " + (distanceFromBoundsCenter - (boundsCenter - counterClockwiseLocalRotationLimit)) );
-
-            // errorMessage = "LookDown action requires positive degree value. Invalid value used: " + action.degrees;
-            // actionFinished(arm.PickupObject(objectIdCandidates, ref errorMessage), errorMessage);
-            // return;
+            throw new InvalidOperationException(
+                    "Cannot rotate by " + targetRelativeRotation + " The rotation ventures into the unreachable zone by " + (distanceFromBoundsCenter - (boundsCenter - counterClockwiseLocalRotationLimit)) + " degrees."
+            );
         }
 
         collisionListener.Reset();
