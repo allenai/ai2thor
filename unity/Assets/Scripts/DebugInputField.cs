@@ -2705,6 +2705,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                // rotate wrist relative
+                case "rwr": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RotateWristRelative";
+                        action["disableRendering"] = false;
+
+                        if (splitcommand.Length > 1) {
+                            action["yaw"] = float.Parse(splitcommand[1]);
+                        }
+
+                        // action.manualInteract = true;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
                 // pickup object
                 case "pu": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
