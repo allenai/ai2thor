@@ -3610,7 +3610,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["position"] = new Vector3(0,0, 0.5f);
                         action["speed"] = 5.0f;
                         action["disableRendering"] = false;
-
+                        action["useLimits"] = true;
                         //action["fixedDeltaTime"] = 5.0f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -3622,6 +3622,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["position"] = new Vector3(0,0, -0.5f);
                         action["speed"] = 5.0f;
                         action["disableRendering"] = false;
+                        action["useLimits"] = true;
 
                         //action["fixedDeltaTime"] = 5.0f;
                         CurrentActiveController().ProcessControlCommand(action);

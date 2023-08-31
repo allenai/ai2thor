@@ -51,8 +51,11 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
     public double distanceTransformedThisFixedUpdate;
     public bool checkForMotion;
 
+    //these limits are from the Articulation Body drive's lower and uppper limit
     public float lowerArmBaseLimit = -0.1832155f;
     public float upperArmBaseLimit = 0.9177839f;
+    public float lowerArmExtendLimit = 0.0f;
+    public float upperArmExtendLimit = 0.516f;
 
 
     void Start() {
@@ -170,6 +173,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 prevStepTransformation = currentPosition;
 
                 if (currentArmMoveParams.useLimits) {
+                    Debug.Log("extending/retracting arm with limits");
                     float distanceRemaining = currentArmMoveParams.distance - distanceMovedSoFar;
 
                     // New version of up-down drive
@@ -259,6 +263,65 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 prevStepTransformation = currentPosition;
 
                 //currentArmMoveParams.armExtender.Extend(distanceMovedSoFar);
+
+                if (currentArmMoveParams.useLimits) {
+                    float distanceRemaining = currentArmMoveParams.distance - distanceMovedSoFar;
+
+                    float forceAppliedFromRest = 500f;
+                    float slowDownTime = 5 * fixedDeltaTime;
+                    drive.forceLimit = forceAppliedFromRest * 2;
+
+                    float direction = (float)extendState;
+                    targetPosition = currentPosition + direction * distanceRemaining;
+
+                    float offset = 1e-2f;
+                    if (extendState == ArmExtendState.MovingForward) {
+                        drive.upperLimit = Mathf.Min(upperArmExtendLimit, targetPosition + offset);
+                        drive.lowerLimit = Mathf.Min(Mathf.Max(lowerArmExtendLimit, currentPosition), targetPosition);
+                    } else if (extendState == ArmExtendState.MovingBackward) {
+                        drive.lowerLimit = Mathf.Max(lowerArmExtendLimit, targetPosition);
+                        drive.upperLimit = Mathf.Max(Mathf.Min(upperArmExtendLimit, currentPosition + offset), targetPosition + offset);
+                    }
+
+                    drive.damping = forceAppliedFromRest / currentArmMoveParams.speed;
+
+                    float signedDistanceRemaining = direction * distanceRemaining;
+
+                    float maxSpeed = Mathf.Max(distanceRemaining / fixedDeltaTime, 0f); // Never move so fast we'll overshoot in 1 step
+                    currentArmMoveParams.speed = Mathf.Min(maxSpeed, currentArmMoveParams.speed);
+
+                    float curVelocity = myAB.velocity.y;
+                    float curSpeed = Mathf.Abs(curVelocity);
+
+                    float switchWhenThisClose = 0.01f;
+                    bool willReachTargetSoon = (
+                        distanceRemaining < switchWhenThisClose || (
+                            direction * curVelocity > 0f
+                            && distanceRemaining / Mathf.Max(curSpeed, 1e-7f) <= slowDownTime
+                        )
+                    );
+
+                    drive.target = targetPosition;
+
+                    if (willReachTargetSoon) {
+                        drive.stiffness = 10000f;
+                        drive.targetVelocity = -direction * (distanceRemaining / slowDownTime);
+                    } else {
+                        drive.stiffness = 0f;
+                        drive.targetVelocity = -direction * currentArmMoveParams.speed;
+                    }
+
+                    float curForceApplied = drive.stiffness * (targetPosition - currentPosition) + drive.damping * (drive.targetVelocity - curVelocity);
+
+                    Debug.Log($"position: {currentPosition} ({targetPosition} target) ({willReachTargetSoon} near target)");
+                    Debug.Log($"drive limits: {drive.lowerLimit}, {drive.upperLimit}");
+                    Debug.Log($"distance moved: {distanceMovedSoFar} ({currentArmMoveParams.distance} target)");
+                    Debug.Log($"velocity: {myAB.velocity.y} ({drive.targetVelocity} target)");
+                    Debug.Log($"current force applied: {curForceApplied}");
+
+                    //this sets the drive to begin moving to the new target position
+                    myAB.yDrive = drive;
+                }
             }
         }
 

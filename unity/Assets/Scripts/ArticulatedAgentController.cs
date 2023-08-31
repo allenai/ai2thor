@@ -138,6 +138,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        //with limits
         public void MoveArmBaseUp(
              float distance,
              bool useLimits,
@@ -178,6 +179,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        //with limits
         public void MoveArmBaseDown(
             float distance,
             bool useLimits,
@@ -217,6 +219,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 coordinateSpace: coordinateSpace,
                 restrictTargetPosition: restrictMovement,
                 disableRendering: disableRendering
+            );
+        }
+
+        //move arm overload with limits
+        public void MoveArm(
+            Vector3 position,
+            bool useLimits,
+            float speed = 1,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            string coordinateSpace = "armBase",
+            bool restrictMovement = false,
+            bool disableRendering = true
+        ) {
+            var arm = getArmImplementation();
+            SetFloorColliderToHighFriction();
+            arm.moveArmTarget(
+                controller: this,
+                target: position,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStart: returnToStart,
+                coordinateSpace: coordinateSpace,
+                restrictTargetPosition: restrictMovement,
+                disableRendering: disableRendering,
+                useLimits: useLimits
             );
         }
 

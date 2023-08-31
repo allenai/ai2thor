@@ -135,7 +135,8 @@ public partial class ArticulatedArmController : ArmController {
         bool returnToStart,
         string coordinateSpace,
         bool restrictTargetPosition,
-        bool disableRendering
+        bool disableRendering,
+        bool useLimits = false
     ) {
         //Debug.Log("starting moveArmTarget in ArticulatedArmController");
         float tolerance = 1e-3f;
@@ -167,7 +168,8 @@ public partial class ArticulatedArmController : ArmController {
             tolerance = tolerance,
             maxTimePassed = maxTimePassed,
             positionCacheSize = positionCacheSize,
-            direction = direction
+            direction = direction,
+            useLimits = useLimits
         };
 
         prepAllTheThingsBeforeJointMoves(joints[1], amp);
