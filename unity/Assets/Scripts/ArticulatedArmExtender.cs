@@ -37,12 +37,11 @@ public class ArticulatedArmExtender : MonoBehaviour {
         // arm5.localPosition = new Vector3 (0, 0, 4 * (armExtensionLength / 4) + 0.0117463f);
     }
 
-    //move these to update because there are cases where even though the arm target has stopped updating
-    //from `ControlJointFromAction`, there is still arm joint movement due to residual momentum
-    //and the colliders would start to be offset because the initial z position no longer matched
-    public void Update() {
+    //should this be in fixed update????
+    public void FixedUpdate() {
         Extend();
     }
+
     public void Extend() {
         scaleColliders();
         var currentZPos = this.gameObject.transform.localPosition.z;

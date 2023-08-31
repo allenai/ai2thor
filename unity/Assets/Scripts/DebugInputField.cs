@@ -3611,6 +3611,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["speed"] = 5.0f;
                         action["disableRendering"] = false;
                         action["useLimits"] = true;
+
+                        if (splitcommand.Length > 1) {
+                            action["position"] = new Vector3(0, 0, float.Parse(splitcommand[1]));
+                        }
+
                         //action["fixedDeltaTime"] = 5.0f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -3624,6 +3629,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["disableRendering"] = false;
                         action["useLimits"] = true;
 
+                        if (splitcommand.Length > 1) {
+                            action["position"] = new Vector3(0, 0, float.Parse(splitcommand[1]));
+                        }
+                        
                         //action["fixedDeltaTime"] = 5.0f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;

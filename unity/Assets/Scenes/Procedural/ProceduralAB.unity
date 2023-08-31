@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.4975372, g: 0.5877081, b: 0.7671276, a: 1}
+  m_IndirectSpecularColor: {r: 0.49753028, g: 0.587666, b: 0.76710796, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -8239,7 +8239,9 @@ MonoBehaviour:
   extendState: 0
   myAB: {fileID: 0}
   distanceMovedSoFar: 0
-  checkStandardDev: 0
+  prevStepTransformation: 0
+  distanceTransformedThisFixedUpdate: 0
+  checkForMotion: 0
   lowerArmBaseLimit: -0.1832155
   upperArmBaseLimit: 0.9177839
 --- !u!4 &1482288546515458676
@@ -9861,7 +9863,7 @@ ArticulationBody:
   m_Enabled: 1
   serializedVersion: 3
   m_Mass: 3
-  m_ParentAnchorPosition: {x: 0.000000026077032, y: 0.0000011920929, z: 0.052000225}
+  m_ParentAnchorPosition: {x: -0.0000000037252903, y: 0.0000011920929, z: 0.052000225}
   m_ParentAnchorRotation: {x: 0, y: 0, z: 0.70710695, w: 0.70710695}
   m_AnchorPosition: {x: 0, y: 0, z: 0}
   m_AnchorRotation: {x: 0, y: 0, z: 0.70710677, w: 0.70710677}
@@ -9960,13 +9962,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64ac8c78dccd3744f87a4bf83f0de175, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myColliders:
-  - {fileID: 7620627817810315446}
-  - {fileID: 7620627817990358366}
-  - {fileID: 7620627817011248541}
-  - {fileID: 7620627817899180336}
-  initialZPos: 0
-  scaleMultiplier: 4.7
 --- !u!114 &3338915182740644609
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9988,7 +9983,7 @@ MonoBehaviour:
   - {fileID: 7620627817011248541}
   - {fileID: 7620627817899180336}
   initialZPos: 0
-  scaleMultiplier: 4.7
+  scaleMultiplier: 4.6
 --- !u!1 &3338915182787308546
 GameObject:
   m_ObjectHideFlags: 0
@@ -10959,7 +10954,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3338915183736973551}
   m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0.025, y: -49.1, z: 0.827}
+  m_LocalPosition: {x: -1.144, y: -49.1, z: 0.827}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4151759449980145493}
@@ -11134,7 +11129,7 @@ ArticulationBody:
   m_Enabled: 1
   serializedVersion: 3
   m_Mass: 0.01
-  m_ParentAnchorPosition: {x: -0.13500011, y: -0.5229988, z: -0.06999997}
+  m_ParentAnchorPosition: {x: -0.13500011, y: -0.5229988, z: -0.069999956}
   m_ParentAnchorRotation: {x: 0, y: 0.7071069, z: 0, w: 0.7071069}
   m_AnchorPosition: {x: 0, y: 0, z: 0}
   m_AnchorRotation: {x: 0, y: 0, z: 0, w: 1}
@@ -11389,7 +11384,7 @@ ArticulationBody:
   m_Enabled: 1
   serializedVersion: 3
   m_Mass: 0.01
-  m_ParentAnchorPosition: {x: -0.08307159, y: -0.013510466, z: -0.026750475}
+  m_ParentAnchorPosition: {x: -0.083071604, y: -0.013510466, z: -0.026750475}
   m_ParentAnchorRotation: {x: 0.70710695, y: 0.70710695, z: 0.0000020862692, w: 0.0000020862692}
   m_AnchorPosition: {x: 0, y: 0, z: 0}
   m_AnchorRotation: {x: 0, y: 0, z: 0.70710677, w: 0.70710677}
@@ -11534,7 +11529,7 @@ ArticulationBody:
   m_Enabled: 1
   serializedVersion: 3
   m_Mass: 2
-  m_ParentAnchorPosition: {x: 0.036923733, y: 0.0000011920929, z: 0.25471026}
+  m_ParentAnchorPosition: {x: 0.036923718, y: 0.0000011920929, z: 0.25471026}
   m_ParentAnchorRotation: {x: 0, y: 0, z: 0.70710695, w: 0.70710695}
   m_AnchorPosition: {x: 0, y: 0, z: 0}
   m_AnchorRotation: {x: 0, y: 0, z: 0.70710677, w: 0.70710677}
@@ -11825,7 +11820,7 @@ ArticulationBody:
   m_Enabled: 1
   serializedVersion: 3
   m_Mass: 0.1
-  m_ParentAnchorPosition: {x: -5.3290694e-13, y: -0.050738573, z: -0.00000008940697}
+  m_ParentAnchorPosition: {x: 0.000000014900628, y: -0.050738573, z: -0.00000008940705}
   m_ParentAnchorRotation: {x: 0, y: 0, z: 0.70710695, w: 0.70710695}
   m_AnchorPosition: {x: 0, y: 0, z: 0}
   m_AnchorRotation: {x: 0, y: 0, z: 0.70710677, w: 0.70710677}
@@ -12088,7 +12083,9 @@ MonoBehaviour:
   extendState: 0
   myAB: {fileID: 0}
   distanceMovedSoFar: 0
-  checkStandardDev: 0
+  prevStepTransformation: 0
+  distanceTransformedThisFixedUpdate: 0
+  checkForMotion: 0
   lowerArmBaseLimit: -0.1832155
   upperArmBaseLimit: 0.9177839
 --- !u!1 &3687388188175947805
@@ -12173,7 +12170,9 @@ MonoBehaviour:
   extendState: 0
   myAB: {fileID: 0}
   distanceMovedSoFar: 0
-  checkStandardDev: 0
+  prevStepTransformation: 0
+  distanceTransformedThisFixedUpdate: 0
+  checkForMotion: 0
   lowerArmBaseLimit: -0.1832155
   upperArmBaseLimit: 0.9177839
 --- !u!1 &3782870845338593906
@@ -12497,7 +12496,9 @@ MonoBehaviour:
   extendState: 0
   myAB: {fileID: 0}
   distanceMovedSoFar: 0
-  checkStandardDev: 0
+  prevStepTransformation: 0
+  distanceTransformedThisFixedUpdate: 0
+  checkForMotion: 0
   lowerArmBaseLimit: -0.1832155
   upperArmBaseLimit: 0.9177839
 --- !u!1 &4281259822893212491
@@ -12562,7 +12563,9 @@ MonoBehaviour:
   extendState: 0
   myAB: {fileID: 0}
   distanceMovedSoFar: 0
-  checkStandardDev: 0
+  prevStepTransformation: 0
+  distanceTransformedThisFixedUpdate: 0
+  checkForMotion: 0
   lowerArmBaseLimit: -0.1832155
   upperArmBaseLimit: 0.9177839
 --- !u!1 &4486224078719205988
@@ -13002,7 +13005,9 @@ MonoBehaviour:
   extendState: 0
   myAB: {fileID: 0}
   distanceMovedSoFar: 0
-  checkStandardDev: 0
+  prevStepTransformation: 0
+  distanceTransformedThisFixedUpdate: 0
+  checkForMotion: 0
   lowerArmBaseLimit: -0.1832155
   upperArmBaseLimit: 0.9177839
 --- !u!1 &5324512306255317816
@@ -15424,10 +15429,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   myAB: {fileID: 0}
   agentState: 0
-  distanceMovedSoFar: 0
+  distanceTransformedSoFar: 0
+  distanceTransformedThisFixedUpdate: 0
   prevStepTransformation: {x: 0, y: 0, z: 0}
   prevStepForward: {x: 0, y: 0, z: 0}
-  checkStandardDev: 0
+  checkForMotion: 0
 --- !u!33 &8387607821874024427
 MeshFilter:
   m_ObjectHideFlags: 0

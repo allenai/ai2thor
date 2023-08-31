@@ -126,22 +126,6 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         }
     }
 
-    // public void AnimateArmExtend(float armExtensionLength) {
-        
-    //     var arm2 = this.gameObject.transform.parent.Find("stretch_robot_arm_2");
-    //     var arm3 = this.gameObject.transform.parent.Find("stretch_robot_arm_3");
-    //     var arm4 = this.gameObject.transform.parent.Find("stretch_robot_arm_4");
-    //     var arm5 = this.gameObject.transform.parent.Find("stretch_robot_arm_5");
-
-    //      //Extend each part of arm by one-quarter of extension length, in local z-direction
-    //     arm2.localPosition = new Vector3 (0, 0, 1 * (armExtensionLength / 4) + 0.01300028f);
-    //     arm3.localPosition = new Vector3 (0, 0, 2 * (armExtensionLength / 4) + 0.01300049f);
-    //     arm4.localPosition = new Vector3 (0, 0, 3 * (armExtensionLength / 4) + 0.01300025f);
-    //     arm5.localPosition = new Vector3 (0, 0, 4 * (armExtensionLength / 4) + 0.0117463f);
-
-
-    // }
-
     public void ControlJointFromAction(float fixedDeltaTime) {
         
         if (currentArmMoveParams == null) {
@@ -262,7 +246,6 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 // Store current values for comparing with next FixedUpdate
                 prevStepTransformation = currentPosition;
 
-                //currentArmMoveParams.armExtender.Extend(distanceMovedSoFar);
 
                 if (currentArmMoveParams.useLimits) {
                     float distanceRemaining = currentArmMoveParams.distance - distanceMovedSoFar;
@@ -304,10 +287,11 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                     drive.target = targetPosition;
 
                     if (willReachTargetSoon) {
-                        drive.stiffness = 10000f;
+                        drive.stiffness = 100000f;
                         drive.targetVelocity = -direction * (distanceRemaining / slowDownTime);
                     } else {
                         drive.stiffness = 0f;
+                        Debug.Log($"stiffness should be 0 but it is: {drive.stiffness}");
                         drive.targetVelocity = -direction * currentArmMoveParams.speed;
                     }
 
@@ -322,6 +306,9 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                     //this sets the drive to begin moving to the new target position
                     myAB.yDrive = drive;
                 }
+
+                //update colliders and arm extend sleeves animating
+                currentArmMoveParams.armExtender.Extend();
             }
         }
 
