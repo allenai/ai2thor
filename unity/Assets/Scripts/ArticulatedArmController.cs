@@ -169,7 +169,8 @@ public partial class ArticulatedArmController : ArmController {
             maxTimePassed = maxTimePassed,
             positionCacheSize = positionCacheSize,
             direction = direction,
-            useLimits = useLimits
+            useLimits = useLimits,
+            maxForce = 20f
         };
 
         prepAllTheThingsBeforeJointMoves(joints[1], amp);
@@ -301,7 +302,8 @@ public partial class ArticulatedArmController : ArmController {
             maxTimePassed = maxTimePassed,
             positionCacheSize = positionCacheSize,
             direction = direction,
-            useLimits = useLimits
+            useLimits = useLimits,
+            maxForce = 20f
         };
 
         ArticulatedArmJointSolver liftJoint = joints[0];
@@ -386,7 +388,8 @@ public partial class ArticulatedArmController : ArmController {
             tolerance = tolerance,
             maxTimePassed = maxTimePassed,
             positionCacheSize = positionCacheSize,
-            direction = direction
+            direction = direction,
+            maxForce = 20f
         };
 
         ArticulatedArmJointSolver wristJoint = joints[2];
@@ -473,11 +476,80 @@ public partial class ArticulatedArmController : ArmController {
 
     protected override void resetArmTarget() {
 
-        // TODO: Reimplement
-        // Vector3 pos = handCameraTransform.transform.position + WristToManipulator;
-        // Quaternion rot = handCameraTransform.transform.rotation;
-        // armTarget.position = pos;
-        // armTarget.rotation = rot;
+
+
+        foreach (ArticulatedArmJointSolver joint in joints) {
+            ArticulationBody myAB = joint.myAB;
+
+            if (myAB == null) {
+                Debug.LogWarning("Articulated body is null, skipping.");
+                continue;
+            }
+
+            // Check the joint type and get the current joint position and velocity
+            if (myAB.jointType == ArticulationJointType.PrismaticJoint) {
+
+//                Debug.Log($"joint {joint.gameObject}");
+//                Debug.Log($"joint {myAB.jointType}");
+//                Debug.Log($"solverIterations {myAB.solverIterations}");
+//                Debug.Log($"solverVelocityIterations {myAB.solverVelocityIterations}");
+
+                if (myAB.dofCount != 1) {
+                    throw new NotImplementedException("Prismatic joint must have 1 degree of freedom");
+                }
+                float currentPosition = myAB.jointPosition[0];
+
+                ArticulationDrive xDrive = myAB.xDrive;
+                ArticulationDrive yDrive = myAB.yDrive;
+                ArticulationDrive zDrive = myAB.zDrive;
+
+                // Super hacky way to get which drive is active
+                string whichDrive = "x";
+                ArticulationDrive activeDrive = xDrive;
+                if (yDrive.target != 0.0f) {
+                    activeDrive = yDrive;
+                    whichDrive = "y";
+                }
+                if (zDrive.target != 0.0f) {
+                    activeDrive = zDrive;
+                    whichDrive = "z";
+                }
+
+                Debug.Log(currentPosition);
+                Debug.Log(whichDrive);
+
+                activeDrive.target = currentPosition;
+                activeDrive.targetVelocity = 0f;
+
+                if (whichDrive == "x") {
+                    myAB.xDrive = activeDrive;
+                }
+                if (whichDrive == "y") {
+                    myAB.yDrive = activeDrive;
+                }
+                if (whichDrive == "z") {
+                    myAB.zDrive = activeDrive;
+                }
+            }
+            else if (myAB.jointType == ArticulationJointType.RevoluteJoint) {
+                // For revolute joints
+                if (myAB.dofCount != 1) {
+                    throw new NotImplementedException("Revolute joint must have 1 degree of freedom");
+                }
+                float currentPosition = Mathf.Rad2Deg * myAB.jointPosition[0]; // Weirdly not in degrees
+
+                // TODO: We just assume that the joint is on the x axis, we don't have a good way to check
+                //       for otherwise atm.
+                ArticulationDrive xDrive = myAB.xDrive;
+
+                xDrive.target = currentPosition;
+                xDrive.targetVelocity = 0f;
+
+                myAB.xDrive = xDrive;
+            } else {
+                throw new NotImplementedException($"Unsupported joint type {myAB.jointType}");
+            }
+        }
     }
 
     public override ArmMetadata GenerateMetadata() {

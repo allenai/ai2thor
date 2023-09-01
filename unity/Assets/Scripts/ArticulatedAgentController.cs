@@ -296,6 +296,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStart = true,
             bool disableRendering = true
         ) {
+            SetFloorColliderToSlippery();
             // Debug.Log("(3) ArticulatedAgentController: PREPPING MOVEAGENT COMMAND");
             int direction = 0;
             if (moveMagnitude < 0) {
@@ -321,7 +322,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 tolerance = 1e-6f,
                 maxTimePassed = 10.0f,
                 positionCacheSize = 10,
-                direction = direction
+                direction = direction,
+                maxForce = 200f
             };
         
             float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
@@ -354,7 +356,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStart = true,
             bool disableRendering = false
         ) {
-            SetFloorColliderToSlippery();
             MoveAgent(
                 moveMagnitude: moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
@@ -373,7 +374,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStart = true,
             bool disableRendering = false
         ) {
-            SetFloorColliderToSlippery();
             MoveAgent(
                 moveMagnitude: -moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
@@ -395,7 +395,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool disableRendering = false,
             float fixedDeltaTime = 0.02f
         ) {
-            SetFloorColliderToSlippery();
             RotateAgent(
                 degrees: degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
@@ -418,7 +417,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool disableRendering = false,
             float fixedDeltaTime = 0.02f
         ) {
-            SetFloorColliderToSlippery();
             RotateAgent(
                 degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
@@ -439,6 +437,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStart = true,
             bool disableRendering = true
         ) {
+            SetFloorColliderToSlippery();
             int direction = 0;
             if (degrees < 0) {
                 direction = -1;
@@ -462,7 +461,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 tolerance = 1e-6f,
                 maxTimePassed = 10.0f,
                 positionCacheSize = 10,
-                direction = direction
+                direction = direction,
+                maxForce = 200f
             };
 
             float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);

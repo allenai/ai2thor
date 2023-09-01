@@ -15,6 +15,7 @@ public class ArmMoveParams {
     public float speed;
     public float tolerance;
     public float maxTimePassed;
+    public float maxForce;
     public int positionCacheSize;
 
     //these are used during movement in fixed update (or whenever physics step executes)
@@ -161,9 +162,9 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                     float distanceRemaining = currentArmMoveParams.distance - distanceMovedSoFar;
 
                     // New version of up-down drive
-                    float forceAppliedFromRest = 500f;
+                    float forceAppliedFromRest = currentArmMoveParams.maxForce;
                     float slowDownTime = 5 * fixedDeltaTime;
-                    drive.forceLimit = forceAppliedFromRest * 2;
+                    drive.forceLimit = forceAppliedFromRest;
 
                     float direction = (float)liftState;
                     targetPosition = currentPosition + direction * distanceRemaining;
@@ -177,7 +178,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                         drive.upperLimit = Mathf.Max(Mathf.Min(upperArmBaseLimit, currentPosition + offset), targetPosition + offset);
                     }
 
-                    drive.damping = forceAppliedFromRest / currentArmMoveParams.speed;
+                    drive.damping = Mathf.Min(forceAppliedFromRest / currentArmMoveParams.speed, 10000f);
 
                     float signedDistanceRemaining = direction * distanceRemaining;
 
@@ -227,13 +228,6 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 //Debug.Log("start ControlJointFromAction for axis type EXTEND");
                 var drive = myAB.zDrive;
                 float currentPosition = myAB.jointPosition[0];
-                float targetPosition = currentPosition + (float)extendState * fixedDeltaTime * currentArmMoveParams.speed;
-                drive.target = targetPosition;
-                myAB.zDrive = drive;
-
-                Debug.Log($"currentPosition: {currentPosition}");
-                Debug.Log($"targetPosition: {targetPosition}");
-
                 // Begin checks to see if we have stopped moving or if we need to stop moving
 
                 // Determine (positive) distance covered
@@ -247,15 +241,23 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 prevStepTransformation = currentPosition;
 
 
-                if (currentArmMoveParams.useLimits) {
-                    float distanceRemaining = currentArmMoveParams.distance - distanceMovedSoFar;
+                if (!currentArmMoveParams.useLimits) {
+                    float targetPosition = currentPosition + (float)extendState * fixedDeltaTime * currentArmMoveParams.speed;
+                    drive.target = targetPosition;
+                    myAB.zDrive = drive;
 
-                    float forceAppliedFromRest = 500f;
+                    Debug.Log($"currentPosition: {currentPosition}");
+                    Debug.Log($"targetPosition: {targetPosition}");
+                } else {
+                    float distanceRemaining = currentArmMoveParams.distance - distanceMovedSoFar;
+                    Debug.Log("DISTANCE REMAINING: " + distanceRemaining);
+
+                    float forceAppliedFromRest = currentArmMoveParams.maxForce;
                     float slowDownTime = 5 * fixedDeltaTime;
-                    drive.forceLimit = forceAppliedFromRest * 2;
+                    drive.forceLimit = forceAppliedFromRest;
 
                     float direction = (float)extendState;
-                    targetPosition = currentPosition + direction * distanceRemaining;
+                    float targetPosition = currentPosition + direction * distanceRemaining;
 
                     float offset = 1e-2f;
                     if (extendState == ArmExtendState.MovingForward) {
@@ -266,14 +268,14 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                         drive.upperLimit = Mathf.Max(Mathf.Min(upperArmExtendLimit, currentPosition + offset), targetPosition + offset);
                     }
 
-                    drive.damping = forceAppliedFromRest / currentArmMoveParams.speed;
+                    drive.damping = Mathf.Min(forceAppliedFromRest / currentArmMoveParams.speed, 10000f);
 
                     float signedDistanceRemaining = direction * distanceRemaining;
 
                     float maxSpeed = Mathf.Max(distanceRemaining / fixedDeltaTime, 0f); // Never move so fast we'll overshoot in 1 step
                     currentArmMoveParams.speed = Mathf.Min(maxSpeed, currentArmMoveParams.speed);
 
-                    float curVelocity = myAB.velocity.y;
+                    float curVelocity = myAB.velocity.z;
                     float curSpeed = Mathf.Abs(curVelocity);
 
                     float switchWhenThisClose = 0.01f;
@@ -304,7 +306,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                     Debug.Log($"current force applied: {curForceApplied}");
 
                     //this sets the drive to begin moving to the new target position
-                    myAB.yDrive = drive;
+                    myAB.zDrive = drive;
                 }
 
                 //update colliders and arm extend sleeves animating

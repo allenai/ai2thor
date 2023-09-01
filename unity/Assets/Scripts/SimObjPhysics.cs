@@ -1137,7 +1137,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
 
     //note breakForce and breakTorque are exposed here so we may use that later I guess
-    public void BeingPickedUpByArticulatedAgent(ArticulatedArmController arm, float breakForce = 2.0f, float breakTorque = 2.0f)
+    public void BeingPickedUpByArticulatedAgent(ArticulatedArmController arm, float breakForce = 20.0f, float breakTorque = 20.0f)
     {
         articulatedArmHoldingMe = arm;
         myRigidbody.isKinematic = false;
