@@ -91,51 +91,84 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     bool armMoveMode = shiftHeld && !altHeld;
                     bool armRotateMode = shiftHeld && altHeld;
 
+                    bool isArticulated = CurrentActiveController().GetType() == typeof(ArticulatedAgentController);
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+                    bool disableRendering = true;
+                    bool useLimits = true;
+
                     if (noModifier) {
                         float WalkMagnitude = 0.25f;
 
-                        Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "";
+                        action["disableRendering"] = disableRendering;
 
-                        if (Input.GetKeyDown(KeyCode.W)) {
-                            action["action"] = "MoveAhead";
-                            action["moveMagnitude"] = WalkMagnitude;
-                        }
+                        if (isArticulated) {
+                            if (Input.GetKeyDown(KeyCode.W)) {
+                                action["action"] = "MoveAgent";
+                                action["moveMagnitude"] = WalkMagnitude;
+                            }
 
-                        if (Input.GetKeyDown(KeyCode.S)) {
-                            action["action"] = "MoveBack";
-                            action["moveMagnitude"] = WalkMagnitude;
-                        }
+                            if (Input.GetKeyDown(KeyCode.S)) {
+                                action["action"] = "MoveAgent";
+                                action["moveMagnitude"] = -WalkMagnitude;
+                            }
 
-                        if (Input.GetKeyDown(KeyCode.A)) {
-                            action["action"] = "MoveLeft";
-                            action["moveMagnitude"] = WalkMagnitude;
-                        }
+                            if (Input.GetKeyDown(KeyCode.LeftArrow)) {
+                                action["action"] = "RotateLeft";
+                                action["degrees"] = 30f;
+                                action["speed"] = 22.5f;
+                                action["acceleration"] = 22.5f;
+                            }
 
-                        if (Input.GetKeyDown(KeyCode.D)) {
-                            action["action"] = "MoveRight";
-                            action["moveMagnitude"] = WalkMagnitude;
-                        }
+                            if (Input.GetKeyDown(KeyCode.RightArrow)) {
+                                action["action"] = "RotateRight";
+                                action["degrees"] = 30f;
+                                action["speed"] = 22.5f;
+                                action["acceleration"] = 22.5f;
+                            }
+                        } else {
 
-                        if (Input.GetKeyDown(KeyCode.UpArrow)) {
-                            action["action"] = "LookUp";
-                        }
+                            if (Input.GetKeyDown(KeyCode.W)) {
+                                action["action"] = "MoveAhead";
+                                action["moveMagnitude"] = WalkMagnitude;
+                            }
 
-                        if (Input.GetKeyDown(KeyCode.DownArrow)) {
-                            action["action"] = "LookDown";
-                        }
+                            if (Input.GetKeyDown(KeyCode.S)) {
+                                action["action"] = "MoveBack";
+                                action["moveMagnitude"] = WalkMagnitude;
+                            }
 
-                        if (Input.GetKeyDown(KeyCode.LeftArrow)) {
-                            action["action"] = "RotateLeft";
-                        }
+                            if (Input.GetKeyDown(KeyCode.A)) {
+                                action["action"] = "MoveLeft";
+                                action["moveMagnitude"] = WalkMagnitude;
+                            }
 
-                        if (Input.GetKeyDown(KeyCode.RightArrow)) {
-                            action["action"] = "RotateRight";
+                            if (Input.GetKeyDown(KeyCode.D)) {
+                                action["action"] = "MoveRight";
+                                action["moveMagnitude"] = WalkMagnitude;
+                            }
+
+                            if (Input.GetKeyDown(KeyCode.UpArrow)) {
+                                action["action"] = "LookUp";
+                            }
+
+                            if (Input.GetKeyDown(KeyCode.DownArrow)) {
+                                action["action"] = "LookDown";
+                            }
+
+                            if (Input.GetKeyDown(KeyCode.LeftArrow)) {
+                                action["action"] = "RotateLeft";
+                            }
+
+                            if (Input.GetKeyDown(KeyCode.RightArrow)) {
+                                action["action"] = "RotateRight";
+                            }
                         }
 
                         if ((string)action["action"] != "") {
                             if (
-                                ((string)action["action"]).Contains("Move") && CurrentActiveController().GetType() == typeof(KinovaArmAgentController)
+                                ((string)action["action"]).Contains("Move")
+                                && CurrentActiveController().GetType() == typeof(KinovaArmAgentController)
                             ) {
                                 action["returnToStart"] = false;
                             }
@@ -147,36 +180,81 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         var localPos = new Vector3(0, 0, 0);
                         float ArmMoveMagnitude = 0.05f;
 
-                        if (Input.GetKeyDown(KeyCode.W)) {
-                            localPos.y += ArmMoveMagnitude;
-                        } else if (Input.GetKeyDown(KeyCode.S)) {
-                            localPos.y -= ArmMoveMagnitude;
-                        } else if (Input.GetKeyDown(KeyCode.UpArrow)) {
-                            localPos.z += ArmMoveMagnitude;
-                        } else if (Input.GetKeyDown(KeyCode.DownArrow)) {
-                            localPos.z -= ArmMoveMagnitude;
-                        } else if (Input.GetKeyDown(KeyCode.LeftArrow)) {
-                            localPos.x -= ArmMoveMagnitude;
-                        } else if (Input.GetKeyDown(KeyCode.RightArrow)) {
-                            localPos.x += ArmMoveMagnitude;
-                        } else if (Input.GetKeyDown(KeyCode.P)) {
-                            actionName = "PickupObject";
-                        } else if (Input.GetKeyDown(KeyCode.D)) {
-                            actionName = "ReleaseObject";
-                        } else {
-                            actionName = "";
-                        }
+                        if (isArticulated) {
+                            ArmMoveMagnitude = 0.1f;
+                            float speed = 0.5f;
+                            action["disableRendering"] = disableRendering;
 
-                        if (actionName != "") {
-                            Dictionary<string, object> action = new Dictionary<string, object>();
-                            action["action"] = actionName;
-                            if (localPos.magnitude != 0) {
-                                action["offset"] = localPos;
-                                //action["fixedDeltaTime"] = fixedDeltaTime;
-                                action["speed"] = 0.1;
-                                action["returnToStart"] = false;
+                            if (Input.GetKeyDown(KeyCode.W)) {
+                                action["action"] = "MoveArm";
+                                action["position"] = new Vector3(0f, 0f, ArmMoveMagnitude);
+                                action["speed"] = speed;
+                            } else if (Input.GetKeyDown(KeyCode.S)) {
+                                action["action"] = "MoveArm";
+                                action["position"] = new Vector3(0f, 0f, -ArmMoveMagnitude);
+                                action["speed"] = speed;
+                            } else if (Input.GetKeyDown(KeyCode.UpArrow)) {
+                                action["action"] = "MoveArmBaseUp";
+                                action["distance"] = 0.2f;
+                                action["speed"] = speed;
+                            } else if (Input.GetKeyDown(KeyCode.DownArrow)) {
+                                action["action"] = "MoveArmBaseDown";
+                                action["distance"] = 0.2f;
+                                action["speed"] = speed;
+                            } else if (Input.GetKeyDown(KeyCode.Q)) {
+                                action["action"] = "RotateWristRelative";
+                                action["yaw"] = -30f;
+                                action["speed"] = 1000f;
+                            } else if (Input.GetKeyDown(KeyCode.E)) {
+                                action["action"] = "RotateWristRelative";
+                                action["yaw"] = 30f;
+                                action["speed"] = 1000f;
+                            } else if (Input.GetKeyDown(KeyCode.P)) {
+                                action["action"] = "PickupObject";
+                                action.Remove("disableRendering");
+                            } else if (Input.GetKeyDown(KeyCode.D)) {
+                                action["action"] = "ReleaseObject";
+                                action.Remove("disableRendering");
+                            } else {
+                                actionName = "";
                             }
-                            this.CurrentActiveController().ProcessControlCommand(action);
+
+                            if (actionName != "") {
+                                if (((string) action["action"]).StartsWith("MoveArm")) {
+                                    action["useLimits"] = useLimits;
+                                }
+                                this.CurrentActiveController().ProcessControlCommand(action);
+                            }
+                        } else {
+                            if (Input.GetKeyDown(KeyCode.W)) {
+                                localPos.y += ArmMoveMagnitude;
+                            } else if (Input.GetKeyDown(KeyCode.S)) {
+                                localPos.y -= ArmMoveMagnitude;
+                            } else if (Input.GetKeyDown(KeyCode.UpArrow)) {
+                                localPos.z += ArmMoveMagnitude;
+                            } else if (Input.GetKeyDown(KeyCode.DownArrow)) {
+                                localPos.z -= ArmMoveMagnitude;
+                            } else if (Input.GetKeyDown(KeyCode.LeftArrow)) {
+                                localPos.x -= ArmMoveMagnitude;
+                            } else if (Input.GetKeyDown(KeyCode.RightArrow)) {
+                                localPos.x += ArmMoveMagnitude;
+                            } else if (Input.GetKeyDown(KeyCode.P)) {
+                                actionName = "PickupObject";
+                            } else if (Input.GetKeyDown(KeyCode.D)) {
+                                actionName = "ReleaseObject";
+                            } else {
+                                actionName = "";
+                            }
+                            if (actionName != "") {
+                                action["action"] = actionName;
+                                if (localPos.magnitude != 0) {
+                                    action["offset"] = localPos;
+                                    //action["fixedDeltaTime"] = fixedDeltaTime;
+                                    action["speed"] = 0.1;
+                                    action["returnToStart"] = false;
+                                }
+                                this.CurrentActiveController().ProcessControlCommand(action);
+                            }
                         }
                     } else if (armRotateMode) {
                         var actionName = "RotateWristRelative";
@@ -213,7 +291,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
 
                         if (actionName != "") {
-                            Dictionary<string, object> action = new Dictionary<string, object>();
                             action["action"] = actionName;
                             if (actionName == "RotateWristRelative") {
                                 action["pitch"] = pitch;

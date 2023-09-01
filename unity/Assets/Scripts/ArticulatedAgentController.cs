@@ -321,7 +321,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 tolerance = 1e-6f,
                 maxTimePassed = 10.0f,
                 positionCacheSize = 10,
-                direction = direction
+                direction = direction,
+                maxForce = 200f
             };
         
             float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
@@ -462,7 +463,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 tolerance = 1e-6f,
                 maxTimePassed = 10.0f,
                 positionCacheSize = 10,
-                direction = direction
+                direction = direction,
+                maxForce = 200f
             };
 
             float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
