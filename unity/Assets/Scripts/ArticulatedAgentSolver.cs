@@ -111,14 +111,6 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                     $"1. distanceDelta is {distanceDelta}. Applying force of {relativeForce} = "
                     + $"clamp({currentAgentMoveParams.maxForce}, {distanceDelta} / {fixedDeltaTime}) * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
                 );
-
-                // Debug.Log("1. distanceDelta is " + distanceDelta + ". Applying force of " + relativeForce);
-
-                // Use motor's max force in edge case where progress is halted, such as an obstacle in the way
-                // UGH, NEED TO ACCOUNT FOR SIGN CHANGE
-                // if (maxForce.sqrMagnitude > Mathf.Abs(relativeForce.sqrMagnitude)) {
-                //     relativeForce = maxForce;
-                // }
                 
                 myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));
             
@@ -141,8 +133,6 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                     + $"clamp({currentAgentMoveParams.maxForce}, {speedDelta} / {fixedDeltaTime}) * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
                 );
 
-                // Debug.Log("3. speedDelta is " + speedDelta + ". Applying force of " + relativeForce);
-
                 myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));
             
             // CASE: Cruise Control - Apply force calculated from difference between intended velocity and current velocity
@@ -152,18 +142,11 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 float relativeForce = (speedDelta / fixedDeltaTime) * currentAgentMoveParams.agentMass
                     * currentAgentMoveParams.direction;
                 
-                // Use motor's max force in edge case where progress is halted, such as an obstacle in the way
-                // UGH, NEED TO ACCOUNT FOR SIGN CHANGE
-                // if (relativeForce.sqrMagnitude > Mathf.Abs(maxForce.sqrMagnitude)) {
-                //     relativeForce = maxForce;
-                // }
                 relativeForce = Mathf.Clamp(relativeForce, -currentAgentMoveParams.maxForce, currentAgentMoveParams.maxForce);
                 Debug.Log(
                     $"2. speedDelta is {speedDelta}. Applying force of {relativeForce} = "
                     + $"clamp({currentAgentMoveParams.maxForce}, {speedDelta} / {fixedDeltaTime}) * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
                 );
-
-                // Debug.Log("2. speedDelta is " + speedDelta + ". Applying force of " + relativeForce);
 
                 myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));
             }
