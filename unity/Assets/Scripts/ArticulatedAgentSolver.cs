@@ -106,10 +106,10 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 float relativeForce = (distanceDelta / fixedDeltaTime) * currentAgentMoveParams.agentMass
                     * currentAgentMoveParams.direction;
 
-                relativeForce = Mathf.Min(currentAgentMoveParams.maxForce, relativeForce);
+                relativeForce = Mathf.Clamp(relativeForce, -currentAgentMoveParams.maxForce, currentAgentMoveParams.maxForce);
                 Debug.Log(
                     $"1. distanceDelta is {distanceDelta}. Applying force of {relativeForce} = "
-                    + $"min({currentAgentMoveParams.maxForce}, {distanceDelta} / {fixedDeltaTime}) * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
+                    + $"clamp({currentAgentMoveParams.maxForce}, {distanceDelta} / {fixedDeltaTime}) * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
                 );
 
                 // Use motor's max force in edge case where progress is halted, such as an obstacle in the way
@@ -133,10 +133,10 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 float relativeForce = (speedDelta / Time.fixedDeltaTime) * currentAgentMoveParams.agentMass
                     * currentAgentMoveParams.direction;
 
-                relativeForce = Mathf.Min(currentAgentMoveParams.maxForce, relativeForce);
+                relativeForce = Mathf.Clamp(relativeForce, -currentAgentMoveParams.maxForce, currentAgentMoveParams.maxForce);
                 Debug.Log(
                     $"3. speedDelta is {speedDelta}. Applying force of {relativeForce} = "
-                    + $"min({currentAgentMoveParams.maxForce}, {speedDelta} / {Time.fixedDeltaTime}) * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
+                    + $"clamp({currentAgentMoveParams.maxForce}, {speedDelta} / {Time.fixedDeltaTime}) * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
                 );
 
 
@@ -154,10 +154,10 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 // if (relativeForce.sqrMagnitude > Mathf.Abs(maxForce.sqrMagnitude)) {
                 //     relativeForce = maxForce;
                 // }
-                relativeForce = Mathf.Min(currentAgentMoveParams.maxForce, relativeForce);
+                relativeForce = Mathf.Clamp(relativeForce, -currentAgentMoveParams.maxForce, currentAgentMoveParams.maxForce);
                 Debug.Log(
                     $"2. speedDelta is {speedDelta}. Applying force of {relativeForce} = "
-                    + $"min({currentAgentMoveParams.maxForce}, {speedDelta} / {Time.fixedDeltaTime}) * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
+                    + $"clamp({currentAgentMoveParams.maxForce}, {speedDelta} / {Time.fixedDeltaTime}) * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
                 );
 
                 myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));
