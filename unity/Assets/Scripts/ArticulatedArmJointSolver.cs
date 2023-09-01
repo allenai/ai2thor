@@ -357,7 +357,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         
         // Otherwise we have a hard timer to stop movement so we don't move forever and crash unity
         currentArmMoveParams.timePassed += fixedDeltaTime;
-        Debug.Log($"time passed: {currentArmMoveParams.timePassed}");
+        // Debug.Log($"time passed: {currentArmMoveParams.timePassed}");
 
         return;
     }
@@ -434,7 +434,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         // check whether any of previous n FixedUpdate deltas qualify agent for a continuation
         bool noProgress = true;
         foreach (double distanceDelta in values) {
-            Debug.Log("distanceDelta is " + distanceDelta);
+            // Debug.Log("distanceDelta is " + distanceDelta);
             if (distanceDelta >= tolerance) {
                 noProgress = false;
             }
