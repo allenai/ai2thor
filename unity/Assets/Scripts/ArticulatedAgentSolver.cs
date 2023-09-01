@@ -95,21 +95,26 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
 
         if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
 
-            float currentSpeed = Mathf.Abs(myAB.transform.InverseTransformDirection(myAB.velocity).z);
+            Vector3 agentOrientedVelocity = myAB.transform.InverseTransformDirection(myAB.velocity);
+            // Damping force for part of velocity that is not in the direction of movement
+            float dampingForceX = Mathf.Clamp(-100f * agentOrientedVelocity.x * currentAgentMoveParams.agentMass, -100f, 100f);
+            myAB.AddRelativeForce(new Vector3(dampingForceX, 0f, 0f));
+            Debug.Log($"Damping force equals: {dampingForceX} == clamp(-100 * {agentOrientedVelocity.x} * {currentAgentMoveParams.agentMass}, 100, 100)");
+
+            float currentSpeed = Mathf.Abs(agentOrientedVelocity.z);
             
             // CASE: Accelerate - Apply force calculated from difference between intended distance and actual distance after amount of time that has passed
             if (distanceTransformedSoFar < accelerationDistance) {
-                float desiredDistance = 0.5f * currentAgentMoveParams.acceleration * Mathf.Pow(currentAgentMoveParams.timePassed,2);
+                float desiredDistance = 0.5f * currentAgentMoveParams.acceleration * Mathf.Pow(currentAgentMoveParams.timePassed, 2);
                 float distanceDelta = desiredDistance - distanceTransformedSoFar;
                 
                 // This shouldn't be the same formula as correcting for a velocityDelta, like in cruise-control mode, but for some reason, it's working great
-                float relativeForce = (distanceDelta / fixedDeltaTime) * currentAgentMoveParams.agentMass
-                    * currentAgentMoveParams.direction;
+                float relativeForce = 50f * distanceDelta * currentAgentMoveParams.agentMass * currentAgentMoveParams.direction;
 
                 relativeForce = Mathf.Clamp(relativeForce, -currentAgentMoveParams.maxForce, currentAgentMoveParams.maxForce);
                 Debug.Log(
                     $"1. distanceDelta is {distanceDelta}. Applying force of {relativeForce} = "
-                    + $"clamp({currentAgentMoveParams.maxForce}, {distanceDelta} / {fixedDeltaTime}) * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
+                    + $"clamp({currentAgentMoveParams.maxForce}, 50f * {distanceDelta} * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
                 );
                 
                 myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));
@@ -124,13 +129,12 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 float desiredSpeed = beginDecelerationSpeed * (remainingDistance / accelerationDistance);
                 float speedDelta = desiredSpeed - currentSpeed;
             
-                float relativeForce = (speedDelta / fixedDeltaTime) * currentAgentMoveParams.agentMass
-                    * currentAgentMoveParams.direction;
+                float relativeForce = 50f * speedDelta * currentAgentMoveParams.agentMass * currentAgentMoveParams.direction;
 
                 relativeForce = Mathf.Clamp(relativeForce, -currentAgentMoveParams.maxForce, currentAgentMoveParams.maxForce);
                 Debug.Log(
                     $"3. speedDelta is {speedDelta}. Applying force of {relativeForce} = "
-                    + $"clamp({currentAgentMoveParams.maxForce}, {speedDelta} / {fixedDeltaTime}) * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
+                    + $"clamp({currentAgentMoveParams.maxForce}, 50f * {speedDelta} * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
                 );
 
                 myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));
@@ -139,13 +143,12 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             } else {
                 float speedDelta = currentAgentMoveParams.speed - currentSpeed;
 
-                float relativeForce = (speedDelta / fixedDeltaTime) * currentAgentMoveParams.agentMass
-                    * currentAgentMoveParams.direction;
+                float relativeForce = 50f * speedDelta * currentAgentMoveParams.agentMass * currentAgentMoveParams.direction;
                 
                 relativeForce = Mathf.Clamp(relativeForce, -currentAgentMoveParams.maxForce, currentAgentMoveParams.maxForce);
                 Debug.Log(
                     $"2. speedDelta is {speedDelta}. Applying force of {relativeForce} = "
-                    + $"clamp({currentAgentMoveParams.maxForce}, {speedDelta} / {fixedDeltaTime}) * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
+                    + $"clamp({currentAgentMoveParams.maxForce}, 50f * {speedDelta} * {currentAgentMoveParams.agentMass} * {currentAgentMoveParams.direction})."
                 );
 
                 myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));

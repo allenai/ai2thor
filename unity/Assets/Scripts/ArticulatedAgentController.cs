@@ -458,7 +458,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 speed = Mathf.Deg2Rad * speed,
                 acceleration = Mathf.Deg2Rad * acceleration,
                 agentMass = CalculateTotalMass(this.transform),
-                tolerance = 1e-6f,
+                tolerance = 1e-4f,
                 maxTimePassed = 10.0f,
                 positionCacheSize = 10,
                 direction = direction,
