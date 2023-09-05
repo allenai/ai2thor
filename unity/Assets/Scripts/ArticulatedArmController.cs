@@ -57,15 +57,17 @@ public partial class ArticulatedArmController : ArmController {
             //only halt if all joints report back that shouldHalt = true
             //joints that are idle and not moving will return shouldHalt = true by default
             //Debug.Log($"checking joint: {j.transform.name}");
-            //Debug.Log($"distance moved so far for this joint is: {j.distanceMovedSoFar}");
+            //Debug.Log($"distance moved so far for this joint is: {j.distanceTransformedSoFar}");
 
             //check all joints that have had movement params set to see if they have halted or not
             if(j.currentArmMoveParams != null)
             {
                 if (!j.shouldHalt(
-                    distanceMovedSoFar: j.distanceMovedSoFar,
+                    distanceTransformedSoFar: j.distanceTransformedSoFar,
                     cachedPositions: j.currentArmMoveParams.cachedPositions,
-                    tolerance: j.currentArmMoveParams.tolerance
+                    cachedFixedTimeDeltas: j.currentArmMoveParams.cachedFixedDeltaTimes,
+                    minMovementPerSecond: j.currentArmMoveParams.minMovementPerSecond,
+                    haltCheckTimeWindow: j.currentArmMoveParams.haltCheckTimeWindow
                 )) {
                     //if any single joint is still not halting, return false
                     //Debug.Log("still not done, don't halt yet");
@@ -76,7 +78,7 @@ public partial class ArticulatedArmController : ArmController {
                 //this joint returns that it should stop! Now we must wait to see if there rest
                 else
                 {
-                    //Debug.Log($"halted! Distance moved: {j.distanceMovedSoFar}");
+                    //Debug.Log($"halted! Distance moved: {j.distanceTransformedSoFar}");
                     shouldHalt = true;
                     continue;
                 }
@@ -139,9 +141,10 @@ public partial class ArticulatedArmController : ArmController {
         bool useLimits = false
     ) {
         //Debug.Log("starting moveArmTarget in ArticulatedArmController");
-        float tolerance = 1e-3f;
+        fixedDeltaTime = disableRendering ? fixedDeltaTime : Time.fixedDeltaTime;
+        float minMovementPerSecond = 1e-3f;
         float maxTimePassed = 10.0f;
-        int positionCacheSize = 10;
+        float haltCheckTimeWindow = 0.2f;
 
         float distance = Vector3.Distance(target, Vector3.zero);
         //Debug.Log($"raw distance value: {distance}");
@@ -165,57 +168,22 @@ public partial class ArticulatedArmController : ArmController {
         ArmMoveParams amp = new ArmMoveParams {
             distance = distance,
             speed = unitsPerSecond,
-            tolerance = tolerance,
+            minMovementPerSecond = minMovementPerSecond,
             maxTimePassed = maxTimePassed,
-            positionCacheSize = positionCacheSize,
+            haltCheckTimeWindow = haltCheckTimeWindow,
             direction = direction,
             useLimits = useLimits,
-            maxForce = 20f
+            maxForce = 40f
         };
 
         prepAllTheThingsBeforeJointMoves(joints[1], amp);
 
-        // //get the total distance each joint can move based on the upper limits
-        // float totalExtendDistance = 0.0f;
-
-        // //loop through all extending joints to get the total distance each joint can move
-        // for (int i = 1; i <= 4; i++) {
-        //     totalExtendDistance += GetDriveUpperLimit(joints[i]);
-        // }
-
-        // //loop through all extending joints and get the ratio of movement each joint is responsible for
-        // for (int i = 1; i <= 4; i++) {
-        //     ArticulatedArmJointSolver thisJoint = joints[i];
-        //     jointToArmDistanceRatios.Add(thisJoint, GetDriveUpperLimit(thisJoint) / totalExtendDistance);
-        // }
-
-        // //set each joint to move its specific distance
-        // foreach (ArticulatedArmJointSolver joint in jointToArmDistanceRatios.Keys) {
-
-        // //assign each joint the distance it needs to move to have the entire arm
-        // //this means the distance each joint moves may be slightly different due to proportion of movement this joint is responsible for
-        // float myDistance = distance * jointToArmDistanceRatios[joint];
-        // Debug.Log($"joint {joint.transform.name} is moving ({myDistance}) out of total distance ({distance})");
-        // ArmMoveParams amp = new ArmMoveParams {
-        //     distance = myDistance,
-        //     speed = unitsPerSecond,
-        //     tolerance = tolerance,
-        //     maxTimePassed = maxTimePassed,
-        //     positionCacheSize = positionCacheSize,
-        //     direction = direction
-        // };
-
-        //     //assign movement params to this joint
-        //     //joint.PrepToControlJointFromAction(amp);
-        //     prepAllTheThingsBeforeJointMoves(joint, amp);
-        // }
-
         //now need to do move call here I think
         IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
-                ContinuousMovement.moveAB(
-                    movable: this,
-                    controller: controller,
-                    fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
+            ContinuousMovement.moveAB(
+                movable: this,
+                controller: controller,
+                fixedDeltaTime: fixedDeltaTime
             )
         );
 
@@ -283,9 +251,10 @@ public partial class ArticulatedArmController : ArmController {
         bool useLimits
     ) {
         Debug.Log("starting moveArmBase in ArticulatedArmController");
-        float tolerance = 1e-3f;
+        fixedDeltaTime = disableRendering ? fixedDeltaTime : Time.fixedDeltaTime;
+        float minMovementPerSecond = 1e-3f;
         float maxTimePassed = 10.0f;
-        int positionCacheSize = 10;
+        float haltCheckTimeWindow = 0.2f;
 
         int direction = 0;
         if (distance < 0) {
@@ -298,12 +267,12 @@ public partial class ArticulatedArmController : ArmController {
         ArmMoveParams amp = new ArmMoveParams {
             distance = Mathf.Abs(distance),
             speed = unitsPerSecond,
-            tolerance = tolerance,
+            minMovementPerSecond = minMovementPerSecond,
             maxTimePassed = maxTimePassed,
-            positionCacheSize = positionCacheSize,
+            haltCheckTimeWindow = haltCheckTimeWindow,
             direction = direction,
             useLimits = useLimits,
-            maxForce = 20f
+            maxForce = 40f
         };
 
         ArticulatedArmJointSolver liftJoint = joints[0];
@@ -318,7 +287,7 @@ public partial class ArticulatedArmController : ArmController {
                 ContinuousMovement.moveAB(
                     movable: this,
                     controller: controller,
-                    fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
+                    fixedDeltaTime: fixedDeltaTime
             )
         );
 
@@ -370,9 +339,10 @@ public partial class ArticulatedArmController : ArmController {
         bool returnToStartPositionIfFailed
     ) {
         Debug.Log("starting rotateWrist in ArticulatedArmController");
-        float tolerance = 1e-3f;
+        fixedDeltaTime = disableRendering ? fixedDeltaTime : Time.fixedDeltaTime;
+        float minMovementPerSecond = 1f * Mathf.Deg2Rad;
         float maxTimePassed = 10.0f;
-        int positionCacheSize = 10;
+        float haltCheckTimeWindow = 0.2f;
 
         int direction = 0;
         if (distance < 0) {
@@ -385,11 +355,11 @@ public partial class ArticulatedArmController : ArmController {
         ArmMoveParams amp = new ArmMoveParams {
             distance = Mathf.Abs(distance),
             speed = degreesPerSecond,
-            tolerance = tolerance,
+            minMovementPerSecond = minMovementPerSecond,
             maxTimePassed = maxTimePassed,
-            positionCacheSize = positionCacheSize,
+            haltCheckTimeWindow = haltCheckTimeWindow,
             direction = direction,
-            maxForce = 20f
+            maxForce = 40f
         };
 
         ArticulatedArmJointSolver wristJoint = joints[2];
@@ -401,7 +371,7 @@ public partial class ArticulatedArmController : ArmController {
                 ContinuousMovement.moveAB(
                     movable: this,
                     controller: controller,
-                    fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime
+                    fixedDeltaTime: fixedDeltaTime
             )
         );
 
