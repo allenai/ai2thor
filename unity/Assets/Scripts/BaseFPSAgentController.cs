@@ -422,6 +422,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected virtual void resumePhysics() { }
 
+        protected virtual CapsuleData GetAgentCapsule() {
+            var cc = GetComponent<CapsuleCollider>();
+            return new CapsuleData {
+                radius = cc.radius,
+                height = cc.height,
+                center = cc.center,
+                transform = cc.transform
+            };
+        }
+
         public Vector3[] getReachablePositions(
             float gridMultiplier = 1.0f,
             int maxStepCount = 10000,
@@ -431,12 +441,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool directionsRelativeAgent = false,
             float? gridSize = null
         ) { // max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
-            CapsuleCollider cc = GetComponent<CapsuleCollider>();
+            CapsuleData capsule = GetAgentCapsule();
+
+            // Debug.Log($"Capsule collider: {cc.radius}, height {cc.height}, innerheight: {cc.height / 2.0f - cc.radius;} startpos: {transform.position + cc.transform.TransformDirection(cc.center)}");
+            // Debug.Log($"Capsule collider: {cc.radius}, height {cc.height}, innerheight: {cc.height / 2.0f - cc.radius;} startpos: ");
+
+            Debug.Log($"Capsule collider: {capsule.radius}  height {capsule.height}, innerheight: {capsule.height / 2.0f - capsule.radius} startpos: {transform.position + capsule.transform.TransformDirection(capsule.center)}");
 
             if (!gridSize.HasValue) {
                 gridSize = BaseFPSAgentController.gridSize;
             }
-
+            // TODO: skin width for ab
             float sw = m_CharacterController.skinWidth;
             Queue<(int, int)> rightForwardQueue = new Queue<(int, int)>();
             rightForwardQueue.Enqueue((0, 0));
@@ -487,7 +502,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         seenRightForwards.Add(newRightForward);
 
                         RaycastHit[] hits = capsuleCastAllForAgent(
-                            capsuleCollider: cc,
+                            capsule: capsule,
                             skinWidth: sw,
                             startPosition: p,
                             dir: right * rightForwardOffset.Item1 + forward * rightForwardOffset.Item2,
@@ -1274,7 +1289,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
 
             RaycastHit[] sweepResults = capsuleCastAllForAgent(
-                GetComponent<CapsuleCollider>(),
+                GetAgentCapsule(),
                 m_CharacterController.skinWidth,
                 transform.position,
                 offset.normalized,
@@ -5075,7 +5090,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // cast a capsule the same size as the agent
         // used to check for collisions
         public RaycastHit[] capsuleCastAllForAgent(
-            CapsuleCollider capsuleCollider,
+            CapsuleData capsule,
             float skinWidth,
             Vector3 startPosition,
             Vector3 dir,
@@ -5083,9 +5098,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int layerMask
         ) {
             // make sure to offset this by capsuleCollider.center since we adjust the capsule size vertically, and in some cases horizontally
-            Vector3 startPositionCapsuleCenter = startPosition + capsuleCollider.transform.TransformDirection(capsuleCollider.center);
-            float radius = capsuleCollider.radius + skinWidth;
-            float innerHeight = capsuleCollider.height / 2.0f - radius;
+            Vector3 startPositionCapsuleCenter = startPosition + capsule.transform.TransformDirection(capsule.center);
+            float radius = capsule.radius + skinWidth;
+            float innerHeight = capsule.height / 2.0f - radius;
 
             Vector3 point1 = startPositionCapsuleCenter + new Vector3(0, innerHeight, 0);
             Vector3 point2 = startPositionCapsuleCenter + new Vector3(0, -innerHeight + skinWidth, 0);
@@ -5146,7 +5161,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float gridMultiplier = 1.0f,
             int maxStepCount = 10000
         ) {
-            CapsuleCollider cc = GetComponent<CapsuleCollider>();
+            var capsule = GetAgentCapsule();
             float sw = m_CharacterController.skinWidth;
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
             pointsQueue.Enqueue(transform.position);
@@ -5191,7 +5206,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         seenPoints.Add(newPosition);
 
                         RaycastHit[] hits = capsuleCastAllForAgent(
-                            capsuleCollider: cc,
+                            capsule: capsule,
                             skinWidth: sw,
                             startPosition: p,
                             dir: d,
