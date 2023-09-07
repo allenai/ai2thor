@@ -522,10 +522,97 @@ public partial class ArticulatedArmController : ArmController {
         }
     }
 
+    //ignore this, we need new metadata that makes more sense for the articulation heirarchy soooooo
     public override ArmMetadata GenerateMetadata() {
-
         // TODO: Reimplement, low prio for benchmark
         ArmMetadata meta = new ArmMetadata();
+        return meta;
+    }
+
+    //actual metadata implementation for articulation heirarchy 
+    public ArticulationArmMetadata GenerateArticulationMetadata() {
+        ArticulationArmMetadata meta = new ArticulationArmMetadata();
+
+        List<ArticulationJointMetadata> metaJoints = new List<ArticulationJointMetadata>();
+
+        //declaring some stuff for processing metadata
+        Quaternion currentRotation;
+        float angleRot;
+        Vector3 vectorRot;
+
+        for (int i = 0; i < joints.Count(); i++) {
+            ArticulationJointMetadata jMeta = new ArticulationJointMetadata();
+
+            jMeta.name = joints[i].name;
+
+            jMeta.position = joints[i].transform.position;
+
+            jMeta.rootRelativePosition = joints[0].transform.InverseTransformPoint(joints[i].transform.position);
+
+            jMeta.jointHeirarchyPosition = i;
+
+            // WORLD RELATIVE ROTATION
+            currentRotation = joints[i].transform.rotation;
+
+            // Check that world-relative rotation is angle-axis-notation-compatible
+            if (currentRotation != new Quaternion(0, 0, 0, -1)) {
+                currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
+                jMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+            } else {
+                jMeta.rotation = new Vector4(1, 0, 0, 0);
+            }
+
+            // ROOT-JOINT RELATIVE ROTATION
+            // Grab rotation of current joint's angler relative to root joint
+            currentRotation = Quaternion.Inverse(joints[0].transform.rotation) * joints[i].transform.rotation;
+            if (currentRotation != new Quaternion(0, 0, 0, -1)) {
+                currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
+                jMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+            } else {
+                jMeta.rootRelativeRotation = new Vector4(1, 0, 0, 0);
+            }
+
+            // LOCAL POSITION AND LOCAL ROTATION
+            //get local position and local rotation relative to immediate parent in heirarchy
+            if (i != 0) {
+                jMeta.localPosition = joints[i - 1].transform.InverseTransformPoint(joints[i].transform.position);
+                
+                var currentLocalRotation = Quaternion.Inverse(joints [i - 1].transform.rotation) * joints[i].transform.rotation;
+                if(currentLocalRotation != new Quaternion(0, 0, 0, -1)) {
+                    currentLocalRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
+                    jMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+                } else {
+                jMeta.localRotation = new Vector4(1, 0, 0, 0);
+                }
+            } else {
+                //special case for the lift since its the base of the arm
+                jMeta.localPosition = jMeta.position;
+                jMeta.localRotation = jMeta.rootRelativeRotation;
+            }
+
+            metaJoints.Add(jMeta);
+        }
+
+        meta.joints = metaJoints.ToArray();
+
+        // metadata for any objects currently held by the hand on the arm
+        // note this is different from objects intersecting the hand's sphere,
+        // there could be a case where an object is inside the sphere but not picked up by the hand
+        List<string> heldObjectIDs = new List<string>();
+        if (heldObjects != null) {
+            foreach (SimObjPhysics sop in heldObjects) {
+                heldObjectIDs.Add(sop.objectID);
+            }
+        }
+
+        meta.heldObjects = heldObjectIDs;
+        meta.handSphereCenter = magnetSphere.transform.TransformPoint(magnetSphere.center);
+        meta.handSphereRadius = magnetSphere.radius;
+        List<SimObjPhysics> objectsInMagnet = WhatObjectsAreInsideMagnetSphereAsSOP(false);
+        meta.pickupableObjects = objectsInMagnet.Where(
+            x => x.PrimaryProperty == SimObjPrimaryProperty.CanPickup
+        ).Select(x => x.ObjectID).ToList();
+        meta.objectsInsideHandSphereRadius = objectsInMagnet.Select(x => x.ObjectID).ToList();
 
         return meta;
     }

@@ -35,6 +35,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
     [HideInInspector]
     public CollisionListener collisionListener;
 
+    //
     [SerializeField]
     public Dictionary<SimObjPhysics, HashSet<Collider>> heldObjects { get; protected set; } = new Dictionary<SimObjPhysics, HashSet<Collider>>();
 
