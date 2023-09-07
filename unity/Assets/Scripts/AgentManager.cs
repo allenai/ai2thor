@@ -1596,6 +1596,46 @@ public class ArmMetadata {
     public float handSphereRadius;
 }
 
+public class ArticulationArmMetadata {
+    //additional metadata for each joint in the articulated arm (currently base, extend joint, and wrist)
+    public ArticulationJointMetadata[] joints;
+    //currently we only support picking up one object for the articulation grabbing
+    public List<String> heldObjects;
+    //a list of all objects currently intersecting the hand sphere that can be possibly picked up
+    public List<String> pickupableObjects;
+    // a list of all objects in the hand sphere radius regardless of if they can be picked up (so large objects too)
+    public List<String> objectsInsideHandSphereRadius;
+    //center of the hand sphere in world coordinates
+    public Vector3 handSphereCenter;
+    //radius of the hand sphere in world coordinates
+    public float handSphereRadius;
+}
+
+//this should include the arm base, the extend joint, and wrist joint for now
+public class ArticulationJointMetadata {
+    //string name of this joint
+    public string name; 
+    //position of this joint in the heirarchy of articulations
+    //grab this from ArticulatedArmController.cs joints array, the 0th element should be the lift so this 
+    //starts from the lift even though the entire articulation itself has the agent as the base
+    public int jointHeirarchyPosition;
+    //position of this object in world coordinates
+    public Vector3 position;
+    //position of this object relative to this object's immediate parent in the articulation heirarchy
+    public Vector3 localPosition;
+    //position relative to the root, or the first joint in the the articulations heirarchy
+    public Vector3 rootRelativePosition;
+    //rotation of this object in world coordinates
+    public Vector4 rotation;
+    //rotation relative to this object's immediate parent in the articulation heirarchy
+    public Vector4 localRotation;
+    //rotation relative to the root, or the first joint in the the articulations heirarchy
+    public Vector4 rootRelativeRotation;
+    //height in world coordinates of the first joint in the articulations heirarchy, or the base (lift in this case)
+    public float? armBaseHeight;
+
+}
+
 [Serializable]
 public class ObjectTypeCount {
     public string objectType; // specify object by type in scene
@@ -1644,6 +1684,7 @@ public struct MetadataWrapper {
     public AgentMetadata agent;
     public HandMetadata heldObjectPose;
     public ArmMetadata arm;
+    public ArticulationArmMetadata articulationArm;
     public float fov;
     public Vector3 cameraPosition;
     public float cameraOrthSize;

@@ -331,6 +331,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Arms
         protected IK_Robot_Arm_Controller Arm;
         protected Stretch_Robot_Arm_Controller SArm;
+        protected ArticulatedArmController AArm;
 
         private PhysicsSceneManager _physicsSceneManager = null;
         // use as reference to the PhysicsSceneManager object
@@ -1916,6 +1917,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             else if (SArm != null) {
                 metaMessage.arm = SArm.GenerateMetadata();
+            }
+            else if (AArm != null) {
+                metaMessage.articulationArm = AArm.GenerateArticulationMetadata();
             }
 
             // EXTRAS
