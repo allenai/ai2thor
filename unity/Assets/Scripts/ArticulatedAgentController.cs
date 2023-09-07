@@ -19,6 +19,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField]
         private PhysicMaterial FloorColliderPhysicsMaterial;
 
+        private CapsuleData originalCapsule;
+
+        protected override CapsuleData GetAgentCapsule() {
+            if (originalCapsule == null) {
+                var cc = this.GetComponent<CapsuleCollider>();
+
+                return new CapsuleData {
+                    radius = cc.radius,
+                    height = cc.height,
+                    center = cc.center,
+                    transform = cc.transform
+                };
+            }
+            else {
+                return originalCapsule;
+            }
+        }
+
         // TODO: Reimplement for Articulation body
         public override void InitializeBody(ServerAction initializeAction) {
             // TODO; Articulation Body init
@@ -34,6 +52,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // TODO: REMOVE
             CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+
+            originalCapsule = new CapsuleData {
+                radius = cc.radius,
+                height = cc.height,
+                center = cc.center,
+                transform = cc.transform
+            };
             cc.center = m_CharacterController.center;
             cc.radius = m_CharacterController.radius;
             cc.height = m_CharacterController.height;

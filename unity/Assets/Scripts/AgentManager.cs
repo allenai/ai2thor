@@ -2065,6 +2065,18 @@ public class ObjectSphereBounds {
     public float radius;
 }
 
+[Serializable]
+[MessagePackObject(keyAsPropertyName: true)]
+public class CapsuleData {
+    public Transform transform;
+    public float radius;
+
+    public float height;
+
+    public Vector3 center;
+
+}
+
 public enum ServerActionErrorCode {
     Undefined,
     ReceptacleNotVisible,
