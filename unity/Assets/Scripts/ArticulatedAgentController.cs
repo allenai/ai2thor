@@ -142,6 +142,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return getArmImplementation();
         }
 
+        public IEnumerator setFloorToHighFrictionAsLastStep(IEnumerator steps) {
+            while (steps.MoveNext()) {
+                yield return steps.Current;
+            }
+            SetFloorColliderToHighFriction();
+        }
+
         public override void MoveArmBaseUp(
              float distance,
              float speed = 1,
@@ -321,7 +328,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStart = true,
             bool disableRendering = true
         ) {
-            SetFloorColliderToSlippery();
             // Debug.Log("(3) ArticulatedAgentController: PREPPING MOVEAGENT COMMAND");
             int direction = 0;
             if (moveMagnitude < 0) {
@@ -337,29 +343,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.Log("Error! distance to move must be nonzero");
                 return;
             }
-            
+
+            float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+
             AgentMoveParams amp = new AgentMoveParams {
                 agentState = ABAgentState.Moving,
                 distance = Mathf.Abs(moveMagnitude),
                 speed = speed,
                 acceleration = acceleration,
                 agentMass = CalculateTotalMass(this.transform),
-                tolerance = 1e-6f,
+                minMovementPerSecond = 0.001f,
                 maxTimePassed = 10.0f,
-                positionCacheSize = 10,
+                haltCheckTimeWindow = 0.2f,
                 direction = direction,
                 maxForce = 200f
             };
-        
-            float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
             
             this.GetComponent<ArticulatedAgentSolver>().PrepToControlAgentFromAction(amp);
 
             // now that move call happens
-            IEnumerator move = ContinuousMovement.moveAB(
-                movable: this.getBodyMovable(),
-                controller: this,
-                fixedDeltaTime: fixedDeltaTimeFloat
+            SetFloorColliderToSlippery();
+            IEnumerator move = setFloorToHighFrictionAsLastStep(
+                ContinuousMovement.moveAB(
+                    movable: this.getBodyMovable(),
+                    controller: this,
+                    fixedDeltaTime: fixedDeltaTimeFloat
+                )
             );
 
             if (disableRendering) {
@@ -462,7 +471,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStart = true,
             bool disableRendering = true
         ) {
-            SetFloorColliderToSlippery();
             int direction = 0;
             if (degrees < 0) {
                 direction = -1;
@@ -477,30 +485,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
+            float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+
             AgentMoveParams amp = new AgentMoveParams {
                 agentState = ABAgentState.Rotating,
                 distance = Mathf.Abs(Mathf.Deg2Rad * degrees),
                 speed = Mathf.Deg2Rad * speed,
                 acceleration = Mathf.Deg2Rad * acceleration,
                 agentMass = CalculateTotalMass(this.transform),
-                tolerance = 1e-6f,
+                minMovementPerSecond = 1f * Mathf.Deg2Rad,
                 maxTimePassed = 10.0f,
-                positionCacheSize = 10,
+                haltCheckTimeWindow = 0.2f,
                 direction = direction,
                 maxForce = 200f
             };
 
-            float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
-
             this.GetComponent<ArticulatedAgentSolver>().PrepToControlAgentFromAction(amp);
 
             // now that rotate call happens
-            IEnumerator rotate = ContinuousMovement.moveAB(
-                movable: this.getBodyMovable(),
-                controller: this,
-                fixedDeltaTime: fixedDeltaTimeFloat,
-                unitsPerSecond: speed,
-                acceleration: acceleration
+            SetFloorColliderToSlippery();
+            IEnumerator rotate = setFloorToHighFrictionAsLastStep(
+                ContinuousMovement.moveAB(
+                    movable: this.getBodyMovable(),
+                    controller: this,
+                    fixedDeltaTime: fixedDeltaTimeFloat,
+                    unitsPerSecond: speed,
+                    acceleration: acceleration
+                )
             );
 
             if (disableRendering) {
