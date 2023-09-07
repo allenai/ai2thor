@@ -625,25 +625,24 @@ public partial class ArticulatedArmController : ArmController {
 
         meta.joints = metaJoints.ToArray();
 
-
         // metadata for any objects currently held by the hand on the arm
         // note this is different from objects intersecting the hand's sphere,
         // there could be a case where an object is inside the sphere but not picked up by the hand
-        // List<string> heldObjectIDs = new List<string>();
-        // if (heldObjects != null) {
-        //     foreach (SimObjPhysics sop in heldObjects.Keys) {
-        //         heldObjectIDs.Add(sop.objectID);
-        //     }
-        // }
+        List<string> heldObjectIDs = new List<string>();
+        if (heldObjects != null) {
+            foreach (SimObjPhysics sop in heldObjects) {
+                heldObjectIDs.Add(sop.objectID);
+            }
+        }
 
-        // meta.heldObjects = heldObjectIDs;
-        // meta.handSphereCenter = magnetSphere.transform.TransformPoint(magnetSphere.center);
-        // meta.handSphereRadius = magnetSphere.radius;
-        // List<SimObjPhysics> objectsInMagnet = WhatObjectsAreInsideMagnetSphereAsSOP(false);
-        // meta.pickupableObjects = objectsInMagnet.Where(
-        //     x => x.PrimaryProperty == SimObjPrimaryProperty.CanPickup
-        // ).Select(x => x.ObjectID).ToList();
-        // meta.touchedNotHeldObjects = objectsInMagnet.Select(x => x.ObjectID).ToList();
+        meta.heldObjects = heldObjectIDs;
+        meta.handSphereCenter = magnetSphere.transform.TransformPoint(magnetSphere.center);
+        meta.handSphereRadius = magnetSphere.radius;
+        List<SimObjPhysics> objectsInMagnet = WhatObjectsAreInsideMagnetSphereAsSOP(false);
+        meta.pickupableObjects = objectsInMagnet.Where(
+            x => x.PrimaryProperty == SimObjPrimaryProperty.CanPickup
+        ).Select(x => x.ObjectID).ToList();
+        meta.objectsInsideHandSphereRadius = objectsInMagnet.Select(x => x.ObjectID).ToList();
 
         return meta;
     }

@@ -1600,7 +1600,7 @@ public class ArticulationArmMetadata {
     //additional metadata for each joint in the articulated arm (currently base, extend joint, and wrist)
     public ArticulationJointMetadata[] joints;
     //currently we only support picking up one object for the articulation grabbing
-    public string heldObject;
+    public List<String> heldObjects;
     //a list of all objects currently intersecting the hand sphere that can be possibly picked up
     public List<String> pickupableObjects;
     // a list of all objects in the hand sphere radius regardless of if they can be picked up (so large objects too)
