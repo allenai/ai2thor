@@ -5752,7 +5752,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //helper function to set transform or position for game objects
         public void SetTransform(Transform transform, Vector3? position = null, Quaternion? rotation = null) {
-            
             if(!transform.GetComponent<ArticulationBody>()) {
                 if(position != null) {
                     transform.position = (Vector3) position;
@@ -5770,14 +5769,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ArticulationBody articulationBody = transform.GetComponent<ArticulationBody>();
 
                 if(position != null && rotation != null) {
+                    Debug.Log("Teleporting position and rotation");
                     articulationBody.TeleportRoot((Vector3) position, (Quaternion) rotation);
                 }
 
                 else if(position != null && rotation == null) {
+                    Debug.Log("Teleporting position, default rotation");
+                    Debug.Log($"Passing to TeleportRoot(): position is {position}, but casting it is {(Vector3) position}");
                     articulationBody.TeleportRoot((Vector3) position, articulationBody.transform.rotation);
                 }
 
                 else if (position == null && rotation != null) {
+                    Debug.Log("Teleporting rotation, default position");
                     articulationBody.TeleportRoot(articulationBody.transform.position, (Quaternion) rotation);
                 }
             }
@@ -5901,10 +5904,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     foreach (float rotation in rotations) {
                         Vector3 rotationVector = new Vector3(x: 0, y: rotation, z: 0);
-                        SetTransform(transform: transform, rotation: Quaternion.Euler(rotationVector));
+                        //Debug.Log($"initial rotation: {transform.rotation}");
+                        SetTransform(transform: transform, rotation: (Quaternion?) Quaternion.Euler(rotationVector));
+                        //Debug.Log($"Rotation after SetTransform(): {transform.rotation}");
 
                         foreach (Vector3 position in filteredPositions) {
-                            SetTransform(transform: transform, position: position);
+                            Debug.Log("////////////////////");
+                            Debug.Log($"position Before SetTransform: {transform.position}");
+                            Debug.Log($"Passing in position to SetTransform: Vector3 {position}, Vector3? {(Vector3?) position}");
+                            SetTransform(transform: transform, position: (Vector3?) position);
+                            Debug.Log($"Position After SetTransform(): {transform.position}");
+                            Debug.Log("////////////////////");
 
                             // Each of these values is directly compatible with TeleportFull
                             // and should be used with .step(action='TeleportFull', **interactable_positions[0])
@@ -5948,7 +5958,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 crouch();
             }
-            SetTransform(transform: transform, position: oldPosition, rotation: oldRotation);
+            SetTransform(transform: transform, position: (Vector3?) oldPosition, rotation: (Quaternion?) oldRotation);
             m_Camera.transform.localEulerAngles = oldHorizon;
             if (ItemInHand != null) {
                 ItemInHand.gameObject.SetActive(true);
