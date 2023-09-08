@@ -1821,7 +1821,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "gip": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetInteractablePoses";
-                        action["objectId"] = "Fridge|-02.10|+00.00|+01.09";
+                        if(splitcommand.Length == 2) {
+                            action["objectId"] = splitcommand[1].ToString();
+                        } else {
+                            action["objectId"] = "Fridge|-02.10|+00.00|+01.07";
+                        }
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }

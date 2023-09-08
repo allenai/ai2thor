@@ -5560,6 +5560,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) {
+            Debug.Log("trying to check if objectIsCurrentlyVisible");
             if (sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
                 updateAllAgentCollidersForVisibilityCheck(false);
@@ -5749,6 +5750,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return allVisible;
         }
 
+        //helper function to set transform or position for game objects
+        public void SetTransform(Transform transform, Vector3? position = null, Quaternion? rotation = null) {
+            
+            if(!transform.GetComponent<ArticulationBody>()) {
+                if(position != null) {
+                    transform.position = (Vector3) position;
+
+                }
+
+                if(rotation != null) {
+                    transform.rotation = (Quaternion) rotation;
+                }
+            }
+
+            //handle if this transform we are trying to manipulate is an articulation body and needs to be treated special
+            else {
+                Debug.Log("SetTransform with Articulation Body happening!");
+                ArticulationBody articulationBody = transform.GetComponent<ArticulationBody>();
+
+                if(position != null && rotation != null) {
+                    articulationBody.TeleportRoot((Vector3) position, (Quaternion) rotation);
+                }
+
+                else if(position != null && rotation == null) {
+                    articulationBody.TeleportRoot((Vector3) position, articulationBody.transform.rotation);
+                }
+
+                else if (position == null && rotation != null) {
+                    articulationBody.TeleportRoot(articulationBody.transform.position, (Quaternion) rotation);
+                }
+            }
+        }
+
         // @positions/@rotations/@horizons/@standings are used to override all possible values the agent
         // may encounter with basic agent navigation commands (excluding teleport).
         private List<Dictionary<string, object>> getInteractablePoses(
@@ -5857,7 +5891,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool stopEarly = false;
             foreach (float horizon in horizons) {
                 m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
-
+                Debug.Log($"setting horizon to: {m_Camera.transform.localEulerAngles.x}");
                 foreach (bool standing in standings) {
                     if (standing) {
                         stand();
@@ -5867,10 +5901,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     foreach (float rotation in rotations) {
                         Vector3 rotationVector = new Vector3(x: 0, y: rotation, z: 0);
-                        transform.rotation = Quaternion.Euler(rotationVector);
+                        SetTransform(transform: transform, rotation: Quaternion.Euler(rotationVector));
 
                         foreach (Vector3 position in filteredPositions) {
-                            transform.position = position;
+                            SetTransform(transform: transform, position: position);
 
                             // Each of these values is directly compatible with TeleportFull
                             // and should be used with .step(action='TeleportFull', **interactable_positions[0])
@@ -5914,8 +5948,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 crouch();
             }
-            transform.position = oldPosition;
-            transform.rotation = oldRotation;
+            SetTransform(transform: transform, position: oldPosition, rotation: oldRotation);
             m_Camera.transform.localEulerAngles = oldHorizon;
             if (ItemInHand != null) {
                 ItemInHand.gameObject.SetActive(true);
