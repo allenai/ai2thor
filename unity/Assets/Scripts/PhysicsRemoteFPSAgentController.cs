@@ -5798,6 +5798,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? maxDistance = null,
             int maxPoses = int.MaxValue  // works like infinity
         ) {
+            Debug.Log($"Position of agent at start of GetInteractablePoses: {this.transform.position}");
             if (360 % rotateStepDegrees != 0 && rotations != null) {
                 throw new InvalidOperationException($"360 % rotateStepDegrees (360 % {rotateStepDegrees} != 0) must be 0, unless 'rotations: float[]' is overwritten.");
             }
