@@ -6272,7 +6272,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             spawned.isStatic = false;
             foreach (var rigidBody in spawned.GetComponentsInChildren<Rigidbody>()) {
-                rigidBody.useGravity = true;
+                rigidBody.useGravity = false;
                 rigidBody.isKinematic = false;
             }
 
