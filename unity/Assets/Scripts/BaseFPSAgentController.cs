@@ -6270,9 +6270,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 rotation: rotation.HasValue ? Quaternion.Euler(rotation.Value) : Quaternion.identity
             );
 
-            spawned.isStatic = false;
+            spawned.isStatic = true;
             foreach (var rigidBody in spawned.GetComponentsInChildren<Rigidbody>()) {
-                rigidBody.useGravity = false;
+                rigidBody.useGravity = true;
                 rigidBody.isKinematic = false;
             }
 
