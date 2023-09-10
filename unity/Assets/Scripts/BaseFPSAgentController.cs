@@ -6239,6 +6239,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, geoList);
         }
 
+
         public void SpawnAsset(
             string assetId,
             string generatedId,
