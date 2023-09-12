@@ -100,12 +100,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // set up primary camera parameters
                 m_Camera.transform.localPosition = new Vector3(0.015f, 0.01832385f, 0.06322689f);
                 m_Camera.transform.localEulerAngles = Vector3.zero;
-                m_Camera.fieldOfView = 65f;
+                m_Camera.fieldOfView = 59f;
 
                 // set up arm-camera parameters
                 fp_camera_2.transform.localPosition = new Vector3(0.015f, 0.01832385f, 0.06322689f);
                 m_Camera.transform.localEulerAngles = Vector3.zero;
-                fp_camera_2.fieldOfView = 65f;
+                fp_camera_2.fieldOfView = 59f;
             }
 
             // limit camera from looking too far down/up
