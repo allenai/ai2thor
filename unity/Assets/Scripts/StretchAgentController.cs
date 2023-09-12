@@ -98,12 +98,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fp_camera_2.transform.SetParent(FixedCameraGimbalSecondary.transform);
 
                 // set up primary camera parameters
-                m_Camera.transform.localPosition = new Vector3(-0.015f, 0.01129817f, 0.06644913f);
+                m_Camera.transform.localPosition = new Vector3(0.015f, 0.01832385f, 0.06322689f);
                 m_Camera.transform.localEulerAngles = Vector3.zero;
                 m_Camera.fieldOfView = 65f;
 
                 // set up arm-camera parameters
-                fp_camera_2.transform.localPosition = new Vector3(-0.01500005f, 0.01832385f, 0.06322689f);
+                fp_camera_2.transform.localPosition = new Vector3(0.015f, 0.01832385f, 0.06322689f);
                 m_Camera.transform.localEulerAngles = Vector3.zero;
                 fp_camera_2.fieldOfView = 65f;
             }
