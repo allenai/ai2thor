@@ -5788,7 +5788,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // @positions/@rotations/@horizons/@standings are used to override all possible values the agent
         // may encounter with basic agent navigation commands (excluding teleport).
-        private List<Dictionary<string, object>> getInteractablePoses(
+        public virtual List<Dictionary<string, object>> getInteractablePoses(
             string objectId,
             bool markActionFinished,
             Vector3[] positions = null,
@@ -5889,7 +5889,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // set each key to store a list
             List<Dictionary<string, object>> validAgentPoses = new List<Dictionary<string, object>>();
-            string[] keys = { "x", "y", "z", "rotation", "standing", "horizon" };
+
+            //commenting this out because I don't think its actually ever used???
+            //string[] keys = { "x", "y", "z", "rotation", "standing", "horizon" };
 
             // iterate over each reasonable agent pose
             bool stopEarly = false;
@@ -5979,7 +5981,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Get the poses with which the agent can interact with 'objectId'
         // @rotations: if rotation is not specified, we use rotateStepDegrees, which results in [0, 90, 180, 270] by default.
-        public void GetInteractablePoses(
+        public virtual void GetInteractablePoses(
             string objectId,
             Vector3[] positions = null,
             float[] rotations = null,
