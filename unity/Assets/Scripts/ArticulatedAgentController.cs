@@ -22,6 +22,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private CapsuleData originalCapsule;
 
         protected override CapsuleData GetAgentCapsule() {
+            Debug.Log("calling Override GetAgentCapsule in ArticulatedAgentController");
             if (originalCapsule == null) {
                 var cc = this.GetComponent<CapsuleCollider>();
 
@@ -45,14 +46,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_CharacterController.radius = 0.01f;
             m_CharacterController.height = 0.02f;
             m_CharacterController.skinWidth = 0.01f;
-            Debug.Log($"prev Position {this.transform.position}");
 
             var ab = this.GetComponent<ArticulationBody>();
             ab.TeleportRoot(this.transform.position, this.transform.rotation);
 
             // TODO: REMOVE
             CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
-
             originalCapsule = new CapsuleData {
                 radius = cc.radius,
                 height = cc.height,
@@ -123,8 +122,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FloorColliderPhysicsMaterial = FloorCollider.material;
 
             getArmImplementation().ContinuousUpdate(Time.fixedDeltaTime);
-
-            Debug.Log($"Position {this.transform.position}");
         }
 
         private ArticulatedArmController getArmImplementation() {
@@ -295,9 +292,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void TeleportFull(Vector3 position, Vector3 rotation, float? horizon = null, bool forceAction = false) {
-            //Vector3 oldPosition = transform.position;
-            //Quaternion oldRotation = transform.rotation;
-            //float oldHorizon = m_Camera.transform.localEulerAngles.x;
+            Debug.Log($"Original Position: {this.transform.position}");
             
             if (horizon == null) {
                 horizon = m_Camera.transform.localEulerAngles.x;
@@ -313,10 +308,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Quaternion realRotationAsQuaternionBecauseYes = Quaternion.Euler(rotation);
 
-            ArticulationBody myBody = this.GetComponent<ArticulationBody>();
-            myBody.TeleportRoot(position, realRotationAsQuaternionBecauseYes);
-            m_Camera.transform.localEulerAngles = new Vector3(horizonf, 0, 0);
+            //teleport must be finished in a coroutine because synctransforms DoESNt WoRK for ArTIcuLAtIONBodies soooooo
+            StartCoroutine(TeleportThenWait(position, realRotationAsQuaternionBecauseYes, horizonf));
+        }
 
+        IEnumerator TeleportThenWait(Vector3 position, Quaternion rotation, float cameraHorizon) {
+            Debug.Log("TeleportThenWait coroutine starting");
+            ArticulationBody myBody = this.GetComponent<ArticulationBody>();
+            myBody.TeleportRoot(position, rotation);
+            m_Camera.transform.localEulerAngles = new Vector3(cameraHorizon, 0, 0);
+
+            yield return new WaitForFixedUpdate();
+
+            Debug.Log($"After TeleportRoot from TeleportThenWait: {this.transform.position}");
             actionFinished(true);
         }
 
