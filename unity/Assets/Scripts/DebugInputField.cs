@@ -219,8 +219,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private void ExecuteAction(string actionName) {
             Dictionary<string, object> action = new Dictionary<string, object>();
             action["action"] = actionName;
-            // CurrentActiveController().ProcessControlCommand(action);
-            
             AManager.ProcessControlCommand(new DynamicServerAction(action));
         }
 
@@ -1836,7 +1834,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "reset": {
                         ServerAction action = new ServerAction();
                         action.action = "Reset";
-                        // CurrentActiveController().ProcessControlCommand(action);
                         ExecuteAction("Reset");
                         break;
                     }
@@ -3641,7 +3638,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         
                         //action["fixedDeltaTime"] = 5.0f;
                         CurrentActiveController().ProcessControlCommand(action);
-                        //AManager.ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
 

@@ -412,7 +412,6 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
     private bool IsFingerTransformCorrect() {
         var eps = 0.1;
         var diff = fingersAB.localPosition - fingersInitialOffset;
-        Debug.Log($" initial: {fingersInitialOffset.ToString("F4")} current: {fingersAB.localPosition.ToString("F4")} diff: {diff.ToString("F4")} comp: {diff.magnitude > eps}");
         return diff.magnitude <= eps;
     }
 }
