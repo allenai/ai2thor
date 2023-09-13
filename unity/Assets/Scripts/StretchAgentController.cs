@@ -11,7 +11,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         
     public partial class StretchAgentController : PhysicsRemoteFPSAgentController {
 
-        protected Transform gimbalBase;
         protected Transform primaryGimbal;
         protected Transform secondaryGimbal;
 
@@ -57,16 +56,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var secondaryCameraName = "SecondaryCamera";
             
-            var gimbalBaseName = "FixedCameraGimbalBase";
             var primaryGimbalName = "FixedCameraGimbalPrimary";
             var secondaryGimbalName = "FixedCameraGimbalSecondary";
 
-            this.gimbalBase = m_CharacterController.transform.FirstChildOrDefault(x => x.name == gimbalBaseName);
             this.primaryGimbal = m_CharacterController.transform.FirstChildOrDefault(x => x.name == primaryGimbalName);
             this.secondaryGimbal = m_CharacterController.transform.FirstChildOrDefault(x => x.name == secondaryGimbalName);
 
-            // gimbalBaseStartingPosition = 0f;
-            // gimbalBaseStartingRotation = 0f;
             primaryStartingXRotation = primaryGimbal.transform.localEulerAngles.x;
             secondaryStartingXRotation = secondaryGimbal.transform.localEulerAngles.x;
 
