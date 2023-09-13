@@ -42,6 +42,11 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
         return armTarget.gameObject;
     }
 
+     public override ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
+        // TODO: does not do anything need to change Continuous Move to call this instead of continuousMoveFinish
+        return ActionFinished.Success;
+     }
+
     void Start() {
         this.collisionListener = this.GetComponentInParent<CollisionListener>();
         this.collisionListener.registerAllChildColliders();
@@ -84,7 +89,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
         solver = this.gameObject.GetComponentInChildren<Stretch_Arm_Solver>();
     }
 
-    protected override void resetArmTarget() {
+    protected override void lastStepCallback() {
         Vector3 pos = handCameraTransform.transform.position + WristToManipulator;
         Quaternion rot = handCameraTransform.transform.rotation;
         armTarget.position = pos;

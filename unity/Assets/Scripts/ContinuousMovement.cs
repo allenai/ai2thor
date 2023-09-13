@@ -8,7 +8,7 @@ using System.Linq;
     public interface MovableContinuous {
         public bool ShouldHalt();
         public void ContinuousUpdate(float fixedDeltaTime);
-        public void FinishContinuousMove(BaseFPSAgentController controller);
+        public ActionFinished FinishContinuousMove(BaseFPSAgentController controller);
     }
 
 
@@ -32,7 +32,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public static IEnumerator rotate(
             PhysicsRemoteFPSAgentController controller,
-            CollisionListener collisionListener,
             Transform moveTransform,
             Quaternion targetRotation,
             float fixedDeltaTime,
@@ -70,7 +69,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public static IEnumerator move(
             PhysicsRemoteFPSAgentController controller,
-            CollisionListener collisionListener,
             Transform moveTransform,
             Vector3 targetPosition,
             float fixedDeltaTime,
@@ -126,7 +124,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float unitsPerSecond = 0,
             float acceleration = 0
         ) {
-            return updateFixedUpdateForAB(
+            return continuousUpdateAB(
                 movable: movable,
                 controller: controller,
                 fixedDeltaTime: fixedDeltaTime
@@ -217,7 +215,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         }
 
-        public static IEnumerator updateFixedUpdateForAB(            
+        public static IEnumerator continuousUpdateAB(            
             MovableContinuous movable,
             BaseFPSAgentController controller,
             float fixedDeltaTime
@@ -237,8 +235,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //Debug.Log("about to start continuousMoveFinish for AB");
-            movable.FinishContinuousMove(controller);
-            yield return null;
+
+            // yield return null;
+            yield return movable.FinishContinuousMove(controller);
         }
 
         public static IEnumerator updateTransformPropertyFixedUpdate<T>(
@@ -334,8 +333,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 resetProp = originalProperty;
             }
             Debug.Log("about to continuousMoveFinish");
-            continuousMoveFinish(
-                controller,
+            var actionFinished = continuousMoveFinish(
                 arm,
                 moveTransform,
                 setProp,
@@ -346,36 +344,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // we call this one more time in the event that the arm collided and was reset
             arm.ContinuousUpdate(fixedDeltaTime);
 
-            if (!Physics.autoSimulation) {
-                if (fixedDeltaTime == 0f) {
-                    Physics.SyncTransforms();
-                } else {
-                    PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
-                }
-            }
+            yield return new WaitForFixedUpdate();
+
+            yield return actionFinished;
         }
 
-        private static void continuousMoveFinishAB(            
-            ArticulatedAgentController controller
-        ) {
-
-            Debug.Log("starting continuousMoveFinishAB");
-            controller.transform.GetComponent<ArticulationBody>().velocity = Vector3.zero;
-            controller.transform.GetComponent<ArticulationBody>().angularVelocity = Vector3.zero;
-            controller.transform.GetComponent<ArticulatedAgentSolver>().currentAgentMoveParams.agentState = ABAgentState.Idle;
-            bool actionSuccess = true;
-            string debugMessage = "I guess everything is fine?";
-
-            //maybe needs to switch back to slippery here to prep for movement???
-            //or maybe we default to high friction, and only change to no friction when moving body
-            //controller.SetFloorColliderToSlippery();
-
-            controller.errorMessage = debugMessage;
-            controller.actionFinished(actionSuccess, debugMessage);
-        }
-
-        private static void continuousMoveFinish<T>(
-            PhysicsRemoteFPSAgentController controller,
+        private static ActionFinished continuousMoveFinish<T>(
             ArmController arm,
             Transform moveTransform,
             System.Action<Transform, T> setProp,
@@ -384,7 +358,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             Debug.Log("starting continuousMoveFinish");
             bool actionSuccess = true;
-            string debugMessage = "";
+            string errorMessage = "";
 
             var staticCollisions = arm.collisionListener?.StaticCollisions().ToList();
 
@@ -396,44 +370,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // if we hit a sim object
                 if (sc.isSimObj) {
-                    debugMessage = "Collided with static/kinematic sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
-                }
-
-                // if we hit a structural object that isn't a sim object but still has static collision
-                if (!sc.isSimObj) {
-                    debugMessage = "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + target + "'.";
-                }
-
-                actionSuccess = false;
-            }
-
-            controller.errorMessage = debugMessage;
-            controller.actionFinished(actionSuccess, debugMessage);
-        }
-
-        private static ActionFinished continuousMoveFinishNew<T>(
-            PhysicsRemoteFPSAgentController controller,
-            CollisionListener collisionListener,
-            Transform moveTransform,
-            System.Action<Transform, T> setProp,
-            T target,
-            T resetProp
-        ) {
-            bool actionSuccess = true;
-            string errorMessage = "";
-            IK_Robot_Arm_Controller arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
-
-            var staticCollisions = collisionListener.StaticCollisions().ToList();
-
-            if (staticCollisions.Count > 0) {
-                var sc = staticCollisions[0];
-
-                // decide if we want to return to original property or last known property before collision
-                setProp(moveTransform, resetProp);
-
-                // if we hit a sim object
-                if (sc.isSimObj) {
-                    errorMessage = "Collided with static sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
+                    errorMessage = "Collided with static/kinematic sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
                 }
 
                 // if we hit a structural object that isn't a sim object but still has static collision
@@ -444,8 +381,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionSuccess = false;
             }
 
-            // controller.errorMessage = debugMessage;
-            // controller.actionFinished(actionSuccess, debugMessage);
+            // controller.errorMessage = errorMessage;
+            // controller.actionFinished(actionSuccess, errorMessage);
+
             return new ActionFinished() {
                 success = actionSuccess,
                 errorMessage = errorMessage

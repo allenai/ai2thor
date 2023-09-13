@@ -109,11 +109,12 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         robosimsHost = LoadStringVariable(robosimsHost, "HOST");
         serverSideScreenshot = LoadBoolVariable(serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
         robosimsClientToken = LoadStringVariable(robosimsClientToken, "CLIENT_TOKEN");
-        serverType = (serverTypes)Enum.Parse(typeof(serverTypes), LoadStringVariable(serverTypes.FIFO.ToString(), "SERVER_TYPE").ToUpper());
+        serverType = (serverTypes)Enum.Parse(typeof(serverTypes), LoadStringVariable(serverTypes.WSGI.ToString(), "SERVER_TYPE").ToUpper());
         if (serverType == serverTypes.FIFO) {
             string serverPipePath = LoadStringVariable(null, "FIFO_SERVER_PIPE_PATH");
             string clientPipePath = LoadStringVariable(null, "FIFO_CLIENT_PIPE_PATH");
 
+            // Create dir if not exists
             if (string.IsNullOrEmpty(serverPipePath)) {
                 serverPipePath = "fifo_pipe/server.pipe";
                 
@@ -168,8 +169,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         StartCoroutine(EmitFrame());
     }
 
-     public void ActionFinished(ActionFinished result) {
-        this.activeAgent().ActionFinished(result);
+     public void Complete(ActionFinished result) {
+        this.activeAgent().Complete(result);
     }
 
     private void initializePrimaryAgent() {
@@ -1318,7 +1319,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         return envVarValue == null ? variable : bool.Parse(envVarValue);
     }
 
-    public void SetErrorState() {
+    public void SetCriticalErrorState() {
         this.agentManagerState = AgentState.Error;
     }
 
@@ -1902,7 +1903,10 @@ public class DynamicServerAction {
         return this.jObject.Count;
     }
 
-}
+    public void AddPhysicsSimulationParams(PhysicsSimulationParams physicsSimulationParams) {
+        this.jObject.Add(new JProperty(physicsSimulationParamsVariable, physicsSimulationParams));
+    }
+ }
 
 [Serializable]
 public class ServerAction {

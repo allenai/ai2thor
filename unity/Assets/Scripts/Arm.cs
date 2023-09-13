@@ -17,61 +17,56 @@ public interface Arm {
         get;
     }
 
-    void moveArmRelative(
+    IEnumerator moveArmRelative(
         PhysicsRemoteFPSAgentController controller,
         Vector3 offset,
         float unitsPerSecond,
         float fixedDeltaTime,
         bool returnToStart,
         string coordinateSpace,
-        bool restrictTargetPosition,
-        bool disableRendering
+        bool restrictTargetPosition
     );
 
-    void moveArmTarget(
+    IEnumerator moveArmTarget(
         PhysicsRemoteFPSAgentController controller,
         Vector3 target,
         float unitsPerSecond,
         float fixedDeltaTime,
         bool returnToStart,
         string coordinateSpace,
-        bool restrictTargetPosition,
-        bool disableRendering
+        bool restrictTargetPosition
     );
 
 
-    void moveArmBase(
+    IEnumerator moveArmBase(
         PhysicsRemoteFPSAgentController controller,
         float height,
         float unitsPerSecond,
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed,
-        bool disableRendering,
         bool normalizedY
     );
 
-    void moveArmBaseUp(
+    IEnumerator moveArmBaseUp(
         PhysicsRemoteFPSAgentController controller,
         float distance,
         float unitsPerSecond,
         float fixedDeltaTime,
-        bool returnToStartPositionIfFailed,
-        bool disableRendering
+        bool returnToStartPositionIfFailed
     );
 
-    void rotateWrist(
+    IEnumerator rotateWrist(
         PhysicsRemoteFPSAgentController controller,
         Quaternion rotation,
         float degreesPerSecond,
-        bool disableRendering,
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed
     );
 
     List<SimObjPhysics> WhatObjectsAreInsideMagnetSphereAsSOP(bool onlyPickupable);
 
-    bool PickupObject(List<string> objectIds, ref string errorMessage);
+    IEnumerator PickupObject(List<string> objectIds);
 
-    void DropObject();
+    IEnumerator DropObject();
 
 }

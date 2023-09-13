@@ -65,12 +65,17 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         return magnetSphere.gameObject;
     }
 
-    protected override void resetArmTarget() {
+    protected override void lastStepCallback() {
         Vector3 pos = handCameraTransform.transform.position;
         Quaternion rot = handCameraTransform.transform.rotation;
         armTarget.position = pos;
         armTarget.rotation = rot;
     }
+
+    public override ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
+        // TODO: does not do anything need to change Continuous Move to call this instead of continuousMoveFinish
+        return ActionFinished.Success;
+     }
 
    
     void Start() {
@@ -133,86 +138,63 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         return targetShoulderSpace.z >= 0.0f && targetShoulderSpace.magnitude <= extendedArmLength;
     }
 
-    public void rotateWristAroundPoint(
+    public IEnumerator rotateWristAroundPoint(
         PhysicsRemoteFPSAgentController controller,
         Vector3 rotatePoint,
         Quaternion rotation,
         float degreesPerSecond,
-        bool disableRendering = false,
-        float fixedDeltaTime = 0.02f,
+         float fixedDeltaTime,
         bool returnToStartPositionIfFailed = false
     ) {
         collisionListener.Reset();
-        IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
+        return withLastStepCallback(
             ContinuousMovement.rotateAroundPoint(
                 controller: controller,
                 collisionListener: collisionListener,
                 updateTransform: armTarget.transform,
                 rotatePoint: rotatePoint,
                 targetRotation: rotation,
-                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                fixedDeltaTime: fixedDeltaTime,
                 degreesPerSecond: degreesPerSecond,
                 returnToStartPropIfFailed: returnToStartPositionIfFailed
             )
         );
-
-        if (disableRendering) {
-            ContinuousMovement.unrollSimulatePhysics(
-                rotate,
-                fixedDeltaTime
-            );
-        } else {
-            StartCoroutine(rotate);
-        }
     }
 
-    public void rotateElbowRelative(
+    public IEnumerator rotateElbowRelative(
         PhysicsRemoteFPSAgentController controller,
         float degrees,
         float degreesPerSecond,
-        bool disableRendering = false,
-        float fixedDeltaTime = 0.02f,
+        float fixedDeltaTime,
         bool returnToStartPositionIfFailed = false
     ) {
         collisionListener.Reset();
         GameObject poleManipulator = GameObject.Find("IK_pole_manipulator");
         Quaternion rotation = Quaternion.Euler(0f, 0f, degrees);
-        IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
+        return withLastStepCallback(
             ContinuousMovement.rotate(
-                controller,
-                collisionListener,
-                poleManipulator.transform,
-                poleManipulator.transform.rotation * rotation,
-                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                controller: controller,
+                moveTransform: poleManipulator.transform,
+                targetRotation: poleManipulator.transform.rotation * rotation,
+                fixedDeltaTime,
                 degreesPerSecond,
                 returnToStartPositionIfFailed
             )
         );
-
-        if (disableRendering) {
-            ContinuousMovement.unrollSimulatePhysics(
-                rotate,
-                fixedDeltaTime
-            );
-        } else {
-            StartCoroutine(rotate);
-        }
     }
 
-    public void rotateElbow(
+    public IEnumerator rotateElbow(
         PhysicsRemoteFPSAgentController controller,
         float degrees,
         float degreesPerSecond,
-        bool disableRendering = false,
-        float fixedDeltaTime = 0.02f,
+        float fixedDeltaTime,
         bool returnToStartPositionIfFailed = false
     ) {
         GameObject poleManipulator = GameObject.Find("IK_pole_manipulator");
-        rotateElbowRelative(
+        return rotateElbowRelative(
             controller: controller,
             degrees: (degrees - poleManipulator.transform.eulerAngles.z),
             degreesPerSecond: degreesPerSecond,
-            disableRendering: disableRendering,
             fixedDeltaTime: fixedDeltaTime,
             returnToStartPositionIfFailed: returnToStartPositionIfFailed
         );

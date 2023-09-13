@@ -142,28 +142,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void RotateWristRelative(
+        public override IEnumerator RotateWristRelative(
+            PhysicsSimulationParams physicsSimulationParams,
+            
             float pitch = 0f,
             float yaw = 0f,
             float roll = 0f,
             float speed = 10f,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             // pitch and roll are not supported for the stretch and so we throw an error
             if (pitch != 0f || roll != 0f) {
                 throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
             }
 
-            base.RotateWristRelative(
+            return base.RotateWristRelative(
+                physicsSimulationParams: physicsSimulationParams,
+
                 pitch: 0f,
                 yaw: yaw,
                 roll: 0f,
                 speed: speed,
-                fixedDeltaTime: fixedDeltaTime,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering
+                returnToStart: returnToStart
             );
         }
 

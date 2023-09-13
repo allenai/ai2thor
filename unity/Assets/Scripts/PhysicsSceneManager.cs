@@ -13,12 +13,13 @@ using UnityEngine.SceneManagement;
 
 public class PhysicsSimulationParams {
     public bool autoSimulation = true;
-    public float? fixedDeltaTime = null;
+    public float fixedDeltaTime = 0.02f;
     public float maxActionTimeMilliseconds = 0;
     // public int maxActionPhysicsSteps = int.MaxValue;
 }
 
 public class PhysicsSceneManager : MonoBehaviour {
+    // public static PhysicsSceneManager Instance { get; private set; }
     public bool ProceduralMode = false;
     public List<GameObject> RequiredObjects = new List<GameObject>();
 
@@ -58,7 +59,25 @@ public class PhysicsSceneManager : MonoBehaviour {
         protected set;
     }
 
-    private PhysicsSimulationParams previousPhysicsSimulationParams;
+    protected PhysicsSimulationParams previousPhysicsSimulationParams;
+
+    // public static float fixedDeltaTime {
+    //     get { return Instance.physicsSimulationParams.fixedDeltaTime; }
+    // }
+
+    // public static bool autoSimulation {
+    //     get { return Instance.physicsSimulationParams.autoSimulation; }
+    // }
+
+    //  void Awake() {
+    //     if (Instance != null) {
+    //         Destroy(gameObject);
+    //         return;
+    //     }
+
+    //     Instance = this;
+    //     DontDestroyOnLoad(gameObject);
+    // }
 
     private void OnEnable() {
         // must do this here instead of Start() since OnEnable gets triggered prior to Start
@@ -99,7 +118,9 @@ public class PhysicsSceneManager : MonoBehaviour {
 
     public static ActionFinished runActionPhysicsSimulation(IEnumerator enumerator, PhysicsSimulationParams physicsSimulationParams) {
         int count = 0;
-        var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+        // Instance.previousPhysicsSimulationParams = Instance.physicsSimulationParams;
+        // Instance.physicsSimulationParams = physicsSimulationParams;
+        var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime;
         var previousAutoSimulate = Physics.autoSimulation;
         Physics.autoSimulation = physicsSimulationParams.autoSimulation;
         
@@ -114,10 +135,11 @@ public class PhysicsSceneManager : MonoBehaviour {
             
             // ActionFinished was found but enumerator keeps moving forward, throw error
             if (actionFinished != null) {
-                actionFinished = new ActionFinished() {
-                    success = false,
-                    errorMessage = "`ActionFinished` was not the last yield return statement for action. Unreachable code found."
-                };
+                // actionFinished = new ActionFinished() {
+                //     success = false,
+                //     errorMessage = "`ActionFinished` was not the last yield return statement for action. Unreachable code found."
+                // };
+                // Premature ActionFinished
                 break;
             }
 
@@ -171,17 +193,18 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     public static IEnumerator addPhysicsSimulationPadding(ActionInvokable target, IEnumerator action, PhysicsSimulationParams physicsSimulationParams) {
-        var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+        var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime;
         var previousFixedDeltaTime = Time.fixedDeltaTime;
         Time.fixedDeltaTime = fixedDeltaTime;
         var startFixedTimeSeconds = Time.fixedTime;
         ActionFinished actionFinished = null;
         while (action.MoveNext()) {
             if (actionFinished != null) {
-                actionFinished = new ActionFinished() {
-                    success = false,
-                    errorMessage = "`ActionFinished` was not the last yield return statement for action. Unreachable code found."
-                };
+                // actionFinished = new ActionFinished() {
+                //     success = false,
+                //     errorMessage = "`ActionFinished` was not the last yield return statement for action. Unreachable code found."
+                // };
+                //Premature finish
                 break;
             }
             if (typeof(ActionFinished) == action.Current.GetType()) {
@@ -190,12 +213,10 @@ public class PhysicsSceneManager : MonoBehaviour {
             yield return action.Current;
         }
 
-         if (actionFinished != null) {
-            actionFinished = new ActionFinished() {
+         actionFinished ??= new ActionFinished() {
                 success = false,
                 errorMessage = "Action did not return an `ActionFinished`"
-            };   
-        }
+            };
 
         var actionFixedTime = Time.fixedTime - startFixedTimeSeconds;
         while (actionFixedTime < physicsSimulationParams.maxActionTimeMilliseconds * 1000.0f) {
@@ -203,7 +224,7 @@ public class PhysicsSceneManager : MonoBehaviour {
             actionFixedTime += fixedDeltaTime;
         }
 
-        target.ActionFinished(actionFinished);
+        target.Complete(actionFinished);
 
         Time.fixedDeltaTime = previousFixedDeltaTime;
     }
@@ -237,7 +258,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                 SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
 
                 float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
-                float accel = (currentVelocity - sop.lastSquaredVelocity) / Time.fixedDeltaTime;
+                float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
                 if (Mathf.Abs(accel) <= 0.0001f) {
                     sop.inMotion = false;
@@ -1085,7 +1106,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                 foreach (Rigidbody rb in rbs) {
                     if (rb.GetComponentInParent<SimObjPhysics>()) {
                         SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
-                        sop.lastSquaredVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
+                        sop.lastVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
                     }
                 }
             }

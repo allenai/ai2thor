@@ -152,7 +152,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             objMeta.numSimObjHits = simObj.numSimObjHit;
             objMeta.numFloorHits = simObj.numFloorHit;
             objMeta.numStructureHits = simObj.numStructureHit;
-            objMeta.lastVelocity = simObj.lastSquaredVelocity;
+            objMeta.lastVelocity = simObj.lastVelocity;
 
             GameObject o = simObj.gameObject;
             objMeta.name = o.name;

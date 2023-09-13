@@ -417,7 +417,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
         }
         
-        public virtual void ActionFinished(ActionFinished result) {
+        public virtual void Complete(ActionFinished result) {
             if (result.errorMessage != null) {
                 this.errorMessage = result.errorMessage;
             }

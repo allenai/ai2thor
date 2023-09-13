@@ -139,27 +139,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         constraints.
         */
         public void RotateWristAroundHeldObject(
+            PhysicsSimulationParams physicsSimulationParams,
+
             float pitch = 0f,
             float yaw = 0f,
             float roll = 0f,
             float speed = 10f,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             var arm = getArm();
 
             if (arm.heldObjects.Count == 1) {
                 SimObjPhysics sop = arm.heldObjects.Keys.ToArray()[0];
                 RotateWristAroundPoint(
+                    physicsSimulationParams: physicsSimulationParams,
                     point: sop.gameObject.transform.position,
                     pitch: pitch,
                     yaw: yaw,
                     roll: roll,
                     speed: speed,
-                    fixedDeltaTime: fixedDeltaTime,
-                    returnToStart: returnToStart,
-                    disableRendering: disableRendering
+                    returnToStart: returnToStart
                 );
             } else {
                 actionFinished(
@@ -176,14 +175,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         rotates some given amount.
         */
         public void RotateWristAroundPoint(
+            PhysicsSimulationParams physicsSimulationParams,
+
             Vector3 point,
             float pitch = 0f,
             float yaw = 0f,
             float roll = 0f,
             float speed = 10f,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             IK_Robot_Arm_Controller arm = getArmImplementation();
 
@@ -192,8 +191,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 rotatePoint: point,
                 rotation: Quaternion.Euler(pitch, yaw, -roll),
                 degreesPerSecond: speed,
-                disableRendering: disableRendering,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart
             );
         }
@@ -209,11 +207,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         determine how to detect collision between a given arm joint and other arm joints.
         */
         public void RotateElbowRelative(
+            PhysicsSimulationParams physicsSimulationParams,
+
             float degrees,
             float speed = 10f,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             IK_Robot_Arm_Controller arm = getArmImplementation();
 
@@ -221,8 +219,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 degrees: degrees,
                 degreesPerSecond: speed,
-                disableRendering: disableRendering,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart
             );
         }
@@ -231,11 +228,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Same as RotateElbowRelative but rotates the elbow to a given angle directly.
         */
         public void RotateElbow(
+            PhysicsSimulationParams physicsSimulationParams,
+
             float degrees,
             float speed = 10f,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             IK_Robot_Arm_Controller arm = getArmImplementation();
 
@@ -243,8 +240,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 degrees: degrees,
                 degreesPerSecond: speed,
-                disableRendering: disableRendering,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart
             );
         }

@@ -307,7 +307,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             }
         }
 
-    public void FinishContinuousMove(BaseFPSAgentController controller) {
+    public ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
         Debug.Log("starting continuousMoveFinishAB");
         controller.transform.GetComponent<ArticulationBody>().velocity = Vector3.zero;
         controller.transform.GetComponent<ArticulationBody>().angularVelocity = Vector3.zero;
@@ -320,11 +320,16 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
 
         bool actionSuccess = IsFingerTransformCorrect();
         if  (!actionSuccess) {
-            controller.agentManager.SetErrorState();
+            controller.agentManager.SetCriticalErrorState();
         }
 
-        controller.errorMessage = actionSuccess ? "" : "Articulated agent is broken, fingers dislodges all actions will fail from this point. Must call 'reset' and reload scene and re-initialize agent.";
-        controller.actionFinished(actionSuccess, debugMessage);
+        debugMessage = actionSuccess ? debugMessage : "Articulated agent is broken, fingers dislodges all actions will fail from this point. Must call 'reset' and reload scene and re-initialize agent.";
+        // controller.actionFinished(actionSuccess, debugMessage);
+
+        return new ActionFinished {
+            success = actionSuccess,
+            errorMessage = debugMessage
+        };
     }
 
     //do checks based on what sort of joint I am

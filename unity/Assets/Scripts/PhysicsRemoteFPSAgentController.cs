@@ -1687,11 +1687,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxAgentsDistance = -1f,
             bool forceAction = false,
             bool manualInteract = false,
-            bool allowAgentsToIntersect = false,
-            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
-            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
-            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
-            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false
         ) {
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
@@ -2016,7 +2012,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
-                    float accel = (currentVelocity - sop.lastSquaredVelocity) / Time.fixedDeltaTime;
+                    float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
                     // ok the accel is basically zero, so it has stopped moving
                     if (Mathf.Abs(accel) <= 0.001f) {
@@ -2092,7 +2088,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     float currentSqrVelocity = rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude;
-                    float squaredAccel = (currentSqrVelocity - sop.lastSquaredVelocity) / (Time.fixedDeltaTime * Time.fixedDeltaTime);
+                    float squaredAccel = (currentSqrVelocity - sop.lastVelocity) / (Time.fixedDeltaTime * Time.fixedDeltaTime);
 
                     // ok the accel is basically zero, so it has stopped moving
                     if (Mathf.Abs(squaredAccel) <= squaredAccelerationEpsilon) {

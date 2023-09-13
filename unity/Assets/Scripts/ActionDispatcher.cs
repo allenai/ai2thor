@@ -13,10 +13,12 @@ using Newtonsoft.Json.Linq;
     public object actionReturn;
     public string errorMessage;
     public bool toEmitState;
+
+    public static ActionFinished Success = new ActionFinished() { success = true} ;
 }
 
  public interface ActionInvokable {
-        void ActionFinished(ActionFinished actionFinished);
+        void Complete(ActionFinished actionFinished);
         Coroutine StartCoroutine(System.Collections.IEnumerator routine);
     }
 
@@ -332,23 +334,28 @@ public static class ActionDispatcher {
 
         List<string> missingArguments = null;
         System.Reflection.ParameterInfo[] methodParams = method.GetParameters();
+        var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
         object[] arguments = new object[methodParams.Length];
         var physicsSimulationProperties = dynamicServerAction.physicsSimulationParams;
         var usePhysicsSimulationParams = physicsSimulationProperties != null;
         if (typeof(IEnumerator) == method.ReturnType) {
-            // Backwards compat action
+            // New action type always pass down physicsSim params if interface has them
             if (!usePhysicsSimulationParams) {
                 usePhysicsSimulationParams = true;
                 // Default simulation params
                 physicsSimulationProperties = new PhysicsSimulationParams();
+                // What will be passed down to the action
+                // if (paramDict.ContainsKey(DynamicServerAction.physicsSimulationParamsVariable)) {
+                //     dynamicServerAction.AddPhysicsSimulationParams(physicsSimulationProperties);
+                // }
             }
         }
+        // TODO: deprecate
         if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(ServerAction)) {
             ServerAction serverAction = dynamicServerAction.ToObject<ServerAction>();
             serverAction.dynamicServerAction = dynamicServerAction;
             arguments[0] = serverAction;
         } else {
-            var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
             var argumentKeys = dynamicServerAction.ArgumentKeys().ToList();
             // if (usePhysicsSimulationParams) {
             //     argumentKeys.Add(DynamicServerAction.physicsSimulationParamsVariable);
@@ -415,9 +422,9 @@ public static class ActionDispatcher {
         // ActionFinishedWrapper2(() => {method.Invoke(target, arguments))
 
         // TODO: deprecated actions called in the old way without PhysicsSimulationParams
-        if (!usePhysicsSimulationParams && method.ReturnType == (typeof(void))) {
+        if (!usePhysicsSimulationParams && method.ReturnType == typeof(void)) {
             method.Invoke(target, arguments);
-            Debug.Log($"-Methoth dispatch invoke {usePhysicsSimulationParams} method: {method.Name}");
+            Debug.Log($"-Backcompat method dispatch invoke {usePhysicsSimulationParams} method: {method.Name}");
         }
         else {
 
@@ -427,17 +434,17 @@ public static class ActionDispatcher {
             
             var runAsCoroutine = false;
 
-            if (method.ReturnType == (typeof(System.Collections.IEnumerator))) {
+            if (method.ReturnType == typeof(System.Collections.IEnumerator)) {
                 methodReturn = method.Invoke(target, arguments);
-                action = (System.Collections.IEnumerator)(methodReturn as IEnumerator);
+                action = methodReturn as IEnumerator;
                 if (physicsSimulationProperties.autoSimulation) {
                     runAsCoroutine = true;
                 }
             }
-            else if (method.ReturnType == (typeof(ActionFinished))) {
+            else if (method.ReturnType == typeof(ActionFinished)) {
                 // methodReturn = method.Invoke(target, arguments);
                 action =  ActionFinishedDelayActionWrapper(
-                    () => (ActionFinished)(method.Invoke(target, arguments) as ActionFinished)
+                    () => method.Invoke(target, arguments) as ActionFinished
                 );
                 // action = ActionFinishedWrapper((ActionFinished)(methodReturn as ActionFinished));
             }
@@ -467,7 +474,7 @@ public static class ActionDispatcher {
 
                 // TODO remove check once legacy actions are removed
                 if (callActionFinished){
-                    target.ActionFinished(actionFinished);
+                    target.Complete(actionFinished);
                 }
                 
             }

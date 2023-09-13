@@ -89,13 +89,25 @@ public partial class ArticulatedArmController : ArmController {
         return shouldHalt;
     }
 
-    public override void FinishContinuousMove(BaseFPSAgentController controller) {
-            Debug.Log("starting continuousMoveFinishAB");
-            bool actionSuccess = true;
-            string debugMessage = "";
 
-            controller.errorMessage = debugMessage;
-            controller.actionFinished(actionSuccess, debugMessage);
+    public override ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
+        Debug.Log("starting continuousMoveFinishAB");
+        string debugMessage = "I guess everything is fine?";
+
+        // TODO inherit both solvers from common code
+        // bool actionSuccess = IsFingerTransformCorrect();
+        bool actionSuccess = true;
+        if  (!actionSuccess) {
+            controller.agentManager.SetCriticalErrorState();
+        }
+
+        debugMessage = actionSuccess ? debugMessage : "Articulated agent is broken, fingers dislodges all actions will fail from this point. Must call 'reset' and reload scene and re-initialize agent.";
+        // controller.actionFinished(actionSuccess, debugMessage);
+
+        return new ActionFinished {
+            success = actionSuccess,
+            errorMessage = debugMessage
+        };
     }
 
     public override GameObject GetArmTarget() {
@@ -116,32 +128,27 @@ public partial class ArticulatedArmController : ArmController {
     }
 
     //TODO: main functions to reimplement, use continuousMovement.moveAB/rotateAB
-    public override void moveArmRelative(
+    public override IEnumerator moveArmRelative(
         PhysicsRemoteFPSAgentController controller,
         Vector3 offset,
         float unitsPerSecond,
         float fixedDeltaTime,
         bool returnToStart,
         string coordinateSpace,
-        bool restrictTargetPosition,
-        bool disableRendering
+        bool restrictTargetPosition
     ) {
+
+        yield return new ActionFinished() { success = false, errorMessage = "Not implemented"};
         //not doing this one yet soooo uhhhhh ignore for now        
     }
 
-    public void moveArmTarget(
+    public IEnumerator moveArmTarget(
         ArticulatedAgentController controller,
         Vector3 target, //distance + direction
         float unitsPerSecond,
         float fixedDeltaTime,
-        bool returnToStart,
-        string coordinateSpace,
-        bool restrictTargetPosition,
-        bool disableRendering,
         bool useLimits = false
     ) {
-        //Debug.Log("starting moveArmTarget in ArticulatedArmController");
-        fixedDeltaTime = disableRendering ? fixedDeltaTime : Time.fixedDeltaTime;
         float minMovementPerSecond = 1e-3f;
         float maxTimePassed = 10.0f;
         float haltCheckTimeWindow = 0.2f;
@@ -179,25 +186,13 @@ public partial class ArticulatedArmController : ArmController {
         prepAllTheThingsBeforeJointMoves(joints[1], amp);
 
         //now need to do move call here I think
-        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
+        return withLastStepCallback(
             ContinuousMovement.moveAB(
                 movable: this,
                 controller: controller,
                 fixedDeltaTime: fixedDeltaTime
             )
         );
-
-        // StartCoroutine(moveCall);
-        if (disableRendering) {
-            ContinuousMovement.unrollSimulatePhysics(
-                moveCall,
-                fixedDeltaTime
-            );
-        } else {
-            StartCoroutine(
-                moveCall
-            );
-        }
     }
 
     public float GetDriveUpperLimit(ArticulatedArmJointSolver joint, JointAxisType jointAxisType = JointAxisType.Extend) {
@@ -218,40 +213,16 @@ public partial class ArticulatedArmController : ArmController {
         return upperLimit;
     }
 
-    // private IEnumerator AreAllTheJointsBackToIdle(List<ArticulatedArmJointSolver> jointsThatAreMoving, PhysicsRemoteFPSAgentController controller) {
-    //     bool hasEveryoneStoppedYet = false;
-
-    //     //keep checking if things are all idle yet
-    //     //all individual joints should have a max timeout so this won't hang infinitely (i hope)
-    //     while (hasEveryoneStoppedYet == false) {
-    //         yield return new WaitForFixedUpdate();
-
-    //         foreach (ArticulatedArmJointSolver joint in jointsThatAreMoving) {
-    //             if (joint.extendState == ArmExtendState.Idle) {
-    //                 hasEveryoneStoppedYet = true;
-    //             } else {
-    //                 hasEveryoneStoppedYet = false;
-    //             }
-    //         }
-    //     }
-
-    //     //done!
-    //     controller.actionFinished(true);
-    //     yield return null;
-    // }
-
-    public void moveArmBase(
+    public IEnumerator moveArmBase(
         ArticulatedAgentController controller,
         float distance,
         float unitsPerSecond,
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed,
-        bool disableRendering,
         bool normalizedY,
         bool useLimits
     ) {
         Debug.Log("starting moveArmBase in ArticulatedArmController");
-        fixedDeltaTime = disableRendering ? fixedDeltaTime : Time.fixedDeltaTime;
         float minMovementPerSecond = 1e-3f;
         float maxTimePassed = 10.0f;
         float haltCheckTimeWindow = 0.2f;
@@ -283,42 +254,29 @@ public partial class ArticulatedArmController : ArmController {
         //Vector3 target = new Vector3(this.transform.position.x, distance, this.transform.position.z);
 
         //now need to do move call here I think
-        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
+        return withLastStepCallback(
                 ContinuousMovement.moveAB(
                     movable: this,
                     controller: controller,
                     fixedDeltaTime: fixedDeltaTime
             )
         );
-
-        if (disableRendering) {
-            ContinuousMovement.unrollSimulatePhysics(
-                moveCall,
-                fixedDeltaTime
-            );
-        } else {
-            StartCoroutine(
-                moveCall
-            );
-        }
     }
 
-    public void moveArmBaseUp(
+    public IEnumerator moveArmBaseUp(
         ArticulatedAgentController controller,
         float distance,
         float unitsPerSecond,
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed,
-        bool disableRendering,
         bool useLimits
     ) {
-        moveArmBase(
+        return moveArmBase(
             controller: controller,
             distance: distance,
             unitsPerSecond: unitsPerSecond,
             fixedDeltaTime: fixedDeltaTime,
             returnToStartPositionIfFailed: returnToStartPositionIfFailed,
-            disableRendering: disableRendering,
             normalizedY: false,
             useLimits: useLimits
         );
@@ -330,16 +288,14 @@ public partial class ArticulatedArmController : ArmController {
         joint.PrepToControlJointFromAction(armMoveParams);
     }
 
-    public void rotateWrist(
+    public IEnumerator rotateWrist(
         ArticulatedAgentController controller,
         float distance,
         float degreesPerSecond,
-        bool disableRendering,
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed
     ) {
         Debug.Log("starting rotateWrist in ArticulatedArmController");
-        fixedDeltaTime = disableRendering ? fixedDeltaTime : Time.fixedDeltaTime;
         float minMovementPerSecond = 1f * Mathf.Deg2Rad;
         float maxTimePassed = 10.0f;
         float haltCheckTimeWindow = 0.2f;
@@ -367,27 +323,16 @@ public partial class ArticulatedArmController : ArmController {
         prepAllTheThingsBeforeJointMoves(wristJoint, amp);
 
         //now need to do move call here I think
-        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
+        return withLastStepCallback(
                 ContinuousMovement.moveAB(
                     movable: this,
                     controller: controller,
                     fixedDeltaTime: fixedDeltaTime
             )
         );
-
-        if (disableRendering) {
-            ContinuousMovement.unrollSimulatePhysics(
-                moveCall,
-                fixedDeltaTime
-            );
-        } else {
-            StartCoroutine(
-                moveCall
-            );
-        }
     }
 
-    public override bool PickupObject(List<string> objectIds, ref string errorMessage) {
+    public IEnumerable PickupObject(List<string> objectIds) {
         Debug.Log("calling PickupObject from ArticulatedArmController");
         bool pickedUp = false;
 
@@ -417,7 +362,7 @@ public partial class ArticulatedArmController : ArmController {
             pickedUp = true;
             heldObjects.Add(sop);
         }
-
+        var errorMessage = "";
         if (!pickedUp) {
             errorMessage = (
                 objectIds != null
@@ -426,11 +371,14 @@ public partial class ArticulatedArmController : ArmController {
             );
         }
 
-        return pickedUp;
+        yield return new ActionFinished() {
+            success = pickedUp,
+            errorMessage = errorMessage
+        };
     }
 
     //called by ArmAgentController ReleaseObject
-    public override void DropObject() { 
+    public override IEnumerator DropObject() { 
         foreach (SimObjPhysics sop in heldObjects)
         {
             //remove the joint component
@@ -442,12 +390,10 @@ public partial class ArticulatedArmController : ArmController {
         }
         
         heldObjects.Clear();
+        yield return ActionFinished.Success;
     }
 
-    protected override void resetArmTarget() {
-
-
-
+    protected override void lastStepCallback() {
         foreach (ArticulatedArmJointSolver joint in joints) {
             ArticulationBody myAB = joint.myAB;
 
