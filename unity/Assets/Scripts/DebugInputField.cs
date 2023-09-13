@@ -895,6 +895,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     IEnumerator executeBatch(JArray jActions) {
                         int i = 0;
                         foreach (JObject action in jActions) {
+                            if (!action.ContainsKey("action")) {
+                                continue;
+                            }
                             while (CurrentActiveController().IsProcessing) {
                                 yield return new WaitForEndOfFrame();
                             }
@@ -4291,6 +4294,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // Debug.Log($"assetDb: {string.Join("\n", assetMetadata.Select(m => $"{m.id}|{m.type}|box: {m.boundingBox.min}, {m.boundingBox.max}, {m.primaryProperty}"))}");
                         break;
                     }
+
+                case "gadt": {
+                    CurrentActiveController().GetAssetDatabase();
+                    var assetMetadata = (List<AssetMetadata>)CurrentActiveController().actionReturn as List<AssetMetadata>;
+
+                    break;
+                }
                 case "soirr": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "SpawnObjectInReceptacleRandomly";

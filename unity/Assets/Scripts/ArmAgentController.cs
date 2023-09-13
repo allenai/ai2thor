@@ -101,6 +101,103 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public IEnumerator MoveArmNew(
+            Vector3 position,
+            PhysicsSimulationParams physicsSimulationParams,
+            float speed = 1,
+            bool returnToStart = true,
+            string coordinateSpace = "armBase",
+            bool restrictMovement = false
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+            var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+            Debug.Log("--- MoveArmNew");
+            // yield return new ActionFinished() {success= true};
+            return arm.moveArmTargetNew(
+                controller: this,
+                target: position,
+                unitsPerSecond: speed,
+                fixedDeltaTime: fixedDeltaTime,
+                returnToStart: returnToStart,
+                coordinateSpace: coordinateSpace,
+                restrictTargetPosition: restrictMovement
+            );
+        }
+
+        /*
+        Let's say you wanted the agent to be able to rotate the object it's
+        holding so that it could get multiple views of the object. You
+        could do this by using the RotateWristRelative action but the downside
+        of using that function is that object will be translated as the
+        wrist rotates. This RotateWristAroundHeldObject action gets around this
+        problem by allowing you to specify how much you'd like the object to
+        rotate by and then figuring out how to translate/rotate the wrist so
+        that the object rotates while staying fixed in space.
+
+        Note that the object may stil be translated if the specified rotation
+        of the object is not feasible given the arm's DOF and length/joint
+        constraints.
+        */
+        public void RotateWristAroundHeldObject(
+            float pitch = 0f,
+            float yaw = 0f,
+            float roll = 0f,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+
+            if (arm.heldObjects.Count == 1) {
+                SimObjPhysics sop = arm.heldObjects.Keys.ToArray()[0];
+                RotateWristAroundPoint(
+                    point: sop.gameObject.transform.position,
+                    pitch: pitch,
+                    yaw: yaw,
+                    roll: roll,
+                    speed: speed,
+                    fixedDeltaTime: fixedDeltaTime,
+                    returnToStart: returnToStart,
+                    disableRendering: disableRendering
+                );
+            } else {
+                actionFinished(
+                    success: false,
+                    errorMessage: $"Cannot RotateWristAroundHeldObject when holding" +
+                        $" != 1 objects, currently holding {arm.heldObjects.Count} objects."
+                );
+            }
+
+        }
+
+        /*
+        Rotates and translates the wrist so that its position
+        stays fixed relative some given point as that point
+        rotates some given amount.
+        */
+        public void RotateWristAroundPoint(
+            Vector3 point,
+            float pitch = 0f,
+            float yaw = 0f,
+            float roll = 0f,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            IK_Robot_Arm_Controller arm = getArm();
+
+            arm.rotateWristAroundPoint(
+                controller: this,
+                rotatePoint: point,
+                rotation: Quaternion.Euler(pitch, yaw, -roll),
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart
+            );
+        }
 
         // perhaps this should fail if no object is picked up?
         // currently action success happens as long as the arm is
@@ -188,6 +285,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public IEnumerator MoveAgentNew(
+            float ahead = 0,
+            float right = 0,
+            float speed = 1,
+            PhysicsSimulationParams physicsSimulationParams = null,
+            bool returnToStart = true
+        ) {
+            if (ahead == 0 && right == 0) {
+                throw new ArgumentException("Must specify ahead or right!");
+            }
+            Vector3 direction = new Vector3(x: right, y: 0, z: ahead);
+            float fixedDeltaTimeFloat = (physicsSimulationParams?.fixedDeltaTime).GetValueOrDefault(Time.fixedDeltaTime);
+
+            CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
+
+            Vector3 directionWorld = transform.TransformDirection(direction);
+            Vector3 targetPosition = transform.position + directionWorld;
+
+            collisionListener.Reset();
+
+            return ContinuousMovement.moveNew(
+                controller: this,
+                collisionListener: collisionListener,
+                moveTransform: this.transform,
+                targetPosition: targetPosition,
+                fixedDeltaTime: fixedDeltaTimeFloat,
+                unitsPerSecond: speed,
+                returnToStartPropIfFailed: returnToStart,
+                localPosition: false
+            );
+        }
+
         public override void MoveAhead(
             float? moveMagnitude = null,
             string objectId = "",                // TODO: Unused, remove when refactoring the controllers
@@ -209,6 +338,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+         public IEnumerator MoveAheadNew(
+            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
+            float speed = 1,
+            PhysicsSimulationParams physicsSimulationParams = null,
+            bool returnToStart = true
+        ) {
+            return MoveAgentNew(
+                ahead: moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                physicsSimulationParams: physicsSimulationParams,
+                returnToStart: returnToStart
+            );
+        }
+
         public override void MoveBack(
             float? moveMagnitude = null,
             string objectId = "",                // TODO: Unused, remove when refactoring the controllers
@@ -227,6 +375,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fixedDeltaTime: fixedDeltaTime,
                 returnToStart: returnToStart,
                 disableRendering: disableRendering
+            );
+        }
+
+         public IEnumerator MoveBackNew(
+            float? moveMagnitude = null,
+            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
+            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
+            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
+            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
+            float speed = 1,
+            PhysicsSimulationParams physicsSimulationParams = null,
+            bool returnToStart = true
+        ) {
+            return MoveAgentNew(
+                ahead: -moveMagnitude.GetValueOrDefault(gridSize),
+                speed: speed,
+                physicsSimulationParams: physicsSimulationParams,
+                returnToStart: returnToStart
             );
         }
 
@@ -342,6 +509,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 StartCoroutine(rotate);
             }
+        }
+
+        public IEnumerator RotateAgentNew(
+            float degrees,
+            float speed = 1.0f,
+            bool waitForFixedUpdate = false,
+            bool returnToStart = true,
+            PhysicsSimulationParams physicsSimulationParams = null
+        ) {
+            CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
+            collisionListener.Reset();
+
+            // this.transform.Rotate()
+            return ContinuousMovement.rotateNew(
+                controller: this,
+                collisionListener: this.GetComponentInParent<CollisionListener>(),
+                moveTransform: this.transform,
+                targetRotation: this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
+                fixedDeltaTime: (physicsSimulationParams?.fixedDeltaTime).GetValueOrDefault(Time.fixedDeltaTime),
+                radiansPerSecond: speed,
+                returnToStartPropIfFailed: returnToStart
+            );
         }
 
         /*

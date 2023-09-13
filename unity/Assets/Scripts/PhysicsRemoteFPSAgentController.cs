@@ -2016,7 +2016,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
-                    float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
+                    float accel = (currentVelocity - sop.lastSquaredVelocity) / Time.fixedDeltaTime;
 
                     // ok the accel is basically zero, so it has stopped moving
                     if (Mathf.Abs(accel) <= 0.001f) {
@@ -2065,6 +2065,88 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // wrapping the SimObjPhysics.ApplyForce function since lots of things use it....
         protected void sopApplyForce(ServerAction action, SimObjPhysics sop) {
             sopApplyForce(action, sop, 0.0f);
+        }
+
+        private IEnumerator checkIfAllObjectsHaveStoppedMoving(
+            float length,
+            double squaredAccelerationEpsilon = 1e-3,
+            bool useTimeout = false) {
+            // yield for the physics update to make sure this yield is consistent regardless of framerate
+            yield return new WaitForFixedUpdate();
+
+            float startTime = Time.time;
+            float waitTime = TimeToWaitForObjectsToComeToRest;
+
+            if (useTimeout) {
+                waitTime = 1.0f;
+            }
+
+            foreach (var sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+
+                Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
+                bool stoppedMoving = false;
+
+                while (Time.time - startTime < waitTime) {
+                    if (sop == null) {
+                        break;
+                    }
+
+                    float currentSqrVelocity = rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude;
+                    float squaredAccel = (currentSqrVelocity - sop.lastSquaredVelocity) / (Time.fixedDeltaTime * Time.fixedDeltaTime);
+
+                    // ok the accel is basically zero, so it has stopped moving
+                    if (Mathf.Abs(squaredAccel) <= squaredAccelerationEpsilon) {
+                        // force the rb to stop moving just to be safe
+                        rb.velocity = Vector3.zero;
+                        rb.angularVelocity = Vector3.zero;
+                        rb.Sleep();
+                        stoppedMoving = true;
+                        break;
+                    } else {
+                        yield return new WaitForFixedUpdate();
+                    }
+                }
+
+                // so we never stopped moving and we are using the timeout
+                if (!stoppedMoving && useTimeout) {
+                    errorMessage = "object couldn't come to rest";
+                    // print(errorMessage);
+                    actionFinished(false);
+                    yield break;
+                }
+
+                // we are past the wait time threshold, so force object to stop moving before
+                // rb.velocity = Vector3.zero;
+                // rb.angularVelocity = Vector3.zero;
+                // rb.Sleep();
+
+                // return to metadatawrapper.actionReturn if an object was touched during this interaction
+                if (length != 0.0f) {
+                    WhatDidITouch feedback = new WhatDidITouch() { didHandTouchSomething = true, objectId = sop.objectID, armsLength = length };
+
+#if UNITY_EDITOR
+                    print("yield timed out");
+                    print("didHandTouchSomething: " + feedback.didHandTouchSomething);
+                    print("object id: " + feedback.objectId);
+                    print("armslength: " + feedback.armsLength);
+#endif
+
+                    // force objec to stop moving 
+                    rb.velocity = Vector3.zero;
+                    rb.angularVelocity = Vector3.zero;
+                    rb.Sleep();
+
+                    actionFinished(true, feedback);
+                }
+
+                // if passed in length is 0, don't return feedback cause not all actions need that
+                else {
+                    DefaultAgentHand();
+                    actionFinished(true, sop.transform.position);
+                }
+            
+            }
+
         }
 
         // Sweeptest to see if the object Agent is holding will prohibit movement

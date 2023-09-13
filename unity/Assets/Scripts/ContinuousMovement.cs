@@ -67,7 +67,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 epsilon: 1e-3
             );
         }
-        
+
         public static IEnumerator move(
             PhysicsRemoteFPSAgentController controller,
             CollisionListener collisionListener,
@@ -409,6 +409,47 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             controller.errorMessage = debugMessage;
             controller.actionFinished(actionSuccess, debugMessage);
+        }
+
+        private static ActionFinished continuousMoveFinishNew<T>(
+            PhysicsRemoteFPSAgentController controller,
+            CollisionListener collisionListener,
+            Transform moveTransform,
+            System.Action<Transform, T> setProp,
+            T target,
+            T resetProp
+        ) {
+            bool actionSuccess = true;
+            string errorMessage = "";
+            IK_Robot_Arm_Controller arm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            var staticCollisions = collisionListener.StaticCollisions().ToList();
+
+            if (staticCollisions.Count > 0) {
+                var sc = staticCollisions[0];
+
+                // decide if we want to return to original property or last known property before collision
+                setProp(moveTransform, resetProp);
+
+                // if we hit a sim object
+                if (sc.isSimObj) {
+                    errorMessage = "Collided with static sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
+                }
+
+                // if we hit a structural object that isn't a sim object but still has static collision
+                if (!sc.isSimObj) {
+                    errorMessage = "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + target + "'.";
+                }
+
+                actionSuccess = false;
+            }
+
+            // controller.errorMessage = debugMessage;
+            // controller.actionFinished(actionSuccess, debugMessage);
+            return new ActionFinished() {
+                success = actionSuccess,
+                errorMessage = errorMessage
+            };
         }
     }
 }

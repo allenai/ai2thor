@@ -405,6 +405,7 @@ class Controller(object):
         self.container_id = None
         self.width = width
         self.height = height
+        self.start_unity = start_unity
 
         self.server_timeout = server_timeout
         self.server_start_timeout = server_start_timeout
@@ -631,6 +632,7 @@ class Controller(object):
                 timeout=self.server_timeout,
                 depth_format=self.depth_format,
                 add_depth_noise=self.add_depth_noise,
+                start_unity=self.start_unity
             )
 
     def __enter__(self):

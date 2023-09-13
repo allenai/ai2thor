@@ -28,6 +28,8 @@ namespace Tests {
             var agentManager = GameObject.FindObjectOfType<AgentManager>();
             action["sequenceId"] = sequenceId;
             agentManager.ProcessControlCommand(new DynamicServerAction(action));
+            
+            yield return new WaitUntil(() => getActiveAgent().agentState == AgentState.ActionComplete);
             yield return new WaitForEndOfFrame();
             this.generateMetadata();
             // yield return agentManager.EmitFrame();
@@ -53,6 +55,11 @@ namespace Tests {
                 { "action", "Initialize"}
             };
             yield return step(action);
+        }
+
+        public BaseFPSAgentController getActiveAgent() {
+            var agentManager = GameObject.FindObjectOfType<AgentManager>();
+            return agentManager.GetActiveAgent();
         }
         
 

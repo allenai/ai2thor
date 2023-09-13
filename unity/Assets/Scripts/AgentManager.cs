@@ -15,6 +15,8 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
 using UnityEngine.Rendering;
 using UnityEngine.Experimental.Rendering;
 #if PLATFORM_CLOUD_RENDERING
@@ -31,7 +33,7 @@ public interface ActionFinisher {
     void actionFinished(bool success, object actionReturn = null, string errorMessage = null);
 }
 
-public class AgentManager : MonoBehaviour {
+public class AgentManager : MonoBehaviour, ActionInvokable {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
     protected int frameCounter;
     protected bool serverSideScreenshot;
@@ -107,10 +109,18 @@ public class AgentManager : MonoBehaviour {
         robosimsHost = LoadStringVariable(robosimsHost, "HOST");
         serverSideScreenshot = LoadBoolVariable(serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
         robosimsClientToken = LoadStringVariable(robosimsClientToken, "CLIENT_TOKEN");
-        serverType = (serverTypes)Enum.Parse(typeof(serverTypes), LoadStringVariable(serverTypes.WSGI.ToString(), "SERVER_TYPE").ToUpper());
+        serverType = (serverTypes)Enum.Parse(typeof(serverTypes), LoadStringVariable(serverTypes.FIFO.ToString(), "SERVER_TYPE").ToUpper());
         if (serverType == serverTypes.FIFO) {
             string serverPipePath = LoadStringVariable(null, "FIFO_SERVER_PIPE_PATH");
             string clientPipePath = LoadStringVariable(null, "FIFO_CLIENT_PIPE_PATH");
+
+            if (string.IsNullOrEmpty(serverPipePath)) {
+                serverPipePath = "fifo_pipe/server.pipe";
+                
+            }
+            if (string.IsNullOrEmpty(clientPipePath)) {
+                clientPipePath = "fifo_pipe/client.pipe";
+            }
 
             Debug.Log("creating fifo server: " + serverPipePath);
             Debug.Log("client fifo path: " + clientPipePath);
@@ -156,6 +166,10 @@ public class AgentManager : MonoBehaviour {
         }
 #endif
         StartCoroutine(EmitFrame());
+    }
+
+     public void ActionFinished(ActionFinished result) {
+        this.activeAgent().ActionFinished(result);
     }
 
     private void initializePrimaryAgent() {
@@ -1071,6 +1085,7 @@ public class AgentManager : MonoBehaviour {
 // frame create new controller state Emitted, to detect between ready to emit and already emitted
 // remove back for python controller parity                        
 #if UNITY_EDITOR        
+                        Debug.LogWarning("EmitFrame WILL STOP RUNNING. createPayload will not be called after every action. Possible environment mismatch. Use python server to match standalone environment.");
                         break;
 #endif
                     }
@@ -1141,8 +1156,21 @@ public class AgentManager : MonoBehaviour {
 
                 byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(multiMeta,
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+                
+                #if UNITY_EDITOR
+                    
+                    Debug.Log("FIFO Timeout started. Trying to read from FIFO server...");
+                    var completed = Task.Run(() => this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata)).Wait(2000);
+                    Debug.Log("ReachedTimeout " + !completed);
+                    if (!completed) {
+                        Debug.Log("FIFO Timeout Reached. Start FIFO server first if remote control is needed.");
+                        Debug.LogWarning("EmitFrame WILL STOP RUNNING. createPayload will not be called after every action. Possible environment mismatch. Use python server to match standalone environment.");
+                        break;
+                    }
+                #else 
+                    this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
+                #endif
 
-                this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
                 AsyncGPUReadback.WaitAllRequests();
                 foreach (var item in renderPayload) {
                     this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
@@ -1754,8 +1782,11 @@ public class DynamicServerAction {
         "renderClassImage",
         "renderNormalsImage",
         "renderInstanceSegmentation",
-        "action"
+        "action",
+        physicsSimulationParamsVariable
     };
+
+    public const string physicsSimulationParamsVariable = "physicsSimulationParams";
 
     public JObject jObject {
         get;
@@ -1777,6 +1808,12 @@ public class DynamicServerAction {
     public string action {
         get {
             return this.jObject["action"].ToString();
+        }
+    }
+
+    public PhysicsSimulationParams physicsSimulationParams {
+        get {
+            return this.jObject[physicsSimulationParamsVariable] != null ? this.jObject[physicsSimulationParamsVariable].ToObject<PhysicsSimulationParams>() : null;
         }
     }
 
@@ -1846,6 +1883,15 @@ public class DynamicServerAction {
     // valid argument for Initialize as well as a global parameter
     public IEnumerable<string> ArgumentKeys() {
         return this.jObject.Properties().Select(p => p.Name).Where(argName => !AllowedExtraneousParameters.Contains(argName)).ToList();
+    }
+
+    public IEnumerable<string> ArgumentKeysWithPhysicsSimulationProperies() { 
+        return this.jObject
+            .Properties()
+            .Select(p => p.Name)
+            .Where(argName => !AllowedExtraneousParameters.Except(new HashSet<string> {"physicsSimulationProperties"})
+            .Contains(argName))
+            .ToList();
     }
 
     public IEnumerable<string> Keys() {
@@ -2008,6 +2054,7 @@ public class ServerAction {
     // for the arm to detect collisions and stop moving
     public float? massThreshold;
 
+    public PhysicsSimulationParams physicsSimulationProperties = null; 
     public float maxUpwardLookAngle = 0.0f;
     public float maxDownwardLookAngle = 0.0f;
 
