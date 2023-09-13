@@ -5560,6 +5560,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) {
+            Debug.Log("trying to check if objectIsCurrentlyVisible");
             if (sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
                 updateAllAgentCollidersForVisibilityCheck(false);
@@ -5749,9 +5750,45 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return allVisible;
         }
 
+        //helper function to set transform or position for game objects
+        public void SetTransform(Transform transform, Vector3? position = null, Quaternion? rotation = null) {
+            if(!transform.GetComponent<ArticulationBody>()) {
+                if(position != null) {
+                    transform.position = (Vector3) position;
+
+                }
+
+                if(rotation != null) {
+                    transform.rotation = (Quaternion) rotation;
+                }
+            }
+
+            //handle if this transform we are trying to manipulate is an articulation body and needs to be treated special
+            else {
+                Debug.Log("SetTransform with Articulation Body happening!");
+                ArticulationBody articulationBody = transform.GetComponent<ArticulationBody>();
+
+                if(position != null && rotation != null) {
+                    Debug.Log("Teleporting position and rotation");
+                    articulationBody.TeleportRoot((Vector3) position, (Quaternion) rotation);
+                }
+
+                else if(position != null && rotation == null) {
+                    Debug.Log("Teleporting position, default rotation");
+                    Debug.Log($"Passing to TeleportRoot(): position is {position}, but casting it is {(Vector3) position}");
+                    articulationBody.TeleportRoot((Vector3) position, articulationBody.transform.rotation);
+                }
+
+                else if (position == null && rotation != null) {
+                    Debug.Log("Teleporting rotation, default position");
+                    articulationBody.TeleportRoot(articulationBody.transform.position, (Quaternion) rotation);
+                }
+            }
+        }
+
         // @positions/@rotations/@horizons/@standings are used to override all possible values the agent
         // may encounter with basic agent navigation commands (excluding teleport).
-        private List<Dictionary<string, object>> getInteractablePoses(
+        public virtual List<Dictionary<string, object>> getInteractablePoses(
             string objectId,
             bool markActionFinished,
             Vector3[] positions = null,
@@ -5761,6 +5798,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? maxDistance = null,
             int maxPoses = int.MaxValue  // works like infinity
         ) {
+            Debug.Log($"Position of agent at start of GetInteractablePoses: {this.transform.position}");
             if (360 % rotateStepDegrees != 0 && rotations != null) {
                 throw new InvalidOperationException($"360 % rotateStepDegrees (360 % {rotateStepDegrees} != 0) must be 0, unless 'rotations: float[]' is overwritten.");
             }
@@ -5851,13 +5889,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // set each key to store a list
             List<Dictionary<string, object>> validAgentPoses = new List<Dictionary<string, object>>();
-            string[] keys = { "x", "y", "z", "rotation", "standing", "horizon" };
+
+            //commenting this out because I don't think its actually ever used???
+            //string[] keys = { "x", "y", "z", "rotation", "standing", "horizon" };
 
             // iterate over each reasonable agent pose
             bool stopEarly = false;
             foreach (float horizon in horizons) {
                 m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
-
+                Debug.Log($"setting horizon to: {m_Camera.transform.localEulerAngles.x}");
                 foreach (bool standing in standings) {
                     if (standing) {
                         stand();
@@ -5867,10 +5907,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     foreach (float rotation in rotations) {
                         Vector3 rotationVector = new Vector3(x: 0, y: rotation, z: 0);
-                        transform.rotation = Quaternion.Euler(rotationVector);
+                        //Debug.Log($"initial rotation: {transform.rotation}");
+                        SetTransform(transform: transform, rotation: (Quaternion?) Quaternion.Euler(rotationVector));
+                        //Debug.Log($"Rotation after SetTransform(): {transform.rotation}");
 
                         foreach (Vector3 position in filteredPositions) {
-                            transform.position = position;
+                            Debug.Log("////////////////////");
+                            Debug.Log($"position Before SetTransform: {transform.position}");
+                            Debug.Log($"Passing in position to SetTransform: Vector3 {position}, Vector3? {(Vector3?) position}");
+                            SetTransform(transform: transform, position: (Vector3?) position);
+                            Debug.Log($"Position After SetTransform(): {transform.position}");
+                            Debug.Log("////////////////////");
 
                             // Each of these values is directly compatible with TeleportFull
                             // and should be used with .step(action='TeleportFull', **interactable_positions[0])
@@ -5914,8 +5961,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 crouch();
             }
-            transform.position = oldPosition;
-            transform.rotation = oldRotation;
+            SetTransform(transform: transform, position: (Vector3?) oldPosition, rotation: (Quaternion?) oldRotation);
             m_Camera.transform.localEulerAngles = oldHorizon;
             if (ItemInHand != null) {
                 ItemInHand.gameObject.SetActive(true);
@@ -5935,7 +5981,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Get the poses with which the agent can interact with 'objectId'
         // @rotations: if rotation is not specified, we use rotateStepDegrees, which results in [0, 90, 180, 270] by default.
-        public void GetInteractablePoses(
+        public virtual void GetInteractablePoses(
             string objectId,
             Vector3[] positions = null,
             float[] rotations = null,

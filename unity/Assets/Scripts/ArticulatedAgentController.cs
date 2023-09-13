@@ -22,6 +22,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private CapsuleData originalCapsule;
 
         protected override CapsuleData GetAgentCapsule() {
+            Debug.Log("calling Override GetAgentCapsule in ArticulatedAgentController");
             if (originalCapsule == null) {
                 var cc = this.GetComponent<CapsuleCollider>();
 
@@ -31,8 +32,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     center = cc.center,
                     transform = cc.transform
                 };
-            }
-            else {
+            } else {
                 return originalCapsule;
             }
         }
@@ -45,14 +45,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_CharacterController.radius = 0.01f;
             m_CharacterController.height = 0.02f;
             m_CharacterController.skinWidth = 0.01f;
-            Debug.Log($"prev Position {this.transform.position}");
 
             var ab = this.GetComponent<ArticulationBody>();
             ab.TeleportRoot(this.transform.position, this.transform.rotation);
 
             // TODO: REMOVE
             CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
-
             originalCapsule = new CapsuleData {
                 radius = cc.radius,
                 height = cc.height,
@@ -123,8 +121,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FloorColliderPhysicsMaterial = FloorCollider.material;
 
             getArmImplementation().ContinuousUpdate(Time.fixedDeltaTime);
-
-            Debug.Log($"Position {this.transform.position}");
         }
 
         private ArticulatedArmController getArmImplementation() {
@@ -199,7 +195,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? fixedDeltaTime = null,
             bool returnToStart = true,
             bool disableRendering = true
-        ) {            
+        ) {
             Debug.Log("MoveArmBaseDown from ArticulatedAgentController (pass negative distance to MoveArmBaseUp)");
             MoveArmBaseUp(
                 distance: -distance,
@@ -219,7 +215,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? fixedDeltaTime = null,
             bool returnToStart = true,
             bool disableRendering = true
-        ) {            
+        ) {
             Debug.Log("MoveArmBaseDown from ArticulatedAgentController (pass negative distance to MoveArmBaseUp)");
             MoveArmBaseUp(
                 distance: -distance,
@@ -281,28 +277,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //helper functions to set physics material values
-        public void SetFloorColliderToSlippery(){
+        public void SetFloorColliderToSlippery() {
             FloorColliderPhysicsMaterial.staticFriction = 0;
             FloorColliderPhysicsMaterial.frictionCombine = PhysicMaterialCombine.Minimum; //ensure min friction take priority
 
             //FloorColliderPhysicsMaterial.dynamicFriction = 0;
         }
 
-        public void SetFloorColliderToHighFriction(){
+        public void SetFloorColliderToHighFriction() {
             FloorColliderPhysicsMaterial.staticFriction = 1;
             FloorColliderPhysicsMaterial.frictionCombine = PhysicMaterialCombine.Maximum; //ensure max friction takes priority
             //FloorColliderPhysicsMaterial.dynamicFriction = 1;
         }
 
         public void TeleportFull(Vector3 position, Vector3 rotation, float? horizon = null, bool forceAction = false) {
-            //Vector3 oldPosition = transform.position;
-            //Quaternion oldRotation = transform.rotation;
-            //float oldHorizon = m_Camera.transform.localEulerAngles.x;
-            
+            Debug.Log($"Original Position: {this.transform.position}");
+
             if (horizon == null) {
                 horizon = m_Camera.transform.localEulerAngles.x;
             }
-        
+
             if (!forceAction && (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle)) {
                 throw new ArgumentOutOfRangeException(
                     $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
@@ -313,11 +307,221 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Quaternion realRotationAsQuaternionBecauseYes = Quaternion.Euler(rotation);
 
-            ArticulationBody myBody = this.GetComponent<ArticulationBody>();
-            myBody.TeleportRoot(position, realRotationAsQuaternionBecauseYes);
-            m_Camera.transform.localEulerAngles = new Vector3(horizonf, 0, 0);
+            //teleport must be finished in a coroutine because synctransforms DoESNt WoRK for ArTIcuLAtIONBodies soooooo
+            StartCoroutine(TeleportThenWait(position, realRotationAsQuaternionBecauseYes, horizonf));
+        }
 
+        IEnumerator TeleportThenWait(Vector3 position, Quaternion rotation, float cameraHorizon) {
+            Debug.Log("TeleportThenWait coroutine starting");
+            ArticulationBody myBody = this.GetComponent<ArticulationBody>();
+            myBody.TeleportRoot(position, rotation);
+            m_Camera.transform.localEulerAngles = new Vector3(cameraHorizon, 0, 0);
+
+            yield return new WaitForFixedUpdate();
+
+            Debug.Log($"After TeleportRoot from TeleportThenWait: {this.transform.position}");
             actionFinished(true);
+        }
+
+        //we have to override this because the teleporting must be done within a coroutine
+        public override void GetInteractablePoses(
+            string objectId,
+            Vector3[] positions = null,
+            float[] rotations = null,
+            float[] horizons = null,
+            bool[] standings = null,
+            float? maxDistance = null,
+            int maxPoses = int.MaxValue  // works like infinity
+        ) {
+            getInteractablePosesAB(
+                objectId: objectId,
+                markActionFinished: true,
+                positions: positions,
+                rotations: rotations,
+                horizons: horizons,
+                standings: standings,
+                maxDistance: maxDistance,
+                maxPoses: maxPoses
+            );
+        }
+
+        public void getInteractablePosesAB(
+            string objectId,
+            bool markActionFinished,
+            Vector3[] positions = null,
+            float[] rotations = null,
+            float[] horizons = null,
+            bool[] standings = null,
+            float? maxDistance = null,
+            int maxPoses = int.MaxValue  // works like infinity
+        ) {
+            Debug.Log("Calling getInteractablePosesAB");
+
+            if (standings != null) {
+                errorMessage = "Articulation Agent does not support 'standings' for GetInteractablePoses";
+                throw new InvalidActionException();
+            }
+
+            Debug.Log($"Position of agent at start of getInteractablePosesAB: {this.transform.position}");
+            if (360 % rotateStepDegrees != 0 && rotations != null) {
+                throw new InvalidOperationException($"360 % rotateStepDegrees (360 % {rotateStepDegrees} != 0) must be 0, unless 'rotations: float[]' is overwritten.");
+            }
+
+            if (maxPoses <= 0) {
+                throw new ArgumentOutOfRangeException("maxPoses must be > 0.");
+            }
+
+            // default "visibility" distance
+            float maxDistanceFloat;
+            if (maxDistance == null) {
+                maxDistanceFloat = maxVisibleDistance;
+            } else if ((float)maxDistance <= 0) {
+                throw new ArgumentOutOfRangeException("maxDistance must be >= 0 meters from the object.");
+            } else {
+                maxDistanceFloat = (float)maxDistance;
+            }
+
+            // populate default horizons
+            if (horizons == null) {
+                horizons = new float[] { -30, 0, 30, 60 };
+            } else {
+                foreach (float horizon in horizons) {
+                    // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
+                    if (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle) {
+                        throw new ArgumentException(
+                            $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
+                        );
+                    }
+                }
+            }
+
+            // populate the rotations based on rotateStepDegrees
+            if (rotations == null) {
+                // Consider the case where one does not want to move on a perfect grid, and is currently moving
+                // with an offsetted set of rotations like {10, 100, 190, 280} instead of the default {0, 90, 180, 270}.
+                // This may happen if the agent starts by teleports with the rotation of 10 degrees.
+                int offset = (int)Math.Round(transform.eulerAngles.y % rotateStepDegrees);
+
+                // Examples:
+                // if rotateStepDegrees=10 and offset=70, then the paths would be [70, 80, ..., 400, 410, 420].
+                // if rotateStepDegrees=90 and offset=10, then the paths would be [10, 100, 190, 280]
+                rotations = new float[(int)Math.Round(360 / rotateStepDegrees)];
+                int i = 0;
+                for (float rotation = offset; rotation < 360 + offset; rotation += rotateStepDegrees) {
+                    rotations[i++] = rotation;
+                }
+            }
+
+            SimObjPhysics theObject = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+
+            // populate the positions by those that are reachable
+            if (positions == null) {
+                positions = getReachablePositions();
+            }
+
+            // Don't want to consider all positions in the scene, just those from which the object
+            // is plausibly visible. The following computes a "fudgeFactor" (radius of the object)
+            // which is then used to filter the set of all reachable positions to just those plausible positions.
+            Bounds objectBounds = UtilityFunctions.CreateEmptyBounds();
+            objectBounds.Encapsulate(theObject.transform.position);
+            foreach (Transform vp in theObject.VisibilityPoints) {
+                objectBounds.Encapsulate(vp.position);
+            }
+            float fudgeFactor = objectBounds.extents.magnitude;
+            List<Vector3> filteredPositions = positions.Where(
+                p => (Vector3.Distance(a: p, b: theObject.transform.position) <= maxDistanceFloat + fudgeFactor + gridSize)
+            ).ToList();
+
+            // save current agent pose
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            Vector3 oldHorizon = m_Camera.transform.localEulerAngles;
+
+            //now put all this into a coroutine to actually teleport and do the visibility checks on a delay
+            //since TeleportRoot needs to sync with a waitForFixedUpdate
+            StartCoroutine(TeleportThenWaitThenCheckInteractable(
+                filteredPositions: filteredPositions,
+                horizons: horizons,
+                rotations: rotations,
+                theObject: theObject,
+                maxDistanceFloat: maxDistanceFloat,
+                maxPoses: maxPoses,
+                oldPosition: oldPosition,
+                oldHorizon: oldHorizon,
+                oldRotation: oldRotation
+            ));
+        }
+
+        IEnumerator TeleportThenWaitThenCheckInteractable(
+            List<Vector3> filteredPositions,
+            float[] horizons,
+            float[] rotations,
+            SimObjPhysics theObject,
+            float maxDistanceFloat,
+            int maxPoses,
+            Vector3 oldPosition,
+            Vector3 oldHorizon,
+            Quaternion oldRotation) {
+
+            // set each key to store a list
+            List<Dictionary<string, object>> validAgentPoses = new List<Dictionary<string, object>>();
+
+            bool stopEarly = false;
+            foreach (float horizon in horizons) {
+                m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
+                Debug.Log($"camera horizon set to: {m_Camera.transform.localEulerAngles.x}");
+
+                foreach (float rotation in rotations) {
+                    Vector3 rotationVector = new Vector3(x: 0, y: rotation, z: 0);
+                    //SetTransform(transform: transform, rotation: (Quaternion?)Quaternion.Euler(rotationVector));
+                    //yield return new WaitForFixedUpdate();
+
+                    foreach (Vector3 position in filteredPositions) {
+                        Debug.Log("////////////////////");
+                        Debug.Log($"position Before SetTransform: {transform.position}");
+                        Debug.Log($"Passing in position to SetTransform: Vector3 {position}, Vector3? {(Vector3?)position}");
+                        SetTransform(transform: transform, position: (Vector3?)position, rotation: (Quaternion?)Quaternion.Euler(rotationVector));
+                        yield return new WaitForFixedUpdate();
+                        Debug.Log($"Position After SetTransform(): {transform.position}");
+                        Debug.Log("////////////////////");
+
+                        // Each of these values is directly compatible with TeleportFull
+                        // and should be used with .step(action='TeleportFull', **interactable_positions[0])
+                        if (objectIsCurrentlyVisible(theObject, maxDistanceFloat)) {
+                            validAgentPoses.Add(new Dictionary<string, object> {
+                                ["x"] = position.x,
+                                ["y"] = position.y,
+                                ["z"] = position.z,
+                                ["rotation"] = rotation,
+                                ["horizon"] = horizon
+                            });
+
+                            if (validAgentPoses.Count >= maxPoses) {
+                                stopEarly = true;
+                                break;
+                            }
+
+#if UNITY_EDITOR
+                            // In the editor, draw lines indicating from where the object was visible.
+                            Debug.DrawLine(position, position + transform.forward * (gridSize * 0.5f), Color.red, 20f);
+#endif
+                        }
+                    }
+                    if (stopEarly) { break; }
+                }
+                if (stopEarly) { break; }
+            }
+
+            //reset to original position/rotation/horizon now that we are done
+            SetTransform(transform: transform, position: (Vector3?) oldPosition, rotation: (Quaternion?) oldRotation);
+            m_Camera.transform.localEulerAngles = oldHorizon;
+
+#if UNITY_EDITOR
+            Debug.Log(validAgentPoses.Count);
+            Debug.Log(validAgentPoses);
+#endif
+
+            actionFinishedEmit(success: true, actionReturn: validAgentPoses);
         }
 
         public void MoveAgent(
@@ -358,7 +562,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 direction = direction,
                 maxForce = 200f
             };
-            
+
             this.GetComponent<ArticulatedAgentSolver>().PrepToControlAgentFromAction(amp);
 
             // now that move call happens
@@ -592,22 +796,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        private float CalculateTotalMass(Transform rootTransform)
-            {
-                float totalMass = 0f;
-                ArticulationBody rootBody = rootTransform.GetComponent<ArticulationBody>();
-                if (rootBody != null)
-                {
-                    totalMass += rootBody.mass;
-                }
-
-                foreach (Transform childTransform in rootTransform)
-                {
-                    totalMass += CalculateTotalMass(childTransform);
-                }
-
-                return totalMass;
+        private float CalculateTotalMass(Transform rootTransform) {
+            float totalMass = 0f;
+            ArticulationBody rootBody = rootTransform.GetComponent<ArticulationBody>();
+            if (rootBody != null) {
+                totalMass += rootBody.mass;
             }
+
+            foreach (Transform childTransform in rootTransform) {
+                totalMass += CalculateTotalMass(childTransform);
+            }
+
+            return totalMass;
+        }
 
         private MovableContinuous getBodyMovable() {
             return this.transform.GetComponent<ArticulatedAgentSolver>();
