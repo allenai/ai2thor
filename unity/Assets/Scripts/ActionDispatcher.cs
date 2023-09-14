@@ -236,6 +236,7 @@ public static class ActionDispatcher {
                         // this happens if one method has a trailing optional value and all 
                         // other parameter types match
                         if (targetParams.Length != sourceParams.Length) {
+                            Debug.Log($"sourceParamLen {sourceParams.Length} targetPramLen {targetParams.Length} minCommon {minCommon} source Params {string.Join(", ", sourceParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))} target Params  {string.Join(", ", targetParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))}");
                             throw new AmbiguousActionException("Signature match found in the same class");
                         }
 
@@ -345,9 +346,9 @@ public static class ActionDispatcher {
                 // Default simulation params
                 physicsSimulationProperties = new PhysicsSimulationParams();
                 // What will be passed down to the action
-                // if (paramDict.ContainsKey(DynamicServerAction.physicsSimulationParamsVariable)) {
-                //     dynamicServerAction.AddPhysicsSimulationParams(physicsSimulationProperties);
-                // }
+                if (paramDict.ContainsKey(DynamicServerAction.physicsSimulationParamsVariable)) {
+                    dynamicServerAction.AddPhysicsSimulationParams(physicsSimulationProperties);
+                }
             }
         }
         // TODO: deprecate

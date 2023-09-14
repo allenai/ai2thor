@@ -1890,7 +1890,7 @@ public class DynamicServerAction {
         return this.jObject
             .Properties()
             .Select(p => p.Name)
-            .Where(argName => !AllowedExtraneousParameters.Except(new HashSet<string> {"physicsSimulationProperties"})
+            .Where(argName => !AllowedExtraneousParameters.Except(new HashSet<string> { physicsSimulationParamsVariable })
             .Contains(argName))
             .ToList();
     }

@@ -17,14 +17,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         /*
         Toggles the visibility of the magnet sphere at the end of the arm.
         */
-        public IEnumerator ToggleMagnetVisibility(bool? visible = null) {
+        public ActionFinished ToggleMagnetVisibility(bool? visible = null) {
             MeshRenderer mr = GameObject.Find("MagnetRenderer").GetComponentInChildren<MeshRenderer>();
             if (visible.HasValue) {
                 mr.enabled = visible.Value;
             } else {
                 mr.enabled = !mr.enabled;
             }
-            yield return ActionFinished.Success; 
+            return ActionFinished.Success; 
         }
 
         public override void updateImageSynthesis(bool status) {
@@ -121,16 +121,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public IEnumerator ReleaseObject() {
             var arm = getArm();
-            arm.DropObject();
-
-            // TODO: only return after object(s) dropped have finished moving
-            // currently this will return the frame the object is released
-            yield return ActionFinished.Success;
+            return arm.DropObject();
         }
 
         // note this does not reposition the center point of the magnet orb
         // so expanding the radius too much will cause it to clip backward into the wrist joint
-        public IEnumerator SetHandSphereRadius(float radius) {
+        public ActionFinished SetHandSphereRadius(float radius) {
             if (radius < 0.04f || radius > 0.5f) {
                 throw new ArgumentOutOfRangeException(
                     $"radius={radius} of hand cannot be less than 0.04m nor greater than 0.5m"
@@ -139,7 +135,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var arm = getArm();
             arm.SetHandSphereRadius(radius);
-            yield return ActionFinished.Success;
+            return ActionFinished.Success;
         }
 
         public virtual IEnumerator MoveAgent(
@@ -252,7 +248,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float? degrees = null,
             float speed = 1.0f,
-            bool waitForFixedUpdate = false,
             bool returnToStart = true
         ) {
             return RotateAgent(
