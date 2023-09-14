@@ -579,6 +579,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 //                        break;
 //                }
 
+                 case "mcb": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "MoveCameraBase";
+                    action["positionOffset"] = 0;
+                    action["transformationAxis"] = "x";
+                    if (splitcommand.Length > 1) {
+                        action["positionOffset"] = float.Parse(splitcommand[1]);
+                    }
+                    if (splitcommand.Length == 3) {
+                        action["positionAxis"] = splitcommand[2];
+                    }
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                 }
+
+                 case "rcb": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "RotateCameraBase";
+                    action["degrees"] = 0;
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                 }
+
                  case "rcm": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
@@ -593,15 +618,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     CurrentActiveController().ProcessControlCommand(action);
                     break;
                  }
+                 
                  case "mabd": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "MoveArmBaseDown";
-                    action["distance"] = 0.4f;
-                    
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                 }
+                        action["action"] = "MoveArmBaseDown";
+                        action["distance"] = 0.4f;
+                        
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                
                 case "inits-camera": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
