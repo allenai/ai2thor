@@ -2416,6 +2416,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+                
+                case "stretchmovebaseup": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveArmBaseUp";
+                        action["distance"] = 0.05f;
+                        action["speed"] = 5.0f;
+                        action["disableRendering"] = false;
+
+                        //action["fixedDeltaTime"] = 5.0f;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
+                case "stretchmovebasedown": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveArmBaseUp";
+                        action["distance"] = -0.05f;
+                        action["speed"] = 5.0f;
+                        action["disableRendering"] = false;
+
+                        //action["fixedDeltaTime"] = 5.0f;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
 
                 // move ahead
                 case "ma": {
