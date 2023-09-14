@@ -54,11 +54,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var secondaryCameraName = "SecondaryCamera";
             
-            var gimbalBaseName = "FixedCameraGimbalBase";
             var primaryGimbalName = "FixedCameraGimbalPrimary";
             var secondaryGimbalName = "FixedCameraGimbalSecondary";
 
-            this.gimbalBase = m_CharacterController.transform.FirstChildOrDefault(x => x.name == gimbalBaseName);
             this.primaryGimbal = m_CharacterController.transform.FirstChildOrDefault(x => x.name == primaryGimbalName);
             this.secondaryGimbal = m_CharacterController.transform.FirstChildOrDefault(x => x.name == secondaryGimbalName);
 
