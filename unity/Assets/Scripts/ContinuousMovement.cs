@@ -15,6 +15,7 @@ using System.Linq;
 namespace UnityStandardAssets.Characters.FirstPerson {
 
     public class ContinuousMovement {
+
         public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
             Debug.Log("ContinuousMovement.unrollSimulatePhysics()");
             int count = 0;
@@ -120,9 +121,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public static IEnumerator moveAB(
             MovableContinuous movable,
             ArticulatedAgentController controller,
-            float fixedDeltaTime,
-            float unitsPerSecond = 0,
-            float acceleration = 0
+            float fixedDeltaTime
         ) {
             return continuousUpdateAB(
                 movable: movable,
@@ -146,7 +145,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public static IEnumerator rotateAroundPoint(
             PhysicsRemoteFPSAgentController controller,
-            CollisionListener collisionListener,
             Transform updateTransform,
             Vector3 rotatePoint,
             Quaternion targetRotation,

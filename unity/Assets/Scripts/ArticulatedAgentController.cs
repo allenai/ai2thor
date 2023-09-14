@@ -515,7 +515,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // }
         }
 
-        public IEnumerator MoveAgent(
+        public IEnumerator MoveAgentNew(
 			PhysicsSimulationParams physicsSimulationParams,
 
             float moveMagnitude = 1,
@@ -535,10 +535,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Debug.Log($"preparing agent {this.transform.name} to move");
             if (Mathf.Approximately(moveMagnitude, 0.0f)) {
                 Debug.Log("Error! distance to move must be nonzero");
-                yield return new ActionFinished() {
+                // yield return nests the iterator structure because C# compiler forces 
+                // to use yield return below and creates a nested Monad, (yield return (yield return val))
+                // better to return with .GetEnumerator();
+                return new ActionFinished() {
                     success = false,
                     errorMessage = "Error! distance to move must be nonzero"
-                };
+                }.GetEnumerator();
             }
 
             float fixedDeltaTimeFloat = physicsSimulationParams.fixedDeltaTime;
@@ -560,7 +563,65 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // now that move call happens
             SetFloorColliderToSlippery();
-            yield return setFloorToHighFrictionAsLastStep(
+            return setFloorToHighFrictionAsLastStep(
+                ContinuousMovement.moveAB(
+                    movable: this.getBodyMovable(),
+                    controller: this,
+                    fixedDeltaTime: fixedDeltaTimeFloat
+                )
+            );
+        }
+
+        public IEnumerator MoveAgent(
+            PhysicsSimulationParams physicsSimulationParams,
+            
+            float moveMagnitude = 1,
+            float speed = 1,
+            float acceleration = 1
+        ) {
+            Debug.Log("(3) ArticulatedAgentController MoveAgent: PREPPING MOVEAGENT COMMAND");
+            // Debug.Log("(3) ArticulatedAgentController: PREPPING MOVEAGENT COMMAND");
+            int direction = 0;
+            if (moveMagnitude < 0) {
+                direction = -1;
+            }
+            if (moveMagnitude > 0) {
+                direction = 1;
+            }
+
+            Debug.Log("Move magnitude is now officially " + moveMagnitude);
+            // Debug.Log($"preparing agent {this.transform.name} to move");
+            if (Mathf.Approximately(moveMagnitude, 0.0f)) {
+                Debug.Log("Error! distance to move must be nonzero");
+                // yield return nests the iterator structure because C# compiler forces 
+                // to use yield return below and creates a nested Monad, (yield return (yield return val))
+                // better to return with .GetEnumerator();
+                return new ActionFinished() {
+                    success = false,
+                    errorMessage = "Error! distance to move must be nonzero"
+                }.GetEnumerator();
+            }
+
+            float fixedDeltaTimeFloat = physicsSimulationParams.fixedDeltaTime;
+
+            AgentMoveParams amp = new AgentMoveParams {
+                agentState = ABAgentState.Moving,
+                distance = Mathf.Abs(moveMagnitude),
+                speed = speed,
+                acceleration = acceleration,
+                agentMass = CalculateTotalMass(this.transform),
+                minMovementPerSecond = 0.001f,
+                maxTimePassed = 10.0f,
+                haltCheckTimeWindow = 0.2f,
+                direction = direction,
+                maxForce = 200f
+            };
+
+            this.GetComponent<ArticulatedAgentSolver>().PrepToControlAgentFromAction(amp);
+
+            // now that move call happens
+            SetFloorColliderToSlippery();
+            return setFloorToHighFrictionAsLastStep(
                 ContinuousMovement.moveAB(
                     movable: this.getBodyMovable(),
                     controller: this,
@@ -577,7 +638,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 0.14f,
             float acceleration = 0.14f
         ) {
-            return MoveAgent(
+            return MoveAgentNew(
                 physicsSimulationParams: physicsSimulationParams,
                 moveMagnitude: moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
@@ -592,7 +653,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 0.14f,
             float acceleration = 0.14f
         ) {
-            return MoveAgent(
+            return MoveAgentNew(
                 physicsSimulationParams: physicsSimulationParams,
                 moveMagnitude: -moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
@@ -650,10 +711,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Debug.Log($"preparing agent {this.transform.name} to rotate");
             if (Mathf.Approximately(degrees, 0.0f)) {
                 Debug.Log("Error! distance to rotate must be nonzero");
-                yield return new ActionFinished() {
+                return new ActionFinished() {
                     success = false,
                     errorMessage = "Error! distance to rotate must be nonzero"
-                };
+                }.GetEnumerator();
             }
 
             AgentMoveParams amp = new AgentMoveParams {
@@ -673,13 +734,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // now that rotate call happens
             SetFloorColliderToSlippery();
-            yield return setFloorToHighFrictionAsLastStep(
+            return setFloorToHighFrictionAsLastStep(
                 ContinuousMovement.moveAB(
                     movable: this.getBodyMovable(),
                     controller: this,
-                    fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
-                    unitsPerSecond: speed,
-                    acceleration: acceleration
+                    fixedDeltaTime: physicsSimulationParams.fixedDeltaTime
                 )
             );
         }

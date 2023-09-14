@@ -6559,6 +6559,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public void GetLastPhysicsSimulateCount() {
+            actionFinished(
+                success: true,
+                actionReturn: PhysicsSceneManager.LastPhysicsSimulateCallCount
+            );
+        }
+
         public void SetObjectsCollisionMode(string collisionDetectionMode) {
             var rootObject = GameObject.Find(ProceduralTools.DefaultObjectsRootName);
             if (rootObject == null) {

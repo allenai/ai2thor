@@ -107,12 +107,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (isArticulated) {
                             if (Input.GetKeyDown(KeyCode.W)) {
                                 action["action"] = "MoveAgent";
-                                action["moveMagnitude"] = WalkMagnitude;
+                                // action["moveMagnitude"] = WalkMagnitude;
                             }
 
                             if (Input.GetKeyDown(KeyCode.S)) {
                                 action["action"] = "MoveAgent";
-                                action["moveMagnitude"] = -WalkMagnitude;
+                                // action["moveMagnitude"] = -WalkMagnitude;
                             }
 
                             if (Input.GetKeyDown(KeyCode.LeftArrow)) {

@@ -150,7 +150,6 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         return withLastStepCallback(
             ContinuousMovement.rotateAroundPoint(
                 controller: controller,
-                collisionListener: collisionListener,
                 updateTransform: armTarget.transform,
                 rotatePoint: rotatePoint,
                 targetRotation: rotation,

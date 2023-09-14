@@ -52,6 +52,10 @@ public class PhysicsSceneManager : MonoBehaviour {
     public int AdvancePhysicsStepCount;
     public static uint PhysicsSimulateCallCount;
 
+    public static uint IteratorExpandCount;
+
+    public static uint LastPhysicsSimulateCallCount;
+
     public static float PhysicsSimulateTimeSeconds;
 
     public PhysicsSimulationParams physicsSimulationParams {
@@ -116,6 +120,42 @@ public class PhysicsSceneManager : MonoBehaviour {
         PhysicsSceneManager.PhysicsSimulateCallCount++;
     }
 
+    public static ActionFinished ExpandIEnumerator(IEnumerator enumerator, PhysicsSimulationParams physicsSimulationParams) {
+        ActionFinished actionFinished = null;
+
+        while (enumerator.MoveNext()) {
+            if (enumerator.Current == null) {
+                continue;
+            }
+            
+            // ActionFinished was found but enumerator keeps moving forward, throw error
+            if (actionFinished != null) {
+                // Premature ActionFinished, same as yield break, stops iterator evaluation
+                break;
+            }
+
+            if (enumerator.Current.GetType() == typeof(WaitForFixedUpdate) && !physicsSimulationParams.autoSimulation) {
+                if (physicsSimulationParams.fixedDeltaTime == 0f) {
+                    Physics.SyncTransforms();
+                } else {
+                    PhysicsSceneManager.PhysicsSimulateTHOR(physicsSimulationParams.fixedDeltaTime);
+                }
+            }
+            // else if (enumerator.Current.GetType() == typeof)
+            else if (enumerator.Current.GetType() == typeof(ActionFinished)) {
+                actionFinished = (ActionFinished)(enumerator.Current as ActionFinished);
+            }
+            // For recursive ienumerators, unity StartCoroutine must do something for cases when (yield return (yield return value))
+            // Though C# compiler should handle it and MoveNext should recursively call MoveNext and set Current, but does not seem to work
+            // so we manually expand iterators depth first
+            else if (typeof(IEnumerator).IsAssignableFrom(enumerator.Current.GetType())) {
+                actionFinished = PhysicsSceneManager.ExpandIEnumerator(enumerator.Current as IEnumerator, physicsSimulationParams);
+            }
+            IteratorExpandCount++;
+        }
+        return actionFinished;
+    }
+
     public static ActionFinished runActionPhysicsSimulation(IEnumerator enumerator, PhysicsSimulationParams physicsSimulationParams) {
         int count = 0;
         // Instance.previousPhysicsSimulationParams = Instance.physicsSimulationParams;
@@ -126,38 +166,15 @@ public class PhysicsSceneManager : MonoBehaviour {
         
         PhysicsSceneManager.PhysicsSimulateTimeSeconds = 0.0f;
         var startPhysicsSimulateCallTime = PhysicsSceneManager.PhysicsSimulateCallCount;
-        ActionFinished actionFinished = null;
-        while (enumerator.MoveNext()) {
+        PhysicsSceneManager.IteratorExpandCount = 0;
 
-            if (enumerator.Current == null) {
-                continue;
-            }
-            
-            // ActionFinished was found but enumerator keeps moving forward, throw error
-            if (actionFinished != null) {
-                // actionFinished = new ActionFinished() {
-                //     success = false,
-                //     errorMessage = "`ActionFinished` was not the last yield return statement for action. Unreachable code found."
-                // };
-                // Premature ActionFinished
-                break;
-            }
-
-            if (enumerator.Current.GetType() == typeof(WaitForFixedUpdate) && !physicsSimulationParams.autoSimulation) {
-                if (fixedDeltaTime == 0f) {
-                    Physics.SyncTransforms();
-                } else {
-                    PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
-                }
-            }
-            // else if (enumerator.Current.GetType() == typeof)
-            else if (enumerator.Current.GetType() == typeof(ActionFinished)) {
-                actionFinished = (ActionFinished)(enumerator.Current as ActionFinished);
-            }
-            count++;
-        }
+        // Recursive expansion of IEnumerator
+        ActionFinished actionFinished = ExpandIEnumerator(enumerator, physicsSimulationParams);
+        
+        
 
         if (actionFinished == null) {
+            Debug.Log("---- runActionPhysicsSimulation No actionfinished");
            
             actionFinished = new ActionFinished() {
                 success = false,
@@ -176,8 +193,10 @@ public class PhysicsSceneManager : MonoBehaviour {
         //     };
         // }
 
-        var currentSimulationCallCount = PhysicsSceneManager.PhysicsSimulateCallCount - startPhysicsSimulateCallTime;
+        PhysicsSceneManager.LastPhysicsSimulateCallCount = PhysicsSceneManager.PhysicsSimulateCallCount - startPhysicsSimulateCallTime;
 
+        Debug.Log($"--Ran enumerator loop count {IteratorExpandCount}, physics call count {LastPhysicsSimulateCallCount}");
+        
         if (!physicsSimulationParams.autoSimulation) {
             while (
                 // currentSimulationCallCount < physicsSimulationParams.maxActionPhysicsSteps ||
