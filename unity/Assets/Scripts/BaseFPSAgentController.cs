@@ -6212,6 +6212,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, results.ToArray());
         }
 
+        public void VisualizeWaypoints(List<Waypoint> waypoints, bool grid = false, Color? gridColor = null) {
+
+            getReachablePositions(1.0f, 10000, grid, gridColor);
+
+            for (var i = 0; i < waypoints.Count; i++) {
+                var waypoint = waypoints[i];
+                var pos = waypoint.position;
+                var go = Instantiate(DebugPointPrefab, pos, Quaternion.identity);
+                var textMesh = go.GetComponentInChildren<TextMesh>();
+                textMesh.text = waypoint.text;
+
+                var mr = go.GetComponent<MeshRenderer>();
+                go.transform.localScale = Vector3.one * waypoint.radius;
+                mr.material.color = waypoint.color.toUnityColor();
+
+                // var lineRenderer = go.GetComponentInChildren<LineRenderer>();
+            }
+            actionFinished(true);
+        }
+
         public void CameraCrack(int randomSeed = 0) {
             GameObject canvas = Instantiate(CrackedCameraCanvas);
             CrackedCameraManager camMan = canvas.GetComponent<CrackedCameraManager>();

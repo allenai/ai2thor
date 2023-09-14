@@ -26,7 +26,7 @@ using UnityEngine.Networking;
 using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
 using UnityStandardAssets.ImageEffects;
-
+using Thor.Procedural.Data;
 
 public class AgentManager : MonoBehaviour {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
@@ -2120,6 +2120,15 @@ public class DebugSphere {
     public Vector3 worldSpaceCenter;
     public float radius;
     public Color color;
+}
+
+ [Serializable]
+ [MessagePackObject(keyAsPropertyName: true)]
+public class Waypoint {
+    public Vector3 position;
+    public SerializableColor color;
+    public float radius = 0.2f;
+    public string text = "";
 }
 
 public enum ServerActionErrorCode {
