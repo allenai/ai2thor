@@ -11,14 +11,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         
     public partial class StretchAgentController : PhysicsRemoteFPSAgentController {
 
-        protected Transform primaryGimbal;
-        protected Transform secondaryGimbal;
+        protected Transform gimbalBase, primaryGimbal, secondaryGimbal;
+        protected float gimbalBaseStartingXPosition, gimbalBaseStartingZPosition, gimbalBaseStartingYRotation;
+        protected float primaryStartingXRotation, secondaryStartingXRotation;
+        protected float minGimbalXRotation = -80.001f, maxGimbalXRotation = 80.001f;
 
-        protected float primaryStartingXRotation;
-        protected float secondaryStartingXRotation;
-
-        protected float minGimbalXRotation = -80.001f;
-        protected float maxGimbalXRotation = 80.001f;
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
         GameObject CameraGimbal2;
@@ -56,12 +53,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var secondaryCameraName = "SecondaryCamera";
             
+            var gimbalBaseName = "FixedCameraGimbalBase";
             var primaryGimbalName = "FixedCameraGimbalPrimary";
             var secondaryGimbalName = "FixedCameraGimbalSecondary";
 
+            this.gimbalBase = m_CharacterController.transform.FirstChildOrDefault(x => x.name == gimbalBaseName);
             this.primaryGimbal = m_CharacterController.transform.FirstChildOrDefault(x => x.name == primaryGimbalName);
             this.secondaryGimbal = m_CharacterController.transform.FirstChildOrDefault(x => x.name == secondaryGimbalName);
 
+            gimbalBaseStartingXPosition = gimbalBase.transform.localPosition.x;
+            gimbalBaseStartingZPosition = gimbalBase.transform.localPosition.z;
+            gimbalBaseStartingYRotation = gimbalBase.transform.localEulerAngles.y;
             primaryStartingXRotation = primaryGimbal.transform.localEulerAngles.x;
             secondaryStartingXRotation = secondaryGimbal.transform.localEulerAngles.x;
 
@@ -858,6 +860,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public void MoveCameraBase(float positionOffset, string positionAxis) {
+            var target = gimbalBase;
+            var startingPosition = 0f;
+
+            if (positionAxis == "x" || positionAxis == "X") {
+                startingPosition = gimbalBaseStartingXPosition;
+                gimbalBase.localPosition += new Vector3((gimbalBaseStartingXPosition + positionOffset) - gimbalBase.transform.localPosition.x, 0, 0);
+                actionFinished(true);
+
+            } else if (positionAxis == "z" || positionAxis == "Z") {
+                startingPosition = gimbalBaseStartingZPosition;
+                gimbalBase.localPosition += new Vector3(0, 0, (gimbalBaseStartingZPosition + positionOffset) - gimbalBase.transform.localPosition.z);
+                actionFinished(true);
+
+            } else {
+                throw new InvalidOperationException(
+                    $"{positionAxis} is not a valid axis for position change!"
+                );
+            }
+        }
+
+        public void RotateCameraBase(float degrees) {
+            var target = gimbalBase;
+            gimbalBase.localEulerAngles += new Vector3(0, (gimbalBaseStartingYRotation + degrees) - gimbalBase.transform.localEulerAngles.z, 0);
+        }
 
         public void RotateCameraMount(float degrees, bool secondary = false) {
             var target = !secondary ? primaryGimbal : secondaryGimbal;

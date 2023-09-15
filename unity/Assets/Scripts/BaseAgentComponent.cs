@@ -14,6 +14,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject DebugPointPrefab;
         public GameObject GridRenderer = null;
         public GameObject DebugTargetPointPrefab;
+        public GameObject FixedCameraGimbalBase;
         public GameObject FixedCameraGimbalPrimary;
         public GameObject FixedCameraGimbalSecondary;
         public GameObject MotorCameraGimbals;
