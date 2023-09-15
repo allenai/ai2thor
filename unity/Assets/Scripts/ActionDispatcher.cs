@@ -239,7 +239,7 @@ public static class ActionDispatcher {
                     // var debug2 = minCommon < targetParams.Length? $"{targetParams[minCommon].Name} = {targetParams[minCommon].DefaultValue}": "";
                     // Debug.Log($"conditions sourceParams.Length > targetParams.Length {sourceParams.Length > targetParams.Length} !sourceParams[minCommon].HasDefaultValue {sourceParams.Length > targetParams.Length && !sourceParams[minCommon].HasDefaultValue} sourceParams[minCommon] {debug1} result: {sourceParams.Length > targetParams.Length && !sourceParams[minCommon].HasDefaultValue}" );
                     // Debug.Log($"conditions targetParams.Length > sourceParams.Length {targetParams.Length > sourceParams.Length} !targetParams[minCommon].HasDefaultValue {targetParams.Length > sourceParams.Length && !targetParams[minCommon].HasDefaultValue} targetParams[minCommon] {debug2} result: {targetParams.Length > sourceParams.Length && !targetParams[minCommon].HasDefaultValue}");
-                    
+
                     // if the method is more specific and the parameters match
                     // we will dispatch to this method instead of the base type
                     if (signatureMatch) {
@@ -251,7 +251,7 @@ public static class ActionDispatcher {
                             // TODO: This designation is based on ordered argument call assumption, which is not true for DynamicServerActions
                             // which are always passed as named arguments, order does not matter, Ambiguity should be determined on actual call
                             // not on method signatures
-                            // throw new AmbiguousActionException("Signature match found in the same class");
+                            throw new AmbiguousActionException("Signature match found in the same class");
                         }
 
                         replaced = true;

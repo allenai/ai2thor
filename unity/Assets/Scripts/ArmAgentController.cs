@@ -138,40 +138,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ActionFinished.Success;
         }
 
-        // public virtual IEnumerator MoveAgent(
-        //     PhysicsSimulationParams physicsSimulationParams,
-            
-        //     float ahead = 0,
-        //     float right = 0,
-        //     float speed = 1,
-        //     float acceleration = 1,
-        //     float? fixedDeltaTime = null,
-        //     bool returnToStart = true,
-        //     bool disableRendering = true
-        // ) {
-        //     if (ahead == 0 && right == 0) {
-        //         throw new ArgumentException("Must specify ahead or right!");
-        //     }
-        //     Vector3 direction = new Vector3(x: right, y: 0, z: ahead);
-        //     float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
-
-        //     CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
-
-        //     Vector3 directionWorld = transform.TransformDirection(direction);
-        //     Vector3 targetPosition = transform.position + directionWorld;
-
-        //     collisionListener.Reset();
-
-        //     return ContinuousMovement.move(
-        //         controller: this,
-        //         moveTransform: this.transform,
-        //         targetPosition: targetPosition,
-        //         fixedDeltaTime: fixedDeltaTimeFloat,
-        //         unitsPerSecond: speed,
-        //         returnToStartPropIfFailed: returnToStart,
-        //         localPosition: false
-        //     );
-        // }
         public virtual IEnumerator MoveAgent(
             PhysicsSimulationParams physicsSimulationParams,
 
@@ -179,10 +145,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float ahead = 0,
             float right = 0,
             float speed = 1
-            
         ) {
-
-            Debug.Log("(3) ArmAgentController MoveAgent");
             if (ahead == 0 && right == 0) {
                 throw new ArgumentException("Must specify ahead or right!");
             }
@@ -206,246 +169,64 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public virtual IEnumerator MoveAgentOld(
-            float ahead = 0,
-            float right = 0,
-            float speed = 1,
-            float acceleration = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
-        ) {
-            if (ahead == 0 && right == 0) {
-                throw new ArgumentException("Must specify ahead or right!");
-            }
-            Vector3 direction = new Vector3(x: right, y: 0, z: ahead);
-            float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
+        public IEnumerator MoveAhead(
+            PhysicsSimulationParams physicsSimulationParams,
 
-            CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
-
-            Vector3 directionWorld = transform.TransformDirection(direction);
-            Vector3 targetPosition = transform.position + directionWorld;
-
-            collisionListener.Reset();
-
-            return ContinuousMovement.move(
-                controller: this,
-                moveTransform: this.transform,
-                targetPosition: targetPosition,
-                fixedDeltaTime: fixedDeltaTimeFloat,
-                unitsPerSecond: speed,
-                returnToStartPropIfFailed: returnToStart,
-                localPosition: false
-            );
-        }
-
-        //  public virtual IEnumerator MoveAgent(
-        //     PhysicsSimulationParams physicsSimulationParams,
-
-        //     float ahead = 0,
-        //     float right = 0,
-        //     float speed = 1,
-        //     float acceleration = 1,
-        //     bool returnToStart = true
-        // ) {
-        //     if (ahead == 0 && right == 0) {
-        //         throw new ArgumentException("Must specify ahead or right!");
-        //     }
-        //     Vector3 direction = new Vector3(x: right, y: 0, z: ahead);
-
-        //     CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
-
-        //     Vector3 directionWorld = transform.TransformDirection(direction);
-        //     Vector3 targetPosition = transform.position + directionWorld;
-
-        //     collisionListener.Reset();
-
-        //     return ContinuousMovement.move(
-        //         controller: this,
-        //         moveTransform: this.transform,
-        //         targetPosition: targetPosition,
-        //         fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
-        //         unitsPerSecond: speed,
-        //         returnToStartPropIfFailed: returnToStart,
-        //         localPosition: false
-        //     );
-        // }
-
-        public override void MoveAhead(
             float? moveMagnitude = null,
-            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
-            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
-            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
-            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
-            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
             float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
-            MoveAgentOld(
+            return MoveAgent(
+                physicsSimulationParams: physicsSimulationParams,
                 ahead: moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
-                fixedDeltaTime: fixedDeltaTime,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering
+                returnToStart: returnToStart
             );
         }
 
-        public override void MoveBack(
+
+        public IEnumerator MoveBack(
+            PhysicsSimulationParams physicsSimulationParams,
+
             float? moveMagnitude = null,
-            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
-            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
-            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
-            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
-            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
             float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
-            MoveAgentOld(
+            return MoveAgent(
+                physicsSimulationParams: physicsSimulationParams,
                 ahead: -moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
-                fixedDeltaTime: fixedDeltaTime,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering
+                returnToStart: returnToStart
             );
         }
 
-        public override void MoveRight(
+        public IEnumerator MoveRight(
+            PhysicsSimulationParams physicsSimulationParams,
             float? moveMagnitude = null,
-            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
-            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
-            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
-            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
-            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
             float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
-            MoveAgentOld(
+            return MoveAgent(
+                physicsSimulationParams: physicsSimulationParams,
                 right: moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
-                fixedDeltaTime: fixedDeltaTime,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering
+                returnToStart: returnToStart
             );
         }
 
-        public override void MoveLeft(
+        public IEnumerator MoveLeft(
+            PhysicsSimulationParams physicsSimulationParams,
             float? moveMagnitude = null,
-            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
-            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
-            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
-            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
-            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
             float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
-            MoveAgentOld(
+            return MoveAgent(
+                physicsSimulationParams: physicsSimulationParams,
                 right: -moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
-                fixedDeltaTime: fixedDeltaTime,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering
+                returnToStart: returnToStart
             );
         }
-
-
-        // public virtual IEnumerator MoveAgent(
-        //     PhysicsSimulationParams physicsSimulationParams,
-
-        //     float ahead = 0,
-        //     float right = 0,
-        //     float speed = 1,
-        //     float acceleration = 1,
-        //     bool returnToStart = true
-        // ) {
-        //     if (ahead == 0 && right == 0) {
-        //         throw new ArgumentException("Must specify ahead or right!");
-        //     }
-        //     Vector3 direction = new Vector3(x: right, y: 0, z: ahead);
-
-        //     CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
-
-        //     Vector3 directionWorld = transform.TransformDirection(direction);
-        //     Vector3 targetPosition = transform.position + directionWorld;
-
-        //     collisionListener.Reset();
-
-        //     return ContinuousMovement.move(
-        //         controller: this,
-        //         moveTransform: this.transform,
-        //         targetPosition: targetPosition,
-        //         fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
-        //         unitsPerSecond: speed,
-        //         returnToStartPropIfFailed: returnToStart,
-        //         localPosition: false
-        //     );
-        // }
-
-        // public IEnumerator MoveAhead(
-        //     PhysicsSimulationParams physicsSimulationParams,
-
-        //     float? moveMagnitude = null,
-        //     float speed = 1,
-        //     bool returnToStart = true
-        // ) {
-        //     return MoveAgent(
-        //         physicsSimulationParams: physicsSimulationParams,
-        //         ahead: moveMagnitude.GetValueOrDefault(gridSize),
-        //         speed: speed,
-        //         returnToStart: returnToStart
-        //     );
-        // }
-
-
-        // public IEnumerator MoveBack(
-        //     PhysicsSimulationParams physicsSimulationParams,
-
-        //     float? moveMagnitude = null,
-        //     float speed = 1,
-        //     bool returnToStart = true
-        // ) {
-        //     return MoveAgent(
-        //         physicsSimulationParams: physicsSimulationParams,
-        //         ahead: -moveMagnitude.GetValueOrDefault(gridSize),
-        //         speed: speed,
-        //         returnToStart: returnToStart
-        //     );
-        // }
-
-        // public IEnumerator MoveRight(
-        //     PhysicsSimulationParams physicsSimulationParams,
-        //     float? moveMagnitude = null,
-        //     float speed = 1,
-        //     bool returnToStart = true
-        // ) {
-        //     return MoveAgent(
-        //         physicsSimulationParams: physicsSimulationParams,
-        //         right: moveMagnitude.GetValueOrDefault(gridSize),
-        //         speed: speed,
-        //         returnToStart: returnToStart
-        //     );
-        // }
-
-        // public IEnumerator MoveLeft(
-        //     PhysicsSimulationParams physicsSimulationParams,
-        //     float? moveMagnitude = null,
-        //     float speed = 1,
-        //     bool returnToStart = true
-        // ) {
-        //     return MoveAgent(
-        //         physicsSimulationParams: physicsSimulationParams,
-        //         right: -moveMagnitude.GetValueOrDefault(gridSize),
-        //         speed: speed,
-        //         returnToStart: returnToStart
-        //     );
-        // }
 
         public IEnumerator RotateRight(
             PhysicsSimulationParams physicsSimulationParams,
