@@ -555,8 +555,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                     //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
 
-                        
-                    
                     break;
                 }
                 case "obig": {
@@ -600,6 +598,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     action["action"] = "RotateCameraBase";
                     action["degrees"] = 0;
+                    if (splitcommand.Length > 1) {
+                        action["degrees"] = float.Parse(splitcommand[1]);
+                    }
                     CurrentActiveController().ProcessControlCommand(action);
                     break;
                 }
@@ -614,6 +615,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                     if (splitcommand.Length == 3) {
                         action["secondary"] = bool.Parse(splitcommand[2]);
+                    }
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
+                case "sgo": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+                    
+                    action["action"] = "SetGripperOpenness";
+                    action["openness"] = 0;
+                    if (splitcommand.Length > 1) {
+                        action["openness"] = float.Parse(splitcommand[1]);
                     }
                     CurrentActiveController().ProcessControlCommand(action);
                     break;
@@ -839,17 +852,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 case "parent": {
-                        Dictionary<string, object> action = new Dictionary<string, object>{
+                    Dictionary<string, object> action = new Dictionary<string, object>{
                         {"action", "ParentObject"},
                     };
-                        action["parentId"] = splitcommand[1];
-                        action["childId"] = splitcommand[2];
+                    action["parentId"] = splitcommand[1];
+                    action["childId"] = splitcommand[2];
 
-                        CurrentActiveController().ProcessControlCommand(
-                            action
-                        );
-                        break;
-                    }
+                    CurrentActiveController().ProcessControlCommand(
+                        action
+                    );
+                    break;
+                }
 
                 case "gohfr": {
                     Dictionary<string, object> action = new Dictionary<string, object> {
@@ -885,7 +898,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 case "whaton": {
-
                     List<string> objectIds = new List<string>();
 
                     for (int i = 1; i < splitcommand.Length; i++) {

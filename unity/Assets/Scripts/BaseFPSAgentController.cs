@@ -139,6 +139,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             get => this.baseAgentComponent.UseMotorCameraGimbals;
         }
 
+        public GameObject[] GripperOpennessStates {
+            get => this.baseAgentComponent.GripperOpennessStates;
+        }
+
+        public float InitialGripperOpenness {
+            get => this.baseAgentComponent.initialGripperOpenness;
+        }
+
 
         protected bool IsHandDefault = true;
         public GameObject ItemInHand = null; // current object in inventory
