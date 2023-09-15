@@ -14,6 +14,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected Transform gimbalBase, primaryGimbal, secondaryGimbal;
         protected float gimbalBaseStartingXPosition, gimbalBaseStartingZPosition, gimbalBaseStartingYRotation;
         protected float primaryStartingXRotation, secondaryStartingXRotation;
+        protected float maxBaseXZOffset = 0.25f, maxBaseYRotation = 10f;
         protected float minGimbalXRotation = -80.001f, maxGimbalXRotation = 80.001f;
 
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
@@ -153,7 +154,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             return arm;
         }
-
 
         /*
         Toggles the visibility of the magnet sphere at the end of the arm.
@@ -863,27 +863,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void MoveCameraBase(float positionOffset, string positionAxis) {
             var target = gimbalBase;
             var startingPosition = 0f;
+            var maxOffset = maxBaseXZOffset;
 
-            if (positionAxis == "x" || positionAxis == "X") {
-                startingPosition = gimbalBaseStartingXPosition;
-                gimbalBase.localPosition += new Vector3((gimbalBaseStartingXPosition + positionOffset) - gimbalBase.transform.localPosition.x, 0, 0);
-                actionFinished(true);
+            if (positionOffset >= -maxOffset && positionOffset <= maxOffset) {
+                if (positionAxis == "x" || positionAxis == "X") {
+                    startingPosition = gimbalBaseStartingXPosition;
+                    gimbalBase.localPosition += new Vector3((gimbalBaseStartingXPosition + positionOffset) - gimbalBase.transform.localPosition.x, 0, 0);
+                    actionFinished(true);
 
-            } else if (positionAxis == "z" || positionAxis == "Z") {
-                startingPosition = gimbalBaseStartingZPosition;
-                gimbalBase.localPosition += new Vector3(0, 0, (gimbalBaseStartingZPosition + positionOffset) - gimbalBase.transform.localPosition.z);
-                actionFinished(true);
+                } else if (positionAxis == "z" || positionAxis == "Z") {
+                    startingPosition = gimbalBaseStartingZPosition;
+                    gimbalBase.localPosition += new Vector3(0, 0, (gimbalBaseStartingZPosition + positionOffset) - gimbalBase.transform.localPosition.z);
+                    actionFinished(true);
 
+                } else {
+                    throw new InvalidOperationException(
+                        $"{positionAxis} is not a valid axis for position change!"
+                    );
+                }
             } else {
                 throw new InvalidOperationException(
-                    $"{positionAxis} is not a valid axis for position change!"
+                    $"Invalid value for `positionOffset`: '{positionOffset}'. Value should be between '{-maxOffset}' and '{maxOffset}'."
                 );
             }
         }
 
         public void RotateCameraBase(float degrees) {
             var target = gimbalBase;
-            gimbalBase.localEulerAngles += new Vector3(0, (gimbalBaseStartingYRotation + degrees) - gimbalBase.transform.localEulerAngles.z, 0);
+            var maxYawDegree = maxBaseYRotation;
+            if (degrees >= -maxYawDegree && degrees <= maxYawDegree) {
+                gimbalBase.localEulerAngles += new Vector3(0, (gimbalBaseStartingYRotation + degrees) - gimbalBase.transform.localEulerAngles.z, 0);
+            } else {
+                errorMessage = $"Invalid value for `degrees`: '{degrees}'. Value should be between '{-maxYawDegree}' and '{maxYawDegree}'.";
+                actionFinished(false);
+            }
         }
 
         public void RotateCameraMount(float degrees, bool secondary = false) {
