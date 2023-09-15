@@ -13,9 +13,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     public partial class StretchAgentController : PhysicsRemoteFPSAgentController {
 
         protected Transform gimbalBase, primaryGimbal, secondaryGimbal;
-        protected float gimbalBaseStartingXPosition, gimbalBaseStartingZPosition, gimbalBaseStartingYRotation;
+        protected float gimbalBaseStartingXPosition, gimbalBaseStartingZPosition, gimbalBaseStartingXRotation, gimbalBaseStartingYRotation;
         protected float primaryStartingXRotation, secondaryStartingXRotation;
-        protected float maxBaseXZOffset = 0.25f, maxBaseYRotation = 10f;
+        protected float maxBaseXZOffset = 0.25f, maxBaseXYRotation = 10f;
         protected float minGimbalXRotation = -80.001f, maxGimbalXRotation = 80.001f;
 
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
@@ -65,6 +65,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             gimbalBaseStartingXPosition = gimbalBase.transform.localPosition.x;
             gimbalBaseStartingZPosition = gimbalBase.transform.localPosition.z;
+            gimbalBaseStartingXRotation = gimbalBase.transform.localEulerAngles.x;
             gimbalBaseStartingYRotation = gimbalBase.transform.localEulerAngles.y;
             primaryStartingXRotation = primaryGimbal.transform.localEulerAngles.x;
             secondaryStartingXRotation = secondaryGimbal.transform.localEulerAngles.x;
@@ -888,42 +889,46 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void MoveCameraBase(float positionOffset, string positionAxis) {
+        public void MoveCameraBase(float xPositionOffset, float zPositionOffset) {
             var target = gimbalBase;
-            var startingPosition = 0f;
             var maxOffset = maxBaseXZOffset;
 
-            if (positionOffset >= -maxOffset && positionOffset <= maxOffset) {
-                if (positionAxis == "x" || positionAxis == "X") {
-                    startingPosition = gimbalBaseStartingXPosition;
-                    gimbalBase.localPosition += new Vector3((gimbalBaseStartingXPosition + positionOffset) - gimbalBase.transform.localPosition.x, 0, 0);
-                    actionFinished(true);
-
-                } else if (positionAxis == "z" || positionAxis == "Z") {
-                    startingPosition = gimbalBaseStartingZPosition;
-                    gimbalBase.localPosition += new Vector3(0, 0, (gimbalBaseStartingZPosition + positionOffset) - gimbalBase.transform.localPosition.z);
-                    actionFinished(true);
-
-                } else {
-                    throw new InvalidOperationException(
-                        $"{positionAxis} is not a valid axis for position change!"
-                    );
-                }
-            } else {
+            if (xPositionOffset < -maxOffset || maxOffset < xPositionOffset) {
                 throw new InvalidOperationException(
-                    $"Invalid value for `positionOffset`: '{positionOffset}'. Value should be between '{-maxOffset}' and '{maxOffset}'."
+                    $"Invalid value for `positionOffset`: '{xPositionOffset}'. Value should be between '{-maxOffset}' and '{maxOffset}'."
                 );
+            } else if (zPositionOffset < -maxOffset || maxOffset < zPositionOffset) {
+                throw new InvalidOperationException(
+                    $"Invalid value for `positionOffset`: '{zPositionOffset}'. Value should be between '{-maxOffset}' and '{maxOffset}'."
+                );
+            } else {
+                gimbalBase.localPosition = new Vector3(
+                    gimbalBaseStartingXPosition + xPositionOffset,
+                    gimbalBase.transform.localPosition.y,
+                    gimbalBaseStartingZPosition + zPositionOffset
+                );
+                actionFinished(true);
             }
         }
 
-        public void RotateCameraBase(float degrees) {
+        public void RotateCameraBase(float yawDegrees, float rollDegrees) {
             var target = gimbalBase;
-            var maxYawDegree = maxBaseYRotation;
-            if (degrees >= -maxYawDegree && degrees <= maxYawDegree) {
-                gimbalBase.localEulerAngles += new Vector3(0, (gimbalBaseStartingYRotation + degrees) - gimbalBase.transform.localEulerAngles.z, 0);
+            var maxDegree = maxBaseXYRotation;
+            Debug.Log("yaw is " + yawDegrees + " and roll is " + rollDegrees);
+            if (yawDegrees < -maxDegree || maxDegree < yawDegrees) {
+                throw new InvalidOperationException(
+                    $"Invalid value for `yawDegrees`: '{yawDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+                );
+            } else if (rollDegrees < -maxDegree || maxDegree < rollDegrees) {
+                throw new InvalidOperationException(
+                    $"Invalid value for `rollDegrees`: '{rollDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+                );
             } else {
-                errorMessage = $"Invalid value for `degrees`: '{degrees}'. Value should be between '{-maxYawDegree}' and '{maxYawDegree}'.";
-                actionFinished(false);
+                gimbalBase.localEulerAngles = new Vector3(
+                    gimbalBaseStartingXRotation + rollDegrees,
+                    gimbalBaseStartingYRotation + yawDegrees,
+                    gimbalBase.transform.localEulerAngles.z
+                );
             }
         }
 
