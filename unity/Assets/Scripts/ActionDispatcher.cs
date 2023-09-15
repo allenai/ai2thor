@@ -234,11 +234,12 @@ public static class ActionDispatcher {
                         signatureMatch = false;
                     }
 
-                    Debug.Log($"-- Signature match? {signatureMatch} sourceParamLen {sourceParams.Length} targetPramLen {targetParams.Length} minCommon {minCommon} source Params {string.Join(", ", sourceParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))} target Params  {string.Join(", ", targetParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))}");
-                    var debug1 = minCommon < sourceParams.Length? $"{sourceParams[minCommon].Name} = {sourceParams[minCommon].DefaultValue}": "";
-                    var debug2 = minCommon < targetParams.Length? $"{targetParams[minCommon].Name} = {targetParams[minCommon].DefaultValue}": "";
-                    Debug.Log($"conditions sourceParams.Length > targetParams.Length {sourceParams.Length > targetParams.Length} !sourceParams[minCommon].HasDefaultValue {sourceParams.Length > targetParams.Length && !sourceParams[minCommon].HasDefaultValue} sourceParams[minCommon] {debug1} result: {sourceParams.Length > targetParams.Length && !sourceParams[minCommon].HasDefaultValue}" );
-                    Debug.Log($"conditions targetParams.Length > sourceParams.Length {targetParams.Length > sourceParams.Length} !targetParams[minCommon].HasDefaultValue {targetParams.Length > sourceParams.Length && !targetParams[minCommon].HasDefaultValue} targetParams[minCommon] {debug2} result: {targetParams.Length > sourceParams.Length && !targetParams[minCommon].HasDefaultValue}");
+                    // Debug.Log($"-- Signature match? {signatureMatch} sourceParamLen {sourceParams.Length} targetPramLen {targetParams.Length} minCommon {minCommon} source Params {string.Join(", ", sourceParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))} target Params  {string.Join(", ", targetParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))}");
+                    // var debug1 = minCommon < sourceParams.Length? $"{sourceParams[minCommon].Name} = {sourceParams[minCommon].DefaultValue}": "";
+                    // var debug2 = minCommon < targetParams.Length? $"{targetParams[minCommon].Name} = {targetParams[minCommon].DefaultValue}": "";
+                    // Debug.Log($"conditions sourceParams.Length > targetParams.Length {sourceParams.Length > targetParams.Length} !sourceParams[minCommon].HasDefaultValue {sourceParams.Length > targetParams.Length && !sourceParams[minCommon].HasDefaultValue} sourceParams[minCommon] {debug1} result: {sourceParams.Length > targetParams.Length && !sourceParams[minCommon].HasDefaultValue}" );
+                    // Debug.Log($"conditions targetParams.Length > sourceParams.Length {targetParams.Length > sourceParams.Length} !targetParams[minCommon].HasDefaultValue {targetParams.Length > sourceParams.Length && !targetParams[minCommon].HasDefaultValue} targetParams[minCommon] {debug2} result: {targetParams.Length > sourceParams.Length && !targetParams[minCommon].HasDefaultValue}");
+                    
                     // if the method is more specific and the parameters match
                     // we will dispatch to this method instead of the base type
                     if (signatureMatch) {
@@ -275,8 +276,8 @@ public static class ActionDispatcher {
             // its possible that it would be only partially populated
             methodDispatchTable[action] = methods;
         }
-        var debug = string.Join("| ", methodDispatchTable[action].Select(m => $"{m.Name} {string.Join(", ", m.GetParameters().Select(p => $"{p.ParameterType} {p.Name} = {p.DefaultValue}"))}"));
-        Debug.Log($"-- Dispatch table for '{action}': ${debug}, CompareTOs : {string.Join(", ", methodDispatchTable[action].Take(methodDispatchTable[action].Count-1).Zip(methodDispatchTable[action].Skip(1), (x, y) => (new MethodParamComparer()).Compare(x, y) ))}");
+        // var debug = string.Join("| ", methodDispatchTable[action].Select(m => $"{m.Name} {string.Join(", ", m.GetParameters().Select(p => $"{p.ParameterType} {p.Name} = {p.DefaultValue}"))}"));
+        // Debug.Log($"-- Dispatch table for '{action}': ${debug}, CompareTOs : {string.Join(", ", methodDispatchTable[action].Take(methodDispatchTable[action].Count-1).Zip(methodDispatchTable[action].Skip(1), (x, y) => (new MethodParamComparer()).Compare(x, y) ))}");
 
         return methodDispatchTable[action];
     }
