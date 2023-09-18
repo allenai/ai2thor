@@ -1904,7 +1904,8 @@ public class DynamicServerAction {
     }
 
     public void AddPhysicsSimulationParams(PhysicsSimulationParams physicsSimulationParams) {
-        this.jObject.Add(new JProperty(physicsSimulationParamsVariable, physicsSimulationParams));
+        var token = JToken.FromObject(physicsSimulationParams);
+        this.jObject.Add(new JProperty(physicsSimulationParamsVariable, token));
     }
  }
 
