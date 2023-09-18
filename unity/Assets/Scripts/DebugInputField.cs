@@ -583,13 +583,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
                     action["action"] = "MoveCameraBase";
-                    action["positionOffset"] = 0;
-                    action["transformationAxis"] = "x";
+                    action["xPositionOffset"] = 0;
+                    action["zPositionOffset"] = 0;
                     if (splitcommand.Length > 1) {
-                        action["positionOffset"] = float.Parse(splitcommand[1]);
+                        action["xPositionOffset"] = float.Parse(splitcommand[1]);
                     }
                     if (splitcommand.Length == 3) {
-                        action["positionAxis"] = splitcommand[2];
+                        action["zPositionOffset"] = float.Parse(splitcommand[2]);
                     }
                     CurrentActiveController().ProcessControlCommand(action);
                     break;
@@ -599,10 +599,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
                     action["action"] = "RotateCameraBase";
-                    action["degrees"] = 0;
+                    action["yawDegrees"] = 0;
+                    action["rollDegrees"] = 0;
+                    if (splitcommand.Length > 1) {
+                        action["yawDegrees"] = float.Parse(splitcommand[1]);
+                    }
+                    if (splitcommand.Length == 3) {
+                        action["rollDegrees"] = float.Parse(splitcommand[2]);
+                    }
                     CurrentActiveController().ProcessControlCommand(action);
                     break;
                 }
+
 
                 case "rcm": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
