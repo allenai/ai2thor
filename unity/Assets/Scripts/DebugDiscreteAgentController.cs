@@ -93,7 +93,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     bool isArticulated = CurrentActiveController().GetType() == typeof(ArticulatedAgentController);
                     Dictionary<string, object> action = new Dictionary<string, object>();
-                    bool disableRendering = true;
+                    bool disableRendering = false;
                     bool useLimits = true;
 
                     if (noModifier) {

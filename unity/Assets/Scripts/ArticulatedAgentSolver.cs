@@ -101,6 +101,8 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         myAB.AddRelativeForce(new Vector3(dampingForceX, 0f, 0f));
         Debug.Log($"Damping force equals: {dampingForceX} == clamp(-200 * {agentOrientedVelocity.x} * {currentAgentMoveParams.agentMass}, 100, 100)");
 
+        accelerationDistance = 0f;
+
         if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
 
             float currentSpeed = Mathf.Abs(agentOrientedVelocity.z);
