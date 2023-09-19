@@ -23,9 +23,11 @@ namespace Tests {
             action["objectId"] = "Kettle|+01.04|+00.90|-02.60";
             yield return step(action);
 
-            UnityEngine.AI.NavMeshPath path = (UnityEngine.AI.NavMeshPath)actionReturn;
+            UnityEngine.AI.NavMeshPath path = actionReturn as UnityEngine.AI.NavMeshPath;
 
             bool result = false;
+
+            Debug.Log("---------Ran test");
 
             //corner 1
             result = Mathf.Approximately(-1.0f, path.corners[0].x);

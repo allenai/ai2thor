@@ -329,7 +329,7 @@ public static class ActionDispatcher {
             // preference is given to the method that matches all parameters for a method
             // even if another method has the same matchCount (but has more parameters)
             // unless is declared in a subclass in which it's given preference
-            if (matchCount > bestMatchCount || (matchCount == bestMatchCount && isSubclassOfBestMatchDeclaringType)) {
+            if (matchCount > bestMatchCount || (matchCount == bestMatchCount && isSubclassOfBestMatchDeclaringType && matchedMethod.DeclaringType != method.DeclaringType)) {
 
                 // TODO: decide if this check should be added, or we want whatever method ranked top by 'MethodParamComparer' to be chosen (based on param number and default params)
                 // if (matchedMethod.DeclaringType == method.DeclaringType) {
