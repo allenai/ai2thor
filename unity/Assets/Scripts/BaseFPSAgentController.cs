@@ -7471,7 +7471,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ObjectOrientedBoundingBox oobb = sop.ObjectOrientedBoundingBox;
 
             if (oobb == null) {
-                throw new ArgumentException($"{sop.objectID} does not have an object oriented bounding box");
+                sop.syncBoundingBoxes(forceCacheReset: true, forceCreateObjectOrientedBoundingBox: true);
+                oobb = sop.ObjectOrientedBoundingBox;
+                if (oob == null) {
+                    throw new ArgumentException($"{sop.objectID} does not have an object oriented bounding box");
+                }
             }
             float[][] oobbPoints = oobb.cornerPoints;
 
