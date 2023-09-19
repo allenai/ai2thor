@@ -2217,7 +2217,6 @@ def test_rotate_hand(controller):
 #     for object_id, object_metadata in first_objs.items():
 #         for d in (diff(object_metadata, last_objs.get(object_id, {}), tolerance=0.00001, ignore=set(["receptacleObjectIds"]))):
 #             diffs.append((object_id, d))
-
 #     assert diffs == []
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
