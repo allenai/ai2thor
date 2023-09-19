@@ -7492,6 +7492,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 maxY = Math.Max(viewPoint.y, maxY);
             }
 
+            minX = Math.Max(minX, 0f);
+            maxX = Math.Min(maxX, 1f);
+            minY = Math.Max(minY, 0f);
+            maxY = Math.Min(maxY, 1f);
+
             List<Vector2> points = new List<Vector2>();
             if (maxX - minX < 1e-3f || maxY - minY < 1e-3f) {
                 return points;
