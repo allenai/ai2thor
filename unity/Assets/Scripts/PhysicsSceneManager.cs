@@ -58,7 +58,7 @@ public class PhysicsSceneManager : MonoBehaviour {
 
     public static float PhysicsSimulateTimeSeconds;
 
-    public PhysicsSimulationParams physicsSimulationParams {
+    public static PhysicsSimulationParams defaultPhysicsSimulationParams {
         get;
         protected set;
     }
@@ -112,6 +112,10 @@ public class PhysicsSceneManager : MonoBehaviour {
     void Start() {
         PhysicsSceneManager.PhysicsSimulateCallCount = 0;
         GatherAllRBsInScene();
+    }
+
+    public static void SetDefaultSimulationParams(PhysicsSimulationParams defaultPhysicsSimulationParams) {
+        PhysicsSceneManager.defaultPhysicsSimulationParams = defaultPhysicsSimulationParams ?? new PhysicsSimulationParams();
     }
 
     public static void PhysicsSimulateTHOR(float deltaTime) {

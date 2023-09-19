@@ -376,7 +376,7 @@ public static class ActionDispatcher {
             if (!usePhysicsSimulationParams) {
                 usePhysicsSimulationParams = true;
                 // Default simulation params
-                physicsSimulationProperties = PhysicsSceneManager.defaultPhysicsSimulationParams;
+                physicsSimulationProperties = PhysicsSceneManager.defaultPhysicsSimulationParams.DeepClone();
                 // What will be passed down to the action
                 if (paramDict.ContainsKey(DynamicServerAction.physicsSimulationParamsVariable)) {
                     dynamicServerAction.AddPhysicsSimulationParams(physicsSimulationProperties);
