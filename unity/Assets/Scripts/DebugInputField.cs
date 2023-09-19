@@ -645,6 +645,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     CurrentActiveController().ProcessControlCommand(action);
                     break;
                 }
+
+                case "gaom": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "GetApproxObjectMask";
+                        action["objectId"] = splitcommand[1];
+                        if (splitcommand.Length > 2) {
+                            action["divisions"] = int.Parse(splitcommand[2]);
+                        }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
                 
                 case "inits-camera": {
                     Dictionary<string, object> action = new Dictionary<string, object>();

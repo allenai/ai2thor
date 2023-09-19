@@ -6302,7 +6302,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
             SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-            actionFinished(true, approxPercentScreenObjectOccupies(sop));
+            actionFinishedEmit(true, approxPercentScreenObjectOccupies(sop));
         }
 
         public void ApproxPercentScreenObjectFromPositions(ServerAction action) {
@@ -6342,7 +6342,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             transform.position = oldPosition;
             transform.rotation = oldRotation;
-            actionFinished(true, positionAndApproxAmountVisible);
+            actionFinishedEmit(true, positionAndApproxAmountVisible);
         }
 
         public void GetVisibilityPointsOfObjects() {

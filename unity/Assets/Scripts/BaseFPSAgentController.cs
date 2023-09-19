@@ -4273,11 +4273,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return currentlyVisibleItemsToList.ToArray();
         }
 
-        // check if the visibility point on a sim object, sop, is within the viewport
-        // has a inclueInvisible bool to check against triggerboxes as well, to check for visibility with things like Cabinets/Drawers
+
+// check if the visibility point on a sim object, sop, is within the viewport
+        // has a includeInvisible bool to check against triggerboxes as well, to check for visibility with things like Cabinets/Drawers
         protected VisibilityCheck CheckIfVisibilityPointRaycast(
             SimObjPhysics sop,
-            Transform point,
+            Vector3 position,
             Camera camera,
             bool includeInvisible
         ) {
@@ -4285,7 +4286,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // now cast a ray out toward the point, if anything occludes this point, that point is not visible
             RaycastHit hit;
 
-            float distFromPointToCamera = Vector3.Distance(point.position, camera.transform.position);
+            float distFromPointToCamera = Vector3.Distance(position, camera.transform.position);
 
             // adding slight buffer to this distance to ensure the ray goes all the way to the collider of the object being cast to
             float raycastDistance = distFromPointToCamera + 0.5f;
@@ -4303,7 +4304,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
             // ignored by the other raycast
             if (includeInvisible) {
-                if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, mask)) {
+                if (Physics.Raycast(camera.transform.position, position - camera.transform.position, out hit, raycastDistance, mask)) {
                     if (
                         hit.transform == sop.transform
                         || ( isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
@@ -4311,7 +4312,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         visCheck.visible = true;
                         visCheck.interactable = true;
 #if UNITY_EDITOR
-                        Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
+                        Debug.DrawLine(camera.transform.position, hit.point, Color.cyan, 10f);
 #endif
                     }
                 }
@@ -4322,7 +4323,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else if (
                 Physics.Raycast(
                     camera.transform.position,
-                    point.position - camera.transform.position,
+                    position - camera.transform.position,
                     out hit,
                     raycastDistance,
                     LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent")
@@ -4347,7 +4348,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         RaycastHit[] hits;
                         hits = Physics.RaycastAll(
                             camera.transform.position,
-                            point.position - camera.transform.position,
+                            position - camera.transform.position,
                             raycastDistance,
                             LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
                             QueryTriggerInteraction.Ignore
@@ -4385,13 +4386,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 #if UNITY_EDITOR
                 if (visCheck.visible) {
-                    Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
+                    Debug.DrawLine(camera.transform.position, hit.point, Color.cyan, 10f);
                 }
 #endif
             }
 
             return visCheck;
         }
+
+        protected VisibilityCheck CheckIfVisibilityPointRaycast(
+            SimObjPhysics sop,
+            Transform point,
+            Camera camera,
+            bool includeInvisible
+        ) {
+            VisibilityCheck visCheck = new VisibilityCheck();
+            // now cast a ray out toward the point, if anything occludes this point, that point is not visible
+            RaycastHit hit;
+
+            float distFromPointToCamera = Vector3.Distance(point.position, camera.transform.position);
+
+            return CheckIfVisibilityPointRaycast(
+                sop: sop,
+                position: point.position,
+                camera: camera,
+                includeInvisible: includeInvisible
+            );
+        }
+
 
         protected VisibilityCheck CheckIfVisibilityPointInViewport(
             SimObjPhysics sop,
@@ -7442,7 +7464,70 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
+        protected List<Vector2> approxObjectMask(SimObjPhysics sop, int divisions) {
+            if (divisions <= 2) {
+                throw new ArgumentException("divisions must be >=3");
+            }
+            ObjectOrientedBoundingBox oobb = sop.ObjectOrientedBoundingBox;
 
+            if (oobb == null) {
+                throw new ArgumentException($"{sop.objectID} does not have an object oriented bounding box");
+            }
+            float[][] oobbPoints = oobb.cornerPoints;
+
+            List<Vector3> worldSpaceCornerPoints = new List<Vector3>();
+            float minX = 1.0f;
+            float maxX = 0.0f;
+            float minY = 1.0f;
+            float maxY = 0.0f;
+            float maxDist = 0.0f;
+            for (int i = 0; i < 8; i++) {
+                Vector3 worldSpaceCornerPoint = new Vector3(oobbPoints[i][0], oobbPoints[i][1], oobbPoints[i][2]);
+                maxDist = Mathf.Max(Vector3.Distance(worldSpaceCornerPoint, m_Camera.transform.position), maxDist);
+                Vector3 viewPoint = m_Camera.WorldToViewportPoint(worldSpaceCornerPoint);
+
+                minX = Math.Min(viewPoint.x, minX);
+                maxX = Math.Max(viewPoint.x, maxX);
+                minY = Math.Min(viewPoint.y, minY);
+                maxY = Math.Max(viewPoint.y, maxY);
+            }
+
+            List<Vector2> points = new List<Vector2>();
+            if (maxX - minX < 1e-3f || maxY - minY < 1e-3f) {
+                return points;
+            }
+
+            // Here we shift minX and maxX slightly 2% towards one another so that we're
+            // not sampling directly along the boundary
+            float alpha = 0.02f;
+            float shrunkMinX = minX * (1-alpha) + maxX * alpha;
+            float shrunkMaxX = minX * alpha + maxX * (1-alpha);
+
+            // Same for minY and maxY
+            float shrunkMinY = minY * (1-alpha) + maxY * alpha;
+            float shrunkMaxY = minY * alpha + maxY * (1-alpha);
+
+            for (int i = 0; i < divisions; i++) {
+                for (int j = 0; j < divisions; j++) {
+                    float x = shrunkMinX + (shrunkMaxX - shrunkMinX) * i / (divisions - 1);
+                    float y = shrunkMinY + (shrunkMaxY - shrunkMinY) * j / (divisions - 1);
+
+                    // Convert x,y to a worldspace coordinate at distance maxDist from the camera
+                    Vector3 point = m_Camera.ViewportToWorldPoint(new Vector3(x, y, maxDist));
+
+                    if (CheckIfVisibilityPointRaycast(sop: sop, position: point, camera: m_Camera, includeInvisible: false).visible) {
+                        points.Add(new Vector2(x, y));
+                    }
+                }
+            }
+            return points;
+        }
+
+        public void GetApproxObjectMask(string objectId, int divisions = 10) {
+            SimObjPhysics sop = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+            List<Vector2> points = approxObjectMask(sop, divisions: divisions);
+            actionFinishedEmit(success: true, actionReturn: points);
+        }
 
         public void unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
             ContinuousMovement.unrollSimulatePhysics(
