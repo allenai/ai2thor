@@ -276,8 +276,8 @@ public static class ActionDispatcher {
             // its possible that it would be only partially populated
             methodDispatchTable[action] = methods;
         }
-        // var debug = string.Join("| ", methodDispatchTable[action].Select(m => $"{m.Name} {string.Join(", ", m.GetParameters().Select(p => $"{p.ParameterType} {p.Name} = {p.DefaultValue}"))}"));
-        // Debug.Log($"-- Dispatch table for '{action}': ${debug}, CompareTOs : {string.Join(", ", methodDispatchTable[action].Take(methodDispatchTable[action].Count-1).Zip(methodDispatchTable[action].Skip(1), (x, y) => (new MethodParamComparer()).Compare(x, y) ))}");
+        var debug = string.Join("| ", methodDispatchTable[action].Select(m => $"{m.Name} {string.Join(", ", m.GetParameters().Select(p => $"{p.ParameterType} {p.Name} = {p.DefaultValue}"))}"));
+        Debug.Log($"-- Dispatch table for '{action}': ${debug}, CompareTOs : {string.Join(", ", methodDispatchTable[action].Take(methodDispatchTable[action].Count-1).Zip(methodDispatchTable[action].Skip(1), (x, y) => (new MethodParamComparer()).Compare(x, y) ))}");
 
         return methodDispatchTable[action];
     }
@@ -287,6 +287,8 @@ public static class ActionDispatcher {
         List<MethodInfo> actionMethods = getCandidateMethods(targetType, dynamicServerAction.action);
         MethodInfo matchedMethod = null;
         int bestMatchCount = -1; // we do this so that 
+
+        Debug.Log($"Method count {actionMethods.Count}");
 
         // This is where the the actual matching occurs.  The matching is done strictly based on
         // variable names.  In the future, this could be modified to include type information from
@@ -318,9 +320,23 @@ public static class ActionDispatcher {
                 }
             }
 
+            // var debug = string.Join("| ", $"{method.Name} {string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType} {p.Name} = {p.DefaultValue}"))}");
+            
+            var isSubclassOfBestMatchDeclaringType = matchedMethod != null && matchedMethod.DeclaringType.IsAssignableFrom(method.DeclaringType);
+            // Debug.Log($"Match count {matchCount} best match {bestMatchCount}, {debug}, rutime {targetType} declaringtype {method.DeclaringType} isSubclass {isSubclassOfBestMatchDeclaringType}");
+
+        
             // preference is given to the method that matches all parameters for a method
             // even if another method has the same matchCount (but has more parameters)
-            if (matchCount > bestMatchCount) {
+            // unless is declared in a subclass in which it's given preference
+            if (matchCount > bestMatchCount || (matchCount == bestMatchCount && isSubclassOfBestMatchDeclaringType)) {
+
+                // TODO: decide if this check should be added, or we want whatever method ranked top by 'MethodParamComparer' to be chosen (based on param number and default params)
+                // if (matchedMethod.DeclaringType == method.DeclaringType) {
+                //     // if matchcount is the same between any two methods and same level of inheritance hierarchy throw ambiguous exeption, since no method 
+                //     // is clearly prefered
+                //     throw new AmbiguousActionException($"Ambiguous call. Cannot distinguish between actions '{method.Name}' at class level '{method.DeclaringType}'");
+                // }
                 bestMatchCount = matchCount;
                 matchedMethod = method;
             }
@@ -360,14 +376,14 @@ public static class ActionDispatcher {
             if (!usePhysicsSimulationParams) {
                 usePhysicsSimulationParams = true;
                 // Default simulation params
-                physicsSimulationProperties = new PhysicsSimulationParams();
+                physicsSimulationProperties = PhysicsSceneManager.defaultPhysicsSimulationParams;
                 // What will be passed down to the action
                 if (paramDict.ContainsKey(DynamicServerAction.physicsSimulationParamsVariable)) {
                     dynamicServerAction.AddPhysicsSimulationParams(physicsSimulationProperties);
                 }
             }
         }
-        // TODO: deprecate
+        // TODO: deprecate, eventually when no void actions are left
         if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(ServerAction)) {
             ServerAction serverAction = dynamicServerAction.ToObject<ServerAction>();
             serverAction.dynamicServerAction = dynamicServerAction;

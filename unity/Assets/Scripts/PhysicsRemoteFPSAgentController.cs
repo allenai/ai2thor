@@ -1659,12 +1659,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxAgentsDistance = -1f,
             bool forceAction = false,
             bool manualInteract = false,
-            bool allowAgentsToIntersect = false,
-            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
-            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
-            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
-            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false
         ) {
+
+            Debug.Log("MoveRight at physics fps? call ");
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
             } else if (moveMagnitude <= 0f) {

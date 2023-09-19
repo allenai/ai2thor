@@ -242,6 +242,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         this.renderInstanceSegmentation = this.initializedInstanceSeg = action.renderInstanceSegmentation;
         this.renderFlowImage = action.renderFlowImage;
         this.fastActionEmit = action.fastActionEmit;
+
+        PhysicsSceneManager.SetDefaultSimulationParams(action.defaultPhysicsSimulationParams);
         // we default Physics.autoSimulation to False in the built Player, but
         // set ServerAction.autoSimulation = True for backwards compatibility. Keeping
         // this value False allows the user complete control of all Physics Simulation
@@ -2062,6 +2064,8 @@ public class ServerAction {
     public PhysicsSimulationParams physicsSimulationProperties = null; 
     public float maxUpwardLookAngle = 0.0f;
     public float maxDownwardLookAngle = 0.0f;
+
+    public PhysicsSimulationParams defaultPhysicsSimulationParams;
 
 
     public SimObjType ReceptableSimObjType() {

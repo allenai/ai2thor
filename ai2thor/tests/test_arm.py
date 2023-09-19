@@ -99,7 +99,7 @@ def test_arm_object_intersect(controller_args):
     evt = controller.step(**{
         "action": "RotateWristRelative",
         "yaw": 200, 
-        "disableRendering": True, 
+        "physicsSimulationParams": {"autoSimulation": False},
         "returnToStart": True, 
         "speed": 1
     })
@@ -133,7 +133,7 @@ def test_arm_body_object_intersect(controller_args):
     evt = controller.step(**
         {"action": "RotateWristRelative", 
          "yaw": 10, 
-         "disableRendering": False, 
+         "physicsSimulationParams": {"autoSimulation": False},
          "returnToStart": True, 
          "speed": 1
          }               

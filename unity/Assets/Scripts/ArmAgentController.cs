@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using RandomExtensions;
 using UnityEngine.AI;
+using System.Runtime.CompilerServices;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
@@ -202,6 +203,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public IEnumerator MoveRight(
             PhysicsSimulationParams physicsSimulationParams,
+            
             float? moveMagnitude = null,
             float speed = 1,
             bool returnToStart = true
