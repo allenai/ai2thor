@@ -7473,7 +7473,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (oobb == null) {
                 sop.syncBoundingBoxes(forceCacheReset: true, forceCreateObjectOrientedBoundingBox: true);
                 oobb = sop.ObjectOrientedBoundingBox;
-                if (oob == null) {
+                if (oobb == null) {
                     throw new ArgumentException($"{sop.objectID} does not have an object oriented bounding box");
                 }
             }
