@@ -99,7 +99,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         // Damping force for part of velocity that is not in the direction of movement
         float dampingForceX = Mathf.Clamp(-100f * agentOrientedVelocity.x * currentAgentMoveParams.agentMass, -200f, 200f);
         myAB.AddRelativeForce(new Vector3(dampingForceX, 0f, 0f));
-        Debug.Log($"Damping force equals: {dampingForceX} == clamp(-200 * {agentOrientedVelocity.x} * {currentAgentMoveParams.agentMass}, 100, 100)");
+        Debug.Log($"Damping force X equals: {dampingForceX} == clamp(-200 * {agentOrientedVelocity.x} * {currentAgentMoveParams.agentMass}, 100, 100)");
 
         if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
 
@@ -178,12 +178,12 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
 
         } else if (currentAgentMoveParams.agentState == ABAgentState.Rotating) {
 
-            // When rotating the agent shouldn't be moving forward/backwards but it's wheels are moving so we use a smaller
+            // When rotating the agent shouldn't be moving forward/backwards but its wheels are moving so we use a smaller
             // damping force to counteract forward/backward movement (as opposed to the force used for lateral movement
             // above)
             float dampingForceZ = Mathf.Clamp(-100f * agentOrientedVelocity.z * currentAgentMoveParams.agentMass, -50f, 50f);
             myAB.AddRelativeForce(new Vector3(0f, 0f, dampingForceZ));
-            Debug.Log($"Damping force equals: {dampingForceZ} == clamp(-100 * {agentOrientedVelocity.z} * {currentAgentMoveParams.agentMass}, -50, 50)");
+            Debug.Log($"Damping force Z equals: {dampingForceZ} == clamp(-100 * {agentOrientedVelocity.z} * {currentAgentMoveParams.agentMass}, -50, 50)");
             
             float currentAngularSpeed = Mathf.Abs(myAB.angularVelocity.y);
             float forceScaler = 1f / fixedDeltaTime;
@@ -199,7 +199,10 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                     currentAgentMoveParams.maxForce
                 );
 
-                Debug.Log("1. distanceDelta is " + angularDistanceDelta + ". Applying torque of " + relativeTorque);
+                Debug.Log(
+                    $"1. distanceDelta is {angularDistanceDelta}. Applying torque of {relativeTorque} = "
+                    + $"clamp(one schmillion Newton-meters, {forceScaler} * {angularDistanceDelta} * {myAB.inertiaTensor.y} * {currentAgentMoveParams.direction})."
+                );
                 myAB.AddRelativeTorque(new Vector3(0, relativeTorque, 0));
 
             // CASE: Decelerate - Apply force calculated from difference between intended angular velocity and actual angular velocity at given angular distance remaining to travel
@@ -218,8 +221,10 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                     currentAgentMoveParams.maxForce
                 );
 
-                Debug.Log("3. desiredAngularSpeed is " + desiredAngularSpeed + ". Applying torque of " + relativeTorque);
-
+                Debug.Log(
+                    $"3. speedDelta is {angularSpeedDelta}. Applying torque of {relativeTorque} = "
+                    + $"clamp(one schmillion Newton-meters, {forceScaler} * {angularSpeedDelta} * {myAB.inertiaTensor.y} * {currentAgentMoveParams.direction})."
+                );
                 myAB.AddRelativeTorque(new Vector3(0, relativeTorque, 0));
                 
             // CASE: Cruise - Apply force calculated from difference between intended angular velocity and current angular velocity
@@ -232,8 +237,11 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                     currentAgentMoveParams.maxForce
                 );
 
+                Debug.Log(
+                    $"2. speedDelta is {angularSpeedDelta}. Applying torque of {relativeTorque} = "
+                    + $"clamp(one schmillion Newton-meters, {forceScaler} * {angularSpeedDelta} * {myAB.inertiaTensor.y} * {currentAgentMoveParams.direction})."
+                );
                 myAB.AddRelativeTorque(new Vector3(0, relativeTorque, 0));
-                Debug.Log("2. angularSpeedDelta is " + angularSpeedDelta + ". Applying torque of " + relativeTorque);
             }
             
             // Begin checks to see if we have stopped moving or if we need to stop moving
