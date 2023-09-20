@@ -6784,7 +6784,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // have the mesh refer to the mesh at meshPath
             meshObj.GetComponent<MeshFilter>().sharedMesh = mesh;
 
-
             // add the rigidbody
             Rigidbody rb = go.AddComponent<Rigidbody>();
             if (physicalProperties != null) {
@@ -6969,7 +6968,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
                 errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -6991,13 +6990,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 metadata.Add(name, meta);
             }
 
-            actionFinished(true, metadata);
+            actionFinishedEmit(true, metadata);
         }
 
         public void AssetInDatabase(string assetId) {
             var assetMap = ProceduralTools.getAssetMap();
 
-            actionFinished(
+            actionFinishedEmit(
                 success: true,
                 actionReturn: assetMap.ContainsKey(assetId)
             );
@@ -7006,18 +7005,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void TouchProceduralLRUCache(List<string> assetIds) {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             assetDB.touchProceduralLRUCache(assetIds);
-            actionFinished(success: true);
+            actionFinishedEmit(success: true);
         }
 
         public void DeleteLRUFromProceduralCache(int assetLimit) {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDB == null) {
+                errorMessage = "No ProceduralAssetDatabase seems to exist.";
+//                Debug.Log(errorMessage);
+                actionFinishedEmit(success: false);
+                return;
+            }
+//            Debug.Log($"Attempting to remove until {assetLimit}");
             assetDB.removeLRUItems(assetLimit);
-            actionFinished(success: true);
+//            Debug.Log($"Items removed.");
+            actionFinishedEmit(success: true);
         }
 
         public void GetLRUCacheKeys() {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
-            actionFinished(
+            actionFinishedEmit(
                 success: true,
                 actionReturn: assetDB.assetMap.proceduralAssetQueue.ToList()
             );
@@ -7031,7 +7038,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 assetDB.touchProceduralLRUCache(assetIds);
             }
             var assetMap = assetDB.assetMap;
-            actionFinished(
+            actionFinishedEmit(
                 success: true,
                 actionReturn: assetIds.Select(id => (id, inDatabase: assetMap.ContainsKey(id))).ToDictionary(it => it.id, it => it.inDatabase)
             );
@@ -7042,7 +7049,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetAssetHoleMetadata(string assetId) {
              var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: "ProceduralAssetDatabase not in scene."
                 );
@@ -7050,7 +7057,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var assetMap = ProceduralTools.getAssetMap();
 
             if (!assetMap.ContainsKey(assetId)) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: $"Asset '{assetId}' is not contained in asset database, you may need to rebuild asset database."
                 );
@@ -7061,14 +7068,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var result = ProceduralTools.getHoleAssetBoundingBox(assetId);
 
             if (result == null) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: $"Asset '{assetId}' does not have a HoleMetadata component, it's probably not a connector like a door or window or component has to be added in the prefab."
                 );
             
             }
             else {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     actionReturn: result
                 );
@@ -7131,14 +7138,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
                 errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             var assetMap = ProceduralTools.getAssetMap();
 
             if (!assetMap.ContainsKey(assetId)) {
                 errorMessage = $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -7165,7 +7172,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: "ProceduralAssetDatabase not in scene."
                 );
@@ -7173,7 +7180,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var assetMap = ProceduralTools.getAssetMap();
 
             if (!assetMap.ContainsKey(assetId)) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database."
                 );
@@ -7211,13 +7218,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
                 errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             var assetMap = ProceduralTools.getAssetMap();
             if (!assetMap.ContainsKey(assetId)) {
                 errorMessage = $"Asset '{assetId}' is not contained in asset database, you may need to rebuild asset database.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -7225,7 +7232,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var bounds = GetObjectSphereBounds(asset);
 
-            actionFinished(true, new ObjectSphereBounds() {
+            actionFinishedEmit(true, new ObjectSphereBounds() {
                 id = assetId,
                 worldSpaceCenter = bounds.center,
                 radius = bounds.extents.magnitude
@@ -7236,7 +7243,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var obj = GameObject.Find(objectId);
             if (obj == null) {
                 errorMessage = $"Object does not exist in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             LookAtObjectCenter(obj);
@@ -7248,7 +7255,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var materialDb = ProceduralTools.GetMaterials();
             if (materialDb == null) {
                 errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             RenderSettings.skybox = materialDb.getAsset(materialId);
@@ -7294,7 +7301,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var obj = GameObject.Find(objectId);
             if (obj == null) {
                 errorMessage = $"Object does not exist in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -7306,7 +7313,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var obj = GameObject.Find(objectId);
             if (obj == null) {
                 errorMessage = $"Object does not exist in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             var bounds = GetObjectSphereBounds(obj);
@@ -7327,12 +7334,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void BakeNavMesh() {
             var navmesh = GameObject.FindObjectOfType<NavMeshSurface>();
             if (navmesh == null) {
-                actionFinished(false, null, "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouse`.");
+                actionFinishedEmit(false, null, "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouse`.");
                 return;
             }
             ProceduralTools.tagObjectNavmesh(this.gameObject, ignore: true);
             navmesh.BuildNavMesh();
-            actionFinished(true);
+            actionFinishedEmit(true);
         }
 
         public void OverwriteNavMeshes(List<NavMeshConfig> navMeshConfigs) {
@@ -7341,7 +7348,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (navmesh == null) { 
                 var go = GameObject.Find(ProceduralTools.NavMeshSurfaceParent());
                 if (go == null) {
-                    actionFinished(false, null, $"No '{ProceduralTools.NavMeshSurfaceParent()}' gameobject found, make sure scene was proceduraly created by `CreateHouse`.");
+                    actionFinishedEmit(false, null, $"No '{ProceduralTools.NavMeshSurfaceParent()}' gameobject found, make sure scene was proceduraly created by `CreateHouse`.");
                     return;
                 }
                 parent = go.transform;
@@ -7361,18 +7368,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             
             ProceduralTools.buildNavMeshes(floorGo.gameObject, navMeshConfigs);
-            actionFinished(success: true);
+            actionFinishedEmit(success: true);
 
         }
 
         public void ReBakeNavMeshes(List<NavMeshConfig> navMeshConfigs = null) {
             var navmeshes = GameObject.FindObjectsOfType<NavMeshSurfaceExtended>();
             if (navmeshes == null || navmeshes.Count() == 0) {
-                actionFinished(false, null, "No NavMeshSurfaceExtended component found, make sure scene was proceduraly created by `CreateHouse`.");
+                actionFinishedEmit(false, null, "No NavMeshSurfaceExtended component found, make sure scene was proceduraly created by `CreateHouse`.");
                 return;
             }
             if (navMeshConfigs != null && navMeshConfigs.Count != navmeshes.Count()) {
-                actionFinished(success: false, errorMessage: $"Provided `navMeshConfigs` count does not match active navmeshSurfaces, provided: {navMeshConfigs.Count} current: {navmeshes.Count()}");
+                actionFinishedEmit(success: false, errorMessage: $"Provided `navMeshConfigs` count does not match active navmeshSurfaces, provided: {navMeshConfigs.Count} current: {navmeshes.Count()}");
             } 
             else if (navMeshConfigs != null){
                 for (var i = 0; i < navmeshes.Count(); i++) {
@@ -7384,16 +7391,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     navmesh.BuildNavMesh(navmesh.buildSettings);
                 }
             }
-            actionFinished(success: true);
+            actionFinishedEmit(success: true);
         }
 
         public void GetNavMeshConfigs() {
             var navmeshes = GameObject.FindObjectsOfType<NavMeshSurfaceExtended>();
             if (navmeshes == null || navmeshes.Count() == 0) {
-                actionFinished(false, null, "No NavMeshSurfaceExtended component found, make sure scene was proceduraly created by `CreateHouse`.");
+                actionFinishedEmit(false, null, "No NavMeshSurfaceExtended component found, make sure scene was proceduraly created by `CreateHouse`.");
                 return;
             }
-            actionFinished(success: true, actionReturn: navmeshes.Select(n => ProceduralTools.navMeshBuildSettingsToConfig(n.buildSettings)).ToList());
+            actionFinishedEmit(success: true, actionReturn: navmeshes.Select(n => ProceduralTools.navMeshBuildSettingsToConfig(n.buildSettings)).ToList());
 
         }
 
@@ -7402,7 +7409,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
             var navmesh = GameObject.FindObjectOfType<NavMeshSurfaceExtended>();
              if (navmesh == null) {
-                actionFinished(false, null, "No NavMeshSurfaceExtended component found, make sure scene was proceduraly created by `CreateHouse`.");
+                actionFinishedEmit(false, null, "No NavMeshSurfaceExtended component found, make sure scene was proceduraly created by `CreateHouse`.");
                 return;
             }
             var navMeshParent = navmesh.transform.parent;
@@ -7416,7 +7423,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
            
             // ProceduralTools.tagObjectNavmesh(this.gameObject, ignore: true);
             // navmesh.BuildNavMesh();
-            actionFinished(true);
+            actionFinishedEmit(true);
         }
 
         public void OnTriggerStay(Collider other) {
@@ -7554,7 +7561,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Debug.Log(positions[0]);
             Debug.Log(positions[1]);
 #endif
-            actionFinished(true, positions);
+            actionFinishedEmit(true, positions);
         }
 
         public void GetLights() {
@@ -7572,7 +7579,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //check that name of light specified exists in scene, if not throw exception
 
-            actionFinished(true);
+            actionFinishedEmit(true);
         }
 
 #if UNITY_EDITOR

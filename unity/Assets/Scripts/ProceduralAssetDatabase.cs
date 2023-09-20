@@ -64,7 +64,7 @@ namespace Thor.Procedural {
         }
         private int originalPriorityMinValue;
         private int originalPriorityMaxValue;
-        public ProceduralLRUCacheAssetMap(int priorityMinValue = 0, int piorityMaxValue = 1) : this(new Dictionary<string, T>(), priorityMinValue, piorityMaxValue) {
+        public ProceduralLRUCacheAssetMap(int priorityMinValue = 0, int priorityMaxValue = 1) : this(new Dictionary<string, T>(), priorityMinValue, priorityMaxValue) {
         }
         public ProceduralLRUCacheAssetMap(Dictionary<string, T> assetMap, int rankingMinValue = 0, int rankingMaxValue = 1) : base(assetMap) {
             this.priorityMinValue = this.originalPriorityMinValue = rankingMinValue;
@@ -98,9 +98,12 @@ namespace Thor.Procedural {
         }
 
         public AsyncOperation removeLRU(int limit, bool deleteWithHighestPriority = true) {
+//            Debug.Log($"Running removeLRU with {limit}, {deleteWithHighestPriority}");
             if (proceduralAssetQueue.Count == 0) {
+//                Debug.Log($"Queue empty, returning");
                 return null;
             }
+//            Debug.Log($"Queue not empty");
 
             var current = proceduralAssetQueue.First;
             var toDequeuePrio = proceduralAssetQueue.GetPriority(current);
@@ -108,11 +111,18 @@ namespace Thor.Procedural {
             // Do not delete items with the highest priority if !deleteWithHighestPriority
             while (proceduralAssetQueue.Count > limit && (deleteWithHighestPriority || toDequeuePrio < this.priorityMaxValue)) {
                 var removed = proceduralAssetQueue.Dequeue();
+                this.assetMap[removed].gameObject.transform.parent = null;
+                this.assetMap[removed].gameObject.SetActive(false);
                 this.assetMap.Remove(removed);
+//                Debug.Log($"Removing {removed}");
                 dequeueCount++;
+                if (proceduralAssetQueue.Count == 0) {
+                    break;
+                }
                 current = proceduralAssetQueue.First;
                 toDequeuePrio = proceduralAssetQueue.GetPriority(current);
             }
+//            Debug.Log($"Remaining in queue {proceduralAssetQueue.Count}");
             AsyncOperation asyncOp = null;
             if (dequeueCount > 0) { 
                 // WARNING: Async operation, should be ok for deleting assets if using the same creation-deletion hook
