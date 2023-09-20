@@ -137,6 +137,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
             Vector3 pos = armTarget.transform.localPosition;
             pos.z = 0.0f; // pulls the arm in to be fully contracted
+            SetGripperOpenness(InitialGripperOpenness); // set initial amount of gripper openness
             armTarget.transform.localPosition = pos;
             var StretchSolver = this.GetComponentInChildren<Stretch_Arm_Solver>();
             Debug.Log("running manipulate stretch arm");
@@ -348,6 +349,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 //         // perhaps this should fail if no object is picked up?
 //         // currently action success happens as long as the arm is
 //         // enabled because it is a successful "attempt" to pickup something
+
+        public void SetGripperOpenness(float openness) {
+            foreach (GameObject opennessState in GripperOpennessStates) {
+                opennessState.SetActive(false);
+            }
+            if (-100 <= openness && openness < 0) {
+                GripperOpennessStates[0].SetActive(true);
+            } else if (0 <= openness && openness < 5) {
+                GripperOpennessStates[1].SetActive(true);
+            } else if (5 <= openness && openness < 15) {
+                GripperOpennessStates[2].SetActive(true);
+            } else if (15 <= openness && openness < 25) {
+                GripperOpennessStates[3].SetActive(true);
+            } else if (25 <= openness && openness < 35) {
+                GripperOpennessStates[4].SetActive(true);
+            } else if (35 <= openness && openness < 45) {
+                GripperOpennessStates[5].SetActive(true);
+            } else if (45 <= openness && openness <= 50) {
+                GripperOpennessStates[6].SetActive(true);
+            } else {
+                throw new InvalidOperationException(
+                    $"Invalid value for `openness`: '{openness}'. Value should be between -100 and 50"
+                );
+            }
+        }
+        
         public void PickupObject(List<string> objectIdCandidates = null) {
             Stretch_Robot_Arm_Controller arm = getArm();
             actionFinished(arm.PickupObject(objectIdCandidates, ref errorMessage), errorMessage);
@@ -881,27 +908,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void RotateCameraBase(float degrees) {
-            var target = gimbalBase;
-            gimbalBase.localEulerAngles += new Vector3(0, (gimbalBaseStartingYRotation + degrees) - gimbalBase.transform.localEulerAngles.z, 0);
-        }
+        // public void RotateCameraBase(float degrees) {
+        //     var target = gimbalBase;
+        //     gimbalBase.localEulerAngles += new Vector3(0, (gimbalBaseStartingYRotation + degrees) - gimbalBase.transform.localEulerAngles.z, 0);
+        // }
 
-        public void RotateCameraMount(float degrees, bool secondary = false) {
-            var target = !secondary ? primaryGimbal : secondaryGimbal;
-            var startingXRotation = !secondary ? primaryStartingXRotation : secondaryStartingXRotation;
-            // var minDegree = Mathf.Round(startingXRotation - 15.0001f);
-            // var maxDegree = Mathf.Round(startingXRotation + 15.0001f);
-            var minDegree = minGimbalXRotation;
-            var maxDegree = maxGimbalXRotation;
-            if (degrees >= minDegree && degrees <= maxDegree) {
-                target.localEulerAngles = new Vector3(degrees, target.localEulerAngles.y, target.localEulerAngles.z);
-                actionFinished(true);
-            }
-            else {
-                errorMessage = $"Invalid value for `degrees`: '{degrees}'. Value should be between '{minDegree}' and '{maxDegree}'.";
-                actionFinished(false);
-            }
-        }
+        // public void RotateCameraMount(float degrees, bool secondary = false) {
+        //     var target = !secondary ? primaryGimbal : secondaryGimbal;
+        //     var startingXRotation = !secondary ? primaryStartingXRotation : secondaryStartingXRotation;
+        //     // var minDegree = Mathf.Round(startingXRotation - 15.0001f);
+        //     // var maxDegree = Mathf.Round(startingXRotation + 15.0001f);
+        //     var minDegree = minGimbalXRotation;
+        //     var maxDegree = maxGimbalXRotation;
+        //     if (degrees >= minDegree && degrees <= maxDegree) {
+        //         target.localEulerAngles = new Vector3(degrees, target.localEulerAngles.y, target.localEulerAngles.z);
+        //         actionFinished(true);
+        //     }
+        //     else {
+        //         errorMessage = $"Invalid value for `degrees`: '{degrees}'. Value should be between '{minDegree}' and '{maxDegree}'.";
+        //         actionFinished(false);
+        //     }
+        // }
 
 #if UNITY_EDITOR
         // debug for static arm collisions from collision listener

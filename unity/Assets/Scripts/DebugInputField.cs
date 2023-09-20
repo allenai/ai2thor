@@ -595,14 +595,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
-                case "rcb": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
+                // case "rcb": {
+                //     Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "RotateCameraBase";
-                    action["degrees"] = 0;
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
+                //     action["action"] = "RotateCameraBase";
+                //     action["degrees"] = 0;
+                //     CurrentActiveController().ProcessControlCommand(action);
+                //     break;
+                // }
 
                 case "rcm": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
@@ -614,6 +614,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                     if (splitcommand.Length == 3) {
                         action["secondary"] = bool.Parse(splitcommand[2]);
+                    }
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
+                case "sgo": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "SetGripperOpenness";
+                    action["openness"] = 0;
+                    if (splitcommand.Length > 1) {
+                        action["openness"] = float.Parse(splitcommand[1]);
                     }
                     CurrentActiveController().ProcessControlCommand(action);
                     break;
