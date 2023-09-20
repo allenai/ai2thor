@@ -111,8 +111,9 @@ namespace Thor.Procedural {
             // Do not delete items with the highest priority if !deleteWithHighestPriority
             while (proceduralAssetQueue.Count > limit && (deleteWithHighestPriority || toDequeuePrio < this.priorityMaxValue)) {
                 var removed = proceduralAssetQueue.Dequeue();
-                this.assetMap[removed].gameObject.transform.parent = null;
-                this.assetMap[removed].gameObject.SetActive(false);
+                // var removedObj = this.assetMap[removed];
+                // this.assetMap[removed].gameObject.transform.parent = null;
+                // this.assetMap[removed].gameObject.SetActive(false);
                 this.assetMap.Remove(removed);
 //                Debug.Log($"Removing {removed}");
                 dequeueCount++;

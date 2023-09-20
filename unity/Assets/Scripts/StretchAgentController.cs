@@ -375,6 +375,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     $"Invalid value for `openness`: '{openness}'. Value should be between -100 and 50"
                 );
             }
+            actionFinished(true);
         }
 
         public void PickupObject(List<string> objectIdCandidates = null) {
@@ -930,6 +931,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     gimbalBase.transform.localEulerAngles.z
                 );
             }
+            actionFinished(true);
         }
 
         public void RotateCameraMount(float degrees, bool secondary = false) {
