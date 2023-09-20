@@ -140,7 +140,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
             Vector3 pos = armTarget.transform.localPosition;
             pos.z = 0.0f; // pulls the arm in to be fully contracted
-            SetGripperOpenness(InitialGripperOpenness); // set initial amount of gripper openness
+            //SetGripperOpenness(InitialGripperOpenness); // set initial amount of gripper openness
             armTarget.transform.localPosition = pos;
             var StretchSolver = this.GetComponentInChildren<Stretch_Arm_Solver>();
             Debug.Log("running manipulate stretch arm");

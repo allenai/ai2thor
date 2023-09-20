@@ -23,7 +23,7 @@ namespace Thor.Procedural {
 
             Instance = this;
             this.assetMap = new ProceduralLRUCacheAssetMap<GameObject>(prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
-            DontDestroyOnLoad(gameObject);
+            // DontDestroyOnLoad(gameObject);
         }
 
         public void addAsset(GameObject asset, bool procedural = false) {
@@ -130,7 +130,18 @@ namespace Thor.Procedural {
                 // WARNING: Async operation, should be ok for deleting assets if using the same creation-deletion hook
                 // cache should be all driven within one system, currently python driven
                 asyncOp = Resources.UnloadUnusedAssets();
-                asyncOp.completed += (op) => GC.Collect();
+                asyncOp.completed += (op) => {
+                    Debug.Log("Asyncop callback called calling GC");
+                    GC.Collect();
+                };
+
+                while (!asyncOp.isDone) {
+                    // waiting
+                    continue;
+                }
+
+                GC.Collect();
+
             }
             return asyncOp;
         }
