@@ -114,6 +114,7 @@ namespace Thor.Procedural {
                 if (this.getAsset(removed) is GameObject go) {
                     go.transform.parent = null;
                     go.SetActive(false);
+                    GameObject.Destroy(go);
                 }
                 this.assetMap.Remove(removed);
 //                Debug.Log($"Removing {removed}");
