@@ -140,7 +140,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
             Vector3 pos = armTarget.transform.localPosition;
             pos.z = 0.0f; // pulls the arm in to be fully contracted
-            SetGripperOpenness(InitialGripperOpenness); // set initial amount of gripper openness
             armTarget.transform.localPosition = pos;
             var StretchSolver = this.GetComponentInChildren<Stretch_Arm_Solver>();
             Debug.Log("running manipulate stretch arm");
@@ -358,18 +357,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             if (-100 <= openness && openness < 0) {
                 GripperOpennessStates[0].SetActive(true);
+                actionFinished(true);
             } else if (0 <= openness && openness < 5) {
                 GripperOpennessStates[1].SetActive(true);
+                actionFinished(true);
             } else if (5 <= openness && openness < 15) {
                 GripperOpennessStates[2].SetActive(true);
+                actionFinished(true);
             } else if (15 <= openness && openness < 25) {
                 GripperOpennessStates[3].SetActive(true);
+                actionFinished(true);
             } else if (25 <= openness && openness < 35) {
                 GripperOpennessStates[4].SetActive(true);
+                actionFinished(true);
             } else if (35 <= openness && openness < 45) {
                 GripperOpennessStates[5].SetActive(true);
+                actionFinished(true);
             } else if (45 <= openness && openness <= 50) {
                 GripperOpennessStates[6].SetActive(true);
+                actionFinished(true);
             } else {
                 throw new InvalidOperationException(
                     $"Invalid value for `openness`: '{openness}'. Value should be between -100 and 50"
@@ -929,6 +935,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     gimbalBaseStartingYRotation + yawDegrees,
                     gimbalBase.transform.localEulerAngles.z
                 );
+                actionFinished(true);
             }
         }
 
