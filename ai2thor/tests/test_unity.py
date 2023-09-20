@@ -2219,7 +2219,6 @@ def test_rotate_hand(controller):
 #             diffs.append((object_id, d))
 #     assert diffs == []
 
-
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_fill_liquid(controller):
     pot = next(
