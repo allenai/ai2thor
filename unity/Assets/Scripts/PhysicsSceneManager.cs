@@ -155,7 +155,7 @@ public class PhysicsSceneManager : MonoBehaviour {
             else if (typeof(IEnumerator).IsAssignableFrom(enumerator.Current.GetType())) {
                 actionFinished = PhysicsSceneManager.ExpandIEnumerator(enumerator.Current as IEnumerator, physicsSimulationParams);
             }
-            IteratorExpandCount++;
+            PhysicsSceneManager.IteratorExpandCount++;
         }
         return actionFinished;
     }
@@ -201,10 +201,10 @@ public class PhysicsSceneManager : MonoBehaviour {
 
         Debug.Log($"--Ran enumerator loop count {IteratorExpandCount}, physics call count {LastPhysicsSimulateCallCount}");
         
-        if (!physicsSimulationParams.autoSimulation) {
+        if (!physicsSimulationParams.autoSimulation && physicsSimulationParams.maxActionTimeMilliseconds > 0.0f) {
             while (
                 // currentSimulationCallCount < physicsSimulationParams.maxActionPhysicsSteps ||
-                PhysicsSimulateTimeSeconds*1000.0f < physicsSimulationParams.maxActionTimeMilliseconds
+                PhysicsSceneManager.PhysicsSimulateTimeSeconds*1000.0f < physicsSimulationParams.maxActionTimeMilliseconds
             ) {
                 Debug.Log($"-- Running simulate physics current {PhysicsSimulateTimeSeconds} to {physicsSimulationParams.maxActionTimeMilliseconds}");
                 PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);

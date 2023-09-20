@@ -369,17 +369,19 @@ public static class ActionDispatcher {
         System.Reflection.ParameterInfo[] methodParams = method.GetParameters();
         var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
         object[] arguments = new object[methodParams.Length];
-        var physicsSimulationProperties = dynamicServerAction.physicsSimulationParams;
-        var usePhysicsSimulationParams = physicsSimulationProperties != null;
+        var physicsSimulationParams = dynamicServerAction.physicsSimulationParams;
+        var usePhysicsSimulationParams = physicsSimulationParams != null;
+
+        // Default simulation params
+        physicsSimulationParams ??= PhysicsSceneManager.defaultPhysicsSimulationParams.DeepClone();
+
         if (typeof(IEnumerator) == method.ReturnType) {
             // New action type always pass down physicsSim params if interface has them
             if (!usePhysicsSimulationParams) {
                 usePhysicsSimulationParams = true;
-                // Default simulation params
-                physicsSimulationProperties = PhysicsSceneManager.defaultPhysicsSimulationParams.DeepClone();
                 // What will be passed down to the action
                 if (paramDict.ContainsKey(DynamicServerAction.physicsSimulationParamsVariable)) {
-                    dynamicServerAction.AddPhysicsSimulationParams(physicsSimulationProperties);
+                    dynamicServerAction.AddPhysicsSimulationParams(physicsSimulationParams);
                 }
             }
         }
@@ -462,7 +464,7 @@ public static class ActionDispatcher {
         else {
 
 
-            Debug.Log($"-- Invoke usePhysicsSimulationParams true autosim: {physicsSimulationProperties.autoSimulation}");
+            Debug.Log($"-- Invoke usePhysicsSimulationParams true autosim: {physicsSimulationParams.autoSimulation}");
             var callActionFinished = true;
             
             var runAsCoroutine = false;
@@ -470,7 +472,7 @@ public static class ActionDispatcher {
             if (method.ReturnType == typeof(System.Collections.IEnumerator)) {
                 methodReturn = method.Invoke(target, arguments);
                 action = methodReturn as IEnumerator;
-                if (physicsSimulationProperties.autoSimulation) {
+                if (physicsSimulationParams.autoSimulation) {
                     runAsCoroutine = true;
                 }
             }
@@ -502,7 +504,7 @@ public static class ActionDispatcher {
                 Debug.Log("-- did not Run as coroutine");
                 var actionFinished = PhysicsSceneManager.runActionPhysicsSimulation(
                     action, 
-                    physicsSimulationProperties
+                    physicsSimulationParams
                 );
 
                 // TODO remove check once legacy actions are removed
@@ -513,7 +515,7 @@ public static class ActionDispatcher {
             }
             else {
                  Debug.Log("-- Ran as coroutine");
-                target.StartCoroutine(PhysicsSceneManager.addPhysicsSimulationPadding(target, action, physicsSimulationProperties));
+                target.StartCoroutine(PhysicsSceneManager.addPhysicsSimulationPadding(target, action, physicsSimulationParams));
             }
             
         }
