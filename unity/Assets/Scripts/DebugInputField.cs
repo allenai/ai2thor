@@ -2749,6 +2749,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                // rotate wrist right
+                case "rwr": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RotateWristRelative";
+                        action["yaw"] = 90f;
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
                 // move hand ahead, forward relative to agent's facing
                 // pass in move magnitude or default is 0.25 units
                 case "mha": {
@@ -3583,6 +3593,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+                
+                case "stretchmovebaseup": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveArmBaseUp";
+                        action["distance"] = 0.05f;
+                        action["speed"] = 5.0f;
+                        action["disableRendering"] = false;
+
+                        //action["fixedDeltaTime"] = 5.0f;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
 
                 case "abmovebaseup": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
