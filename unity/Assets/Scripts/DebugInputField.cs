@@ -635,7 +635,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     CurrentActiveController().ProcessControlCommand(action);
                     break;
                 }
-                 
+
+                case "adbdol": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "SetAssetDatabaseCaching";
+
+                    if (splitcommand.Length > 1) {
+                        action["enable"] = bool.Parse(splitcommand[1]);
+                    }
+                    
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+
+                }
                 case "mabd": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 

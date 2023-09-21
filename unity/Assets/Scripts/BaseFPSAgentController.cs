@@ -7582,6 +7582,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true);
         }
 
+        public void SetAssetDatabaseCaching(bool enable) {
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDb == null) {
+                errorMessage = "ProceduralAssetDatabase not in scene.";
+                actionFinishedEmit(false);
+                return;
+            }
+            assetDb.dontDestroyOnLoad = enable;
+            actionFinished(true);
+        }
+
 #if UNITY_EDITOR
         void OnDrawGizmos() {
             //// check for valid spawn points in GetSpawnCoordinatesAboveObject action

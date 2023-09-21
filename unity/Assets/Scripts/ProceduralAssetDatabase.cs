@@ -15,6 +15,8 @@ namespace Thor.Procedural {
 
         [SerializeField] public ProceduralLRUCacheAssetMap<GameObject> assetMap;
 
+        public bool dontDestroyOnLoad = true;
+
         void Awake() {
             if (Instance != null) {
                 Destroy(gameObject);
@@ -23,7 +25,13 @@ namespace Thor.Procedural {
 
             Instance = this;
             this.assetMap = new ProceduralLRUCacheAssetMap<GameObject>(prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
-            DontDestroyOnLoad(gameObject);
+            if (dontDestroyOnLoad) {
+                DontDestroyOnLoad(gameObject);
+            }
+            else {
+                // Reset it back to enable caching for next time object is created
+                dontDestroyOnLoad = true;
+            }
         }
 
         public void addAsset(GameObject asset, bool procedural = false) {
@@ -130,21 +138,22 @@ namespace Thor.Procedural {
             if (dequeueCount > 0) { 
                 // WARNING: Async operation, should be ok for deleting assets if using the same creation-deletion hook
                 // cache should be all driven within one system, currently python driven
-                asyncOp = Resources.UnloadUnusedAssets();
-                asyncOp.completed += (op) => {
-                    Debug.Log("Asyncop callback called calling GC");
-                    GC.Collect();
-                };
-
-                float timeout = 2.0f;
-                float startTime = Time.realtimeSinceStartup;
-                while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
-                    // waiting
-                    continue;
-                }
-
-                GC.Collect();
-
+                
+                    asyncOp = Resources.UnloadUnusedAssets();
+                    asyncOp.completed += (op) => {
+                        Debug.Log("Asyncop callback called calling GC");
+                        GC.Collect();
+                    };
+                   
+                    #if !UNITY_EDITOR && !UNITY_WEBGL
+                        float timeout = 2.0f;
+                        float startTime = Time.realtimeSinceStartup;
+                        while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
+                            // waiting
+                            continue;
+                        }
+                        GC.Collect();
+                    #endif
             }
             return asyncOp;
         }
