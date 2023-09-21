@@ -7590,7 +7590,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
             assetDb.dontDestroyOnLoad = enable;
-            actionFinished(true);
+            actionFinishedEmit(true);
         }
 
 #if UNITY_EDITOR

@@ -139,21 +139,21 @@ namespace Thor.Procedural {
                 // WARNING: Async operation, should be ok for deleting assets if using the same creation-deletion hook
                 // cache should be all driven within one system, currently python driven
                 
-                    asyncOp = Resources.UnloadUnusedAssets();
-                    asyncOp.completed += (op) => {
-                        Debug.Log("Asyncop callback called calling GC");
-                        GC.Collect();
-                    };
+                    // asyncOp = Resources.UnloadUnusedAssets();
+                    // asyncOp.completed += (op) => {
+                    //     Debug.Log("Asyncop callback called calling GC");
+                    //     GC.Collect();
+                    // };
                    
-                    #if !UNITY_EDITOR && !UNITY_WEBGL
-                        float timeout = 2.0f;
-                        float startTime = Time.realtimeSinceStartup;
-                        while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
-                            // waiting
-                            continue;
-                        }
-                        GC.Collect();
-                    #endif
+                    // #if !UNITY_EDITOR && !UNITY_WEBGL
+                    //     float timeout = 2.0f;
+                    //     float startTime = Time.realtimeSinceStartup;
+                    //     while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
+                    //         // waiting
+                    //         continue;
+                    //     }
+                    //     GC.Collect();
+                    // #endif
             }
             return asyncOp;
         }
