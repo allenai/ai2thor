@@ -23,7 +23,7 @@ namespace Thor.Procedural {
 
             Instance = this;
             this.assetMap = new ProceduralLRUCacheAssetMap<GameObject>(prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
-            // DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(gameObject);
         }
 
         public void addAsset(GameObject asset, bool procedural = false) {
