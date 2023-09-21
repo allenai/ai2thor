@@ -136,7 +136,9 @@ namespace Thor.Procedural {
                     GC.Collect();
                 };
 
-                while (!asyncOp.isDone) {
+                float timeout = 2.0f;
+                float startTime = Time.realtimeSinceStartup;
+                while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
                     // waiting
                     continue;
                 }
