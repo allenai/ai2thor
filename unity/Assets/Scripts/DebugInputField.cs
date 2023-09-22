@@ -3543,6 +3543,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+
                 // move mid level arm stop motion
                 case "mar": {
                         // ServerAction action = new ServerAction();
@@ -3585,6 +3586,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+
                 case "mau": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveArmBaseUp";
@@ -3604,7 +3606,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         //action["fixedDeltaTime"] = 5.0f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
-                }
+                    }
 
                 case "abmovebaseup": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
