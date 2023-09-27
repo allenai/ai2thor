@@ -894,7 +894,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            if ((!scene.StartsWith("Procedural")) g&& excludedObjectIds != null) {
+            if ((!scene.StartsWith("Procedural")) && excludedObjectIds != null) {
                 // The reason for the error below is that we need to be sure that every
                 // object contains references to its own materials. This is not
                 // necessarily the case in some ithor scenes because some objects
