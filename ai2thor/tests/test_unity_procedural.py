@@ -212,41 +212,41 @@ def test_depth(controller_args):
     assert depth_images_near(evt.depth_frame, raw_depth, epsilon=1e-1, debug_save=True)
 
 
-@pytest.mark.parametrize("controller_args", fifo)
-def test_determinism(controller_args):
-    controller_args.update(
-    #     ph
-    # )
+# @pytest.mark.parametrize("controller_args", fifo)
+# def test_determinism(controller_args):
+#     controller_args.update(
+#         ph
+#     )
 
-    # controller = build_controller(**controller_args)
+#     controller = build_controller(**controller_args)
 
-    # depth_filename = "proc_depth.npy"
-    # raw_depth = np.load(os.path.join(IMAGE_FOLDER_PATH, depth_filename))
+#     depth_filename = "proc_depth.npy"
+#     raw_depth = np.load(os.path.join(IMAGE_FOLDER_PATH, depth_filename))
 
-    # evt = controller.step(action="GetHouseFromTemplate", template=house_template)
+#     evt = controller.step(action="GetHouseFromTemplate", template=house_template)
 
-    # assert evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]
-    # house = evt.metadata["actionReturn"]
+#     assert evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]
+#     house = evt.metadata["actionReturn"]
 
-    # evt = controller.step(action="CreateHouse", house=house)
+#     evt = controller.step(action="CreateHouse", house=house)
 
-    # print(
-    #     "Action success {0}, message {1}".format(
-    #         evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]
-    #     )
-    # )
-    # assert evt.metadata["lastActionSuccess"]
+#     print(
+#         "Action success {0}, message {1}".format(
+#             evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]
+#         )
+#     )
+#     assert evt.metadata["lastActionSuccess"]
 
-    # evt = controller.step(
-    #     action="TeleportFull",
-    #     x=3.0,
-    #     y=0.9010001,
-    #     z=1.0,
-    #     rotation=dict(x=0, y=0, z=0),
-    #     horizon=0,
-    #     standing=True,
-    #     forceAction=True,
-    # )
+#     evt = controller.step(
+#         action="TeleportFull",
+#         x=3.0,
+#         y=0.9010001,
+#         z=1.0,
+#         rotation=dict(x=0, y=0, z=0),
+#         horizon=0,
+#         standing=True,
+#         forceAction=True,
+#     )
 
-    # controller.stop()
-    # assert depth_images_near(evt.depth_frame, raw_depth, epsilon=1e-1, debug_save=True)
+#     controller.stop()
+#     assert depth_images_near(evt.depth_frame, raw_depth, epsilon=1e-1, debug_save=True)
