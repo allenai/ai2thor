@@ -869,7 +869,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool? useValMaterials = null,
             bool? useTestMaterials = null,
             bool? useExternalMaterials = null,
-            string[] inRoomTypes = null
+            string[] inRoomTypes = null,
+            List<string> excludedObjectIds = null
         ) {
             string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             HashSet<string> validRoomTypes = new HashSet<string>() {
@@ -893,6 +894,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+            if ((!scene.StartsWith("Procedural")) g&& excludedObjectIds != null) {
+                // The reason for the error below is that we need to be sure that every
+                // object contains references to its own materials. This is not
+                // necessarily the case in some ithor scenes because some objects
+                // are "fake" in the sense that part of them might correspond
+                // to scene geometry (e.g. the CounterTop in FloorPlan1).
+                throw new ArgumentException(
+                    "excludedObjectIds can only be set in a Procedural scene."
+                );
+            }
+
+            if (excludedObjectIds == null) {
+                excludedObjectIds = new List<string>();
+            }
+
+            HashSet<string> excludedMaterialNames = new HashSet<string>();
+            foreach (string objectId in excludedObjectIds) {
+                Debug.Log($"Exclude materials from {objectId}");
+                SimObjPhysics objectWhoseMaterialsToExclude = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+                foreach (var renderer in objectWhoseMaterialsToExclude.GetComponentsInChildren<Renderer>()) {
+                    foreach (var mat in renderer.sharedMaterials) {
+                        if (mat != null && mat.name != null) {
+                            Debug.Log($"excluding {mat.name}");
+                            excludedMaterialNames.Add(mat.name);
+                        }
+                    }
+                }
+            }
+
             ColorChanger colorChangeComponent;
             if (scene.StartsWith("Procedural")) {
                 colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
@@ -901,7 +932,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     useValMaterials: useValMaterials.HasValue ? useValMaterials.Value : true,
                     useTestMaterials: useTestMaterials.HasValue ? useTestMaterials.Value : true,
                     useExternalMaterials: useExternalMaterials.HasValue ? useExternalMaterials.Value : true,
-                    inRoomTypes: inRoomTypes != null ? chosenRoomTypes : validRoomTypes
+                    inRoomTypes: inRoomTypes != null ? chosenRoomTypes : validRoomTypes,
+                    excludedMaterialNames: excludedMaterialNames
                 );
 
                 // Keep it here to make sure the action succeeds first
@@ -1003,7 +1035,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 useValMaterials: useValMaterials.Value,
                 useTestMaterials: useTestMaterials.Value,
                 useExternalMaterials: useExternalMaterials.Value,
-                inRoomTypes: chosenRoomTypes.Count == 0 ? null : chosenRoomTypes
+                inRoomTypes: chosenRoomTypes.Count == 0 ? null : chosenRoomTypes,
+                excludedMaterialNames: excludedMaterialNames
             );
 
             // Keep it here to make sure the action succeeds first

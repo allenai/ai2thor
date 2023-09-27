@@ -1422,8 +1422,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // materials, and you'll have to call "git restore *.mat *maT"
                 // to revert the materials.
                 case "dangerouslyChangeMaterial":
+                    List<string> excludedObjectIds = new List<string>();
+
+                    if (splitcommand.Length > 1) {
+                        excludedObjectIds.Add(splitcommand[1]);
+                    }
+
                     CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                        ["action"] = "RandomizeMaterials"
+                        ["action"] = "RandomizeMaterials",
+                        ["excludedObjectIds"] = excludedObjectIds
                     });
                     break;
                 case "resetMaterial":
