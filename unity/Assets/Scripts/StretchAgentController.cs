@@ -143,8 +143,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override IEnumerator RotateWristRelative(
-            PhysicsSimulationParams physicsSimulationParams,
-            
             float pitch = 0f,
             float yaw = 0f,
             float roll = 0f,
@@ -157,8 +155,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             return base.RotateWristRelative(
-                physicsSimulationParams: physicsSimulationParams,
-
                 pitch: 0f,
                 yaw: yaw,
                 roll: 0f,

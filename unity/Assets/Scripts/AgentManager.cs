@@ -2061,7 +2061,7 @@ public class ServerAction {
     // for the arm to detect collisions and stop moving
     public float? massThreshold;
 
-    public PhysicsSimulationParams physicsSimulationProperties = null; 
+    public PhysicsSimulationParams physicsSimulationParams; 
     public float maxUpwardLookAngle = 0.0f;
     public float maxDownwardLookAngle = 0.0f;
 

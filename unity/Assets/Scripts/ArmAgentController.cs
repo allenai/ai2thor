@@ -59,8 +59,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         `MoveArmRelative` are identical.
         */
         public IEnumerator MoveArmRelative(
-            PhysicsSimulationParams physicsSimulationParams, // Special param will be autofilled if not provided with default values
-
             Vector3 offset,
             float speed = 1,
             bool returnToStart = true,
@@ -72,7 +70,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 offset: offset,
                 unitsPerSecond: speed,
-                fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStart: returnToStart,
                 coordinateSpace: coordinateSpace,
                 restrictTargetPosition: restrictMovement
@@ -80,8 +78,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual IEnumerator MoveArm(
-            PhysicsSimulationParams physicsSimulationParams,
-
             Vector3 position,
             float speed = 1,
             bool returnToStart = true,
@@ -93,7 +89,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 target: position,
                 unitsPerSecond: speed,
-                fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStart: returnToStart,
                 coordinateSpace: coordinateSpace,
                 restrictTargetPosition: restrictMovement
@@ -140,8 +136,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual IEnumerator MoveAgent(
-            PhysicsSimulationParams physicsSimulationParams,
-
             bool returnToStart = true,
             float ahead = 0,
             float right = 0,
@@ -163,7 +157,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 moveTransform: this.transform,
                 targetPosition: targetPosition,
-                fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 unitsPerSecond: speed,
                 returnToStartPropIfFailed: returnToStart,
                 localPosition: false
@@ -171,14 +165,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public IEnumerator MoveAhead(
-            PhysicsSimulationParams physicsSimulationParams,
-
             float? moveMagnitude = null,
             float speed = 1,
             bool returnToStart = true
         ) {
             return MoveAgent(
-                physicsSimulationParams: physicsSimulationParams,
                 ahead: moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
                 returnToStart: returnToStart
@@ -187,14 +178,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
         public IEnumerator MoveBack(
-            PhysicsSimulationParams physicsSimulationParams,
-
             float? moveMagnitude = null,
             float speed = 1,
             bool returnToStart = true
         ) {
             return MoveAgent(
-                physicsSimulationParams: physicsSimulationParams,
                 ahead: -moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
                 returnToStart: returnToStart
@@ -202,14 +190,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public IEnumerator MoveRight(
-            PhysicsSimulationParams physicsSimulationParams,
-            
             float? moveMagnitude = null,
             float speed = 1,
             bool returnToStart = true
         ) {
             return MoveAgent(
-                physicsSimulationParams: physicsSimulationParams,
                 right: moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
                 returnToStart: returnToStart
@@ -217,13 +202,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public IEnumerator MoveLeft(
-            PhysicsSimulationParams physicsSimulationParams,
             float? moveMagnitude = null,
             float speed = 1,
             bool returnToStart = true
         ) {
             return MoveAgent(
-                physicsSimulationParams: physicsSimulationParams,
                 right: -moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
                 returnToStart: returnToStart
@@ -231,13 +214,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public IEnumerator RotateRight(
-            PhysicsSimulationParams physicsSimulationParams,
             float? degrees = null,
             float speed = 1.0f,
             bool returnToStart = true
         ) {
             return RotateAgent(
-                physicsSimulationParams: physicsSimulationParams,
                 degrees: degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
                 returnToStart: returnToStart
@@ -245,14 +226,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public IEnumerator RotateLeft(
-            PhysicsSimulationParams physicsSimulationParams,
-
             float? degrees = null,
             float speed = 1.0f,
             bool returnToStart = true
         ) {
             return RotateAgent(
-                physicsSimulationParams: physicsSimulationParams,
                 degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
                 returnToStart: returnToStart
@@ -260,8 +238,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual IEnumerator RotateAgent(
-            PhysicsSimulationParams physicsSimulationParams,
-
             float degrees,
             float speed = 1.0f,
             bool returnToStart = true
@@ -274,7 +250,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 moveTransform: this.transform,
                 targetRotation: this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
-                fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 radiansPerSecond: speed,
                 returnToStartPropIfFailed: returnToStart
             );
@@ -291,8 +267,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         determine how to detect collision between a given arm joint and other arm joints.
         */
         public virtual IEnumerator RotateWristRelative(
-            PhysicsSimulationParams physicsSimulationParams,
-
             float pitch = 0f,
             float yaw = 0f,
             float roll = 0f,
@@ -304,7 +278,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 rotation: Quaternion.Euler(pitch, yaw, -roll),
                 degreesPerSecond: speed,
-                fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart
             );
         }
@@ -313,8 +287,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
         // arm constrained by the agent's capsule
         public virtual IEnumerator MoveArmBase(
-            PhysicsSimulationParams physicsSimulationParams,
-
             float y,
             float speed = 1,
             bool returnToStart = true,
@@ -330,15 +302,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 height: y,
                 unitsPerSecond: speed,
-                fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart,
                 normalizedY: normalizedY
             );
         }
 
         public virtual IEnumerator MoveArmBaseUp(
-            PhysicsSimulationParams physicsSimulationParams,
-
             float distance,
             float speed = 1,
             bool returnToStart = true
@@ -348,20 +318,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 distance: distance,
                 unitsPerSecond: speed,
-                fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart
             );
         }
 
         public virtual IEnumerator MoveArmBaseDown(
-            PhysicsSimulationParams physicsSimulationParams,
-
             float distance,
             float speed = 1,
             bool returnToStart = true
         ) {
             return MoveArmBaseUp(
-                physicsSimulationParams: physicsSimulationParams,
                 distance: -distance,
                 speed: speed,
                 returnToStart: returnToStart

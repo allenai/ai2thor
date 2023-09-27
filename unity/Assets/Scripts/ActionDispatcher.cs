@@ -452,29 +452,26 @@ public static class ActionDispatcher {
 
         IEnumerator action = null;
         object methodReturn;
-        // TODO: deprecate, void action 
-        // if (usePhysicsSimulationParams &&  method.ReturnType == (typeof(void))) {
-        //     // TODO: remove once deprecated
-        //     action = DeprecatedActionWrapper(() => method.Invoke(target, arguments), new ActionFinished());
-        // }
 
-        // TODO: deprecated actions called in the old way without PhysicsSimulationParams or any wrappers
+        // TODO: deprecated actions called in the old way that return void 
         if (!usePhysicsSimulationParams && method.ReturnType == typeof(void)) {
             method.Invoke(target, arguments);
         }
         else {
-            
-            var runAsCoroutine = physicsSimulationParams.autoSimulation;//(physicsSimulationParams?.autoSimulation).GetValueOrDefault();
+            // Only IEnumerators return functions will be run in a coroutine
+            var runAsCoroutine = false;
 
             if (method.ReturnType == typeof(System.Collections.IEnumerator)) {
                 methodReturn = method.Invoke(target, arguments);
                 action = methodReturn as IEnumerator;
+                runAsCoroutine = physicsSimulationParams.autoSimulation;
             }
             else if (method.ReturnType == typeof(ActionFinished)) {
                 action =  ActionFinishedDelayActionWrapper(
                     () => method.Invoke(target, arguments) as ActionFinished
                 );
             }
+            // TODO: when legacy actions are gone remove branch
             else {
                 
                 action = ActionFinishedDelayActionWrapper(
@@ -484,8 +481,6 @@ public static class ActionDispatcher {
                         return new ActionFinished() { isDummy = true };
                      }
                 );
-
-                // TODO: when migration is full remove branch
             }
             if (!runAsCoroutine) { 
                 // Blocking
@@ -493,6 +488,7 @@ public static class ActionDispatcher {
                     action, 
                     physicsSimulationParams
                 );
+                // Complete callback at action end, implementation should do any state changes
                 target.Complete(actionFinished);
                 
             }

@@ -168,7 +168,6 @@ public class PhysicsSceneManager : MonoBehaviour {
     public static void PhysicsSimulateTHOR(float deltaTime) {
         Physics.Simulate(deltaTime);
         PhysicsSceneManager.PhysicsSimulateTimeSeconds += deltaTime;
-        Debug.Log($"Physics simulate call count {PhysicsSceneManager.PhysicsSimulateCallCount}");
         PhysicsSceneManager.PhysicsSimulateCallCount++;
     }
 
@@ -296,23 +295,10 @@ public class PhysicsSceneManager : MonoBehaviour {
 
         var actionFixedTime = Time.fixedTime - startFixedTimeSeconds;
         const float eps = 1e-5f;
-
-        Debug.Log($"--- Adding padding actionFixedTime: {actionFixedTime} <= minActionTimeSeconds: {physicsSimulationParams.minActionTimeSeconds} , startFixed {startFixedTimeSeconds} endFixed: {Time.fixedTime}");
-         // TODO: physics padding does not work for backcompat actions because it they call actionFinished
-        // returning control to controller, and should not add padding that can create a physics deathloop
-        if (!actionFinished.isDummy) {
-            while (actionFixedTime <= (physicsSimulationParams.minActionTimeSeconds- eps)) {
-                yield return new WaitForFixedUpdate();
-                actionFixedTime += fixedDeltaTime;
-            }
-        }
-        else if (actionFixedTime <= (physicsSimulationParams.minActionTimeSeconds- eps)) {
-            // Return InvalidArgument error when trying to add padding to Coroutine action
-            actionFinished = new ActionFinished() {
-                success = false,
-                errorMessage = "Legacy action with `physicsSimulation.autoSimulation == true` do not support `physicsSimulation.minActionTimeSeconds` to add simulation padding. `physicsSimulation` params either passed at Initialize or last action.",
-                errorCode = ServerActionErrorCode.InvalidArgument
-            };
+    
+        while (actionFixedTime <= (physicsSimulationParams.minActionTimeSeconds- eps)) {
+            yield return new WaitForFixedUpdate();
+            actionFixedTime += fixedDeltaTime;
         }
         
         if (physicsSimulationParams.syncTransformsAfterAction) {

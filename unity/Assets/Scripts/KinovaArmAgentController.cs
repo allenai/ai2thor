@@ -139,8 +139,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         constraints.
         */
         public void RotateWristAroundHeldObject(
-            PhysicsSimulationParams physicsSimulationParams,
-
             float pitch = 0f,
             float yaw = 0f,
             float roll = 0f,
@@ -152,7 +150,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (arm.heldObjects.Count == 1) {
                 SimObjPhysics sop = arm.heldObjects.Keys.ToArray()[0];
                 RotateWristAroundPoint(
-                    physicsSimulationParams: physicsSimulationParams,
                     point: sop.gameObject.transform.position,
                     pitch: pitch,
                     yaw: yaw,
@@ -175,8 +172,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         rotates some given amount.
         */
         public void RotateWristAroundPoint(
-            PhysicsSimulationParams physicsSimulationParams,
-
             Vector3 point,
             float pitch = 0f,
             float yaw = 0f,
@@ -191,7 +186,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 rotatePoint: point,
                 rotation: Quaternion.Euler(pitch, yaw, -roll),
                 degreesPerSecond: speed,
-                fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart
             );
         }
@@ -207,8 +202,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         determine how to detect collision between a given arm joint and other arm joints.
         */
         public void RotateElbowRelative(
-            PhysicsSimulationParams physicsSimulationParams,
-
             float degrees,
             float speed = 10f,
             bool returnToStart = true
@@ -219,7 +212,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 degrees: degrees,
                 degreesPerSecond: speed,
-                fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart
             );
         }
@@ -228,8 +221,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Same as RotateElbowRelative but rotates the elbow to a given angle directly.
         */
         public void RotateElbow(
-            PhysicsSimulationParams physicsSimulationParams,
-
             float degrees,
             float speed = 10f,
             bool returnToStart = true
@@ -240,7 +231,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 degrees: degrees,
                 degreesPerSecond: speed,
-                fixedDeltaTime: physicsSimulationParams.fixedDeltaTime,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart
             );
         }

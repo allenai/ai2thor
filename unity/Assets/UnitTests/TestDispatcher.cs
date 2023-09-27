@@ -614,8 +614,7 @@ namespace Tests {
 
             var physicsSimulationParams = new PhysicsSimulationParams() {
                 fixedDeltaTime = 0.01f,
-                autoSimulation = true,
-                // minActionTimeSeconds = 0.1f
+                autoSimulation = true
             };
 
             var args = new Dictionary<string, object>() {
@@ -625,17 +624,16 @@ namespace Tests {
             };
 
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
-
-            yield return new WaitUntil(() => controller.actionFinished != null);
             
             // Old Action types don't call true Complete, they have their own actionFinished
             Assert.IsFalse(controller.ranCompleteCallback);
-            Assert.IsTrue(controller.ranAsCoroutine);
             Assert.IsTrue(controller.ranAsBackCompat);
+
+            yield return true;
         }
 
          [UnityTest]
-        public IEnumerator TestBackCompatActionAutosimulationErrorPadding() {
+        public IEnumerator TestBackCompatActionAutosimulationWithPadding() {
             // Can't add padding to legacy actions run in coroutines, as actionFinished
             // returns controll and can't add padding if not blocked because can create "deathloop"
             var controller = new TestController(this.agentManager);
@@ -654,21 +652,17 @@ namespace Tests {
                 {"physicsSimulationParams", physicsSimulationParams}
             };
 
-            var startTime = Time.fixedTime;
 
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
 
-            yield return new WaitUntil(() => controller.actionFinished != null);
+            // No time simulating physics because of autosim
+            Assert.IsTrue(PhysicsSceneManager.PhysicsSimulateTimeSeconds <  1e-5);
 
-            // Calls complete to relay error and overwrites whatever actionFinished set
-            Assert.IsTrue(controller.ranCompleteCallback);
-            Assert.IsTrue(controller.ranAsCoroutine);
+            // Old actions don't call real complete
+            Assert.IsFalse(controller.ranCompleteCallback);
             Assert.IsTrue(controller.ranAsBackCompat);
 
-            Assert.IsFalse(controller.actionFinished.success);
-            Assert.AreEqual(controller.actionFinished.errorCode, ServerActionErrorCode.InvalidArgument);
-
-            
+            yield return true;
         }
 
         [UnityTest]
