@@ -12,10 +12,34 @@ using UnityEngine.SceneManagement;
 [ExecuteInEditMode]
 
 public class PhysicsSimulationParams {
-    public bool autoSimulation = true;
+    public bool autoSimulation = false;
     public float fixedDeltaTime = 0.02f;
-    public float maxActionTimeMilliseconds = 0;
+    public float minActionTimeSeconds = 0;
+
+    public bool syncTransformsAfterAction = false;
     // public int maxActionPhysicsSteps = int.MaxValue;
+
+    public override bool Equals(object p) {
+
+        if (p is null)
+        {
+            return false;
+        }
+        if (object.ReferenceEquals(this, p))
+        {
+            return true;
+        }
+        if (this.GetType() != p.GetType())
+        {
+            return false;
+        }
+        var otherPhysicsParams = p as PhysicsSimulationParams;
+
+        return autoSimulation.Equals(otherPhysicsParams.autoSimulation)
+            && fixedDeltaTime.Equals(otherPhysicsParams.fixedDeltaTime)
+            && minActionTimeSeconds.Equals(otherPhysicsParams.minActionTimeSeconds)
+            && syncTransformsAfterAction.Equals(otherPhysicsParams.syncTransformsAfterAction);
+    }
 }
 
 public class PhysicsSceneManager : MonoBehaviour {
@@ -60,10 +84,24 @@ public class PhysicsSceneManager : MonoBehaviour {
 
     public static PhysicsSimulationParams defaultPhysicsSimulationParams {
         get;
-        protected set;
+        private set;
     }
 
     protected PhysicsSimulationParams previousPhysicsSimulationParams;
+
+    public static PhysicsSimulationParams physicsSimulationParams {
+        get;
+        private set;
+    }
+
+    public static float fixedDeltaTime {
+        get { return physicsSimulationParams.fixedDeltaTime; }
+        private set {
+            return;
+        }
+    }
+
+
 
     // public static float fixedDeltaTime {
     //     get { return Instance.physicsSimulationParams.fixedDeltaTime; }
@@ -82,6 +120,10 @@ public class PhysicsSceneManager : MonoBehaviour {
     //     Instance = this;
     //     DontDestroyOnLoad(gameObject);
     // }
+
+     void Awake() {
+        SetDefaultSimulationParams(new PhysicsSimulationParams());
+     }
 
     private void OnEnable() {
         // must do this here instead of Start() since OnEnable gets triggered prior to Start
@@ -116,11 +158,17 @@ public class PhysicsSceneManager : MonoBehaviour {
 
     public static void SetDefaultSimulationParams(PhysicsSimulationParams defaultPhysicsSimulationParams) {
         PhysicsSceneManager.defaultPhysicsSimulationParams = defaultPhysicsSimulationParams ?? new PhysicsSimulationParams();
+        PhysicsSceneManager.physicsSimulationParams = PhysicsSceneManager.defaultPhysicsSimulationParams;
+    }
+
+    public static void SetPhysicsSimulationParams(PhysicsSimulationParams physicsSimulationParams) {
+        PhysicsSceneManager.physicsSimulationParams = physicsSimulationParams;
     }
 
     public static void PhysicsSimulateTHOR(float deltaTime) {
         Physics.Simulate(deltaTime);
         PhysicsSceneManager.PhysicsSimulateTimeSeconds += deltaTime;
+        Debug.Log($"Physics simulate call count {PhysicsSceneManager.PhysicsSimulateCallCount}");
         PhysicsSceneManager.PhysicsSimulateCallCount++;
     }
 
@@ -139,6 +187,7 @@ public class PhysicsSceneManager : MonoBehaviour {
             }
 
             if (enumerator.Current.GetType() == typeof(WaitForFixedUpdate) && !physicsSimulationParams.autoSimulation) {
+                // TODO: is this still used?
                 if (physicsSimulationParams.fixedDeltaTime == 0f) {
                     Physics.SyncTransforms();
                 } else {
@@ -160,10 +209,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         return actionFinished;
     }
 
-    public static ActionFinished runActionPhysicsSimulation(IEnumerator enumerator, PhysicsSimulationParams physicsSimulationParams) {
-        int count = 0;
-        // Instance.previousPhysicsSimulationParams = Instance.physicsSimulationParams;
-        // Instance.physicsSimulationParams = physicsSimulationParams;
+    public static ActionFinished RunSimulatePhysicsForAction(IEnumerator enumerator, PhysicsSimulationParams physicsSimulationParams) {
         var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime;
         var previousAutoSimulate = Physics.autoSimulation;
         Physics.autoSimulation = physicsSimulationParams.autoSimulation;
@@ -175,80 +221,106 @@ public class PhysicsSceneManager : MonoBehaviour {
         // Recursive expansion of IEnumerator
         ActionFinished actionFinished = ExpandIEnumerator(enumerator, physicsSimulationParams);
         
-        
-
         if (actionFinished == null) {
-            Debug.Log("---- runActionPhysicsSimulation No actionfinished");
-           
-            actionFinished = new ActionFinished() {
-                success = false,
-                errorMessage = "Action did not return an `ActionFinished`"
-            };
+            throw new MissingActionFinishedException();
         }
-        
-        // ActionFinished actionFinished;
-        // try {
-        //     actionFinished = (ActionFinished)(enumerator.Current as ActionFinished);
-        // }
-        // catch (InvalidCastException) {
-        //     actionFinished = new ActionFinished() {
-        //         success = false,
-        //         errorMessage = "Action did not return an `ActionFinished`"
-        //     };
-        // }
 
         PhysicsSceneManager.LastPhysicsSimulateCallCount = PhysicsSceneManager.PhysicsSimulateCallCount - startPhysicsSimulateCallTime;
-
-        Debug.Log($"--Ran enumerator loop count {IteratorExpandCount}, physics call count {LastPhysicsSimulateCallCount}");
         
-        if (!physicsSimulationParams.autoSimulation && physicsSimulationParams.maxActionTimeMilliseconds > 0.0f) {
+        if (!physicsSimulationParams.autoSimulation && physicsSimulationParams.minActionTimeSeconds > 0.0f) {
+            // Because of floating point precision
+            const float eps = 1e-5f;
             while (
-                // currentSimulationCallCount < physicsSimulationParams.maxActionPhysicsSteps ||
-                PhysicsSceneManager.PhysicsSimulateTimeSeconds*1000.0f < physicsSimulationParams.maxActionTimeMilliseconds
+                PhysicsSceneManager.PhysicsSimulateTimeSeconds <= (physicsSimulationParams.minActionTimeSeconds - eps)
             ) {
-                Debug.Log($"-- Running simulate physics current {PhysicsSimulateTimeSeconds} to {physicsSimulationParams.maxActionTimeMilliseconds}");
                 PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
             }
+        }
+
+        if (physicsSimulationParams.syncTransformsAfterAction) {
+            Physics.SyncTransforms();
         }
 
         Physics.autoSimulation = previousAutoSimulate;
         return actionFinished;
     }
 
-    public static IEnumerator addPhysicsSimulationPadding(ActionInvokable target, IEnumerator action, PhysicsSimulationParams physicsSimulationParams) {
+    public static IEnumerator RunActionForCoroutine(ActionInvokable target, IEnumerator action, PhysicsSimulationParams physicsSimulationParams) {
         var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime;
         var previousFixedDeltaTime = Time.fixedDeltaTime;
         Time.fixedDeltaTime = fixedDeltaTime;
         var startFixedTimeSeconds = Time.fixedTime;
         ActionFinished actionFinished = null;
-        while (action.MoveNext()) {
-            if (actionFinished != null) {
+
+        while (true) {
+            // Adds Exception handling for Coroutines!
+            try {
+                if (!action.MoveNext()) {
+                    break;
+                }
+            }
+            catch (Exception e) {
+                 actionFinished = new ActionFinished() {
+                    success = false,
+                    errorMessage = $"{e.GetType()}: {e.StackTrace}",
+                    errorCode = ServerActionErrorCode.UnhandledException
+                 };
+
+                // Calling InnerException throws exception so avoid that if we want to continue
                 // actionFinished = new ActionFinished() {
                 //     success = false,
-                //     errorMessage = "`ActionFinished` was not the last yield return statement for action. Unreachable code found."
+                //     errorMessage = $"{e.InnerException.GetType().Name}: {e.InnerException.Message}. trace: {e.InnerException.StackTrace.ToString()}",
+                //     errorCode = ServerActionErrorCode.UnhandledException
                 // };
-                //Premature finish
                 break;
             }
-            if (typeof(ActionFinished) == action.Current.GetType()) {
+            
+            if (action.Current != null && typeof(ActionFinished) == action.Current.GetType()) {
                 actionFinished = (ActionFinished)(action.Current as ActionFinished);
+                break;
             }
             yield return action.Current;
         }
+       
+        // For the coroutine path we can't throw an exception because there is no way to catch it
+        // as it's ran by unity's code 
+        // if (actionFinished == null) {
+        //     throw new MissingActionFinishedException();
+        // }
 
-         actionFinished ??= new ActionFinished() {
-                success = false,
-                errorMessage = "Action did not return an `ActionFinished`"
-            };
+        actionFinished ??= new ActionFinished() {
+            success = false,
+            errorMessage = "Action did not return an `ActionFinished`.",
+            errorCode = ServerActionErrorCode.MissingActionFinished
+        };
 
         var actionFixedTime = Time.fixedTime - startFixedTimeSeconds;
-        while (actionFixedTime < physicsSimulationParams.maxActionTimeMilliseconds * 1000.0f) {
-            yield return new WaitForFixedUpdate();
-            actionFixedTime += fixedDeltaTime;
+        const float eps = 1e-5f;
+
+        Debug.Log($"--- Adding padding actionFixedTime: {actionFixedTime} <= minActionTimeSeconds: {physicsSimulationParams.minActionTimeSeconds} , startFixed {startFixedTimeSeconds} endFixed: {Time.fixedTime}");
+         // TODO: physics padding does not work for backcompat actions because it they call actionFinished
+        // returning control to controller, and should not add padding that can create a physics deathloop
+        if (!actionFinished.isDummy) {
+            while (actionFixedTime <= (physicsSimulationParams.minActionTimeSeconds- eps)) {
+                yield return new WaitForFixedUpdate();
+                actionFixedTime += fixedDeltaTime;
+            }
+        }
+        else if (actionFixedTime <= (physicsSimulationParams.minActionTimeSeconds- eps)) {
+            // Return InvalidArgument error when trying to add padding to Coroutine action
+            actionFinished = new ActionFinished() {
+                success = false,
+                errorMessage = "Legacy action with `physicsSimulation.autoSimulation == true` do not support `physicsSimulation.minActionTimeSeconds` to add simulation padding. `physicsSimulation` params either passed at Initialize or last action.",
+                errorCode = ServerActionErrorCode.InvalidArgument
+            };
+        }
+        
+        if (physicsSimulationParams.syncTransformsAfterAction) {
+            Physics.SyncTransforms();
         }
 
         target.Complete(actionFinished);
-
+        
         Time.fixedDeltaTime = previousFixedDeltaTime;
     }
 

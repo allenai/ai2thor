@@ -1816,7 +1816,7 @@ public class DynamicServerAction {
 
     public PhysicsSimulationParams physicsSimulationParams {
         get {
-            return this.jObject[physicsSimulationParamsVariable] != null ? this.jObject[physicsSimulationParamsVariable].ToObject<PhysicsSimulationParams>() : null;
+            return this.jObject[physicsSimulationParamsVariable]?.ToObject<PhysicsSimulationParams>();
         }
     }
 
@@ -2161,7 +2161,9 @@ public enum ServerActionErrorCode {
     InvalidAction,
     MissingArguments,
     AmbiguousAction,
-    InvalidArgument
+    InvalidArgument,
+    MissingActionFinished,
+    UnhandledException
 }
 
 public enum VisibilityScheme {

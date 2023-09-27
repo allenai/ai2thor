@@ -13,8 +13,15 @@ using Newtonsoft.Json.Linq;
     public object actionReturn;
     public string errorMessage;
     public bool toEmitState;
+    public ServerActionErrorCode errorCode;
+
+    // Special value for legacy void actions running on new mode to avoid overwriting action Finished values
+    // TODO: Remove when backcompat actions are gone
+    public bool isDummy;
 
     public static ActionFinished Success = new ActionFinished() { success = true} ;
+
+    public static ActionFinished SuccessToEmitState = new ActionFinished() { success = true, toEmitState = true} ;
 
     public IEnumerator GetEnumerator() {
         yield return this;
@@ -247,7 +254,7 @@ public static class ActionDispatcher {
                         // this happens if one method has a trailing optional value and all 
                         // other parameter types match
                         if (targetParams.Length != sourceParams.Length) {
-                            Debug.Log($"-- Ambiguous sourceParamLen {sourceParams.Length} targetPramLen {targetParams.Length} minCommon {minCommon} source Params {string.Join(", ", sourceParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))} target Params  {string.Join(", ", targetParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))}");
+                            // Debug.Log($"-- Ambiguous sourceParamLen {sourceParams.Length} targetPramLen {targetParams.Length} minCommon {minCommon} source Params {string.Join(", ", sourceParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))} target Params  {string.Join(", ", targetParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))}");
                             // TODO: This designation is based on ordered argument call assumption, which is not true for DynamicServerActions
                             // which are always passed as named arguments, order does not matter, Ambiguity should be determined on actual call
                             // not on method signatures
@@ -276,9 +283,6 @@ public static class ActionDispatcher {
             // its possible that it would be only partially populated
             methodDispatchTable[action] = methods;
         }
-        var debug = string.Join("| ", methodDispatchTable[action].Select(m => $"{m.Name} {string.Join(", ", m.GetParameters().Select(p => $"{p.ParameterType} {p.Name} = {p.DefaultValue}"))}"));
-        Debug.Log($"-- Dispatch table for '{action}': ${debug}, CompareTOs : {string.Join(", ", methodDispatchTable[action].Take(methodDispatchTable[action].Count-1).Zip(methodDispatchTable[action].Skip(1), (x, y) => (new MethodParamComparer()).Compare(x, y) ))}");
-
         return methodDispatchTable[action];
     }
 
@@ -375,8 +379,10 @@ public static class ActionDispatcher {
         // Default simulation params
         physicsSimulationParams ??= PhysicsSceneManager.defaultPhysicsSimulationParams.DeepClone();
 
-        if (typeof(IEnumerator) == method.ReturnType) {
-            // New action type always pass down physicsSim params if interface has them
+        PhysicsSceneManager.SetPhysicsSimulationParams(physicsSimulationParams);
+
+        if (typeof(IEnumerator) == method.ReturnType || method.ReturnType == typeof(ActionFinished)) {
+            // New action types always pass down physicsSim params if interface has them
             if (!usePhysicsSimulationParams) {
                 usePhysicsSimulationParams = true;
                 // What will be passed down to the action
@@ -392,9 +398,6 @@ public static class ActionDispatcher {
             arguments[0] = serverAction;
         } else {
             var argumentKeys = dynamicServerAction.ArgumentKeys().ToList();
-            // if (usePhysicsSimulationParams) {
-            //     argumentKeys.Add(DynamicServerAction.physicsSimulationParamsVariable);
-            // }
             var invalidArgs = argumentKeys
                 .Where(argName => !paramDict.ContainsKey(argName))
                 .ToList();
@@ -454,68 +457,48 @@ public static class ActionDispatcher {
         //     // TODO: remove once deprecated
         //     action = DeprecatedActionWrapper(() => method.Invoke(target, arguments), new ActionFinished());
         // }
-        // ActionFinishedWrapper2(() => {method.Invoke(target, arguments))
 
-        // TODO: deprecated actions called in the old way without PhysicsSimulationParams
+        // TODO: deprecated actions called in the old way without PhysicsSimulationParams or any wrappers
         if (!usePhysicsSimulationParams && method.ReturnType == typeof(void)) {
             method.Invoke(target, arguments);
-            Debug.Log($"-Backcompat method dispatch invoke {usePhysicsSimulationParams} method: {method.Name}");
         }
         else {
-
-
-            Debug.Log($"-- Invoke usePhysicsSimulationParams true autosim: {physicsSimulationParams.autoSimulation}");
-            var callActionFinished = true;
             
-            var runAsCoroutine = false;
+            var runAsCoroutine = physicsSimulationParams.autoSimulation;//(physicsSimulationParams?.autoSimulation).GetValueOrDefault();
 
             if (method.ReturnType == typeof(System.Collections.IEnumerator)) {
                 methodReturn = method.Invoke(target, arguments);
                 action = methodReturn as IEnumerator;
-                if (physicsSimulationParams.autoSimulation) {
-                    runAsCoroutine = true;
-                }
             }
             else if (method.ReturnType == typeof(ActionFinished)) {
-                // methodReturn = method.Invoke(target, arguments);
                 action =  ActionFinishedDelayActionWrapper(
                     () => method.Invoke(target, arguments) as ActionFinished
                 );
-                // action = ActionFinishedWrapper((ActionFinished)(methodReturn as ActionFinished));
             }
             else {
-               
-                // throw new InvalidActionCallWithPhysicsSimulationParams(
-                //     "Actions called with argument `physicsSimulationParams` must return IEnumerator or ActionFinished, if it is a legacy action call without `physicsSimulationParams` or change action to return IEnumerator or ActionFinished in source."
-                // );
-                callActionFinished = false;
+                
                 action = ActionFinishedDelayActionWrapper(
                      () => {
                         method.Invoke(target, arguments);
                         // TODO: deprecated void action returns dummy ActionFinished
-                        return new ActionFinished();
+                        return new ActionFinished() { isDummy = true };
                      }
                 );
 
-                // TODO: when migration is full remove callAction finished, add back exception for this branch
-                // action = ActionFinishedWrapper(new ActionFinished()); 
+                // TODO: when migration is full remove branch
             }
             if (!runAsCoroutine) { 
-                Debug.Log("-- did not Run as coroutine");
-                var actionFinished = PhysicsSceneManager.runActionPhysicsSimulation(
+                // Blocking
+                var actionFinished = PhysicsSceneManager.RunSimulatePhysicsForAction(
                     action, 
                     physicsSimulationParams
                 );
-
-                // TODO remove check once legacy actions are removed
-                if (callActionFinished){
-                    target.Complete(actionFinished);
-                }
+                target.Complete(actionFinished);
                 
             }
             else {
-                 Debug.Log("-- Ran as coroutine");
-                target.StartCoroutine(PhysicsSceneManager.addPhysicsSimulationPadding(target, action, physicsSimulationParams));
+                // "Async" will run after unity's frame update
+                target.StartCoroutine(PhysicsSceneManager.RunActionForCoroutine(target, action, physicsSimulationParams));
             }
             
         }
@@ -526,20 +509,8 @@ public static class ActionDispatcher {
     }
 
     public static IEnumerator ActionFinishedDelayActionWrapper(Func<ActionFinished> action) {
-        yield return null;
         yield return action();
     }
-
-    public static System.Collections.IEnumerator invokeActionUnderPhysicsSimulation<T>(
-        MethodInfo method,
-        T target,
-        object[] args,
-        PhysicsSimulationParams physicsSimulationProperties) where T : MonoBehaviour {
-
-    yield return null;
-
-    }
-
 }
 
 
@@ -631,4 +602,9 @@ public class InvalidArgumentsException : Exception {
         this.ParameterNames = parameterNames ?? new List<string>();
         this.PossibleOverwrites = possibleOverwrites ?? new List<string>();
     }
+}
+
+[Serializable]
+public class MissingActionFinishedException : Exception {
+    public MissingActionFinishedException(string message = ""): base(message) { }
 }

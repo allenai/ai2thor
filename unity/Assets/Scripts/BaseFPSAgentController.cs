@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using MIConvexHull;
 using Thor.Procedural;
 using Thor.Procedural.Data;
+using System.Linq.Expressions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
@@ -418,11 +419,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
         
         public virtual void Complete(ActionFinished result) {
-            if (result.errorMessage != null) {
-                this.errorMessage = result.errorMessage;
+            // Check to not call `actionFinished` twice and overwriting values when running in new mode
+            // TODO: remove check once legacy actions are gone. 
+            if (!result.isDummy) {
+                if (result.errorMessage != null) {
+                    this.errorMessage = result.errorMessage;
+                }
+                this.errorCode = result.errorCode;
+                actionFinished(success: result.success, newState: !result.toEmitState ? AgentState.ActionComplete : AgentState.Emit, actionReturn: result.actionReturn);
             }
-            actionFinished(success: result.success, newState: !result.toEmitState ? AgentState.ActionComplete : AgentState.Emit, actionReturn: result.actionReturn);
-           // ??? this.resumePhysics();
         }
 
         // Delete and use yield return ActionFinished
@@ -2090,6 +2095,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     success: false,
                     errorMessage: $"{e.InnerException.GetType().Name}: {e.InnerException.Message}. trace: {e.InnerException.StackTrace.ToString()}"
                 );
+            } catch (MissingActionFinishedException e) {
+                errorCode = ServerActionErrorCode.MissingActionFinished;
+                actionFinished(
+                    false, 
+                    errorMessage:  $"Action '{controlCommand.action}' did not return an `ActionFinished`. Possible bug with the action and it's execution path given the arguments it was called with. Arguments: {controlCommand.jObject.ToString()}"
+                );
+
             } catch (Exception e) {
                 Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
                 Debug.LogError("Action error message: " + errorMessage);
