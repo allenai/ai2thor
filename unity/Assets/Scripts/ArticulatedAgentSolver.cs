@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 using UnityStandardAssets.Characters.FirstPerson;
+using System.Timers;
+using System.Data.SqlClient;
 
 public enum ABAgentState { Idle = 0, Moving = 1, Rotating = 2 };
 
@@ -41,9 +43,19 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
     private bool beginDeceleration, maxSpeed;
     float deceleration, speedupTime;
 
+    private Transform wristAB;
+    private Transform fingersAB;
+    private Vector3 fingersInitialOffset;
+
     void Start() {
         myAB = this.GetComponent<ArticulationBody>();
         currentAgentMoveParams.agentState = ABAgentState.Idle;
+
+        wristAB = transform.FirstChildOrDefault(x => x.name == "stretch_robot_wrist_1");
+
+        fingersAB = transform.FirstChildOrDefault(x => x.name == "stretch_robot_wrist_2");
+
+        fingersInitialOffset = fingersAB.localPosition;
     }
 
     public void PrepToControlAgentFromAction(AgentMoveParams agentMoveParams) {
@@ -101,6 +113,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         myAB.AddRelativeForce(new Vector3(dampingForceX, 0f, 0f));
         Debug.Log($"Damping force X equals: {dampingForceX} == clamp(-200 * {agentOrientedVelocity.x} * {currentAgentMoveParams.agentMass}, 100, 100)");
 
+        accelerationDistance = 0.0f;
         if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
 
             float currentSpeed = Mathf.Abs(agentOrientedVelocity.z);
@@ -307,14 +320,18 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         controller.transform.GetComponent<ArticulationBody>().velocity = Vector3.zero;
         controller.transform.GetComponent<ArticulationBody>().angularVelocity = Vector3.zero;
         controller.transform.GetComponent<ArticulatedAgentSolver>().currentAgentMoveParams.agentState = ABAgentState.Idle;
-        bool actionSuccess = true;
         string debugMessage = "I guess everything is fine?";
 
         //maybe needs to switch back to slippery here to prep for movement???
         //or maybe we default to high friction, and only change to no friction when moving body
         //controller.SetFloorColliderToSlippery();
 
-        controller.errorMessage = debugMessage;
+        bool actionSuccess = IsFingerTransformCorrect();
+        if  (!actionSuccess) {
+            controller.agentManager.SetErrorState();
+        }
+
+        controller.errorMessage = actionSuccess ? "" : "Articulated agent is broken, fingers dislodges all actions will fail from this point. Must call 'reset' and reload scene and re-initialize agent.";
         controller.actionFinished(actionSuccess, debugMessage);
     }
 
@@ -398,5 +415,11 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             body.centerOfMass = localCenterOfMass;
             // Debug.Log(body.gameObject.name + "'s center of mass set to (" + body.centerOfMass.x + ", " + body.centerOfMass.y + ", " + body.centerOfMass.z + ")");
         }
+    }
+
+    private bool IsFingerTransformCorrect() {
+        var eps = 0.1;
+        var diff = fingersAB.localPosition - fingersInitialOffset;
+        return diff.magnitude <= eps;
     }
 }

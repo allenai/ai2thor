@@ -65,6 +65,7 @@ public class AgentManager : MonoBehaviour {
 
     // it is public to be accessible from the debug input field.
     public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera", "ChangeQuality" };
+    public HashSet<string> errorAllowedActions = new HashSet<string>  { "Reset" };
 
     public bool doResetMaterials = false;
     public bool doResetColors = false;
@@ -988,8 +989,8 @@ public class AgentManager : MonoBehaviour {
                 break;
             }
         }
-
-        return this.agentManagerState == AgentState.Emit && emit;
+        
+        return (this.agentManagerState == AgentState.Emit && emit) || this.agentManagerState == AgentState.Error;
     }
 
     private RenderTexture createRenderTexture(int width, int height) {
@@ -1013,6 +1014,7 @@ public class AgentManager : MonoBehaviour {
             yield return new WaitForEndOfFrame();
 
             frameCounter += 1;
+            
             if (this.agentManagerState == AgentState.ActionComplete) {
                 this.agentManagerState = AgentState.Emit;
             }
@@ -1193,6 +1195,12 @@ public class AgentManager : MonoBehaviour {
         this.renderImage = controlCommand.renderImage;
         this.activeAgentId = controlCommand.agentId;
 
+         if (agentManagerState == AgentState.Error && !errorAllowedActions.Contains(controlCommand.action)) {
+            var activeAgent = this.activeAgent();
+            activeAgent.errorMessage = $"Critical Error. No more actions can be run before calling 'reset'. Action that caused error: '{activeAgent.lastAction}'";
+            return;
+        }
+
         if (agentManagerActions.Contains(controlCommand.action)) {
             // let's look in this class for the action
             this.activeAgent().ProcessControlCommand(controlCommand: controlCommand, target: this);
@@ -1280,6 +1288,10 @@ public class AgentManager : MonoBehaviour {
         string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
         string envVarValue = Environment.GetEnvironmentVariable(envVarName);
         return envVarValue == null ? variable : bool.Parse(envVarValue);
+    }
+
+    public void SetErrorState() {
+        this.agentManagerState = AgentState.Error;
     }
 
 }
@@ -2172,5 +2184,6 @@ public enum AgentState {
     Processing,
     ActionComplete,
     PendingFixedUpdate,
-    Emit
+    Emit,
+    Error
 }
