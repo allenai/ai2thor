@@ -14,7 +14,7 @@ using UnityEngine.SceneManagement;
 public class PhysicsSimulationParams {
     public bool autoSimulation = false;
     public float fixedDeltaTime = 0.02f;
-    public float minActionTimeSeconds = 0;
+    public float minSimulateTimeSeconds = 0;
 
     public bool syncTransformsAfterAction = false;
     // public int maxActionPhysicsSteps = int.MaxValue;
@@ -37,7 +37,7 @@ public class PhysicsSimulationParams {
 
         return autoSimulation.Equals(otherPhysicsParams.autoSimulation)
             && fixedDeltaTime.Equals(otherPhysicsParams.fixedDeltaTime)
-            && minActionTimeSeconds.Equals(otherPhysicsParams.minActionTimeSeconds)
+            && minSimulateTimeSeconds.Equals(otherPhysicsParams.minSimulateTimeSeconds)
             && syncTransformsAfterAction.Equals(otherPhysicsParams.syncTransformsAfterAction);
     }
 }
@@ -226,11 +226,11 @@ public class PhysicsSceneManager : MonoBehaviour {
 
         PhysicsSceneManager.LastPhysicsSimulateCallCount = PhysicsSceneManager.PhysicsSimulateCallCount - startPhysicsSimulateCallTime;
         
-        if (!physicsSimulationParams.autoSimulation && physicsSimulationParams.minActionTimeSeconds > 0.0f) {
+        if (!physicsSimulationParams.autoSimulation && physicsSimulationParams.minSimulateTimeSeconds > 0.0f) {
             // Because of floating point precision
             const float eps = 1e-5f;
             while (
-                PhysicsSceneManager.PhysicsSimulateTimeSeconds <= (physicsSimulationParams.minActionTimeSeconds - eps)
+                PhysicsSceneManager.PhysicsSimulateTimeSeconds <= (physicsSimulationParams.minSimulateTimeSeconds - eps)
             ) {
                 PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
             }
@@ -296,7 +296,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         var actionFixedTime = Time.fixedTime - startFixedTimeSeconds;
         const float eps = 1e-5f;
     
-        while (actionFixedTime <= (physicsSimulationParams.minActionTimeSeconds- eps)) {
+        while (actionFixedTime <= (physicsSimulationParams.minSimulateTimeSeconds- eps)) {
             yield return new WaitForFixedUpdate();
             actionFixedTime += fixedDeltaTime;
         }

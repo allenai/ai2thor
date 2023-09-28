@@ -2199,25 +2199,34 @@ def test_rotate_hand(controller):
     assert_near(h1["localRotation"], dict(x=0, y=0, z=0))
     assert_near(h2["localRotation"], dict(x=90, y=180, z=0))
 
-# TODO: Outdated
-# def test_settle_physics(fifo_controller):
-#     from dictdiffer import diff
-#     fifo_controller.reset(agentMode="arm")
 
-#     for i in range(30):
-#         fifo_controller.step("AdvancePhysicsStep", raise_for_failure=True)
+def test_settle_physics():
+    from dictdiffer import diff
+    physicsSimulationParams = {
+            "autoSimulation": False,
+            "fixedDeltaTime": 0.01,
+            # run 30 simulations after action
+            "minSimulateTimeSeconds": 0.3
+    }
+    fifo_controller = build_controller(
+        server_class=FifoServer, 
+        agentMode="arm", 
+        physicsSimulationParams = physicsSimulationParams
+    )
 
-#     first_objs = {o['objectId']: o for o in fifo_controller.last_event.metadata["objects"]}
+    first_objs = {o['objectId']: o for o in fifo_controller.last_event.metadata["objects"]}
 
-#     for i in range(30):
-#         fifo_controller.step("AdvancePhysicsStep", raise_for_failure=True)
+    fifo_controller.reset(
+        agentMode="arm", 
+        physicsSimulationParams = physicsSimulationParams
+    )
 
-#     diffs = []
-#     last_objs = {o['objectId']: o for o in fifo_controller.last_event.metadata["objects"]}
-#     for object_id, object_metadata in first_objs.items():
-#         for d in (diff(object_metadata, last_objs.get(object_id, {}), tolerance=0.00001, ignore=set(["receptacleObjectIds"]))):
-#             diffs.append((object_id, d))
-#     assert diffs == []
+    diffs = []
+    last_objs = {o['objectId']: o for o in fifo_controller.last_event.metadata["objects"]}
+    for object_id, object_metadata in first_objs.items():
+        for d in (diff(object_metadata, last_objs.get(object_id, {}), tolerance=0.00001, ignore=set(["receptacleObjectIds"]))):
+            diffs.append((object_id, d))
+    assert diffs == []
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_fill_liquid(controller):

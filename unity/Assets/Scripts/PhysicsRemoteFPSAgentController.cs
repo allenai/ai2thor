@@ -1958,6 +1958,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public IEnumerator SimulatePhysics(int steps) {
+            for (var i = 0; i < steps; i++) {
+                yield return new WaitForFixedUpdate();
+            }
+            yield return ActionFinished.Success;
+        }
+
         protected void sopApplyForce(ServerAction action, SimObjPhysics sop, float length) {
             // print("running sopApplyForce");
             // apply force, return action finished immediately

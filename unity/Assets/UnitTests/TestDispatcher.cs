@@ -67,7 +67,7 @@ namespace Tests {
             }
 
              public IEnumerator AsyncActionPhysicsParams(PhysicsSimulationParams physicsSimulationParams) {
-                var count = (int)Math.Round(physicsSimulationParams.minActionTimeSeconds / physicsSimulationParams.fixedDeltaTime);
+                var count = (int)Math.Round(physicsSimulationParams.minSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime);
                 for (var i = 0; i < count; i++) {
                     yield return new WaitForFixedUpdate();
                 }
@@ -210,7 +210,7 @@ namespace Tests {
 
             var physicsSimulationParams = new PhysicsSimulationParams() {
                 fixedDeltaTime = 0.02f,
-                minActionTimeSeconds = 0.1f,
+                minSimulateTimeSeconds = 0.1f,
                 autoSimulation = false
             };
 
@@ -226,9 +226,9 @@ namespace Tests {
             Assert.IsFalse(controller.ranCompleteCallback);
 
             // 5 physics steps of pure padding
-            Assert.AreEqual(PhysicsSceneManager.PhysicsSimulateCallCount, physicsSimulationParams.minActionTimeSeconds / physicsSimulationParams.fixedDeltaTime);
+            Assert.AreEqual(PhysicsSceneManager.PhysicsSimulateCallCount, physicsSimulationParams.minSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime);
 
-            var simulateTimeMatched = Math.Abs(PhysicsSceneManager.PhysicsSimulateTimeSeconds - physicsSimulationParams.minActionTimeSeconds) < 1e-5;
+            var simulateTimeMatched = Math.Abs(PhysicsSceneManager.PhysicsSimulateTimeSeconds - physicsSimulationParams.minSimulateTimeSeconds) < 1e-5;
             // Mathf.Approximately(PhysicsSceneManager.PhysicsSimulateTimeSeconds, physicsSimulationParams.maxActionTimeMilliseconds / 1000.0f);
             Assert.IsTrue(simulateTimeMatched);
 
@@ -247,7 +247,7 @@ namespace Tests {
 
             var physicsSimulationParams = new PhysicsSimulationParams() {
                 fixedDeltaTime = 0.02f,
-                minActionTimeSeconds = 0.1f,
+                minSimulateTimeSeconds = 0.1f,
                 autoSimulation = false
             };
 
@@ -263,9 +263,9 @@ namespace Tests {
             Assert.IsTrue(controller.ranCompleteCallback);
 
             // 5 physics steps of pure padding
-            Assert.AreEqual(PhysicsSceneManager.PhysicsSimulateCallCount, physicsSimulationParams.minActionTimeSeconds / physicsSimulationParams.fixedDeltaTime);
+            Assert.AreEqual(PhysicsSceneManager.PhysicsSimulateCallCount, physicsSimulationParams.minSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime);
 
-            var simulateTimeMatched = Math.Abs(PhysicsSceneManager.PhysicsSimulateTimeSeconds - physicsSimulationParams.minActionTimeSeconds) < eps;
+            var simulateTimeMatched = Math.Abs(PhysicsSceneManager.PhysicsSimulateTimeSeconds - physicsSimulationParams.minSimulateTimeSeconds) < eps;
             // Mathf.Approximately(PhysicsSceneManager.PhysicsSimulateTimeSeconds, physicsSimulationParams.maxActionTimeMilliseconds / 1000.0f);
             Assert.IsTrue(simulateTimeMatched);
             
@@ -363,7 +363,7 @@ namespace Tests {
                 fixedDeltaTime = 0.01f,
                 autoSimulation = false,
                 // has to run 1 second so 0.1 seconds of action time and  0.9 of padding
-                minActionTimeSeconds = 1
+                minSimulateTimeSeconds = 1
             };
 
             var args = new Dictionary<string, object>() {
@@ -377,9 +377,9 @@ namespace Tests {
             // New Action types call Complete
             Assert.IsTrue(controller.ranCompleteCallback);
 
-            Assert.IsTrue(Math.Abs(PhysicsSceneManager.PhysicsSimulateCallCount - (physicsSimulationParams.minActionTimeSeconds / physicsSimulationParams.fixedDeltaTime)) < eps);
+            Assert.IsTrue(Math.Abs(PhysicsSceneManager.PhysicsSimulateCallCount - (physicsSimulationParams.minSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime)) < eps);
            
-            var simulateTimeMatched = Math.Abs(PhysicsSceneManager.PhysicsSimulateTimeSeconds - physicsSimulationParams.minActionTimeSeconds) < eps;
+            var simulateTimeMatched = Math.Abs(PhysicsSceneManager.PhysicsSimulateTimeSeconds - physicsSimulationParams.minSimulateTimeSeconds) < eps;
             // Mathf.Approximately(PhysicsSceneManager.PhysicsSimulateTimeSeconds, physicsSimulationParams.maxActionTimeMilliseconds / 1000.0f);
             Assert.IsTrue(simulateTimeMatched);
             // Times of simulation + yield return ActionFinished
@@ -402,7 +402,7 @@ namespace Tests {
             var physicsSimulationParams = new PhysicsSimulationParams() {
                 fixedDeltaTime = 0.01f,
                 autoSimulation = false,
-                minActionTimeSeconds = 0.2f
+                minSimulateTimeSeconds = 0.2f
             };
 
             var args = new Dictionary<string, object>() {
@@ -424,8 +424,8 @@ namespace Tests {
             Assert.AreEqual(PhysicsSceneManager.IteratorExpandCount, simulateTimes + 1);
 
             var returnPhysicsParams = controller.actionFinished.actionReturn as PhysicsSimulationParams;
-            Debug.Log($"{returnPhysicsParams.autoSimulation} {returnPhysicsParams.fixedDeltaTime} {returnPhysicsParams.minActionTimeSeconds}");
-            Debug.Log($"{physicsSimulationParams.autoSimulation} {physicsSimulationParams.fixedDeltaTime} {physicsSimulationParams.minActionTimeSeconds}");
+            Debug.Log($"{returnPhysicsParams.autoSimulation} {returnPhysicsParams.fixedDeltaTime} {returnPhysicsParams.minSimulateTimeSeconds}");
+            Debug.Log($"{physicsSimulationParams.autoSimulation} {physicsSimulationParams.fixedDeltaTime} {physicsSimulationParams.minSimulateTimeSeconds}");
             // Returns back the physics params
             Assert.AreEqual(controller.actionFinished.actionReturn, physicsSimulationParams);
             yield return true;
@@ -443,10 +443,10 @@ namespace Tests {
             var physicsSimulationParams = new PhysicsSimulationParams() {
                 fixedDeltaTime = 0.01f,
                 autoSimulation = false,
-                minActionTimeSeconds = 0.1f
+                minSimulateTimeSeconds = 0.1f
             };
 
-            var simulateTimes = (int)((physicsSimulationParams.minActionTimeSeconds / physicsSimulationParams.fixedDeltaTime) + eps);
+            var simulateTimes = (int)((physicsSimulationParams.minSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime) + eps);
 
             var args = new Dictionary<string, object>() {
                 {"action", "AsyncActionPhysicsParams"},
@@ -643,7 +643,7 @@ namespace Tests {
             var physicsSimulationParams = new PhysicsSimulationParams() {
                 fixedDeltaTime = 0.01f,
                 autoSimulation = true,
-                minActionTimeSeconds = 0.1f
+                minSimulateTimeSeconds = 0.1f
             };
 
             var args = new Dictionary<string, object>() {
