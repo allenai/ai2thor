@@ -28,8 +28,8 @@ namespace Tests {
             var agentManager = GameObject.FindObjectOfType<AgentManager>();
             action["sequenceId"] = sequenceId;
             agentManager.ProcessControlCommand(new DynamicServerAction(action));
-            
-            yield return new WaitUntil(() => getActiveAgent().agentState == AgentState.ActionComplete);
+            // Emit state or Action Complete are valid states
+            yield return new WaitUntil(() => getActiveAgent().ReadyForCommand);
             yield return new WaitForEndOfFrame();
             this.generateMetadata();
             // yield return agentManager.EmitFrame();

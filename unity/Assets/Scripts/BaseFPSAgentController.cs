@@ -410,11 +410,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
             Debug.Log($"lastAction: '{this.lastAction}'");
             Debug.Log($"lastActionSuccess: '{success}'");
+            Debug.Log($"actionReturn: '{actionReturn}'");
             if (!success) {
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
             } else if (actionReturn != null) {
                 Debug.Log($"actionReturn: '{actionReturn}'");
             }
+            
 #endif
         }
         
@@ -2834,6 +2836,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // used to check if an specified sim object has come to rest
         // set useTimeout bool to use a faster time out 
+        // TODO: Change to new action type
         protected IEnumerator checkIfObjectHasStoppedMoving(
             SimObjPhysics sop,
             bool useTimeout = false) {
