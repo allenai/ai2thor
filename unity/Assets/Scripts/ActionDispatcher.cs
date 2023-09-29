@@ -241,12 +241,6 @@ public static class ActionDispatcher {
                         signatureMatch = false;
                     }
 
-                    // Debug.Log($"-- Signature match? {signatureMatch} sourceParamLen {sourceParams.Length} targetPramLen {targetParams.Length} minCommon {minCommon} source Params {string.Join(", ", sourceParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))} target Params  {string.Join(", ", targetParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))}");
-                    // var debug1 = minCommon < sourceParams.Length? $"{sourceParams[minCommon].Name} = {sourceParams[minCommon].DefaultValue}": "";
-                    // var debug2 = minCommon < targetParams.Length? $"{targetParams[minCommon].Name} = {targetParams[minCommon].DefaultValue}": "";
-                    // Debug.Log($"conditions sourceParams.Length > targetParams.Length {sourceParams.Length > targetParams.Length} !sourceParams[minCommon].HasDefaultValue {sourceParams.Length > targetParams.Length && !sourceParams[minCommon].HasDefaultValue} sourceParams[minCommon] {debug1} result: {sourceParams.Length > targetParams.Length && !sourceParams[minCommon].HasDefaultValue}" );
-                    // Debug.Log($"conditions targetParams.Length > sourceParams.Length {targetParams.Length > sourceParams.Length} !targetParams[minCommon].HasDefaultValue {targetParams.Length > sourceParams.Length && !targetParams[minCommon].HasDefaultValue} targetParams[minCommon] {debug2} result: {targetParams.Length > sourceParams.Length && !targetParams[minCommon].HasDefaultValue}");
-
                     // if the method is more specific and the parameters match
                     // we will dispatch to this method instead of the base type
                     if (signatureMatch) {
@@ -254,7 +248,6 @@ public static class ActionDispatcher {
                         // this happens if one method has a trailing optional value and all 
                         // other parameter types match
                         if (targetParams.Length != sourceParams.Length) {
-                            // Debug.Log($"-- Ambiguous sourceParamLen {sourceParams.Length} targetPramLen {targetParams.Length} minCommon {minCommon} source Params {string.Join(", ", sourceParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))} target Params  {string.Join(", ", targetParams.Select(p => $"{p.Name} = {p.DefaultValue.ToString()}"))}");
                             // TODO: This designation is based on ordered argument call assumption, which is not true for DynamicServerActions
                             // which are always passed as named arguments, order does not matter, Ambiguity should be determined on actual call
                             // not on method signatures
@@ -292,8 +285,6 @@ public static class ActionDispatcher {
         MethodInfo matchedMethod = null;
         int bestMatchCount = -1; // we do this so that 
 
-        Debug.Log($"Method count {actionMethods.Count}");
-
         // This is where the the actual matching occurs.  The matching is done strictly based on
         // variable names.  In the future, this could be modified to include type information from
         // the inbound JSON object by mapping JSON types to csharp primitive types 
@@ -324,11 +315,7 @@ public static class ActionDispatcher {
                 }
             }
 
-            // var debug = string.Join("| ", $"{method.Name} {string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType} {p.Name} = {p.DefaultValue}"))}");
-            
             var isSubclassOfBestMatchDeclaringType = matchedMethod != null && matchedMethod.DeclaringType.IsAssignableFrom(method.DeclaringType);
-            // Debug.Log($"Match count {matchCount} best match {bestMatchCount}, {debug}, rutime {targetType} declaringtype {method.DeclaringType} isSubclass {isSubclassOfBestMatchDeclaringType}");
-
         
             // preference is given to the method that matches all parameters for a method
             // even if another method has the same matchCount (but has more parameters)
@@ -458,7 +445,7 @@ public static class ActionDispatcher {
             method.Invoke(target, arguments);
         }
         else {
-            // Only IEnumerators return functions will be run in a coroutine
+            // Only IEnumerators return functions can be run in a coroutine
             var runAsCoroutine = false;
 
             if (method.ReturnType == typeof(System.Collections.IEnumerator)) {

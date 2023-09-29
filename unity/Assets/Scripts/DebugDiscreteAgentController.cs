@@ -107,12 +107,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (isArticulated) {
                             if (Input.GetKeyDown(KeyCode.W)) {
                                 action["action"] = "MoveAgent";
-                                // action["moveMagnitude"] = WalkMagnitude;
+                                action["moveMagnitude"] = WalkMagnitude;
                             }
 
                             if (Input.GetKeyDown(KeyCode.S)) {
                                 action["action"] = "MoveAgent";
-                                // action["moveMagnitude"] = -WalkMagnitude;
+                                action["moveMagnitude"] = -WalkMagnitude;
                             }
 
                             if (Input.GetKeyDown(KeyCode.LeftArrow)) {
@@ -213,9 +213,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 action["speed"] = 1000f;
                             } else if (Input.GetKeyDown(KeyCode.P)) {
                                 action["action"] = "PickupObject";
+                                // Doesn't matter we can keep them
                                 action.Remove("physicsSimulationParams");
                             } else if (Input.GetKeyDown(KeyCode.D)) {
                                 action["action"] = "ReleaseObject";
+                                // Doesn't matter we can keep them
                                 action.Remove("physicsSimulationParams");
                             } else {
                                 actionName = "";

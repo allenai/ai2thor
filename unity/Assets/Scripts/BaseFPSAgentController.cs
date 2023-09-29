@@ -6712,10 +6712,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MonoBehaviour.print(message);
         }
 
-        // public void StartCoroutine(IEnumerator coroutine) {
-        //     this.baseAgentComponent.StartCoroutine(coroutine);
-        // }
-
         public T GetComponent<T>() where T : Component {
             return this.baseAgentComponent.GetComponent<T>();
         }

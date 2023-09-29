@@ -1681,15 +1681,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public virtual void MoveAhead(
              float? moveMagnitude = null,
-            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
-            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
-            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
-            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
-            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
-            float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            string objectId = "",                
+            float maxAgentsDistance = -1f,     
+            bool forceAction = false,            
+            bool manualInteract = false,        
+            bool allowAgentsToIntersect = false
         ) {
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;

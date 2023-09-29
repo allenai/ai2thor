@@ -114,7 +114,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             string serverPipePath = LoadStringVariable(null, "FIFO_SERVER_PIPE_PATH");
             string clientPipePath = LoadStringVariable(null, "FIFO_CLIENT_PIPE_PATH");
 
-            // Create dir if not exists
+            // TODO: Create dir if not exists
             if (string.IsNullOrEmpty(serverPipePath)) {
                 serverPipePath = "fifo_pipe/server.pipe";
                 

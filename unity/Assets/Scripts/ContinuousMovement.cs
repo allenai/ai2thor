@@ -354,7 +354,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             T target,
             T resetProp
         ) {
-            Debug.Log("starting continuousMoveFinish");
             bool actionSuccess = true;
             string errorMessage = "";
 
@@ -378,9 +377,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 actionSuccess = false;
             }
-
-            // controller.errorMessage = errorMessage;
-            // controller.actionFinished(actionSuccess, errorMessage);
 
             return new ActionFinished() {
                 success = actionSuccess,

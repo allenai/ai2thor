@@ -3771,41 +3771,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
-                // case "mc": {
-                //         Dictionary<string, object> action = new Dictionary<string, object>();
-                //         action["action"] = "MoveAgent";
-                //         if (splitcommand.Length > 4) {
-                //             action["direction"] = new Vector3(
-                //                     float.Parse(splitcommand[1]),
-                //                     float.Parse(splitcommand[2]),
-                //                     float.Parse(splitcommand[3])
-                //                 );
-
-                //             if (splitcommand.Length >= 5) {
-                //                 action["speed"] = float.Parse(splitcommand[4]);
-                //             }
-                //         }
-
-                //         action["disableRendering"] = true;
-                //         action["restrictMovement"] = false;
-                //         action["returnToStart"] = true;
-                //         action["speed"] = 1;
-                //         CurrentActiveController().ProcessControlCommand(action);
-                //         break;
-                //     }
                 case "mc": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveAgent";
                          action["speed"] = 1;
                         if (splitcommand.Length > 2) {
-                            // action["direction"] = new Vector3(
-                            //         float.Parse(splitcommand[1]),
-                            //         float.Parse(splitcommand[2]),
-                            //         float.Parse(splitcommand[3])
-                            //     );
+                           
                             action["ahead"] = float.Parse(splitcommand[1]);                        
                             action["right"] = float.Parse(splitcommand[2]);
-
 
                             if (splitcommand.Length > 3) {
                                 action["speed"] = float.Parse(splitcommand[3]);

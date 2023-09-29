@@ -101,26 +101,6 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
-
-
-    // public static float fixedDeltaTime {
-    //     get { return Instance.physicsSimulationParams.fixedDeltaTime; }
-    // }
-
-    // public static bool autoSimulation {
-    //     get { return Instance.physicsSimulationParams.autoSimulation; }
-    // }
-
-    //  void Awake() {
-    //     if (Instance != null) {
-    //         Destroy(gameObject);
-    //         return;
-    //     }
-
-    //     Instance = this;
-    //     DontDestroyOnLoad(gameObject);
-    // }
-
      void Awake() {
         SetDefaultSimulationParams(new PhysicsSimulationParams());
      }
