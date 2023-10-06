@@ -153,7 +153,7 @@ class Controller(object):
         #print("3 processing_time: ", time.time()-start_time)
         start_time = time.time()
         payload = self._post_event("step", action)
-        print("4 processing_time: ", time.time()-start_time)
+        print("Response return time: ", time.time()-start_time)
 
         events = []
         for i, agent_metadata in enumerate(payload["metadata"]["agents"]):
@@ -196,7 +196,6 @@ class Controller(object):
                 if key in payload and len(payload[key]) > i:
                     image_mapping[key](payload[key][i])
             events.append(event)
-        print("processing_time: ", time.time()-start_time)
 
         if len(events) > 1:
             self.last_event = MultiAgentEvent(self.agent_id, events)
@@ -215,6 +214,7 @@ class Controller(object):
         # pprint("Display event:")
         # Controller._display_step_event(self.last_event)
 
+        print("[Step] processing_time: ", time.time()-start_time)
         return self.last_event
 
     def interact(

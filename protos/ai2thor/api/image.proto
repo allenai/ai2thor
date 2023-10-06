@@ -1,0 +1,44 @@
+// reference: https://github.com/boston-dynamics/spot-sdk/blob/master/protos/bosdyn/api/image.proto
+
+syntax = "proto3";
+
+package ai2thor.api;
+
+import "google/protobuf/timestamp.proto";
+
+service ImageService {
+
+    // Reqeust an image by name, with optional parameters for request image size or quality level
+    rpc GetImage(ImageRequest) returns (Image) {}
+
+    rpc GetAllImages(ImageRequest) returns (GetImageResponses) {}
+}
+
+message ImageRequest {
+    string image_source_name = 1;
+    enum PixelFormat {
+        PIXEL_FORMAT_BGR_U8 = 0;
+        PIXEL_FORMAT_DEPTH_U16 = 1;
+    }
+
+    int32 width = 2;
+    int32 height = 3;
+    PixelFormat pixel_format = 4;
+}
+
+message Image {
+    google.protobuf.Timestamp timestamp = 1;
+
+    // Number of columns in the image (in pixels)
+    int32 cols = 2;
+    // Number of rows in the image (in pixels)
+    int32 rows = 3;
+
+    // Raw image data 
+    bytes data = 4;
+}
+
+message GetImageResponses {
+    google.protobuf.Timestamp timestamp = 1;
+    repeated Image images = 2;
+}

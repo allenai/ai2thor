@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package ai2thor.api;
+
+import "google/protobuf/timestamp.proto";
+
+service RobotCommandService {
+    rpc MoveRobot(RobotCommandRequest) returns (RobotCommandResponse) {}
+}
+
+message RobotCommandRequest {
+    repeated RobotCommand robot_commands = 1;
+}
+
+message RobotCommand {
+    string action = 1;
+    map<string, float> args = 2;
+}
+
+message RobotCommandResponse {
+    google.protobuf.Timestamp timestamp = 1;
+
+    bool success = 2;
+
+    enum ErrorStatus {
+        // no error 
+        NO_ERROR = 0;
+
+        // error raised
+        UNKNOWN_ACTION = 1;         
+    }
+
+    ErrorStatus error_status = 3;
+}
