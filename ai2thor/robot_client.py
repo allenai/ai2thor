@@ -245,7 +245,7 @@ class RobotClient():
             
             # TODO: assuming... either list of string ("Pass" or "Done", or list of {})
             for a in actions:
-                print("action key: ", a)
+                #print("action key: ", a)
                 if type(a) is not dict and type(a) is str:
                     all_request.robot_commands.append(robot_command_pb2.RobotCommand(action = a))
                 else:
@@ -267,7 +267,7 @@ class RobotClient():
 
             if self.multi_thread:
                 self.flag_action_timestamp(action_completed_timestamp)
-                print("action timestamp", action_completed_timestamp)
+                #print("action timestamp", action_completed_timestamp)
    
 
         ## TODO: update state and observation. make sure the timestamp is after ressponse timestamp
