@@ -361,21 +361,22 @@ public static class ActionDispatcher {
         var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
         object[] arguments = new object[methodParams.Length];
         var physicsSimulationParams = dynamicServerAction.physicsSimulationParams;
-        var usePhysicsSimulationParams = physicsSimulationParams != null;
 
-        // Default simulation params
-        physicsSimulationParams ??= PhysicsSceneManager.defaultPhysicsSimulationParams.DeepClone();
-
+        var addPhysicsSimulationParams = physicsSimulationParams == null;
+        // If it's passed in the action or was set globally
+        var usePhysicsSimulationParams = physicsSimulationParams != null || PhysicsSceneManager.defaultPhysicsSimulationParams != null;
+        // Default simulation params if physicsSimulationParams is null and if default is null create the default (backcompat when it's not passed to init)
+        physicsSimulationParams ??= PhysicsSceneManager.defaultPhysicsSimulationParams ?? new PhysicsSimulationParams();
+        // Set static variable so actions can access it
         PhysicsSceneManager.SetPhysicsSimulationParams(physicsSimulationParams);
 
-        if (typeof(IEnumerator) == method.ReturnType || method.ReturnType == typeof(ActionFinished)) {
+        if (
+            usePhysicsSimulationParams && addPhysicsSimulationParams &&
+            (typeof(IEnumerator) == method.ReturnType || method.ReturnType == typeof(ActionFinished))
+        ) {
             // New action types always pass down physicsSim params if interface has them
-            if (!usePhysicsSimulationParams) {
-                usePhysicsSimulationParams = true;
-                // What will be passed down to the action
-                if (paramDict.ContainsKey(DynamicServerAction.physicsSimulationParamsVariable)) {
-                    dynamicServerAction.AddPhysicsSimulationParams(physicsSimulationParams);
-                }
+            if (paramDict.ContainsKey(DynamicServerAction.physicsSimulationParamsVariable)) {
+                dynamicServerAction.AddPhysicsSimulationParams(physicsSimulationParams);
             }
         }
         // TODO: deprecate, eventually when no void actions are left

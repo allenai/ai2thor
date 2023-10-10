@@ -91,32 +91,6 @@ namespace Tests {
             }
         }
 
-        public class TestControllerChild : TestController {
-            public TestControllerChild(AgentManager agentManager) : base(agentManager) {}
-            public bool calledChild = false;
-            // Ambiguous actions
-            public void BackCompatAction(int x, string defaultParam = "") {
-                ranAsBackCompat = true;
-                calledChild = true;
-            }
-
-            public ActionFinished NewAction(int x) {
-                calledChild = true;
-                return new ActionFinished() {
-                    success = true,
-                    actionReturn = x,
-                };
-            }
-
-            public IEnumerable AsyncAction(int x, int otherParams = 0) {
-                calledChild = true;
-                yield return new ActionFinished() {
-                    success = true,
-                    actionReturn = x,
-                };
-            }
-        }
-
         [UnityTest]
         public IEnumerator TestDispatchInvalidArguments() {
             yield return Initialize();
@@ -761,22 +735,61 @@ namespace Tests {
             Assert.AreEqual(controller.actionFinished.errorCode, ServerActionErrorCode.UnhandledException);
         }
 
+         public class TestControllerChild : TestController {
+            public TestControllerChild(AgentManager agentManager) : base(agentManager) {}
+            public bool calledChild = false;
+            // Ambiguous actions
+            public void BackCompatAction(int x, string defaultParam = "") {
+                ranAsBackCompat = true;
+                calledChild = true;
+            }
+
+            public ActionFinished NewAction(int x) {
+                calledChild = true;
+                return new ActionFinished() {
+                    success = true,
+                    actionReturn = x,
+                };
+            }
+        }
+
         [UnityTest]
          public IEnumerator TestChildAmbiguousAction() {
-
+            
             var controller = new TestControllerChild(this.agentManager);
 
             var args = new Dictionary<string, object>() {
                 {"action", "BackCompatAction"},
                 {"x", 1},
             };
-           
+            
+            // TODO: we may want to remove this happening
             Assert.Throws<AmbiguousActionException>(() => {
                 ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
             });
 
             yield return true;
         }
+
+        [UnityTest]
+         public IEnumerator TestChildAmbiguousNewAction() {
+
+            var controller = new TestControllerChild(this.agentManager);
+
+            var args = new Dictionary<string, object>() {
+                {"action", "NewAction"},
+                {"x", 1},
+            };
+           
+            ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
+
+            Assert.IsTrue(controller.calledChild);
+
+            Assert.IsTrue(controller.ranCompleteCallback);
+
+            yield return true;
+        }
+
 
     }
 }

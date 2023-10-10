@@ -137,7 +137,7 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     public static void SetDefaultSimulationParams(PhysicsSimulationParams defaultPhysicsSimulationParams) {
-        PhysicsSceneManager.defaultPhysicsSimulationParams = defaultPhysicsSimulationParams ?? new PhysicsSimulationParams();
+        PhysicsSceneManager.defaultPhysicsSimulationParams = defaultPhysicsSimulationParams;// ?? new PhysicsSimulationParams();
         PhysicsSceneManager.physicsSimulationParams = PhysicsSceneManager.defaultPhysicsSimulationParams;
     }
 
