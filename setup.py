@@ -56,7 +56,7 @@ setup(
         "werkzeug>=0.15.0",  # needed for unix socket support
         "compress_pickle",
         "grpcio",
-        "grpcio-tools"
+        "grpcio-tools",
         "protobuf>=4.24.0"
     ],
     setup_requires=["pytest-runner"],
