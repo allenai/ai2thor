@@ -54,7 +54,9 @@ setup(
         "python-xlib",
         "opencv-python",
         "werkzeug>=0.15.0",  # needed for unix socket support
-        "compress_pickle"
+        "compress_pickle",
+        "grpcio",
+        "grpcio-tools"
     ],
     setup_requires=["pytest-runner"],
     tests_require=["pytest", "pytest-timeout", "pytest-cov", "jsonschema", "shapely", "pytest-mock", "dictdiffer"],
