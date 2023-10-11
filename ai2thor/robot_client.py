@@ -119,6 +119,7 @@ class Controller(object):
         ## Assuming there is only one Agent and its corresponding Event to be created (not using MulitAgentEvent)
         
         # send action
+        ## TODO: single dict with "action" and "args" keyword
         if action is not None and type(action) is not dict:
             action = dict(action=[action])
 
