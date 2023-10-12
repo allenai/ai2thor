@@ -1659,12 +1659,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxAgentsDistance = -1f,
             bool forceAction = false,
             bool manualInteract = false,
-            bool allowAgentsToIntersect = false,
-            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
-            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
-            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
-            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false
         ) {
+
+            Debug.Log("MoveRight at physics fps? call ");
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
             } else if (moveMagnitude <= 0f) {
@@ -1682,16 +1680,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual void MoveAhead(
-            float? moveMagnitude = null,
-            string objectId = "",
-            float maxAgentsDistance = -1f,
-            bool forceAction = false,
-            bool manualInteract = false,
-            bool allowAgentsToIntersect = false,
-            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
-            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
-            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
-            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
+             float? moveMagnitude = null,
+            string objectId = "",                
+            float maxAgentsDistance = -1f,     
+            bool forceAction = false,            
+            bool manualInteract = false,        
+            bool allowAgentsToIntersect = false
         ) {
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
@@ -1960,6 +1954,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public IEnumerator SimulatePhysics(int steps) {
+            for (var i = 0; i < steps; i++) {
+                yield return new WaitForFixedUpdate();
+            }
+            yield return ActionFinished.Success;
+        }
+
         protected void sopApplyForce(ServerAction action, SimObjPhysics sop, float length) {
             // print("running sopApplyForce");
             // apply force, return action finished immediately
@@ -2065,6 +2066,88 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // wrapping the SimObjPhysics.ApplyForce function since lots of things use it....
         protected void sopApplyForce(ServerAction action, SimObjPhysics sop) {
             sopApplyForce(action, sop, 0.0f);
+        }
+
+        private IEnumerator checkIfAllObjectsHaveStoppedMoving(
+            float length,
+            double squaredAccelerationEpsilon = 1e-3,
+            bool useTimeout = false) {
+            // yield for the physics update to make sure this yield is consistent regardless of framerate
+            yield return new WaitForFixedUpdate();
+
+            float startTime = Time.time;
+            float waitTime = TimeToWaitForObjectsToComeToRest;
+
+            if (useTimeout) {
+                waitTime = 1.0f;
+            }
+
+            foreach (var sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+
+                Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
+                bool stoppedMoving = false;
+
+                while (Time.time - startTime < waitTime) {
+                    if (sop == null) {
+                        break;
+                    }
+
+                    float currentSqrVelocity = rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude;
+                    float squaredAccel = (currentSqrVelocity - sop.lastVelocity) / (Time.fixedDeltaTime * Time.fixedDeltaTime);
+
+                    // ok the accel is basically zero, so it has stopped moving
+                    if (Mathf.Abs(squaredAccel) <= squaredAccelerationEpsilon) {
+                        // force the rb to stop moving just to be safe
+                        rb.velocity = Vector3.zero;
+                        rb.angularVelocity = Vector3.zero;
+                        rb.Sleep();
+                        stoppedMoving = true;
+                        break;
+                    } else {
+                        yield return new WaitForFixedUpdate();
+                    }
+                }
+
+                // so we never stopped moving and we are using the timeout
+                if (!stoppedMoving && useTimeout) {
+                    errorMessage = "object couldn't come to rest";
+                    // print(errorMessage);
+                    actionFinished(false);
+                    yield break;
+                }
+
+                // we are past the wait time threshold, so force object to stop moving before
+                // rb.velocity = Vector3.zero;
+                // rb.angularVelocity = Vector3.zero;
+                // rb.Sleep();
+
+                // return to metadatawrapper.actionReturn if an object was touched during this interaction
+                if (length != 0.0f) {
+                    WhatDidITouch feedback = new WhatDidITouch() { didHandTouchSomething = true, objectId = sop.objectID, armsLength = length };
+
+#if UNITY_EDITOR
+                    print("yield timed out");
+                    print("didHandTouchSomething: " + feedback.didHandTouchSomething);
+                    print("object id: " + feedback.objectId);
+                    print("armslength: " + feedback.armsLength);
+#endif
+
+                    // force objec to stop moving 
+                    rb.velocity = Vector3.zero;
+                    rb.angularVelocity = Vector3.zero;
+                    rb.Sleep();
+
+                    actionFinished(true, feedback);
+                }
+
+                // if passed in length is 0, don't return feedback cause not all actions need that
+                else {
+                    DefaultAgentHand();
+                    actionFinished(true, sop.transform.position);
+                }
+            
+            }
+
         }
 
         // Sweeptest to see if the object Agent is holding will prohibit movement

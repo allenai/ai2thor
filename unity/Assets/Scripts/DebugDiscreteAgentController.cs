@@ -93,14 +93,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     bool isArticulated = CurrentActiveController().GetType() == typeof(ArticulatedAgentController);
                     Dictionary<string, object> action = new Dictionary<string, object>();
-                    bool disableRendering = true;
+                    var physicsSimulationParams = new PhysicsSimulationParams() {
+                        autoSimulation = false
+                    };
                     bool useLimits = true;
 
                     if (noModifier) {
                         float WalkMagnitude = 0.25f;
 
                         action["action"] = "";
-                        action["disableRendering"] = disableRendering;
+                        action["physicsSimulationParams"] = physicsSimulationParams;
 
                         if (isArticulated) {
                             if (Input.GetKeyDown(KeyCode.W)) {
@@ -183,7 +185,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (isArticulated) {
                             ArmMoveMagnitude = 0.1f;
                             float speed = 0.5f;
-                            action["disableRendering"] = disableRendering;
+                            action["physicsSimulationParams"] = physicsSimulationParams;
 
                             if (Input.GetKeyDown(KeyCode.W)) {
                                 action["action"] = "MoveArm";
@@ -211,10 +213,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 action["speed"] = 1000f;
                             } else if (Input.GetKeyDown(KeyCode.P)) {
                                 action["action"] = "PickupObject";
-                                action.Remove("disableRendering");
+                                // Doesn't matter we can keep them
+                                action.Remove("physicsSimulationParams");
                             } else if (Input.GetKeyDown(KeyCode.D)) {
                                 action["action"] = "ReleaseObject";
-                                action.Remove("disableRendering");
+                                // Doesn't matter we can keep them
+                                action.Remove("physicsSimulationParams");
                             } else {
                                 actionName = "";
                             }

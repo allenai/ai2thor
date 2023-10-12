@@ -15,6 +15,8 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
 using UnityEngine.Rendering;
 using UnityEngine.Experimental.Rendering;
 #if PLATFORM_CLOUD_RENDERING
@@ -31,7 +33,7 @@ public interface ActionFinisher {
     void actionFinished(bool success, object actionReturn = null, string errorMessage = null);
 }
 
-public class AgentManager : MonoBehaviour {
+public class AgentManager : MonoBehaviour, ActionInvokable {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
     protected int frameCounter;
     protected bool serverSideScreenshot;
@@ -112,6 +114,15 @@ public class AgentManager : MonoBehaviour {
             string serverPipePath = LoadStringVariable(null, "FIFO_SERVER_PIPE_PATH");
             string clientPipePath = LoadStringVariable(null, "FIFO_CLIENT_PIPE_PATH");
 
+            // TODO: Create dir if not exists
+            if (string.IsNullOrEmpty(serverPipePath)) {
+                serverPipePath = "fifo_pipe/server.pipe";
+                
+            }
+            if (string.IsNullOrEmpty(clientPipePath)) {
+                clientPipePath = "fifo_pipe/client.pipe";
+            }
+
             Debug.Log("creating fifo server: " + serverPipePath);
             Debug.Log("client fifo path: " + clientPipePath);
             this.fifoClient = FifoServer.Client.GetInstance(serverPipePath, clientPipePath);
@@ -156,6 +167,10 @@ public class AgentManager : MonoBehaviour {
         }
 #endif
         StartCoroutine(EmitFrame());
+    }
+
+     public void Complete(ActionFinished result) {
+        this.activeAgent().Complete(result);
     }
 
     private void initializePrimaryAgent() {
@@ -227,6 +242,8 @@ public class AgentManager : MonoBehaviour {
         this.renderInstanceSegmentation = this.initializedInstanceSeg = action.renderInstanceSegmentation;
         this.renderFlowImage = action.renderFlowImage;
         this.fastActionEmit = action.fastActionEmit;
+
+        PhysicsSceneManager.SetDefaultSimulationParams(action.defaultPhysicsSimulationParams);
         // we default Physics.autoSimulation to False in the built Player, but
         // set ServerAction.autoSimulation = True for backwards compatibility. Keeping
         // this value False allows the user complete control of all Physics Simulation
@@ -1071,6 +1088,7 @@ public class AgentManager : MonoBehaviour {
 // frame create new controller state Emitted, to detect between ready to emit and already emitted
 // remove back for python controller parity                        
 #if UNITY_EDITOR        
+                        Debug.LogWarning("EmitFrame WILL STOP RUNNING. createPayload will not be called after every action. Possible environment mismatch. Use python server to match standalone environment.");
                         break;
 #endif
                     }
@@ -1141,8 +1159,21 @@ public class AgentManager : MonoBehaviour {
 
                 byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(multiMeta,
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+                
+                #if UNITY_EDITOR
+                    
+                    Debug.Log("FIFO Timeout started. Trying to read from FIFO server...");
+                    var completed = Task.Run(() => this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata)).Wait(2000);
+                    Debug.Log("ReachedTimeout " + !completed);
+                    if (!completed) {
+                        Debug.Log("FIFO Timeout Reached. Start FIFO server first if remote control is needed.");
+                        Debug.LogWarning("EmitFrame WILL STOP RUNNING. createPayload will not be called after every action. Possible environment mismatch. Use python server to match standalone environment.");
+                        break;
+                    }
+                #else 
+                    this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
+                #endif
 
-                this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
                 AsyncGPUReadback.WaitAllRequests();
                 foreach (var item in renderPayload) {
                     this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
@@ -1290,7 +1321,7 @@ public class AgentManager : MonoBehaviour {
         return envVarValue == null ? variable : bool.Parse(envVarValue);
     }
 
-    public void SetErrorState() {
+    public void SetCriticalErrorState() {
         this.agentManagerState = AgentState.Error;
     }
 
@@ -1754,8 +1785,11 @@ public class DynamicServerAction {
         "renderClassImage",
         "renderNormalsImage",
         "renderInstanceSegmentation",
-        "action"
+        "action",
+        physicsSimulationParamsVariable
     };
+
+    public const string physicsSimulationParamsVariable = "physicsSimulationParams";
 
     public JObject jObject {
         get;
@@ -1777,6 +1811,12 @@ public class DynamicServerAction {
     public string action {
         get {
             return this.jObject["action"].ToString();
+        }
+    }
+
+    public PhysicsSimulationParams physicsSimulationParams {
+        get {
+            return this.jObject[physicsSimulationParamsVariable]?.ToObject<PhysicsSimulationParams>();
         }
     }
 
@@ -1848,6 +1888,15 @@ public class DynamicServerAction {
         return this.jObject.Properties().Select(p => p.Name).Where(argName => !AllowedExtraneousParameters.Contains(argName)).ToList();
     }
 
+    public IEnumerable<string> ArgumentKeysWithPhysicsSimulationProperies() { 
+        return this.jObject
+            .Properties()
+            .Select(p => p.Name)
+            .Where(argName => !AllowedExtraneousParameters.Except(new HashSet<string> { physicsSimulationParamsVariable })
+            .Contains(argName))
+            .ToList();
+    }
+
     public IEnumerable<string> Keys() {
         return this.jObject.Properties().Select(p => p.Name).ToList();
     }
@@ -1856,7 +1905,11 @@ public class DynamicServerAction {
         return this.jObject.Count;
     }
 
-}
+    public void AddPhysicsSimulationParams(PhysicsSimulationParams physicsSimulationParams) {
+        var token = JToken.FromObject(physicsSimulationParams);
+        this.jObject.Add(new JProperty(physicsSimulationParamsVariable, token));
+    }
+ }
 
 [Serializable]
 public class ServerAction {
@@ -2008,8 +2061,11 @@ public class ServerAction {
     // for the arm to detect collisions and stop moving
     public float? massThreshold;
 
+    public PhysicsSimulationParams physicsSimulationParams; 
     public float maxUpwardLookAngle = 0.0f;
     public float maxDownwardLookAngle = 0.0f;
+
+    public PhysicsSimulationParams defaultPhysicsSimulationParams;
 
 
     public SimObjType ReceptableSimObjType() {
@@ -2105,7 +2161,9 @@ public enum ServerActionErrorCode {
     InvalidAction,
     MissingArguments,
     AmbiguousAction,
-    InvalidArgument
+    InvalidArgument,
+    MissingActionFinished,
+    UnhandledException
 }
 
 public enum VisibilityScheme {

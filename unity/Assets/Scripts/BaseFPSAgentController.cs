@@ -15,10 +15,11 @@ using Newtonsoft.Json.Linq;
 using MIConvexHull;
 using Thor.Procedural;
 using Thor.Procedural.Data;
+using System.Linq.Expressions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
-    abstract public class BaseFPSAgentController {
+    abstract public class BaseFPSAgentController : ActionInvokable {
         // debug draw bounds of objects in editor
 #if UNITY_EDITOR
         protected List<Bounds> gizmobounds = new List<Bounds>();
@@ -31,6 +32,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public GameObject gameObject {
             get => this.baseAgentComponent.gameObject;
+        }
+
+        public Coroutine StartCoroutine(IEnumerator routine) {
+            return this.baseAgentComponent.StartCoroutine(routine);
         }
 
         public SimObjPhysics[] VisibleSimObjPhysics;
@@ -405,14 +410,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
             Debug.Log($"lastAction: '{this.lastAction}'");
             Debug.Log($"lastActionSuccess: '{success}'");
+            Debug.Log($"actionReturn: '{actionReturn}'");
             if (!success) {
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
             } else if (actionReturn != null) {
                 Debug.Log($"actionReturn: '{actionReturn}'");
             }
+            
 #endif
         }
+        
+        public virtual void Complete(ActionFinished result) {
+            // Check to not call `actionFinished` twice and overwriting values when running in new mode
+            // TODO: remove check once legacy actions are gone. 
+            if (!result.isDummy) {
+                if (result.errorMessage != null) {
+                    this.errorMessage = result.errorMessage;
+                }
+                this.errorCode = result.errorCode;
+                actionFinished(success: result.success, newState: !result.toEmitState ? AgentState.ActionComplete : AgentState.Emit, actionReturn: result.actionReturn);
+            }
+        }
 
+        // Delete and use yield return ActionFinished
         public virtual void actionFinished(bool success, object actionReturn = null, string errorMessage = null) {
             if (errorMessage != null) {
                 this.errorMessage = errorMessage;
@@ -2012,7 +2032,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ProcessControlCommand(controlCommand: controlCommand, target: this);
         }
 
-        public void ProcessControlCommand(DynamicServerAction controlCommand, object target) {
+        public void ProcessControlCommand<T>(DynamicServerAction controlCommand, T target) where T: ActionInvokable{
             lastActionInitialPhysicsSimulateCount = PhysicsSceneManager.PhysicsSimulateCallCount;
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
@@ -2024,6 +2044,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.agentState = AgentState.Processing;
 
             try {
+                // Debug.Log("Calling dispatch");
                 ActionDispatcher.Dispatch(target: target, dynamicServerAction: controlCommand);
             } catch (InvalidArgumentsException e) {
                 errorMessage =
@@ -2076,6 +2097,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     success: false,
                     errorMessage: $"{e.InnerException.GetType().Name}: {e.InnerException.Message}. trace: {e.InnerException.StackTrace.ToString()}"
                 );
+            } catch (MissingActionFinishedException e) {
+                errorCode = ServerActionErrorCode.MissingActionFinished;
+                actionFinished(
+                    false, 
+                    errorMessage:  $"Action '{controlCommand.action}' did not return an `ActionFinished`. Possible bug with the action and it's execution path given the arguments it was called with. Arguments: {controlCommand.jObject.ToString()}"
+                );
+
             } catch (Exception e) {
                 Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
                 Debug.LogError("Action error message: " + errorMessage);
@@ -2808,6 +2836,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // used to check if an specified sim object has come to rest
         // set useTimeout bool to use a faster time out 
+        // TODO: Change to new action type
         protected IEnumerator checkIfObjectHasStoppedMoving(
             SimObjPhysics sop,
             bool useTimeout = false) {
@@ -6545,6 +6574,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public void GetLastPhysicsSimulateCount() {
+            actionFinished(
+                success: true,
+                actionReturn: PhysicsSceneManager.LastPhysicsSimulateCallCount
+            );
+        }
+
         public void SetObjectsCollisionMode(string collisionDetectionMode) {
             var rootObject = GameObject.Find(ProceduralTools.DefaultObjectsRootName);
             if (rootObject == null) {
@@ -6677,10 +6713,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void print(string message) {
             MonoBehaviour.print(message);
-        }
-
-        public void StartCoroutine(IEnumerator coroutine) {
-            this.baseAgentComponent.StartCoroutine(coroutine);
         }
 
         public T GetComponent<T>() where T : Component {

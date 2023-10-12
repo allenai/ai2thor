@@ -143,9 +143,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float yaw = 0f,
             float roll = 0f,
             float speed = 10f,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             var arm = getArm();
 
@@ -157,9 +155,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     yaw: yaw,
                     roll: roll,
                     speed: speed,
-                    fixedDeltaTime: fixedDeltaTime,
-                    returnToStart: returnToStart,
-                    disableRendering: disableRendering
+                    returnToStart: returnToStart
                 );
             } else {
                 actionFinished(
@@ -181,9 +177,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float yaw = 0f,
             float roll = 0f,
             float speed = 10f,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             IK_Robot_Arm_Controller arm = getArmImplementation();
 
@@ -192,8 +186,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 rotatePoint: point,
                 rotation: Quaternion.Euler(pitch, yaw, -roll),
                 degreesPerSecond: speed,
-                disableRendering: disableRendering,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart
             );
         }
@@ -211,9 +204,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void RotateElbowRelative(
             float degrees,
             float speed = 10f,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             IK_Robot_Arm_Controller arm = getArmImplementation();
 
@@ -221,8 +212,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 degrees: degrees,
                 degreesPerSecond: speed,
-                disableRendering: disableRendering,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart
             );
         }
@@ -233,9 +223,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void RotateElbow(
             float degrees,
             float speed = 10f,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             IK_Robot_Arm_Controller arm = getArmImplementation();
 
@@ -243,8 +231,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 degrees: degrees,
                 degreesPerSecond: speed,
-                disableRendering: disableRendering,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart
             );
         }

@@ -1063,5 +1063,68 @@ public class ProceduralRoomEditor : MonoBehaviour {
         proceduralADB.totalMats = proceduralADB.materials.Count();
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
     }
+
+    [UnityEditor.MenuItem("Procedural/Filter Asset Database")]
+    public static void ReduceAssetDb() {
+        var proceduralADB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+
+        var house = readHouseFromJsonStatic("test_0_out.json");
+
+        // proceduralADB.prefabs = new AssetMap<GameObject>(ProceduralTools.FindPrefabsInAssets().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+        // proceduralADB.materials = new AssetMap<Material>(ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+
+        proceduralADB.prefabs = ProceduralTools.FindPrefabsInAssets();
+        proceduralADB.materials = ProceduralTools.FindAssetsByType<Material>();
+
+        // house.objects.Select(o => o.id)
+        proceduralADB.totalMats = proceduralADB.materials.Count();
+        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+    }
+
+    public static void filterADBFromHousesAssets(ProceduralAssetDatabase assetDb, IEnumerable<ProceduralHouse> houses) {
+        var mats = new HashSet<string>(houses.SelectMany(h => getAllMaterials(h)));
+        var assets =  new HashSet<string>(houses.SelectMany(h => getAssetIds(h)));
+        assetDb.prefabs = assetDb.prefabs.Where(p => assets.Contains(p.name)).ToList();
+        assetDb.materials = assetDb.materials.Where(p => mats.Contains(p.name)).ToList();
+    }
+
+    public static IEnumerable<string> getAllMaterials(ProceduralHouse house) {
+        return house.rooms.SelectMany(
+                    r => r.ceilings
+                            .Select(c => c.material.name)
+                            .Concat(new List<string>() { r.floorMaterial.name })
+                            .Concat(house.walls.Select(w => w.material.name))
+                ).Concat(
+                    new List<string>() { house.proceduralParameters.ceilingMaterial.name }
+                );
+
+    }
+
+    public static IEnumerable<string> getAssetIds(ProceduralHouse house) {
+        return house.objects.Select(o => o.assetId)
+            .Concat(house.windows.Select(w => w.assetId))
+            .Concat(house.doors.Select(d => d.assetId));
+    }
+
+    public static ProceduralHouse readHouseFromJsonStatic(string fileName) {
+        var path = BuildLayoutPathStatic(fileName);
+        Debug.Log($"Loading: '{path}'");
+        var jsonStr = System.IO.File.ReadAllText(path);
+        Debug.Log($"json: {jsonStr}");
+
+        JObject obj = JObject.Parse(jsonStr);
+
+        return obj.ToObject<ProceduralHouse>();
+
+    }
+    public static string BuildLayoutPathStatic(string layoutFilename) {
+        layoutFilename = layoutFilename.Trim();
+        string LoadBasePath = "/Resources/rooms/";
+        if (!layoutFilename.EndsWith(".json")) {
+            layoutFilename += ".json";
+        }
+        var path = Application.dataPath + LoadBasePath + layoutFilename;
+        return path;
+    }
     #endif
 }

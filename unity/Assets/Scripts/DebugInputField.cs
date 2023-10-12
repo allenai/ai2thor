@@ -895,6 +895,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     IEnumerator executeBatch(JArray jActions) {
                         int i = 0;
                         foreach (JObject action in jActions) {
+                            if (!action.ContainsKey("action")) {
+                                continue;
+                            }
                             while (CurrentActiveController().IsProcessing) {
                                 yield return new WaitForEndOfFrame();
                             }
@@ -3795,22 +3798,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "mc": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveAgent";
-                        if (splitcommand.Length > 4) {
-                            action["direction"] = new Vector3(
-                                    float.Parse(splitcommand[1]),
-                                    float.Parse(splitcommand[2]),
-                                    float.Parse(splitcommand[3])
-                                );
+                         action["speed"] = 1;
+                        if (splitcommand.Length > 2) {
+                           
+                            action["ahead"] = float.Parse(splitcommand[1]);                        
+                            action["right"] = float.Parse(splitcommand[2]);
 
-                            if (splitcommand.Length >= 5) {
-                                action["speed"] = float.Parse(splitcommand[4]);
+                            if (splitcommand.Length > 3) {
+                                action["speed"] = float.Parse(splitcommand[3]);
                             }
                         }
 
-                        action["disableRendering"] = true;
-                        action["restrictMovement"] = false;
+                        action["physicsSimulationParams"] = new PhysicsSimulationParams() { autoSimulation = false};
                         action["returnToStart"] = true;
-                        action["speed"] = 1;
+                       
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -4315,6 +4316,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // Debug.Log($"assetDb: {string.Join("\n", assetMetadata.Select(m => $"{m.id}|{m.type}|box: {m.boundingBox.min}, {m.boundingBox.max}, {m.primaryProperty}"))}");
                         break;
                     }
+
+                case "gadt": {
+                    CurrentActiveController().GetAssetDatabase();
+                    var assetMetadata = (List<AssetMetadata>)CurrentActiveController().actionReturn as List<AssetMetadata>;
+
+                    break;
+                }
                 case "soirr": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "SpawnObjectInReceptacleRandomly";
