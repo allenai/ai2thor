@@ -461,7 +461,6 @@ public static class ActionDispatcher {
             }
             // TODO: when legacy actions are gone remove branch
             else {
-                
                 action = ActionFinishedDelayActionWrapper(
                      () => {
                         method.Invoke(target, arguments);
