@@ -23,6 +23,7 @@ enum_to_string = {
     1 : "depth"
 }
 
+MAX_MESSAGE_LENGTH = 4*1280*720
 
 def timestamp1_is_bigger_timestamp2(ts1, ts2):
     #print("ts2 - ts1", ts2.seconds - ts1.seconds, ts2.nanos-ts1.nanos)
@@ -37,9 +38,16 @@ def difference_in_timestamps(ts1, ts2):
     dnano = ts1.nanos - ts2.nanos
     return dsec + dnano * 10**-9
 
-def decode_image(buffer, pixel_format=cv2.IMREAD_UNCHANGED): #cv2.IMREAD_COLOR):
-    nparr = np.frombuffer(buffer, np.uint8)#.reshape(720,1280,3)
-    image = cv2.imdecode(nparr, pixel_format)
+def decode_image(buffer, pixel_format, width=None, height=None): #cv2.IMREAD_COLOR):
+    #print(buffer)
+    if pixel_format == 0:
+        nparr = np.frombuffer(buffer, dtype= np.uint8)#.reshape(720,1280,3)
+        image = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)    
+    else:
+        nparr = np.frombuffer(buffer, dtype=np.uint16)#, np.uint8)#.reshape(720,1280,3)
+        #image = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
+        #print(nparr.min(), nparr.max())
+        image = nparr.reshape(height, width,1)
     return image 
 
 
@@ -49,9 +57,11 @@ PRINT_TIMESTAMPS = False
 class Controller(object):
     def __init__(self, host="", port=50051, width=1280, height=720, agent_id=0, multi_thread=False,
                 get_depth=True, depth_format=DepthFormat.Meters,
+                camera_sources = ["arm","nav"], #"stretch
                 camera_near_plane=0.1, camera_far_plane=20):
         
-        self.robot_client = RobotClient(robot_ip=host, port=str(port), width=width, height=height, multi_thread=multi_thread, get_depth=get_depth)
+        self.camera_sources = camera_sources
+        self.robot_client = RobotClient(robot_ip=host, port=str(port), width=width, height=height, multi_thread=multi_thread, get_depth=get_depth, camera_sources=camera_sources)
         self.last_event = {}
         self.last_action = {}
 
@@ -141,8 +151,13 @@ class Controller(object):
             
         
         event = Event(self._metadata)
-        event.frame = images["nav"]["bgr"]["data"]
-        event.third_party_camera_frames.append(images["arm"]["bgr"]["data"])
+        if "nav" in self.camera_sources:
+            event.frame = images["nav"]["bgr"]["data"]
+        if "arm" in self.camera_sources:
+            event.third_party_camera_frames.append(images["arm"]["bgr"]["data"])
+        if "stretch" in self.camera_sources:
+            event.third_party_camera_frames.append(images["stretch"]["bgr"]["data"])
+
         #event.frame = add_image(images["nav"]["bgr"]["data"], flip_y=False, flip_rb_colors=False)
         #event.add_third_party_camera_image_robot(images["arm"]["bgr"]["data"], self.screen_width, self.screen_height)
     
@@ -151,8 +166,13 @@ class Controller(object):
             ## Realsense depth scale = 0.001 (m)
             #event.add_third_party_image_depth_robot(images["arm"]["depth"]["data"], dtype=np.float64, flip_y=False, depth_format=self.depth_format, depth_width=self.screen_width, depth_height=self.screen_height)
             #event.add_image_depth_robot(images["nav"]["depth"]["data"], self.depth_format, camera_near_plane=self.camera_near_plane, camera_far_plane=self.camera_far_plane, depth_width=self.screen_width, depth_height=self.screen_height, flip_y=False, dtype=np.float64)
-            event.depth_frame = 0.001 * images["nav"]["depth"]["data"]
-            event.third_party_depth_frames.append(0.001 * images["arm"]["depth"]["data"])
+            if "nav" in self.camera_sources:
+                event.depth_frame = 0.001 * images["nav"]["depth"]["data"]
+            if "arm" in self.camera_sources:
+                event.third_party_depth_frames.append(0.001 * images["arm"]["depth"]["data"])
+            if "stretch" in self.camera_sources:
+                event.third_party_depth_frames.append(0.001 * images["stretch"]["depth"]["data"])
+
 
         self.last_event = event 
         print("Last Event constructed. ", time.time()-start_time)
@@ -168,8 +188,11 @@ class Controller(object):
 
 
 class RobotClient():
-    def __init__(self, multi_thread=False, robot_ip="172.16.121.205", port="50051", width=1280, height=720, get_depth=False):
-        channel = grpc.insecure_channel(robot_ip+':'+port)
+    def __init__(self, multi_thread=False, robot_ip="172.16.121.205", port="50051", width=1280, height=720, get_depth=False, camera_sources=["nav", "arm"]):
+        channel = grpc.insecure_channel(robot_ip+':'+port,
+                                          options=[
+        ('grpc.max_send_message_length', MAX_MESSAGE_LENGTH),
+        ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH)])
 
         # all services
         self.obs_stub = image_pb2_grpc.ImageServiceStub(channel)
@@ -177,12 +200,14 @@ class RobotClient():
         self.command_stub = robot_command_pb2_grpc.RobotCommandServiceStub(channel)
 
         # init variables
-        ##TODO: keep a fixed length of data with its timestamp
         self.images = {}
-        self.images["arm"] = {"bgr": {"timestamp":None, "data":None}, "depth": {"timestamp":None, "data":None}}
-        self.images["nav"] = {"bgr": {"timestamp":None, "data":None}, "depth": {"timestamp":None, "data":None}}
+        for cam_source in camera_sources:
+            self.images[cam_source] = {"bgr": {"timestamp":None, "data":None}, "depth": {"timestamp":None, "data":None}}
+        #self.images["arm"] = {"bgr": {"timestamp":None, "data":None}, "depth": {"timestamp":None, "data":None}}
+        #self.images["nav"] = {"bgr": {"timestamp":None, "data":None}, "depth": {"timestamp":None, "data":None}}
         self.set_obs_shape(width, height)
         self.get_depth = get_depth # TODO:
+        self.camera_sources = camera_sources
 
         self.robot_state = {}
         #self.robot_state["timestamp"] = None
@@ -205,27 +230,34 @@ class RobotClient():
             self._recieved_data["robot_state"] = False
 
             self._recieved_data["images"] = {}
+            camera_threads = []
             if not self.get_depth:
-                camera_thread1 = threading.Thread(target=self.run_observations, args=("nav", 0))
-                camera_thread1.start()
-                camera_thread2 = threading.Thread(target=self.run_observations, args=("arm", 0))
-                camera_thread2.start()
-                self._recieved_data["images"]["navbgr"] = False
-                self._recieved_data["images"]["armbgr"] = False
-            
+                for cam_source in camera_sources:
+                    cam_thread = threading.Thread(target=self.run_observations, args=(cam_source, 0))
+                    cam_thread.start()
+                    camera_threads.append(cam_thread)
+                    self._recieved_data["images"][cam_source + "bgr"] = False
+                #camera_thread1 = threading.Thread(target=self.run_observations, args=("nav", 0))
+                #camera_thread1.start()
+                #camera_thread2 = threading.Thread(target=self.run_observations, args=("arm", 0))
+                #camera_thread2.start()
+                #self._recieved_data["images"]["navbgr"] = False
+                #self._recieved_data["images"]["armbgr"] = False 
             else:
-                #camera_thread3 = threading.Thread(target=self.run_all_observations("nav"))
-                #camera_thread3.start()
-                #camera_thread4 = threading.Thread(target=self.run_all_observations("arm"))
-                #camera_thread4.start()
-                camera_thread1 = threading.Thread(target=self.run_all_observations, args=("nav", 0))
-                camera_thread1.start()
-                camera_thread2 = threading.Thread(target=self.run_all_observations, args=("arm", 0))
-                camera_thread2.start()
-                self._recieved_data["images"]["navbgr"] = False
-                self._recieved_data["images"]["armbgr"] = False
-                self._recieved_data["images"]["navdepth"] = False
-                self._recieved_data["images"]["armdepth"] = False
+                for cam_source in camera_sources:
+                    cam_thread = threading.Thread(target=self.run_all_observations, args=(cam_source, 0))
+                    cam_thread.start()
+                    camera_threads.append(cam_thread)
+                    self._recieved_data["images"][cam_source + "bgr"] = False
+                    self._recieved_data["images"][cam_source + "depth"] = False
+                #camera_thread1 = threading.Thread(target=self.run_all_observations, args=("nav", 0))
+                #camera_thread1.start()
+                #camera_thread2 = threading.Thread(target=self.run_all_observations, args=("arm", 0))
+                #camera_thread2.start()
+                #self._recieved_data["images"]["navbgr"] = False
+                #self._recieved_data["images"]["armbgr"] = False
+                #self._recieved_data["images"]["navdepth"] = False
+                #self._recieved_data["images"]["armdepth"] = False
 
     def check_timebound(self):
         pass 
@@ -276,13 +308,17 @@ class RobotClient():
             self.get_state(action_completed_timestamp)
 
             if not self.get_depth:
-                self.get_observations("arm", 0, action_completed_timestamp)
-                self.get_observations("nav", 0, action_completed_timestamp)
+                for cam_source in self.camera_sources:
+                    self.get_observations(cam_source, 0, action_completed_timestamp)
+                #self.get_observations("arm", 0, action_completed_timestamp)
+                #self.get_observations("nav", 0, action_completed_timestamp)
 
             ## TODO: passed by config
             else:#if self.get_depth:
-                self.get_all_observations("arm", action_completed_timestamp)
-                self.get_all_observations("nav", action_completed_timestamp)
+                for cam_source in self.camera_sources:
+                    self.get_all_observations(cam_source, action_completed_timestamp)
+                #self.get_all_observations("arm", action_completed_timestamp)
+                #self.get_all_observations("nav", action_completed_timestamp)
 
             images = self.images 
             robot_state = self.robot_state
@@ -315,13 +351,12 @@ class RobotClient():
         
     def flag_action_timestamp(self, timestamp):
         self._action_timestamp = timestamp
-
         self._recieved_data["robot_state"] = False
-        self._recieved_data["images"]["navbgr"] = False
-        self._recieved_data["images"]["armbgr"] = False
-        if self.get_depth:
-            self._recieved_data["images"]["navdepth"] = False
-            self._recieved_data["images"]["armdepth"] = False
+        for cam_source in self.camera_sources:
+            self._recieved_data["images"][cam_source + "bgr"] = False
+            if self.get_depth:
+                self._recieved_data["images"][cam_source + "depth"] = False
+            
 
     def run_all_observations(self, image_source_name, pixel_format):
         while True:
@@ -343,6 +378,7 @@ class RobotClient():
 
     def get_all_observations(self, image_source_name, lowerbound_timestamp=None):
         #start_time = time.time()
+        print("Getting ALL Observations")
 
         if self.multi_thread: # and self._action_timestamp is None:
             if self._action_timestamp is not None and lowerbound_timestamp is None: 
@@ -361,11 +397,12 @@ class RobotClient():
             
         self.images[image_source_name][enum_to_string[0]] = {
             "timestamp" : response.timestamp,
-            "data": decode_image(response.images[0].data) #self.decode_image(response.data)
+            "data": decode_image(response.images[0].data, 0) #self.decode_image(response.data)
         }
+
         self.images[image_source_name][enum_to_string[1]] = {
             "timestamp" : response.timestamp,
-            "data": decode_image(response.images[1].data) #self.decode_image(response.data)
+            "data": decode_image(response.images[1].data, 1, width=self.width, height=self.height) #self.decode_image(response.data)
         }
 
         if self.multi_thread: # and self._action_timestamp is None:
@@ -398,7 +435,7 @@ class RobotClient():
             
         self.images[image_source_name][enum_to_string[pixel_format]] = {
             "timestamp" : response.timestamp,
-            "data": decode_image(response.data) #self.decode_image(response.data)
+            "data": decode_image(response.data, pixel_format, width=self.width, height=self.height) #self.decode_image(response.data)
         }
 
         if self.multi_thread: # and self._action_timestamp is None:
