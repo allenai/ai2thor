@@ -12,6 +12,8 @@ namespace Thor.Utils
     {
         [HideInInspector] [SerializeField] Vector2[] uv;
         [HideInInspector] [SerializeField] Vector3[] verticies;
+        [HideInInspector] [SerializeField] Vector3[] normals;
+
         [HideInInspector] [SerializeField] int[] triangles;
         [HideInInspector] [SerializeField] bool serialized = false;
         
@@ -48,6 +50,7 @@ namespace Thor.Utils
             uv = mesh.uv;
             verticies = mesh.vertices;
             triangles = mesh.triangles;
+            normals = mesh.normals;
  
             serialized = true;
             var matName = transform.parent.gameObject.name;
@@ -79,9 +82,10 @@ namespace Thor.Utils
             Mesh mesh = new Mesh();
             mesh.vertices = verticies;
             mesh.triangles = triangles;
+            mesh.normals = normals;
             mesh.uv = uv;
            
-            mesh.RecalculateNormals();
+            // mesh.RecalculateNormals();
             mesh.RecalculateBounds();
  
             return mesh;
