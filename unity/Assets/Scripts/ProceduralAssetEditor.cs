@@ -122,7 +122,7 @@ namespace Thor.Procedural {
                     procAsset.yRotOffset ,
                     serializable: true,
                     returnObject: true,
-                    parent: null
+                    parent: transform
                 );
             var go = result["gameObject"] as GameObject;
 
