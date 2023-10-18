@@ -122,7 +122,7 @@ namespace Thor.Procedural {
                     procAsset.yRotOffset ,
                     serializable: true,
                     returnObject: true,
-                    parent: transform
+                    parent: null
                 );
             var go = result["gameObject"] as GameObject;
 
@@ -145,8 +145,13 @@ namespace Thor.Procedural {
         }
 
         [Button(Expanded = true)]
-        public void SaveObjectTextures() { 
+        public void CopyObjectTextures() { 
+            var transformRoot = GameObject.Find(objectId);
             var transform = gameObject.transform.root.FirstChildOrDefault(g => g.name == objectId);
+
+            if (transform == null) {
+                transform = transformRoot.transform;
+            }
             // Debug.Log($"Root: {gameObject.transform.root.name}");
             if (transform != null) {
                 SaveTextures(transform.gameObject);
@@ -157,8 +162,9 @@ namespace Thor.Procedural {
         }
 
          [Button(Expanded = true)]
-        public void SaveAllTextures() { 
-            var procAssets = gameObject.transform.root.GetComponentsInChildren<RuntimePrefab>();
+        public void CopyAllTextures() { 
+            var procAssets = GameObject.FindObjectsOfType(typeof(RuntimePrefab))  as RuntimePrefab[];
+            // var procAssets = gameObject.transform.root.GetComponentsInChildren<RuntimePrefab>();
             foreach (var asset in procAssets) {
                 if (asset != null) {
                     SaveTextures(asset.gameObject);
