@@ -21,13 +21,14 @@ namespace Thor.Procedural {
 
         public string objectsDirectory = "objaverse";
 
-        public bool copyTexturesWhenLoading = false;
+        public bool copyTexturesOnLoad = false;
 
         // public bool savePrefab = true;
 
+        public string objectId;
 
         private const string prefabsRelativePath = "Prefabs";
-        // #if UNITY_EDITOR
+        #if UNITY_EDITOR
         private string copyTexture(string original, string destinationDir) {
             var outName = $"{destinationDir}/{Path.GetFileName(original)}";
             if (!File.Exists(outName)) {
@@ -73,7 +74,7 @@ namespace Thor.Procedural {
         }   
         // TODO: put in ifdef  block
         [Button(Expanded = true)]
-        public void LoadObject(string objectId) {
+        public void LoadObject() {
             var file = objectId.Trim();
             if (!file.EndsWith(".json")) {
                 file += ".json";
@@ -94,6 +95,16 @@ namespace Thor.Procedural {
             JObject obj = JObject.Parse(jsonStr);
 
             var procAsset = obj.ToObject<ProceduralAsset>();
+
+            // var prefabParentTransform = transform.Find("ProceduralAssets");
+            
+            // if (prefabParentTransform == null) {
+            //     Debug.Log($"ProceduralAssets container does not exist {prefabParentTransform == null}");
+            //     var prefabParent = new GameObject("ProceduralAssets");
+            //     prefabParent.transform.parent = transform;
+            //     prefabParentTransform = prefabParent.transform;
+            // }
+
             var result = ProceduralTools.CreateAsset(
                     procAsset.vertices,
                     procAsset.normals,
@@ -110,13 +121,17 @@ namespace Thor.Procedural {
                     procAsset.receptacleCandidate ,
                     procAsset.yRotOffset ,
                     serializable: true,
-                    returnObject: true
+                    returnObject: true,
+                    parent: transform
                 );
             var go = result["gameObject"] as GameObject;
 
-            go.transform.parent.gameObject.SetActive(true);
+            if (go.transform.parent != null && !go.transform.parent.gameObject.activeSelf) {
+                go.transform.parent.gameObject.SetActive(true);
+            }
+            
 
-            if (copyTexturesWhenLoading) {
+            if (copyTexturesOnLoad) {
                 SaveTextures(go);
             }
 
@@ -130,8 +145,9 @@ namespace Thor.Procedural {
         }
 
         [Button(Expanded = true)]
-        public void SaveObjectTextures(string objectId) { 
+        public void SaveObjectTextures() { 
             var transform = gameObject.transform.root.FirstChildOrDefault(g => g.name == objectId);
+            // Debug.Log($"Root: {gameObject.transform.root.name}");
             if (transform != null) {
                 SaveTextures(transform.gameObject);
             }
@@ -139,6 +155,19 @@ namespace Thor.Procedural {
                 Debug.LogError($"Invalid object {objectId} not present in scene.");
             }
         }
-        // #endif
+
+         [Button(Expanded = true)]
+        public void SaveAllTextures() { 
+            var procAssets = gameObject.transform.root.GetComponentsInChildren<RuntimePrefab>();
+            foreach (var asset in procAssets) {
+                if (asset != null) {
+                    SaveTextures(asset.gameObject);
+                }
+                else {
+                    Debug.LogError($"Invalid object in scene.");
+                }
+            }
+        }
+        #endif
     }
 }

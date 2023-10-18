@@ -5,6 +5,13 @@ using System.Reflection;
 using System.Collections;
 using UnityEngine;
 
+
+#if UNITY_EDITOR
+using EasyButtons.Editor;
+using UnityEditor.SceneManagement;
+#endif
+using EasyButtons;
+
 [ExecuteInEditMode]
 public class RuntimePrefab : MonoBehaviour {
 
@@ -23,9 +30,8 @@ public class RuntimePrefab : MonoBehaviour {
     // the texture again, since they can share it.
     public Material sharedMaterial;
 
-    public void Awake() {
-
-        GameObject mesh = transform.Find("mesh").gameObject;
+    private void reloadtextures() {
+         GameObject mesh = transform.Find("mesh").gameObject;
         // load the texture from disk
         if (albedoTexturePath != null) {
             if (sharedMaterial.mainTexture == null) {
@@ -55,4 +61,19 @@ public class RuntimePrefab : MonoBehaviour {
                 sharedMaterial.SetColor("_EmissionColor", Color.white);
             }
     }
+
+    public void Awake() {
+
+       reloadtextures();
+    }
+
+    #if UNITY_EDITOR
+    [Button(Expanded = true)]
+    public void RealoadTextures() { 
+        reloadtextures();
+    }
+
+    #endif
+
+
 }

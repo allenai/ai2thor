@@ -2257,7 +2257,8 @@ namespace Thor.Procedural {
             bool receptacleCandidate = false,
             float yRotOffset = 0f,
             bool serializable = false,
-            bool returnObject = false
+            bool returnObject = false,
+            Transform parent = null
         ) {
             // create a new game object
             GameObject go = new GameObject();
@@ -2450,8 +2451,18 @@ namespace Thor.Procedural {
 
             // Add the asset to the procedural asset database
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            Transform prefabParentTransform = parent;
             if (assetDb != null && assetDb.assetMap != null) {
                 assetDb.addAsset(go, procedural: true);
+                // get child object on assetDb's game object that's called "Prefabs"
+                // and add the prefab to that
+                prefabParentTransform = assetDb.transform.Find("Prefabs");
+                if (prefabParentTransform == null) {
+                    var prefabParent = new GameObject("Prefabs");
+                    prefabParent.transform.parent = assetDb.transform;
+                    prefabParent.SetActive(false);
+                    prefabParentTransform = prefabParent.transform;
+                }
             }
 
             // Compute the object metadata
@@ -2461,16 +2472,7 @@ namespace Thor.Procedural {
             var assetMeta = getAssetMetadata(sop.gameObject);
 
             var objectMeta =  SimObjPhysics.ObjectMetadataFromSimObjPhysics(sop, true, true);
-
-            // get child object on assetDb's game object that's called "Prefabs"
-            // and add the prefab to that
-            var prefabParentTransform = assetDb.transform.Find("Prefabs");
-            if (prefabParentTransform == null) {
-                var prefabParent = new GameObject("Prefabs");
-                prefabParent.transform.parent = assetDb.transform;
-                prefabParent.SetActive(false);
-                prefabParentTransform = prefabParent.transform;
-            }
+            
             go.transform.parent = prefabParentTransform;
 
             var result =  new Dictionary<string, object>{
