@@ -5,7 +5,7 @@ import compress_pickle
 import json
 
 def normalize_texture_path(obj_dir, texture_path):
-    return os.path.join(obj_dir, os.path.basename(texture_path))
+    return os.path.join(os.path.abspath(obj_dir), os.path.basename(texture_path))
 
 def expand_objaverse(directory, ids):
     id_set = {}
@@ -20,6 +20,7 @@ def expand_objaverse(directory, ids):
             obj["albedoTexturePath"] = normalize_texture_path(obj_dir, obj["albedoTexturePath"])
             obj["normalTexturePath"] = normalize_texture_path(obj_dir, obj["normalTexturePath"])
             obj["emissionTexturePath"] = normalize_texture_path(obj_dir, obj["emissionTexturePath"])
+            print(f'new paths: {obj["albedoTexturePath"]} {obj["normalTexturePath"]} {obj["emissionTexturePath"]}')
             out_obj = os.path.join(obj_dir, f"{obj_id}.json")
             print(out_obj)
             with open(out_obj, "w") as f:

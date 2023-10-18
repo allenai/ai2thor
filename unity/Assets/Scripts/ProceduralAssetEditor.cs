@@ -114,7 +114,9 @@ namespace Thor.Procedural {
                 );
             var go = result["gameObject"] as GameObject;
 
-            if (saveTextures) {
+            go.transform.parent.gameObject.SetActive(true);
+
+            if (copyTexturesWhenLoading) {
                 SaveTextures(go);
             }
 
