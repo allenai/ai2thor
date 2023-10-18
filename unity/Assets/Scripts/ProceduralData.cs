@@ -468,6 +468,26 @@ namespace Thor.Procedural.Data {
         public bool unlit;
     }
 
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class ProceduralAsset {
+        public Vector3[] vertices;
+        public Vector3[] normals;
+        public string name;
+        public int[] triangles;
+        public Vector2[]? uvs = null;
+        public string albedoTexturePath = null;
+        public string normalTexturePath = null;
+        public string emissionTexturePath = null;
+        public SerializableCollider[]? colliders = null;
+        public PhysicalProperties physicalProperties = null;
+        public Vector3[]? visibilityPoints = null;
+        public ObjectAnnotations annotations = null;
+        public bool receptacleCandidate = false;
+        public float yRotOffset = 0f;
+        public bool serializable = false;
+    }
+
     public static class ExtensionMethods {
         public static T DeepClone<T>(this T obj)
         {

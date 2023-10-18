@@ -14,6 +14,7 @@ using Thor.Procedural;
 using Thor.Procedural.Data;
 using System.Linq;
 using System.IO;
+using Thor.Utils;
 
 [ExecuteInEditMode]
 public class ProceduralRoomEditor : MonoBehaviour {
@@ -1068,3 +1069,5 @@ public class ProceduralRoomEditor : MonoBehaviour {
     }
     #endif
 }
+
+

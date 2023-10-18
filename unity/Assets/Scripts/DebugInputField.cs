@@ -4441,6 +4441,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         JObject obj = JObject.Parse(jsonStr);
 
                         obj["action"] = "CreateObjectPrefab";
+                        obj["serializable"] = true;
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(obj));
 
                         break;

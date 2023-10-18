@@ -17,7 +17,7 @@ namespace Thor.Procedural {
 
         public bool dontDestroyOnLoad = true;
 
-        void Awake() {
+        public void Awake() {
             if (Instance != null) {
                 Destroy(gameObject);
                 return;

@@ -2270,6 +2270,119 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
     }
 
+    // generates object metatada based on sim object's properties
+        public static ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible, bool isInteractable) {
+            ObjectMetadata objMeta = new ObjectMetadata();
+            GameObject o = simObj.gameObject;
+            objMeta.name = o.name;
+            objMeta.position = o.transform.position;
+            objMeta.rotation = o.transform.eulerAngles;
+            objMeta.objectType = Enum.GetName(typeof(SimObjType), simObj.Type);
+            objMeta.receptacle = simObj.IsReceptacle;
+
+            objMeta.openable = simObj.IsOpenable;
+            if (objMeta.openable) {
+                objMeta.isOpen = simObj.IsOpen;
+                objMeta.openness = simObj.openness;
+            }
+
+            objMeta.toggleable = simObj.IsToggleable;
+            //note: not all objects that report back `isToggled` are themselves `toggleable`, however they all do have the `CanToggleOnOff` secondary sim object property
+            //this is to account for cases like a [stove burner], which can report `isToggled` but cannot have the "ToggleObjectOn" action performed on them directly, and instead
+            //a [stove knob] linked to the [stove burner] must have a "ToggleObjectOn" action performed on it to have both the knob and burner set to a state of `isToggled = true` 
+            if (simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)) {
+                objMeta.isToggled = simObj.IsToggled;
+            }
+
+            objMeta.breakable = simObj.IsBreakable;
+            if (objMeta.breakable) {
+                objMeta.isBroken = simObj.IsBroken;
+            }
+
+            objMeta.canFillWithLiquid = simObj.IsFillable;
+            if (objMeta.canFillWithLiquid) {
+                objMeta.isFilledWithLiquid = simObj.IsFilled;
+                objMeta.fillLiquid = simObj.FillLiquid;
+            }
+
+            objMeta.dirtyable = simObj.IsDirtyable;
+            if (objMeta.dirtyable) {
+                objMeta.isDirty = simObj.IsDirty;
+            }
+
+            objMeta.cookable = simObj.IsCookable;
+            if (objMeta.cookable) {
+                objMeta.isCooked = simObj.IsCooked;
+            }
+
+            // if the sim object is moveable or pickupable
+            if (simObj.IsPickupable || simObj.IsMoveable || (simObj.salientMaterials != null && simObj.salientMaterials.Length > 0)) {
+                // this object should report back mass and salient materials
+
+                string[] salientMaterialsToString = new string[simObj.salientMaterials.Length];
+
+                for (int i = 0; i < simObj.salientMaterials.Length; i++) {
+                    salientMaterialsToString[i] = simObj.salientMaterials[i].ToString();
+                }
+
+                objMeta.salientMaterials = salientMaterialsToString;
+
+                // this object should also report back mass since it is moveable/pickupable
+                objMeta.mass = simObj.Mass;
+
+            }
+
+            // can this object change others to hot?
+            objMeta.isHeatSource = simObj.isHeatSource;
+
+            // can this object change others to cold?
+            objMeta.isColdSource = simObj.isColdSource;
+
+            // placeholder for heatable objects -kettle, pot, pan
+            // objMeta.abletocook = simObj.abletocook;
+            // if(objMeta.abletocook) {
+            //     objMeta.isReadyToCook = simObj.IsHeated;
+            // }
+
+            objMeta.sliceable = simObj.IsSliceable;
+            if (objMeta.sliceable) {
+                objMeta.isSliced = simObj.IsSliced;
+            }
+
+            objMeta.canBeUsedUp = simObj.CanBeUsedUp;
+            if (objMeta.canBeUsedUp) {
+                objMeta.isUsedUp = simObj.IsUsedUp;
+            }
+
+            // object temperature to string
+            objMeta.temperature = simObj.CurrentObjTemp.ToString();
+
+            objMeta.pickupable = simObj.IsPickupable;
+            objMeta.isPickedUp = simObj.isPickedUp;// returns true for if this object is currently being held by the agent
+
+            objMeta.moveable = simObj.IsMoveable;
+
+            objMeta.objectId = simObj.ObjectID;
+
+            objMeta.assetId = simObj.assetID;
+
+            // TODO: using the isVisible flag on the object causes weird problems
+            // in the multiagent setting, explicitly giving this information for now.
+            objMeta.visible = isVisible; // simObj.isVisible;
+
+            //determines if the objects is unobstructed and interactable. Objects visible behind see-through geometry like glass will be isInteractable=False even if visible
+            //note using forceAction=True will ignore the isInteractable requirement
+            objMeta.isInteractable = isInteractable;
+
+            objMeta.isMoving = simObj.inMotion;// keep track of if this object is actively moving
+
+            objMeta.objectOrientedBoundingBox = simObj.ObjectOrientedBoundingBox;
+
+            objMeta.axisAlignedBoundingBox = simObj.AxisAlignedBoundingBox;
+
+            return objMeta;
+        }
+
 
     class BoundingBoxCacheKey {
         public Vector3 position;
