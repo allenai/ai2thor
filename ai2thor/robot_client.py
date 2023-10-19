@@ -12,6 +12,7 @@ import time
 import threading 
 import math
 
+from ai2thor.robot_grasping import GraspPlanner, ObjectDetector
 from ai2thor.server import Event, MultiAgentEvent, DepthFormat
 #from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 
@@ -64,6 +65,8 @@ class Controller(object):
         self.robot_client = RobotClient(robot_ip=host, port=str(port), width=width, height=height, multi_thread=multi_thread, get_depth=get_depth, camera_sources=camera_sources)
         self.last_event = {}
         self.last_action = {}
+
+        self.grasp_planner = GraspPlanner()
 
         self.sequence_id = 0 #where does this get updated? what is it for?
         self.agent_id = agent_id 
@@ -182,6 +185,7 @@ class Controller(object):
     def interact(self):
         pass 
 
+    
     @staticmethod
     def _display_step_event(event):
         pass
