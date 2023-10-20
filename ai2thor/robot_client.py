@@ -120,6 +120,8 @@ class Controller(object):
         assert(type(camera_sources)==list)
         self.camera_sources = camera_sources
         self.robot_client.camera_sources = camera_sources
+        if self.robot_client.multi_thread:
+            self.robot_client.flag_action_timestamp(None)
 
     def stop(self):
         pass 
