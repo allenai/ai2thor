@@ -1,6 +1,9 @@
 """
 Classes defined for plannign grasping that is specific to Stretch RE1 robot
 
+To install open3d
+ !python -m pip install open3d
+
 To install detectron2
  !python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
 """
@@ -102,6 +105,7 @@ class ObjectDetector():
         objectPoseCamera = np.concatenate((Randt,lastrow)) 
 
         return self.CameraPose @ objectPoseCamera
+
 
 
 class GraspPlanner():
