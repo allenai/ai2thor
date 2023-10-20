@@ -128,7 +128,7 @@ class GraspPlanner():
         
         # rotate wrist out
         if np.degrees(last_event.metadata["arm"]["wrist_degrees"]) != 0.0:
-            trajectory.appenjd({"action": "MoveWrist", "args": {"move_scalar":  180 + np.degrees(last_event.metadata["arm"]["wrist_degrees"])%180 }})
+            trajectory.append({"action": "MoveWrist", "args": {"move_scalar":  180 + np.degrees(last_event.metadata["arm"]["wrist_degrees"])%180 }})
 
         # lift
         trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": self.plan_lift_extenion(object_position, last_event.metadata["arm"]["lift_m"])}})
