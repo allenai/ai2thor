@@ -57,7 +57,7 @@ setup(
         "compress_pickle",
         "grpcio",
         "grpcio-tools",
-        "protobuf>=4.24.0"
+        "protobuf>=4.0.0"
     ],
     setup_requires=["pytest-runner"],
     tests_require=["pytest", "pytest-timeout", "pytest-cov", "jsonschema", "shapely", "pytest-mock", "dictdiffer"],
