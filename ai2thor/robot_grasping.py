@@ -40,7 +40,7 @@ class ObjectDetector():
 
         ## TODO: read from config
         #if intrinsics is None:
-        with open('images/camera_intrinsics/camera_intrinsics_102422073668.txt') as f:
+        with open('camera_intrinsics_102422073668.txt') as f:
             intr = json.load(f)
         self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
         self.depth_scale = intr["depth_scale"]
