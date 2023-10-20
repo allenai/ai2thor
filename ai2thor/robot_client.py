@@ -509,5 +509,5 @@ if __name__ == "__main__":
     while True:
         robot_client.step()
         if robot_client.images["nav"]["bgr"]["data"] is not None:
-            cv2.imshow("image", cv2.cvtColor(decde_image(robot_client.images["nav"]["bgr"]["data"]), cv2.COLOR_BGR2RGB))
+            cv2.imshow("image", cv2.cvtColor(decode_image(robot_client.images["nav"]["bgr"]["data"]), cv2.COLOR_BGR2RGB))
             cv2.waitKey(1)
