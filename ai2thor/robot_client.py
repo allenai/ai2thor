@@ -23,7 +23,7 @@ enum_to_string = {
     1 : "depth"
 }
 
-MAX_MESSAGE_LENGTH = 4*1280*720
+MAX_MESSAGE_LENGTH = 5*1280*720
 
 def timestamp1_is_bigger_timestamp2(ts1, ts2):
     #print("ts2 - ts1", ts2.seconds - ts1.seconds, ts2.nanos-ts1.nanos)
