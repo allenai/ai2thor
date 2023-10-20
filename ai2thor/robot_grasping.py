@@ -136,7 +136,7 @@ class GraspPlanner():
         trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": self.plan_arm_extension(object_position, last_event.metadata["arm"]["extension_m"])}})
         
         # close grapser
-        trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":-100}})
+        #trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":-100}})
 
         return {"action": trajectory}
 
