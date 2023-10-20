@@ -160,7 +160,7 @@ class Controller(object):
         
         event = Event(self._metadata)
         if "nav" in self.camera_sources:
-            event.frame = images["nav"]["bgr"]["data"]
+            event.frame = cv2.cvtColor(images["nav"]["bgr"]["data"], cv2.COLOR_BGR2RGB)
         if "arm" in self.camera_sources:
             event.third_party_camera_frames.append(images["arm"]["bgr"]["data"])
         if "stretch" in self.camera_sources:
