@@ -16,7 +16,7 @@ from detectron2 import model_zoo
 from detectron2.engine import DefaultPredictor
 from detectron2.config import get_cfg
 
-from coco_wordnet import synset_to_ms_coco
+from ai2thor.coco_wordnet import synset_to_ms_coco
 
 
 
@@ -53,6 +53,7 @@ class ObjectDetector():
 
 
     def predict_instance_segmentation(self, rgb):
+        rgb = cv2.cvtColor(rgb, cv2.COLOR_BGR2RGB)
         rgb = cv2.rotate(rgb, cv2.ROTATE_90_CLOCKWISE) # it works better for stretch cam
         outputs = self.predictor(rgb)
 
@@ -78,11 +79,10 @@ class ObjectDetector():
 
         # check if target object is detected
         if id in cls:
-            return masks[id] 
+            return masks[np.where(cls == id)[0]][0] #(1, w, h)-> (w,h)
         else:
             print("Target object " + object_str + " not detected.")
-            raise # error message
-        
+            return None
         
     def get_target_object_pose(self, rgb, depth, mask):
         rgb = np.array(rgb.copy())
@@ -133,11 +133,11 @@ class GraspPlanner():
         trajectory.append({"action": "RotateAgent", "args": {"move_scalar": self.plan_base_rotation(object_position) - 90}})
         
         # extend arm
-        trajectory.append({{"action": "MoveArmExtension", "args": {"move_scalar": self.plan_arm_extension(object_position, last_event.metadata["arm"]["extension_m"])}}})
+        trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": self.plan_arm_extension(object_position, last_event.metadata["arm"]["extension_m"])}})
         
         # close grapser
         trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":-100}})
 
-        return {"actions": trajectory}
+        return {"action": trajectory}
 
     
