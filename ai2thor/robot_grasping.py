@@ -7,7 +7,7 @@ To install open3d
 To install detectron2
  !python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
 """
-
+import os
 import cv2 
 import open3d
 import json
@@ -40,7 +40,7 @@ class ObjectDetector():
 
         ## TODO: read from config
         #if intrinsics is None:
-        with open('camera_intrinsics_102422073668.txt') as f:
+        with open(os.path.join(os.path.dirname(__file__),'camera_intrinsics_102422073668.txt')) as f:
             intr = json.load(f)
         self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
         self.depth_scale = intr["depth_scale"]
