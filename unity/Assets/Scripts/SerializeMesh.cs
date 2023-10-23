@@ -1,20 +1,37 @@
 #if UNITY_EDITOR
 using System;
+using System.Linq;
 using UnityEditor;
 #endif
 using UnityEngine;
  
 namespace Thor.Utils
 {
+    [System.Serializable]
+    public class SerializableMesh {
+        // [SerializeField] public Vector2[] uv;
+        // [SerializeField] public Vector3[] verticies;
+        // [SerializeField] public Vector3[] normals;
+
+        // [SerializeField] public int[] triangles;
+
+        public Vector2[] uv;
+        public Vector3[] verticies;
+        public Vector3[] normals;
+        public int[] triangles;
+    }
+    
     [ExecuteInEditMode]
     [RequireComponent(typeof(MeshFilter))]
     public class SerializeMesh : MonoBehaviour
     {
-        [HideInInspector] [SerializeField] Vector2[] uv;
-        [HideInInspector] [SerializeField] Vector3[] verticies;
-        [HideInInspector] [SerializeField] Vector3[] normals;
+        // [HideInInspector] [SerializeField] Vector2[] uv;
+        // [HideInInspector] [SerializeField] Vector3[] verticies;
+        // [HideInInspector] [SerializeField] Vector3[] normals;
 
-        [HideInInspector] [SerializeField] int[] triangles;
+        // [HideInInspector] [SerializeField] int[] triangles;
+        [SerializeField] public SerializableMesh model;
+        [SerializeField] SerializableMesh[] collisionMeshes;
         [HideInInspector] [SerializeField] bool serialized = false;
         
 
@@ -31,6 +48,9 @@ namespace Thor.Utils
             {
                 GetComponent<MeshFilter>().mesh = Rebuild();
             }
+            // else {
+            //     this.model = new SerializableMesh();
+            // }
         }
  
         void Start()
@@ -42,15 +62,46 @@ namespace Thor.Utils
  
             Serialize();
         }
+
+        private SerializableMesh serializeMesh(Mesh mesh) {
+            var outMesh = new SerializableMesh();
+            outMesh.uv = mesh.uv;
+            outMesh.verticies = mesh.vertices;
+            outMesh.triangles = mesh.triangles;
+            outMesh.normals = mesh.normals;
+            return outMesh;
+        }
+
+        private Mesh deSerializeMesh(SerializableMesh serializedMesh) {
+            Mesh mesh = new Mesh();
+            mesh.vertices = serializedMesh.verticies;
+            mesh.triangles = serializedMesh.triangles;
+            mesh.normals = serializedMesh.normals;
+            mesh.uv = serializedMesh.uv;
+            return mesh;
+        }
  
         public void Serialize()
         {
             var mesh = GetComponent<MeshFilter>().mesh;
  
-            uv = mesh.uv;
-            verticies = mesh.vertices;
-            triangles = mesh.triangles;
-            normals = mesh.normals;
+            // model.uv = mesh.uv;
+            // model.verticies = mesh.vertices;
+            // model.triangles = mesh.triangles;
+            // model.normals = mesh.normals;
+
+            model = serializeMesh(mesh);
+
+            var colliders = transform.parent.Find("Colliders").GetComponentsInChildren<MeshCollider>();
+            // if (this.collisionMeshes == null || colliders.Length != this.collisionMeshes.Length) {
+                this.collisionMeshes = new SerializableMesh[colliders.Length];
+            // }
+
+            Debug.Log($"----- Serializing collider meshes {colliders.Length}");
+            for (var i = 0; i < colliders.Length; i++) {
+                var collisionMesh = colliders[i].sharedMesh;
+                this.collisionMeshes[i] = this.serializeMesh(collisionMesh);
+            }
  
             serialized = true;
             var matName = transform.parent.gameObject.name;
@@ -79,14 +130,30 @@ namespace Thor.Utils
  
         public Mesh Rebuild()
         {
-            Mesh mesh = new Mesh();
-            mesh.vertices = verticies;
-            mesh.triangles = triangles;
-            mesh.normals = normals;
-            mesh.uv = uv;
+            Mesh mesh = this.deSerializeMesh(model);
+
+            // Mesh mesh = new Mesh();
+            // mesh.vertices = model.verticies;
+            // mesh.triangles = model.triangles;
+            // mesh.normals = model.normals;
+            // mesh.uv = model.uv;
+
+            
            
             // mesh.RecalculateNormals();
             mesh.RecalculateBounds();
+
+            var colliders = transform.parent.Find("Colliders").GetComponentsInChildren<MeshCollider>();
+
+            for (var i = 0; i < colliders.Length; i++) {
+                colliders[i].sharedMesh = deSerializeMesh(this.collisionMeshes[i]);
+            }
+
+            colliders = transform.parent.Find("TriggerColliders").GetComponentsInChildren<MeshCollider>();
+
+            for (var i = 0; i < colliders.Length; i++) {
+                colliders[i].sharedMesh = deSerializeMesh(this.collisionMeshes[i]);
+            }
  
             return mesh;
         }
