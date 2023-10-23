@@ -88,6 +88,9 @@ class ObjectDetector():
             return None
         
     def get_target_object_pose(self, rgb, depth, mask):
+        if mask is None:
+            exit()
+
         rgb = np.array(rgb.copy())
         rgbim = open3d.geometry.Image(rgb.astype(np.uint8))
 
@@ -122,15 +125,17 @@ class GraspPlanner():
         return -1*np.degrees(np.arctan2(object_position[1], object_position[0])) # bc stretch moves clockwise
 
     def plan_grasp_trajectory(self, object_position, last_event):
+        ## TODO: should they be separated? and not command all at once?
+
         trajectory = []
         # open grasper 
         trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":100}})
         
         # rotate wrist out
-        if np.degrees(last_event.metadata["arm"]["wrist_degrees"]) != 0.0:
-            trajectory.append({"action": "MoveWrist", "args": {"move_scalar":  180 + np.degrees(last_event.metadata["arm"]["wrist_degrees"])%180 }})
+        #if np.degrees(last_event.metadata["arm"]["wrist_degrees"]) != 0.0:
+        #    trajectory.append({"action": "MoveWrist", "args": {"move_scalar":  180 + np.degrees(last_event.metadata["arm"]["wrist_degrees"])%180 }})
 
-        # lift
+        # lift1
         trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": self.plan_lift_extenion(object_position, last_event.metadata["arm"]["lift_m"])}})
         
         # rotate base
