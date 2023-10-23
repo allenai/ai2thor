@@ -117,8 +117,13 @@ class Controller(object):
         assert(type(camera_sources)==list)
         self.camera_sources = camera_sources
         self.robot_client.camera_sources = camera_sources
+        for cam_source in camera_sources:
+            self.robot_client.images[cam_source] = {"bgr": {"timestamp":None, "data":None}, "depth": {"timestamp":None, "data":None}}
+        
         if self.robot_client.multi_thread:
             self.robot_client.flag_action_timestamp(None)
+
+    #def update_get_depth(self, get_depth=False):
 
     def stop(self):
         pass 
