@@ -38,7 +38,7 @@ namespace Thor.Procedural {
 
         };
 
-        public bool savePrefabsAndTexturesOnLoad = false;
+        public bool savePrefabsOnLoad = false;
 
         private bool savePrefab = true;
 
@@ -198,7 +198,7 @@ namespace Thor.Procedural {
             }
             
 
-            if (savePrefabsAndTexturesOnLoad) {
+            if (savePrefabsOnLoad) {
                 SaveTextures(go, savePrefab);
             }
             else {
