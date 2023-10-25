@@ -249,7 +249,7 @@ namespace Thor.Procedural {
             }
         }
 
-         [UnityEditor.MenuItem("Procedural/Reload Procedural Asset Textures %e")]
+         [UnityEditor.MenuItem("Procedural/Reload Procedural Asset Textures _s")]
         public static void ReloadTextures() {
              var procAssets = GameObject.FindObjectsOfType(typeof(RuntimePrefab))  as RuntimePrefab[];
              foreach (var asset in procAssets) { 
