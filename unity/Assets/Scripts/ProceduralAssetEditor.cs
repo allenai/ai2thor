@@ -17,17 +17,34 @@ using System.IO;
 using Thor.Utils;
 
 namespace Thor.Procedural {
+
+    [System.Serializable]
+    public class AssetEditorPaths {
+        public string serializeBasePath;
+        public string materialsRelativePath;
+        public string texturesRelativePath;
+        public string prefabsRelativePath;
+        public string repoRootObjaverseDir;
+    }
+
     public class ProceduralAssetEditor : MonoBehaviour {
+        
+        public AssetEditorPaths paths = new AssetEditorPaths() {
+            serializeBasePath = "Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets",
+            materialsRelativePath = "Materials/objaverse",
+            texturesRelativePath = "Textures",
+            prefabsRelativePath = "Prefabs",
+            repoRootObjaverseDir = "objaverse"
 
-        public string objectsDirectory = "objaverse";
+        };
 
-        public bool copyTexturesOnLoad = false;
+        public bool savePrefabsAndTexturesOnLoad = false;
 
-        // public bool savePrefab = true;
+        private bool savePrefab = true;
 
         public string objectId;
 
-        private const string prefabsRelativePath = "Prefabs";
+       
         #if UNITY_EDITOR
         private string copyTexture(string original, string destinationDir) {
             var outName = $"{destinationDir}/{Path.GetFileName(original)}";
@@ -40,12 +57,45 @@ namespace Thor.Procedural {
             return outName;
         } 
 
-        private void SaveTextures(GameObject go) {
-            Debug.Log("---- SaveTextures");
-            var runtimeP = go.GetComponent<RuntimePrefab>();
-            var dir = string.Join("/", SerializeMesh.serializeBasePath.Split('/').Skip(1));
+        private string getAssetRelativePath(string absPath) {
+            return string.Join("/", absPath.Split('/').SkipWhile(x=> x != "Assets"));
+        }
 
-            var outTextureBasePath = $"{Application.dataPath}/{dir}/{SerializeMesh.texturesRelativePath}/{go.name}";
+        private Texture2D loadTexture(string textureAbsPath) {
+            return (Texture2D)AssetDatabase.LoadAssetAtPath(getAssetRelativePath(textureAbsPath),typeof(Texture2D));//Resources.Load<Texture2D>(newAlbedo);
+        } 
+
+        // private Texture2D copyAndLoadTexture(string original, string destinationDir) {
+        //     var outName = $"{destinationDir}/{Path.GetFileName(original)}";
+        //     copyTexture(original, destinationDir);
+        //     var relativeName =  string.Join("/", outName.Split('/').SkipWhile(x=> x != "Assets"));
+
+        //     return (Texture2D)AssetDatabase.LoadAssetAtPath(relativeName,typeof(Texture2D));//Resources.Load<Texture2D>(newAlbedo);
+            
+        // } 
+
+        private void SaveTextures(GameObject go, bool savePrefab) {
+            var assetId = go.GetComponentInChildren<SimObjPhysics>().assetID;
+
+            var matOutPath = $"{paths.serializeBasePath}/{paths.materialsRelativePath}/{assetId}.mat";
+
+            if (File.Exists(matOutPath)) {
+                Debug.LogWarning($"Failed to save material {matOutPath}, as it already extists. To overwite delete it first and load object again.");
+
+                var savedMat = (Material)AssetDatabase.LoadAssetAtPath(getAssetRelativePath(matOutPath),typeof(Material));
+                go.GetComponentInChildren<MeshRenderer>().sharedMaterial = savedMat;
+            }
+            else {
+                UnityEditor.AssetDatabase.CreateAsset(
+                    go.GetComponentInChildren<MeshRenderer>().sharedMaterial, matOutPath
+                );
+            }
+
+            
+            var runtimeP = go.GetComponent<RuntimePrefab>();
+            var dir = string.Join("/", paths.serializeBasePath.Split('/').Skip(1));
+
+            var outTextureBasePath = $"{Application.dataPath}/{dir}/{paths.texturesRelativePath}/{assetId}";
 
             if (!Directory.Exists(outTextureBasePath)) {
                 Directory.CreateDirectory(outTextureBasePath);
@@ -56,16 +106,33 @@ namespace Thor.Procedural {
             var newAlbedo = copyTexture(runtimeP.albedoTexturePath, outTextureBasePath);
             var newNormal = copyTexture(runtimeP.normalTexturePath, outTextureBasePath);
             var newEmission = copyTexture(runtimeP.emissionTexturePath, outTextureBasePath);
-            runtimeP.albedoTexturePath = newAlbedo;
-            runtimeP.normalTexturePath = newNormal;
-            runtimeP.emissionTexturePath = newEmission;
+
+            var sharedMaterial = go.GetComponentInChildren<MeshRenderer>().sharedMaterial;
+
+            // AssetDatabase.CreateAsset(this.relatedMaterial, MATERIALS_PATH + "_material.mat");
+
+            // newAlbedo = newAlbedo.Substring(0,newAlbedo.LastIndexOf('.'));
+            AssetDatabase.Refresh();
+            
+            
+            sharedMaterial.SetTexture("_MainTex", loadTexture(newAlbedo));//Resources.Load<Texture2D>(newAlbedo));
+            sharedMaterial.SetTexture("_BumpMap",  loadTexture(newNormal));
+            sharedMaterial.SetTexture("_EmissionMap",  loadTexture(newEmission));
+
+            sharedMaterial.SetColor("_EmissionColor", Color.white);
+
+            DestroyImmediate(runtimeP);
+            
+            if (savePrefab) {
+                PrefabUtility.SaveAsPrefabAssetAndConnect(go, $"{paths.serializeBasePath}/{paths.prefabsRelativePath}/{assetId}.prefab", InteractionMode.UserAction);
+            }
         }
 
         // NOT WORKIGN drag prefab manually
         private void SavePrefab(GameObject go) {
 
             // var dir = string.Join("/", SerializeMesh.serializeBasePath.Split('/').Skip(1));
-            var path = $"{SerializeMesh.serializeBasePath}/{prefabsRelativePath}/{go.name}.prefab";
+            var path = $"{paths.serializeBasePath}/{paths.prefabsRelativePath}/{go.name}.prefab";
             Debug.Log($"---- Savingprefabs {path}");
             //  PrefabUtility.SaveAsPrefabAsset(go, path);
             bool prefabSuccess;
@@ -85,7 +152,7 @@ namespace Thor.Procedural {
             var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
             Debug.Log(string.Join("/", repoRoot));
 
-            var objectPath = $"{string.Join("/", repoRoot)}/objaverse/{objectId}/{file}";
+            var objectPath = $"{string.Join("/", repoRoot)}/{paths.repoRootObjaverseDir}/{objectId}/{file}";
             //var objectPath = $"{string.Join("/", repoRoot)}/{this.objectsDirectory}/{objectId}/{file}";
             Debug.Log(objectPath);
             // this.loadedHouse = readHouseFromJson(objectPath);
@@ -131,8 +198,15 @@ namespace Thor.Procedural {
             }
             
 
-            if (copyTexturesOnLoad) {
-                SaveTextures(go);
+            if (savePrefabsAndTexturesOnLoad) {
+                SaveTextures(go, savePrefab);
+            }
+            else {
+                var runtimeP = go.GetComponent<RuntimePrefab>();
+                if (runtimeP != null) {
+                    runtimeP.RealoadTextures();
+                }
+               
             }
 
             // if (savePrefab) {
@@ -145,7 +219,7 @@ namespace Thor.Procedural {
         }
 
         [Button(Expanded = true)]
-        public void CopyObjectTextures() { 
+        public void SaveObjectPrefabAndTextures() { 
             var transformRoot = GameObject.Find(objectId);
             var transform = gameObject.transform.root.FirstChildOrDefault(g => g.name == objectId);
 
@@ -154,20 +228,20 @@ namespace Thor.Procedural {
             }
             // Debug.Log($"Root: {gameObject.transform.root.name}");
             if (transform != null) {
-                SaveTextures(transform.gameObject);
+                SaveTextures(transform.gameObject, savePrefab);
             }
             else {
                 Debug.LogError($"Invalid object {objectId} not present in scene.");
             }
         }
 
-         [Button(Expanded = true)]
-        public void CopyAllTextures() { 
+        [Button(Expanded = true)]
+        public void SaveAllPrefabsAndTextures() { 
             var procAssets = GameObject.FindObjectsOfType(typeof(RuntimePrefab))  as RuntimePrefab[];
             // var procAssets = gameObject.transform.root.GetComponentsInChildren<RuntimePrefab>();
             foreach (var asset in procAssets) {
                 if (asset != null) {
-                    SaveTextures(asset.gameObject);
+                    SaveTextures(asset.gameObject, savePrefab);
                 }
                 else {
                     Debug.LogError($"Invalid object in scene.");
@@ -175,5 +249,6 @@ namespace Thor.Procedural {
             }
         }
         #endif
+
     }
 }

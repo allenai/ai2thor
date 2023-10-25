@@ -36,11 +36,6 @@ namespace Thor.Utils
         
 
         private static int materialCount = 0;
-
-        public const string serializeBasePath = "Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets";
-
-        private string serializeMaterialsPath = $"{serializeBasePath}/Materials";
-        public const string texturesRelativePath = "Textures";
  
         void Awake()
         {
@@ -108,9 +103,11 @@ namespace Thor.Utils
 
             
 
-            UnityEditor.AssetDatabase.CreateAsset(
-                    GetComponent<MeshRenderer>().sharedMaterial, $"{serializeMaterialsPath}/{matName}.mat"
-                );
+            // UnityEditor.AssetDatabase.CreateAsset(
+            //         GetComponent<MeshRenderer>().sharedMaterial, $"{serializeMaterialsPath}/{matName}.mat"
+            //     );
+
+
             // try {
                 // UnityEditor.AssetDatabase.CreateAsset(
                 //     GetComponentInChildren<MeshRenderer>().material, $"{serializeMaterialsPath}/{matName}.mat"
