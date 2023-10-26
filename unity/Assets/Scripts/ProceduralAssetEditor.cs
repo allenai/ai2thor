@@ -113,7 +113,10 @@ namespace Thor.Procedural {
 
             // newAlbedo = newAlbedo.Substring(0,newAlbedo.LastIndexOf('.'));
             AssetDatabase.Refresh();
-            
+
+            var normalImporter = AssetImporter.GetAtPath(getAssetRelativePath(newNormal)) as TextureImporter;
+
+            normalImporter.textureType = TextureImporterType.NormalMap;
             
             sharedMaterial.SetTexture("_MainTex", loadTexture(newAlbedo));//Resources.Load<Texture2D>(newAlbedo));
             sharedMaterial.SetTexture("_BumpMap",  loadTexture(newNormal));
