@@ -7317,7 +7317,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        protected List<Vector2> approxObjectMask(SimObjPhysics sop, int divisions) {
+        protected List<Vector2> approxObjectMask(
+            SimObjPhysics sop, int divisions, int? thirdPartyCameraIndex = null
+        ) {
             if (divisions <= 2) {
                 throw new ArgumentException("divisions must be >=3");
             }
@@ -7332,6 +7334,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             float[][] oobbPoints = oobb.cornerPoints;
 
+            Camera camera = m_Camera;
+            if (thirdPartyCameraIndex.HasValue) {
+                camera = agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value];
+            }
+
             List<Vector3> worldSpaceCornerPoints = new List<Vector3>();
             float minX = 1.0f;
             float maxX = 0.0f;
@@ -7340,8 +7347,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxDist = 0.0f;
             for (int i = 0; i < 8; i++) {
                 Vector3 worldSpaceCornerPoint = new Vector3(oobbPoints[i][0], oobbPoints[i][1], oobbPoints[i][2]);
-                maxDist = Mathf.Max(Vector3.Distance(worldSpaceCornerPoint, m_Camera.transform.position), maxDist);
-                Vector3 viewPoint = m_Camera.WorldToViewportPoint(worldSpaceCornerPoint);
+                maxDist = Mathf.Max(Vector3.Distance(worldSpaceCornerPoint, camera.transform.position), maxDist);
+                Vector3 viewPoint = camera.WorldToViewportPoint(worldSpaceCornerPoint);
 
                 minX = Math.Min(viewPoint.x, minX);
                 maxX = Math.Max(viewPoint.x, maxX);
@@ -7375,9 +7382,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     float y = shrunkMinY + (shrunkMaxY - shrunkMinY) * j / (divisions - 1);
 
                     // Convert x,y to a worldspace coordinate at distance maxDist from the camera
-                    Vector3 point = m_Camera.ViewportToWorldPoint(new Vector3(x, y, maxDist));
+                    Vector3 point = camera.ViewportToWorldPoint(new Vector3(x, y, maxDist));
 
-                    if (CheckIfVisibilityPointRaycast(sop: sop, position: point, camera: m_Camera, includeInvisible: false).visible) {
+                    if (CheckIfVisibilityPointRaycast(sop: sop, position: point, camera: camera, includeInvisible: false).visible) {
                         points.Add(new Vector2(x, y));
                     }
                 }
@@ -7385,9 +7392,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return points;
         }
 
-        public void GetApproxObjectMask(string objectId, int divisions = 10) {
+        public void GetApproxObjectMask(
+            string objectId,
+            int divisions = 10,
+            int? thirdPartyCameraIndex = null
+        ) {
             SimObjPhysics sop = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
-            List<Vector2> points = approxObjectMask(sop, divisions: divisions);
+            List<Vector2> points = approxObjectMask(
+                sop,
+                divisions: divisions,
+                thirdPartyCameraIndex: thirdPartyCameraIndex
+            );
             actionFinishedEmit(success: true, actionReturn: points);
         }
 
