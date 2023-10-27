@@ -6,7 +6,21 @@ To install open3d
 
 To install detectron2
  !python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
+
+To install OwlVit
+ ! pip install transformers
+
+To install Fast SAM
+  !pip install git+https://github.com/CASIA-IVA-Lab/FastSAM.git
+  !pip install git+https://github.com/openai/CLIP.git
+  !pip install ultralytics==8.0.120
+
+  To download model weights
+   mkdir model_chekpoints && cd model_checkpoints
+   !wget https://huggingface.co/spaces/An-619/FastSAM/resolve/main/weights/FastSAM.pt 
+   
 """
+
 import os
 import cv2 
 import open3d
@@ -14,32 +28,12 @@ import json
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-import torch, detectron2
-from detectron2 import model_zoo
-from detectron2.engine import DefaultPredictor
-from detectron2.config import get_cfg
-
-from ai2thor.coco_wordnet import synset_to_ms_coco
+import torch
 
 
-
-class ObjectDetector():
-    def __init__(self, device="cpu"):    
-
-        ## DEFAULT INSTANCE SEGMENTATION
-        cfg = get_cfg()
-        # add project-specific config (e.g., TensorMask) here if you're not running a model in detectron2's core library
-        cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5  # set threshold for this model
-        # Find a model from detectron2's model zoo. You can use the https://dl.fbaipublicfiles... url as well
-        cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
-        cfg.MODEL.DEVICE = device  #cpu or mps or cuda
-
-        self.predictor = DefaultPredictor(cfg)
-        self.predictor_cls_map = synset_to_ms_coco
-
+class BaseObjectDetector():
+    def __init__(self):
         ## TODO: read from config
-        #if intrinsics is None:
         with open(os.path.join(os.path.dirname(__file__),'camera_intrinsics_102422073668.txt')) as f:
             intr = json.load(f)
         self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
@@ -54,9 +48,140 @@ class ObjectDetector():
         CameraPose[3,3]=1
         self.CameraPose = CameraPose
 
+    #def predict_instance_segmentation(self, rgb):
+    #    raise NotImplementedError
+
+    def get_target_mask(self, object_str, rgb):
+        raise NotImplementedError
+
+    def get_target_object_pose(self, rgb, depth, mask):
+        if mask is None:
+            exit()
+
+        rgb = np.array(rgb.copy())
+        rgbim = open3d.geometry.Image(rgb.astype(np.uint8))
+
+        depth[mask==False] = -0.1
+        depth = np.asarray(depth).astype(np.float32) / self.depth_scale
+        depthim = open3d.geometry.Image(depth)
+
+        rgbd = open3d.geometry.RGBDImage.create_from_color_and_depth(rgbim, depthim, convert_rgb_to_intensity=False)
+        pcd = open3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.intrinsic)
+        
+        center = pcd.get_center()
+        bbox = pcd.get_oriented_bounding_box()
+        ##TODO: if len(pcd.points) is zero, there is a problem with a depth image)
+
+        Randt=np.concatenate((bbox.R, np.expand_dims(bbox.center, axis=1)),axis=1) # pitfall: arrays need to be passed as a tuple
+        lastrow=np.expand_dims(np.array([0,0,0,1]),axis=0)
+        objectPoseCamera = np.concatenate((Randt,lastrow)) 
+
+        return self.CameraPose @ objectPoseCamera
+
+
+
+class OwlVitSegAnyObjectDetector(BaseObjectDetector):
+    """
+    https://huggingface.co/docs/transformers/model_doc/owlvit#transformers.OwlViTForObjectDetection
+    """
+
+    def __init__(self, fastsam_path, device="cpu"):
+        super().__init__()
+        self.device = device
+
+        # initialize OwlVit
+        from transformers import OwlViTProcessor, OwlViTForObjectDetection
+        self.processor_owlvit = OwlViTProcessor.from_pretrained("google/owlvit-base-patch32")
+        self.model_owlvit = OwlViTForObjectDetection.from_pretrained("google/owlvit-base-patch32")
+
+        # initialize SegAnything
+        from fastsam import FastSAM #, FastSAMPrompt 
+        self.model_fastsam = FastSAM(fastsam_path) #os.path.join(os.path.dirname(__file__),'model_checkpoints/FastSAM.pt'))
+        self.model_fastsam.to(device=device)
+
+
+    def get_target_mask(self, object_str, rgb):
+        rgb = cv2.rotate(rgb, cv2.ROTATE_90_CLOCKWISE) # it works better for stretch cam
+
+        def predict_object_detection(rgb, object_str):
+            inputs = self.processor_owlvit(text=object_str, images=rgb, return_tensors="pt")
+            outputs = self.model_owlvit(**inputs)
+
+            target_sizes = torch.Tensor([rgb.shape[0:2]])
+            results = self.processor_owlvit.post_process_object_detection(outputs=outputs, target_sizes=target_sizes, threshold=0.1)
+            boxes = results[0]["boxes"].detach().cpu().numpy() #results[0]["scores"], results[0]["labels"]
+
+            if len(boxes)==0:
+                print(f"{object_str} Not Detected.")
+                return None
+
+            return [round(i) for i in boxes[0].tolist()] #xyxy
+
+        bbox = predict_object_detection(rgb=rgb, object_str=object_str)
+
+        everything_results = self.model_fastsam(
+                rgb,
+                device=self.device,
+                retina_masks=True,
+                imgsz=1024, #1024 is default 
+                conf=0.4,
+                iou=0.9    
+                )
+
+        from fastsam import FastSAMPrompt 
+        prompt_process = FastSAMPrompt(rgb, everything_results, device=self.device)
+        masks = prompt_process.box_prompt(bboxes=[bbox])
+        
+        # rotate back
+        mask = cv2.rotate(np.array(masks[0]), cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+        return mask
+
+
+    def get_target_object_pose(self, rgb, depth, mask):
+        return super().get_target_object_pose(rgb, depth, mask)
+
+
+"""
+class DoorKnobDetector(ObjectDetectorVit):
+    def __init__(self, device="cpu"):
+        super().__init__()
+
+    def get_target_mask(self, object_str, rgb):
+        raise NotImplementedError
+
+    def get_target_object_pose(self, rgb, depth, mask):
+        raise NotImplementedError
+"""
+
+
+class ObjectDetector(BaseObjectDetector):
+    def __init__(self, device="cpu"):    
+        super().__init__()
+        
+        # import
+        import detectron2
+        from detectron2 import model_zoo
+        from detectron2.engine import DefaultPredictor
+        from detectron2.config import get_cfg
+
+        from ai2thor.coco_wordnet import synset_to_ms_coco
+
+        ## DEFAULT INSTANCE SEGMENTATION
+        cfg = get_cfg()
+        # add project-specific config (e.g., TensorMask) here if you're not running a model in detectron2's core library
+        cfg.merge_from_file(model_zoo.get_config_file("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml"))
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.5  # set threshold for this model
+        # Find a model from detectron2's model zoo. You can use the https://dl.fbaipublicfiles... url as well
+        cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-InstanceSegmentation/mask_rcnn_R_50_FPN_3x.yaml")
+        cfg.MODEL.DEVICE = device  #cpu or mps or cuda
+
+        self.predictor = DefaultPredictor(cfg)
+        self.predictor_cls_map = synset_to_ms_coco
+
 
     def predict_instance_segmentation(self, rgb):
-        rgb = cv2.cvtColor(rgb, cv2.COLOR_BGR2RGB)
+        #rgb = cv2.cvtColor(rgb, cv2.COLOR_BGR2RGB)
         rgb = cv2.rotate(rgb, cv2.ROTATE_90_CLOCKWISE) # it works better for stretch cam
         outputs = self.predictor(rgb)
 
@@ -87,27 +212,10 @@ class ObjectDetector():
             print("Target object " + object_str + " not detected.")
             return None
         
+
     def get_target_object_pose(self, rgb, depth, mask):
-        if mask is None:
-            exit()
+        return super().get_target_object_pose(rgb, depth, mask)
 
-        rgb = np.array(rgb.copy())
-        rgbim = open3d.geometry.Image(rgb.astype(np.uint8))
-
-        depth[mask==False] = -0.1
-        depth = np.asarray(depth).astype(np.float32) / self.depth_scale
-        depthim = open3d.geometry.Image(depth)
-
-        rgbd = open3d.geometry.RGBDImage.create_from_color_and_depth(rgbim, depthim, convert_rgb_to_intensity=False)
-        pcd = open3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.intrinsic)
-        center = pcd.get_center()
-        bbox = pcd.get_oriented_bounding_box()
-
-        Randt=np.concatenate((bbox.R, np.expand_dims(bbox.center, axis=1)),axis=1) # pitfall: arrays need to be passed as a tuple
-        lastrow=np.expand_dims(np.array([0,0,0,1]),axis=0)
-        objectPoseCamera = np.concatenate((Randt,lastrow)) 
-
-        return self.CameraPose @ objectPoseCamera
 
 
 
@@ -131,12 +239,7 @@ class GraspPlanner():
         # open grasper 
         trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":100}})
         
-        # TODO: wrist will be out. fix the amount of rotation and sign
-        # rotate wrist out
-        #if np.degrees(last_event.metadata["arm"]["wrist_degrees"]) != 0.0:
-        #    trajectory.append({"action": "MoveWrist", "args": {"move_scalar":  180 + np.degrees(last_event.metadata["arm"]["wrist_degrees"])%180 }})
-        trajectory.append({"action": "WristTo", "args": {"move_to":  0}})
-
+        
         # lift1
         trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": self.plan_lift_extenion(object_position, last_event.metadata["arm"]["lift_m"])}})
         
@@ -146,6 +249,12 @@ class GraspPlanner():
         # extend arm
         trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": self.plan_arm_extension(object_position, last_event.metadata["arm"]["extension_m"])}})
         
+        # TODO: wrist will be out. fix the amount of rotation and sign
+        # rotate wrist out
+        #if np.degrees(last_event.metadata["arm"]["wrist_degrees"]) != 0.0:
+        #    trajectory.append({"action": "MoveWrist", "args": {"move_scalar":  180 + np.degrees(last_event.metadata["arm"]["wrist_degrees"])%180 }})
+        trajectory.append({"action": "WristTo", "args": {"move_to":  0}})
+
         # close grapser
         #trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":-100}})
 
