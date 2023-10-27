@@ -161,15 +161,14 @@ class Controller(object):
         self._metadata["lastActionSuccess"] = success
         self._metadata["errorMessage"] = error_message
             
-        
         event = Event(self._metadata)
         if "nav" in self.camera_sources:
-            event.frame = cv2.cvtColor(images["nav"]["bgr"]["data"], cv2.COLOR_BGR2RGB)
+            event.frame = images["nav"]["bgr"]["data"]
         if "arm" in self.camera_sources:
             event.third_party_camera_frames.append(images["arm"]["bgr"]["data"])
         if "stretch" in self.camera_sources:
             event.third_party_camera_frames.append(images["stretch"]["bgr"]["data"])
-
+            
         #event.frame = add_image(images["nav"]["bgr"]["data"], flip_y=False, flip_rb_colors=False)
         #event.add_third_party_camera_image_robot(images["arm"]["bgr"]["data"], self.screen_width, self.screen_height)
     
@@ -391,8 +390,8 @@ class RobotClient():
 
     def get_all_observations(self, image_source_name, lowerbound_timestamp=None):
         #start_time = time.time()
-        print("Getting ALL Observations")
-
+        print("Getting ALL Observations") 
+        
         if self.multi_thread: # and self._action_timestamp is None:
             if self._action_timestamp is not None and lowerbound_timestamp is None: 
                 lowerbound_timestamp = self._action_timestamp
@@ -402,12 +401,11 @@ class RobotClient():
                                                                 width=self.width,
                                                                 height=self.height))
         
-
         while lowerbound_timestamp is not None and timestamp1_is_bigger_timestamp2(lowerbound_timestamp, response.timestamp):                    
             response = self.obs_stub.GetAllImages(image_pb2.ImageRequest(image_source_name=image_source_name,
                                                                     width=self.width,
                                                                    height=self.height))
-            
+
         self.images[image_source_name][enum_to_string[0]] = {
             "timestamp" : response.timestamp,
             "data": decode_image(response.images[0].data, 0) #self.decode_image(response.data)
