@@ -870,9 +870,10 @@ def pre_test(context):
         "unity/builds/%s" % c.build_name(),
     )
 
+import scripts.update_private
 
-def clean(is_travis_build: bool = True):
-    import scripts.update_private
+def clean(is_travis_build: bool = True, private_repos: list[scripts.update_private.Repo] = []):
+
 
     # a deploy key is used on the build server and an .ssh/config entry has been added
     # to point to the deploy key caclled ai2thor-private-github
@@ -887,8 +888,10 @@ def clean(is_travis_build: bool = True):
     subprocess.check_call("git reset --hard", shell=True)
     subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
-    shutil.rmtree(scripts.update_private.private_dir, ignore_errors=True)
-    scripts.update_private.checkout_branch()
+
+    for repo in private_repos:
+        shutil.rmtree(repo.private_dir, ignore_errors=True)
+        repo.checkout_branch()
 
 
 def ci_prune_cache(cache_dir):
@@ -1090,6 +1093,7 @@ def ci_build(
     commit_id = None, # Optional[str] 
     branch = None, # Optional[str] 
     skip_pip = False, # bool
+    novelty_thor_scenes = False
 ):
     assert (commit_id is None) == (
         branch is None
@@ -1099,6 +1103,23 @@ def ci_build(
 
     if not is_travis_build:
         logger.info("Initiating a NON-TRAVIS build")
+
+    base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
+    private_scenes = [
+        scripts.update_private.Repo(
+            url  = "https://github.com/allenai/ai2thor-private",
+            target_dir = os.path.join(base_dir, "unity", "Assets", "Private"),
+        )
+    ]
+
+    if (novelty_thor_scenes):
+        logger.info("Including a NoveltyThor scenes and making it a private build")
+        private_scenes.append(
+            scripts.update_private.Repo(
+                url  = "https://github.com/allenai/ai2thor-objaverse",
+                target_dir = os.path.join(base_dir, "unity", "Assets", "Resources"),
+            )
+        )
 
     with open(os.path.join(os.environ["HOME"], ".ci-build.lock"), "w") as lock_f:
         arch_temp_dirs = dict()
@@ -1128,7 +1149,7 @@ def ci_build(
                     "git checkout -qf %s" % build["commit_id"], shell=True
                 )
 
-                private_scene_options = [False]
+                private_scene_options = [novelty_thor_scenes]
 
                 build_archs = ["OSXIntel64", "Linux64"]
 
