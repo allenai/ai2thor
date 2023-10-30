@@ -885,8 +885,8 @@ def clean(is_travis_build: bool = True, private_repos: list[scripts.update_priva
         scripts.update_private.private_repo_url = (
             "git@github.com:allenai/ai2thor-private.git"
         )
-    subprocess.check_call("git reset --hard", shell=True)
-    subprocess.check_call("git clean -f -d -x", shell=True)
+    # subprocess.check_call("git reset --hard", shell=True)
+    # subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
 
     for repo in private_repos:
@@ -1145,6 +1145,7 @@ def ci_build(
                 subprocess.check_call(
                     "git checkout %s --" % build["branch"], shell=True
                 )
+                logger.info(f" After checkout")
                 subprocess.check_call(
                     "git checkout -qf %s" % build["commit_id"], shell=True
                 )
@@ -1428,6 +1429,7 @@ def ci_build_arch(
             set_gi_cache_folder(arch)
 
             logger.info(f"Starting build for {arch} {commit_id}")
+            logger.info(f"Log at {build_info['log']}")
             success = _build(
                 unity_path=unity_path,
                 arch=arch,
