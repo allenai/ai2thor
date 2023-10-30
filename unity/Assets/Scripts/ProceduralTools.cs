@@ -2343,6 +2343,7 @@ namespace Thor.Procedural {
                     t.parent = newGo.transform;
                 }
             }
+            var oldGo = go;
             go.SetActive(false);
             go = newGo;
 
@@ -2484,6 +2485,7 @@ namespace Thor.Procedural {
                 meshObj.AddComponent<SerializeMesh>();
                 if (returnObject) {
                     result["gameObject"] = go;
+                    result["intermediateGameObject"] = oldGo;
                 }
             }
 

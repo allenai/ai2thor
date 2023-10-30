@@ -16,6 +16,11 @@ using System.Linq;
 using System.IO;
 using Thor.Utils;
 
+using diagnostics = System.Diagnostics;
+using System.Text;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
+
 namespace Thor.Procedural {
 
     [System.Serializable]
@@ -27,6 +32,14 @@ namespace Thor.Procedural {
         public string repoRootObjaverseDir;
     }
 
+    [System.Serializable]
+    public class ObjaversePipelinseSettings {
+        public string pythonExecutablePath;
+        public string convertionScript; 
+        public float timeoutSeconds;
+        
+    }
+
     public class ProceduralAssetEditor : MonoBehaviour {
         
         public AssetEditorPaths paths = new AssetEditorPaths() {
@@ -36,6 +49,12 @@ namespace Thor.Procedural {
             prefabsRelativePath = "Prefabs",
             repoRootObjaverseDir = "objaverse"
 
+        };
+
+        public ObjaversePipelinseSettings objaversePipelineConfig = new ObjaversePipelinseSettings{
+            pythonExecutablePath = "/Users/alvaroh/anaconda3/envs/vida/bin/python",
+            convertionScript = "/Users/alvaroh/ai2/vida/data_generation/objaverse/object_consolidater_blender_direct.py",
+            timeoutSeconds = 800
         };
 
         public bool savePrefabsOnLoad = false;
@@ -142,24 +161,8 @@ namespace Thor.Procedural {
                 PrefabUtility.SaveAsPrefabAssetAndConnect(go, path, InteractionMode.UserAction, out prefabSuccess);
                 Debug.Log($"---- prefab save {prefabSuccess}");
         }   
-        // TODO: put in ifdef  block
-        [Button(Expanded = true)]
-        public void LoadObject() {
-            var file = objectId.Trim();
-            if (!file.EndsWith(".json")) {
-                file += ".json";
-            }
-            
-            var pathSplit = Application.dataPath.Split('/');
 
-            var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
-            Debug.Log(string.Join("/", repoRoot));
-
-            var objectPath = $"{string.Join("/", repoRoot)}/{paths.repoRootObjaverseDir}/{objectId}/{file}";
-            //var objectPath = $"{string.Join("/", repoRoot)}/{this.objectsDirectory}/{objectId}/{file}";
-            Debug.Log(objectPath);
-            // this.loadedHouse = readHouseFromJson(objectPath);
-
+        private void importAsset(string objectPath) {
             var jsonStr = System.IO.File.ReadAllText(objectPath);
 
             JObject obj = JObject.Parse(jsonStr);
@@ -196,6 +199,9 @@ namespace Thor.Procedural {
                 );
             var go = result["gameObject"] as GameObject;
 
+            var intermediate = result["intermediateGameObject"] as GameObject;
+            DestroyImmediate(intermediate);
+
             if (go.transform.parent != null && !go.transform.parent.gameObject.activeSelf) {
                 go.transform.parent.gameObject.SetActive(true);
             }
@@ -211,6 +217,37 @@ namespace Thor.Procedural {
                 }
                
             }
+        }
+        // TODO: put in ifdef  block
+        [Button(Expanded = true)]
+        public void LoadObject() {
+            var file = objectId.Trim();
+            if (!file.EndsWith(".json")) {
+                file += ".json";
+            }
+            
+            var pathSplit = Application.dataPath.Split('/');
+
+            var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
+            Debug.Log(string.Join("/", repoRoot));
+
+            var objectDir = $"{string.Join("/", repoRoot)}/{paths.repoRootObjaverseDir}/{objectId}";
+            var objectPath = $"{objectDir}/{file}";
+            //var objectPath = $"{string.Join("/", repoRoot)}/{this.objectsDirectory}/{objectId}/{file}";
+            Debug.Log(objectPath);
+            // this.loadedHouse = readHouseFromJson(objectPath);
+
+            if (!Directory.Exists(objectDir)) {
+                Debug.Log("Starting objaverse pipeline background process...");
+                StartCoroutine(runAssetPipelineAsync(objectId, () => importAsset(objectPath)));
+            }
+            else {
+                importAsset(objectPath);
+            }
+
+            
+
+            
 
             // if (savePrefab) {
             //     if (!saveTextures) {
@@ -259,6 +296,138 @@ namespace Thor.Procedural {
                 asset.RealoadTextures();
              }
         }
+
+        private ConcurrentDictionary<string, float> processingIds = new ConcurrentDictionary<string, float>();
+
+        private IEnumerator waitForProcess(diagnostics.Process p, string id, int sleepSeconds, int debugIntervalSeconds, int timeoutSeconds) {
+
+            var secs = 0;
+            var start = Time.realtimeSinceStartup;
+            var prevCount = processingIds.Count;
+            var updateProgressBar = false;
+            Debug.Log("Running objaverse conversion pipeline...");
+            while (!p.HasExited) {
+                
+               
+                // var currentCount = processingIds.Count;
+                // p.StandardOutput.ReadAsync()
+                yield return new WaitForSeconds(sleepSeconds);
+
+               
+
+                // yield return true;
+                var currentCount = processingIds.Count;
+                
+                var deltaSeconds = Time.realtimeSinceStartup - start;
+                int roundedSeconds = (int)Mathf.Round(deltaSeconds);
+                if (roundedSeconds % debugIntervalSeconds == 0) {
+                    Debug.Log($"Ran pipeline for ({roundedSeconds}) for '{id}'.");
+                    
+                    // Debug.Log($"Output: {p.StandardOutput.ReadToEnd()}");
+                    // Debug.Log($"Error Out: {p.StandardError.ReadToEnd()}");
+                }
+
+                 
+                if (currentCount < prevCount) {
+                    //  prevCount = currentCount;
+                    EditorUtility.DisplayProgressBar("Objaverse import", $"Still running glb conversion pipeline for {id}...", 0.1f);
+                    // prevCount = currentCount;
+                }
+                // if (updateProgressBar && currentCount < prevCount) {
+                //     prevCount = currentCount;
+                //     EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Still running glb conversion pipeline...", 0.1f);
+                // }
+
+
+                if (deltaSeconds >= timeoutSeconds) {
+                    Debug.Log($"Timeout reached, possible issue with object '{id}', or increase components 'objaversePipelineConfig.timeoutSeconds'.");
+                    p.Kill();
+                    break;
+                }
+            }
+        }
+
+        private diagnostics.Process runPythonCommand(string id) {
+            diagnostics.Process p = new diagnostics.Process ();
+
+            var pythonFilename = "/Users/alvaroh/ai2/vida/data_generation/objaverse/object_consolidater_blender_direct.py";
+            p.StartInfo = new diagnostics.ProcessStartInfo("/Users/alvaroh/anaconda3/envs/vida/bin/python", $"{pythonFilename} {objectId}")
+            {
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = true
+            };
+            Console.InputEncoding = Encoding.UTF8;
+            
+            // p.OutputDataReceived += (sender, args) => Debug.Log(args.Data);
+            p.Start();
+            
+
+            return p;
+
+        }
+
+        // private float getPipelineAverageProgress() {
+        //     return processingIds.Values.Sum() / processingIds.Count;
+        // }
+
+        private IEnumerator runAssetPipelineAsync(string id, Action callback = null) {
+            processingIds.GetOrAdd(id, 0.0f);
+            // processingIds.TryUpdate(id)
+            EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Running import pipeline...", 0.0f);
+            var p = runPythonCommand(id);
+            // cant mix async and non async output read
+            // p.BeginOutputReadLine();
+             EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Running glb conversion...", 0.1f);
+            yield return waitForProcess(p, id, 1, 5, 800);
+
+             EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Finished glb conversion.", 0.8f);
+
+
+            var outputStr = p.StandardOutput.ReadToEnd();
+            var errorStr = p.StandardError.ReadToEnd();
+            Debug.Log($"Pipeline Output: {outputStr}");
+
+            Debug.LogError($"Pipeline Output: {errorStr}");
+
+            // var split = $"{outputStr}\n{errorStr}".Split('\n');
+            // foreach (var line in split) {
+            //     Debug.Log (line);
+            // }
+            
+            p.WaitForExit();
+            
+            Debug.Log($"Exit: {p.ExitCode}");
+            Debug.Log("Running callback...");
+            EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Importing to Unity", 0.9f);
+            callback?.Invoke();
+            EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Finished!", 1f);
+
+            processingIds.TryRemove(id, out float val);
+            if (processingIds.IsEmpty) {
+                EditorUtility.ClearProgressBar();
+            }
+
+        }
+
+        // [Button(Expanded = true)]
+        // public void Download() {
+        //     var p = runPythonCommand(objectId);
+
+        //     var outputStr = p.StandardOutput.ReadToEnd();
+        //     var errorStr = p.StandardError.ReadToEnd();
+        //     Debug.Log(outputStr);
+        //     Debug.Log(errorStr);
+            
+            
+        //     p.WaitForExit();
+            
+        //     Debug.Log($"Exit: {p.ExitCode}");
+            
+        // }
+
+    
         #endif
 
     }
