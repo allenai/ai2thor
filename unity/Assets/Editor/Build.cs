@@ -109,6 +109,7 @@ public class Build {
 
         if (IncludePrivateScenes()) {
             files.AddRange(Directory.GetFiles("Assets/Private/Scenes/"));
+            files.AddRange(Directory.GetFiles("Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets/Scenes"));
         }
 
         files.AddRange(Directory.GetFiles("Assets/Scenes/Procedural"));

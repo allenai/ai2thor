@@ -481,7 +481,7 @@ def local_build(
 
     build = ai2thor.build.Build(arch, prefix, False)
     env = dict()
-    if os.path.isdir("unity/Assets/Private/Scenes"):
+    if os.path.isdir("unity/Assets/Private/Scenes") or os.path.isdir("Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets/Scenes"):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
 
     build_dir = os.path.join("builds", build.name)
@@ -1117,7 +1117,7 @@ def ci_build(
         private_scenes.append(
             scripts.update_private.Repo(
                 url  = "https://github.com/allenai/ai2thor-objaverse",
-                target_dir = os.path.join(base_dir, "unity", "Assets", "Resources"),
+                target_dir = os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
             )
         )
 
