@@ -890,7 +890,7 @@ def clean(is_travis_build: bool = True, private_repos = []):
     shutil.rmtree("unity/builds", ignore_errors=True)
 
     for repo in private_repos:
-        shutil.rmtree(repo.private_dir, ignore_errors=True)
+        shutil.rmtree(repo.target_dir, ignore_errors=True)
         repo.checkout_branch()
 
 
