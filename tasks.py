@@ -885,8 +885,8 @@ def clean(is_travis_build: bool = True, private_repos: list[scripts.update_priva
         scripts.update_private.private_repo_url = (
             "git@github.com:allenai/ai2thor-private.git"
         )
-    # subprocess.check_call("git reset --hard", shell=True)
-    # subprocess.check_call("git clean -f -d -x", shell=True)
+    subprocess.check_call("git reset --hard", shell=True)
+    subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
 
     for repo in private_repos:
