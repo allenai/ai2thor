@@ -872,7 +872,7 @@ def pre_test(context):
 
 import scripts.update_private
 
-def clean(is_travis_build: bool = True, private_repos: list[scripts.update_private.Repo] = []):
+def clean(is_travis_build: bool = True, private_repos = []):
 
 
     # a deploy key is used on the build server and an .ssh/config entry has been added
@@ -1105,7 +1105,7 @@ def ci_build(
         logger.info("Initiating a NON-TRAVIS build")
 
     base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
-    private_scenes = [
+    private_repos = [
         scripts.update_private.Repo(
             url  = "https://github.com/allenai/ai2thor-private",
             target_dir = os.path.join(base_dir, "unity", "Assets", "Private"),
@@ -1114,7 +1114,7 @@ def ci_build(
 
     if (novelty_thor_scenes):
         logger.info("Including a NoveltyThor scenes and making it a private build")
-        private_scenes.append(
+        private_repos.append(
             scripts.update_private.Repo(
                 url  = "https://github.com/allenai/ai2thor-objaverse",
                 target_dir = os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
@@ -1140,7 +1140,7 @@ def ci_build(
                 # disabling delete temporarily since it interferes with pip releases
                 # pytest_s3_object(build["commit_id"]).delete()
                 logger.info(f"pending build for {build['branch']} {build['commit_id']}")
-                clean(is_travis_build=is_travis_build)
+                clean(is_travis_build=is_travis_build, private_repos=private_repos)
                 subprocess.check_call("git fetch", shell=True)
                 subprocess.check_call(
                     "git checkout %s --" % build["branch"], shell=True
