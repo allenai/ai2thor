@@ -35,7 +35,7 @@ namespace Thor.Procedural {
     [System.Serializable]
     public class ObjaversePipelinseSettings {
         public string pythonExecutablePath;
-        public string convertionScript; 
+        public string vidaRepo; 
         public float timeoutSeconds;
         
     }
@@ -53,7 +53,7 @@ namespace Thor.Procedural {
 
         public ObjaversePipelinseSettings objaversePipelineConfig = new ObjaversePipelinseSettings{
             pythonExecutablePath = "/Users/alvaroh/anaconda3/envs/vida/bin/python",
-            convertionScript = "/Users/alvaroh/ai2/vida/data_generation/objaverse/object_consolidater_blender_direct.py",
+            vidaRepo = "/Users/alvaroh/ai2/vida/data_generation/objaverse/object_consolidater_blender_direct.py",
             timeoutSeconds = 800
         };
 
@@ -349,9 +349,9 @@ namespace Thor.Procedural {
 
         private diagnostics.Process runPythonCommand(string id) {
             diagnostics.Process p = new diagnostics.Process ();
-
-            var pythonFilename = "/Users/alvaroh/ai2/vida/data_generation/objaverse/object_consolidater_blender_direct.py";
-            p.StartInfo = new diagnostics.ProcessStartInfo("/Users/alvaroh/anaconda3/envs/vida/bin/python", $"{pythonFilename} {objectId}")
+            
+            var pythonFilename = $"{objaversePipelineConfig.vidaRepo}/data_generation/objaverse/object_consolidater_blender_direct.py";
+            p.StartInfo = new diagnostics.ProcessStartInfo(objaversePipelineConfig.pythonExecutablePath, $"{pythonFilename} {objectId}")
             {
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
