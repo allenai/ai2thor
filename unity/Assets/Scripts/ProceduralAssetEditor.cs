@@ -36,7 +36,7 @@ namespace Thor.Procedural {
     public class ObjaversePipelinseSettings {
         public string pythonExecutablePath;
         public string vidaRepo; 
-        public float timeoutSeconds;
+        public int timeoutSeconds;
         
     }
 
@@ -380,7 +380,7 @@ namespace Thor.Procedural {
             // cant mix async and non async output read
             // p.BeginOutputReadLine();
              EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Running glb conversion...", 0.1f);
-            yield return waitForProcess(p, id, 1, 5, 800);
+            yield return waitForProcess(p, id, 1, 5, objaversePipelineConfig.timeoutSeconds);
 
              EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Finished glb conversion.", 0.8f);
 
