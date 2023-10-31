@@ -885,8 +885,8 @@ def clean(is_travis_build: bool = True, private_repos = []):
         scripts.update_private.private_repo_url = (
             "git@github.com:allenai/ai2thor-private.git"
         )
-    subprocess.check_call("git reset --hard", shell=True)
-    subprocess.check_call("git clean -f -d -x", shell=True)
+    # subprocess.check_call("git reset --hard", shell=True)
+    # subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
 
     for repo in private_repos:
@@ -1141,14 +1141,14 @@ def ci_build(
                 # pytest_s3_object(build["commit_id"]).delete()
                 logger.info(f"pending build for {build['branch']} {build['commit_id']}")
                 clean(is_travis_build=is_travis_build, private_repos=private_repos)
-                subprocess.check_call("git fetch", shell=True)
-                subprocess.check_call(
-                    "git checkout %s --" % build["branch"], shell=True
-                )
-                logger.info(f" After checkout")
-                subprocess.check_call(
-                    "git checkout -qf %s" % build["commit_id"], shell=True
-                )
+                # subprocess.check_call("git fetch", shell=True)
+                # subprocess.check_call(
+                #     "git checkout %s --" % build["branch"], shell=True
+                # )
+                # logger.info(f" After checkout")
+                # subprocess.check_call(
+                #     "git checkout -qf %s" % build["commit_id"], shell=True
+                # )
 
                 private_scene_options = [novelty_thor_scenes]
 
@@ -1323,10 +1323,10 @@ def ci_build(
         except io.BlockingIOError:
             pass
 
-        finally:
-            for arch, temp_dir in arch_temp_dirs.items():
-                logger.info("deleting temp dir %s" % temp_dir)
-                shutil.rmtree(temp_dir)
+        # finally:
+        #     for arch, temp_dir in arch_temp_dirs.items():
+        #         logger.info("deleting temp dir %s" % temp_dir)
+        #         shutil.rmtree(temp_dir)
 
 
 @task

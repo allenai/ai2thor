@@ -53,7 +53,7 @@ namespace Thor.Procedural {
 
         public ObjaversePipelinseSettings objaversePipelineConfig = new ObjaversePipelinseSettings{
             pythonExecutablePath = "/Users/alvaroh/anaconda3/envs/vida/bin/python",
-            vidaRepo = "/Users/alvaroh/ai2/vida/data_generation/objaverse/object_consolidater_blender_direct.py",
+            vidaRepo = "/Users/alvaroh/ai2/vida",
             timeoutSeconds = 800
         };
 
@@ -231,7 +231,8 @@ namespace Thor.Procedural {
             var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
             Debug.Log(string.Join("/", repoRoot));
 
-            var objectDir = $"{string.Join("/", repoRoot)}/{paths.repoRootObjaverseDir}/{objectId}";
+            var objaverseRoot = $"{string.Join("/", repoRoot)}/{paths.repoRootObjaverseDir}";
+            var objectDir = $"{objaverseRoot}/{objectId}";
             var objectPath = $"{objectDir}/{file}";
             //var objectPath = $"{string.Join("/", repoRoot)}/{this.objectsDirectory}/{objectId}/{file}";
             Debug.Log(objectPath);
@@ -239,7 +240,7 @@ namespace Thor.Procedural {
 
             if (!Directory.Exists(objectDir)) {
                 Debug.Log("Starting objaverse pipeline background process...");
-                StartCoroutine(runAssetPipelineAsync(objectId, () => importAsset(objectPath)));
+                StartCoroutine(runAssetPipelineAsync(objectId, objaverseRoot, () => importAsset(objectPath)));
             }
             else {
                 importAsset(objectPath);
@@ -347,11 +348,10 @@ namespace Thor.Procedural {
             }
         }
 
-        private diagnostics.Process runPythonCommand(string id) {
+        private diagnostics.Process runPythonCommand(string id, string saveDir) {
             diagnostics.Process p = new diagnostics.Process ();
-            
             var pythonFilename = $"{objaversePipelineConfig.vidaRepo}/data_generation/objaverse/object_consolidater_blender_direct.py";
-            p.StartInfo = new diagnostics.ProcessStartInfo(objaversePipelineConfig.pythonExecutablePath, $"{pythonFilename} {objectId}")
+            p.StartInfo = new diagnostics.ProcessStartInfo(objaversePipelineConfig.pythonExecutablePath, $"{pythonFilename} {objectId} {saveDir}")
             {
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
@@ -372,11 +372,11 @@ namespace Thor.Procedural {
         //     return processingIds.Values.Sum() / processingIds.Count;
         // }
 
-        private IEnumerator runAssetPipelineAsync(string id, Action callback = null) {
+        private IEnumerator runAssetPipelineAsync(string id, string saveDir, Action callback = null) {
             processingIds.GetOrAdd(id, 0.0f);
             // processingIds.TryUpdate(id)
             EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Running import pipeline...", 0.0f);
-            var p = runPythonCommand(id);
+            var p = runPythonCommand(id, saveDir);
             // cant mix async and non async output read
             // p.BeginOutputReadLine();
              EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Running glb conversion...", 0.1f);
