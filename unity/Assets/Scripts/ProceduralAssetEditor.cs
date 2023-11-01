@@ -351,6 +351,7 @@ namespace Thor.Procedural {
         private diagnostics.Process runPythonCommand(string id, string saveDir) {
             diagnostics.Process p = new diagnostics.Process ();
             var pythonFilename = $"{objaversePipelineConfig.vidaRepo}/data_generation/objaverse/object_consolidater_blender_direct.py";
+            Debug.Log($"Running conversion script: `{objaversePipelineConfig.pythonExecutablePath} {pythonFilename} {objectId} {saveDir}`");
             p.StartInfo = new diagnostics.ProcessStartInfo(objaversePipelineConfig.pythonExecutablePath, $"{pythonFilename} {objectId} {saveDir}")
             {
                 RedirectStandardOutput = true,
@@ -360,9 +361,15 @@ namespace Thor.Procedural {
             };
             Console.InputEncoding = Encoding.UTF8;
             
-            // p.OutputDataReceived += (sender, args) => Debug.Log(args.Data);
+            p.OutputDataReceived += (sender, args) => Debug.Log(args.Data);
+            p.ErrorDataReceived += (sender, args) => Debug.LogError(args.Data);
+
+
             p.Start();
             
+            // cant mix async and non async output read
+             p.BeginOutputReadLine();
+             p.BeginErrorReadLine();
 
             return p;
 
@@ -377,19 +384,17 @@ namespace Thor.Procedural {
             // processingIds.TryUpdate(id)
             EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Running import pipeline...", 0.0f);
             var p = runPythonCommand(id, saveDir);
-            // cant mix async and non async output read
-            // p.BeginOutputReadLine();
              EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Running glb conversion...", 0.1f);
             yield return waitForProcess(p, id, 1, 5, objaversePipelineConfig.timeoutSeconds);
 
              EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Finished glb conversion.", 0.8f);
 
 
-            var outputStr = p.StandardOutput.ReadToEnd();
-            var errorStr = p.StandardError.ReadToEnd();
-            Debug.Log($"Pipeline Output: {outputStr}");
+            // var outputStr = p.StandardOutput.ReadToEnd();
+            // var errorStr = p.StandardError.ReadToEnd();
+            // Debug.Log($"Pipeline Output: {outputStr}");
 
-            Debug.LogError($"Pipeline Error Output: {errorStr}");
+            // Debug.LogError($"Pipeline Error Output: {errorStr}");
 
             // var split = $"{outputStr}\n{errorStr}".Split('\n');
             // foreach (var line in split) {
