@@ -119,7 +119,6 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
         from fastsam import FastSAM #, FastSAMPrompt 
         self.model_fastsam = FastSAM(fastsam_path) #os.path.join(os.path.dirname(__file__),'model_checkpoints/FastSAM.pt'))
         self.model_fastsam.to(device=device)
-        self.model_fastsam
 
     def get_target_mask(self, object_str, rgb):
         rgb = cv2.rotate(rgb, cv2.ROTATE_90_CLOCKWISE) # it works better for stretch cam
