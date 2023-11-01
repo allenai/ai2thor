@@ -145,7 +145,7 @@ namespace Thor.Procedural {
                         GC.Collect();
                     };
                    
-                    #if !UNITY_EDITOR && !UNITY_WEBGL
+                    // #if !UNITY_EDITOR && !UNITY_WEBGL
                         float timeout = 2.0f;
                         float startTime = Time.realtimeSinceStartup;
                         while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
@@ -153,7 +153,7 @@ namespace Thor.Procedural {
                             continue;
                         }
                         GC.Collect();
-                    #endif
+                    // #endif
             }
             return asyncOp;
         }

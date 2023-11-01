@@ -389,7 +389,7 @@ namespace Thor.Procedural {
             var errorStr = p.StandardError.ReadToEnd();
             Debug.Log($"Pipeline Output: {outputStr}");
 
-            Debug.LogError($"Pipeline Output: {errorStr}");
+            Debug.LogError($"Pipeline Error Output: {errorStr}");
 
             // var split = $"{outputStr}\n{errorStr}".Split('\n');
             // foreach (var line in split) {
