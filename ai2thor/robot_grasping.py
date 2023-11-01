@@ -125,7 +125,8 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
         self.model_fastsam.to(device=device)
 
     def get_target_mask(self, object_str, rgb):
-        rgb = cv2.rotate(rgb, cv2.ROTATE_90_CLOCKWISE) # it works better for stretch cam
+        if self.camera_source == "stretch":
+            rgb = cv2.rotate(rgb, cv2.ROTATE_90_CLOCKWISE) # it works better for stretch cam
 
         def predict_object_detection(rgb, object_str):
             with torch.no_grad():
@@ -157,8 +158,9 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
         prompt_process = FastSAMPrompt(rgb, everything_results, device=self.device)
         masks = prompt_process.box_prompt(bboxes=[bbox])
         
-        # rotate back
-        mask = cv2.rotate(np.array(masks[0]), cv2.ROTATE_90_COUNTERCLOCKWISE)
+        if self.camera_source == "stretch":
+            # rotate back
+            mask = cv2.rotate(np.array(masks[0]), cv2.ROTATE_90_COUNTERCLOCKWISE)
 
         return mask
 
@@ -209,19 +211,23 @@ class ObjectDetector(BaseObjectDetector):
 
     def predict_instance_segmentation(self, rgb):
         #rgb = cv2.cvtColor(rgb, cv2.COLOR_BGR2RGB)
-        rgb = cv2.rotate(rgb, cv2.ROTATE_90_CLOCKWISE) # it works better for stretch cam
+        if self.camera_source == "stretch":
+            rgb = cv2.rotate(rgb, cv2.ROTATE_90_CLOCKWISE) # it works better for stretch cam
         outputs = self.predictor(rgb)
 
         predict_classes = outputs["instances"].pred_classes.to("cpu").numpy()
         predict_masks = outputs["instances"].pred_masks.to("cpu").numpy()
 
-        # rotate counter clockwise
-        rotated_masks = []
-        for i, mask in enumerate(predict_masks):
+        masks = []
+        for mask in predict_masks:
             mask = mask*1.0
-            mask = cv2.rotate(np.array(mask), cv2.ROTATE_90_COUNTERCLOCKWISE)
-            rotated_masks.append(mask)
-        predict_masks = np.array(rotated_masks)
+
+            if self.camera_source == "stretch":
+                # rotate counter clockwise
+                mask = cv2.rotate(np.array(mask), cv2.ROTATE_90_COUNTERCLOCKWISE)
+
+            masks.append(mask)
+        predict_masks = np.array(masks)
 
         return predict_classes, predict_masks
     
