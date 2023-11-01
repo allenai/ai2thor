@@ -83,6 +83,9 @@ class BaseObjectDetector():
             self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
             self.depth_scale = intr["depth_scale"]
             self.CameraPose = T_ARM_FROM_BASE_30
+        else:
+            print("Camera source can only be [arm30, arm50 or stretch]")
+            print("Please call 'update_camera_info(camera_source)' with the right camera source")
 
     def get_target_mask(self, object_str, rgb):
         raise NotImplementedError
@@ -180,30 +183,49 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
 
 
 class DoorKnobDetector(OwlVitSegAnyObjectDetector):
-    def __init__(self, fastsam_path, camera_source="arm", device="cpu"):
+    def __init__(self, fastsam_path, camera_source="arm30", device="cpu"):
         super().__init__(fastsam_path, camera_source)
 
     def get_target_mask(self, rgb, object_str="a photo of a doorknob"):
         return super().get_target_mask(object_str=object_str, rgb=rgb)
 
+    def get_door_pointcloud(self, rgb, depth):
+        mask = self.get_target_mask(rgb, object_str="a photo of a door")
+
+        _rgb = np.array(rgb.copy())
+        rgbim = open3d.geometry.Image(_rgb.astype(np.uint8))
+
+        _depth = depth.copy()
+        _depth[mask==False] = -0.1
+        _depth = np.asarray(_depth).astype(np.float32) / self.depth_scale
+        depthim = open3d.geometry.Image(_depth)
+
+        rgbd = open3d.geometry.RGBDImage.create_from_color_and_depth(rgbim, depthim, convert_rgb_to_intensity=False)
+        pcd = open3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.intrinsic)
+        #pcd_downsampled = pcd.voxel_down_sample(voxel_size=0.05)
+
+        return pcd 
+
     def get_target_object_pointcloud(self, rgb, depth, mask):
         if mask is None:
             exit()
 
-        rgb = np.array(rgb.copy())
-        rgbim = open3d.geometry.Image(rgb.astype(np.uint8))
+        _rgb = np.array(rgb.copy())
+        rgbim = open3d.geometry.Image(_rgb.astype(np.uint8))
 
-        depth[mask==False] = -0.1
-        depth = np.asarray(depth).astype(np.float32) / self.depth_scale
-        depthim = open3d.geometry.Image(depth)
+        _depth = depth.copy()
+        _depth[mask==False] = -0.1
+        _depth = np.asarray(_depth).astype(np.float32) / self.depth_scale
+        depthim = open3d.geometry.Image(_depth)
 
         rgbd = open3d.geometry.RGBDImage.create_from_color_and_depth(rgbim, depthim, convert_rgb_to_intensity=False)
         pcd = open3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.intrinsic)
         return pcd 
 
     def get_target_object_pose(self, rgb, depth, mask):
-        pcd = self.get_target_object_pointcloud(rgb, depth, mask)
+        normval_vector = self.get_center_normal_vector(self.get_door_pointcloud(rgb, depth))
 
+        pcd = self.get_target_object_pointcloud(rgb, depth, mask)
         center = pcd.get_center()
         bbox = pcd.get_oriented_bounding_box()
         ##TODO: if len(pcd.points) is zero, there is a problem with a depth image)
@@ -212,14 +234,22 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         lastrow=np.expand_dims(np.array([0,0,0,1]),axis=0)
         objectPoseCamera = np.concatenate((Randt,lastrow)) 
 
-        return self.CameraPose @ objectPoseCamera
+        preplan_pose = self.plan_pregrasp_pose(objectPoseCamera, normval_vector)
+        return [self.CameraPose @ objectPoseCamera, self.CameraPose @ preplan_pose]
 
+    def plan_pregrasp_pose(self, object_pose, normal_vector, distance_m=0.1):
+        # Compute the waypoint pose
+        waypoint_pose = object_pose.copy()
+        translation_offset = distance_m * normal_vector
+        waypoint_pose[0:3, 3] += translation_offset
+        return waypoint_pose
+    
     def get_center_normal_vector(self, pcd):
         # Downsample the point cloud to speed up the normal estimation
         #pcd = pcd.voxel_down_sample(voxel_size=0.05)
-
+        
         # Estimate normals
-        pcd.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
+        pcd.estimate_normals() #search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
         pcd.normalize_normals()
 
         # Get the center point of the point cloud
@@ -235,7 +265,7 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
 
 
 class ObjectDetector(BaseObjectDetector):
-    def __init__(self, camera_source="arm", device="cpu"):    
+    def __init__(self, camera_source="arm30", device="cpu"):    
         super().__init__(camera_source)
         
         # import
@@ -345,9 +375,14 @@ class GraspPlanner():
         return {"action": trajectory}
 
     
-"""
-class DoorKnobGraspPlanner(GraspPlanner):
 
-    def plan_grasp_trajectory(self):
-        # using normal vector
-"""
+class DoorKnobGraspPlanner(GraspPlanner):
+    def plan_grasp_trajectory(self, object_waypoint_position, last_event):
+        first_actions = super().plan_grasp_trajectory(object_waypoint_position, last_event)
+        second_actions = {"action": [
+          {"action": "MoveArmExtension", "args": {"move_scalar": 0.1}}  
+        ]}
+
+        return first_actions, second_actions
+
+        
