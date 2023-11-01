@@ -62,7 +62,4 @@ setup(
     setup_requires=["pytest-runner"],
     tests_require=["pytest", "pytest-timeout", "pytest-cov", "jsonschema", "shapely", "pytest-mock", "dictdiffer"],
     scripts=["scripts/ai2thor-xorg"],
-    package_data={"ai2thor": ['camera_intrinsics_102422073668.txt']},
-    include_package_data=True,
 )
-

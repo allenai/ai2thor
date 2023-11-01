@@ -32,7 +32,7 @@ import torch
 
 
 ## CONSTANTS TRANSFORMATION MATRIX
-T_ARM_FROM_BASE = np.array([[-9.99936250e-01, -1.12876885e-02,  2.90756694e-04,
+T_ARM_FROM_BASE_50 = np.array([[-9.99936250e-01, -1.12876885e-02,  2.90756694e-04,
         -7.00894177e-02],
        [-6.73963135e-03,  5.75983960e-01, -8.17433211e-01,
         -4.78219868e-02],
@@ -40,6 +40,11 @@ T_ARM_FROM_BASE = np.array([[-9.99936250e-01, -1.12876885e-02,  2.90756694e-04,
          1.43400645e+00],
        [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
          1.00000000e+00]])
+
+T_ARM_FROM_BASE_30 = np.array([[-0.99602, -0.088905, 0.0066098, -0.067627],
+       [ -0.042288, 0.40588, -0.91295, -0.026198],
+       [ 0.078483, -0.90959, -0.40802, 1.4357],
+       [ 0, 0, 0, 1]])
 
 T_ROTATED_STRETCH_FROM_BASE = np.array([[-0.00069263, 1, -0.0012349, -0.017],
                     [ 0.5214, -0.00069263, -0.85331, -0.038],
@@ -52,7 +57,7 @@ ARM_INTR = {'coeffs': [-0.05686680227518082, 0.06842068582773209, -0.00045246770
 
 
 class BaseObjectDetector():
-    def __init__(self, camera_source="arm"):
+    def __init__(self, camera_source="arm30"):
         self.camera_source = camera_source
         self.update_camera_info(camera_source)
 
@@ -68,12 +73,16 @@ class BaseObjectDetector():
             self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
             self.depth_scale = intr["depth_scale"]
             self.CameraPose = T_ROTATED_STRETCH_FROM_BASE
-        elif camera_source == "arm":
+        elif camera_source == "arm50":
             intr = ARM_INTR
             self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
             self.depth_scale = intr["depth_scale"]
-            self.CameraPose = T_ARM_FROM_BASE
-
+            self.CameraPose = T_ARM_FROM_BASE_50
+        elif camera_source == "arm30":
+            intr = ARM_INTR
+            self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
+            self.depth_scale = intr["depth_scale"]
+            self.CameraPose = T_ARM_FROM_BASE_30
 
     def get_target_mask(self, object_str, rgb):
         raise NotImplementedError
@@ -109,8 +118,8 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
     https://huggingface.co/docs/transformers/model_doc/owlvit#transformers.OwlViTForObjectDetection
     """
 
-    def __init__(self, fastsam_path, device="cpu"):
-        super().__init__()
+    def __init__(self, fastsam_path, camera_source="arm", device="cpu"):
+        super().__init__(camera_source)
         self.device = device
 
         # initialize OwlVit
@@ -161,7 +170,8 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
         if self.camera_source == "stretch":
             # rotate back
             mask = cv2.rotate(np.array(masks[0]), cv2.ROTATE_90_COUNTERCLOCKWISE)
-
+        else:
+            mask = np.array(masks[0])
         return mask
 
 
@@ -169,24 +179,64 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
         return super().get_target_object_pose(rgb, depth, mask)
 
 
-"""
 class DoorKnobDetector(OwlVitSegAnyObjectDetector):
-    def __init__(self, device="cpu"):
-        super().__init__()
+    def __init__(self, fastsam_path, camera_source="arm", device="cpu"):
+        super().__init__(fastsam_path, camera_source)
 
-    def get_target_mask(self, object_str, rgb):
-        raise NotImplementedError
+    def get_target_mask(self, rgb, object_str="a photo of a doorknob"):
+        return super().get_target_mask(object_str=object_str, rgb=rgb)
+
+    def get_target_object_pointcloud(self, rgb, depth, mask):
+        if mask is None:
+            exit()
+
+        rgb = np.array(rgb.copy())
+        rgbim = open3d.geometry.Image(rgb.astype(np.uint8))
+
+        depth[mask==False] = -0.1
+        depth = np.asarray(depth).astype(np.float32) / self.depth_scale
+        depthim = open3d.geometry.Image(depth)
+
+        rgbd = open3d.geometry.RGBDImage.create_from_color_and_depth(rgbim, depthim, convert_rgb_to_intensity=False)
+        pcd = open3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.intrinsic)
+        return pcd 
 
     def get_target_object_pose(self, rgb, depth, mask):
-        raise NotImplementedError
+        pcd = self.get_target_object_pointcloud(rgb, depth, mask)
 
-    def get_knob_normal_vector()
-"""
+        center = pcd.get_center()
+        bbox = pcd.get_oriented_bounding_box()
+        ##TODO: if len(pcd.points) is zero, there is a problem with a depth image)
+
+        Randt=np.concatenate((bbox.R, np.expand_dims(bbox.center, axis=1)),axis=1) # pitfall: arrays need to be passed as a tuple
+        lastrow=np.expand_dims(np.array([0,0,0,1]),axis=0)
+        objectPoseCamera = np.concatenate((Randt,lastrow)) 
+
+        return self.CameraPose @ objectPoseCamera
+
+    def get_center_normal_vector(self, pcd):
+        # Downsample the point cloud to speed up the normal estimation
+        #pcd = pcd.voxel_down_sample(voxel_size=0.05)
+
+        # Estimate normals
+        pcd.estimate_normals(search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
+        pcd.normalize_normals()
+
+        # Get the center point of the point cloud
+        #center_point = np.asarray(pcd.points).mean(axis=0)
+        center_point = pcd.get_center()
+
+        # Find the index of the nearest point to the center
+        pcd_tree = open3d.geometry.KDTreeFlann(pcd)
+        k, idx, _ = pcd_tree.search_knn_vector_3d(center_point, 1)
+
+        # Get the normal at the center point
+        return np.asarray(pcd.normals)[idx[0]]
 
 
 class ObjectDetector(BaseObjectDetector):
-    def __init__(self, device="cpu"):    
-        super().__init__()
+    def __init__(self, camera_source="arm", device="cpu"):    
+        super().__init__(camera_source)
         
         # import
         import detectron2
