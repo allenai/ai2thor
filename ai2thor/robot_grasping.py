@@ -31,25 +31,45 @@ from scipy.spatial.transform import Rotation as R
 import torch
 
 
-class BaseObjectDetector():
-    def __init__(self):
-        ## TODO: read from config
-        with open(os.path.join(os.path.dirname(__file__),'camera_intrinsics_102422073668.txt')) as f:
-            intr = json.load(f)
-        self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
-        self.depth_scale = intr["depth_scale"]
+## CONSTANTS TRANSFORMATION MATRIX
+T_ARM_FROM_BASE = np.array([[0.41975, 0.030219, 0.90714, -1.0913],
+                   [0.72314, 0.59288, -0.35436, -0.62287],
+                   [-0.54853, 0.80473, 0.22701, 0.54269],
+                   [0, 0, 0, 1]])
 
-        ## TODO: read from config
-        r = R.from_quat([0.616, 0.616, -0.346, 0.345]) # camera_color_optical_frame
-        t = np.array([-0.017, -0.038, 1.294])
-        CameraPose=np.zeros((4,4))
-        CameraPose[0:3, 0:3] = r.as_matrix()
-        CameraPose[0:3,3] = t
-        CameraPose[3,3]=1
-        self.CameraPose = CameraPose
+T_ROTATED_STRETCH_FROM_BASE = np.array([[-0.00069263, 1, -0.0012349, -0.017],
+                    [ 0.5214, -0.00069263, -0.85331, -0.038],
+                    [ -0.85331, -0.0012349, -0.52139, 1.294],
+                    [ 0, 0, 0, 1]])
+
+## CONSTANT CAMERA INTRINSIC 
+STRETCH_INTR = {'coeffs': [0.0, 0.0, 0.0, 0.0, 0.0], 'fx': 911.8329467773438, 'fy': 911.9554443359375, 'height': 720, 'ppx': 647.63037109375, 'ppy': 368.0513000488281, 'width': 1280, 'depth_scale': 0.0010000000474974513}
+ARM_INTR = {'coeffs': [-0.05686680227518082, 0.06842068582773209, -0.0004524677060544491, 0.0006787769380025566, -0.022475285455584526], 'fx': 640.1092529296875, 'fy': 639.4522094726562, 'height': 720, 'ppx': 652.3712158203125, 'ppy': 368.69549560546875, 'width': 1280, 'depth_scale': 0.0010000000474974513}
+
+
+class BaseObjectDetector():
+    def __init__(self, camera_source="arm"):
+        self.camera_source = camera_source
+        self.update_camera_info(camera_source)
 
     #def predict_instance_segmentation(self, rgb):
     #    raise NotImplementedError
+
+    def update_camera_info(self, camera_source):
+        ## TODO: read from config
+        if camera_source == "stretch":
+            #with open(os.path.join(os.path.dirname(__file__),'camera_intrinsics_102422073668.txt')) as f:
+            #    intr = json.load(f)
+            intr = STRETCH_INTR
+            self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
+            self.depth_scale = intr["depth_scale"]
+            self.CameraPose = T_ROTATED_STRETCH_FROM_BASE
+        elif camera_source == "arm":
+            intr = ARM_INTR
+            self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
+            self.depth_scale = intr["depth_scale"]
+            self.CameraPose = T_ARM_FROM_BASE
+
 
     def get_target_mask(self, object_str, rgb):
         raise NotImplementedError
@@ -93,19 +113,21 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
         from transformers import OwlViTProcessor, OwlViTForObjectDetection
         self.processor_owlvit = OwlViTProcessor.from_pretrained("google/owlvit-base-patch32")
         self.model_owlvit = OwlViTForObjectDetection.from_pretrained("google/owlvit-base-patch32")
+        self.model_owlvit.eval()
 
         # initialize SegAnything
         from fastsam import FastSAM #, FastSAMPrompt 
         self.model_fastsam = FastSAM(fastsam_path) #os.path.join(os.path.dirname(__file__),'model_checkpoints/FastSAM.pt'))
         self.model_fastsam.to(device=device)
-
+        self.model_fastsam.eval()
 
     def get_target_mask(self, object_str, rgb):
         rgb = cv2.rotate(rgb, cv2.ROTATE_90_CLOCKWISE) # it works better for stretch cam
 
         def predict_object_detection(rgb, object_str):
-            inputs = self.processor_owlvit(text=object_str, images=rgb, return_tensors="pt")
-            outputs = self.model_owlvit(**inputs)
+            with torch.no_grad():
+                inputs = self.processor_owlvit(text=object_str, images=rgb, return_tensors="pt")
+                outputs = self.model_owlvit(**inputs)
 
             target_sizes = torch.Tensor([rgb.shape[0:2]])
             results = self.processor_owlvit.post_process_object_detection(outputs=outputs, target_sizes=target_sizes, threshold=0.1)
@@ -143,7 +165,7 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
 
 
 """
-class DoorKnobDetector(ObjectDetectorVit):
+class DoorKnobDetector(OwlVitSegAnyObjectDetector):
     def __init__(self, device="cpu"):
         super().__init__()
 
@@ -152,6 +174,8 @@ class DoorKnobDetector(ObjectDetectorVit):
 
     def get_target_object_pose(self, rgb, depth, mask):
         raise NotImplementedError
+
+    def get_knob_normal_vector()
 """
 
 
@@ -234,7 +258,8 @@ class GraspPlanner():
 
     def plan_grasp_trajectory(self, object_position, last_event):
         ## TODO: should they be separated? and not command all at once?
-
+        ## TODO: is object position whihtn a reachable range? Add an error margin as an argument to determine.
+        
         trajectory = []
         # open grasper 
         trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":100}})
@@ -261,3 +286,9 @@ class GraspPlanner():
         return {"action": trajectory}
 
     
+"""
+class DoorKnobGraspPlanner(GraspPlanner):
+
+    def plan_grasp_trajectory(self):
+        # using normal vector
+"""
