@@ -1,5 +1,5 @@
 """
-Classes defined for plannign grasping that is specific to Stretch RE1 robot
+Classes defined for planning grasping that is specific to Stretch RE1 robot
 
 To install open3d
  !python -m pip install open3d
@@ -222,7 +222,7 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         pcd = open3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.intrinsic)
         return pcd 
 
-    def get_target_object_pose(self, rgb, depth, mask):
+    def get_target_object_pose(self, rgb, depth, mask, distance_m=0.205):
         normval_vector = self.get_center_normal_vector(self.get_door_pointcloud(rgb, depth))
 
         pcd = self.get_target_object_pointcloud(rgb, depth, mask)
@@ -234,10 +234,11 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         lastrow=np.expand_dims(np.array([0,0,0,1]),axis=0)
         objectPoseCamera = np.concatenate((Randt,lastrow)) 
 
-        preplan_pose = self.plan_pregrasp_pose(objectPoseCamera, normval_vector)
+        preplan_pose = self.plan_pregrasp_pose(objectPoseCamera, normval_vector, distance_m)
         return [self.CameraPose @ objectPoseCamera, self.CameraPose @ preplan_pose]
 
-    def plan_pregrasp_pose(self, object_pose, normal_vector, distance_m=0.1):
+    def plan_pregrasp_pose(self, object_pose, normal_vector, distance_m=0.205):
+        # GraspCenter to Arm Offset = 0.205
         # Compute the waypoint pose
         waypoint_pose = object_pose.copy()
         translation_offset = distance_m * normal_vector
@@ -333,6 +334,7 @@ class ObjectDetector(BaseObjectDetector):
 
 
 class GraspPlanner():
+    """ Naive grasp Planner """
     def __init__(self):
         pass
     
@@ -377,12 +379,81 @@ class GraspPlanner():
     
 
 class DoorKnobGraspPlanner(GraspPlanner):
-    def plan_grasp_trajectory(self, object_waypoint_position, last_event):
-        first_actions = super().plan_grasp_trajectory(object_waypoint_position, last_event)
-        second_actions = {"action": [
-          {"action": "MoveArmExtension", "args": {"move_scalar": 0.1}}  
-        ]}
+    def plan_grasp_trajectory(self, object_waypoints, last_event):
+        object_pose, pregrasp_pose = object_waypoints
+        
+        object_position = object_pose[0:3,3]
+        pregrasp_position = pregrasp_pose[0:3,3]
 
-        return first_actions, second_actions
+        ## FIRST ACTION
+        # 1. move a wrist to a pregrasp position
+        # 2. rotate wrist to align with the object center
+        trajectory = []
+
+        # open grasper 
+        trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":100}})
+        
+        # lift
+        lift_offset = 0.1
+        trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": lift_offset + self.plan_lift_extenion(pregrasp_position, last_event.metadata["arm"]["lift_m"])}})
+        
+        # rotate base
+        self.plan_base_rotation(pregrasp_position)# - 90
+        self.plan_base_rotation(object_position)# - 90
+
+        trajectory.append({"action": "RotateAgent", "args": {"move_scalar": self.plan_base_rotation(pregrasp_position) - 90}})
+        
+        # extend arm
+        arm_offset = 0.205
+        trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": arm_offset + self.plan_arm_extension(pregrasp_position, last_event.metadata["arm"]["extension_m"])}})
+
+        # rotate wrist - stretch wrist moves clockwise
+        # pregrasp position 's Y direction is X
+        # pregrasp position 's -X direction is Y
+        x_delta, y_delta = (object_position - pregrasp_position)[0:2]
+        wrist_offset = np.degrees(np.arctan2(-x_delta, y_delta)) # arctan2(y,x)
+        trajectory.append({"action": "WristTo", "args": {"move_to":  wrist_offset}})
+
+        first_actions = {"action": trajectory}
+
+
+        ## SECOND ACTION
+        # 1. move arm base down a predetermined to object center
+        # 2. grasp
+        second_actions = {"action": [
+          {"action": "MoveArmBase", "args": {"move_scalar": -lift_offset}}  
+        ]}
+        
+        # close grapser
+        #trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":-100}})
+
+        return [first_actions, second_actions]
+
+
+
+class VIDAGraspPlanner():
+    def __init__(self):
+        super().__init__()
+        self.wrist_yaw_from_base = 0.68 # FIXED
+
+
+    def get_wrist_position(self, last_event):
+        position = np.zeros(3)
+        
+        # x axis FIXED
+        position[0] = self.wrist_yaw_from_base
+
+        # y depends on Arm Extension
+        position[1] = last_event.metadata["arm"][""]
+
+        # z depends on Lift
+        position[2] = 
+
+        #rotation = np.zeros((3,3))
+        
+        
+    def plan_grasp_trajectory(self, object_position, last_event):
+        pass
+ 
 
         
