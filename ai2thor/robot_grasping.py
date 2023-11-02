@@ -27,24 +27,20 @@ import open3d
 import json
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-
+import math
 import torch
 
 
 ## CONSTANTS TRANSFORMATION MATRIX
-T_ARM_FROM_BASE_50 = np.array([[-9.99936250e-01, -1.12876885e-02,  2.90756694e-04,
-        -7.00894177e-02],
-       [-6.73963135e-03,  5.75983960e-01, -8.17433211e-01,
-        -4.78219868e-02],
-       [ 9.05946026e-03, -8.17383059e-01, -5.76023316e-01,
-         1.43400645e+00],
-       [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
-         1.00000000e+00]])
+T_ARM_FROM_BASE_188 = np.array([[-9.93850963e-01, -1.10724527e-01,  5.85398328e-04, -6.43959597e-02],
+       [-5.75822889e-02,  5.12321977e-01, -8.56860824e-01,-6.07795199e-02],
+       [ 9.45755966e-02, -8.51625663e-01, -5.15547462e-01, 1.45327095e+00],
+       [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00, 1.00000000e+00]])
 
-T_ARM_FROM_BASE_30 = np.array([[-0.99602, -0.088905, 0.0066098, -0.067627],
-       [ -0.042288, 0.40588, -0.91295, -0.026198],
-       [ 0.078483, -0.90959, -0.40802, 1.4357],
-       [ 0, 0, 0, 1]])
+T_ARM_FROM_BASE_205 = np.array([[   -0.99652,   -0.080247,   -0.022519,   -0.055535],
+       [  -0.023487,     0.52961,    -0.84792,   -0.053421],
+       [   0.079969,    -0.84444,    -0.52965,      1.4676],
+       [          0,           0,           0,           1]])
 
 T_ROTATED_STRETCH_FROM_BASE = np.array([[-0.00069263, 1, -0.0012349, -0.017],
                     [ 0.5214, -0.00069263, -0.85331, -0.038],
@@ -57,7 +53,7 @@ ARM_INTR = {'coeffs': [-0.05686680227518082, 0.06842068582773209, -0.00045246770
 
 
 class BaseObjectDetector():
-    def __init__(self, camera_source="arm30"):
+    def __init__(self, camera_source="arm205"):
         self.camera_source = camera_source
         self.update_camera_info(camera_source)
 
@@ -73,18 +69,18 @@ class BaseObjectDetector():
             self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
             self.depth_scale = intr["depth_scale"]
             self.CameraPose = T_ROTATED_STRETCH_FROM_BASE
-        elif camera_source == "arm50":
+        elif camera_source == "arm205":
             intr = ARM_INTR
             self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
             self.depth_scale = intr["depth_scale"]
-            self.CameraPose = T_ARM_FROM_BASE_50
-        elif camera_source == "arm30":
+            self.CameraPose = T_ARM_FROM_BASE_205
+        elif camera_source == "arm188":
             intr = ARM_INTR
             self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
             self.depth_scale = intr["depth_scale"]
-            self.CameraPose = T_ARM_FROM_BASE_30
+            self.CameraPose = T_ARM_FROM_BASE_188        
         else:
-            print("Camera source can only be [arm30, arm50 or stretch]")
+            print("Camera source can only be [arm205, arm188 or stretch]")
             print("Please call 'update_camera_info(camera_source)' with the right camera source")
 
     def get_target_mask(self, object_str, rgb):
@@ -121,7 +117,7 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
     https://huggingface.co/docs/transformers/model_doc/owlvit#transformers.OwlViTForObjectDetection
     """
 
-    def __init__(self, fastsam_path, camera_source="arm", device="cpu"):
+    def __init__(self, fastsam_path, camera_source="arm205", device="cpu"):
         super().__init__(camera_source)
         self.device = device
 
@@ -183,7 +179,7 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
 
 
 class DoorKnobDetector(OwlVitSegAnyObjectDetector):
-    def __init__(self, fastsam_path, camera_source="arm30", device="cpu"):
+    def __init__(self, fastsam_path, camera_source="arm205", device="cpu"):
         super().__init__(fastsam_path, camera_source)
 
     def get_target_mask(self, rgb, object_str="a photo of a doorknob"):
@@ -266,7 +262,7 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
 
 
 class ObjectDetector(BaseObjectDetector):
-    def __init__(self, camera_source="arm30", device="cpu"):    
+    def __init__(self, camera_source="arm205", device="cpu"):    
         super().__init__(camera_source)
         
         # import
@@ -379,6 +375,12 @@ class GraspPlanner():
     
 
 class DoorKnobGraspPlanner(GraspPlanner):
+    def isReaable(self):
+        ## Not reachable when
+        #1. grasper center <-> object is beyond a threashold
+        #2. needs to move the mobiel base 
+        pass 
+
     def plan_grasp_trajectory(self, object_waypoints, last_event):
         object_pose, pregrasp_pose = object_waypoints
         
@@ -398,6 +400,7 @@ class DoorKnobGraspPlanner(GraspPlanner):
         trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": lift_offset + self.plan_lift_extenion(pregrasp_position, last_event.metadata["arm"]["lift_m"])}})
         
         # rotate base
+        # TODO: omit rotate. and if not reachable call it failure
         self.plan_base_rotation(pregrasp_position)# - 90
         self.plan_base_rotation(object_position)# - 90
 
@@ -408,10 +411,11 @@ class DoorKnobGraspPlanner(GraspPlanner):
         trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": arm_offset + self.plan_arm_extension(pregrasp_position, last_event.metadata["arm"]["extension_m"])}})
 
         # rotate wrist - stretch wrist moves clockwise
-        # pregrasp position 's Y direction is X
-        # pregrasp position 's -X direction is Y
+        # pregrasp position 's -Y direction is X 
+        # pregrasp position 's -X direction is Y 
+        wrist_to_joint_offset=0.05
         x_delta, y_delta = (object_position - pregrasp_position)[0:2]
-        wrist_offset = np.degrees(np.arctan2(-x_delta, y_delta)) # arctan2(y,x)
+        wrist_offset = np.degrees(np.arctan2(-x_delta-wrist_to_joint_offset, y_delta)) # arctan2(y,x)
         trajectory.append({"action": "WristTo", "args": {"move_to":  wrist_offset}})
 
         first_actions = {"action": trajectory}
@@ -430,12 +434,14 @@ class DoorKnobGraspPlanner(GraspPlanner):
         return [first_actions, second_actions]
 
 
-'''
-class VIDAGraspPlanner():
+
+class VIDAGraspPlanner(GraspPlanner):
     def __init__(self):
         super().__init__()
-        self.wrist_yaw_from_base = 0.68 # FIXED
-
+        self.wrist_yaw_from_base = -0.025 # FIXED
+        self.arm_offset = 0.140
+        self.lift_base_offset = 0.192 #base to lift
+        self.lift_wrist_offset = 0.028
 
     def get_wrist_position(self, last_event):
         position = np.zeros(3)
@@ -443,17 +449,86 @@ class VIDAGraspPlanner():
         # x axis FIXED
         position[0] = self.wrist_yaw_from_base
 
+        #TODO: check if this is correct
         # y depends on Arm Extension
-        position[1] = last_event.metadata["arm"][""]
+        position[1] = -(last_event.metadata["arm"]["extension_m"] + self.arm_offset)
 
         # z depends on Lift
-        position[2] = 
+        position[2] = last_event.metadata["arm"]["lift_m"] + self.lift_base_offset + self.lift_wrist_offset
 
         #rotation = np.zeros((3,3))
-        
-        
+        print(f"Wrist position from base frame: {position}")
+        return position
+    
+
+    def find_points_on_y_axis(self, p2, distance=0.228): #0.208
+        angle = math.atan2(p2[1] - 0.0, p2[0] - 0.0)
+        y1_1 = p2[1] + distance * math.sin(angle)
+        y1_2 = p2[1]- distance * math.sin(angle)
+
+        # sort smaller change
+        if abs(y1_1) < abs(y1_2):
+            return [[0.0, y1_1], [0.0, y1_2]]
+        else:
+            return [[0.0, y1_2], [0.0, y1_1]]
+
     def plan_grasp_trajectory(self, object_position, last_event):
-        pass
- '''
+        wrist_position = self.get_wrist_position(last_event)
+
+        x_delta, y_delta, z_delta = (object_position - wrist_position)
+        distance = math.sqrt(x_delta**2 + y_delta**2)
+        isReachable=False
+
+        trajectory = []
+        if abs(distance - 0.205) <= 0.025:
+            # don't need to adjust arm extension
+            # plan trajectory
+            isReachable = True
+        
+            # open grasper 
+            trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":100}})
+
+            # TODO: check z_delta before  - will it hit the object?
+            # rotate wrist - stretch wrist moves clockwise
+            # pregrasp position 's Y direction is X
+            # pregrasp position 's -X direction is Y            
+            wrist_offset = np.degrees(np.arctan2(-x_delta, y_delta)) # arctan2(y,x)
+            trajectory.append({"action": "WristTo", "args": {"move_to":  wrist_offset}})
+
+            # lift - will it hit the object? most likely the arm is higher than the object....
+            trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": self.plan_lift_extenion(object_position, last_event.metadata["arm"]["lift_m"])}})
+
+        else:
+            curr_arm = last_event.metadata["arm"]["extension_m"]
+            new_wrist_positions = self.find_points_on_y_axis([x_delta, y_delta])
+
+            for new_position in new_wrist_positions:
+                # TODO: update minmax threshold
+                new_arm_position = -new_position[1] 
+                if curr_arm + new_arm_position < 1.0 and curr_arm + new_arm_position> 0.25:
+                    # open grasper 
+                    trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":100}})
+
+                    # TODO: check z_delta before  - will it hit the object?
+                    # extend arm
+                    trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": new_arm_position}})                    
+                    isReachable=True 
+
+                    # TODO: check z_delta before  - will it hit the object?
+                    # rotate wrist - stretch wrist moves clockwise
+                    # pregrasp position 's -Y direction is X
+                    # pregrasp position 's -X direction is Y
+                    wrist_to_joint_offset=0.05
+                    wrist_offset = np.degrees(np.arctan2(-x_delta-wrist_to_joint_offset, -y_delta-new_arm_position)) # arctan2(y,x)
+                    trajectory.append({"action": "WristTo", "args": {"move_to":  wrist_offset}})
+
+                    # lift - will it hit the object? most likely the arm is higher than the object....
+                    ## TODO: fix offset (check)
+                    trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": self.plan_lift_extenion(object_position, last_event.metadata["arm"]["lift_m"])}})
+                    break 
+                
+            
+        return isReachable, {"action": trajectory}
+
 
         
