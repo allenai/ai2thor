@@ -123,7 +123,7 @@ namespace Thor.Procedural {
                     go.transform.parent = null;
                     go.SetActive(false);
                     this.assetMap.Remove(removed);
-                    GameObject.DestroyImmediate(go);
+                    GameObject.Destroy(go);
                 } else {
                     this.assetMap.Remove(removed);
                 }
