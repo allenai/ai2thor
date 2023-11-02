@@ -32,10 +32,10 @@ import torch
 
 
 ## CONSTANTS TRANSFORMATION MATRIX
-T_ARM_FROM_BASE_188 = np.array([[-9.93850963e-01, -1.10724527e-01,  5.85398328e-04, -6.43959597e-02],
-       [-5.75822889e-02,  5.12321977e-01, -8.56860824e-01,-6.07795199e-02],
-       [ 9.45755966e-02, -8.51625663e-01, -5.15547462e-01, 1.45327095e+00],
-       [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00, 1.00000000e+00]])
+T_ARM_FROM_BASE_188 = np.array([[   -0.99996,   0.0027321,  -0.0088218,   -0.039942],
+       [ -0.0022629,     0.85363,     0.52087,     -1.0036],
+       [  0.0089536,     0.52087,    -0.85359,      1.4492],
+       [          0,           0,           0,           1]])
 
 T_ARM_FROM_BASE_205 = np.array([[   -0.99652,   -0.080247,   -0.022519,   -0.055535],
        [  -0.023487,     0.52961,    -0.84792,   -0.053421],
@@ -514,7 +514,8 @@ class VIDAGraspPlanner(GraspPlanner):
                     trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": new_arm_position}})                    
                     isReachable=True 
 
-                    # TODO: check z_delta before  - will it hit the object?
+                    # TODO: check z_delta before  
+                    # - will it hit the object? It does sometimes...so might have to lift a little
                     # rotate wrist - stretch wrist moves clockwise
                     # pregrasp position 's -Y direction is X
                     # pregrasp position 's -X direction is Y
@@ -523,7 +524,6 @@ class VIDAGraspPlanner(GraspPlanner):
                     trajectory.append({"action": "WristTo", "args": {"move_to":  wrist_offset}})
 
                     # lift - will it hit the object? most likely the arm is higher than the object....
-                    ## TODO: fix offset (check)
                     trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": self.plan_lift_extenion(object_position, last_event.metadata["arm"]["lift_m"])}})
                     break 
                 
