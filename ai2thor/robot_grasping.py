@@ -430,7 +430,7 @@ class DoorKnobGraspPlanner(GraspPlanner):
         return [first_actions, second_actions]
 
 
-
+'''
 class VIDAGraspPlanner():
     def __init__(self):
         super().__init__()
@@ -454,6 +454,6 @@ class VIDAGraspPlanner():
         
     def plan_grasp_trajectory(self, object_position, last_event):
         pass
- 
+ '''
 
         
