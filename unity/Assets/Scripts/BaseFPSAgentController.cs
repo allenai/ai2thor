@@ -7454,6 +7454,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true);
         }
 
+
 #if UNITY_EDITOR
         void OnDrawGizmos() {
             //// check for valid spawn points in GetSpawnCoordinatesAboveObject action
