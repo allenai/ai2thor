@@ -429,9 +429,11 @@ class DoorKnobGraspPlanner(GraspPlanner):
 
         trajectory.append({"action": "RotateAgent", "args": {"move_scalar": self.plan_base_rotation(pregrasp_position)}})
         
+        ## TODO: LIFT OFFSET 
         # lift
         lift_offset = 0.1
-        trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": lift_offset + self.plan_lift_extenion(pregrasp_position, last_event.metadata["arm"]["lift_m"])}}) 
+        #trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": lift_offset + self.plan_lift_extenion(pregrasp_position, last_event.metadata["arm"]["lift_m"])}}) 
+        trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": lift_offset + self.plan_lift_extenion(object_position, last_event.metadata["arm"]["lift_m"])}}) 
         
         
         # rotate wrist - stretch wrist moves clockwise
