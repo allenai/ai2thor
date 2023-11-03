@@ -99,19 +99,27 @@ class BaseObjectDetector():
 
         rgbd = open3d.geometry.RGBDImage.create_from_color_and_depth(rgbim, depthim, convert_rgb_to_intensity=False)
         pcd = open3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.intrinsic)
+        print("pcd pointcloud numbers: ", len(pcd.points))
         pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
+        print("pcd pointcloud numbers after outlier removal: ", len(pcd.points))
 
         center = pcd.get_center()
         bbox = pcd.get_oriented_bounding_box()
         
         ##TODO: if len(pcd.points) is zero, there is a problem with a depth image)
-        center[2] = bbox.center[2] #TODO. investigate. cetner seems to be little above where bbox.center seems middle
         Randt=np.concatenate((bbox.R, np.expand_dims(center, axis=1)),axis=1) # pitfall: arrays need to be passed as a tuple
-        #Randt=np.concatenate((bbox.R, np.expand_dims(bbox.center, axis=1)),axis=1) # pitfall: arrays need to be passed as a tuple
         lastrow=np.expand_dims(np.array([0,0,0,1]),axis=0)
         objectPoseCamera = np.concatenate((Randt,lastrow)) 
 
-        return self.CameraPose @ objectPoseCamera
+        Randt=np.concatenate((bbox.R, np.expand_dims(bbox.center, axis=1)),axis=1) # pitfall: arrays need to be passed as a tuple
+        objectPoseCamera1 = np.concatenate((Randt,lastrow)) 
+        print("Center vs bbox center:", (self.CameraPose @ objectPoseCamera)[:3,3], (self.CameraPose @ objectPoseCamera1)[:3,3])
+
+        ObjectPose = self.CameraPose @ objectPoseCamera
+        ObjectPose1 = self.CameraPose @ objectPoseCamera1
+        ObjectPose1[0,3] = ObjectPose[0,3]
+        ObjectPose1[1,3] = ObjectPose[1,3]
+        return ObjectPose1 #self.CameraPose @ objectPoseCamera
 
 
 
@@ -343,6 +351,7 @@ class GraspPlanner():
         return object_position[2] + 0.168 - (curr_lift_position-0.21) - 0.41 #meters
 
     def plan_arm_extension(self, object_position, curr_arm_extension_position):
+        # assumes wrist rotation is at 0 degree position 
         return -1*object_position[1] - 0.205 - 0.254 - curr_arm_extension_position + 0.083 # -0.1 + 0.115 
 
     def plan_base_rotation(self, object_position):
@@ -382,6 +391,7 @@ class GraspPlanner():
 class DoorKnobGraspPlanner(GraspPlanner):
     def plan_base_rotation(self, object_position):
         # positive rotation clockwise
+        ### TODO: MAKE SURE THIS WORKS FOR BOTH POSITIVE X, NEGATIVE X 
         return np.degrees(np.arctan2(-object_position[1], object_position[0])) - 90 # bc stretch moves clockwise
 
     def get_wrist_position(self, last_event):
@@ -472,10 +482,16 @@ class DoorKnobGraspPlanner(GraspPlanner):
 class VIDAGraspPlanner(GraspPlanner):
     def __init__(self):
         super().__init__()
-        self.wrist_yaw_from_base = -0.020 # -0.025 # FIXED - should be.
-        self.arm_offset = 0.140
+
+        ## 188 constants
+        self.wrist_yaw_from_base = 0.003#25 #-0.020 # -0.025 # FIXED - should be.
+        self.arm_offset = 0.155 #0.140
         self.lift_base_offset = 0.192 #base to lift
         self.lift_wrist_offset = 0.028
+
+    def plan_lift_extenion(self, object_position, curr_lift_position):
+        lift_object_offset = -0.025 # to grasp a little lower than the estimated cetner
+        return (object_position[2]+lift_object_offset) + 0.168 - (curr_lift_position-0.21) - 0.41 #meters
 
     def get_wrist_position(self, last_event):
         position = np.zeros(3)
@@ -495,7 +511,7 @@ class VIDAGraspPlanner(GraspPlanner):
         return position
     
 
-    def find_points_on_y_axis(self, p2, distance=0.210): #0.235 works for apple 0.208
+    def find_points_on_y_axis(self, p2, distance=0.2050): #210 worked for most too. 0.220 works for apple 0.208
         def distance_between_points(p1, p2):
             x1, y1 = p1
             x2, y2 = p2
@@ -539,9 +555,10 @@ class VIDAGraspPlanner(GraspPlanner):
 
             # TODO: check z_delta before  - will it hit the object?
             # rotate wrist - stretch wrist moves clockwise
-            # pregrasp position 's Y direction is X
+            # pregrasp position 's -Y direction is X
             # pregrasp position 's -X direction is Y            
             wrist_offset = np.degrees(np.arctan2(-x_delta, -y_delta)) # arctan2(y,x)
+            #wrist_offset = wrist_offset + 7 if wrist_offset < 0 
             trajectory.append({"action": "WristTo", "args": {"move_to":  wrist_offset}})
 
             # lift - will it hit the object? most likely the arm is higher than the object....
@@ -563,15 +580,12 @@ class VIDAGraspPlanner(GraspPlanner):
                     # rotate wrist - stretch wrist moves clockwise
                     # pregrasp position 's -Y direction is X
                     # pregrasp position 's -X direction is Y
-                    last_event.metadata["arm"]["extension_m"] += new_arm_position
+                    #last_event.metadata["arm"]["extension_m"] += new_arm_position
                     #wrist_position = self.get_wrist_position(last_event)
                     #x_delta, y_delta, z_delta = (object_position - wrist_position)
-
-                    y_delta = -1*abs(y_delta + new_arm_position)
+                    y_delta = -1*abs(y_delta + new_arm_position) 
                     print("After Extension X delta and Y delta: ", x_delta, y_delta)
                     wrist_offset = np.degrees(np.arctan2(-x_delta, -y_delta)) # arctan2(y,x)
-                    print(wrist_offset)
-
                     if wrist_offset >= 75.0: #max Wrist Rotation
                         trajectory = []
                         isReachable=False
@@ -580,6 +594,8 @@ class VIDAGraspPlanner(GraspPlanner):
 
                     # TODO: check z_delta before  - will it hit the object?
                     # extend arm
+                    #wrist_to_gripper_offset = 0.205 - np.cos(np.deg2rad(wrist_offset)) * 0.205 # 0.205 #TODO to be correct. it should be cos(angle)*offset
+                    #print("wrist gripper offset:", wrist_to_gripper_offset)
                     trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": new_arm_position}})                    
                     isReachable=True 
 
