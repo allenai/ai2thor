@@ -165,6 +165,8 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
             return [round(i) for i in boxes[ind].tolist()] #xyxy
 
         bbox = predict_object_detection(rgb=rgb, object_str=object_str)
+        if bbox is None or len(bbox) == 0:
+            return None
 
         everything_results = self.model_fastsam(
                 rgb,
