@@ -32,9 +32,9 @@ import torch
 
 
 ## CONSTANTS TRANSFORMATION MATRIX
-T_ARM_FROM_BASE_188 = np.array([[   -0.99996,   0.0027321,  -0.0088218,   -0.039942],
-       [ -0.0022629,     0.85363,     0.52087,     -1.0036],
-       [  0.0089536,     0.52087,    -0.85359,      1.4492],
+T_ARM_FROM_BASE_188 = np.array([[   -0.99929,   -0.021817,    0.030712,   -0.062167],
+       [  -0.037528,     0.50515,    -0.86222,   -0.047745],
+       [   0.003297,    -0.86276,    -0.50561,      1.4732],
        [          0,           0,           0,           1]])
 
 T_ARM_FROM_BASE_205 = np.array([[   -0.99652,   -0.080247,   -0.022519,   -0.055535],
@@ -99,12 +99,15 @@ class BaseObjectDetector():
 
         rgbd = open3d.geometry.RGBDImage.create_from_color_and_depth(rgbim, depthim, convert_rgb_to_intensity=False)
         pcd = open3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.intrinsic)
-        
+        pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=2.0)
+
         center = pcd.get_center()
         bbox = pcd.get_oriented_bounding_box()
+        
         ##TODO: if len(pcd.points) is zero, there is a problem with a depth image)
-
-        Randt=np.concatenate((bbox.R, np.expand_dims(bbox.center, axis=1)),axis=1) # pitfall: arrays need to be passed as a tuple
+        center[2] = bbox.center[2] #TODO. investigate. cetner seems to be little above where bbox.center seems middle
+        Randt=np.concatenate((bbox.R, np.expand_dims(center, axis=1)),axis=1) # pitfall: arrays need to be passed as a tuple
+        #Randt=np.concatenate((bbox.R, np.expand_dims(bbox.center, axis=1)),axis=1) # pitfall: arrays need to be passed as a tuple
         lastrow=np.expand_dims(np.array([0,0,0,1]),axis=0)
         objectPoseCamera = np.concatenate((Randt,lastrow)) 
 
@@ -144,12 +147,14 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
             target_sizes = torch.Tensor([rgb.shape[0:2]])
             results = self.processor_owlvit.post_process_object_detection(outputs=outputs, target_sizes=target_sizes, threshold=0.1)
             boxes = results[0]["boxes"].detach().cpu().numpy() #results[0]["scores"], results[0]["labels"]
+            scores = results[0]["scores"].detach().cpu().numpy()
 
             if len(boxes)==0:
                 print(f"{object_str} Not Detected.")
                 return None
-
-            return [round(i) for i in boxes[0].tolist()] #xyxy
+            
+            ind = np.argmin(scores)
+            return [round(i) for i in boxes[ind].tolist()] #xyxy
 
         bbox = predict_object_detection(rgb=rgb, object_str=object_str)
 
@@ -413,9 +418,9 @@ class DoorKnobGraspPlanner(GraspPlanner):
         # rotate wrist - stretch wrist moves clockwise
         # pregrasp position 's -Y direction is X 
         # pregrasp position 's -X direction is Y 
-        wrist_to_joint_offset=0.05
+        wrist_to_joint_offset=0.0 #0.05
         x_delta, y_delta = (object_position - pregrasp_position)[0:2]
-        wrist_offset = np.degrees(np.arctan2(-x_delta-wrist_to_joint_offset, y_delta)) # arctan2(y,x)
+        wrist_offset = np.degrees(np.arctan2(-x_delta-wrist_to_joint_offset, -y_delta)) # arctan2(y,x)
         trajectory.append({"action": "WristTo", "args": {"move_to":  wrist_offset}})
 
         first_actions = {"action": trajectory}
@@ -438,7 +443,7 @@ class DoorKnobGraspPlanner(GraspPlanner):
 class VIDAGraspPlanner(GraspPlanner):
     def __init__(self):
         super().__init__()
-        self.wrist_yaw_from_base = -0.025 # FIXED
+        self.wrist_yaw_from_base = -0.020 # -0.025 # FIXED - should be.
         self.arm_offset = 0.140
         self.lift_base_offset = 0.192 #base to lift
         self.lift_wrist_offset = 0.028
@@ -461,16 +466,30 @@ class VIDAGraspPlanner(GraspPlanner):
         return position
     
 
-    def find_points_on_y_axis(self, p2, distance=0.228): #0.208
-        angle = math.atan2(p2[1] - 0.0, p2[0] - 0.0)
-        y1_1 = p2[1] + distance * math.sin(angle)
-        y1_2 = p2[1]- distance * math.sin(angle)
+    def find_points_on_y_axis(self, p2, distance=0.210): #0.235 works for apple 0.208
+        def distance_between_points(p1, p2):
+            x1, y1 = p1
+            x2, y2 = p2
+            return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+        
+        sqrt_diff = distance**2 - p2[0]**2
+        if sqrt_diff < 0:
+            return []
+        
+        y1_1 = p2[1] + math.sqrt(distance**2 - p2[0]**2)
+        y1_2 = p2[1] - math.sqrt(distance**2 - p2[0]**2)
 
-        # sort smaller change
-        if abs(y1_1) < abs(y1_2):
-            return [[0.0, y1_1], [0.0, y1_2]]
-        else:
-            return [[0.0, y1_2], [0.0, y1_1]]
+        print("new points 1: ", y1_1, distance_between_points(p2,[0.0, y1_1]))
+        print("new ppints 2: ", y1_2, distance_between_points(p2,[0.0, y1_2]))
+
+        new_points = []
+        if abs(distance_between_points(p2,[0.0, y1_1]) - distance) <= 0.0005:
+            new_points.append([0.0, y1_1])
+        if abs(distance_between_points(p2,[0.0, y1_2]) - distance) <= 0.0005:
+            new_points.append([0.0, y1_2])
+
+        return new_points #returns bigger value first - closer to 0 means it's cloer to base
+
 
     def plan_grasp_trajectory(self, object_position, last_event):
         wrist_position = self.get_wrist_position(last_event)
@@ -478,6 +497,7 @@ class VIDAGraspPlanner(GraspPlanner):
         x_delta, y_delta, z_delta = (object_position - wrist_position)
         distance = math.sqrt(x_delta**2 + y_delta**2)
         isReachable=False
+        print("Before Extension X delta and Y delta: ", x_delta, y_delta)
 
         trajectory = []
         if abs(distance - 0.205) <= 0.025:
@@ -492,7 +512,7 @@ class VIDAGraspPlanner(GraspPlanner):
             # rotate wrist - stretch wrist moves clockwise
             # pregrasp position 's Y direction is X
             # pregrasp position 's -X direction is Y            
-            wrist_offset = np.degrees(np.arctan2(-x_delta, y_delta)) # arctan2(y,x)
+            wrist_offset = np.degrees(np.arctan2(-x_delta, -y_delta)) # arctan2(y,x)
             trajectory.append({"action": "WristTo", "args": {"move_to":  wrist_offset}})
 
             # lift - will it hit the object? most likely the arm is higher than the object....
@@ -505,27 +525,39 @@ class VIDAGraspPlanner(GraspPlanner):
             for new_position in new_wrist_positions:
                 # TODO: update minmax threshold
                 new_arm_position = -new_position[1] 
-                if curr_arm + new_arm_position < 1.0 and curr_arm + new_arm_position> 0.25:
+                if not isReachable and (curr_arm + new_arm_position) < 0.5193114280700684 and (curr_arm + new_arm_position) > 0.0:
                     # open grasper 
                     trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":100}})
-
-                    # TODO: check z_delta before  - will it hit the object?
-                    # extend arm
-                    trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": new_arm_position}})                    
-                    isReachable=True 
 
                     # TODO: check z_delta before  
                     # - will it hit the object? It does sometimes...so might have to lift a little
                     # rotate wrist - stretch wrist moves clockwise
                     # pregrasp position 's -Y direction is X
                     # pregrasp position 's -X direction is Y
-                    wrist_to_joint_offset=0.05
-                    wrist_offset = np.degrees(np.arctan2(-x_delta-wrist_to_joint_offset, -y_delta-new_arm_position)) # arctan2(y,x)
+                    last_event.metadata["arm"]["extension_m"] += new_arm_position
+                    #wrist_position = self.get_wrist_position(last_event)
+                    #x_delta, y_delta, z_delta = (object_position - wrist_position)
+
+                    y_delta = -1*abs(y_delta + new_arm_position)
+                    print("After Extension X delta and Y delta: ", x_delta, y_delta)
+                    wrist_offset = np.degrees(np.arctan2(-x_delta, -y_delta)) # arctan2(y,x)
+                    print(wrist_offset)
+
+                    if wrist_offset >= 75.0: #max Wrist Rotation
+                        trajectory = []
+                        isReachable=False
+                        continue 
                     trajectory.append({"action": "WristTo", "args": {"move_to":  wrist_offset}})
 
+                    # TODO: check z_delta before  - will it hit the object?
+                    # extend arm
+                    trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": new_arm_position}})                    
+                    isReachable=True 
+
+                    
                     # lift - will it hit the object? most likely the arm is higher than the object....
                     trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": self.plan_lift_extenion(object_position, last_event.metadata["arm"]["lift_m"])}})
-                    break 
+                     
                 
             
         return isReachable, {"action": trajectory}
