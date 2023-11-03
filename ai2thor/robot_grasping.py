@@ -235,7 +235,7 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         lastrow=np.expand_dims(np.array([0,0,0,1]),axis=0)
         objectPoseCamera = np.concatenate((Randt,lastrow)) 
 
-        preplan_pose = self.plan_pregrasp_pose(objectPoseCamera, normval_vector, distance_m)
+        preplan_pose = self.plan_pregrasp_pose(objectPoseCamera, normval_vector, -distance_m)
         return [self.CameraPose @ objectPoseCamera, self.CameraPose @ preplan_pose]
 
     def plan_pregrasp_pose(self, object_pose, normal_vector, distance_m=0.205):
@@ -380,6 +380,28 @@ class GraspPlanner():
     
 
 class DoorKnobGraspPlanner(GraspPlanner):
+    def plan_base_rotation(self, object_position):
+        # positive rotation clockwise
+        return np.degrees(np.arctan2(-object_position[1], object_position[0])) - 90 # bc stretch moves clockwise
+
+    def get_wrist_position(self, last_event):
+            position = np.zeros(3)
+            
+            # x axis FIXED
+            position[0] = self.wrist_yaw_from_base
+
+            #TODO: check if this is correct
+            # y depends on Arm Extension
+            position[1] = -(last_event.metadata["arm"]["extension_m"] + self.arm_offset)
+
+            # z depends on Lift
+            position[2] = last_event.metadata["arm"]["lift_m"] + self.lift_base_offset + self.lift_wrist_offset
+
+            #rotation = np.zeros((3,3))
+            print(f"Wrist position from base frame: {position}")
+            return position
+
+
     def isReaable(self):
         ## Not reachable when
         #1. grasper center <-> object is beyond a threashold
@@ -400,29 +422,34 @@ class DoorKnobGraspPlanner(GraspPlanner):
         # open grasper 
         trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":100}})
         
-        # lift
-        lift_offset = 0.1
-        trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": lift_offset + self.plan_lift_extenion(pregrasp_position, last_event.metadata["arm"]["lift_m"])}})
-        
         # rotate base
         # TODO: omit rotate. and if not reachable call it failure
-        self.plan_base_rotation(pregrasp_position)# - 90
-        self.plan_base_rotation(object_position)# - 90
+        #self.plan_base_rotation(pregrasp_position)# - 90
+        #self.plan_base_rotation(object_position)# - 90
 
-        trajectory.append({"action": "RotateAgent", "args": {"move_scalar": self.plan_base_rotation(pregrasp_position) - 90}})
+        trajectory.append({"action": "RotateAgent", "args": {"move_scalar": self.plan_base_rotation(pregrasp_position)}})
         
-        # extend arm
-        arm_offset = 0.205
-        trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": arm_offset + self.plan_arm_extension(pregrasp_position, last_event.metadata["arm"]["extension_m"])}})
-
+        # lift
+        lift_offset = 0.1
+        trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": lift_offset + self.plan_lift_extenion(pregrasp_position, last_event.metadata["arm"]["lift_m"])}}) 
+        
+        
         # rotate wrist - stretch wrist moves clockwise
         # pregrasp position 's -Y direction is X 
         # pregrasp position 's -X direction is Y 
-        wrist_to_joint_offset=0.0 #0.05
+        wrist_to_joint_offset=0#0.070 #0.05
         x_delta, y_delta = (object_position - pregrasp_position)[0:2]
         wrist_offset = np.degrees(np.arctan2(-x_delta-wrist_to_joint_offset, -y_delta)) # arctan2(y,x)
         trajectory.append({"action": "WristTo", "args": {"move_to":  wrist_offset}})
 
+        # extend arm
+        arm_offset = 0.220 #0.205 #0.205
+        delta_ext = arm_offset + self.plan_arm_extension(pregrasp_position, last_event.metadata["arm"]["extension_m"])
+        trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": delta_ext}})
+
+        if last_event.metadata["arm"]["extension_m"] + delta_ext > 0.5203085541725159:
+            return False, []
+        
         first_actions = {"action": trajectory}
 
 
@@ -436,7 +463,7 @@ class DoorKnobGraspPlanner(GraspPlanner):
         # close grapser
         #trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":-100}})
 
-        return [first_actions, second_actions]
+        return True, [first_actions, second_actions]
 
 
 
