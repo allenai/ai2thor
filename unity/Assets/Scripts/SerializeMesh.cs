@@ -4,6 +4,8 @@ using System.Linq;
 using UnityEditor;
 #endif
 using UnityEngine;
+
+using System.IO;
  
 namespace Thor.Utils
 {
@@ -36,12 +38,86 @@ namespace Thor.Utils
         
 
         private static int materialCount = 0;
+
+         private static string getAssetRelativePath(string absPath) {
+            return string.Join("/", absPath.Split('/').SkipWhile(x=> x != "Assets"));
+        }
+
+        public static string MeshToObj(string name, Mesh mesh) {
+            var objString = $"o {name}";
+            var verts = string.Join("\n", mesh.vertices.Select(v => $"v {v.x:F6} {v.y:F6} {v.z:F6}"));
+            var uvs = string.Join("\n", mesh.uv.Select(v => $"vt {v.x:F6} {v.y:F6}"));
+            var normals = string.Join("\n", mesh.normals.Select(v => $"vn {v.x:F6} {v.y:F6} {v.z:F6}"));
+            var faces =  string.Join("\n", Enumerable.Range(0, mesh.triangles.Length / 3)
+                .Select(i => 
+                    ( i0: mesh.triangles[i * 3]+1, i1: mesh.triangles[i * 3 + 1]+1, i2: mesh.triangles[i * 3 + 2]+1))
+                .Select(indx => $"f {indx.i0}/{indx.i0}/{indx.i0} {indx.i1}/{indx.i1}/{indx.i1} {indx.i2}/{indx.i2}/{indx.i2}")
+            );
+            return $"{objString}\n{verts}\n{uvs}\n{normals}\ns 1\n{faces}";
+        }
+
+        private static string SaveAsObj( Mesh mesh, string assetId, string outPath, string prefix = "") {
+
+            var obj = MeshToObj(assetId, mesh);
+
+            if (!Directory.Exists(outPath)) {
+                Directory.CreateDirectory(outPath);
+            }
+
+            // var f = File.Create($"{outModelsBasePath}/{assetId}.obj");
+            var fileObj = $"{outPath}/{prefix}_{assetId}.obj";
+            Debug.Log($"Writing obj to `{fileObj}`");
+            File.WriteAllText(fileObj, obj);
+
+            return fileObj;
+        }
+
+        public static void SaveMeshesAsObjAndReplaceReferences(GameObject go, string assetId, string modelsOutPath, string collidersOutPath) {
+            var meshGo = go.transform.Find("mesh");
+
+            var mf = meshGo.GetComponentInChildren<MeshFilter>();
+            var objPath = SaveAsObj(mf.sharedMesh, assetId, modelsOutPath);
+
+            var colliders = go.transform.Find("Colliders").GetComponentsInChildren<MeshCollider>();
+            var colliderObjPaths = colliders.Select((c, i) => SaveAsObj(c.sharedMesh, assetId, collidersOutPath, prefix: $"col_{i}")).ToArray();
+            
+            AssetDatabase.Refresh();
+            
+            // is this necessary?
+            if (mf.sharedMesh.indexFormat == UnityEngine.Rendering.IndexFormat.UInt32) {
+                var mi = AssetImporter.GetAtPath(getAssetRelativePath(objPath)) as ModelImporter;
+                mi.indexFormat = ModelImporterIndexFormat.UInt32;
+            }
+            
+
+            var mesh = (Mesh)AssetDatabase.LoadAssetAtPath(getAssetRelativePath(objPath),typeof(Mesh));
+
+            mf.sharedMesh = mesh;
+
+             var collisionMeshes = colliderObjPaths.Select(path => (Mesh)AssetDatabase.LoadAssetAtPath(getAssetRelativePath(path), typeof(Mesh))).ToArray();
+            for (var i = 0; i < colliders.Length; i++) {
+                
+                // is this necessary?
+                if (colliders[i].sharedMesh.indexFormat == UnityEngine.Rendering.IndexFormat.UInt32) {
+                    var mi = AssetImporter.GetAtPath(getAssetRelativePath(colliderObjPaths[i])) as ModelImporter;
+                    mi.indexFormat = ModelImporterIndexFormat.UInt32;
+                }
+                // collisionMeshes[i].RecalculateNormals();
+                colliders[i].sharedMesh = collisionMeshes[i];
+            }
+            colliders = go.transform.Find("TriggerColliders").GetComponentsInChildren<MeshCollider>();
+            for (var i = 0; i < colliders.Length; i++) {
+                colliders[i].sharedMesh  = collisionMeshes[i];
+            }
+
+        }
  
         void Awake()
         {
+            Debug.Log("--- Awake called on object " + transform.parent.gameObject.name);
             if (serialized)
             {
-                GetComponent<MeshFilter>().mesh = Rebuild();
+                GetComponent<MeshFilter>().sharedMesh = Rebuild();
             }
             // else {
             //     this.model = new SerializableMesh();
@@ -78,6 +154,7 @@ namespace Thor.Utils
  
         public void Serialize()
         {
+            Debug.Log("--- Serialize called  " + transform.parent.gameObject.name);
             var mesh = GetComponent<MeshFilter>().mesh;
  
             // model.uv = mesh.uv;

@@ -2258,7 +2258,8 @@ namespace Thor.Procedural {
             float yRotOffset = 0f,
             bool serializable = false,
             bool returnObject = false,
-            Transform parent = null
+            Transform parent = null,
+            bool addAnotationComponent = false
         ) {
             // create a new game object
             GameObject go = new GameObject();
@@ -2350,6 +2351,10 @@ namespace Thor.Procedural {
             go.name = name;
             go.layer = LayerMask.NameToLayer("SimObjVisible");
             go.tag = "SimObjPhysics";
+
+            if (addAnotationComponent) {
+                go.AddComponent<Objaverse.ObjaverseAnnotation>();
+            }
 
             Material mat = null;
             RuntimePrefab runtimePrefab = null;
@@ -2482,7 +2487,7 @@ namespace Thor.Procedural {
             };
 
             if (serializable) {
-                meshObj.AddComponent<SerializeMesh>();
+                // meshObj.AddComponent<SerializeMesh>();
                 if (returnObject) {
                     result["gameObject"] = go;
                     result["intermediateGameObject"] = oldGo;
