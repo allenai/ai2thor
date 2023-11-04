@@ -161,7 +161,7 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
                 print(f"{object_str} Not Detected.")
                 return None
             
-            ind = np.argmin(scores)
+            ind = np.argmax(scores)
             return [round(i) for i in boxes[ind].tolist()] #xyxy
 
         bbox = predict_object_detection(rgb=rgb, object_str=object_str)
@@ -233,7 +233,7 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         pcd = open3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.intrinsic)
         return pcd 
 
-    def get_target_object_pose(self, rgb, depth, mask, distance_m=0.205):
+    def get_target_object_pose(self, rgb, depth, mask, distance_m=0.215): # -0.205
         normval_vector = self.get_center_normal_vector(self.get_door_pointcloud(rgb, depth))
 
         pcd = self.get_target_object_pointcloud(rgb, depth, mask)
@@ -246,9 +246,13 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         objectPoseCamera = np.concatenate((Randt,lastrow)) 
 
         preplan_pose = self.plan_pregrasp_pose(objectPoseCamera, normval_vector, -distance_m)
+        
+        # TODO: if preplan pose is wrong (like Z axis shouldn't be too different)
+        # TODO: target pose itself is wrong
+
         return [self.CameraPose @ objectPoseCamera, self.CameraPose @ preplan_pose]
 
-    def plan_pregrasp_pose(self, object_pose, normal_vector, distance_m=0.205):
+    def plan_pregrasp_pose(self, object_pose, normal_vector, distance_m=0.215):
         # GraspCenter to Arm Offset = 0.205
         # Compute the waypoint pose
         waypoint_pose = object_pose.copy()
@@ -391,40 +395,66 @@ class GraspPlanner():
     
 
 class DoorKnobGraspPlanner(GraspPlanner):
+    def __init__(self):
+        super().__init__()
+
+        ## 188 constants
+        self.gripper_length = 0.205
+        self.gripper_heihgt = 0.138
+
+        self.wrist_yaw_from_base = 0.003#25 #-0.020 # -0.025 # FIXED - should be.
+        self.arm_offset = 0.155 #0.140
+        self.lift_base_offset = 0.192 #base to lift
+        self.lift_wrist_offset = 0.028
+
+
     def plan_base_rotation(self, object_position):
         # positive rotation clockwise
         ### TODO: MAKE SURE THIS WORKS FOR BOTH POSITIVE X, NEGATIVE X 
         return np.degrees(np.arctan2(-object_position[1], object_position[0])) - 90 # bc stretch moves clockwise
 
-    def get_wrist_position(self, last_event):
-            position = np.zeros(3)
-            
-            # x axis FIXED
-            position[0] = self.wrist_yaw_from_base
+    def get_gripper_center_position(self, last_event):
+        wrist_yaw = last_event.metadata["arm"]["wrist_degrees"] # but is actually in radians
 
-            #TODO: check if this is correct
-            # y depends on Arm Extension
-            position[1] = -(last_event.metadata["arm"]["extension_m"] + self.arm_offset)
+        position = np.zeros(3)
 
-            # z depends on Lift
-            position[2] = last_event.metadata["arm"]["lift_m"] + self.lift_base_offset + self.lift_wrist_offset
+        # x axis FIXED
+        wrist_to_gripper_offset_x = -np.sin(np.deg2rad(wrist_yaw)) * self.gripper_length # 0.205 #TODO to be correct. it should be cos(angle)*offset
+        position[0] = self.wrist_yaw_from_base + wrist_to_gripper_offset_x
 
-            #rotation = np.zeros((3,3))
-            print(f"Wrist position from base frame: {position}")
-            return position
+        #TODO: check if this is correct
+        # y depends on Arm Extension
+        wrist_to_gripper_offset_y = -np.cos(np.deg2rad(wrist_yaw)) * self.gripper_length # 0.205 #TODO to be correct. it should be cos(angle)*offset
+        position[1] = -(last_event.metadata["arm"]["extension_m"] + self.arm_offset) + wrist_to_gripper_offset_y
+
+        # z depends on Lift
+        position[2] = last_event.metadata["arm"]["lift_m"] + self.lift_base_offset + self.lift_wrist_offset - self.gripper_heihgt
+
+        #rotation = np.zeros((3,3))
+        print(f"Gripper center position from base frame: {position}")
+        return position
 
 
-    def isReaable(self):
+    def isReachable(self, target_position, last_event, threshold=0.025):
+        gripper_position = self.get_gripper_center_position(last_event)
+
+        def distance_between_points(p1, p2):
+            x1, y1, z1 = p1
+            x2, y2, z2 = p2
+            return math.sqrt((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)
+        
         ## Not reachable when
         #1. grasper center <-> object is beyond a threashold
-        #2. needs to move the mobiel base 
-        pass 
-
+        if distance_between_points(target_position, gripper_position) >= threshold:
+            return False
+        return True 
+        
     def plan_grasp_trajectory(self, object_waypoints, last_event):
         object_pose, pregrasp_pose = object_waypoints
         
         object_position = object_pose[0:3,3]
         pregrasp_position = pregrasp_pose[0:3,3]
+        #pregrasp_position[2] = object_position[2]
 
         ## FIRST ACTION
         # 1. move a wrist to a pregrasp position
@@ -459,11 +489,13 @@ class DoorKnobGraspPlanner(GraspPlanner):
         # extend arm
         arm_offset = 0.220 #0.205 #0.205
         delta_ext = arm_offset + self.plan_arm_extension(pregrasp_position, last_event.metadata["arm"]["extension_m"])
-        trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": delta_ext}})
-
-        if last_event.metadata["arm"]["extension_m"] + delta_ext > 0.5203085541725159:
-            return False, []
         
+        #2. needs to move the mobiel base 
+        if (delta_ext + last_event.metadata["arm"]["extension_m"]) >= 0.52 or (last_event.metadata["arm"]["extension_m"] + delta_ext) < 0.0:
+            print("Need to extend to far. Not Reachable.")
+            return False, []
+
+        trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": delta_ext}})
         first_actions = {"action": trajectory}
 
 
