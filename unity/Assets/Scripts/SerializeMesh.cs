@@ -72,6 +72,7 @@ namespace Thor.Utils
             return fileObj;
         }
 
+#if UNITY_EDITOR
         public static void SaveMeshesAsObjAndReplaceReferences(GameObject go, string assetId, string modelsOutPath, string collidersOutPath) {
             var meshGo = go.transform.Find("mesh");
 
@@ -111,6 +112,7 @@ namespace Thor.Utils
             }
 
         }
+#endif
  
         void Awake()
         {
@@ -232,7 +234,7 @@ namespace Thor.Utils
             return mesh;
         }
     }
- 
+
 #if UNITY_EDITOR
     [CustomEditor(typeof(SerializeMesh))]
     class SerializeMeshEditor : Editor

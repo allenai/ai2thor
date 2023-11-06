@@ -68,8 +68,8 @@ namespace Thor.Procedural {
 
         public string objectId;
 
-       
-        #if UNITY_EDITOR
+
+#if UNITY_EDITOR
         private string copyTexture(string original, string destinationDir) {
             var outName = $"{destinationDir}/{Path.GetFileName(original)}";
             if (!File.Exists(outName)) {
@@ -516,7 +516,7 @@ namespace Thor.Procedural {
         // }
 
     
-        #endif
+#endif
 
     }
 }
