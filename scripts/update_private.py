@@ -2,17 +2,26 @@
 import os
 import subprocess
 import sys
+from typing import Optional
 
 private_dir = ""
 private_repo_url = ""
+
 class Repo():
-    def __init__(self, url, target_dir) -> None:
+    def __init__(
+        self,
+        url: str,
+        target_dir: str,
+        commit_id: Optional[str] = None,
+        branch: Optional[str] = None
+    ) -> None:
         self.url = url
         self.target_dir = target_dir
         self.base_dir = os.path.normpath(
             os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
         )
-    
+        self.commit_id = commit_id
+        self.branch = branch
     
     def current_branch(self):
         git_dir = os.path.join(self.base_dir, ".git")
@@ -24,24 +33,29 @@ class Repo():
             .strip()
         )
 
-
     def checkout_branch(self, remote="origin"):
         if not os.path.isdir(self.target_dir):
             subprocess.check_call(f"git clone {self.url} {self.target_dir}", shell=True)
 
         cwd = os.getcwd()
         os.chdir(self.target_dir)
-        branch = self.current_branch()
+        branch = self.current_branch() if self.branch is None else self.branch
         try:
             print(f"Trying to checkout {self.target_dir} -> {branch}")
-            subprocess.check_call(f"git fetch {remote} {branch}", shell=True)
-            subprocess.check_call(f"git checkout {branch}", shell=True)
-            subprocess.check_call(f"git pull {remote} {branch}", shell=True)
+            subprocess.check_call(f"git fetch {remote}", shell=True)
+            if self.commit_id is None:
+                subprocess.check_call(f"git checkout {branch}", shell=True)
+                subprocess.check_call(f"git pull {remote} {branch}", shell=True)
+            else:
+                subprocess.check_call(f"git checkout {self.commit_id}", shell=True)
         except subprocess.CalledProcessError as e:
             print(f"No branch exists for private: {branch} - remaining on main")
             subprocess.check_call(f"git fetch {remote} main", shell=True)
-            subprocess.check_call(f"git checkout main", shell=True)
-            subprocess.check_call(f"git pull {remote} main", shell=True)
+            if self.commit_id is None:
+                subprocess.check_call(f"git checkout main", shell=True)
+                subprocess.check_call(f"git pull {remote} main", shell=True)
+            else:
+                subprocess.check_call(f"git checkout {self.commit_id}", shell=True)
 
         os.chdir(cwd)
 

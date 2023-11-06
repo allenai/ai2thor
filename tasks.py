@@ -15,7 +15,7 @@ import shutil
 import subprocess
 import pprint
 import random
-from typing import Dict, Optional
+from typing import Dict, Sequence
 
 from invoke import task
 import boto3
@@ -872,9 +872,7 @@ def pre_test(context):
 
 import scripts.update_private
 
-def clean(is_travis_build: bool = True, private_repos = []):
-
-
+def clean(is_travis_build: bool = True, private_repos: Sequence = tuple()):
     # a deploy key is used on the build server and an .ssh/config entry has been added
     # to point to the deploy key caclled ai2thor-private-github
     if is_travis_build:
@@ -1107,17 +1105,26 @@ def ci_build(
     base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
     private_repos = [
         scripts.update_private.Repo(
-            url  = "https://github.com/allenai/ai2thor-private",
+            url = "https://github.com/allenai/ai2thor-private",
             target_dir = os.path.join(base_dir, "unity", "Assets", "Private"),
         )
     ]
 
-    if (novelty_thor_scenes):
+    if novelty_thor_scenes:
         logger.info("Including a NoveltyThor scenes and making it a private build")
         private_repos.append(
             scripts.update_private.Repo(
-                url  = "https://github.com/allenai/ai2thor-objaverse",
+                url = "https://github.com/allenai/ai2thor-objaverse",
                 target_dir = os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
+            )
+        )
+    else:
+        # Needs to be here so we overwrite any existing NoveltyTHOR repo
+        private_repos.append(
+            scripts.update_private.Repo(
+                url="https://github.com/allenai/ai2thor-objaverse",
+                target_dir=os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
+                commit_id="066485f29d7021ac732bed57758dea4b9d481c40", # Initial commit, empty repo.
             )
         )
 
