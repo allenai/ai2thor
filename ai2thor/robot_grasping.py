@@ -224,7 +224,7 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
             # Check if the point is within the bounding box
             if box[0] <= point[0] <= box[2] and box[1] <= point[1] <= box[3]:
                 return [round(i) for i in box.tolist()]
-    
+        return None 
 
     def get_target_mask(self, rgb, object_str="a photo of a doorknob"):
         doorknob_bbox = super().predict_object_detection(rgb, object_str) #xyxy
@@ -260,8 +260,6 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
        
         self.door_mask = door_mask
         return doorknob_mask
-
-
 
     def get_door_pointcloud(self, rgb, depth):
         if self.door_mask is None :
