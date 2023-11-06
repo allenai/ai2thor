@@ -1091,7 +1091,8 @@ def ci_build(
     commit_id = None, # Optional[str] 
     branch = None, # Optional[str] 
     skip_pip = False, # bool
-    novelty_thor_scenes = False
+    novelty_thor_scenes = False,
+    delete_tmp_dir = True, # bool
 ):
     assert (commit_id is None) == (
         branch is None
@@ -1331,9 +1332,10 @@ def ci_build(
             pass
 
         finally:
-            for arch, temp_dir in arch_temp_dirs.items():
-                logger.info("deleting temp dir %s" % temp_dir)
-                shutil.rmtree(temp_dir)
+            if delete_tmp_dir:
+                for arch, temp_dir in arch_temp_dirs.items():
+                    logger.info("deleting temp dir %s" % temp_dir)
+                    shutil.rmtree(temp_dir)
 
 
 @task
