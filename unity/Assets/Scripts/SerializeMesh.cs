@@ -1,6 +1,6 @@
-#if UNITY_EDITOR
 using System;
 using System.Linq;
+#if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
