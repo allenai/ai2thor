@@ -93,9 +93,10 @@ class BaseObjectDetector():
         rgb = np.array(rgb.copy())
         rgbim = open3d.geometry.Image(rgb.astype(np.uint8))
 
-        depth[mask==False] = -0.1
-        depth = np.asarray(depth).astype(np.float32) / self.depth_scale
-        depthim = open3d.geometry.Image(depth)
+        _depth = depth.copy()
+        _depth[mask==False] = -0.1
+        _depth = np.asarray(depth).astype(np.float32) / self.depth_scale
+        depthim = open3d.geometry.Image(_depth)
 
         rgbd = open3d.geometry.RGBDImage.create_from_color_and_depth(rgbim, depthim, convert_rgb_to_intensity=False)
         pcd = open3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.intrinsic)
@@ -143,28 +144,31 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
         self.model_fastsam = FastSAM(fastsam_path) #os.path.join(os.path.dirname(__file__),'model_checkpoints/FastSAM.pt'))
         self.model_fastsam.to(device=device)
 
+
+    def predict_object_detection(self, rgb, object_str):
+        with torch.no_grad():
+            inputs = self.processor_owlvit(text=object_str, images=rgb, return_tensors="pt")
+            outputs = self.model_owlvit(**inputs)
+
+        target_sizes = torch.Tensor([rgb.shape[0:2]])
+        results = self.processor_owlvit.post_process_object_detection(outputs=outputs, target_sizes=target_sizes, threshold=0.1)
+        boxes = results[0]["boxes"].detach().cpu().numpy() #results[0]["scores"], results[0]["labels"]
+        scores = results[0]["scores"].detach().cpu().numpy()
+
+        if len(boxes)==0:
+            print(f"{object_str} Not Detected.")
+            return None
+        
+        ind = np.argmax(scores)
+        return [round(i) for i in boxes[ind].tolist()] #xyxy
+    
+
     def get_target_mask(self, object_str, rgb):
         if self.camera_source == "stretch":
             rgb = cv2.rotate(rgb, cv2.ROTATE_90_CLOCKWISE) # it works better for stretch cam
 
-        def predict_object_detection(rgb, object_str):
-            with torch.no_grad():
-                inputs = self.processor_owlvit(text=object_str, images=rgb, return_tensors="pt")
-                outputs = self.model_owlvit(**inputs)
-
-            target_sizes = torch.Tensor([rgb.shape[0:2]])
-            results = self.processor_owlvit.post_process_object_detection(outputs=outputs, target_sizes=target_sizes, threshold=0.1)
-            boxes = results[0]["boxes"].detach().cpu().numpy() #results[0]["scores"], results[0]["labels"]
-            scores = results[0]["scores"].detach().cpu().numpy()
-
-            if len(boxes)==0:
-                print(f"{object_str} Not Detected.")
-                return None
-            
-            ind = np.argmax(scores)
-            return [round(i) for i in boxes[ind].tolist()] #xyxy
-
-        bbox = predict_object_detection(rgb=rgb, object_str=object_str)
+        bbox = self.predict_object_detection(rgb=rgb, object_str=object_str)
+    
         if bbox is None or len(bbox) == 0:
             return None
 
@@ -176,7 +180,7 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
                 conf=0.4,
                 iou=0.9    
                 )
-
+            
         from fastsam import FastSAMPrompt 
         prompt_process = FastSAMPrompt(rgb, everything_results, device=self.device)
         masks = prompt_process.box_prompt(bboxes=[bbox])
@@ -196,12 +200,73 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
 class DoorKnobDetector(OwlVitSegAnyObjectDetector):
     def __init__(self, fastsam_path, camera_source="arm205", device="cpu"):
         super().__init__(fastsam_path, camera_source)
+        self.door_mask = None 
+
+    def predict_object_detection(self, rgb, object_str, point):
+        with torch.no_grad():
+            inputs = self.processor_owlvit(text=object_str, images=rgb, return_tensors="pt")
+            outputs = self.model_owlvit(**inputs)
+
+        target_sizes = torch.Tensor([rgb.shape[0:2]])
+        results = self.processor_owlvit.post_process_object_detection(outputs=outputs, target_sizes=target_sizes, threshold=0.1)
+        boxes = results[0]["boxes"].detach().cpu().numpy() #results[0]["scores"], results[0]["labels"]
+        scores = results[0]["scores"].detach().cpu().numpy()
+        
+        if len(boxes)==0:
+            print(f"{object_str} Not Detected.")
+            return None
+        
+        combined_data = list(zip(boxes, scores))
+        sorted_data = sorted(combined_data, key=lambda x: x[1], reverse=True)
+        sorted_boxes, _ = zip(*sorted_data)
+
+        for box in sorted_boxes:
+            # Check if the point is within the bounding box
+            if box[0] <= point[0] <= box[2] and box[1] <= point[1] <= box[3]:
+                return [round(i) for i in box.tolist()]
+    
 
     def get_target_mask(self, rgb, object_str="a photo of a doorknob"):
-        return super().get_target_mask(object_str=object_str, rgb=rgb)
+        doorknob_bbox = super().predict_object_detection(rgb, object_str) #xyxy
+        x_center = round(doorknob_bbox[0] + (doorknob_bbox[2]-doorknob_bbox[0])/2)
+        y_center = round(doorknob_bbox[1] + (doorknob_bbox[3]-doorknob_bbox[1])/2)
+        
+        everything_results = self.model_fastsam(
+                rgb,
+                device=self.device,
+                retina_masks=True,
+                imgsz=1024, #1024 is default 
+                conf=0.4,
+                iou=0.9    
+                )
+
+        from fastsam import FastSAMPrompt 
+        prompt_process = FastSAMPrompt(rgb, everything_results, device=self.device)
+        doorknob_masks = prompt_process.box_prompt(bboxes=[doorknob_bbox])
+
+        door_bbox = self.predict_object_detection(rgb, object_str="a photo of a door", point=[x_center, y_center]) #xyxy
+        door_masks = prompt_process.box_prompt(bboxes=[door_bbox])
+        door_mask = door_masks[0]
+
+        #door_masks = prompt_process.point_prompt(points=[[x_center, y_center]],  pointlabel=[0]) # 0:background, 1:foreground
+        #door_masks = prompt_process.text_prompt(text="a photo of a door")
+        
+        if self.camera_source == "stretch":
+            # rotate back
+            doorknob_mask = cv2.rotate(np.array(doorknob_masks[0]), cv2.ROTATE_90_COUNTERCLOCKWISE)
+            door_mask = cv2.rotate(door_mask, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        else:
+            doorknob_mask = np.array(doorknob_masks[0])
+       
+        self.door_mask = door_mask
+        return doorknob_mask
+
+
 
     def get_door_pointcloud(self, rgb, depth):
-        mask = self.get_target_mask(rgb, object_str="a photo of a door")
+        if self.door_mask is None :
+            self.get_target_mask(rgb)
+        mask = self.door_mask #elf.get_target_mask(rgb, object_str="a photo of a door")
 
         _rgb = np.array(rgb.copy())
         rgbim = open3d.geometry.Image(_rgb.astype(np.uint8))
