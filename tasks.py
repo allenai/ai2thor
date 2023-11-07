@@ -871,17 +871,7 @@ def pre_test(context):
     )
 
 import scripts.update_private
-def clean(is_travis_build: bool = True, private_repos = tuple()):
-    # a deploy key is used on the build server and an .ssh/config entry has been added
-    # to point to the deploy key caclled ai2thor-private-github
-    if is_travis_build:
-        scripts.update_private.private_repo_url = (
-            "git@ai2thor-private-github:allenai/ai2thor-private.git"
-        )
-    else:
-        scripts.update_private.private_repo_url = (
-            "git@github.com:allenai/ai2thor-private.git"
-        )
+def clean(private_repos = tuple()):
     subprocess.check_call("git reset --hard", shell=True)
     subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
@@ -1103,15 +1093,26 @@ def ci_build(
         logger.info("Initiating a NON-TRAVIS build")
 
     base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
+
+    if is_travis_build:
+        # a deploy key is used on the build server and an .ssh/config entry has been added
+        # to point to the deploy key caclled ai2thor-private-github
+        private_url =  "git@ai2thor-private-github:allenai/ai2thor-private.git"
+        novelty_thor_url = "git@ai2thor-objaverse-github:allenai/ai2thor-objaverse.git"
+    else:
+        private_url = "https://github.com/allenai/ai2thor-private"
+        novelty_thor_url ="https://github.com/allenai/ai2thor-objaverse"
+        
+
     private_repos = [
         scripts.update_private.Repo(
-            url = "https://github.com/allenai/ai2thor-private",
+            url = private_url,
             target_dir = os.path.join(base_dir, "unity", "Assets", "Private"),
         )
     ]
 
     novelty_thor_repo = scripts.update_private.Repo(
-                url = "https://github.com/allenai/ai2thor-objaverse",
+                url = novelty_thor_url,
                 target_dir = os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
             )
 
@@ -1124,7 +1125,7 @@ def ci_build(
         # Needs to be here so we overwrite any existing NoveltyTHOR repo
         private_repos.append(
             scripts.update_private.Repo(
-                url="https://github.com/allenai/ai2thor-objaverse",
+                url=novelty_thor_url,
                 target_dir=os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
                 commit_id="066485f29d7021ac732bed57758dea4b9d481c40", # Initial commit, empty repo.
             )
@@ -1155,7 +1156,7 @@ def ci_build(
                 # disabling delete temporarily since it interferes with pip releases
                 # pytest_s3_object(build["commit_id"]).delete()
                 logger.info(f"pending build for {build['branch']} {build['commit_id']}")
-                clean(is_travis_build=is_travis_build, private_repos=private_repos)
+                clean(private_repos=private_repos)
                 subprocess.check_call("git fetch", shell=True)
                 subprocess.check_call(
                     "git checkout %s --" % build["branch"], shell=True
