@@ -872,7 +872,7 @@ def pre_test(context):
     )
 
 import scripts.update_private
-def clean(is_travis_build: bool = True, private_repos: Sequence = tuple()):
+def clean(is_travis_build: bool = True, private_repos = tuple()):
     # a deploy key is used on the build server and an .ssh/config entry has been added
     # to point to the deploy key caclled ai2thor-private-github
     if is_travis_build:
