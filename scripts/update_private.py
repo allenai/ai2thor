@@ -12,8 +12,8 @@ class Repo():
         self,
         url: str,
         target_dir: str,
-        commit_id: Optional[str] = None,
-        branch: Optional[str] = None
+        commit_id = None,
+        branch = None
     ) -> None:
         self.url = url
         self.target_dir = target_dir

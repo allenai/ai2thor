@@ -15,7 +15,7 @@ import shutil
 import subprocess
 import pprint
 import random
-from typing import Dict, Sequence
+from typing import Dict
 
 from invoke import task
 import boto3
@@ -24,7 +24,7 @@ import multiprocessing
 import io
 import ai2thor.build
 import logging
- 
+
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler(sys.stdout)
@@ -871,8 +871,7 @@ def pre_test(context):
     )
 
 import scripts.update_private
-
-def clean(is_travis_build: bool = True, private_repos: Sequence = tuple()):
+def clean(is_travis_build: bool = True, private_repos = tuple()):
     # a deploy key is used on the build server and an .ssh/config entry has been added
     # to point to the deploy key caclled ai2thor-private-github
     if is_travis_build:
@@ -1111,13 +1110,15 @@ def ci_build(
         )
     ]
 
-    if novelty_thor_scenes:
-        logger.info("Including a NoveltyThor scenes and making it a private build")
-        private_repos.append(
-            scripts.update_private.Repo(
+    novelty_thor_repo = scripts.update_private.Repo(
                 url = "https://github.com/allenai/ai2thor-objaverse",
                 target_dir = os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
             )
+
+    if novelty_thor_scenes:
+        logger.info("Including a NoveltyThor scenes and making it a private build")
+        private_repos.append(
+            novelty_thor_repo
         )
     else:
         # Needs to be here so we overwrite any existing NoveltyTHOR repo
@@ -1142,6 +1143,12 @@ def ci_build(
                     "tag": None,
                     "id": None,
                 }
+            novelty_thor_add_branches = ["new_cam_adjust"]
+            if is_travis_build and build and build["branch"] in novelty_thor_add_branches:
+                novelty_thor_scenes = True
+                private_repos.append(
+                    novelty_thor_repo
+                )
 
             skip_branches = ["vids", "video", "erick/cloudrendering", "it_vr"]
             if build and build["branch"] not in skip_branches:
@@ -1438,7 +1445,6 @@ def ci_build_arch(
             set_gi_cache_folder(arch)
 
             logger.info(f"Starting build for {arch} {commit_id}")
-            logger.info(f"Log at {build_info['log']}")
             success = _build(
                 unity_path=unity_path,
                 arch=arch,
