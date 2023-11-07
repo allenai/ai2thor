@@ -871,20 +871,25 @@ def pre_test(context):
         "unity/builds/%s" % c.build_name(),
     )
 
-
-def clean():
-    import scripts.update_private
-
+import scripts.update_private
+def clean(is_travis_build: bool = True, private_repos = tuple()):
     # a deploy key is used on the build server and an .ssh/config entry has been added
     # to point to the deploy key caclled ai2thor-private-github
-    scripts.update_private.private_repo_url = (
-        "git@ai2thor-private-github:allenai/ai2thor-private.git"
-    )
+    if is_travis_build:
+        scripts.update_private.private_repo_url = (
+            "git@ai2thor-private-github:allenai/ai2thor-private.git"
+        )
+    else:
+        scripts.update_private.private_repo_url = (
+            "git@github.com:allenai/ai2thor-private.git"
+        )
     subprocess.check_call("git reset --hard", shell=True)
     subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
-    shutil.rmtree(scripts.update_private.private_dir, ignore_errors=True)
-    scripts.update_private.checkout_branch()
+
+    for repo in private_repos:
+        shutil.rmtree(repo.target_dir, ignore_errors=True)
+        repo.checkout_branch()
 
 
 def ci_prune_cache(cache_dir):
@@ -1079,29 +1084,89 @@ def ci_pytest(branch, commit_id):
         f"finished pytest for {branch} {commit_id} in {time.time() - start_time:.2f} seconds"
     )
 
-
+# Type hints break build server's invoke version 
 @task
-def ci_build(context):
+def ci_build(
+    context,
+    commit_id = None, # Optional[str] 
+    branch = None, # Optional[str] 
+    skip_pip = False, # bool
+    novelty_thor_scenes = False,
+    skip_delete_tmp_dir = False, # bool
+):
+    assert (commit_id is None) == (
+        branch is None
+    ), "must specify both commit_id and branch or neither"
+
+    is_travis_build = commit_id is None
+
+    if not is_travis_build:
+        logger.info("Initiating a NON-TRAVIS build")
+
+    base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
+    private_repos = [
+        scripts.update_private.Repo(
+            url = "https://github.com/allenai/ai2thor-private",
+            target_dir = os.path.join(base_dir, "unity", "Assets", "Private"),
+        )
+    ]
+
+    novelty_thor_repo = scripts.update_private.Repo(
+                url = "https://github.com/allenai/ai2thor-objaverse",
+                target_dir = os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
+            )
+
+    if novelty_thor_scenes:
+        logger.info("Including a NoveltyThor scenes and making it a private build")
+        private_repos.append(
+            novelty_thor_repo
+        )
+    else:
+        # Needs to be here so we overwrite any existing NoveltyTHOR repo
+        private_repos.append(
+            scripts.update_private.Repo(
+                url="https://github.com/allenai/ai2thor-objaverse",
+                target_dir=os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
+                commit_id="066485f29d7021ac732bed57758dea4b9d481c40", # Initial commit, empty repo.
+            )
+        )
+
     with open(os.path.join(os.environ["HOME"], ".ci-build.lock"), "w") as lock_f:
         arch_temp_dirs = dict()
         try:
             fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            build = pending_travis_build()
+            if is_travis_build:
+                build = pending_travis_build()
+            else:
+                build = {
+                    "commit_id": commit_id,
+                    "branch": branch,
+                    "tag": None,
+                    "id": None,
+                }
+            novelty_thor_add_branches = ["new_cam_adjust"]
+            if is_travis_build and build and build["branch"] in novelty_thor_add_branches:
+                novelty_thor_scenes = True
+                private_repos.append(
+                    novelty_thor_repo
+                )
+
             skip_branches = ["vids", "video", "erick/cloudrendering", "it_vr"]
             if build and build["branch"] not in skip_branches:
                 # disabling delete temporarily since it interferes with pip releases
                 # pytest_s3_object(build["commit_id"]).delete()
                 logger.info(f"pending build for {build['branch']} {build['commit_id']}")
-                clean()
+                clean(is_travis_build=is_travis_build, private_repos=private_repos)
                 subprocess.check_call("git fetch", shell=True)
                 subprocess.check_call(
                     "git checkout %s --" % build["branch"], shell=True
                 )
+                logger.info(f" After checkout")
                 subprocess.check_call(
                     "git checkout -qf %s" % build["commit_id"], shell=True
                 )
 
-                private_scene_options = [False]
+                private_scene_options = [novelty_thor_scenes]
 
                 build_archs = ["OSXIntel64", "Linux64"]
 
@@ -1246,18 +1311,24 @@ def ci_build(context):
 
                 # must have this after all the procs are joined
                 # to avoid generating a _builds.py file that would affect pytest execution
-                build_pip_commit(context)
-                push_pip_commit(context)
-                generate_pypi_index(context)
+                if skip_pip:
+                    logger.info("Skipping pip build")
+                else:
+                    build_pip_commit(context)
+                    push_pip_commit(context)
+                    generate_pypi_index(context)
 
                 # give the travis poller time to see the result
-                for i in range(12):
-                    b = travis_build(build["id"])
-                    logger.info("build state for %s: %s" % (build["id"], b["state"]))
+                if is_travis_build:
+                    for i in range(12):
+                        b = travis_build(build["id"])
+                        logger.info(
+                            "build state for %s: %s" % (build["id"], b["state"])
+                        )
 
-                    if b["state"] != "started":
-                        break
-                    time.sleep(10)
+                        if b["state"] != "started":
+                            break
+                        time.sleep(10)
 
                 logger.info(
                     "build complete %s %s" % (build["branch"], build["commit_id"])
@@ -1265,13 +1336,14 @@ def ci_build(context):
 
             fcntl.flock(lock_f, fcntl.LOCK_UN)
 
-        except io.BlockingIOError as e:
+        except io.BlockingIOError:
             pass
 
         finally:
-            for arch, temp_dir in arch_temp_dirs.items():
-                logger.info("deleting temp dir %s" % temp_dir)
-                shutil.rmtree(temp_dir)
+            if not skip_delete_tmp_dir:
+                for arch, temp_dir in arch_temp_dirs.items():
+                    logger.info("deleting temp dir %s" % temp_dir)
+                    shutil.rmtree(temp_dir)
 
 
 @task
