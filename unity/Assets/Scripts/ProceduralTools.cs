@@ -2493,7 +2493,6 @@ namespace Thor.Procedural {
                     result["intermediateGameObject"] = oldGo;
                 }
             }
-
             return result;
         }
     }
