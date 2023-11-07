@@ -12,8 +12,9 @@ class Repo():
         self,
         url: str,
         target_dir: str,
-        commit_id = None,
-        branch = None
+        delete_before_checkout: bool,
+        commit_id=None,
+        branch=None,
     ) -> None:
         self.url = url
         self.target_dir = target_dir
@@ -22,6 +23,7 @@ class Repo():
         )
         self.commit_id = commit_id
         self.branch = branch
+        self.delete_before_checkout = delete_before_checkout
     
     def current_branch(self):
         git_dir = os.path.join(self.base_dir, ".git")
@@ -75,5 +77,5 @@ if __name__ == "__main__":
             f"Private directory {private_dir} is not a directory - please remove"
         )
     else:
-        repo = Repo(url = private_repo_url, target_dir = private_dir)
+        repo = Repo(url = private_repo_url, target_dir = private_dir, delete_before_checkout=True)
         repo.checkout_branch()

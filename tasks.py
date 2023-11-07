@@ -871,13 +871,16 @@ def pre_test(context):
     )
 
 import scripts.update_private
-def clean(private_repos = tuple()):
+
+
+def clean(private_repos=tuple()):
     subprocess.check_call("git reset --hard", shell=True)
     subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
 
     for repo in private_repos:
-        shutil.rmtree(repo.target_dir, ignore_errors=True)
+        if repo.delete_before_checkout:
+            shutil.rmtree(repo.target_dir, ignore_errors=True)
         repo.checkout_branch()
 
 
@@ -1106,15 +1109,17 @@ def ci_build(
 
     private_repos = [
         scripts.update_private.Repo(
-            url = private_url,
-            target_dir = os.path.join(base_dir, "unity", "Assets", "Private"),
+            url=private_url,
+            target_dir=os.path.join(base_dir, "unity", "Assets", "Private"),
+            delete_before_checkout=True,
         )
     ]
 
     novelty_thor_repo = scripts.update_private.Repo(
-                url = novelty_thor_url,
-                target_dir = os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
-            )
+        url=novelty_thor_url,
+        target_dir=os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
+        delete_before_checkout=False,
+    )
 
     if novelty_thor_scenes:
         logger.info("Including a NoveltyThor scenes and making it a private build")
