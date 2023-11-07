@@ -491,7 +491,9 @@ class RobotClient():
         robot_state["arm"]["lift_force"] = response.arm.lift_force
         robot_state["arm"]["lift_m"] = response.arm.lift_pos
         robot_state["arm"]["wrist_degrees"] = response.arm.wrist_degree
+        robot_state["arm"]["wrist_effort_percent"] = response.arm.wrist_effort_percent
         robot_state["arm"]["grip_percent"] = response.arm.grip_percent
+        robot_state["arm"]["grip_effort"] = response.arm.grip_effort
         #self.robot_state["arm"]["wrist_effort_percent"]
         #self.robot_state["arm"]["grip_effort"]
         
