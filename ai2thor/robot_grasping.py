@@ -307,13 +307,28 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         Randt=np.concatenate((bbox.R, np.expand_dims(bbox.center, axis=1)),axis=1) # pitfall: arrays need to be passed as a tuple
         lastrow=np.expand_dims(np.array([0,0,0,1]),axis=0)
         objectPoseCamera = np.concatenate((Randt,lastrow)) 
-
-        preplan_pose = self.plan_pregrasp_pose(objectPoseCamera, normval_vector, -distance_m)
+        objectPoseBase = self.CameraPose @ objectPoseCamera
         
+        #TODO: is this the right logic? this should also depends on normal vector....
+        # preplan pose. whichever is closer to the base should be used
+        # can also use....left side of camera vs right side of the camera?
+        preplan_pose1 = self.plan_pregrasp_pose(objectPoseCamera, normval_vector, distance_m)
+        preplan_pose_base1 = self.CameraPose @ preplan_pose1
+        preplan_pose2 = self.plan_pregrasp_pose(objectPoseCamera, normval_vector, -distance_m)
+        preplan_pose_base2 = self.CameraPose @ preplan_pose2
+
+        dist1 = math.sqrt((preplan_pose_base1[0,3])**2 + (preplan_pose_base1[1,3])**2)
+        dist2 = math.sqrt((preplan_pose_base2[0,3])**2 + (preplan_pose_base2[1,3])**2)
+        if dist1 > dist2:
+            preplan_pose_base = preplan_pose_base2
+            pull_pose_base = 
+        else:
+            preplan_pose_base = preplan_pose_base1        
+
         # TODO: if preplan pose is wrong (like Z axis shouldn't be too different)
         # TODO: target pose itself is wrong
 
-        return [self.CameraPose @ objectPoseCamera, self.CameraPose @ preplan_pose]
+        return [objectPoseBase, preplan_pose_base]
 
     def plan_pregrasp_pose(self, object_pose, normal_vector, distance_m=0.215):
         # GraspCenter to Arm Offset = 0.205
@@ -498,7 +513,7 @@ class DoorKnobGraspPlanner(GraspPlanner):
         return position
 
 
-    def isReachable(self, target_position, last_event, threshold=0.025):
+    def isReachable(self, target_position, last_event, threshold=0.25):
         gripper_position = self.get_gripper_center_position(last_event)
 
         def distance_between_points(p1, p2):
@@ -551,11 +566,14 @@ class DoorKnobGraspPlanner(GraspPlanner):
 
         # extend arm
         arm_offset = 0.220 #0.205 #0.205
+        #arm_offset *= np.cos(wrist_offset)
+        #print("wrist length cos: ", np.cos(np.deg2rad(wrist_offset)) * self.gripper_length)
+        #arm_offset = self.gripper_length #- np.cos(np.deg2rad(wrist_offset)) * self.gripper_length
         delta_ext = arm_offset + self.plan_arm_extension(pregrasp_position, last_event.metadata["arm"]["extension_m"])
         
         #2. needs to move the mobiel base 
         if (delta_ext + last_event.metadata["arm"]["extension_m"]) >= 0.52 or (last_event.metadata["arm"]["extension_m"] + delta_ext) < 0.0:
-            print("Need to extend to far. Not Reachable.")
+            print("Need to extend to far. Not Reachable.", delta_ext)
             return False, []
 
         trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": delta_ext}})
@@ -566,7 +584,7 @@ class DoorKnobGraspPlanner(GraspPlanner):
         # 1. move arm base down a predetermined to object center
         # 2. grasp
         second_actions = {"action": [
-          {"action": "MoveArmBase", "args": {"move_scalar": -lift_offset}}  
+          {"action": "MoveArmBase", "args": {"move_scalar": -lift_offset-0.02}}  
         ]}
         
         # close grapser
