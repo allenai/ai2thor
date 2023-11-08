@@ -15,6 +15,7 @@ using Newtonsoft.Json.Linq;
 using MIConvexHull;
 using Thor.Procedural;
 using Thor.Procedural.Data;
+using Newtonsoft.Json;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
@@ -6474,22 +6475,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, positions);
         }
 
-        public void GetLights() {
-            print("GetLights in BASE happening now");
-            //debug
-            #if UNITY_EDITOR
-            List<LightParameters> lights = UtilityFunctions.GetLightPropertiesOfScene();
-            UtilityFunctions.debugGetLightPropertiesOfScene(lights);
-            #endif
-
-            actionFinishedEmit(true, UtilityFunctions.GetLightPropertiesOfScene());
+        // coroutine to yield n frames before returning
+        protected IEnumerator waitForNFramesAndReturn(int n, bool actionSuccess) {
+            for (int i = 0; i < n; i++) {
+                yield return null;
+            }
+            actionFinished(actionSuccess);
         }
 
-        public void SetLights() {
+        public void GetLights() {
+            List<LightParameters> lights = UtilityFunctions.GetLightPropertiesOfScene();
 
-            //check that name of light specified exists in scene, if not throw exception
+#if UNITY_EDITOR
+            //if editor, debug to create a json of the light parameters for testing
+            var jsonResolver = new ShouldSerializeContractResolver();
+            string json = JsonConvert.SerializeObject(
+                lights,
+                Formatting.Indented,
+                new Newtonsoft.Json.JsonSerializerSettings() {
+                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                    ContractResolver = jsonResolver
+                }
+                );
+            UtilityFunctions.exportJsonToDebug(json);
+#endif
 
-            actionFinished(true);
+            actionFinishedEmit(true, lights);
+        }
+
+        public void SetLights(List<LightParameters> lightParams) {
+            UtilityFunctions.SetLightPropertiesOfScene(lightParams);
+            //delay actionfinished until frame update to be safe???
+            StartCoroutine(waitForNFramesAndReturn(1, true));
         }
 
 #if UNITY_EDITOR

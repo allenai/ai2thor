@@ -4347,7 +4347,6 @@ def plot(
             return default_title
 
     benchmark_filenames = benchamrk_filenames.split(",")
-
     # markers = ["o", "*", "^", "+", "~"]
     markers = list(Line2D.markers.keys())
     # remove empty marker

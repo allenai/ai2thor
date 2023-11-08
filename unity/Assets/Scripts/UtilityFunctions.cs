@@ -16,7 +16,6 @@ using UnityEditor.SceneManagement;
 #endif
 
 public static class UtilityFunctions {
-
     //store the max number of layers unity supports in its layer system. By default this is 32
     //and will likely not change but here it is just in case
     public const int maxUnityLayerCount = 32;
@@ -268,9 +267,9 @@ public static class UtilityFunctions {
         return corners;
     }
 
+    //Goes through all game objects with a <Light> component on them in the scene and grabs their parameters
     public static List<LightParameters> GetLightPropertiesOfScene() {
 
-            Debug.Log("we are inside GetLIghtPropertiesOfScene");
             var lightsInScene = UnityEngine.Object.FindObjectsOfType<Light>(true);
 
             List<LightParameters> allOfTheLights = new List<LightParameters>();
@@ -285,8 +284,6 @@ public static class UtilityFunctions {
                 lp.type = LightType.GetName(typeof(LightType), hikari.type);
 
                 lp.position = hikari.transform.position;
-
-                lp.localPosition = hikari.transform.localPosition;
 
                 //culling mask stuff
                 List<string> cullingMaskOff = new List<String>();
@@ -330,96 +327,257 @@ public static class UtilityFunctions {
 
                 lp.shadow = xemnas;
 
-                //linked sim object
-                //lp.linkedSimObj = ;
+                //return objectID of sim objects that can toggle this light
+                if(hikari.GetComponent<WhatControlsThis>()) {
+                    SimObjPhysics[] thingsThatControlsMe = hikari.GetComponent<WhatControlsThis>().SimObjsThatControlMe;
 
-                lp.enabled = hikari.enabled;
+                    List<String> thingsThatControlMeToString = new List<String>();
+
+                    foreach(SimObjPhysics sop in thingsThatControlsMe) {
+                        thingsThatControlMeToString.Add(sop.objectID.ToString());
+                    }
+
+                    lp.controllerSimObjIds = thingsThatControlMeToString.ToArray();
+                }
+
+                lp.enabled = hikari.gameObject.activeSelf;
 
                 if(hikari.GetComponentInParent<SimObjPhysics>()) {
-                    lp.parentSimObjId = hikari.GetComponentInParent<SimObjPhysics>().objectID;
-                    lp.parentSimObjName = hikari.GetComponentInParent<SimObjPhysics>().transform.name;
+                    lp.parentSimObjObjectId = hikari.GetComponentInParent<SimObjPhysics>().objectID;
                 }
 
                 allOfTheLights.Add(lp);
             }
 
-            //find all sim obj physics in scene
-
             return allOfTheLights;
+    }
+
+    public static void SetLightPropertiesOfScene(List<LightParameters> lightParams) {
+        if(lightParams == null) {
+            throw new ArgumentNullException("no Light Parameters supplied to SetLightPropertiesOfScene action.");
+        }
+
+        //ok first find all light objects in the scene and cache them so we also find any inactive lights
+        Light[] allLightsInScene = UnityEngine.Object.FindObjectsOfType<Light>(includeInactive: true);
+
+        //search all simobjphysics in scene by object type to find potential inactive
+        SimObjPhysics[] allSimObjs = UnityEngine.Object.FindObjectsOfType<SimObjPhysics>(includeInactive: true);
+
+        foreach (var lp in lightParams) {
+
+            #if UNITY_EDITOR
+            Debug.Log($"Setting light properties for {lp.id}");
+            #endif
+
+            if(lp.id == null ){
+                throw new ArgumentException($"Light Parameter's `id` property is missing or null!");
+            }
+            
+            Light light = null;
+            //find the light in the scene
+            foreach(Light lightInScene in allLightsInScene) {
+                if(lightInScene.name == lp.id) {
+                    light = lightInScene;
+                    break;
+                }
+            }
+
+            if(light == null) {
+                throw new NullReferenceException($"light named {lp.id} does not exist in this scene!");
+            }
+
+            light.transform.position = lp.position;
+
+            if(lp.rotation != null) {
+                light.transform.rotation = lp.rotation.toQuaternion();
+            }
+
+            else {
+                throw new ArgumentException($"Light Parameter's `rotation` property is missing or null!");
+            }
+
+            var lightComponent = light.GetComponent<Light>();
+            if(lightComponent == null) {
+                throw new NullReferenceException($"light named {lp.id} does not have a light component!");
+            }
+
+            if(lp.type == null) {
+                throw new ArgumentException($"Light Parameter's `type` property is missing or null!");
+            }
+
+            //parse to light type enum
+            var lightParamType = (LightType)Enum.Parse(typeof(LightType), lp.type, ignoreCase: true);
+
+            if(lightParamType == LightType.Area || lightParamType == LightType.Disc || lightParamType == LightType.Rectangle) {
+                throw new ArgumentException($"Light type cannot be of type [Area] [Disc] or [Rectangle] as these only affect baked lighting and cannot be modified at runtime");
+            }
+
+            //if the type of this light is not the same as the property type passed in, we need a new light component
+            if(lightComponent.type != lightParamType) {
+                lightComponent.type = lightParamType;
+            }
+
+            //if this was, or is now a spot light
+            if(lightComponent.type == LightType.Spot) {
+                //spot angle must be in range [1-179]
+                if(lightComponent.spotAngle > 0 && lightComponent.spotAngle < 180) {
+                    lightComponent.spotAngle = lp.spotAngle;
+                }
+                else {
+                    throw new ArgumentException($"Light Parameter's `spotAngle` property is not in valid bounds. spotAngle must be in range [1,179]");
+                }            
+            }
+            
+            //check that rgba values are [0, 1]
+            if(lp.rgb.r < 0 || lp.rgb.r > 1) {
+                throw new ArgumentException($"Light Parameter's rgb values must be in range [0,1]");
+            }
+
+            if(lp.rgb.g < 0 || lp.rgb.g > 1) {
+                throw new ArgumentException($"Light Parameter's rgb values must be in range [0,1]");
+            }
+
+            if(lp.rgb.b < 0 || lp.rgb.b > 1) {
+                throw new ArgumentException($"Light Parameter's rgb values must be in range [0,1]");
+            }
+
+            if(lp.rgb.a < 0 || lp.rgb.a > 1) {
+                throw new ArgumentException($"Light Parameter's rgb values must be in range [0,1]");
+            }
+
+            lightComponent.color = new Color(lp.rgb.r, lp.rgb.g, lp.rgb.b, lp.rgb.a);
+            lightComponent.intensity = lp.intensity;
+
+            //must be >0
+            if(lp.indirectMultiplier < 0) {
+                throw new ArgumentException($"Light Parameter's `indirectMultiplier` value cannot be negative");
+            }
+            lightComponent.bounceIntensity = lp.indirectMultiplier;
+
+            if(lp.range < 0) {
+                throw new ArgumentException($"Light Parameter's `range` value cannot be negative");
+            }
+            lightComponent.range = lp.range;
+
+            //culling mask and shadows both have default values in-scene, so not necessary to throw exceptions if no
+            // mask or shadow values are passed in, instead lights will remain as they were before
+            if (lp.cullingMaskOff != null) {
+                foreach (var layer in lp.cullingMaskOff) {
+                    lightComponent.cullingMask &= ~(1 << LayerMask.NameToLayer(layer));
+                }
+            }
+
+            if (lp.shadow != null) {
+                lightComponent.shadowStrength = lp.shadow.strength;
+                lightComponent.shadows = (LightShadows)Enum.Parse(typeof(LightShadows), lp.shadow.type, ignoreCase: true);
+                lightComponent.shadowBias = lp.shadow.bias;
+                lightComponent.shadowNormalBias = lp.shadow.normalBias;
+                lightComponent.shadowNearPlane = lp.shadow.nearPlane;
+                lightComponent.shadowResolution = (UnityEngine.Rendering.LightShadowResolution)Enum.Parse(typeof(UnityEngine.Rendering.LightShadowResolution), lp.shadow.resolution, ignoreCase: true);
+            }
+
+            //change parent object if you want???
+            if (lp.parentSimObjObjectId != null) {
+                if (lp.parentSimObjObjectId == light.gameObject.name) {
+                    throw new ArgumentException($"Light Parameter's `parentSimObjObjectId` is the same name as {lp.id}. Cannot set parent to itself!");
+                }
+
+                SimObjPhysics targetSOP = null;
+                foreach (SimObjPhysics sop in allSimObjs) {
+                    if (sop.objectID == lp.parentSimObjObjectId) {
+                        targetSOP = sop;
+                    }
+                }
+
+                if (targetSOP == null) {
+                    throw new NullReferenceException($"{lp.parentSimObjObjectId} does not match objectID of any sim object in scene!");
+                }
+
+                light.gameObject.transform.parent = targetSOP.transform;
+            }
+
+            if (lp.controllerSimObjIds != null) {
+
+                List<SimObjPhysics> thingsThatControlMe = new List<SimObjPhysics>();
+
+                //to update LightSources, first we need to search all CanToggleOnOff objects in scene
+                CanToggleOnOff[] allToggleableObjectsInScene = UnityEngine.Object.FindObjectsOfType<CanToggleOnOff>(includeInactive: true);
+
+                List<CanToggleOnOff> toggleableObjectsToClear = new List<CanToggleOnOff>();
+
+                //if so, remove them from the CanToggleOnOff object's LightSources array
+                //now we update this light to be controlled by the controllerObject(s) specified
+
+                foreach(string controllerObject in lp.controllerSimObjIds) {
+                    foreach (CanToggleOnOff toggleableObject in allToggleableObjectsInScene) {
+                        //see if this light is controlled by any of these toggleable objects
+                        foreach(Light ls in toggleableObject.LightSources) {
+                            //ok we found a match to the current light we are trying to set properties for
+                            if(ls == light) {
+                                if(!toggleableObjectsToClear.Contains(toggleableObject)) {
+                                    toggleableObjectsToClear.Add(toggleableObject);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                //now clear this light from all toggleable objects that have this light so we can cleanly
+                //assign the new controllerObject specified by lp
+                foreach(CanToggleOnOff c in toggleableObjectsToClear) {
+                    //use linq magic to remove all instances of this light from each toggleable object that references this light
+                    c.LightSources = c.LightSources.Where(val => val != light).ToArray();
+                }
+
+                foreach(string controllerObject in lp.controllerSimObjIds) {
+                    //find the sim object that controllerObject specifies
+                    SimObjPhysics targetSOP = null;
+                    foreach (SimObjPhysics sop in allSimObjs) {
+                        if (sop.objectID == controllerObject) {
+                            targetSOP = sop;
+                        }
+                    }
+
+                    if (targetSOP == null) {
+                        throw new NullReferenceException($"{controllerObject} does not match objectID of any sim object in scene!");
+                    }
+
+                    if(!targetSOP.GetComponent<CanToggleOnOff>()) {
+                        throw new ArgumentException ($"The controllerSimObjIds element {controllerObject} of {lp.id}'s light parameters is missing the toggleable functionality and can't be assigned to this light");
+                    }
+
+                    thingsThatControlMe.Add(targetSOP);
+
+                    //now update LightSources array with this
+                    CanToggleOnOff ctoo = targetSOP.GetComponent<CanToggleOnOff>();
+
+                    Array.Resize(ref ctoo.LightSources, ctoo.LightSources.Length + 1);
+                    ctoo.LightSources[ctoo.LightSources.Length - 1] = light;
+                }
+
+                //ok now assign to WhatControlsThis component
+                if (!light.gameObject.GetComponent<WhatControlsThis>()) {
+                    //add component if it doesn't already have one, cause some lights aren't controlled by anything by defualt
+                    WhatControlsThis wct = light.gameObject.AddComponent<WhatControlsThis>();
+                    wct.SimObjsThatControlMe = thingsThatControlMe.ToArray();
+                } else {
+                    //if this light was controlled by somethig already, no need to add component again cause THAT CAUSES PROBLEMS
+                    WhatControlsThis wct = light.gameObject.GetComponent<WhatControlsThis>();
+                    wct.SimObjsThatControlMe = thingsThatControlMe.ToArray();
+                }
+            }
+
+            light.gameObject.SetActive(lp.enabled);
+        }
     }
 
 #if UNITY_EDITOR
 
-    public static void debugGetLightPropertiesOfScene(List<LightParameters> lights) {
-        Debug.Log("we are inside debugGetLightProperties...");
-
-        var file = "debugLightProperties.txt";
-        var create = File.CreateText("Assets/DebugTextFiles/" + file);
-
-        create.WriteLine($"Total number of Lights in scene: {lights.Count()}");
-
-        foreach (LightParameters lp in lights) {
-            create.WriteLine($"ID: {lp.id}");
-
-            create.WriteLine($"Type: {lp.type}");
-
-            create.WriteLine($"position: {lp.position}");
-
-            create.WriteLine($"localPosition: {lp.localPosition}");
-
-            if (lp.cullingMaskOff.Length > 0) {
-                create.WriteLine($"Culling Mask Off Layers:");
-
-                foreach (string s in lp.cullingMaskOff) {
-                    create.WriteLine("     " + s);
-                }
-            } else {
-                create.WriteLine($"Culling Mask Off Layers: none");
-            }
-
-            create.WriteLine($"rotation degrees: {lp.rotation.degrees}");
-
-            create.WriteLine($"rotation axis: {lp.rotation.axis}");
-
-            create.WriteLine($"intensity: {lp.intensity}");
-
-            create.WriteLine($"indirect Multiplier: {lp.indirectMultiplier}");
-
-            create.WriteLine($"range: {lp.range}");
-
-            //this should be 0 if not a spotlight
-            if (Mathf.Approximately(lp.spotAngle, 0.0f)) {
-                create.WriteLine("spotAngle: not a spot light!");
-            } else {
-                create.WriteLine($"spotAngle: {lp.spotAngle}");
-            }
-
-            create.WriteLine($"rgba: {lp.rgb.r} {lp.rgb.g} {lp.rgb.b} {lp.rgb.a}");
-
-            if (lp.shadow != null) {
-                create.WriteLine($"shadow params:");
-                create.WriteLine($"     shadow type: {lp.shadow.type}");
-                create.WriteLine($"     shadow strength: {lp.shadow.strength}");
-                create.WriteLine($"     shadow normalBias: {lp.shadow.normalBias}");
-                create.WriteLine($"     shadow bias: {lp.shadow.bias}");
-                create.WriteLine($"     shadow nearPlane: {lp.shadow.nearPlane}");
-                create.WriteLine($"     shadow resolution: {lp.shadow.resolution}");
-            } else {
-                create.WriteLine($"shadow params NULL!!!");
-            }
-
-            create.WriteLine($"linkedSimObj: {lp.linkedSimObj}");
-
-            create.WriteLine($"enabled: {lp.enabled}");
-
-            create.WriteLine($"parent Sim Obj Id: {lp.parentSimObjId}");
-
-            create.WriteLine($"parent Sim Obj Name: {lp.parentSimObjName}");
-
-            create.WriteLine("");
-        }
-
-        create.Close();
+    public static void exportJsonToDebug(string json) {
+        var file = "exportedLightParams.json";
+        //var create = File.CreateText("Assets/DebugTextFiles/" + file).Dispose();
+        File.WriteAllText("Assets/DebugTextFiles/" + file, json);
+        //create.Close();
     }
 
     [MenuItem("SimObjectPhysics/Toggle Off PlaceableSurface Material")]
@@ -555,7 +713,7 @@ public static class UtilityFunctions {
                 lightAndTypeToSimObjPhys.Add(l, l.Key.GetComponentInParent<SimObjPhysics>());
             }
 
-            //track if multiple key lights in simObjChildLIghts are children of the same SimObjPhysics
+            //track if multiple key lights in simObjChildLights are children of the same SimObjPhysics
             Dictionary<SimObjPhysics, int> simObjToSpotInstanceCountInThatSimObj = new Dictionary<SimObjPhysics, int>();
             Dictionary<SimObjPhysics, int> simObjToDirectionalInstanceCountInThatSimObj = new Dictionary<SimObjPhysics, int>();
             Dictionary<SimObjPhysics, int> simObjToPointInstanceCountInThatSimObj = new Dictionary<SimObjPhysics, int>();

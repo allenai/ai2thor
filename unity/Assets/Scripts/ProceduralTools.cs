@@ -1344,6 +1344,7 @@ namespace Thor.Procedural {
 
             }
 
+            //spawn all prefab sim obj physics
             foreach (var obj in house.objects) {
                 spawnObjectHierarchy(obj);
             }
@@ -1403,16 +1404,36 @@ namespace Thor.Procedural {
             }
 
             var lightingRoot = new GameObject(DefaultLightingRootName);
-            if (house.proceduralParameters.lights != null) {
+            if (house.proceduralParameters.lights != null) {    
+
+                //gather all spawned sim objects to assign parents and toggle on/off controllers
+                SimObjPhysics[] allSimObjs = UnityEngine.Object.FindObjectsOfType<SimObjPhysics>(includeInactive: true);
+            
                 foreach (var lightParams in house.proceduralParameters.lights) {
+                    //name light game object in format scene|<light type>|<instance count> in the house json
                     var go = new GameObject(lightParams.id);
                     go.transform.position = lightParams.position;
                     if (lightParams.rotation != null) {
                         go.transform.rotation = lightParams.rotation.toQuaternion();
                     }
                     var light = go.AddComponent<Light>();
-                    //light.lightmapBakeType = LightmapBakeType.Realtime; //removed because this is editor only, and probably not needed since the light should default to Realtime Light Mode anyway?
-                    light.type = (LightType)Enum.Parse(typeof(LightType), lightParams.type, ignoreCase: true);
+
+                    
+                    var lightParamType = (LightType)Enum.Parse(typeof(LightType), lightParams.type, ignoreCase: true);
+
+                    if(lightParamType == LightType.Area || lightParamType == LightType.Disc || lightParamType == LightType.Rectangle) {
+                        throw new ArgumentException($"Light type cannot be of type [Area] [Disc] or [Rectangle] as these only affect baked lighting and cannot be modified at runtime");
+                    }
+
+                    light.type = lightParamType;
+
+                    if(light.type == LightType.Spot) {
+                        //spot angle must be in range [1-179]
+                        if(lightParams.spotAngle > 0) {
+                            light.spotAngle = lightParams.spotAngle;
+                        }
+                    }
+
                     light.color = new Color(lightParams.rgb.r, lightParams.rgb.g, lightParams.rgb.b, lightParams.rgb.a);
                     light.intensity = lightParams.intensity;
                     light.bounceIntensity = lightParams.indirectMultiplier;
@@ -1431,8 +1452,46 @@ namespace Thor.Procedural {
                         light.shadowNearPlane = lightParams.shadow.nearPlane;
                         light.shadowResolution = (UnityEngine.Rendering.LightShadowResolution)Enum.Parse(typeof(UnityEngine.Rendering.LightShadowResolution), lightParams.shadow.resolution, ignoreCase: true);
                     }
+
+                    if(lightParams.controllerSimObjIds != null) {
+
+                        List<SimObjPhysics> thingsThatControlMe = new List<SimObjPhysics>();
+
+                        foreach (string controllerObject in lightParams.controllerSimObjIds) {
+                            //find the sim object that controllerObject specifies
+                            //do this by objectID which, for procedural scenes, will be the same as the object name
+                            SimObjPhysics targetSOP = null;
+                            foreach (SimObjPhysics sop in allSimObjs) {
+                                if (sop.objectID == controllerObject) {
+                                    targetSOP = sop;
+                                }
+                            }
+
+                            if (targetSOP == null) {
+                                throw new NullReferenceException($"{controllerObject} does not match objectID of any sim object in scene!");
+                            }
+
+                            if (!targetSOP.GetComponent<CanToggleOnOff>()) {
+                                throw new ArgumentException($"{controllerObject} is missing the toggleable functionality and can't be assigned to light {lightParams.id}");
+                            }
+
+                            thingsThatControlMe.Add(targetSOP);
+
+                            //now update LightSources array with this
+                            CanToggleOnOff ctoo = targetSOP.GetComponent<CanToggleOnOff>();
+
+                            Array.Resize(ref ctoo.LightSources, ctoo.LightSources.Length + 1);
+                            ctoo.LightSources[ctoo.LightSources.Length - 1] = light;
+                        }
+
+                        WhatControlsThis wct = light.gameObject.AddComponent<WhatControlsThis>();
+                        wct.SimObjsThatControlMe = thingsThatControlMe.ToArray();
+                    }
+
                     go.transform.parent = lightingRoot.transform;
 
+                    //set enabled state of light game object
+                    go.SetActive(lightParams.enabled);
                 }
             }
 
@@ -1689,14 +1748,6 @@ namespace Thor.Procedural {
                 }
             }
 
-            if (isOn.HasValue) {
-                var canToggle = spawned.GetComponentInChildren<CanToggleOnOff>();
-                if (canToggle != null) {
-                    if (isOn.Value != canToggle.isOn) {
-                        canToggle.Toggle();
-                    }
-                }
-            }
 
             if (isDirty.HasValue) {
                 var dirt = spawned.GetComponentInChildren<Dirty>();
@@ -1747,6 +1798,51 @@ namespace Thor.Procedural {
             toSpawn.objectID = id;
             toSpawn.name = id;
             toSpawn.assetID = assetId;
+
+            if (isOn.HasValue) {
+                var canToggle = spawned.GetComponentInChildren<CanToggleOnOff>();
+                if (canToggle != null) {
+                    if (isOn.Value != canToggle.isOn) {
+                        canToggle.Toggle();
+                    }
+
+                    //this logic only works for prefabs with child lights on them
+                    //scene-level lights not in a sim obj prefab hierarchy are handled differently
+                    Dictionary<Light, SimObjPhysics> childLights = new Dictionary<Light, SimObjPhysics>();
+                    //gather all light child objects in this sim object prefab
+                    foreach (Light l in canToggle.LightSources) {
+                        childLights.Add(l, l.GetComponentInParent<SimObjPhysics>());
+                    }
+
+                    //track instance count for lights for this sim object
+                    int directionalInstance = 0;
+                    int spotInstance = 0;
+                    int pointInstance = 0;
+                    int areaInstance = 0;
+
+                    foreach (KeyValuePair<Light, SimObjPhysics> lsop in childLights) {
+                        if(lsop.Key.type == LightType.Directional) {
+                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + directionalInstance;
+                            directionalInstance++;
+                        }
+
+                        if(lsop.Key.type == LightType.Spot) {
+                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + spotInstance;
+                            spotInstance++;
+                        }
+
+                        if(lsop.Key.type == LightType.Point) {
+                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + pointInstance;
+                            pointInstance++;
+                        }
+
+                        if(lsop.Key.type == LightType.Area) {
+                            lsop.Key.name = lsop.Value.transform.name + "|" + lsop.Key.type.ToString() + "|" + areaInstance;
+                            areaInstance++;
+                        }
+                    }
+                }
+            }
 
             Shader unlitShader = null;
             if (unlit) {

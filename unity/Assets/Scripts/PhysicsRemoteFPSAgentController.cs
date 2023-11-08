@@ -2560,14 +2560,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        // coroutine to yield n frames before returning
-        protected IEnumerator waitForNFramesAndReturn(int n, bool actionSuccess) {
-            for (int i = 0; i < n; i++) {
-                yield return null;
-            }
-            actionFinished(actionSuccess);
-        }
-
         // Moves hand relative the agent (but not relative the camera, i.e. up is up)
         // x, y, z coordinates should specify how far to move in that direction, so
         // x=.1, y=.1, z=0 will move the hand .1 in both the x and y coordinates.
@@ -7644,18 +7636,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             StartCoroutine(SpamObjectsInRoomHelper(100, newObjects));
-        }
-
-        public void ChangeLightSet(ServerAction action) {
-            if (action.objectVariation > 10 || action.objectVariation < 1) {
-                errorMessage = "Please use value between 1 and 10";
-                actionFinished(false);
-                return;
-            }
-
-            GameObject lightTransform = GameObject.Find("Lighting");
-            lightTransform.GetComponent<ChangeLighting>().SetLights(action.objectVariation);
-            actionFinished(true);
         }
 
         public void SliceObject(ServerAction action) {

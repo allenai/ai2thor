@@ -120,9 +120,6 @@ public class CanToggleOnOff : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-
-        //setLightSourcesNames();
-
 #if UNITY_EDITOR
         if (!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)) {
             Debug.LogError(this.name + "is missing the CanToggleOnOff Secondary Property! Please set it!");
@@ -222,17 +219,32 @@ public class CanToggleOnOff : MonoBehaviour {
 
     // toggle isOn variable, swap Materials and enable/disable Light sources
     private void setisOn() {
-        // if isOn true, set it to false and also turn off all lights/deactivate materials
+        // if isOn true, toggle off all controlled sim objects
+        //and toggle the active state of all light sources and effects
         if (isOn) {
             if (LightSources.Length > 0) {
                 for (int i = 0; i < LightSources.Length; i++) {
-                    LightSources[i].transform.gameObject.SetActive(false);
+                    if (LightSources[i] == null) {
+                        continue;
+                    }
+
+                    if (LightSources[i].transform.gameObject.activeSelf == true) {
+                        LightSources[i].transform.gameObject.SetActive(false);
+                    } else {
+                        LightSources[i].transform.gameObject.SetActive(true);
+                    }
                 }
             }
 
             if(effects.Length > 0) {
                 for (int i = 0; i< effects.Length; i++) {
-                    effects[i].SetActive(false);
+                    if(effects[i].transform.gameObject.activeSelf == true) {
+                        effects[i].SetActive(false);
+                    }
+
+                    else {
+                        effects[i].SetActive(true);
+                    }
                 }
             }
 
@@ -243,7 +255,7 @@ public class CanToggleOnOff : MonoBehaviour {
                 }
             }
 
-            // also set any objects this object controlls to the off state
+            // also set any objects this object controls to match this object's off state
             if (ControlledSimObjects.Length > 0) {
                 foreach (SimObjPhysics sop in ControlledSimObjects) {
                     sop.GetComponent<CanToggleOnOff>().isOn = false;
@@ -257,13 +269,27 @@ public class CanToggleOnOff : MonoBehaviour {
         else {
             if (LightSources.Length > 0) {
                 for (int i = 0; i < LightSources.Length; i++) {
-                    LightSources[i].transform.gameObject.SetActive(true);
+                    if (LightSources[i] == null) {
+                        continue;
+                    }
+
+                    if (LightSources[i].transform.gameObject.activeSelf == true) {
+                        LightSources[i].transform.gameObject.SetActive(false);
+                    } else {
+                        LightSources[i].transform.gameObject.SetActive(true);
+                    }
                 }
             }
 
-            if(effects.Length > 0) {
+            if (effects.Length > 0) {
                 for (int i = 0; i< effects.Length; i++) {
-                    effects[i].SetActive(true);
+                    if(effects[i].transform.gameObject.activeSelf == true) {
+                        effects[i].SetActive(false);
+                    }
+
+                    else {
+                        effects[i].SetActive(true);
+                    }
                 }
             }
 

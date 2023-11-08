@@ -40,28 +40,48 @@ namespace Thor.Procedural.Data {
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class LightParameters {
-        public string id { get; set; }
-        public string type { get; set; }
-        public Vector3 position { get; set; }
-        public Vector3 localPosition { get; set; }
-        public string[] cullingMaskOff { get; set;}
-        public FlexibleRotation rotation;
-        public float intensity { get; set; }
-        public float indirectMultiplier { get; set; }
-        public float range { get; set; }
+        [JsonProperty(Order = 0)]
+        public string id { get; set; } //game object name of light game object
+
+        [JsonProperty(Order = 1)]
+        public string type { get; set; } //type of light
+
+        [JsonProperty(Order = 2)]
+        public Vector3 position { get; set; } //world position of light
+
+        [JsonProperty(Order = 3)]
+        public FlexibleRotation rotation; //rotation of light in world coordinates
+
+        [JsonProperty(Order = 4)]
+        public bool enabled { get; set; } //the active state of the light game object (NOT the light component of the game object)
+
+        [JsonProperty(Order = 5)]
+        public string[] controllerSimObjIds { get; set; } //the objectID(s) of Sim Object(s) that control this light via ToggleOnOff
+
+        [JsonProperty(Order = 6)]
+        public string parentSimObjObjectId { get; set; } //the objectID of a parent Sim Object this Light is a child of
+
+        [JsonProperty(Order = 7)]
         public float spotAngle { get; set; } //only used for spot lights, [1-179] valid range 
-        public SerializableColor rgb { get; set; }
-        public ShadowParameters shadow = null;
-        /*
-        linked objects are one of two cases:
-        this is a scene light and it is controlled by some light switch sim object, and is linked to that light switch
-        this is a light that is a child of some sim object (ie: lamp) and it is controlled by that sim object
-        notably, lights that are children of sim objects will have that sim object's name in the light's name (LightParameters.id) as an additional identifier
-        */
-        public string linkedSimObj { get; set; } //explicit reference to what Sim Object controls if this light is enabled/disabled when using ToggleOnOff
-        public bool enabled { get; set; }
-        public string parentSimObjId { get; set; } //explicit reference to the objectID of a parent Sim Object this Light is a child of
-        public string parentSimObjName { get; set;} //explicit reference to the game object name of the parent Sim Object this Light is a child of
+
+        [JsonProperty(Order = 8)]
+        public float intensity { get; set; } //brightness of the light
+
+        [JsonProperty(Order = 9)]
+        public float range { get; set; } //range in meters of the light (note range for point lights is radial)
+
+        [JsonProperty(Order = 10)]
+        public SerializableColor rgb { get; set; } //color of light
+
+        [JsonProperty(Order = 11)]
+        public float indirectMultiplier { get; set; } //assigns to bounceIntensity of light bounce on other objects. 0 is no bounce, 1 is "normal" >1 is artificially high
+
+        [JsonProperty(Order = 12)]
+        public string[] cullingMaskOff { get; set; } //culling mask properties of light
+
+        [JsonProperty(Order = 13)]
+        public ShadowParameters shadow = null; //shadow properties of light source
+
     }
 
     [Serializable]
@@ -351,13 +371,10 @@ namespace Thor.Procedural.Data {
         public List<Taxonomy> types { get; set; }
         public string assetId { get; set; } //name of prefab asset from asset database
         public string navmeshArea { get; set; }
-
         public string layer { get; set; }
-
         public float? openness { get; set; } = null;
         public bool? isOn { get; set; } = null;
         public bool? isDirty { get; set; } = null;
-        
         public bool unlit;
         public MaterialProperties material;
     }

@@ -537,19 +537,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
-                
-                case "getlights": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-
-                        action["action"] = "GetLights";
-
-                        CurrentActiveController().ProcessControlCommand(action);
-
-                        //ctionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
-                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
-
-                        break;
-                    }
 
                 case "stretchtest1": {
                         List<string> commands = new List<string>();
@@ -861,6 +848,59 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                     StartCoroutine(executeBatch(jActions: actions));
                     break;
+
+                case "getlights": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "GetLights";
+
+                        CurrentActiveController().ProcessControlCommand(action);
+
+                        break;
+                    }
+
+                case "setlights": {
+
+                        //note, to test `SetLights` use in-editor `GetLights` to
+                        //generate a debug json of light parameters of a given scene at 
+                        //Assets/DebugTextFiles/exportedLightParams.json
+                        //
+                        //this is because the LightParameters class must be passed as 
+                        //json format for compatibility, which is done automatically for
+                        //pythong dict -> Unity as it turns it into a json for us, but
+                        //from this debug input field it can't convert LightParameters classes
+                        //to a json until someone decides to make that I guess and i'm lazy so
+                        //we're just gonna debug export it as a json directly its fine, I promise its fine
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "SetLights";
+                        var ROOM_BASE_PATH = "/DebugTextFiles/";
+
+                        //path = Application.dataPath + "/DebugTextFiles/exportedLightParams.json";
+                        //path = Application.dataPath + "/DebugTextFiles/exportedLightParams_FloorPlan1_TestSet.json";
+                        path = Application.dataPath + "/DebugTextFiles/exportedLightParams_Procedural_TestSet_lighthouse_test.json";
+
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + ROOM_BASE_PATH + file;
+                        }
+
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"json: being read {jsonStr}");
+
+                        JArray obj = JArray.Parse(jsonStr);
+                        Debug.Log("did it get through the parse?");
+                        action["lightParams"] = obj;
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        
+                        break;
+                    }
 
                 case "exp": {
                         ServerAction action = new ServerAction();
