@@ -86,7 +86,7 @@ class BaseObjectDetector():
     def get_target_mask(self, object_str, rgb):
         raise NotImplementedError
 
-    def get_target_object_pose(self, rgb, depth, mask):
+    def get_target_object_pose(self, rgb, depth, mask, visualize=False):
         if mask is None:
             exit()
 
@@ -120,6 +120,27 @@ class BaseObjectDetector():
         ObjectPose1 = self.CameraPose @ objectPoseCamera1
         ObjectPose1[0,3] = ObjectPose[0,3]
         ObjectPose1[1,3] = ObjectPose[1,3]
+
+
+        if visualize:
+            obj_center = open3d.geometry.TriangleMesh.create_sphere(radius=0.015) #create a small sphere to represent point
+            obj_center.translate(ObjectPose1[:3,3])
+            obj_center.paint_uniform_color([255,0,0])
+
+            coord = open3d.geometry.TriangleMesh().create_coordinate_frame()
+
+            # TODO: maybe add robot mesh at origin
+            pcd_base = pcd.transform(self.CameraPose)
+            
+            vis = open3d.visualization.Visualizer()
+            vis.create_window()
+            vis.add_geometry(pcd_base)
+            vis.add_geometry(obj_center)
+            vis.add_geometry(coord)
+
+            vis.run()
+            vis.destroy_window() # this kills Jupyter Notebook kernel for some reason
+
         return ObjectPose1 #self.CameraPose @ objectPoseCamera
 
 
@@ -296,9 +317,9 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         pcd = open3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.intrinsic)
         return pcd 
 
-    def get_target_object_pose(self, rgb, depth, mask, distance_m=0.215): # -0.205
+    def get_target_object_pose(self, rgb, depth, mask, distance_m=0.215, visualize=False): # -0.205
         normval_vector = self.get_center_normal_vector(self.get_door_pointcloud(rgb, depth))
-
+        
         pcd = self.get_target_object_pointcloud(rgb, depth, mask)
         center = pcd.get_center()
         bbox = pcd.get_oriented_bounding_box()
@@ -323,9 +344,30 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
             preplan_pose_base = preplan_pose_base2
         else:
             preplan_pose_base = preplan_pose_base1        
+        
+        # TODO: maybe compare Z axis and recompute if very off
 
-        # TODO: if preplan pose is wrong (like Z axis shouldn't be too different)
-        # TODO: target pose itself is wrong
+        if visualize:
+            obj_center = open3d.geometry.TriangleMesh.create_sphere(radius=0.005) #create a small sphere to represent point
+            obj_center.translate(objectPoseBase[:3,3])
+            obj_center.paint_uniform_color([255,0,0])
+
+            preplan_center = open3d.geometry.TriangleMesh.create_sphere(radius=0.005) #create a small sphere to represent point
+            preplan_center.translate(preplan_pose_base[:3,3])  
+            preplan_center.paint_uniform_color([255,0,0])
+
+            coord = open3d.geometry.TriangleMesh().create_coordinate_frame()
+            
+            pcd_base = pcd.transform(self.CameraPose)
+            
+            vis = open3d.visualization.Visualizer()
+            vis.create_window()
+            vis.add_geometry(pcd_base)
+            vis.add_geometry(obj_center)
+            vis.add_geometry(preplan_center)
+            vis.add_geometry(coord)
+            vis.run()
+            vis.destroy_window()
 
         return [objectPoseBase, preplan_pose_base]
 
@@ -345,6 +387,13 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         pcd.estimate_normals() #search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
         pcd.normalize_normals()
 
+        plane_model, inliers = pcd.segment_plane(distance_threshold=0.01,
+                                                ransac_n=3,
+                                                num_iterations=1000)
+        [a, b, c, d] = plane_model
+
+        return np.asanyarray([a, b, c])
+        """
         # Get the center point of the point cloud
         #center_point = np.asarray(pcd.points).mean(axis=0)
         center_point = pcd.get_center()
@@ -355,7 +404,7 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
 
         # Get the normal at the center point
         return np.asarray(pcd.normals)[idx[0]]
-
+        """
 
 class ObjectDetector(BaseObjectDetector):
     def __init__(self, camera_source="arm205", device="cpu"):    
