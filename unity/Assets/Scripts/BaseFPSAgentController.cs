@@ -4116,6 +4116,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, visible.Select(sop => sop.ObjectID).ToList());
         }
 
+        public void GetObjaverseAnnotations() {
+            Dictionary<string, Dictionary<string, string>> annotations = new Dictionary<string, Dictionary<string, string>>();
+
+            foreach (Thor.Objaverse.ObjaverseAnnotation oa in GameObject.FindObjectsOfType<Thor.Objaverse.ObjaverseAnnotation>()) {
+                SimObjPhysics sop = oa.gameObject.GetComponent<SimObjPhysics>();
+                annotations[sop.ObjectID] = new Dictionary<string, string>();
+
+                annotations[sop.ObjectID]["objectType"] = oa.ObjectCategory;
+                annotations[sop.ObjectID]["dataset"] = oa.MostSpecificDataset.ToString();
+
+//                Debug.Log(sop.ObjectID);
+//                Debug.Log(oa.ObjectCategory);
+//                Debug.Log(oa.MostSpecificDataset.ToString());
+            }
+
+            actionFinishedEmit(true, annotations);
+        }
+
         [ObsoleteAttribute(message: "This action is deprecated. Call GetVisibleObjects instead.", error: false)]
         public void ObjectsVisibleFromThirdPartyCamera(
             int thirdPartyCameraIndex,
