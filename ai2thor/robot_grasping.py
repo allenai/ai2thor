@@ -349,7 +349,7 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         dist2 = math.sqrt((preplan_pose_base2[0,3])**2 + (preplan_pose_base2[1,3])**2)
         if dist1 > dist2:
             preplan_pose_base = preplan_pose_base2
-            print("using negative distance")
+            print("using negative distance. normal vector: ", normval_vector)
         else:
             preplan_pose_base = preplan_pose_base1        
         
