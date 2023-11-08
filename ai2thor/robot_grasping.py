@@ -214,8 +214,8 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
         return mask
 
 
-    def get_target_object_pose(self, rgb, depth, mask):
-        return super().get_target_object_pose(rgb, depth, mask)
+    def get_target_object_pose(self, rgb, depth, mask, visualize=False):
+        return super().get_target_object_pose(rgb, depth, mask, visualize=visualize)
 
 
 class DoorKnobDetector(OwlVitSegAnyObjectDetector):
@@ -468,8 +468,8 @@ class ObjectDetector(BaseObjectDetector):
             return None
         
 
-    def get_target_object_pose(self, rgb, depth, mask):
-        return super().get_target_object_pose(rgb, depth, mask)
+    def get_target_object_pose(self, rgb, depth, mask, visualize=False):
+        return super().get_target_object_pose(rgb, depth, mask, visualize=visualize)
 
 
 
