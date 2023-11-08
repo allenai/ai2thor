@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEditor;
 #endif
 using UnityEngine;
+using Newtonsoft.Json.Linq;
 
 using System.IO;
  
@@ -56,7 +57,7 @@ namespace Thor.Utils
             return $"{objString}\n{verts}\n{uvs}\n{normals}\ns 1\n{faces}";
         }
 
-        private static string SaveAsObj( Mesh mesh, string assetId, string outPath, string prefix = "") {
+        private static string SaveAsObj( Mesh mesh, string assetId, string outPath, string prefix = "", bool overwite = true) {
 
             var obj = MeshToObj(assetId, mesh);
 
@@ -65,27 +66,48 @@ namespace Thor.Utils
             }
 
             // var f = File.Create($"{outModelsBasePath}/{assetId}.obj");
+            var sep = prefix == "" ? "" : "_";
             var fileObj = $"{outPath}/{prefix}_{assetId}.obj";
-            Debug.Log($"Writing obj to `{fileObj}`");
-            File.WriteAllText(fileObj, obj);
+            
+            if (!File.Exists(fileObj) || overwite) {
+                Debug.Log($"Writing obj to `{fileObj}`");
+
+                File.WriteAllText(fileObj, obj);
+            }
+            else {
+                Debug.Log($"File `{fileObj}` exists, skipping");
+
+            }
 
             return fileObj;
         }
 
 #if UNITY_EDITOR
-        public static void SaveMeshesAsObjAndReplaceReferences(GameObject go, string assetId, string modelsOutPath, string collidersOutPath) {
+        public static void SaveMeshesAsObjAndReplaceReferences(GameObject go, string assetId, string modelsOutPath, string collidersOutPath, bool overwrite = true, GameObject sourceGo =null) {
             var meshGo = go.transform.Find("mesh");
+            var useOriginalAssetGeo = sourceGo != null;
 
             var mf = meshGo.GetComponentInChildren<MeshFilter>();
-            var objPath = SaveAsObj(mf.sharedMesh, assetId, modelsOutPath);
-
+            var mainMesh = mf.sharedMesh;
             var colliders = go.transform.Find("Colliders").GetComponentsInChildren<MeshCollider>();
-            var colliderObjPaths = colliders.Select((c, i) => SaveAsObj(c.sharedMesh, assetId, collidersOutPath, prefix: $"col_{i}")).ToArray();
+
+            var collidersSourceMeshes = colliders.Select(c => c.sharedMesh);
+
+            if (useOriginalAssetGeo) {
+            
+                mainMesh = sourceGo.transform.Find("mesh").GetComponentInChildren<MeshFilter>().sharedMesh;
+                collidersSourceMeshes = go.transform.Find("Colliders").GetComponentsInChildren<MeshCollider>().Select(mc => mc.sharedMesh);
+            }
+
+            var objPath = SaveAsObj(mainMesh, assetId, modelsOutPath, overwite: overwrite);
+
+            
+            var colliderObjPaths = collidersSourceMeshes.Select((m, i) => SaveAsObj(m, assetId, collidersOutPath, prefix: $"col_{i}", overwite: overwrite)).ToArray();
             
             AssetDatabase.Refresh();
             
             // is this necessary?
-            if (mf.sharedMesh.indexFormat == UnityEngine.Rendering.IndexFormat.UInt32) {
+            if (mainMesh.indexFormat == UnityEngine.Rendering.IndexFormat.UInt32) {
                 var mi = AssetImporter.GetAtPath(getAssetRelativePath(objPath)) as ModelImporter;
                 mi.indexFormat = ModelImporterIndexFormat.UInt32;
             }
