@@ -349,6 +349,7 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         dist2 = math.sqrt((preplan_pose_base2[0,3])**2 + (preplan_pose_base2[1,3])**2)
         if dist1 > dist2:
             preplan_pose_base = preplan_pose_base2
+            print("using negative distance")
         else:
             preplan_pose_base = preplan_pose_base1        
         
@@ -389,11 +390,7 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
     def get_center_normal_vector(self, pcd):
         # Downsample the point cloud to speed up the normal estimation
         #pcd = pcd.voxel_down_sample(voxel_size=0.05)
-        
-        # Estimate normals
-        pcd.estimate_normals() #search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
-        pcd.normalize_normals()
-
+        open3d.geometry.orient_normals_towards_camera_location(pcd)
         plane_model, inliers = pcd.segment_plane(distance_threshold=0.01,
                                                 ransac_n=3,
                                                 num_iterations=1000)
@@ -401,6 +398,10 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
 
         return np.asanyarray([a, b, c])
         """
+        # Estimate normals
+        pcd.estimate_normals() #search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
+        pcd.normalize_normals()
+        
         # Get the center point of the point cloud
         #center_point = np.asarray(pcd.points).mean(axis=0)
         center_point = pcd.get_center()
