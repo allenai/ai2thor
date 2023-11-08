@@ -96,7 +96,7 @@ class BaseObjectDetector():
 
         _depth = depth.copy()
         _depth[mask==False] = -0.1
-        _depth = np.asarray(depth).astype(np.float32) / self.depth_scale
+        _depth = np.asarray(_depth).astype(np.float32) / self.depth_scale
         depthim = open3d.geometry.Image(_depth)
 
         rgbd = open3d.geometry.RGBDImage.create_from_color_and_depth(rgbim, depthim, convert_rgb_to_intensity=False)
