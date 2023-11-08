@@ -1118,7 +1118,7 @@ def ci_build(
     novelty_thor_repo = scripts.update_private.Repo(
         url=novelty_thor_url,
         target_dir=os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
-        delete_before_checkout=False,
+        delete_before_checkout=is_travis_build,
     )
 
     if novelty_thor_scenes:

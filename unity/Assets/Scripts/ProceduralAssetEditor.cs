@@ -20,6 +20,7 @@ using diagnostics = System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.Data.Common;
 
 namespace Thor.Procedural {
 
@@ -202,7 +203,7 @@ namespace Thor.Procedural {
                 Debug.Log($"---- prefab save {prefabSuccess}");
         }   
 
-        private void importAsset(string objectPath, bool addAnotationComponent = false) {
+        private GameObject importAsset(string objectPath, bool addAnotationComponent = false) {
             var jsonStr = System.IO.File.ReadAllText(objectPath);
 
             JObject obj = JObject.Parse(jsonStr);
@@ -258,7 +259,9 @@ namespace Thor.Procedural {
                 }
                
             }
+            return go;
         }
+
         private List<Coroutine> coroutines = new List<Coroutine>();
         // TODO: put in ifdef  block
         [Button(Expanded = true)]
@@ -327,6 +330,105 @@ namespace Thor.Procedural {
             coroutines.Clear();
         }
 
+
+        // [UnityEditor.MenuItem("Procedural/Fix Prefabs")]
+         [Button(Expanded = false)]
+        public void FixPrefabs() {
+            var procAssets = GameObject.FindObjectsOfType(typeof(SimObjPhysics))  as SimObjPhysics[];
+
+            //var gos = procAssets.GroupBy(so => so.assetID).Select(k => (IdentifierCase: k.Key, go: k.First().gameObject)).Where(p => p.go.GetComponentInChildren<SerializeMesh>() != null);
+            //var dict = new Dictionary<string, 
+            var gos = procAssets.Select(k => (id: k.assetID, go: k.gameObject)).Where(p => p.id == "9f6f9018f14a4dbea1ad1aea0ce89e7c");//.Where(p => p.go.GetComponentInChildren<SerializeMesh>() != null);
+            Debug.Log($"running for {gos.Count()}");
+
+            
+            Debug.Log($"running for {string.Join(",", gos.Select(g => g.id).Distinct())}");
+
+            // var loadedObjs = gos.Select(m => m.id).Distinct().ToDictionary(id => id, assetId => {
+
+            //      var pathSplit = Application.dataPath.Split('/');
+
+            //         var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
+            //          var objaverseRoot = $"{string.Join("/", repoRoot)}/{paths.repoRootObjaverseDir}";
+            //         var objectDir = $"{objaverseRoot}/{assetId}";
+            //         var objectPath = $"{objectDir}/{assetId}.json";
+
+            //         var jsonStr = System.IO.File.ReadAllText(objectPath);
+
+            // JObject obj = JObject.Parse(jsonStr);
+
+            // var procAsset = obj.ToObject<Procedural.Data.ProceduralAsset>();
+
+            // var result = Procedural.ProceduralTools.CreateAsset(
+            //         procAsset.vertices,
+            //         procAsset.normals,
+            //         procAsset.name,
+            //         procAsset.triangles,
+            //         procAsset.uvs,
+            //         procAsset.albedoTexturePath ,
+            //         procAsset.normalTexturePath ,
+            //         procAsset.emissionTexturePath,
+            //         procAsset.colliders ,
+            //         procAsset.physicalProperties,
+            //         procAsset.visibilityPoints ,
+            //         procAsset.annotations ,
+            //         procAsset.receptacleCandidate ,
+            //         procAsset.yRotOffset ,
+            //         serializable: true,
+            //         returnObject: true,
+            //         parent: null
+            //     );
+            //     return result["gameObject"] as GameObject;
+            // });
+
+
+            foreach (var (assetId, go) in gos) {
+                var dir =string.Join("/", paths.serializeBasePath.Split('/').Skip(1));
+                  if (PrefabUtility.IsPartOfPrefabInstance(go)) {
+                    
+                    SerializeMesh.SaveMeshesAsObjAndReplaceReferences(
+                        go,
+                        assetId,
+                        $"{Application.dataPath}/{dir}/{paths.modelsRelativePath}/{assetId}",
+                        $"{Application.dataPath}/{dir}/{paths.modelsRelativePath}/{assetId}/{paths.collidersInModelsPath}",
+                        overwrite: true
+                        //,sourceGo: loadedObjs[assetId]
+                    );
+                    var meshGo = go.transform.Find("mesh");
+                    // if (meshGo != null) 
+                    // {
+                    //     var negRot = -meshGo.transform.localEulerAngles;
+                    //     meshGo.transform.localEulerAngles = negRot;
+                    // }
+                    Debug.Log($"Ran for {go.name}");
+                    if (go.GetComponentInChildren<SerializeMesh>() != null) {
+                        DestroyImmediate(go.GetComponentInChildren<SerializeMesh>());
+                    }
+                    
+                    PrefabUtility.ApplyPrefabInstance(go, InteractionMode.UserAction);
+                    Selection.activeGameObject=go;
+                  }
+            }
+
+            // foreach (var go in loadedObjs.Values) {
+            //     DestroyImmediate(go);
+            // }
+        } 
+
+         [MenuItem("Procedural/Revert Prefabs")]
+          public void RevertPrefabs() {
+            var simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics))  as SimObjPhysics[];
+            
+            foreach (var so in simObjs) {
+                if (PrefabUtility.IsPartOfPrefabInstance(so.gameObject)) {
+                    Debug.Log($"Reverting {so.gameObject}");
+                    //PrefabUtility.RevertPropertyOverride()
+                    PrefabUtility.RevertPrefabInstance(so.gameObject, InteractionMode.UserAction);
+                }
+            }
+          }
+
+
         [Button(Expanded = true)]
         public void SaveObjectPrefabAndTextures() { 
             var transformRoot = GameObject.Find(objectId);
@@ -370,6 +472,8 @@ namespace Thor.Procedural {
             public float progress;
             public diagnostics.Process process;
             public string id;
+
+            public GameObject goResultß;
         }
 
         private ConcurrentDictionary<string, AsyncProcess> processingIds = new ConcurrentDictionary<string, AsyncProcess>();
