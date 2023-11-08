@@ -324,35 +324,22 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         pcd = open3d.geometry.PointCloud.create_from_rgbd_image(rgbd, self.intrinsic)
         return pcd 
 
-    def get_target_object_pose(self, rgb, depth, mask, distance_m=0.215, visualize=False): # -0.205
-        normval_vector = self.get_center_normal_vector(self.get_door_pointcloud(rgb, depth))
-        
+    def get_target_object_pose(self, rgb, depth, mask, distance_m=0.215, visualize=False): # -0.205 
         pcd = self.get_target_object_pointcloud(rgb, depth, mask)
-        center = pcd.get_center()
-        bbox = pcd.get_oriented_bounding_box()
         ##TODO: if len(pcd.points) is zero, there is a problem with a depth image)
+
+        self.center = pcd.get_center()
+        bbox = pcd.get_oriented_bounding_box()
 
         Randt=np.concatenate((bbox.R, np.expand_dims(bbox.center, axis=1)),axis=1) # pitfall: arrays need to be passed as a tuple
         lastrow=np.expand_dims(np.array([0,0,0,1]),axis=0)
         objectPoseCamera = np.concatenate((Randt,lastrow)) 
         objectPoseBase = self.CameraPose @ objectPoseCamera
-        
-        #TODO: is this the right logic? this should also depends on normal vector....
-        # preplan pose. whichever is closer to the base should be used
-        # can also use....left side of camera vs right side of the camera?
-        preplan_pose1 = self.plan_pregrasp_pose(objectPoseCamera, normval_vector, distance_m)
-        preplan_pose_base1 = self.CameraPose @ preplan_pose1
-        preplan_pose2 = self.plan_pregrasp_pose(objectPoseCamera, normval_vector, -distance_m)
-        preplan_pose_base2 = self.CameraPose @ preplan_pose2
 
-        dist1 = math.sqrt((preplan_pose_base1[0,3])**2 + (preplan_pose_base1[1,3])**2)
-        dist2 = math.sqrt((preplan_pose_base2[0,3])**2 + (preplan_pose_base2[1,3])**2)
-        if dist1 > dist2:
-            # TODO: this may not be needed since normal dir has been orietanted to be toward camera
-            preplan_pose_base = preplan_pose_base2
-            print("using negative distance. normal vector: ", normval_vector)
-        else:
-            preplan_pose_base = preplan_pose_base1        
+        # Get Normal oriented towards camera
+        normval_vector = self.get_center_normal_vector(self.get_door_pointcloud(rgb, depth))
+        preplan_pose = self.plan_pregrasp_pose(objectPoseCamera, normval_vector, distance_m)
+        preplan_pose_base = self.CameraPose @ preplan_pose
         
         # TODO: maybe compare Z axis and recompute if very off
 
@@ -391,18 +378,29 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
     def get_center_normal_vector(self, pcd):
         # Downsample the point cloud to speed up the normal estimation
         #pcd = pcd.voxel_down_sample(voxel_size=0.05)
-        open3d.geometry.orient_normals_towards_camera_location(pcd)
+
         plane_model, inliers = pcd.segment_plane(distance_threshold=0.01,
                                                 ransac_n=3,
                                                 num_iterations=1000)
         [a, b, c, d] = plane_model
 
+        if c > 0: # always orient toward camera
+            return -1*np.asanyarray([a, b, c])
         return np.asanyarray([a, b, c])
+    
         """
         # Estimate normals
         pcd.estimate_normals() #search_param=open3d.geometry.KDTreeSearchParamHybrid(radius=0.1, max_nn=30))
         pcd.normalize_normals()
-        
+        pcd.orient_normals_towards_camera_location()
+
+        # Find the index of the nearest point to the center
+        pcd_tree = open3d.geometry.KDTreeFlann(pcd)
+        k, idx, _ = pcd_tree.search_knn_vector_3d(self.center, 1)
+
+        # Get the normal at the center point
+        print("Normal near doorknob cneter: ", np.asarray(pcd.normals)[idx[0]])
+            
         # Get the center point of the point cloud
         #center_point = np.asarray(pcd.points).mean(axis=0)
         center_point = pcd.get_center()
