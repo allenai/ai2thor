@@ -338,7 +338,7 @@ namespace Thor.Procedural {
 
             //var gos = procAssets.GroupBy(so => so.assetID).Select(k => (IdentifierCase: k.Key, go: k.First().gameObject)).Where(p => p.go.GetComponentInChildren<SerializeMesh>() != null);
             //var dict = new Dictionary<string, 
-            var gos = procAssets.Select(k => (id: k.assetID, go: k.gameObject)).Where(p => p.id == "9f6f9018f14a4dbea1ad1aea0ce89e7c");//.Where(p => p.go.GetComponentInChildren<SerializeMesh>() != null);
+            var gos = procAssets.Select(k => (id: k.assetID, go: k.gameObject));//.Where(p => p.id == "9f6f9018f14a4dbea1ad1aea0ce89e7c");//.Where(p => p.go.GetComponentInChildren<SerializeMesh>() != null);
             Debug.Log($"running for {gos.Count()}");
 
             
