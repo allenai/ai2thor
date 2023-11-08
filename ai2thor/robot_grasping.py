@@ -715,7 +715,7 @@ class VIDAGraspPlanner(GraspPlanner):
         print("Before Extension X delta and Y delta: ", x_delta, y_delta)
 
         trajectory = []
-        if abs(distance - 0.205) <= 0.025:
+        if abs(distance - 0.205) <= 0.0025:
             # don't need to adjust arm extension
             # plan trajectory
             isReachable = True
