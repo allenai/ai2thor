@@ -1130,6 +1130,7 @@ def ci_build(
             scripts.update_private.Repo(
                 url=novelty_thor_url,
                 target_dir=os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
+                delete_before_checkout=is_travis_build,
                 commit_id="066485f29d7021ac732bed57758dea4b9d481c40", # Initial commit, empty repo.
             )
         )
