@@ -29,7 +29,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 import math
 import torch
-
+import matplotlib.pyplot as plt
 
 ## CONSTANTS TRANSFORMATION MATRIX
 T_ARM_FROM_BASE_188 = np.array([[   -0.99906,    -0.04335,  -0.0003883,   -0.047584],
@@ -124,6 +124,12 @@ class BaseObjectDetector():
 
 
         if visualize:
+            color = np.array([0,255,0], dtype='uint8')
+            masked_img = np.where(mask[...,None], color, rgb)
+            out = cv2.addWeighted(rgb, 0.65, masked_img, 0.35,0)
+            plt.imshow(out)
+            plt.show()
+
             obj_center = open3d.geometry.TriangleMesh.create_sphere(radius=0.015) #create a small sphere to represent point
             obj_center.translate(ObjectPose1[:3,3])
             obj_center.paint_uniform_color([255,0,0])
