@@ -39,10 +39,10 @@ T_ARM_FROM_BASE_188 = np.array([[         -1, -0.00076734,   0.0022021,   -0.059
        [-0.00033483,    -0.88728,    -0.46123,       1.414],
        [          0,           0,           0,           1]])
 
-T_ARM_FROM_BASE_205 = np.array([[   -0.99652,   -0.080247,   -0.022519,   -0.055535],
-       [  -0.023487,     0.52961,    -0.84792,   -0.053421],
-       [   0.079969,    -0.84444,    -0.52965,      1.4676],
-       [          0,           0,           0,           1]])
+T_ARM_FROM_BASE_205 = np.array([[-0.99462515, -0.10153981, -0.02026033, -0.05633738],
+       [-0.0353048 ,  0.51653206, -0.85553971, -0.05158587],
+       [ 0.09733645, -0.85022603, -0.51734062,  1.46661359],
+       [ 0.        ,  0.        ,  0.        ,  1.        ]])
 
 T_ROTATED_STRETCH_FROM_BASE = np.array([[-0.00069263, 1, -0.0012349, -0.017],
                     [ 0.5214, -0.00069263, -0.85331, -0.038],
@@ -122,8 +122,8 @@ class BaseObjectDetector():
         controller.step("Stow")
         controller.step("RotateHead")
         controller.step({"action":[
-                    {"action": "MoveArmExtension", "args": {"move_scalar": 0.3}},
-                    {"action": "MoveArmBase", "args": {"move_scalar": 0.6}},
+                    {"action": "MoveArmExtension", "args": {"move_scalar": 0.25}},
+                    {"action": "MoveArmBase", "args": {"move_scalar": 0.70}},
         ]})
 
         arm_image = c.last_event.third_party_camera_frames[0]
@@ -819,7 +819,7 @@ class VIDAGraspPlanner(GraspPlanner):
         return position
     
 
-    def find_points_on_y_axis(self, p2, distance=0.210): #205 210 worked for most too. 0.220 works for apple 0.208
+    def find_points_on_y_axis(self, p2, distance=0.205): #205 210 worked for most too. 0.220 works for apple 0.208
         def distance_between_points(p1, p2):
             x1, y1 = p1
             x2, y2 = p2
@@ -844,7 +844,7 @@ class VIDAGraspPlanner(GraspPlanner):
         return new_points #returns bigger value first - closer to 0 means it's cloer to base
 
 
-    def plan_grasp_trajectory(self, object_position, last_event, distance=0.210):
+    def plan_grasp_trajectory(self, object_position, last_event, distance=0.205):
         wrist_position = self.get_wrist_position(last_event)
 
         x_delta, y_delta, z_delta = (object_position - wrist_position)
