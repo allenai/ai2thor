@@ -681,7 +681,7 @@ class VIDAGraspPlanner(GraspPlanner):
         return position
     
 
-    def find_points_on_y_axis(self, p2, distance=0.2050): #210 worked for most too. 0.220 works for apple 0.208
+    def find_points_on_y_axis(self, p2, distance=0.210): #205 210 worked for most too. 0.220 works for apple 0.208
         def distance_between_points(p1, p2):
             x1, y1 = p1
             x2, y2 = p2
