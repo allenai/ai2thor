@@ -698,9 +698,9 @@ class VIDAGraspPlanner(GraspPlanner):
         # print("new ppints 2: ", y1_2, distance_between_points(p2,[0.0, y1_2]))
 
         new_points = []
-        if abs(distance_between_points(p2,[0.0, y1_1]) - distance) <= 0.0005:
+        if abs(distance_between_points(p2,[0.0, y1_1]) - distance) <= 0.0001:
             new_points.append([0.0, y1_1])
-        if abs(distance_between_points(p2,[0.0, y1_2]) - distance) <= 0.0005:
+        if abs(distance_between_points(p2,[0.0, y1_2]) - distance) <= 0.0001:
             new_points.append([0.0, y1_2])
 
         return new_points #returns bigger value first - closer to 0 means it's cloer to base
