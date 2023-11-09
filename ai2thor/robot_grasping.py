@@ -706,16 +706,16 @@ class VIDAGraspPlanner(GraspPlanner):
         return new_points #returns bigger value first - closer to 0 means it's cloer to base
 
 
-    def plan_grasp_trajectory(self, object_position, last_event):
+    def plan_grasp_trajectory(self, object_position, last_event, distance=0.210):
         wrist_position = self.get_wrist_position(last_event)
 
         x_delta, y_delta, z_delta = (object_position - wrist_position)
-        distance = math.sqrt(x_delta**2 + y_delta**2)
+        wrist_to_object_distance = math.sqrt(x_delta**2 + y_delta**2)
         isReachable=False
         print("Before Extension X delta and Y delta: ", x_delta, y_delta)
 
         trajectory = []
-        if abs(distance - 0.205) <= 0.0025:
+        if abs(wrist_to_object_distance - distance) <= 0.0025: 
             # don't need to adjust arm extension
             # plan trajectory
             isReachable = True
@@ -736,7 +736,7 @@ class VIDAGraspPlanner(GraspPlanner):
 
         else:
             curr_arm = last_event.metadata["arm"]["extension_m"]
-            new_wrist_positions = self.find_points_on_y_axis([x_delta, y_delta])
+            new_wrist_positions = self.find_points_on_y_axis([x_delta, y_delta], distance)
 
             for new_position in new_wrist_positions:
                 # TODO: update minmax threshold
