@@ -34,9 +34,9 @@ from scipy.spatial.transform import Rotation as R
 
 
 ## CONSTANTS TRANSFORMATION MATRIX
-T_ARM_FROM_BASE_188 = np.array([[   -0.99736,  -0.0073698,   -0.072253,   -0.025143],
-       [  -0.048995,     0.80264,     0.59445,    -0.76168],
-       [   0.053612,     0.59642,    -0.80088,      1.4598],
+T_ARM_FROM_BASE_188 = np.array([[         -1, -0.00076734,   0.0022021,   -0.059324],
+       [ -0.0023078,     0.46123,    -0.88728,   -0.037616],
+       [-0.00033483,    -0.88728,    -0.46123,       1.414],
        [          0,           0,           0,           1]])
 
 T_ARM_FROM_BASE_205 = np.array([[   -0.99652,   -0.080247,   -0.022519,   -0.055535],
@@ -123,7 +123,7 @@ class BaseObjectDetector():
         controller.step("RotateHead")
         controller.step({"action":[
                     {"action": "MoveArmExtension", "args": {"move_scalar": 0.3}},
-                    {"action": "MoveArmBase", "args": {"move_scalar": 0.65}},
+                    {"action": "MoveArmBase", "args": {"move_scalar": 0.6}},
         ]})
 
         arm_image = c.last_event.third_party_camera_frames[0]
@@ -142,6 +142,9 @@ class BaseObjectDetector():
         # arm image
         gray_arm_image = cv2.cvtColor(arm_image, cv2.COLOR_BGR2GRAY)
         arm_aruco_corners, arm_aruco_ids, aruco_rejected_image_points = detector.detectMarkers(gray_arm_image)
+
+        # CHECK IF MARKERS ARE DETECTED
+        assert(stretch_aruco_ids == arm_aruco_ids)
 
         # pose (stretch)
         stretch_camera_matrix = np.array([[STRETCH_INTR["fx"], 0, STRETCH_INTR["ppx"]], [0, STRETCH_INTR["fy"], STRETCH_INTR["ppy"]], [0, 0, 1]])
@@ -233,7 +236,7 @@ class BaseObjectDetector():
         #pcd = pcd.voxel_down_sample(voxel_size=0.02)
         #print("pcd pointcloud numbers after down sample: ", len(pcd.points))
         pcd, ind = pcd.remove_radius_outlier(nb_points=20, radius=0.02)
-        #pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=0.5)
+        pcd, ind = pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=0.1)
         print("pcd pointcloud numbers after outlier removal: ", len(pcd.points))
 
 
