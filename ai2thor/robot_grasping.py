@@ -654,9 +654,9 @@ class VIDAGraspPlanner(GraspPlanner):
         super().__init__()
 
         ## 188 constants
-        self.wrist_yaw_from_base = 0.003#25 #-0.020 # -0.025 # FIXED - should be.
-        self.arm_offset = 0.155 #0.140
-        self.lift_base_offset = 0.192 #base to lift
+        self.wrist_yaw_from_base = 0.003 # 25 #-0.020 # -0.025 # FIXED - should be.
+        self.arm_offset = 0.155 # 0.140
+        self.lift_base_offset = 0.192 # base to lift
         self.lift_wrist_offset = 0.028
 
     def plan_lift_extenion(self, object_position, curr_lift_position):
@@ -694,8 +694,8 @@ class VIDAGraspPlanner(GraspPlanner):
         y1_1 = p2[1] + math.sqrt(distance**2 - p2[0]**2)
         y1_2 = p2[1] - math.sqrt(distance**2 - p2[0]**2)
 
-        print("new points 1: ", y1_1, distance_between_points(p2,[0.0, y1_1]))
-        print("new ppints 2: ", y1_2, distance_between_points(p2,[0.0, y1_2]))
+        # print("new points 1: ", y1_1, distance_between_points(p2,[0.0, y1_1]))
+        # print("new ppints 2: ", y1_2, distance_between_points(p2,[0.0, y1_2]))
 
         new_points = []
         if abs(distance_between_points(p2,[0.0, y1_1]) - distance) <= 0.0005:
@@ -710,70 +710,45 @@ class VIDAGraspPlanner(GraspPlanner):
         wrist_position = self.get_wrist_position(last_event)
 
         x_delta, y_delta, z_delta = (object_position - wrist_position)
-        wrist_to_object_distance = math.sqrt(x_delta**2 + y_delta**2)
+        new_wrist_positions = self.find_points_on_y_axis([x_delta, y_delta], distance)
+
         isReachable=False
-        print("Before Extension X delta and Y delta: ", x_delta, y_delta)
-
         trajectory = []
-        if abs(wrist_to_object_distance - distance) <= 0.0025: 
-            # don't need to adjust arm extension
-            # plan trajectory
-            isReachable = True
+
+        curr_arm = last_event.metadata["arm"]["extension_m"]
         
-            # open grasper 
-            trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":100}})
+        for new_position in new_wrist_positions:
+            new_arm_position = -new_position[1] 
+            if not isReachable and (curr_arm + new_arm_position) < 0.5193114280700684 and (curr_arm + new_arm_position) > 0.0:
+                # open grasper 
+                trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":100}})
 
-            # TODO: check z_delta before  - will it hit the object?
-            # rotate wrist - stretch wrist moves clockwise
-            # pregrasp position 's -Y direction is X
-            # pregrasp position 's -X direction is Y            
-            wrist_offset = np.degrees(np.arctan2(-x_delta, -y_delta)) # arctan2(y,x)
-            #wrist_offset = wrist_offset + 7 if wrist_offset < 0 
-            trajectory.append({"action": "WristTo", "args": {"move_to":  wrist_offset}})
+                # TODO: check z_delta before  
+                # - will it hit the object? It does sometimes...so might have to lift a little
+                # rotate wrist - stretch wrist moves clockwise
+                # pregrasp position 's -Y direction is X
+                # pregrasp position 's -X direction is Y
+                #last_event.metadata["arm"]["extension_m"] += new_arm_position
+                #wrist_position = self.get_wrist_position(last_event)
+                #x_delta, y_delta, z_delta = (object_position - wrist_position)
+                y_delta = -1*abs(y_delta + new_arm_position) 
+                wrist_offset = np.degrees(np.arctan2(-x_delta, -y_delta)) # arctan2(y,x)
+                if wrist_offset >= 75.0: #max Wrist Rotation
+                    trajectory = []
+                    isReachable=False
+                    continue 
+                trajectory.append({"action": "WristTo", "args": {"move_to":  wrist_offset}})
 
-            # lift - will it hit the object? most likely the arm is higher than the object....
-            trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": self.plan_lift_extenion(object_position, last_event.metadata["arm"]["lift_m"])}})
-
-        else:
-            curr_arm = last_event.metadata["arm"]["extension_m"]
-            new_wrist_positions = self.find_points_on_y_axis([x_delta, y_delta], distance)
-
-            for new_position in new_wrist_positions:
-                # TODO: update minmax threshold
-                new_arm_position = -new_position[1] 
-                if not isReachable and (curr_arm + new_arm_position) < 0.5193114280700684 and (curr_arm + new_arm_position) > 0.0:
-                    # open grasper 
-                    trajectory.append({"action": "MoveGrasp", "args": {"move_scalar":100}})
-
-                    # TODO: check z_delta before  
-                    # - will it hit the object? It does sometimes...so might have to lift a little
-                    # rotate wrist - stretch wrist moves clockwise
-                    # pregrasp position 's -Y direction is X
-                    # pregrasp position 's -X direction is Y
-                    #last_event.metadata["arm"]["extension_m"] += new_arm_position
-                    #wrist_position = self.get_wrist_position(last_event)
-                    #x_delta, y_delta, z_delta = (object_position - wrist_position)
-                    y_delta = -1*abs(y_delta + new_arm_position) 
-                    print("After Extension X delta and Y delta: ", x_delta, y_delta)
-                    wrist_offset = np.degrees(np.arctan2(-x_delta, -y_delta)) # arctan2(y,x)
-                    if wrist_offset >= 75.0: #max Wrist Rotation
-                        trajectory = []
-                        isReachable=False
-                        continue 
-                    trajectory.append({"action": "WristTo", "args": {"move_to":  wrist_offset}})
-
-                    # TODO: check z_delta before  - will it hit the object?
-                    # extend arm
-                    #wrist_to_gripper_offset = 0.205 - np.cos(np.deg2rad(wrist_offset)) * 0.205 # 0.205 #TODO to be correct. it should be cos(angle)*offset
-                    #print("wrist gripper offset:", wrist_to_gripper_offset)
-                    trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": new_arm_position}})                    
-                    isReachable=True 
-
-                    
-                    # lift - will it hit the object? most likely the arm is higher than the object....
-                    trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": self.plan_lift_extenion(object_position, last_event.metadata["arm"]["lift_m"])}})
-                     
+                # TODO: check z_delta before  - will it hit the object?
+                # extend arm
+                #wrist_to_gripper_offset = 0.205 - np.cos(np.deg2rad(wrist_offset)) * 0.205 # 0.205 #TODO to be correct. it should be cos(angle)*offset
+                #print("wrist gripper offset:", wrist_to_gripper_offset)
+                trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": new_arm_position}})                    
                 
+                # lift - will it hit the object? most likely the arm is higher than the object....
+                trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": self.plan_lift_extenion(object_position, last_event.metadata["arm"]["lift_m"])}})
+                isReachable=True 
+    
             
         return isReachable, {"action": trajectory}
 
