@@ -4362,7 +4362,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         visCheck.visible = true;
                         visCheck.interactable = true;
 #if UNITY_EDITOR
-                        Debug.DrawLine(camera.transform.position, hit.point, Color.cyan, 10f);
+                        Debug.DrawLine(camera.transform.position, hit.point, Color.cyan, 0f);
 #endif
                     }
                 }
@@ -4436,7 +4436,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 #if UNITY_EDITOR
                 if (visCheck.visible) {
-                    Debug.DrawLine(camera.transform.position, hit.point, Color.cyan, 10f);
+                    Debug.DrawLine(camera.transform.position, hit.point, Color.cyan, 0f);
                 }
 #endif
             }
@@ -5926,7 +5926,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (shouldEnqueue) {
                             pointsQueue.Enqueue(newPosition);
 #if UNITY_EDITOR
-                            Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+                            Debug.DrawLine(p, newPosition, Color.cyan, 10f);
 #endif
                         }
                     }

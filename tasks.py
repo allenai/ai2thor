@@ -1174,7 +1174,7 @@ def ci_build(
 
                 private_scene_options = [novelty_thor_scenes]
 
-                build_archs = ["OSXIntel64", "Linux64"]
+                build_archs = ["OSXIntel64"] #, "Linux64"]
 
                 # CloudRendering only supported with 2020.3.25
                 # should change this in the future to automatically install
