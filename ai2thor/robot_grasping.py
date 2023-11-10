@@ -39,10 +39,10 @@ T_ARM_FROM_BASE_188 = np.array([[         -1, -0.00076734,   0.0022021,   -0.059
        [-0.00033483,    -0.88728,    -0.46123,       1.414],
        [          0,           0,           0,           1]])
 
-T_ARM_FROM_BASE_205 = np.array([[-0.99462515, -0.10153981, -0.02026033, -0.05633738],
-       [-0.0353048 ,  0.51653206, -0.85553971, -0.05158587],
-       [ 0.09733645, -0.85022603, -0.51734062,  1.46661359],
-       [ 0.        ,  0.        ,  0.        ,  1.        ]])
+T_ARM_FROM_BASE_205 = np.array([[   -0.99686,   -0.078317,   -0.011768,   -0.064451],
+       [  -0.030594,     0.51788,    -0.85491,    -0.05393],
+       [   0.073048,    -0.85186,    -0.51865,      1.4639],
+       [          0,           0,           0,           1]])
 
 T_ROTATED_STRETCH_FROM_BASE = np.array([[-0.00069263, 1, -0.0012349, -0.017],
                     [ 0.5214, -0.00069263, -0.85331, -0.038],
@@ -50,9 +50,11 @@ T_ROTATED_STRETCH_FROM_BASE = np.array([[-0.00069263, 1, -0.0012349, -0.017],
                     [ 0, 0, 0, 1]])
 
 ## CONSTANT CAMERA INTRINSIC 
-STRETCH_INTR = {'coeffs': [0.0, 0.0, 0.0, 0.0, 0.0], 'fx': 911.8329467773438, 'fy': 911.9554443359375, 'height': 720, 'ppx': 647.63037109375, 'ppy': 368.0513000488281, 'width': 1280, 'depth_scale': 0.0010000000474974513}
-ARM_INTR = {'coeffs': [-0.05686680227518082, 0.06842068582773209, -0.0004524677060544491, 0.0006787769380025566, -0.022475285455584526], 'fx': 640.1092529296875, 'fy': 639.4522094726562, 'height': 720, 'ppx': 652.3712158203125, 'ppy': 368.69549560546875, 'width': 1280, 'depth_scale': 0.0010000000474974513}
+STRETCH188_INTR = {'coeffs': [0.0, 0.0, 0.0, 0.0, 0.0], 'fx': 911.8329467773438, 'fy': 911.9554443359375, 'height': 720, 'ppx': 647.63037109375, 'ppy': 368.0513000488281, 'width': 1280, 'depth_scale': 0.0010000000474974513}
+STRETCH205_INTR = {"coeffs": [0.0, 0.0, 0.0, 0.0, 0.0], "fx": 924.7802734375, "fy": 924.7508544921875, "height": 720, "ppx": 648.2431030273438, "ppy": 360.4836120605469, "width": 1280, "depth_scale": 0.0010000000474974513}
 
+ARM188_INTR = {'coeffs': [-0.05686680227518082, 0.06842068582773209, -0.0004524677060544491, 0.0006787769380025566, -0.022475285455584526], 'fx': 640.1092529296875, 'fy': 639.4522094726562, 'height': 720, 'ppx': 652.3712158203125, 'ppy': 368.69549560546875, 'width': 1280, 'depth_scale': 0.0010000000474974513}
+ARM205_INTR = {"coeffs": [-0.05642872303724289, 0.07066791504621506, 0.00024385287542827427, 0.0014521401608362794, -0.02267066016793251], "fx": 638.9337768554688, "fy": 638.2869262695312, "height": 720, "ppx": 646.5670776367188, "ppy": 364.27740478515625, "width": 1280, "depth_scale": 0.0010000000474974513}
 
 ## POSE ESTIMATION
 def my_estimatePoseSingleMarkers(corners, marker_size, mtx, distortion):
@@ -122,12 +124,12 @@ class BaseObjectDetector():
         controller.step("Stow")
         controller.step("RotateHead")
         controller.step({"action":[
-                    {"action": "MoveArmExtension", "args": {"move_scalar": 0.25}},
-                    {"action": "MoveArmBase", "args": {"move_scalar": 0.70}},
+                    {"action": "MoveArmExtension", "args": {"move_scalar": 0.2}}, # arm 0.276
+                    {"action": "MoveArmBase", "args": {"move_scalar": 0.70}},  #lift 0.87
         ]})
 
-        arm_image = c.last_event.third_party_camera_frames[0]
-        stretch_image = c.last_event.third_party_camera_frames[1]
+        arm_image = controller.last_event.third_party_camera_frames[0]
+        stretch_image = controller.last_event.third_party_camera_frames[1]
 
         # aruco marker detector
         dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)
@@ -145,6 +147,12 @@ class BaseObjectDetector():
 
         # CHECK IF MARKERS ARE DETECTED
         assert(stretch_aruco_ids == arm_aruco_ids)
+        if self.camera_source == "arm188":
+            ARM_INTR = ARM188_INTR
+            STRETCH_INTR = STRETCH188_INTR
+        if self.camera_source == "arm205":
+            ARM_INTR = ARM205_INTR
+            STRETCH_INTR = STRETCH205_INTR
 
         # pose (stretch)
         stretch_camera_matrix = np.array([[STRETCH_INTR["fx"], 0, STRETCH_INTR["ppx"]], [0, STRETCH_INTR["fy"], STRETCH_INTR["ppy"]], [0, 0, 1]])
@@ -194,25 +202,32 @@ class BaseObjectDetector():
 
     def update_camera_info(self, camera_source):
         ## TODO: read from config
-        if camera_source == "stretch":
+        if camera_source == "stretch205":
             #with open(os.path.join(os.path.dirname(__file__),'camera_intrinsics_102422073668.txt')) as f:
             #    intr = json.load(f)
-            intr = STRETCH_INTR
+            intr = STRETCH205_INTR
+            self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
+            self.depth_scale = intr["depth_scale"]
+            self.CameraPose = T_ROTATED_STRETCH_FROM_BASE
+        elif camera_source == "stretch188":
+            #with open(os.path.join(os.path.dirname(__file__),'camera_intrinsics_102422073668.txt')) as f:
+            #    intr = json.load(f)
+            intr = STRETCH188_INTR
             self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
             self.depth_scale = intr["depth_scale"]
             self.CameraPose = T_ROTATED_STRETCH_FROM_BASE
         elif camera_source == "arm205":
-            intr = ARM_INTR
+            intr = ARM205_INTR
             self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
             self.depth_scale = intr["depth_scale"]
             self.CameraPose = T_ARM_FROM_BASE_205
         elif camera_source == "arm188":
-            intr = ARM_INTR
+            intr = ARM188_INTR
             self.intrinsic = open3d.camera.PinholeCameraIntrinsic(intr["width"],intr["height"],intr["fx"],intr["fy"],intr["ppx"],intr["ppy"])    
             self.depth_scale = intr["depth_scale"]
             self.CameraPose = T_ARM_FROM_BASE_188        
         else:
-            print("Camera source can only be [arm205, arm188 or stretch]")
+            print("Camera source can only be [arm205, arm188, stretch188, or stretch205]")
             print("Please call 'update_camera_info(camera_source)' with the right camera source")
 
     def get_target_mask(self, object_str, rgb):
@@ -623,7 +638,7 @@ class GraspPlanner():
     """ Naive grasp Planner """
     def __init__(self):
         pass
-    
+
     def plan_lift_extenion(self, object_position, curr_lift_position):
         return object_position[2] + 0.168 - (curr_lift_position-0.21) - 0.41 #meters
 
@@ -790,15 +805,25 @@ class DoorKnobGraspPlanner(GraspPlanner):
 class VIDAGraspPlanner(GraspPlanner):
     def __init__(self):
         super().__init__()
+        
+        ## 205 constants
+        ARM_OFFSET_205 = 0.125
+        WRIST_YAW_TO_BASE_205 = -0.04
+        GRIPPER_LENGTH_205 = 0.230
 
-        ## 188 constants
-        self.wrist_yaw_from_base = 0.0025 # 25 #-0.020 # -0.025 # FIXED - should be.
-        self.arm_offset = 0.20 # end of arm to wrist offset
+        ## 188 constants (need to check)
+        ARM_OFFSET_188 = 0.2
+        WRIST_YAW_TO_BASE_188 = 0.0025
+        DISTANCE_188 = 0.205
+
+        self.gripper_length = GRIPPER_LENGTH_205
+        self.wrist_yaw_from_base = WRIST_YAW_TO_BASE_205 # -0.04 # #-0.07(aruco x) + 0.03 #0.0025 # 25 #-0.020 # -0.025 # FIXED - should be.
+        self.arm_offset = ARM_OFFSET_205 #0.20 
         self.lift_base_offset = 0.192 # base to lift
         self.lift_wrist_offset = 0.028
 
     def plan_lift_extenion(self, object_position, curr_lift_position):
-        lift_object_offset = -0.03 # to grasp a little lower than the estimated cetner
+        lift_object_offset = -0.015 # to grasp a little lower than the estimated cetner
         return (object_position[2]+lift_object_offset) + 0.168 - (curr_lift_position-0.21) - 0.41 #meters
 
     def get_wrist_position(self, last_event):
@@ -819,7 +844,7 @@ class VIDAGraspPlanner(GraspPlanner):
         return position
     
 
-    def find_points_on_y_axis(self, p2, distance=0.205): #205 210 worked for most too. 0.220 works for apple 0.208
+    def find_points_on_y_axis(self, p2, distance): #205 210 worked for most too. 0.220 works for apple 0.208
         def distance_between_points(p1, p2):
             x1, y1 = p1
             x2, y2 = p2
@@ -844,11 +869,14 @@ class VIDAGraspPlanner(GraspPlanner):
         return new_points #returns bigger value first - closer to 0 means it's cloer to base
 
 
-    def plan_grasp_trajectory(self, object_position, last_event, distance=0.205):
+    def plan_grasp_trajectory(self, object_position, last_event, distance=None):
+        if distance is not None:
+            self.gripper_length = distance 
+            
         wrist_position = self.get_wrist_position(last_event)
 
         x_delta, y_delta, z_delta = (object_position - wrist_position)
-        new_wrist_positions = self.find_points_on_y_axis([x_delta, y_delta], distance)
+        new_wrist_positions = self.find_points_on_y_axis([x_delta, y_delta], self.gripper_length)
 
         isReachable=False
         trajectory = []
