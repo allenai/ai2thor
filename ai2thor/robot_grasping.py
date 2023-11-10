@@ -686,11 +686,28 @@ class DoorKnobGraspPlanner(GraspPlanner):
 
         ## 188 constants
         self.gripper_length = 0.205
-        self.gripper_heihgt = 0.138
+        self.gripper_height = 0.138
 
-        self.wrist_yaw_from_base = 0.003#25 #-0.020 # -0.025 # FIXED - should be.
-        self.arm_offset = 0.155 #0.140
-        self.lift_base_offset = 0.192 #base to lift
+        #self.wrist_yaw_from_base = 0.003#25 #-0.020 # -0.025 # FIXED - should be.
+        #self.arm_offset = 0.155 #0.140
+        #self.lift_base_offset = 0.192 #base to lift
+        #self.lift_wrist_offset = 0.028
+
+        
+        ## 205 constants
+        ARM_OFFSET_205 = 0.125          # checked with detected object pose
+        WRIST_YAW_TO_BASE_205 = -0.04   # checked with 133 aruco marker
+        GRIPPER_LENGTH_205 = 0.230
+
+        ## 188 constants (need to check)
+        ARM_OFFSET_188 = 0.2
+        WRIST_YAW_TO_BASE_188 = 0.0025
+        DISTANCE_188 = 0.205
+
+        self.gripper_length = GRIPPER_LENGTH_205
+        self.wrist_yaw_from_base = WRIST_YAW_TO_BASE_205 
+        self.arm_offset = ARM_OFFSET_205 #0.20 
+        self.lift_base_offset = 0.192 # base to lift
         self.lift_wrist_offset = 0.028
 
 
@@ -714,7 +731,7 @@ class DoorKnobGraspPlanner(GraspPlanner):
         position[1] = -(last_event.metadata["arm"]["extension_m"] + self.arm_offset) + wrist_to_gripper_offset_y
 
         # z depends on Lift
-        position[2] = last_event.metadata["arm"]["lift_m"] + self.lift_base_offset + self.lift_wrist_offset - self.gripper_heihgt
+        position[2] = last_event.metadata["arm"]["lift_m"] + self.lift_base_offset + self.lift_wrist_offset - self.gripper_height
 
         #rotation = np.zeros((3,3))
         print(f"Gripper center position from base frame: {position}")
@@ -807,8 +824,8 @@ class VIDAGraspPlanner(GraspPlanner):
         super().__init__()
         
         ## 205 constants
-        ARM_OFFSET_205 = 0.125
-        WRIST_YAW_TO_BASE_205 = -0.04
+        ARM_OFFSET_205 = 0.125          # checked with detected object pose
+        WRIST_YAW_TO_BASE_205 = -0.04   # checked with 133 aruco marker
         GRIPPER_LENGTH_205 = 0.230
 
         ## 188 constants (need to check)
@@ -817,10 +834,11 @@ class VIDAGraspPlanner(GraspPlanner):
         DISTANCE_188 = 0.205
 
         self.gripper_length = GRIPPER_LENGTH_205
-        self.wrist_yaw_from_base = WRIST_YAW_TO_BASE_205 # -0.04 # #-0.07(aruco x) + 0.03 #0.0025 # 25 #-0.020 # -0.025 # FIXED - should be.
+        self.wrist_yaw_from_base = WRIST_YAW_TO_BASE_205 
         self.arm_offset = ARM_OFFSET_205 #0.20 
         self.lift_base_offset = 0.192 # base to lift
         self.lift_wrist_offset = 0.028
+
 
     def plan_lift_extenion(self, object_position, curr_lift_position):
         lift_object_offset = -0.015 # to grasp a little lower than the estimated cetner
@@ -872,7 +890,7 @@ class VIDAGraspPlanner(GraspPlanner):
     def plan_grasp_trajectory(self, object_position, last_event, distance=None):
         if distance is not None:
             self.gripper_length = distance 
-            
+
         wrist_position = self.get_wrist_position(last_event)
 
         x_delta, y_delta, z_delta = (object_position - wrist_position)
