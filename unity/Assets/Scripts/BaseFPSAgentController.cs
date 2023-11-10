@@ -1548,7 +1548,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
             Debug.Log("Echoes! Three Freeze!");
 #endif
-
             actionFinished(true);
         }
 
