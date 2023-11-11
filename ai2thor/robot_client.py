@@ -483,7 +483,7 @@ class RobotClient():
         }
         robot_state["agent"]["rotation"] = {
             "x" : response.base.rotation.x,
-            "y" : math.degrees(-response.base.rotation.y)%360,
+            "y" : response.base.rotation.y,
             "z" : response.base.rotation.z
         }
         robot_state["arm"]["extension_force"] = response.arm.extension_force
