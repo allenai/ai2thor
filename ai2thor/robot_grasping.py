@@ -844,6 +844,27 @@ class VIDAGraspPlanner(GraspPlanner):
         lift_object_offset = -0.015 # to grasp a little lower than the estimated cetner
         return (object_position[2]+lift_object_offset) + 0.168 - (curr_lift_position-0.21) - 0.41 #meters
 
+    def get_gripper_center_position(self, last_event):
+        wrist_yaw = last_event.metadata["arm"]["wrist_degrees"] # but is actually in radians
+
+        position = np.zeros(3)
+
+        # x axis FIXED
+        wrist_to_gripper_offset_x = -np.sin(np.deg2rad(wrist_yaw)) * self.gripper_length # 0.205 #TODO to be correct. it should be cos(angle)*offset
+        position[0] = self.wrist_yaw_from_base + wrist_to_gripper_offset_x
+
+        #TODO: check if this is correct
+        # y depends on Arm Extension
+        wrist_to_gripper_offset_y = -np.cos(np.deg2rad(wrist_yaw)) * self.gripper_length # 0.205 #TODO to be correct. it should be cos(angle)*offset
+        position[1] = -(last_event.metadata["arm"]["extension_m"] + self.arm_offset) + wrist_to_gripper_offset_y
+
+        # z depends on Lift
+        position[2] = last_event.metadata["arm"]["lift_m"] + self.lift_base_offset + self.lift_wrist_offset - self.gripper_height
+
+        #rotation = np.zeros((3,3))
+        print(f"Gripper center position from base frame: {position}")
+        return position
+
     def get_wrist_position(self, last_event):
         position = np.zeros(3)
         
