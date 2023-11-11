@@ -833,6 +833,7 @@ class VIDAGraspPlanner(GraspPlanner):
         WRIST_YAW_TO_BASE_188 = 0.0025
         DISTANCE_188 = 0.205
 
+        self.gripper_height =  0.138
         self.gripper_length = GRIPPER_LENGTH_205
         self.wrist_yaw_from_base = WRIST_YAW_TO_BASE_205 
         self.arm_offset = ARM_OFFSET_205 #0.20 
