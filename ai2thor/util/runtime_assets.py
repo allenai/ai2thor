@@ -4,6 +4,8 @@ import os
 import shutil
 import multiprocessing
 
+from filelock import FileLock
+
 logger = logging.getLogger(__name__)
 
 
@@ -80,45 +82,46 @@ def create_asset(
     if verbose:
         logger.info(f"Copying asset to THOR build dir: {save_dir}.")
 
-    if asset_symlink:
-        build_target_dir = os.path.join(save_dir, asset_id)
-        exists = os.path.exists(build_target_dir)
-        is_link = os.path.islink(build_target_dir)
-        if exists and not is_link:
-            # If not a link, delete the full directory
+    build_target_dir = os.path.join(save_dir, asset_id)
+
+    with FileLock(os.path.join(save_dir, f"{asset_id}.lock")):
+        if asset_symlink:
+            exists = os.path.exists(build_target_dir)
+            is_link = os.path.islink(build_target_dir)
+            if exists and not is_link:
+                # If not a link, delete the full directory
+                if verbose:
+                    logger.info(f"Deleting old asset dir: {build_target_dir}")
+                shutil.rmtree(build_target_dir)
+            elif is_link:
+                # If not a link, delete it only if its not pointing to the right place
+                if os.path.realpath(build_target_dir) != os.path.realpath(asset_directory):
+                    os.remove(build_target_dir)
+
+            if (not os.path.exists(build_target_dir)) and (not os.path.islink(build_target_dir)):
+                # Add symlink if it doesn't already exist
+                os.symlink(asset_directory, build_target_dir)
+        else:
             if verbose:
-                logger.info(f"Deleting old asset dir: {build_target_dir}")
-            shutil.rmtree(build_target_dir)
-        elif is_link:
-            # If not a link, delete it only if its not pointing to the right place
-            if os.path.realpath(build_target_dir) != os.path.realpath(asset_directory):
-                os.remove(build_target_dir)
+                logger.info("Starting copy and reference modification...")
 
-        if not os.path.islink(build_target_dir):
-            # Add symlink if it doesn't already exist
-            os.symlink(asset_directory, build_target_dir)
-    else:
-        build_target_dir = os.path.join(save_dir, asset_id)
+            if os.path.exists(build_target_dir):
+                if verbose:
+                    logger.info(f"Deleting old asset dir: {build_target_dir}")
+                shutil.rmtree(build_target_dir)
 
-        if verbose:
-            logger.info("Starting copy and reference modification...")
-
-        if os.path.exists(build_target_dir):
+            shutil.copytree(
+                asset_directory,
+                build_target_dir,
+                ignore=shutil.ignore_patterns("images", "*.obj", "thor_metadata.json"),
+            )
             if verbose:
-                logger.info(f"Deleting old asset dir: {build_target_dir}")
-            shutil.rmtree(build_target_dir)
+                logger.info("Copy finished.")
 
-        shutil.copytree(
-            asset_directory,
-            build_target_dir,
-            ignore=shutil.ignore_patterns("images", "*.obj", "thor_metadata.json"),
+        create_prefab_action = load_existing_thor_asset_file(
+            out_dir=asset_directory, object_name=asset_id
         )
-        if verbose:
-            logger.info("Copy finished.")
 
-    create_prefab_action = load_existing_thor_asset_file(
-        out_dir=asset_directory, object_name=asset_id
-    )
     create_prefab_action["normalTexturePath"] = os.path.join(
         save_dir,
         asset_id,
