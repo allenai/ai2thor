@@ -5954,7 +5954,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool visualize = false,
             int? navMeshId = null
         ) {
-            Debug.Log("----- GetSimObjectNavMeshTarget");
             var targetTransform = targetSOP.transform;
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
             var agentTransform = this.transform;
