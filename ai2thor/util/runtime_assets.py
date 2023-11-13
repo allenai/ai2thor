@@ -115,6 +115,7 @@ def create_asset(
                 build_target_dir,
                 ignore=shutil.ignore_patterns("images", "*.obj", "thor_metadata.json"),
             )
+
             if verbose:
                 logger.info("Copy finished.")
 
