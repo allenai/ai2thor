@@ -401,10 +401,11 @@ class RobotClient():
                                                                 width=self.width,
                                                                 height=self.height))
         
-        while lowerbound_timestamp is not None and timestamp1_is_bigger_timestamp2(lowerbound_timestamp, response.timestamp):                    
-            response = self.obs_stub.GetAllImages(image_pb2.ImageRequest(image_source_name=image_source_name,
-                                                                    width=self.width,
-                                                                   height=self.height))
+        if self.multi_thread:
+            while lowerbound_timestamp is not None and timestamp1_is_bigger_timestamp2(lowerbound_timestamp, response.timestamp):                    
+                response = self.obs_stub.GetAllImages(image_pb2.ImageRequest(image_source_name=image_source_name,
+                                                                        width=self.width,
+                                                                       height=self.height))
 
         self.images[image_source_name][enum_to_string[0]] = {
             "timestamp" : response.timestamp,
@@ -437,12 +438,12 @@ class RobotClient():
                                                                 height=self.height,
                                                                 pixel_format=pixel_format))
         
-
-        while lowerbound_timestamp is not None and timestamp1_is_bigger_timestamp2(lowerbound_timestamp, response.timestamp):                    
-            response = self.obs_stub.GetImage(image_pb2.ImageRequest(image_source_name=image_source_name,
-                                                                    width=self.width,
-                                                                    height=self.height,
-                                                                    pixel_format=pixel_format))
+        if self.multi_thread:
+            while lowerbound_timestamp is not None and timestamp1_is_bigger_timestamp2(lowerbound_timestamp, response.timestamp):                    
+                 response = self.obs_stub.GetImage(image_pb2.ImageRequest(image_source_name=image_source_name,
+                                                                         width=self.width,
+                                                                         height=self.height,
+                                                                         pixel_format=pixel_format))
             
         self.images[image_source_name][enum_to_string[pixel_format]] = {
             "timestamp" : response.timestamp,
@@ -467,8 +468,9 @@ class RobotClient():
         #start_time = time.time()
 
         response = self.state_stub.GetRobotState(robot_state_pb2.RobotStateRequest(client_name="RobotClient"))
-        while lowerbound_timestamp is not None and timestamp1_is_bigger_timestamp2(lowerbound_timestamp, response.timestamp):            
-            response = self.state_stub.GetRobotState(robot_state_pb2.RobotStateRequest(client_name="RobotClient"))
+        if self.multi_thread:
+            while lowerbound_timestamp is not None and timestamp1_is_bigger_timestamp2(lowerbound_timestamp, response.timestamp):            
+                response = self.state_stub.GetRobotState(robot_state_pb2.RobotStateRequest(client_name="RobotClient"))
 
         robot_state = {}
         robot_state["timestamp"] = response.timestamp
