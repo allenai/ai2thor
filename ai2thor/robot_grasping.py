@@ -342,14 +342,15 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
         return [round(i) for i in boxes[ind].tolist()] #xyxy
     
 
-    def get_target_mask(self, object_str, rgb):
+    def get_target_mask(self, object_str, rgb, bbox=None):
         if self.camera_source == "stretch":
             rgb = cv2.rotate(rgb, cv2.ROTATE_90_CLOCKWISE) # it works better for stretch cam
 
-        bbox = self.predict_object_detection(rgb=rgb, object_str=object_str)
-    
-        if bbox is None or len(bbox) == 0:
-            return None
+        if bbox is None:
+            bbox = self.predict_object_detection(rgb=rgb, object_str=object_str)
+        
+            if bbox is None or len(bbox) == 0:
+                return None
 
         everything_results = self.model_fastsam(
                 rgb,
@@ -840,7 +841,7 @@ class VIDAGraspPlanner(GraspPlanner):
         WRIST_YAW_TO_BASE_188 = 0.0025
         DISTANCE_188 = 0.205
 
-        self.gripper_height =  0.138
+        self.gripper_height =  0.180 #0.138
         self.gripper_length = GRIPPER_LENGTH_205
         self.wrist_yaw_from_base = WRIST_YAW_TO_BASE_205 
         self.arm_offset = ARM_OFFSET_205 #0.20 
