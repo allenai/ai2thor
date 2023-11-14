@@ -408,6 +408,8 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
 
     def get_target_mask(self, rgb, object_str="a photo of a doorknob"):
         doorknob_bbox = super().predict_object_detection(rgb, object_str) #xyxy
+        if doorknob_bbox is None:
+            return None
         x_center = round(doorknob_bbox[0] + (doorknob_bbox[2]-doorknob_bbox[0])/2)
         y_center = round(doorknob_bbox[1] + (doorknob_bbox[3]-doorknob_bbox[1])/2)
         
@@ -483,6 +485,9 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         ##TODO: if len(pcd.points) is zero, there is a problem with a depth image)
         if pcd is None:
             return [None, None]
+        if len(pcd.points) == 0:
+            return [None, None]
+
         
         self.center = pcd.get_center()
         bbox = pcd.get_oriented_bounding_box()
@@ -775,6 +780,10 @@ class DoorKnobGraspPlanner(GraspPlanner):
         #self.plan_base_rotation(pregrasp_position)# - 90
         #self.plan_base_rotation(object_position)# - 90
 
+        current_ext = last_event.metadata["arm"]["extension_m"]
+        move_inside = min(last_event.metadata["arm"]["extension_m"], 0.2)
+        trajectory.append({"action": "MoveArmExtension", "args": {"move_scalar": -move_inside}})
+
         trajectory.append({"action": "RotateAgent", "args": {"move_scalar": self.plan_base_rotation(pregrasp_position)}})
         
         ## TODO: LIFT OFFSET 
@@ -797,7 +806,7 @@ class DoorKnobGraspPlanner(GraspPlanner):
         #arm_offset *= np.cos(wrist_offset)
         #print("wrist length cos: ", np.cos(np.deg2rad(wrist_offset)) * self.gripper_length)
         #arm_offset = self.gripper_length #- np.cos(np.deg2rad(wrist_offset)) * self.gripper_length
-        delta_ext = arm_offset + self.plan_arm_extension(pregrasp_position, last_event.metadata["arm"]["extension_m"])
+        delta_ext = arm_offset + self.plan_arm_extension(pregrasp_position, last_event.metadata["arm"]["extension_m"] - move_inside)
         
         #2. needs to move the mobiel base 
         if (delta_ext + last_event.metadata["arm"]["extension_m"]) >= 0.52 or (last_event.metadata["arm"]["extension_m"] + delta_ext) < 0.0:
