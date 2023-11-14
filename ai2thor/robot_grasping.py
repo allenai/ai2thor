@@ -407,6 +407,8 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
 
     def get_target_mask(self, rgb, object_str="a photo of a doorknob"):
         doorknob_bbox = super().predict_object_detection(rgb, object_str) #xyxy
+        if doorknob_bbox is None:
+            return None
         x_center = round(doorknob_bbox[0] + (doorknob_bbox[2]-doorknob_bbox[0])/2)
         y_center = round(doorknob_bbox[1] + (doorknob_bbox[3]-doorknob_bbox[1])/2)
         
@@ -482,6 +484,9 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         ##TODO: if len(pcd.points) is zero, there is a problem with a depth image)
         if pcd is None:
             return [None, None]
+        if len(pcd.points) == 0:
+            return [None, None]
+
         
         self.center = pcd.get_center()
         bbox = pcd.get_oriented_bounding_box()
