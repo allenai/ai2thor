@@ -13,6 +13,8 @@ using Newtonsoft.Json.Serialization;
 using Thor.Procedural.Data;
 using UnityEngine.AI;
 using Thor.Utils;
+using System.Runtime.InteropServices.WindowsRuntime;
+
 
 #if UNITY_EDITOR
 using UnityEditor.SceneManagement;
@@ -1176,6 +1178,25 @@ namespace Thor.Procedural {
             return 0;
         }
 
+        private static bool validateHouseObjects(AssetMap<GameObject> assetDb, IEnumerable<HouseObject> hos, List<string> missingIds) {
+            if (hos == null) {
+                return true;
+            }
+            else {
+                var result = true;
+                foreach (var ho in hos) {
+
+                    var inDb = assetDb.ContainsKey(ho.assetId);
+                    if (!inDb) {
+                        missingIds.Add(ho.assetId);
+                    }
+                    result =  inDb && validateHouseObjects(assetDb, ho.children, missingIds);
+                }
+                
+                return result;
+            }
+        }
+
         public static GameObject CreateHouse(
            ProceduralHouse house,
            AssetMap<Material> materialDb,
@@ -1186,6 +1207,13 @@ namespace Thor.Procedural {
                 throw new ArgumentException(
                     $"House metadata schema not specified! Should be under house['metadata']['schema']." +
                     $" The current schema for this THOR version is '{CURRENT_HOUSE_SCHEMA}'"
+                );
+            }
+            var missingIds = new List<string>();
+            if (!validateHouseObjects(getAssetMap(), house.objects, missingIds )) {
+                throw new ArgumentException(
+                    $"Object ids '{string.Join(", ", missingIds)}' not present in asset database." +
+                    $" If it is a procedural asset make sure you call 'CreateAsset' before 'CreateHouse'"
                 );
             }
 
