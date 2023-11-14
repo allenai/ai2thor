@@ -396,10 +396,11 @@ class RobotClient():
             if self._action_timestamp is not None and lowerbound_timestamp is None: 
                 lowerbound_timestamp = self._action_timestamp
         
-
+        start_time = time.time()
         response = self.obs_stub.GetAllImages(image_pb2.ImageRequest(image_source_name=image_source_name,
                                                                 width=self.width,
                                                                 height=self.height))
+        print("all images respone time:", time.time() - start_time)
         
         if self.multi_thread:
             while lowerbound_timestamp is not None and timestamp1_is_bigger_timestamp2(lowerbound_timestamp, response.timestamp):                    

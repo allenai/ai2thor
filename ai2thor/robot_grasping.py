@@ -34,9 +34,9 @@ from scipy.spatial.transform import Rotation as R
 
 
 ## CONSTANTS TRANSFORMATION MATRIX
-T_ARM_FROM_BASE_188 = np.array([[         -1, -0.00076734,   0.0022021,   -0.059324],
-       [ -0.0023078,     0.46123,    -0.88728,   -0.037616],
-       [-0.00033483,    -0.88728,    -0.46123,       1.414],
+T_ARM_FROM_BASE_188 = np.array([[   -0.98555,   -0.076904,    -0.15093,    0.091622],
+       [    0.13275,     0.20278,    -0.97018,     0.16104],
+       [    0.10522,     -0.9762,    -0.18964,      1.2793],
        [          0,           0,           0,           1]])
 
 T_ARM_FROM_BASE_205 = np.array([[   -0.99686,   -0.078317,   -0.011768,   -0.064451],
@@ -832,7 +832,7 @@ class DoorKnobGraspPlanner(GraspPlanner):
 
 
 class VIDAGraspPlanner(GraspPlanner):
-    def __init__(self):
+    def __init__(self, robot_ip="205"):
         super().__init__()
         
         ## 205 constants
@@ -841,21 +841,29 @@ class VIDAGraspPlanner(GraspPlanner):
         GRIPPER_LENGTH_205 = 0.230
 
         ## 188 constants (need to check)
-        ARM_OFFSET_188 = 0.2
-        WRIST_YAW_TO_BASE_188 = 0.0025
-        DISTANCE_188 = 0.205
+        ARM_OFFSET_188 = 0.225
+        #WRIST_YAW_TO_BASE_188 = -0.04 # 133 aruco marker
+        #DISTANCE_188 = 0.230
 
         self.gripper_height =  0.180 #0.138
         self.gripper_length = GRIPPER_LENGTH_205
         self.wrist_yaw_from_base = WRIST_YAW_TO_BASE_205 
+
         self.arm_offset = ARM_OFFSET_205 #0.20 
+        if robot_ip[-3:] == "188":
+            self.arm_offset = ARM_OFFSET_188 #0.20 
+
         self.lift_base_offset = 0.192 # base to lift
         self.lift_wrist_offset = 0.028
 
+        self.lift_object_offset = -0.015 # to grasp a little lower than the estimated cetner
+        if robot_ip[-3:] == "188":
+            self.lift_object_offset = -0.1
+            self.lift_base_offset += 0.09
+        
 
     def plan_lift_extenion(self, object_position, curr_lift_position):
-        lift_object_offset = -0.015 # to grasp a little lower than the estimated cetner
-        return (object_position[2]+lift_object_offset) + 0.168 - (curr_lift_position-0.21) - 0.41 #meters
+        return (object_position[2]+self.lift_object_offset) + 0.168 - (curr_lift_position-0.21) - 0.41 #meters
 
     def get_gripper_center_position(self, last_event):
         wrist_yaw = last_event.metadata["arm"]["wrist_degrees"] # but is actually in radians
