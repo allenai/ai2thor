@@ -806,7 +806,7 @@ class DoorKnobGraspPlanner(GraspPlanner):
         #arm_offset *= np.cos(wrist_offset)
         #print("wrist length cos: ", np.cos(np.deg2rad(wrist_offset)) * self.gripper_length)
         #arm_offset = self.gripper_length #- np.cos(np.deg2rad(wrist_offset)) * self.gripper_length
-        delta_ext = arm_offset + self.plan_arm_extension(pregrasp_position, last_event.metadata["arm"]["extension_m"] + move_inside)
+        delta_ext = arm_offset + self.plan_arm_extension(pregrasp_position, last_event.metadata["arm"]["extension_m"] - move_inside)
         
         #2. needs to move the mobiel base 
         if (delta_ext + last_event.metadata["arm"]["extension_m"]) >= 0.52 or (last_event.metadata["arm"]["extension_m"] + delta_ext) < 0.0:
