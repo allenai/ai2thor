@@ -424,6 +424,8 @@ class DoorKnobDetector(OwlVitSegAnyObjectDetector):
         doorknob_masks = prompt_process.box_prompt(bboxes=[doorknob_bbox])
 
         door_bbox = self.predict_object_detection(rgb, object_str="a photo of a door", point=[x_center, y_center]) #xyxy
+        if door_bbox is None:
+            return None
         door_masks = prompt_process.box_prompt(bboxes=[door_bbox])
         door_mask = door_masks[0]
 
@@ -776,7 +778,7 @@ class DoorKnobGraspPlanner(GraspPlanner):
         
         ## TODO: LIFT OFFSET 
         # lift
-        lift_offset = 0.1
+        lift_offset = -0.4
         #trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": lift_offset + self.plan_lift_extenion(pregrasp_position, last_event.metadata["arm"]["lift_m"])}}) 
         trajectory.append({"action": "MoveArmBase", "args": {"move_scalar": lift_offset + self.plan_lift_extenion(object_position, last_event.metadata["arm"]["lift_m"])}}) 
         
