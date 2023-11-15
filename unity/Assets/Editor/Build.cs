@@ -122,6 +122,10 @@ public class Build {
                 continue;
             }
 
+            if (f.EndsWith("_Screenshot.unity")) {
+                continue;
+            }
+
             if (f.EndsWith(".unity")) {
                 scenes.Add(f);
             }
