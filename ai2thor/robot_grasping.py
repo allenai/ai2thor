@@ -253,8 +253,9 @@ class BaseObjectDetector():
         pcd, ind = pcd.remove_radius_outlier(nb_points=20, radius=0.02)
         pcd, ind = pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=0.1)
         print("pcd pointcloud numbers after outlier removal: ", len(pcd.points))
-
-
+        if len(pcd.points==0):
+            return None 
+        
         center = pcd.get_center()
         bbox = pcd.get_oriented_bounding_box()
         
