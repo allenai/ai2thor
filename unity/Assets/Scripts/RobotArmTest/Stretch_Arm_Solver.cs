@@ -7,11 +7,9 @@ public class Stretch_Arm_Solver : MonoBehaviour {
     Transform arm1, arm2, arm3, arm4, arm5, wrist1;
     float liftInitialLocalHeightOffset = 0f, armHeight, armExtensionLength; 
 
-    #if UNITY_EDITOR
         void Update() {
             ManipulateStretchArm();
         }
-    #endif
 
     public void ManipulateStretchArm() {
         arm1 = armRoot.GetChild(0);

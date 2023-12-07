@@ -1,13 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour {
 
+    private CharacterController controller;
     public Camera playerCamera;
     public Transform playerArmManip;
     public Transform cameraThirdPersonReference;
     public Transform cameraLookAtReference;
+    public SphereCollider tractorInfluence;
     public Transform audioManager;
     public float swapTime = 0.25f;
     public float armSpeed = 0.5f;
@@ -15,23 +18,29 @@ public class PlayerController : MonoBehaviour {
     public float rotationTime = 0.25f;
     public float dioramaModeFOV = 60f;
     public float FPSModeFOV = 70f;
-
-    bool isRotating;
+    public bool isRotating;
     bool isViewSwapping;
     bool inFPSMode;
+    bool isCarrying;
+    List<Transform> pickedUpObjects = new List<Transform>();
+
+    private void Start()
+    {
+        controller = gameObject.GetComponent<CharacterController>();
+    }
 
     private void Update()
     {
         // Sync camera to reference's current position.
-        if (!isRotating && !isViewSwapping) {
-            if (inFPSMode == false) {
-                playerCamera.transform.position = cameraThirdPersonReference.transform.position;
-                playerCamera.transform.rotation = cameraThirdPersonReference.transform.rotation;
-            } else {
-                playerCamera.transform.position = cameraLookAtReference.transform.position;
-                playerCamera.transform.rotation = cameraLookAtReference.transform.rotation;
-            }
-        }
+        // if (!isRotating && !isViewSwapping) {
+        //     if (inFPSMode == false) {
+        //         playerCamera.transform.position = cameraThirdPersonReference.transform.position;
+        //         playerCamera.transform.rotation = cameraThirdPersonReference.transform.rotation;
+        //     } else {
+        //         playerCamera.transform.position = cameraLookAtReference.transform.position;
+        //         playerCamera.transform.rotation = cameraLookAtReference.transform.rotation;
+        //     }
+        // }
 
         // View-swap Inputs
         if (Input.GetKey(KeyCode.Space) && isViewSwapping == false) {
@@ -46,11 +55,11 @@ public class PlayerController : MonoBehaviour {
             if (!isRotating) {
                 if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W)) {
                     audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
-                    transform.position += transform.forward * forwardSpeed * Time.deltaTime;
+                    controller.Move(transform.forward * forwardSpeed * Time.deltaTime);
                 }
                 if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S)) {
                     audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
-                    transform.position -= transform.forward * forwardSpeed * Time.deltaTime;
+                    controller.Move(-transform.forward * forwardSpeed * Time.deltaTime);
                 }
             }
 
@@ -70,19 +79,19 @@ public class PlayerController : MonoBehaviour {
             if (!isRotating) {
                 if (Input.GetKey(KeyCode.W)) {
                     audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
-                    transform.position += transform.right * Vector3.Dot(transform.right, playerArmManip.forward) * armSpeed * Time.deltaTime;
+                    controller.Move(transform.right * Vector3.Dot(transform.right, playerArmManip.forward) * armSpeed * Time.deltaTime);
                     playerArmManip.position += (playerArmManip.forward - transform.right * Vector3.Dot(transform.right, playerArmManip.forward)) * armSpeed * Time.deltaTime;
                 } if (Input.GetKey(KeyCode.S)) {
                     audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
-                    transform.position -= transform.right * Vector3.Dot(transform.right, playerArmManip.forward) * armSpeed * Time.deltaTime;
+                    controller.Move(-transform.right * Vector3.Dot(transform.right, playerArmManip.forward) * armSpeed * Time.deltaTime);
                     playerArmManip.position -= (playerArmManip.forward - transform.right * Vector3.Dot(transform.right, playerArmManip.forward)) * armSpeed * Time.deltaTime;
                 } if (Input.GetKey(KeyCode.A)) {
                     audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
-                    transform.position -= transform.right * Vector3.Dot(transform.right, playerArmManip.right) * armSpeed * Time.deltaTime;
+                    controller.Move(-transform.right * Vector3.Dot(transform.right, playerArmManip.right) * armSpeed * Time.deltaTime);
                     playerArmManip.position -= (playerArmManip.right - transform.right * Vector3.Dot(transform.right, playerArmManip.right)) * armSpeed * Time.deltaTime;
                 } if (Input.GetKey(KeyCode.D)) {
                     audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
-                    transform.position += transform.right * Vector3.Dot(transform.right, playerArmManip.right) * armSpeed * Time.deltaTime;
+                    controller.Move(transform.right * Vector3.Dot(transform.right, playerArmManip.right) * armSpeed * Time.deltaTime);
                     playerArmManip.position += ( playerArmManip.right - transform.right * Vector3.Dot(transform.right, playerArmManip.right)) * armSpeed * Time.deltaTime;
                 } if (Input.GetKey(KeyCode.UpArrow)) {
                     audioManager.transform.Find("Slide").GetComponent<AudioSource>().enabled = true;
@@ -92,10 +101,48 @@ public class PlayerController : MonoBehaviour {
                     playerArmManip.position -= playerArmManip.up * armSpeed * Time.deltaTime;
                 } if (Input.GetKey(KeyCode.LeftArrow)) {
                     isRotating = !isRotating;
-                    StartCoroutine(RotateSmooth(playerArmManip, -45, rotationTime/2));
+                    StartCoroutine(RotateSmooth(playerArmManip, -45f, rotationTime/2));
                 } if (Input.GetKey(KeyCode.RightArrow)) {
                     isRotating = !isRotating;
-                    StartCoroutine(RotateSmooth(playerArmManip, 45, rotationTime/2));
+                    StartCoroutine(RotateSmooth(playerArmManip, 45f, rotationTime/2));
+                } if (Input.GetKeyDown(KeyCode.F)) {
+                    // Nothing picked up yet
+                    if (!isCarrying) {
+                        isCarrying = !isCarrying;
+                        audioManager.transform.Find("Thud").GetComponent<AudioSource>().Play();
+                        audioManager.transform.Find("Tractor").GetComponent<AudioSource>().enabled = true;
+                        foreach (Collider overlappedObject in Physics.OverlapSphere(tractorInfluence.transform.TransformPoint(tractorInfluence.center), tractorInfluence.radius)) {
+                            if (
+                                //overlappedObject.gameObject.name != "stretch_robot_grp" &&
+                                overlappedObject.GetType() != typeof(MeshCollider) &&
+                                overlappedObject.isTrigger != true &&
+                                overlappedObject.gameObject.isStatic != true
+                                ) {
+                                    Transform pickupCandidate = overlappedObject.transform;
+                                    Debug.Log(pickupCandidate.gameObject.name);
+                                    while (pickupCandidate.parent != GameObject.Find("Objects").transform) {
+                                        pickupCandidate = pickupCandidate.parent.transform;
+                                    }
+                                    pickedUpObjects.Add(pickupCandidate);
+                            }
+                        }
+                        pickedUpObjects = pickedUpObjects.Distinct().ToList();
+                        foreach (Transform pickedUpObject in pickedUpObjects) {
+                            pickedUpObject.SetParent(tractorInfluence.transform);
+                            pickedUpObject.GetComponent<Rigidbody>().isKinematic = true;
+                        }
+                    }
+                    // Stuff picked up
+                    else {
+                        isCarrying = !isCarrying;
+                        audioManager.transform.Find("Thud").GetComponent<AudioSource>().Play();
+                        audioManager.transform.Find("Tractor").GetComponent<AudioSource>().enabled = false;
+                        foreach (Transform pickedUpObject in pickedUpObjects) {
+                            pickedUpObject.SetParent(GameObject.Find("Objects").transform);
+                            pickedUpObject.GetComponent<Rigidbody>().isKinematic = false;
+                        }
+                        pickedUpObjects.Clear();
+                    }
                 }
             }
         }
