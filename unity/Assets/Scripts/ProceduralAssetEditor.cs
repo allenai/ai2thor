@@ -329,7 +329,63 @@ namespace Thor.Procedural {
             processingIds.Clear();
             coroutines.Clear();
         }
+        private string commaSepIds;
 
+        // [Button(Expanded = false)]
+        public void LoadMulti() {
+
+            var ids = commaSepIds.Split(',');
+            Debug.Log($"ids comma {string.Join(" | ", ids)} count {ids.Count()}");
+            foreach (var id in ids) {
+            var file = id.Trim();
+            if (!file.EndsWith(".json")) {
+                file += ".json";
+            }
+            
+            
+            
+
+            var objaverseRoot = getObjaverseRootPath();
+            Debug.Log(string.Join("/", objaverseRoot));
+            var objectDir = $"{objaverseRoot}/{id}";
+            var objectPath = $"{objectDir}/{file}";
+            //var objectPath = $"{string.Join("/", repoRoot)}/{this.objectsDirectory}/{id}/{file}";
+            Debug.Log(objectPath);
+            // this.loadedHouse = readHouseFromJson(objectPath);
+
+            if (!File.Exists(objectPath)) {
+                cancellAll = false;
+                Debug.Log("Starting objaverse pipeline background process...");
+                coroutines.Add(
+                    StartCoroutine(runAssetPipelineAsync(id, objaverseRoot, () => {                        
+                        if (!cancellAll) { importAsset(objectPath, addAnotationComponent: true); }
+                    }))
+                );
+            }
+            else {
+                importAsset(objectPath, forceCreateAnnotationComponent);
+            }
+            }
+
+
+        }
+
+        private string getObjaverseRootPath() {
+            var pathSplit = Application.dataPath.Split('/');
+
+            var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
+            return  $"{string.Join("/", repoRoot)}/{paths.repoRootObjaverseDir}";
+        }
+
+        // private IEnumerator loadAndFixAsync(string[] ids) {
+
+        //     foreach (var id in ids) {
+
+        //     }
+
+        // }
+
+        public bool useLoadedMesh = false;
 
         // [UnityEditor.MenuItem("Procedural/Fix Prefabs")]
          [Button(Expanded = false)]
@@ -338,61 +394,72 @@ namespace Thor.Procedural {
 
             //var gos = procAssets.GroupBy(so => so.assetID).Select(k => (IdentifierCase: k.Key, go: k.First().gameObject)).Where(p => p.go.GetComponentInChildren<SerializeMesh>() != null);
             //var dict = new Dictionary<string, 
-            var gos = procAssets.Select(k => (id: k.assetID, go: k.gameObject));//.Where(p => p.id == "1807cfeea89c4a57997cbe5fce569b53");//.Where(p => p.go.GetComponentInChildren<SerializeMesh>() != null);
-            Debug.Log($"running for {gos.Count()}");
+            var gos = procAssets.
+            Select(k => (id: k.assetID, go: k.gameObject))
+            .Where( p => p.id != "4b3ae3b8744d429a8a4aa1b5b5cb4f7c" && p.id != "")
+            .Where(p => p.id == "46bb9561bf23477aaad941e143a52803");
+             //Selection.activeGameObject=gos.Last().go;
+            //"4b3ae3b8744d429a8a4aa1b5b5cb4f7c"
+            Debug.Log($"running for {gos.Count()} last {gos.Last().id} eq {gos.Last().id == ""}");
 
             
             Debug.Log($"running for {string.Join(",", gos.Select(g => g.id).Distinct())}");
+            //return;
 
-            // var loadedObjs = gos.Select(m => m.id).Distinct().ToDictionary(id => id, assetId => {
+            var loadedObjs = new Dictionary<string, GameObject>();
 
-            //      var pathSplit = Application.dataPath.Split('/');
+            if (useLoadedMesh) {
+            loadedObjs = gos.Select(m => m.id).Distinct().ToDictionary(id => id, assetId => {
 
-            //         var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
-            //          var objaverseRoot = $"{string.Join("/", repoRoot)}/{paths.repoRootObjaverseDir}";
-            //         var objectDir = $"{objaverseRoot}/{assetId}";
-            //         var objectPath = $"{objectDir}/{assetId}.json";
+                 var pathSplit = Application.dataPath.Split('/');
 
-            //         var jsonStr = System.IO.File.ReadAllText(objectPath);
+                    var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
+                     var objaverseRoot = $"{string.Join("/", repoRoot)}/{paths.repoRootObjaverseDir}";
+                    var objectDir = $"{objaverseRoot}/{assetId}";
+                    var objectPath = $"{objectDir}/{assetId}.json";
 
-            // JObject obj = JObject.Parse(jsonStr);
+                    var jsonStr = System.IO.File.ReadAllText(objectPath);
 
-            // var procAsset = obj.ToObject<Procedural.Data.ProceduralAsset>();
+            JObject obj = JObject.Parse(jsonStr);
 
-            // var result = Procedural.ProceduralTools.CreateAsset(
-            //         procAsset.vertices,
-            //         procAsset.normals,
-            //         procAsset.name,
-            //         procAsset.triangles,
-            //         procAsset.uvs,
-            //         procAsset.albedoTexturePath ,
-            //         procAsset.normalTexturePath ,
-            //         procAsset.emissionTexturePath,
-            //         procAsset.colliders ,
-            //         procAsset.physicalProperties,
-            //         procAsset.visibilityPoints ,
-            //         procAsset.annotations ,
-            //         procAsset.receptacleCandidate ,
-            //         procAsset.yRotOffset ,
-            //         serializable: true,
-            //         returnObject: true,
-            //         parent: null
-            //     );
-            //     return result["gameObject"] as GameObject;
-            // });
+            var procAsset = obj.ToObject<Procedural.Data.ProceduralAsset>();
+
+            var result = Procedural.ProceduralTools.CreateAsset(
+                    procAsset.vertices,
+                    procAsset.normals,
+                    procAsset.name,
+                    procAsset.triangles,
+                    procAsset.uvs,
+                    procAsset.albedoTexturePath ,
+                    procAsset.normalTexturePath ,
+                    procAsset.emissionTexturePath,
+                    procAsset.colliders ,
+                    procAsset.physicalProperties,
+                    procAsset.visibilityPoints ,
+                    procAsset.annotations ,
+                    procAsset.receptacleCandidate ,
+                    procAsset.yRotOffset ,
+                    serializable: true,
+                    returnObject: true,
+                    parent: null
+                );
+                DestroyImmediate(result["intermediateGameObject"] as GameObject);
+                return result["gameObject"] as GameObject;
+            });
+            }
 
 
             foreach (var (assetId, go) in gos) {
                 var dir =string.Join("/", paths.serializeBasePath.Split('/').Skip(1));
                   if (PrefabUtility.IsPartOfPrefabInstance(go)) {
-                    
+                    var loaded = useLoadedMesh ? loadedObjs[assetId] : null;
                     SerializeMesh.SaveMeshesAsObjAndReplaceReferences(
                         go,
                         assetId,
                         $"{Application.dataPath}/{dir}/{paths.modelsRelativePath}/{assetId}",
                         $"{Application.dataPath}/{dir}/{paths.modelsRelativePath}/{assetId}/{paths.collidersInModelsPath}",
                         overwrite: true
-                        //,sourceGo: loadedObjs[assetId]
+                        ,sourceGo: loaded
                     );
                     var meshGo = go.transform.Find("mesh");
                     // if (meshGo != null) 
@@ -409,10 +476,11 @@ namespace Thor.Procedural {
                     Selection.activeGameObject=go;
                   }
             }
-
-            // foreach (var go in loadedObjs.Values) {
-            //     DestroyImmediate(go);
-            // }
+            if (useLoadedMesh) { 
+                // foreach (var go in loadedObjs.Values) {
+                //     DestroyImmediate(go);
+                // }
+            }
         } 
 
          [MenuItem("Procedural/Revert Prefabs")]

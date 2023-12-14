@@ -4738,6 +4738,43 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                     case "ca_msg": {
+                   
+                    
+
+                    if (splitcommand.Length == 2) {
+
+                        var objectId = splitcommand[1];
+
+                        var fname = objectId.Trim();
+                        if (!fname.EndsWith(".json")) {
+                            fname += ".msgpack.gz";
+                        }
+                        
+                        var pathSplit = Application.dataPath.Split('/');
+
+                        var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
+                        Debug.Log(string.Join("/", repoRoot));
+
+                        var objaverseRoot = $"{string.Join("/", repoRoot)}/objaverse";
+                        var objectDir = $"{objaverseRoot}/{objectId}";
+                        var objectPath = $"{objectDir}/{fname}";
+
+                         
+                        
+                        var filename = Path.GetFileName(objectPath);
+
+                        var pathOut = Application.dataPath + $"/Resources/msgpack_test/{objectId}.json";
+
+                        CurrentActiveController().CreateObjectPrefab(
+                            objectPath,
+                            pathOut
+                        );
+                    }
+                    
+                    break;
+                }
+
                 case "proc_mats": {
                         var mats = ProceduralTools.GetMaterials();
                         var matString = string.Join("\n", mats.Keys());

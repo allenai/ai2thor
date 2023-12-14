@@ -46,10 +46,10 @@ namespace Thor.Utils
 
         public static string MeshToObj(string name, Mesh mesh) {
             var objString = $"o {name}";
-            var verts = string.Join("\n", mesh.vertices.Select(v => $"v {-v.x:F6} {v.y:F6} {v.z:F6}"));
+            var verts = string.Join("\n", mesh.vertices.Select(v => $"v {v.x:F6} {v.y:F6} {v.z:F6}"));
             var uvs = string.Join("\n", mesh.uv.Select(v => $"vt {v.x:F6} {v.y:F6}"));
-            var normals = string.Join("\n", mesh.normals.Select(v => $"vn {-v.x:F6} {v.y:F6} {v.z:F6}"));
-            var triangles = mesh.triangles.Reverse().ToArray();
+            var normals = string.Join("\n", mesh.normals.Select(v => $"vn {v.x:F6} {v.y:F6} {v.z:F6}"));
+            var triangles = mesh.triangles;//.Reverse().ToArray();
             var faces =  string.Join("\n", Enumerable.Range(0, mesh.triangles.Length / 3)
                 .Select(i => 
                     ( i0: triangles[i * 3]+1, i1: triangles[i * 3 + 1]+1, i2: triangles[i * 3 + 2]+1))

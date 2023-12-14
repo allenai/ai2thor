@@ -17,6 +17,12 @@ using MIConvexHull;
 using Thor.Procedural;
 using Thor.Procedural.Data;
 
+using MessagePack.Resolvers;
+using MessagePack.Formatters;
+using MessagePack;
+
+using System.IO;
+using System.IO.Compression;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
@@ -6715,6 +6721,58 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             actionFinished(success: true, actionReturn: assetData);
+        }
+
+        public void CreateObjectPrefab(
+            string filepath,
+            string outpath
+        ) {
+            using FileStream compressedFileStream = File.Open(filepath, FileMode.Open);
+            //using FileStream outputFileStream = File.Create(DecompressedFileName);
+            //using FileStream outputFileStream = File.Create(DecompressedFileName);
+            using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
+
+            using (var resultStream = new MemoryStream()) {
+                decompressor.CopyTo(resultStream);
+                var bytes = resultStream.ToArray();
+
+                ProceduralAsset procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(bytes,
+                        MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+                // decompressor.CopyTo(outputFileStream);
+                //outputFileStream.
+                var jsonResolver = new ShouldSerializeContractResolver();
+                var str = Newtonsoft.Json.JsonConvert.SerializeObject(
+                    procAsset,
+                    Newtonsoft.Json.Formatting.None,
+                    new Newtonsoft.Json.JsonSerializerSettings() {
+                        ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                        ContractResolver = jsonResolver
+                    });
+
+                System.IO.File.WriteAllText(outpath, str);
+                object assetData = null;
+                // var assetData = ProceduralTools.CreateAsset(
+                //         procAsset.vertices,
+                //         procAsset.normals,
+                //         procAsset.name,
+                //         procAsset.triangles,
+                //         procAsset.uvs,
+                //         procAsset.albedoTexturePath ,
+                //         procAsset.normalTexturePath ,
+                //         procAsset.emissionTexturePath,
+                //         procAsset.colliders ,
+                //         procAsset.physicalProperties,
+                //         procAsset.visibilityPoints ,
+                //         procAsset.annotations ,
+                //         procAsset.receptacleCandidate ,
+                //         procAsset.yRotOffset ,
+                //         serializable: true,
+                //         returnObject: true,
+                //         parent: transform,
+                //         addAnotationComponent: addAnotationComponent
+                //     );
+            }
+           // actionFinished(success: true, actionReturn: null);
         }
 
         public void CreateHouse(ProceduralHouse house) {
