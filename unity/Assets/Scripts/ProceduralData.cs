@@ -486,6 +486,7 @@ namespace Thor.Procedural.Data {
         public bool receptacleCandidate = false;
         public float yRotOffset = 0f;
         public bool serializable = false;
+        public string parentTexturesDir = null;
     }
 
     public static class ExtensionMethods {

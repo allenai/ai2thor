@@ -32,7 +32,7 @@ def get_all_asset_ids_recursively(
 
 
 def create_assets_if_not_exist(
-    controller, asset_ids, asset_directory, asset_symlink, stop_if_fail
+    controller, asset_ids, asset_directory, copy_to_dir, asset_symlink, stop_if_fail, load_file_in_unity, verbose=False
 ):
     evt = controller.step(
         action="AssetsInDatabase", assetIds=asset_ids, updateProceduralLRUCache=True
@@ -49,8 +49,10 @@ def create_assets_if_not_exist(
             controller=controller,
             asset_id=asset_id,
             asset_directory=asset_dir,
+            copy_to_dir=copy_to_dir,
             asset_symlink=asset_symlink,
-            verbose=True,
+            verbose=verbose,
+            load_file_in_unity=load_file_in_unity
         )
         if not evt.metadata["lastActionSuccess"]:
             logger.info(
@@ -66,15 +68,20 @@ class ProceduralAssetHookRunner:
     def __init__(
         self,
         asset_directory,
+        target_dir="processed_models",
         asset_symlink=True,
+        load_file_in_unity=False,
         stop_if_fail=False,
         asset_limit=-1,
-        verbose=False,
+        verbose=True,
     ):
         self.asset_directory = asset_directory
         self.asset_symlink = asset_symlink
         self.stop_if_fail = stop_if_fail
         self.asset_limit = asset_limit
+        self.load_file_in_unity = load_file_in_unity
+        self.target_dir = target_dir
+        self.verbose = verbose
 
     def Initialize(self, action, controller):
         if self.asset_limit > 0:
@@ -89,8 +96,11 @@ class ProceduralAssetHookRunner:
             controller=controller,
             asset_ids=asset_ids,
             asset_directory=self.asset_directory,
+            copy_to_dir=os.path.join(controller._build.base_dir, self.target_dir),
             asset_symlink=self.asset_symlink,
             stop_if_fail=self.stop_if_fail,
+            load_file_in_unity=self.load_file_in_unity
+            verbose=self.verbose
         )
 
     def SpawnAsset(self, action, controller):
@@ -99,8 +109,11 @@ class ProceduralAssetHookRunner:
             controller=controller,
             asset_ids=asset_ids,
             asset_directory=self.asset_directory,
+            copy_to_dir=os.path.join(controller._build.base_dir, self.target_dir),
             asset_symlink=self.asset_symlink,
             stop_if_fail=self.stop_if_fail,
+            load_file_in_unity=self.load_file_in_unity,
+            verbose=self.verbose
         )
 
     def GetHouseFromTemplate(self, action, controller):
@@ -112,8 +125,11 @@ class ProceduralAssetHookRunner:
             controller=controller,
             asset_ids=asset_ids,
             asset_directory=self.asset_directory,
+            copy_to_dir=os.path.join(controller._build.base_dir, self.target_dir),
             asset_symlink=self.asset_symlink,
             stop_if_fail=self.stop_if_fail,
+            load_file_in_unity=self.load_file_in_unity,
+            verbose=self.verbose
         )
 
 

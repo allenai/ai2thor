@@ -2268,6 +2268,7 @@ namespace Thor.Procedural {
             };
         }
 
+        // TODO refactor to recieve a ProceduralAsset
         public static Dictionary<string, object> CreateAsset(
             Vector3[] vertices,
             Vector3[] normals,
@@ -2286,7 +2287,8 @@ namespace Thor.Procedural {
             bool serializable = false,
             bool returnObject = false,
             Transform parent = null,
-            bool addAnotationComponent = false
+            bool addAnotationComponent = false,
+            string parentTexturesDir = ""
         ) {
             // create a new game object
             GameObject go = new GameObject();
@@ -2385,8 +2387,10 @@ namespace Thor.Procedural {
 
             Material mat = null;
             RuntimePrefab runtimePrefab = null;
+            
             // load image from disk
             if (albedoTexturePath != null) {
+                albedoTexturePath = !Path.IsPathRooted(albedoTexturePath) ? Path.Combine(parentTexturesDir, albedoTexturePath) : albedoTexturePath;
                 // textures aren't saved as part of the prefab, so we load them from disk
                 runtimePrefab = go.AddComponent<RuntimePrefab>();
                 runtimePrefab.albedoTexturePath = albedoTexturePath;
@@ -2412,6 +2416,7 @@ namespace Thor.Procedural {
             mat.SetFloat("_Glossiness", 0f);
 
             if (normalTexturePath != null) {
+                normalTexturePath = !Path.IsPathRooted(normalTexturePath) ? Path.Combine(parentTexturesDir, normalTexturePath) : normalTexturePath;
                 if (runtimePrefab == null) {
                     runtimePrefab = go.AddComponent<RuntimePrefab>();
                 }
@@ -2425,6 +2430,7 @@ namespace Thor.Procedural {
             }
 
             if (emissionTexturePath != null) {
+                emissionTexturePath = !Path.IsPathRooted(emissionTexturePath) ? Path.Combine(parentTexturesDir, emissionTexturePath) : emissionTexturePath;
                  if (runtimePrefab == null) {
                     runtimePrefab = go.AddComponent<RuntimePrefab>();
                 }
@@ -2513,11 +2519,13 @@ namespace Thor.Procedural {
                 {"objectMetadata", objectMeta}
             };
 
+            MonoBehaviour.Destroy(oldGo);
+
             if (serializable) {
                 // meshObj.AddComponent<SerializeMesh>();
                 if (returnObject) {
                     result["gameObject"] = go;
-                    result["intermediateGameObject"] = oldGo;
+                    //result["intermediateGameObject"] = oldGo;
                 }
             }
             return result;

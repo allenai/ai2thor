@@ -4799,7 +4799,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
 
     hook_runner = ProceduralAssetHookRunner(
-        asset_directory=asset_dir, asset_symlink=True, verbose=True
+        asset_directory=asset_dir, asset_symlink=True, verbose=True, load_file_in_unity=True
     )
     controller = ai2thor.controller.Controller(
         # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",
@@ -4832,10 +4832,21 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
         ]
     evt = controller.step(action="CreateHouse", house=house)
 
+   
     print(
         f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
     )
     print(f'Error: {evt.metadata["errorMessage"]}')
+
+    evt = controller.step(
+        action="SetSkybox", 
+        color={
+            "r": 0,
+            "g": 0,
+            "b": 0,
+        }
+    )
+
 
     evt = controller.step(dict(action="LookAtObjectCenter", objectId=instance_id))
 
@@ -4843,7 +4854,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
         f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
     )
     print(f'Error: {evt.metadata["errorMessage"]}')
-
+    input()
 
 @task
 def procedural_asset_cache_test(

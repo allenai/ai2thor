@@ -241,8 +241,8 @@ namespace Thor.Procedural {
                 );
             var go = result["gameObject"] as GameObject;
 
-            var intermediate = result["intermediateGameObject"] as GameObject;
-            DestroyImmediate(intermediate);
+            // var intermediate = result["intermediateGameObject"] as GameObject;
+            // DestroyImmediate(intermediate);
 
             if (go.transform.parent != null && !go.transform.parent.gameObject.activeSelf) {
                 go.transform.parent.gameObject.SetActive(true);

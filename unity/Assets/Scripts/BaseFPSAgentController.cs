@@ -16,7 +16,14 @@ using Newtonsoft.Json.Linq;
 using MIConvexHull;
 using Thor.Procedural;
 using Thor.Procedural.Data;
+using Newtonsoft.Json;
 
+using MessagePack.Resolvers;
+using MessagePack.Formatters;
+using MessagePack;
+
+using System.IO;
+using System.IO.Compression;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
@@ -6679,6 +6686,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
+        public void CreateRuntimeAsset(
+            ProceduralAsset asset
+        ) {
+            var assetData = ProceduralTools.CreateAsset(
+                vertices: asset.vertices,
+                normals: asset.normals,
+                name: asset.name,
+                triangles: asset.triangles,
+                uvs: asset.uvs,
+                albedoTexturePath: asset.albedoTexturePath ,
+                normalTexturePath: asset.normalTexturePath ,
+                emissionTexturePath: asset.emissionTexturePath,
+                colliders: asset.colliders ,
+                physicalProperties: asset.physicalProperties,
+                visibilityPoints: asset.visibilityPoints ,
+                annotations: asset.annotations ,
+                receptacleCandidate: asset.receptacleCandidate ,
+                yRotOffset: asset.yRotOffset ,
+                serializable: asset.serializable
+                parentTexturesDir: asset.parentTexturesDir
+            );
+            actionFinished(success: true, actionReturn: assetData);
+        }
         public void CreateObjectPrefab(
             Vector3[] vertices,
             Vector3[] normals,
@@ -6694,7 +6724,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ObjectAnnotations annotations = null,
             bool receptacleCandidate = false,
             float yRotOffset = 0f,
-            bool serializable = false
+            bool serializable = false,
+            string parentTexturesDir = ""
         ) {
             var assetData = ProceduralTools.CreateAsset(
                 vertices,
@@ -6711,10 +6742,289 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 annotations ,
                 receptacleCandidate ,
                 yRotOffset ,
-                serializable 
+                serializable,
+                parentTexturesDir: parentTexturesDir
             );
 
             actionFinished(success: true, actionReturn: assetData);
+        }
+
+        public void CreateObjectPrefabDebug(
+            string filepath,
+            string outpath
+        ) {
+            using FileStream compressedFileStream = File.Open(filepath, FileMode.Open);
+            //using FileStream outputFileStream = File.Create(DecompressedFileName);
+            //using FileStream outputFileStream = File.Create(DecompressedFileName);
+            using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
+
+            using (var resultStream = new MemoryStream()) {
+                decompressor.CopyTo(resultStream);
+                var bytes = resultStream.ToArray();
+
+                ProceduralAsset procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(bytes,
+                        MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+                // decompressor.CopyTo(outputFileStream);
+                //outputFileStream.
+                var jsonResolver = new ShouldSerializeContractResolver();
+                var str = Newtonsoft.Json.JsonConvert.SerializeObject(
+                    procAsset,
+                    Newtonsoft.Json.Formatting.None,
+                    new Newtonsoft.Json.JsonSerializerSettings() {
+                        ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                        ContractResolver = jsonResolver
+                    });
+
+                System.IO.File.WriteAllText(outpath, str);
+                //object assetData = null;
+                var assetData = ProceduralTools.CreateAsset(
+                        procAsset.vertices,
+                        procAsset.normals,
+                        procAsset.name,
+                        procAsset.triangles,
+                        procAsset.uvs,
+                        procAsset.albedoTexturePath ,
+                        procAsset.normalTexturePath ,
+                        procAsset.emissionTexturePath,
+                        procAsset.colliders ,
+                        procAsset.physicalProperties,
+                        procAsset.visibilityPoints ,
+                        procAsset.annotations ,
+                        procAsset.receptacleCandidate ,
+                        procAsset.yRotOffset ,
+                        returnObject: true,
+                        parent: GameObject.Find("Objects").transform,
+                        addAnotationComponent: false,
+                        parentTexturesDir: procAsset.parentTexturesDir
+                    );
+            }
+           // actionFinished(success: true, actionReturn: null);
+        }
+
+        public void CreateObjectPrefab(
+            string filepath,
+            string outpath
+        ) {
+            using FileStream compressedFileStream = File.Open(filepath, FileMode.Open);
+            //using FileStream outputFileStream = File.Create(DecompressedFileName);
+            //using FileStream outputFileStream = File.Create(DecompressedFileName);
+            using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
+
+            using var resultStream = new MemoryStream();
+            decompressor.CopyTo(resultStream);
+            var bytes = resultStream.ToArray();
+
+            ProceduralAsset procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(bytes,
+                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+            // decompressor.CopyTo(outputFileStream);
+            //outputFileStream.
+            var jsonResolver = new ShouldSerializeContractResolver();
+            var str = Newtonsoft.Json.JsonConvert.SerializeObject(
+                procAsset,
+                Newtonsoft.Json.Formatting.None,
+                new Newtonsoft.Json.JsonSerializerSettings() {
+                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                    ContractResolver = jsonResolver
+                });
+
+            System.IO.File.WriteAllText(outpath, str);
+            //object assetData = null;
+            var parent  =  GameObject.Find("Objects").transform;
+            var assetData = ProceduralTools.CreateAsset(
+                    procAsset.vertices,
+                    procAsset.normals,
+                    procAsset.name,
+                    procAsset.triangles,
+                    procAsset.uvs,
+                    procAsset.albedoTexturePath ,
+                    procAsset.normalTexturePath ,
+                    procAsset.emissionTexturePath,
+                    procAsset.colliders ,
+                    procAsset.physicalProperties,
+                    procAsset.visibilityPoints ,
+                    procAsset.annotations ,
+                    procAsset.receptacleCandidate ,
+                    procAsset.yRotOffset ,
+                    returnObject: true,
+                    parent:parent,
+                    addAnotationComponent: false,
+                    parentTexturesDir: procAsset.parentTexturesDir
+                );
+
+                Debug.Log($"root is null? {parent == null} -  {parent}");
+           actionFinished(success: true, actionReturn: null);
+        }
+
+        public void CreateObjectPrefab(
+            string id,
+            string dir,
+            string extension = ".msgpack.gz",
+            ObjectAnnotations annotations = null
+        ) {
+            var validDirs = new List<string>() {
+                Application.persistentDataPath,
+                Application.streamingAssetsPath
+            };
+            var supportedExtensions = new HashSet<string>(){
+                ".gz", ".msgpack", ".msgpack.gz", ".json"
+            };
+            Debug.Log($"------- CreateObjectPrefabId for  '{id}' extension: = {extension}");
+            extension = !extension.StartsWith(".") ? $".{extension}" : extension;
+            extension = extension.Trim();
+            if (!supportedExtensions.Contains(extension)) {
+                actionFinished(success: false, errorMessage: $"Unsupported extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
+                return;
+            }
+            var filename = $"{id}{extension}";
+            var filepath = Path.Combine(dir, id, filename);
+            if (!File.Exists(filepath)) {
+                 actionFinished(success: false, actionReturn: null, errorMessage: $"Asset fiile '{filepath}' does not exist.");
+                 return;
+            }
+
+            // to support different
+            var presentStages = extension.Split('.').Reverse().Where(s => !string.IsNullOrEmpty(s)).ToArray();
+
+            // var stages = new Dictionary<string, Func(Stream, MemoryStream)>() {
+
+            //     "gz": (stream: Stream) => {
+            //         using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
+            //         using var resultStream = new MemoryStream();
+            //         decompressor.CopyTo(resultStream);
+            //         return resultStream;
+            //     },
+            //     "msgpack": (stream: Stream) => {
+
+            //     }
+
+            // };
+
+            
+            // if (!validDirs.Any(prefix => dir.StartsWith(prefix))) {
+            //     actionFinished(
+            //         success: false,
+            //         errorMessage: $"Runtime filesystem access is restricted. `dir` must be a sub-directory in one of the following Unity designated paths: {string.Join(", ", validDirs.Select(d => $"'{d}'"))} ",
+            //         actionReturn: null
+            //     );
+            // }
+            // var filepath = Path.Combine(Application.persistentDataPath, id, $"{id}.msgpack.gz");
+            
+            // var outpath = Path.Combine(Application.persistentDataPath, "out", $"{id}.msgpack.gz");
+            using FileStream rawFileStream = File.Open(filepath, FileMode.Open);
+            using var resultStream = new MemoryStream();
+            Debug.Log($"------- raw file read at for  '{filepath}'");
+            var stageIndex = 0;
+            if ("gz" == presentStages[stageIndex]) {
+                using var decompressor = new GZipStream(rawFileStream, CompressionMode.Decompress);
+                decompressor.CopyTo(resultStream);
+                stageIndex++;
+
+            }
+            else {
+                rawFileStream.CopyTo(resultStream);
+            }
+
+            ProceduralAsset procAsset = null;
+            var debug = stageIndex < presentStages.Length ? presentStages[stageIndex] : "null";
+            Debug.Log($"presentStages {presentStages}, at index {stageIndex}: {debug} , {debug == "msgpack"},  {presentStages.Length} ");
+
+            if (stageIndex < presentStages.Length && presentStages[stageIndex] == "msgpack") {
+                Debug.Log("Deserialize raw json");
+                 procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
+                    resultStream.ToArray(),
+                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options
+                );
+            }
+            else if (presentStages.Length == 1) {
+                resultStream.Seek(0, SeekOrigin.Begin);
+                using var reader = new StreamReader(resultStream);
+                
+                var jsonResolver = new ShouldSerializeContractResolver();
+                var serializer = new Newtonsoft.Json.JsonSerializerSettings() {
+                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                    ContractResolver = jsonResolver,
+                    ObjectCreationHandling = ObjectCreationHandling.Replace
+                };
+                var json = reader.ReadToEnd();
+                Debug.Log($"Deserialize raw json at {filepath}: str {json}");
+                // procAsset = Newtonsoft.Json.JsonConvert.DeserializeObject<ProceduralAsset>(reader.ReadToEnd(), serializer);
+                procAsset = JsonConvert.DeserializeObject<ProceduralAsset>(json);
+            }
+            else {
+                 actionFinished(success: false, errorMessage: $"Unexpected error with extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
+                 return;
+            }
+
+            /// WORKING
+            /*
+            using FileStream compressedFileStream = File.Open(filepath, FileMode.Open);
+            //using FileStream outputFileStream = File.Create(DecompressedFileName);
+            //using FileStream outputFileStream = File.Create(DecompressedFileName);
+            using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
+            
+
+            using var resultStream = new MemoryStream();
+            decompressor.CopyTo(resultStream);
+            var bytes = resultStream.ToArray();
+
+            ProceduralAsset procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(bytes,
+                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+            */
+
+
+            // decompressor.CopyTo(outputFileStream);
+            //outputFileStream.
+
+            // Debugging write contents
+            // var jsonResolver = new ShouldSerializeContractResolver();
+            // var str = Newtonsoft.Json.JsonConvert.SerializeObject(
+            //     procAsset,
+            //     Newtonsoft.Json.Formatting.None,
+            //     new Newtonsoft.Json.JsonSerializerSettings() {
+            //         ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+            //         ContractResolver = jsonResolver
+            //     });
+
+            // System.IO.File.WriteAllText(outpath, str);
+
+            //object assetData = null;
+            //var parent  =  GameObject.Find("Objects").transform;
+            Debug.Log($"procAsset is null? {procAsset == null} -  {procAsset}, albedo rooted? {!Path.IsPathRooted(procAsset.albedoTexturePath)} {procAsset.albedoTexturePath}");
+
+            procAsset.parentTexturesDir =  Path.Combine(dir, id);
+            Debug.Log($" albedo after fix? {procAsset.albedoTexturePath}");
+
+            var assetData = ProceduralTools.CreateAsset(
+                    procAsset.vertices,
+                    procAsset.normals,
+                    procAsset.name,
+                    procAsset.triangles,
+                    procAsset.uvs,
+                    procAsset.albedoTexturePath ,
+                    procAsset.normalTexturePath ,
+                    procAsset.emissionTexturePath,
+                    procAsset.colliders ,
+                    procAsset.physicalProperties,
+                    procAsset.visibilityPoints ,
+                    procAsset.annotations ?? annotations,
+                    procAsset.receptacleCandidate ,
+                    procAsset.yRotOffset ,
+                    returnObject: true,
+                    parent:null,
+                    addAnotationComponent: false,
+                    parentTexturesDir: procAsset.parentTexturesDir
+                );
+
+                // Debug.Log($"root is null? {parent == null} -  {parent}");
+           actionFinished(success: true, actionReturn: null);
+        }
+
+        public void GetStreamingAssetsPath() {
+            actionFinished(success: true, actionReturn: Application.streamingAssetsPath);
+        }
+
+        public void GetPersistentDataPath() {
+            actionFinished(success: true, actionReturn: Application.persistentDataPath);
         }
 
         public void CreateHouse(ProceduralHouse house) {
