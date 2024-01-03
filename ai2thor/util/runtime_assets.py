@@ -267,7 +267,7 @@ def create_asset(
         create_prefab_action = change_asset_pahts(create_prefab_action, copy_to_dir, asset_id)
     else:
         create_prefab_action = {
-        "action": "CreateObjectPrefabId",
+        "action": "CreateRuntimeAsset",
         "id": asset_id,
         "dir": copy_to_dir
     }

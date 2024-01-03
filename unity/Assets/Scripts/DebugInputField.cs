@@ -499,17 +499,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                case "testing": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
-                    action["action"] = "CreateObjectPrefabObj";
-                    action["name"] = "TESTING";
-                    action["albedoTexturePath"] = "/Users/lucaw/tmp/debug/processed/637a8eb96f4b4de6a80de5fc9e693763/albedo.jpg";
-                    action["normalTexturePath"] = "/Users/lucaw/tmp/debug/processed/637a8eb96f4b4de6a80de5fc9e693763/normal.jpg";
-                    action["emissionTexturePath"] = "/Users/lucaw/tmp/debug/processed/637a8eb96f4b4de6a80de5fc9e693763/emission.jpg";
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
-
                 case "sim": {
                     var collisionListener = this.CurrentActiveController().GetComponent<CollisionListener>();
                     Physics.Simulate(0.02f);
@@ -4440,7 +4429,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         JObject obj = JObject.Parse(jsonStr);
 
-                        obj["action"] = "CreateObjectPrefab";
+                        obj["action"] = "CreateRuntimeAsset";
                         obj["serializable"] = true;
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(obj));
 
@@ -4766,7 +4755,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         var pathOut = Application.dataPath + $"/Resources/msgpack_test/{objectId}.json";
 
-                        CurrentActiveController().CreateObjectPrefab(
+                        CurrentActiveController().CreateRuntimeAsset(
                             objectPath,
                             pathOut
                         );
@@ -4803,7 +4792,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         var pathOut = Application.dataPath + $"/Resources/msgpack_test/{objectId}.json";
 
-                        CurrentActiveController().CreateObjectPrefab(
+                        CurrentActiveController().CreateRuntimeAsset(
                             objectId,
                             dir
                         );

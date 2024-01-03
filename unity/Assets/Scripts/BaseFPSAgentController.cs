@@ -6704,158 +6704,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 annotations: asset.annotations ,
                 receptacleCandidate: asset.receptacleCandidate ,
                 yRotOffset: asset.yRotOffset ,
-                serializable: asset.serializable
+                serializable: asset.serializable,
                 parentTexturesDir: asset.parentTexturesDir
             );
             actionFinished(success: true, actionReturn: assetData);
         }
-        public void CreateObjectPrefab(
-            Vector3[] vertices,
-            Vector3[] normals,
-            string name,
-            int[] triangles,
-            Vector2[]? uvs = null,
-            string albedoTexturePath = null,
-            string normalTexturePath = null,
-            string emissionTexturePath = null,
-            SerializableCollider[]? colliders = null,
-            PhysicalProperties physicalProperties = null,
-            Vector3[]? visibilityPoints = null,
-            ObjectAnnotations annotations = null,
-            bool receptacleCandidate = false,
-            float yRotOffset = 0f,
-            bool serializable = false,
-            string parentTexturesDir = ""
-        ) {
-            var assetData = ProceduralTools.CreateAsset(
-                vertices,
-                normals,
-                name,
-                triangles,
-                uvs,
-                albedoTexturePath ,
-                normalTexturePath ,
-                emissionTexturePath,
-                colliders ,
-                physicalProperties,
-                visibilityPoints ,
-                annotations ,
-                receptacleCandidate ,
-                yRotOffset ,
-                serializable,
-                parentTexturesDir: parentTexturesDir
-            );
 
-            actionFinished(success: true, actionReturn: assetData);
-        }
-
-        public void CreateObjectPrefabDebug(
-            string filepath,
-            string outpath
-        ) {
-            using FileStream compressedFileStream = File.Open(filepath, FileMode.Open);
-            //using FileStream outputFileStream = File.Create(DecompressedFileName);
-            //using FileStream outputFileStream = File.Create(DecompressedFileName);
-            using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
-
-            using (var resultStream = new MemoryStream()) {
-                decompressor.CopyTo(resultStream);
-                var bytes = resultStream.ToArray();
-
-                ProceduralAsset procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(bytes,
-                        MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
-                // decompressor.CopyTo(outputFileStream);
-                //outputFileStream.
-                var jsonResolver = new ShouldSerializeContractResolver();
-                var str = Newtonsoft.Json.JsonConvert.SerializeObject(
-                    procAsset,
-                    Newtonsoft.Json.Formatting.None,
-                    new Newtonsoft.Json.JsonSerializerSettings() {
-                        ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                        ContractResolver = jsonResolver
-                    });
-
-                System.IO.File.WriteAllText(outpath, str);
-                //object assetData = null;
-                var assetData = ProceduralTools.CreateAsset(
-                        procAsset.vertices,
-                        procAsset.normals,
-                        procAsset.name,
-                        procAsset.triangles,
-                        procAsset.uvs,
-                        procAsset.albedoTexturePath ,
-                        procAsset.normalTexturePath ,
-                        procAsset.emissionTexturePath,
-                        procAsset.colliders ,
-                        procAsset.physicalProperties,
-                        procAsset.visibilityPoints ,
-                        procAsset.annotations ,
-                        procAsset.receptacleCandidate ,
-                        procAsset.yRotOffset ,
-                        returnObject: true,
-                        parent: GameObject.Find("Objects").transform,
-                        addAnotationComponent: false,
-                        parentTexturesDir: procAsset.parentTexturesDir
-                    );
-            }
-           // actionFinished(success: true, actionReturn: null);
-        }
-
-        public void CreateObjectPrefab(
-            string filepath,
-            string outpath
-        ) {
-            using FileStream compressedFileStream = File.Open(filepath, FileMode.Open);
-            //using FileStream outputFileStream = File.Create(DecompressedFileName);
-            //using FileStream outputFileStream = File.Create(DecompressedFileName);
-            using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
-
-            using var resultStream = new MemoryStream();
-            decompressor.CopyTo(resultStream);
-            var bytes = resultStream.ToArray();
-
-            ProceduralAsset procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(bytes,
-                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
-            // decompressor.CopyTo(outputFileStream);
-            //outputFileStream.
-            var jsonResolver = new ShouldSerializeContractResolver();
-            var str = Newtonsoft.Json.JsonConvert.SerializeObject(
-                procAsset,
-                Newtonsoft.Json.Formatting.None,
-                new Newtonsoft.Json.JsonSerializerSettings() {
-                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                    ContractResolver = jsonResolver
-                });
-
-            System.IO.File.WriteAllText(outpath, str);
-            //object assetData = null;
-            var parent  =  GameObject.Find("Objects").transform;
-            var assetData = ProceduralTools.CreateAsset(
-                    procAsset.vertices,
-                    procAsset.normals,
-                    procAsset.name,
-                    procAsset.triangles,
-                    procAsset.uvs,
-                    procAsset.albedoTexturePath ,
-                    procAsset.normalTexturePath ,
-                    procAsset.emissionTexturePath,
-                    procAsset.colliders ,
-                    procAsset.physicalProperties,
-                    procAsset.visibilityPoints ,
-                    procAsset.annotations ,
-                    procAsset.receptacleCandidate ,
-                    procAsset.yRotOffset ,
-                    returnObject: true,
-                    parent:parent,
-                    addAnotationComponent: false,
-                    parentTexturesDir: procAsset.parentTexturesDir
-                );
-
-                Debug.Log($"root is null? {parent == null} -  {parent}");
-           actionFinished(success: true, actionReturn: null);
-        }
-
-        public void CreateObjectPrefab(
+        public void CreateRuntimeAsset(
             string id,
             string dir,
             string extension = ".msgpack.gz",
@@ -6868,7 +6723,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var supportedExtensions = new HashSet<string>(){
                 ".gz", ".msgpack", ".msgpack.gz", ".json"
             };
-            Debug.Log($"------- CreateObjectPrefabId for  '{id}' extension: = {extension}");
+            Debug.Log($"------- CreateRuntimeAsset for  '{id}' extension: = {extension}");
             extension = !extension.StartsWith(".") ? $".{extension}" : extension;
             extension = extension.Trim();
             if (!supportedExtensions.Contains(extension)) {
