@@ -4797,6 +4797,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
+    import ai2thor.util.runtime_assets as ra
 
     hook_runner = ProceduralAssetHookRunner(
         asset_directory=asset_dir, asset_symlink=True, verbose=True, load_file_in_unity=True
@@ -4814,30 +4815,8 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
         visibilityScheme="Distance",
         action_hook_runner=hook_runner,
     )
-
-    with open(house_path, "r") as f:
-        house = json.load(f)
-    instance_id = "asset_0"
-    if asset_id != "":
-        house["objects"] = [
-            {
-                "assetId": asset_id,
-                "id": instance_id,
-                "kinematic": True,
-                "position": {"x": 0, "y": 0, "z": 0},
-                "rotation": {"x": 0, "y": 0, "z": 0},
-                "layer": "Procedural2",
-                "material": None,
-            }
-        ]
-    evt = controller.step(action="CreateHouse", house=house)
-
-   
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
-    )
-    print(f'Error: {evt.metadata["errorMessage"]}')
-
+    
+    #TODO bug why skybox is not changing? from just procedural pipeline
     evt = controller.step(
         action="SetSkybox", 
         color={
@@ -4847,14 +4826,59 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
         }
     )
 
-
-    evt = controller.step(dict(action="LookAtObjectCenter", objectId=instance_id))
-
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    angle_increment = 45
+    angles = [n * angle_increment for n in range(0, round(360 / angle_increment))]
+    axes = [(0, 1, 0), (1, 0, 0)]
+    rotations = [(x, y, z, degrees) for degrees in angles for (x, y, z) in axes]
+    ra.view_asset_in_thor(
+        asset_id=asset_id,
+        controller=controller,
+        output_dir="./output-test",
+        rotations=rotations,
+        house_path=house_path,
+        skybox_color=(0, 0, 0)
     )
-    print(f'Error: {evt.metadata["errorMessage"]}')
-    input()
+
+    # with open(house_path, "r") as f:
+    #     house = json.load(f)
+    # instance_id = "asset_0"
+    # if asset_id != "":
+    #     house["objects"] = [
+    #         {
+    #             "assetId": asset_id,
+    #             "id": instance_id,
+    #             "kinematic": True,
+    #             "position": {"x": 0, "y": 0, "z": 0},
+    #             "rotation": {"x": 0, "y": 0, "z": 0},
+    #             "layer": "Procedural2",
+    #             "material": None,
+    #         }
+    #     ]
+    # evt = controller.step(action="CreateHouse", house=house)
+
+   
+    # print(
+    #     f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    # )
+    # print(f'Error: {evt.metadata["errorMessage"]}')
+
+    # evt = controller.step(
+    #     action="SetSkybox", 
+    #     color={
+    #         "r": 0,
+    #         "g": 0,
+    #         "b": 0,
+    #     }
+    # )
+
+
+    # evt = controller.step(dict(action="LookAtObjectCenter", objectId=instance_id))
+
+    # print(
+    #     f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    # )
+    # print(f'Error: {evt.metadata["errorMessage"]}')
+    # input()
 
 @task
 def procedural_asset_cache_test(
@@ -4863,6 +4887,7 @@ def procedural_asset_cache_test(
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
+    import ai2thor.util.runtime_assets as ra
 
     hook_runner = ProceduralAssetHookRunner(
         asset_directory=asset_dir, asset_symlink=True, verbose=True, asset_limit=1

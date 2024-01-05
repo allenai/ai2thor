@@ -67,7 +67,7 @@ def get_existing_thor_asset_file_path(out_dir, asset_id, force_extension=None):
         for path in possible_paths.values():
             if os.path.exists(path):
                 return path
-    raise Exception(f"Could not find existing THOR object file for {asset_id}")
+    raise Exception(f"Could not find existing THOR object file for {asset_id}, Path: `{path}`")
 
 
 def load_existing_thor_asset_file(out_dir, object_name, force_extension=None):
@@ -252,7 +252,7 @@ def add_default_annotations(asset, asset_directory, verbose=False):
     if thor_obj_md is None:
         if verbose:
             logger.info(
-                f"Object metadata for {asset['name']} is missing annotations, assuming pickupable."
+                f"Object metadata is missing annotations, assuming pickupable."
             )
 
         asset["annotations"] = {
@@ -283,7 +283,6 @@ def create_asset(
 ):
     # Verifies the file exists
     create_prefab_action = {}
-
     asset_path = get_existing_thor_asset_file_path(
         out_dir=asset_directory, asset_id=asset_id, force_extension=extension
     )
@@ -292,7 +291,6 @@ def create_asset(
     )
     if file_extension not in EXTENSIONS_LOADABLE_IN_UNITY:
         load_file_in_unity = False
-    print("--------- extension " + extension)
     copy_to_dir = (
         os.path.join(thor_controller._build.base_dir)
         if copy_to_dir is None
@@ -389,5 +387,82 @@ def create_assets(
             events.append(evt)
     return success, events
 
+def make_single_object_house(
+    asset_id,
+    instance_id="asset_0",
+    skybox_color=(0, 0, 0),
+    house_path="objathor/asset_conversion/data/empty_house.json",
+):
+    with open(house_path, "r") as f:
+        house = json.load(f)
+
+    house["objects"] = [
+        {
+            "assetId": asset_id,
+            "id": instance_id,
+            "kinematic": True,
+            "position": {"x": 0, "y": 0, "z": 0},
+            "rotation": {"x": 0, "y": 0, "z": 0},
+            "layer": "Procedural2",
+            "material": None,
+        }
+    ]
+    house["proceduralParameters"]["skyboxColor"] = {
+        "r": skybox_color[0],
+        "g": skybox_color[1],
+        "b": skybox_color[2],
+    }
+    return house
 
 # def create_assets_from_paths(controller, asset_paths, asset_symlink=True, return_events=False, verbose=False):
+def view_asset_in_thor(
+    asset_id,
+    controller,
+    output_dir,
+    rotations=[],
+    instance_id="asset_0",
+    house_path="objathor/asset_conversion/data/empty_house.json",
+    skybox_color=(0, 0, 0),
+):
+    from PIL import Image
+
+    house = make_single_object_house(
+        asset_id=asset_id,
+        instance_id=instance_id,
+        house_path=house_path,
+        skybox_color=skybox_color,
+    )
+    evt = controller.step(action="CreateHouse", house=house)
+
+    if not evt.metadata["lastActionSuccess"]:
+        print(f"Action success: {evt.metadata['lastActionSuccess']}")
+        print(f'Error: {evt.metadata["errorMessage"]}')
+        return evt
+    evt = controller.step(action="LookAtObjectCenter", objectId=instance_id)
+
+    im = Image.fromarray(evt.frame)
+    # os.makedirs(output_dir, exist_ok=True)
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    im.save(os.path.join(output_dir, "neutral.jpg"))
+    for rotation in rotations:
+        evt = controller.step(
+            action="RotateObject",
+            angleAxisRotation={
+                "axis": {
+                    "x": rotation[0],
+                    "y": rotation[1],
+                    "z": rotation[2],
+                },
+                "degrees": rotation[3],
+            },
+        )
+        im = Image.fromarray(evt.frame)
+        im.save(
+            os.path.join(
+                output_dir,
+                f"{rotation[0]}_{rotation[1]}_{rotation[2]}_{rotation[3]}.jpg",
+            )
+        )
+    return evt
