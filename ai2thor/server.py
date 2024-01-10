@@ -99,9 +99,9 @@ class LazyInstanceSegmentationMasks(LazyMask):
         self.class_colors: Dict[str, List[List[int]]] = {}
         for c in metadata["colors"]:
             cls = c["name"]
+            self.instance_colors[c["name"]] = c["color"]
 
             if "|" in c["name"]:
-                self.instance_colors[c["name"]] = c["color"]
                 cls = c["name"].split("|")[0]
 
             if cls not in self.class_colors:
