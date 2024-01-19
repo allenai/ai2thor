@@ -19,7 +19,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
     private PhysicsRemoteFPSAgentController PhysicsController;
 
-    //Distance from joint containing gripper camera to armTarget
+    // Distance from joint containing gripper camera to armTarget
     private Vector3 WristToManipulator = new Vector3 (0, -0.09872628f, 0);
 
     // dict to track which picked up object has which set of trigger colliders
@@ -451,9 +451,11 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         } else {
             targetRelativeRotation = rotation.eulerAngles.y;
         }
+        // Debug.Log("targetRelativeRotation is " + targetRelativeRotation);
         
         // Check if rotation will reach past bounds
         boundsCenter = (clockwiseLocalRotationLimit + (counterClockwiseLocalRotationLimit + 360)) / 2;
+        // Debug.Log(boundsCenter + " BABY!!!!!!!!");
         distanceFromBoundsCenter = Mathf.Abs((continuousRotation + targetRelativeRotation) - boundsCenter);
         if (distanceFromBoundsCenter > (boundsCenter - counterClockwiseLocalRotationLimit) ) {
             throw new InvalidOperationException(
@@ -461,6 +463,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             );
         }
 
+        // Rotate wrist
         collisionListener.Reset();
         IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
             ContinuousMovement.rotate(

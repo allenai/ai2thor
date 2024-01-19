@@ -776,6 +776,56 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public void RotateWrist(
+            float pitch = 0f,
+            float yaw = 0f,
+            float roll = 0f,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            // pitch and roll are not supported for the stretch and so we throw an error
+            if (pitch != 0f || roll != 0f) {
+                throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
+            }
+
+            // GameObject posRotManip = this.GetComponent<BaseAgentComponent>().StretchArm.GetComponent<Stretch_Robot_Arm_Controller>().GetArmTarget();
+
+            Stretch_Robot_Arm_Controller arm = getArm();
+            float startingRotation = arm.GetArmTarget().transform.localEulerAngles.y;
+
+            // Normalize target yaw to be within 0 and 360 (startingRotation always starts between 0 and 360)
+            if (yaw <= -180) {
+                yaw += 360;
+            } else if (180 < yaw) {
+                yaw -= 360;
+            }
+
+            // Debug.Log("target is " + yaw + ", and startingRotation is " + startingRotation);
+
+            // Find yaw delta to feed into rotateWrist
+            yaw = yaw - startingRotation;
+
+            // Normalize final yaw delta to be between within 0 and 180
+            if (yaw <= -180) {
+                yaw += 360;
+            } else if (yaw > 180) {
+                yaw -= 360;
+            }
+
+            // Debug.Log("final yaw is " + yaw);
+
+            arm.rotateWrist(
+                controller: this,
+                rotation: Quaternion.Euler(0, yaw, 0),
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart
+            );
+        }
+
         // /*
         // Rotates the elbow (in a relative fashion) by some given
         // number of degrees. Easiest to see how this works by
