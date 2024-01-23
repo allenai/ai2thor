@@ -766,6 +766,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Stretch_Robot_Arm_Controller arm = getArm();
 
+            yaw %= 360;
+
             arm.rotateWrist(
                 controller: this,
                 rotation: Quaternion.Euler(0, yaw, 0),
@@ -795,7 +797,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Stretch_Robot_Arm_Controller arm = getArm();
             float startingRotation = arm.GetArmTarget().transform.localEulerAngles.y;
 
-            // Normalize target yaw to be within 0 and 360 (startingRotation always starts between 0 and 360)
+            // Normalize target yaw to be bounded by [0, 360) (startingRotation is defaults to this)
+            yaw %= 360;
             if (yaw <= -180) {
                 yaw += 360;
             } else if (180 < yaw) {
@@ -805,14 +808,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Debug.Log("target is " + yaw + ", and startingRotation is " + startingRotation);
 
             // Find yaw delta to feed into rotateWrist
-            yaw = yaw - startingRotation;
-
-            // Normalize final yaw delta to be between within 0 and 180
-            if (yaw <= -180) {
-                yaw += 360;
-            } else if (yaw > 180) {
-                yaw -= 360;
-            }
+            yaw -= startingRotation;
 
             // Debug.Log("final yaw is " + yaw);
 

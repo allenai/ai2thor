@@ -45,6 +45,9 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
     public CollisionListener collisionListener;
 
+    public float wristClockwiseLocalRotationLimit = 77.5f;
+    public float wristCounterClockwiseLocalRotationLimit = 102.5f;
+
     public GameObject GetArmTarget() {
         return armTarget.gameObject;
     }
@@ -432,36 +435,69 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         float fixedDeltaTime = 0.02f,
         bool returnToStartPositionIfFailed = false
     ) {
-        // Check for whether rotation passes through (clockwiseLocalRotationLimit, counterClockwiseLocalRotationLimit) local-degree unreachable-zone
-        float clockwiseLocalRotationLimit = 77.5f;
-        float counterClockwiseLocalRotationLimit = 102.5f;
-        float continuousRotation, targetRelativeRotation, boundsCenter, distanceFromBoundsCenter;
+        // float clockwiseLocalRotationLimit = 77.5f;
+        // float counterClockwiseLocalRotationLimit = 102.5f;
+        float currentContinuousRotation, targetContinuousRotation, targetRelativeRotation;
+        float continuousClockwiseLocalRotationLimit = wristClockwiseLocalRotationLimit;
+        float continuousCounterClockwiseLocalRotationLimit = wristCounterClockwiseLocalRotationLimit;
 
-        // Consolidate euler-rotations (which are normally bounded by 0 and 360) into a continuous number line for our purposes,
-        // bounded by [counterClockwiseLocalRotationLimit, clockwiseLocalRotationLimit + 360]
-        if (armTarget.transform.localEulerAngles.y < counterClockwiseLocalRotationLimit) {
-            continuousRotation = armTarget.transform.localEulerAngles.y + 360;
-        } else {
-            continuousRotation = armTarget.transform.localEulerAngles.y;
-        }
+        currentContinuousRotation = armTarget.transform.localEulerAngles.y;
+        Quaternion? secTarget;
 
-        // Consolidate relative rotation amount to be bound by (-180, 180]
-        if (rotation.eulerAngles.y > 180) {
+        // Consolidate relative rotation amount to be bounded by (-180, 180]
+        if (rotation.eulerAngles.y <= -180) {
+            targetRelativeRotation = rotation.eulerAngles.y + 360;
+        } else if (rotation.eulerAngles.y > 180) {
             targetRelativeRotation = rotation.eulerAngles.y - 360;
         } else {
             targetRelativeRotation = rotation.eulerAngles.y;
         }
-        // Debug.Log("targetRelativeRotation is " + targetRelativeRotation);
-        
-        // Check if rotation will reach past bounds
-        boundsCenter = (clockwiseLocalRotationLimit + (counterClockwiseLocalRotationLimit + 360)) / 2;
-        // Debug.Log(boundsCenter + " BABY!!!!!!!!");
-        distanceFromBoundsCenter = Mathf.Abs((continuousRotation + targetRelativeRotation) - boundsCenter);
-        if (distanceFromBoundsCenter > (boundsCenter - counterClockwiseLocalRotationLimit) ) {
-            throw new InvalidOperationException(
-                    "Cannot rotate by " + targetRelativeRotation + " The rotation ventures into the unreachable zone by " + (distanceFromBoundsCenter - (boundsCenter - counterClockwiseLocalRotationLimit)) + " degrees."
-            );
+        Debug.Log("targetRelativeRotation is initially " + targetRelativeRotation);
+
+        // LOGIC
+                
+        // Consolidate reachable euler-rotations (which are normally bounded by [0, 360)) into a continuous number line,
+        // bounded instead by [counterClockwiseLocalRotationLimit, clockwiseLocalRotationLimit + 360)
+        if (wristClockwiseLocalRotationLimit < continuousCounterClockwiseLocalRotationLimit) {
+            continuousClockwiseLocalRotationLimit += 360;
+            if (currentContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
+                currentContinuousRotation += 360;
+            }
         }
+
+        // THIS SHOULD BE 180, since it's bound by [102.5, 77.5 + 360 = 437.5)!!!
+        Debug.Log("Current continuous rotation is " + currentContinuousRotation);
+
+        targetContinuousRotation = currentContinuousRotation + targetRelativeRotation;
+        // This should be range-check
+        Debug.Log("Target continuous rotation is " + targetContinuousRotation);
+
+        // STEP 1 - CHECK IF ACUTE TURN WILL HIT DEAD-ZONE. IF YES, PROCEED TO COROUTINE WITH TARGET. IF NO, PROCEED TO STEP 2.
+        if (targetContinuousRotation > continuousClockwiseLocalRotationLimit || targetContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
+            // STEP 2 - CHECK IF OBTUSE TURN WILL HIT DEAD-ZONE. IF YES, GET INVERSE ANGLE, DIVIDE IT BY TWO, AND PROCEED TO COROUTINE WITH TARGET AND SECTARGET.
+            // IF STILL NO, TOSS UP ERROR.
+            targetContinuousRotation = currentContinuousRotation + ((Mathf.Abs(targetRelativeRotation) - 360) * Mathf.Sign(targetRelativeRotation));
+            Debug.Log("Target continuous rotation is now " + currentContinuousRotation + " + " + ((Mathf.Abs(targetRelativeRotation) - 360) * Mathf.Sign(targetRelativeRotation)));
+            if (targetContinuousRotation > continuousClockwiseLocalRotationLimit || targetContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
+                throw new InvalidOperationException(
+                    "Cannot rotate by " + targetRelativeRotation + " The rotation ventures into the unreachable zone."
+                );
+            } else {
+                targetRelativeRotation = (Mathf.Abs(targetRelativeRotation) - 360) * Mathf.Sign(targetRelativeRotation) / 2;
+                secTarget = armTarget.transform.rotation * Quaternion.Euler(0,targetRelativeRotation,0) * Quaternion.Euler(0,targetRelativeRotation,0);
+
+                if (secTarget is Quaternion currentSecTarget) {
+                    Debug.Log("Okay so secTarget would now be " + currentSecTarget.eulerAngles);
+                }
+
+            }
+        } else {
+            secTarget = null;
+        }
+
+        Debug.Log("Rotating by " + targetRelativeRotation + " degrees, and then to " + secTarget);
+
+        rotation = Quaternion.Euler(0, targetRelativeRotation, 0);
 
         // Rotate wrist
         collisionListener.Reset();
@@ -473,7 +509,8 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 armTarget.transform.rotation * rotation,
                 disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                 degreesPerSecond,
-                returnToStartPositionIfFailed
+                returnToStartPositionIfFailed,
+                secTarget
             )
         );
 
@@ -482,6 +519,7 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 rotate,
                 fixedDeltaTime
             );
+
         } else {
             StartCoroutine(rotate);
         }

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System;
 using System.Linq;
+using UnityEditor.PackageManager;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class ContinuousMovement {
@@ -27,7 +28,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Quaternion targetRotation,
             float fixedDeltaTime,
             float radiansPerSecond,
-            bool returnToStartPropIfFailed = false
+            bool returnToStartPropIfFailed = false,
+            Quaternion? secTarget = null
         ) {
             bool teleport = (radiansPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
 
@@ -55,7 +57,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 distanceMetric: (target, current) => Quaternion.Angle(current, target),
                 fixedDeltaTime: fixedDeltaTime,
                 returnToStartPropIfFailed: returnToStartPropIfFailed,
-                epsilon: 1e-3
+                epsilon: 1e-3,
+                secTarget
             );
         }
 
@@ -209,8 +212,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Func<T, T, float> distanceMetric,
             float fixedDeltaTime,
             bool returnToStartPropIfFailed,
-            double epsilon
-        ) {
+            double epsilon,
+            T? secTarget = null
+        ) where T : struct {
             T originalProperty = getProp(moveTransform);
             var previousProperty = originalProperty;
 
@@ -245,65 +249,96 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Debug.Log(stretchArm);
         }
 #endif
-
             // commenting out the WaitForEndOfFrame here since we shoudn't need 
             // this as we already wait for a frame to pass when we execute each action
             // yield return yieldInstruction;
+            
+            int transformIterations = 1;
+            if (secTarget != null) {
+                transformIterations = 2;
+            }
 
+            T? currentTarget = null;
+            T directionToTarget;
+            // Getting current transform (stays true for both iterations)
             var currentProperty = getProp(moveTransform);
-            float currentDistance = distanceMetric(target, currentProperty);
-
-            T directionToTarget = getDirection(target, currentProperty);
-
+            Debug.Log("currentProperty is " + currentProperty);
+            float currentDistance = 0;
             bool haveGottenWithinEpsilon = currentDistance <= epsilon;
-            while (!collisionListener.ShouldHalt()) {
-                previousProperty = getProp(moveTransform);
 
-                T next = nextProp(moveTransform, directionToTarget);
-                float nextDistance = distanceMetric(target, next);
+            for (int i = 0; i < transformIterations; i++) {
 
-                // allows for snapping behaviour to target when the target is close
-                // if nextDistance is too large then it will overshoot, in this case we snap to the target
-                // this can happen if the speed it set high
-                if (
-                    nextDistance <= epsilon
-                    || nextDistance > distanceMetric(target, getProp(moveTransform))
-                ) {
-                    setProp(moveTransform, target);
+                // This syntax is a new method of pattern-matching that was introduced in C# 7.0, where the type check and
+                // variable assignment are performed in a single step
+                if (i == 0) {
+                    currentTarget = target;
                 } else {
-                    setProp(moveTransform, next);
+                    currentTarget = (T)secTarget;
                 }
 
-                // this will be a NOOP for Rotate/Move/Height actions
-                if (controller.GetType() == typeof(ArmAgentController)) {
-                    ikArmSolver.ManipulateArm();
+                // does NOT stay true for both iterations
+                currentDistance = distanceMetric((T)currentTarget, currentProperty);
+                directionToTarget = getDirection((T)currentTarget, currentProperty);
+
+                // Getting distance between target and current
+                Debug.Log("currentDistance on " + i + " is " + currentDistance +
+                ", and directionToTarget is " + directionToTarget);
+
+                // view Quaternion rotation
+                if (currentTarget is Quaternion printTarget) {
+                    Debug.Log("Oh, and currentTarget is " + printTarget.eulerAngles);
                 }
 
-                // TODO: why have two different Manipulate methods, this introduces dependencies to two different
-                // arm classes. We should make these arm classes a non-mono behavior inheriting a common interface
-                else if (controller.GetType() == typeof(StretchAgentController)) {
-                    stretchArmSolver.ManipulateStretchArm();
-                }
-                
-                if (!Physics.autoSimulation) {
-                    if (fixedDeltaTime == 0f) {
-                        Physics.SyncTransforms();
+                while (!collisionListener.ShouldHalt()) {
+                    previousProperty = getProp(moveTransform);
+
+                    T next = nextProp(moveTransform, directionToTarget);
+
+                    float nextDistance = distanceMetric((T)currentTarget, next);
+                    
+                    // allows for snapping behaviour to target when the target is close
+                    // if nextDistance is too large then it will overshoot, in this case we snap to the target
+                    // this can happen if the speed it set high
+                    if (
+                        nextDistance <= epsilon
+                        || nextDistance > distanceMetric((T)currentTarget, getProp(moveTransform))
+                    ) {
+                        setProp(moveTransform, (T)currentTarget);
                     } else {
-                        PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+                        setProp(moveTransform, next);
                     }
-                }
 
-                yield return new WaitForFixedUpdate();
+                    // this will be a NOOP for Rotate/Move/Height actions
+                    if (controller.GetType() == typeof(ArmAgentController)) {
+                        ikArmSolver.ManipulateArm();
+                    }
 
-                currentDistance = distanceMetric(target, getProp(moveTransform));
+                    // TODO: why have two different Manipulate methods, this introduces dependencies to two different
+                    // arm classes. We should make these arm classes a non-mono behavior inheriting a common interface
+                    else if (controller.GetType() == typeof(StretchAgentController)) {
+                        stretchArmSolver.ManipulateStretchArm();
+                    }
+                    
+                    if (!Physics.autoSimulation) {
+                        if (fixedDeltaTime == 0f) {
+                            Physics.SyncTransforms();
+                        } else {
+                            PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+                        }
+                    }
 
-                if (currentDistance <= epsilon) {
-                    // This logic is a bit unintuitive but it ensures we run the
-                    // `setProp(moveTransform, target);` line above once we get within epsilon
-                    if (haveGottenWithinEpsilon) {
-                        break;
-                    } else {
-                        haveGottenWithinEpsilon = true;
+                    yield return new WaitForFixedUpdate();
+
+                    currentDistance = distanceMetric((T)currentTarget, getProp(moveTransform));
+
+                    if (currentDistance <= epsilon) {
+                        // This logic is a bit unintuitive but it ensures we run the
+                        // `setProp(moveTransform, currentTarget);` line above once we get within epsilon
+                        if (haveGottenWithinEpsilon) {
+                            break;
+                        } else {
+                            haveGottenWithinEpsilon = true;
+                        }
                     }
                 }
             }
@@ -317,7 +352,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 collisionListener,
                 moveTransform,
                 setProp,
-                target,
+                (T)currentTarget,
                 resetProp
             );
 
