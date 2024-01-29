@@ -29,7 +29,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float fixedDeltaTime,
             float radiansPerSecond,
             bool returnToStartPropIfFailed = false,
-            Quaternion? secTarget = null
+            Quaternion? secTargetRotation = null
         ) {
             bool teleport = (radiansPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
 
@@ -58,7 +58,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fixedDeltaTime: fixedDeltaTime,
                 returnToStartPropIfFailed: returnToStartPropIfFailed,
                 epsilon: 1e-3,
-                secTarget
+                secTarget: secTargetRotation
             );
         }
 
@@ -196,7 +196,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     epsilon: 1e-3
                 )
             );
-
         }
 
         public static IEnumerator updateTransformPropertyFixedUpdate<T>(
@@ -229,9 +228,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //Debug.Log("This is the stretchArm: " + stretchArm.name);
                 stretchArmSolver = stretchArm.gameObject.GetComponentInChildren<Stretch_Arm_Solver>();
                 //Debug.Log("This is the stretchArmSolver: " + stretchArmSolver.name);
-            }
-
-            else {
+            } else {
                 ikArm = controller.GetComponentInChildren<IK_Robot_Arm_Controller>();
                 //Debug.Log("This is the ikArm: " + ikArm.name);
                 ikArmSolver = ikArm.gameObject.GetComponentInChildren<FK_IK_Solver>();
@@ -241,13 +238,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
 #if UNITY_EDITOR
-        Debug.Log("ContinuousMovement arm ->");
-        if (controller.GetType() == typeof(ArmAgentController)) {
-	        Debug.Log(ikArm);
-        }
-        else if (controller.GetType() == typeof(StretchAgentController)) {
-            Debug.Log(stretchArm);
-        }
+            Debug.Log("ContinuousMovement arm ->");
+            if (controller.GetType() == typeof(ArmAgentController)) {
+                Debug.Log(ikArm);
+            }
+            else if (controller.GetType() == typeof(StretchAgentController)) {
+                Debug.Log(stretchArm);
+            }
 #endif
             // commenting out the WaitForEndOfFrame here since we shoudn't need 
             // this as we already wait for a frame to pass when we execute each action
@@ -267,7 +264,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool haveGottenWithinEpsilon = currentDistance <= epsilon;
 
             for (int i = 0; i < transformIterations; i++) {
-
                 // This syntax is a new method of pattern-matching that was introduced in C# 7.0, where the type check and
                 // variable assignment are performed in a single step
                 if (i == 0) {
@@ -280,16 +276,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 currentDistance = distanceMetric((T)currentTarget, currentProperty);
                 directionToTarget = getDirection((T)currentTarget, currentProperty);
 
-                // Getting distance between target and current
-                Debug.Log("currentDistance on " + i + " is " + currentDistance +
-                ", and directionToTarget is " + directionToTarget);
+                // view target rotation
+                // if (currentTarget is Quaternion printTarget) {
+                //     Debug.Log("Oh, currentTarget is " + printTarget.eulerAngles.y);
+                // }
 
-                // view Quaternion rotation
-                if (currentTarget is Quaternion printTarget) {
-                    Debug.Log("Oh, and currentTarget is " + printTarget.eulerAngles);
-                }
-
-                while (!collisionListener.ShouldHalt()) {
+                while (!collisionListener.ShouldHalt()
+                && !collisionListener.TransformChecks(controller, moveTransform)) {
                     previousProperty = getProp(moveTransform);
 
                     T next = nextProp(moveTransform, directionToTarget);

@@ -770,11 +770,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             arm.rotateWrist(
                 controller: this,
-                rotation: Quaternion.Euler(0, yaw, 0),
+                rotation: yaw,
                 degreesPerSecond: speed,
                 disableRendering: disableRendering,
                 fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
-                returnToStartPositionIfFailed: returnToStart
+                returnToStartPositionIfFailed: returnToStart,
+                isRelativeRotation: true
             );
         }
 
@@ -799,26 +800,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Normalize target yaw to be bounded by [0, 360) (startingRotation is defaults to this)
             yaw %= 360;
-            if (yaw <= -180) {
+            if (yaw < 0) {
                 yaw += 360;
-            } else if (180 < yaw) {
-                yaw -= 360;
             }
 
-            // Debug.Log("target is " + yaw + ", and startingRotation is " + startingRotation);
-
-            // Find yaw delta to feed into rotateWrist
+            // Find shortest relativeRotation to feed into rotateWrist
             yaw -= startingRotation;
 
-            // Debug.Log("final yaw is " + yaw);
+            if (Mathf.Abs(yaw) > 180) {
+                yaw = (Mathf.Abs(yaw) - 360) * Mathf.Sign(yaw);
+            }
 
             arm.rotateWrist(
                 controller: this,
-                rotation: Quaternion.Euler(0, yaw, 0),
+                rotation: yaw,
                 degreesPerSecond: speed,
                 disableRendering: disableRendering,
                 fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
-                returnToStartPositionIfFailed: returnToStart
+                returnToStartPositionIfFailed: returnToStart,
+                isRelativeRotation: false
             );
         }
 

@@ -429,88 +429,118 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
     public void rotateWrist(
         PhysicsRemoteFPSAgentController controller,
-        Quaternion rotation,
+        float rotation,
         float degreesPerSecond,
         bool disableRendering = false,
         float fixedDeltaTime = 0.02f,
-        bool returnToStartPositionIfFailed = false
+        bool returnToStartPositionIfFailed = false,
+        bool isRelativeRotation = true
     ) {
         // float clockwiseLocalRotationLimit = 77.5f;
         // float counterClockwiseLocalRotationLimit = 102.5f;
-        float currentContinuousRotation, targetContinuousRotation, targetRelativeRotation;
+        float currentContinuousRotation, targetRelativeRotation, targetContinuousRotation;
         float continuousClockwiseLocalRotationLimit = wristClockwiseLocalRotationLimit;
         float continuousCounterClockwiseLocalRotationLimit = wristCounterClockwiseLocalRotationLimit;
 
         currentContinuousRotation = armTarget.transform.localEulerAngles.y;
-        Quaternion? secTarget;
+        Quaternion targetRotation;
+        Quaternion? secTargetRotation = null;
 
-        // Consolidate relative rotation amount to be bounded by (-180, 180]
-        if (rotation.eulerAngles.y <= -180) {
-            targetRelativeRotation = rotation.eulerAngles.y + 360;
-        } else if (rotation.eulerAngles.y > 180) {
-            targetRelativeRotation = rotation.eulerAngles.y - 360;
-        } else {
-            targetRelativeRotation = rotation.eulerAngles.y;
-        }
-        Debug.Log("targetRelativeRotation is initially " + targetRelativeRotation);
-
-        // LOGIC
-                
-        // Consolidate reachable euler-rotations (which are normally bounded by [0, 360)) into a continuous number line,
-        // bounded instead by [counterClockwiseLocalRotationLimit, clockwiseLocalRotationLimit + 360)
-        if (wristClockwiseLocalRotationLimit < continuousCounterClockwiseLocalRotationLimit) {
-            continuousClockwiseLocalRotationLimit += 360;
-            if (currentContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
-                currentContinuousRotation += 360;
-            }
-        }
-
-        // THIS SHOULD BE 180, since it's bound by [102.5, 77.5 + 360 = 437.5)!!!
-        Debug.Log("Current continuous rotation is " + currentContinuousRotation);
-
-        targetContinuousRotation = currentContinuousRotation + targetRelativeRotation;
-        // This should be range-check
-        Debug.Log("Target continuous rotation is " + targetContinuousRotation);
-
-        // STEP 1 - CHECK IF ACUTE TURN WILL HIT DEAD-ZONE. IF YES, PROCEED TO COROUTINE WITH TARGET. IF NO, PROCEED TO STEP 2.
-        if (targetContinuousRotation > continuousClockwiseLocalRotationLimit || targetContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
-            // STEP 2 - CHECK IF OBTUSE TURN WILL HIT DEAD-ZONE. IF YES, GET INVERSE ANGLE, DIVIDE IT BY TWO, AND PROCEED TO COROUTINE WITH TARGET AND SECTARGET.
-            // IF STILL NO, TOSS UP ERROR.
-            targetContinuousRotation = currentContinuousRotation + ((Mathf.Abs(targetRelativeRotation) - 360) * Mathf.Sign(targetRelativeRotation));
-            Debug.Log("Target continuous rotation is now " + currentContinuousRotation + " + " + ((Mathf.Abs(targetRelativeRotation) - 360) * Mathf.Sign(targetRelativeRotation)));
-            if (targetContinuousRotation > continuousClockwiseLocalRotationLimit || targetContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
-                throw new InvalidOperationException(
-                    "Cannot rotate by " + targetRelativeRotation + " The rotation ventures into the unreachable zone."
-                );
+        // ROTATION LOGIC (TO OBTAIN FOR RELATIVE ROTATION)
+        // currentContinuousRotation is the start-rotation state on the bounds number-range
+        // targetContinuousRotation is the end-rotation state on the bounds number-range
+        // (which means that acute and obtuse are distinct)
+        // targetRelativeRotation is simply the final relative-rotation
+        if (isRelativeRotation) {
+            if (Mathf.Abs(rotation) <= 180) {
+                targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,rotation,0);
             } else {
-                targetRelativeRotation = (Mathf.Abs(targetRelativeRotation) - 360) * Mathf.Sign(targetRelativeRotation) / 2;
-                secTarget = armTarget.transform.rotation * Quaternion.Euler(0,targetRelativeRotation,0) * Quaternion.Euler(0,targetRelativeRotation,0);
+                // Calculate target and secTargetRotation
+                targetRelativeRotation = rotation / 2;
+                targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,targetRelativeRotation,0);
+                secTargetRotation = targetRotation * Quaternion.Euler(0,targetRelativeRotation,0);
+            }
+        } else {
+            // UGH, I'll PROBABLY NEED TO TURN THIS INTO A FUNCTION
+            // Consolidate reachable euler-rotations (which are normally bounded by [0, 360)) into a continuous number line,
+            // bounded instead by [continuousCounterClockwiseLocalRotationLimit, continuousClockwiseLocalRotationLimit + 360)
+            if (continuousClockwiseLocalRotationLimit < continuousCounterClockwiseLocalRotationLimit) {
+                continuousClockwiseLocalRotationLimit += 360;
+                if (currentContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
+                    currentContinuousRotation += 360;
+                }
+            }
 
-                if (secTarget is Quaternion currentSecTarget) {
-                    Debug.Log("Okay so secTarget would now be " + currentSecTarget.eulerAngles);
+            targetContinuousRotation = currentContinuousRotation + rotation;
+
+            // if angle is reachable via non-reflex rotation
+            if (targetContinuousRotation > continuousCounterClockwiseLocalRotationLimit
+                && targetContinuousRotation < continuousClockwiseLocalRotationLimit) {
+                Debug.Log($"I should only be reading this if {targetContinuousRotation} lies between {continuousCounterClockwiseLocalRotationLimit} and {continuousClockwiseLocalRotationLimit}");
+                targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,rotation,0);
+            
+            // if angle is NOT reachable, find how close it can get from that direction
+            } else {
+                float nonReflexAngularDistance, reflexAngularDistance;
+
+                // Calculate proximity of non-reflex angle extreme to target
+                if (targetContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
+                    nonReflexAngularDistance = continuousCounterClockwiseLocalRotationLimit - targetContinuousRotation;
+                } else {
+                    nonReflexAngularDistance = targetContinuousRotation - continuousClockwiseLocalRotationLimit;
                 }
 
+                // Reflex targetContinuousRotation calculation
+                targetRelativeRotation = (Mathf.Abs(rotation) - 360) * Mathf.Sign(rotation) / 2;
+                float secTargetContinuousRotation = currentContinuousRotation + 2 * targetRelativeRotation;
+
+                // If angle is reachable via reflex rotation
+                if (secTargetContinuousRotation > continuousCounterClockwiseLocalRotationLimit
+                    && secTargetContinuousRotation < continuousClockwiseLocalRotationLimit)
+                {
+                    targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,targetRelativeRotation,0);
+                    secTargetRotation = targetRotation * Quaternion.Euler(0,targetRelativeRotation,0);
+                } else {
+                    // Calculate proximity of reflex angle extreme to target
+                    if (secTargetContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
+                        reflexAngularDistance = continuousCounterClockwiseLocalRotationLimit - secTargetContinuousRotation;
+                    } else {// if (secTargetContinuousRotation > continuousClockwiseLocalRotationLimit) {
+                        reflexAngularDistance = secTargetContinuousRotation - continuousClockwiseLocalRotationLimit;
+                    }
+
+                    // Calculate which distance gets wrist closer to target
+                    if (nonReflexAngularDistance <= reflexAngularDistance) {
+                        targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,rotation,0);
+                    } else {
+                        targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,targetRelativeRotation,0);
+                        secTargetRotation = targetRotation * Quaternion.Euler(0,targetRelativeRotation,0);
+                    }
+                }
             }
-        } else {
-            secTarget = null;
         }
 
-        Debug.Log("Rotating by " + targetRelativeRotation + " degrees, and then to " + secTarget);
-
-        rotation = Quaternion.Euler(0, targetRelativeRotation, 0);
+        // view target rotation
+        // Debug.Log("Rotating to " + targetRotation.eulerAngles + " degrees");
+        // if (secTargetRotation is Quaternion currentSecTargetRotation) {
+        //     Debug.Log("Rotating to " + targetRotation.eulerAngles + " degrees, and then to " + currentSecTargetRotation.eulerAngles);
+        // }
 
         // Rotate wrist
         collisionListener.Reset();
+
+        // Activate check for dead-zone encroachment inside of CollisionListener
+        collisionListener.enableDeadZoneCheck();
+
         IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
             ContinuousMovement.rotate(
                 controller,
                 collisionListener,
                 armTarget.transform,
-                armTarget.transform.rotation * rotation,
+                targetRotation,
                 disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
                 degreesPerSecond,
                 returnToStartPositionIfFailed,
-                secTarget
+                secTargetRotation
             )
         );
 
