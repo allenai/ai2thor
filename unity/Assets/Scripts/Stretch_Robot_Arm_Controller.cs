@@ -446,10 +446,9 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
         Quaternion targetRotation;
         Quaternion? secTargetRotation = null;
 
-        // ROTATION LOGIC (TO OBTAIN FOR RELATIVE ROTATION)
         // currentContinuousRotation is the start-rotation state on the bounds number-range
         // targetContinuousRotation is the end-rotation state on the bounds number-range
-        // (which means that acute and obtuse are distinct)
+        // (which allows acute and obtuse rotation end-states to be distinct)
         // targetRelativeRotation is simply the final relative-rotation
         if (isRelativeRotation) {
             if (Mathf.Abs(rotation) <= 180) {
