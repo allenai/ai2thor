@@ -257,7 +257,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             T? currentTarget = null;
             T directionToTarget;
-            // Getting current transform (stays true for both iterations)
             var currentProperty = getProp(moveTransform);
             Debug.Log("currentProperty is " + currentProperty);
             float currentDistance = 0;
@@ -272,7 +271,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     currentTarget = (T)secTarget;
                 }
 
-                // does NOT stay true for both iterations
                 currentDistance = distanceMetric((T)currentTarget, currentProperty);
                 directionToTarget = getDirection((T)currentTarget, currentProperty);
 
@@ -380,10 +378,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var staticCollisions = collisionListener.StaticCollisions().ToList();
 
+            // decide if we want to return to original property or last known property before collision
             if (staticCollisions.Count > 0) {
                 var sc = staticCollisions[0];
 
-                // decide if we want to return to original property or last known property before collision
                 setProp(moveTransform, resetProp);
 
                 // if we hit a sim object
@@ -396,6 +394,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     debugMessage = "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + target + "'.";
                 }
 
+                actionSuccess = false;
+            } else if (collisionListener.TransformChecks(controller, moveTransform) == true) {
+                setProp(moveTransform, resetProp);
+                debugMessage = "Rotated up against Stretch arm wrist's dead-zone, could not reach target: '" + target + "'.";
                 actionSuccess = false;
             }
 
