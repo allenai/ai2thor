@@ -461,7 +461,6 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
                 secTargetRotation = targetRotation * Quaternion.Euler(0,targetRelativeRotation,0);
             }
         } else {
-            // UGH, I'll PROBABLY NEED TO TURN THIS INTO A FUNCTION
             // Consolidate reachable euler-rotations (which are normally bounded by [0, 360)) into a continuous number line,
             // bounded instead by [continuousCounterClockwiseLocalRotationLimit, continuousClockwiseLocalRotationLimit + 360)
             if (continuousClockwiseLocalRotationLimit < continuousCounterClockwiseLocalRotationLimit) {
@@ -476,7 +475,6 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
             // if angle is reachable via non-reflex rotation
             if (targetContinuousRotation > continuousCounterClockwiseLocalRotationLimit
                 && targetContinuousRotation < continuousClockwiseLocalRotationLimit) {
-                Debug.Log($"I should only be reading this if {targetContinuousRotation} lies between {continuousCounterClockwiseLocalRotationLimit} and {continuousClockwiseLocalRotationLimit}");
                 targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,rotation,0);
             
             // if angle is NOT reachable, find how close it can get from that direction
