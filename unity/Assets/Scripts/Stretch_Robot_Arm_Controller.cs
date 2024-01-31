@@ -17,7 +17,8 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
     [SerializeField]
     private GameObject MagnetRenderer = null;
 
-    private PhysicsRemoteFPSAgentController PhysicsController;
+    [SerializeField]
+    public PhysicsRemoteFPSAgentController PhysicsController;
 
     // Distance from joint containing gripper camera to armTarget
     private Vector3 WristToManipulator = new Vector3 (0, -0.09872628f, 0);
@@ -880,12 +881,17 @@ public partial class Stretch_Robot_Arm_Controller : MonoBehaviour {
 
         meta.heldObjects = heldObjectIDs;
         meta.handSphereCenter = magnetSphere.transform.TransformPoint(magnetSphere.center);
+
+        meta.rootRelativeHandSphereCenter = armBase.InverseTransformPoint(meta.handSphereCenter);
+
         meta.handSphereRadius = magnetSphere.radius;
         List<SimObjPhysics> objectsInMagnet = WhatObjectsAreInsideMagnetSphereAsSOP(false);
         meta.pickupableObjects = objectsInMagnet.Where(
             x => x.PrimaryProperty == SimObjPrimaryProperty.CanPickup
         ).Select(x => x.ObjectID).ToList();
         meta.touchedNotHeldObjects = objectsInMagnet.Select(x => x.ObjectID).ToList();
+        meta.gripperOpennessState = ((StretchAgentController) PhysicsController).gripperOpennessState;
+        
         return meta;
     }
 

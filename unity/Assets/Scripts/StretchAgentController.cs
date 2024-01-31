@@ -17,6 +17,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected float primaryStartingXRotation, secondaryStartingXRotation;
         protected float maxBaseXZOffset = 0.25f, maxBaseXYRotation = 10f;
         protected float minGimbalXRotation = -80.001f, maxGimbalXRotation = 80.001f;
+        public int gripperOpennessState = 0;
 
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
@@ -136,11 +137,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // enable stretch arm component
             Debug.Log("initializing stretch arm");
             StretchArm.SetActive(true);
+            //initialize all things needed for the stretch arm controller
             SArm = this.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+            SArm.PhysicsController = this;
             var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
             Vector3 pos = armTarget.transform.localPosition;
             pos.z = 0.0f; // pulls the arm in to be fully contracted
-            //SetGripperOpenness(InitialGripperOpenness); // set initial amount of gripper openness
             armTarget.transform.localPosition = pos;
             var StretchSolver = this.GetComponentInChildren<Stretch_Arm_Solver>();
             Debug.Log("running manipulate stretch arm");
@@ -358,18 +360,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             if (-100 <= openness && openness < 0) {
                 GripperOpennessStates[0].SetActive(true);
+                gripperOpennessState = 0;
             } else if (0 <= openness && openness < 5) {
                 GripperOpennessStates[1].SetActive(true);
+                gripperOpennessState = 1;
             } else if (5 <= openness && openness < 15) {
                 GripperOpennessStates[2].SetActive(true);
+                gripperOpennessState = 2;
             } else if (15 <= openness && openness < 25) {
                 GripperOpennessStates[3].SetActive(true);
+                gripperOpennessState = 3;
             } else if (25 <= openness && openness < 35) {
                 GripperOpennessStates[4].SetActive(true);
+                gripperOpennessState = 4;
             } else if (35 <= openness && openness < 45) {
                 GripperOpennessStates[5].SetActive(true);
+                gripperOpennessState = 5;
             } else if (45 <= openness && openness <= 50) {
                 GripperOpennessStates[6].SetActive(true);
+                gripperOpennessState = 6;
             } else {
                 throw new InvalidOperationException(
                     $"Invalid value for `openness`: '{openness}'. Value should be between -100 and 50"
