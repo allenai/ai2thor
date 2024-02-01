@@ -274,7 +274,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 currentDistance = distanceMetric((T)currentTarget, currentProperty);
                 directionToTarget = getDirection((T)currentTarget, currentProperty);
 
-                // view target rotation
+                // // view target rotation
                 // if (currentTarget is Quaternion printTarget) {
                 //     Debug.Log("Oh, currentTarget is " + printTarget.eulerAngles.y);
                 // }
