@@ -200,8 +200,9 @@ def _build(
     process = subprocess.Popen(command, shell=True, env=full_env)
 
     start = time.time()
+    sleep_time = 10
     while True:
-        time.sleep(10)  # Check for build completion every 10 seconds
+        time.sleep(sleep_time)  # Check for build completion every `sleep_time` seconds
 
         if process.poll() is not None:  # Process has finished.
             break
@@ -215,10 +216,8 @@ def _build(
             os.waitpid(-1, os.WNOHANG)
             return False
 
-        if elapsed // print_interval > (elapsed - print_interval) // print_interval:
-            print(
-                f"{print_interval}-second interval reached. Process is still running."
-            )
+        if elapsed // print_interval > (elapsed - sleep_time) // print_interval:
+            logger.info(f"Build has been running for {elapsed:.2f} seconds.")
 
     logger.info(f"Exited with code {process.returncode}")
 
@@ -482,7 +481,7 @@ def local_build(
 
     build = ai2thor.build.Build(arch, prefix, False)
     env = dict()
-    if os.path.isdir("unity/Assets/Private/Scenes"):
+    if os.path.isdir("unity/Assets/Private/Scenes") or os.path.isdir("Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets/Scenes"):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
 
     build_dir = os.path.join("builds", build.name)
@@ -871,20 +870,18 @@ def pre_test(context):
         "unity/builds/%s" % c.build_name(),
     )
 
+import scripts.update_private
 
-def clean():
-    import scripts.update_private
 
-    # a deploy key is used on the build server and an .ssh/config entry has been added
-    # to point to the deploy key caclled ai2thor-private-github
-    scripts.update_private.private_repo_url = (
-        "git@ai2thor-private-github:allenai/ai2thor-private.git"
-    )
+def clean(private_repos=tuple()):
     subprocess.check_call("git reset --hard", shell=True)
     subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
-    shutil.rmtree(scripts.update_private.private_dir, ignore_errors=True)
-    scripts.update_private.checkout_branch()
+
+    for repo in private_repos:
+        if repo.delete_before_checkout:
+            shutil.rmtree(repo.target_dir, ignore_errors=True)
+        repo.checkout_branch()
 
 
 def ci_prune_cache(cache_dir):
@@ -1079,31 +1076,105 @@ def ci_pytest(branch, commit_id):
         f"finished pytest for {branch} {commit_id} in {time.time() - start_time:.2f} seconds"
     )
 
-
+# Type hints break build server's invoke version 
 @task
-def ci_build(context):
+def ci_build(
+    context,
+    commit_id = None, # Optional[str] 
+    branch = None, # Optional[str] 
+    skip_pip = False, # bool
+    novelty_thor_scenes = False,
+    skip_delete_tmp_dir = False, # bool
+):
+    assert (commit_id is None) == (
+        branch is None
+    ), "must specify both commit_id and branch or neither"
+
+    is_travis_build = commit_id is None
+
+    if not is_travis_build:
+        logger.info("Initiating a NON-TRAVIS build")
+
+    base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
+
+    if is_travis_build:
+        # a deploy key is used on the build server and an .ssh/config entry has been added
+        # to point to the deploy key caclled ai2thor-private-github
+        private_url =  "git@ai2thor-private-github:allenai/ai2thor-private.git"
+        novelty_thor_url = "git@ai2thor-objaverse-github:allenai/ai2thor-objaverse.git"
+    else:
+        private_url = "https://github.com/allenai/ai2thor-private"
+        novelty_thor_url ="https://github.com/allenai/ai2thor-objaverse"
+        
+
+    private_repos = [
+        scripts.update_private.Repo(
+            url=private_url,
+            target_dir=os.path.join(base_dir, "unity", "Assets", "Private"),
+            delete_before_checkout=True,
+        )
+    ]
+
+    novelty_thor_repo = scripts.update_private.Repo(
+        url=novelty_thor_url,
+        target_dir=os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
+        delete_before_checkout=is_travis_build,
+    )
+
+    if novelty_thor_scenes:
+        logger.info("Including a NoveltyThor scenes and making it a private build")
+        private_repos.append(
+            novelty_thor_repo
+        )
+    else:
+        # Needs to be here so we overwrite any existing NoveltyTHOR repo
+        private_repos.append(
+            scripts.update_private.Repo(
+                url=novelty_thor_url,
+                target_dir=os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
+                delete_before_checkout=is_travis_build,
+                commit_id="066485f29d7021ac732bed57758dea4b9d481c40", # Initial commit, empty repo.
+            )
+        )
+
     with open(os.path.join(os.environ["HOME"], ".ci-build.lock"), "w") as lock_f:
         arch_temp_dirs = dict()
         try:
             fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            build = pending_travis_build()
+            if is_travis_build:
+                build = pending_travis_build()
+            else:
+                build = {
+                    "commit_id": commit_id,
+                    "branch": branch,
+                    "tag": None,
+                    "id": None,
+                }
+            novelty_thor_add_branches = ["new_cam_adjust"]
+            if is_travis_build and build and build["branch"] in novelty_thor_add_branches:
+                novelty_thor_scenes = True
+                private_repos.append(
+                    novelty_thor_repo
+                )
+
             skip_branches = ["vids", "video", "erick/cloudrendering", "it_vr"]
             if build and build["branch"] not in skip_branches:
                 # disabling delete temporarily since it interferes with pip releases
                 # pytest_s3_object(build["commit_id"]).delete()
                 logger.info(f"pending build for {build['branch']} {build['commit_id']}")
-                clean()
+                clean(private_repos=private_repos)
                 subprocess.check_call("git fetch", shell=True)
                 subprocess.check_call(
                     "git checkout %s --" % build["branch"], shell=True
                 )
+                logger.info(f" After checkout")
                 subprocess.check_call(
                     "git checkout -qf %s" % build["commit_id"], shell=True
                 )
 
-                private_scene_options = [False]
+                private_scene_options = [novelty_thor_scenes]
 
-                build_archs = ["OSXIntel64", "Linux64"]
+                build_archs = ["OSXIntel64"] #, "Linux64"]
 
                 # CloudRendering only supported with 2020.3.25
                 # should change this in the future to automatically install
@@ -1246,18 +1317,24 @@ def ci_build(context):
 
                 # must have this after all the procs are joined
                 # to avoid generating a _builds.py file that would affect pytest execution
-                build_pip_commit(context)
-                push_pip_commit(context)
-                generate_pypi_index(context)
+                if skip_pip:
+                    logger.info("Skipping pip build")
+                else:
+                    build_pip_commit(context)
+                    push_pip_commit(context)
+                    generate_pypi_index(context)
 
                 # give the travis poller time to see the result
-                for i in range(12):
-                    b = travis_build(build["id"])
-                    logger.info("build state for %s: %s" % (build["id"], b["state"]))
+                if is_travis_build:
+                    for i in range(12):
+                        b = travis_build(build["id"])
+                        logger.info(
+                            "build state for %s: %s" % (build["id"], b["state"])
+                        )
 
-                    if b["state"] != "started":
-                        break
-                    time.sleep(10)
+                        if b["state"] != "started":
+                            break
+                        time.sleep(10)
 
                 logger.info(
                     "build complete %s %s" % (build["branch"], build["commit_id"])
@@ -1265,13 +1342,14 @@ def ci_build(context):
 
             fcntl.flock(lock_f, fcntl.LOCK_UN)
 
-        except io.BlockingIOError as e:
+        except io.BlockingIOError:
             pass
 
         finally:
-            for arch, temp_dir in arch_temp_dirs.items():
-                logger.info("deleting temp dir %s" % temp_dir)
-                shutil.rmtree(temp_dir)
+            if not skip_delete_tmp_dir:
+                for arch, temp_dir in arch_temp_dirs.items():
+                    logger.info("deleting temp dir %s" % temp_dir)
+                    shutil.rmtree(temp_dir)
 
 
 @task
@@ -4736,9 +4814,10 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
+    import ai2thor.util.runtime_assets as ra
 
     hook_runner = ProceduralAssetHookRunner(
-        asset_directory=asset_dir, asset_symlink=True, verbose=True
+        asset_directory=asset_dir, asset_symlink=True, verbose=True, load_file_in_unity=True
     )
     controller = ai2thor.controller.Controller(
         # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",
@@ -4753,36 +4832,70 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
         visibilityScheme="Distance",
         action_hook_runner=hook_runner,
     )
-
-    with open(house_path, "r") as f:
-        house = json.load(f)
-    instance_id = "asset_0"
-    if asset_id != "":
-        house["objects"] = [
-            {
-                "assetId": asset_id,
-                "id": instance_id,
-                "kinematic": True,
-                "position": {"x": 0, "y": 0, "z": 0},
-                "rotation": {"x": 0, "y": 0, "z": 0},
-                "layer": "Procedural2",
-                "material": None,
-            }
-        ]
-    evt = controller.step(action="CreateHouse", house=house)
-
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    
+    #TODO bug why skybox is not changing? from just procedural pipeline
+    evt = controller.step(
+        action="SetSkybox", 
+        color={
+            "r": 0,
+            "g": 0,
+            "b": 0,
+        }
     )
-    print(f'Error: {evt.metadata["errorMessage"]}')
 
-    evt = controller.step(dict(action="LookAtObjectCenter", objectId=instance_id))
-
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    angle_increment = 45
+    angles = [n * angle_increment for n in range(0, round(360 / angle_increment))]
+    axes = [(0, 1, 0), (1, 0, 0)]
+    rotations = [(x, y, z, degrees) for degrees in angles for (x, y, z) in axes]
+    ra.view_asset_in_thor(
+        asset_id=asset_id,
+        controller=controller,
+        output_dir="./output-test",
+        rotations=rotations,
+        house_path=house_path,
+        skybox_color=(0, 0, 0)
     )
-    print(f'Error: {evt.metadata["errorMessage"]}')
 
+    # with open(house_path, "r") as f:
+    #     house = json.load(f)
+    # instance_id = "asset_0"
+    # if asset_id != "":
+    #     house["objects"] = [
+    #         {
+    #             "assetId": asset_id,
+    #             "id": instance_id,
+    #             "kinematic": True,
+    #             "position": {"x": 0, "y": 0, "z": 0},
+    #             "rotation": {"x": 0, "y": 0, "z": 0},
+    #             "layer": "Procedural2",
+    #             "material": None,
+    #         }
+    #     ]
+    # evt = controller.step(action="CreateHouse", house=house)
+
+   
+    # print(
+    #     f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    # )
+    # print(f'Error: {evt.metadata["errorMessage"]}')
+
+    # evt = controller.step(
+    #     action="SetSkybox", 
+    #     color={
+    #         "r": 0,
+    #         "g": 0,
+    #         "b": 0,
+    #     }
+    # )
+
+
+    # evt = controller.step(dict(action="LookAtObjectCenter", objectId=instance_id))
+
+    # print(
+    #     f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    # )
+    # print(f'Error: {evt.metadata["errorMessage"]}')
+    # input()
 
 @task
 def procedural_asset_cache_test(
@@ -4791,6 +4904,7 @@ def procedural_asset_cache_test(
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
+    import ai2thor.util.runtime_assets as ra
 
     hook_runner = ProceduralAssetHookRunner(
         asset_directory=asset_dir, asset_symlink=True, verbose=True, asset_limit=1
@@ -4896,3 +5010,4 @@ def procedural_asset_cache_test(
     )
     print(f'Error: {evt.metadata["errorMessage"]}')
     print(f'return {evt.metadata["actionReturn"]}')
+    

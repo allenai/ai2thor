@@ -135,7 +135,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ActionFinished.Success;
         }
 
-        public virtual IEnumerator MoveAgent(
+        public IEnumerator MoveAgent(
             bool returnToStart = true,
             float ahead = 0,
             float right = 0,

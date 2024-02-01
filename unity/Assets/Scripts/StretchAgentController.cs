@@ -6,11 +6,31 @@ using System.Linq;
 using RandomExtensions;
 using UnityEngine.AI;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.UIElements;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
         
     public partial class StretchAgentController : ArmAgentController {
+
+        protected Transform gimbalBase, primaryGimbal, secondaryGimbal;
+        protected float gimbalBaseStartingXPosition, gimbalBaseStartingZPosition, gimbalBaseStartingXRotation, gimbalBaseStartingYRotation;
+        protected float primaryStartingXRotation, secondaryStartingXRotation;
+        protected float maxBaseXZOffset = 0.25f, maxBaseXYRotation = 10f;
+        protected float minGimbalXRotation = -80.001f, maxGimbalXRotation = 80.001f;
+
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
+        }
+        GameObject CameraGimbal2;
+
+        public override void updateImageSynthesis(bool status) {
+            base.updateImageSynthesis(status);
+
+            // updateImageSynthesis is run in BaseFPSController's Initialize method after the
+            // Stretch Agent's unique secondary camera has been added to the list of third party
+            // cameras in InitializeBody, so a third-party camera image synthesis update is
+            // necessary if we want the secondary camera's image synthesis componenent to match
+            // the primary camera's
+            agentManager.updateThirdPartyCameraImageSynthesis(status);
         }
 
         public override void InitializeBody(ServerAction initializeAction) {
@@ -23,42 +43,75 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cc.center = m_CharacterController.center;
             cc.radius = m_CharacterController.radius;
             cc.height = m_CharacterController.height;
-
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
-
-            // camera position
-            m_Camera.transform.localPosition = new Vector3(0, 0.378f, 0.0453f);
-
-            // camera FOV
-            m_Camera.fieldOfView = 69f;
 
             // set camera stand/crouch local positions for Tall mode
             standingLocalCameraPosition = m_Camera.transform.localPosition;
             crouchingLocalCameraPosition = m_Camera.transform.localPosition;
 
-            // set secondary arm-camera
-            Camera fp_camera_2 = m_CharacterController.transform.Find("SecondaryCamera").GetComponent<Camera>();
+            // set up main camera parameters
+            m_Camera.fieldOfView = 65f;
+
+            var secondaryCameraName = "SecondaryCamera";
+            
+            var gimbalBaseName = "FixedCameraGimbalBase";
+            var primaryGimbalName = "FixedCameraGimbalPrimary";
+            var secondaryGimbalName = "FixedCameraGimbalSecondary";
+
+            this.gimbalBase = m_CharacterController.transform.FirstChildOrDefault(x => x.name == gimbalBaseName);
+            this.primaryGimbal = m_CharacterController.transform.FirstChildOrDefault(x => x.name == primaryGimbalName);
+            this.secondaryGimbal = m_CharacterController.transform.FirstChildOrDefault(x => x.name == secondaryGimbalName);
+
+            gimbalBaseStartingXPosition = gimbalBase.transform.localPosition.x;
+            gimbalBaseStartingZPosition = gimbalBase.transform.localPosition.z;
+            gimbalBaseStartingXRotation = gimbalBase.transform.localEulerAngles.x;
+            gimbalBaseStartingYRotation = gimbalBase.transform.localEulerAngles.y;
+            primaryStartingXRotation = primaryGimbal.transform.localEulerAngles.x;
+            secondaryStartingXRotation = secondaryGimbal.transform.localEulerAngles.x;
+
+            // activate arm-camera
+            Camera fp_camera_2 = m_CharacterController.transform.Find(secondaryCameraName).GetComponent<Camera>();
             fp_camera_2.gameObject.SetActive(true);
-            fp_camera_2.transform.localPosition = new Vector3(0.0353f, 0.5088f, -0.076f);
-            fp_camera_2.transform.localEulerAngles = new Vector3(45f, 90f, 0f);
-            fp_camera_2.fieldOfView = 90f;
-
-            if (initializeAction != null) {
-
-                if (initializeAction.cameraNearPlane > 0) {
-                    m_Camera.nearClipPlane = initializeAction.cameraNearPlane;
-                    fp_camera_2.nearClipPlane = initializeAction.cameraNearPlane;
-                }
-
-                if (initializeAction.cameraFarPlane > 0) {
-                    m_Camera.farClipPlane = initializeAction.cameraFarPlane;
-                    fp_camera_2.farClipPlane = initializeAction.cameraFarPlane;
-                }
-                
+            agentManager.registerAsThirdPartyCamera(fp_camera_2);
+            if (initializeAction.antiAliasing != null) {
+                agentManager.updateAntiAliasing(
+                    postProcessLayer: fp_camera_2.gameObject.GetComponentInChildren<PostProcessLayer>(),
+                    antiAliasing: initializeAction.antiAliasing
+                );
             }
 
-            agentManager.registerAsThirdPartyCamera(fp_camera_2);
+            // motor gimbals setup
+            if (UseMotorCameraGimbals == true) {
+                CameraGimbal2 = MotorCameraGimbals.transform.GetChild(0).gameObject;
+
+                // rehierchize primary camera to motorized gimbals, to accurately reflect real-life camera rotation
+                m_Camera.transform.SetParent(CameraGimbal2.transform);
+
+                // set up primary camera parameters
+                m_Camera.transform.localPosition = new Vector3(0.03f, 0.007f, 0.044f);
+                m_Camera.transform.localEulerAngles = Vector3.zero;
+                fp_camera_2.fieldOfView = 69f;
+
+                // set up arm-camera parameters
+                // ???
+
+            // fixed gimbals setup
+            } else {
+                // rehierchize cameras to fixed gimbals
+                m_Camera.transform.SetParent(FixedCameraGimbalPrimary.transform);
+                fp_camera_2.transform.SetParent(FixedCameraGimbalSecondary.transform);
+
+                // set up primary camera parameters
+                m_Camera.transform.localPosition = new Vector3(0.015f, 0.01832385f, 0.06322689f);
+                m_Camera.transform.localEulerAngles = Vector3.zero;
+                m_Camera.fieldOfView = 59f;
+
+                // set up arm-camera parameters
+                fp_camera_2.transform.localPosition = new Vector3(0.015f, 0.01832385f, 0.06322689f);
+                m_Camera.transform.localEulerAngles = Vector3.zero;
+                fp_camera_2.fieldOfView = 59f;
+            }
 
             // limit camera from looking too far down/up
             if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f)) {
@@ -73,6 +126,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
             }
 
+            var secondaryCameraParams = new CameraParameters();
+            var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(secondaryCameraName, out secondaryCameraParams);
+
+            if (setSecondaryParams.GetValueOrDefault()) {
+                CameraParameters.setCameraParameters(fp_camera_2, secondaryCameraParams);
+            }
+
             // enable stretch arm component
             Debug.Log("initializing stretch arm");
             StretchArm.SetActive(true);
@@ -80,6 +140,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
             Vector3 pos = armTarget.transform.localPosition;
             pos.z = 0.0f; // pulls the arm in to be fully contracted
+            //SetGripperOpenness(InitialGripperOpenness); // set initial amount of gripper openness
             armTarget.transform.localPosition = pos;
             var StretchSolver = this.GetComponentInChildren<Stretch_Arm_Solver>();
             Debug.Log("running manipulate stretch arm");

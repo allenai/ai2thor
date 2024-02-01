@@ -8,7 +8,7 @@ public class DraggablePoint : PropertyAttribute {}
 
 
 #if UNITY_EDITOR
-[CustomEditor(typeof(MonoBehaviour), true)]
+// [CustomEditor(typeof(MonoBehaviour), true)]
 public class DraggablePointDrawer : Editor {
 
   readonly GUIStyle style = new GUIStyle();

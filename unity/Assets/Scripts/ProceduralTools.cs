@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Linq;
 using UnityStandardAssets.Characters.FirstPerson;
 using System;
+using System.IO;
 using MessagePack.Resolvers;
 using MessagePack.Formatters;
 using MessagePack;
@@ -11,6 +12,8 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Thor.Procedural.Data;
 using UnityEngine.AI;
+using Thor.Utils;
+
 
 #if UNITY_EDITOR
 using UnityEditor.SceneManagement;
@@ -21,26 +24,34 @@ namespace Thor.Procedural {
     [ExecuteInEditMode]
     [Serializable]
     public class AssetMap<T> {
-        private Dictionary<string, T> assetMap;
+        protected Dictionary<string, T> assetMap;
         public AssetMap(Dictionary<string, T> assetMap) {
             this.assetMap = assetMap;
         }
 
-        public T getAsset(string name) {
+        public virtual T getAsset(string name) {
             return assetMap[name];
         }
 
-        public bool ContainsKey(string key) {
+        public virtual bool ContainsKey(string key) {
             return assetMap.ContainsKey(key);
         }
 
-        public int Count() {
+        public virtual int Count() {
             return assetMap.Count;
         }
 
 
-        public IEnumerable<string> Keys() {
+        public virtual IEnumerable<string> Keys() {
             return assetMap.Keys;
+        }
+
+        public virtual IEnumerable<T> Values() {
+            return assetMap.Values;
+        }
+
+        public virtual void Clear() {
+            assetMap.Clear();
         }
     }
 
@@ -1140,7 +1151,8 @@ namespace Thor.Procedural {
         public static (int, int, int) parseHouseVersion(string version) {
             if (string.IsNullOrEmpty(version)) {
                 return (0, 0, 0);
-            } else {
+            }
+            else {
                 var versionSplit = version.Split('.');
                 Debug.Log(string.Join(", ", versionSplit));
                 var versionResult = new int[] {0, 0, 0 }.Select((x, i) => {
@@ -1165,6 +1177,25 @@ namespace Thor.Procedural {
             return 0;
         }
 
+        private static bool validateHouseObjects(AssetMap<GameObject> assetDb, IEnumerable<HouseObject> hos, List<string> missingIds) {
+            if (hos == null) {
+                return true;
+            }
+            else {
+                var result = true;
+                foreach (var ho in hos) {
+
+                    var inDb = assetDb.ContainsKey(ho.assetId);
+                    if (!inDb) {
+                        missingIds.Add(ho.assetId);
+                    }
+                    result =  inDb && validateHouseObjects(assetDb, ho.children, missingIds);
+                }
+                
+                return result;
+            }
+        }
+
         public static GameObject CreateHouse(
            ProceduralHouse house,
            AssetMap<Material> materialDb,
@@ -1175,6 +1206,13 @@ namespace Thor.Procedural {
                 throw new ArgumentException(
                     $"House metadata schema not specified! Should be under house['metadata']['schema']." +
                     $" The current schema for this THOR version is '{CURRENT_HOUSE_SCHEMA}'"
+                );
+            }
+            var missingIds = new List<string>();
+            if (!validateHouseObjects(getAssetMap(), house.objects, missingIds )) {
+                throw new ArgumentException(
+                    $"Object ids '{string.Join(", ", missingIds)}' not present in asset database." +
+                    $" If it is a procedural asset make sure you call 'CreateAsset' before 'CreateHouse'"
                 );
             }
 
@@ -1460,9 +1498,28 @@ namespace Thor.Procedural {
                 }
             }
 
-            buildNavMesh(floorGameObject, house.proceduralParameters.navmeshVoxelSize);
+            // buildNavMesh(floorGameObject, house.proceduralParameters.navmeshVoxelSize);
+            // Debug.Log($"Navmeshes {string.Join(", ", house.metadata.navMeshes.Select(n => $"{n.agentTypeID} radius {n.agentRadius}"))}");
+            Debug.Log($"schema {house.metadata.schema}");
+            buildNavMeshes(floorGameObject, house.metadata.navMeshes);
 
-            RenderSettings.skybox = materialDb.getAsset(house.proceduralParameters.skyboxId);
+           
+            if (string.IsNullOrEmpty(house.proceduralParameters.skyboxId) || !materialDb.ContainsKey(house.proceduralParameters.skyboxId)) {
+                var mat = new Material(Shader.Find("Standard"));
+                Debug.Log("--------- Working");
+                mat.color = house.proceduralParameters.skyboxColor.toUnityColor();
+                RenderSettings.skybox = mat;
+                
+                // var cam = GameObject.FindObjectOfType<Camera>();
+                var cam = GameObject.Find("FirstPersonCharacter").GetComponent<Camera>();
+                cam.clearFlags = CameraClearFlags.SolidColor;
+                cam.backgroundColor = mat.color;
+                
+                // RenderSettings.ambientSkyColor =
+            }
+            else {
+                RenderSettings.skybox = materialDb.getAsset(house.proceduralParameters.skyboxId);
+            }
             DynamicGI.UpdateEnvironment();
             GameObject.FindObjectOfType<ReflectionProbe>().GetComponent<ReflectionProbe>().RenderProbe();
 
@@ -1490,11 +1547,15 @@ namespace Thor.Procedural {
                 BaseFPSAgentController bfps = agentManager.primaryAgent;
                 Vector3 newPosition = house.metadata.agentPoses[agentManager.agentMode].position;
                 Vector3 newRotation = house.metadata.agentPoses[agentManager.agentMode].rotation;
-                float newHorizon = house.metadata.agentPoses[agentManager.agentMode].horizon;
+                float? newHorizon = house.metadata.agentPoses[agentManager.agentMode].horizon;
                 bool? newStanding = house.metadata.agentPoses[agentManager.agentMode].standing;
+
+                // make sure to sync transforms after teleporting to ensure rigidbody/transforms are all updated even if a frame hasn't passed
+                bool savedAutoSyncTransforms = Physics.autoSyncTransforms;
+                Physics.autoSyncTransforms = true;
+
                 if (newPosition != null) {
                     bfps.transform.position = newPosition;
-                    bfps.autoSyncTransforms();//make sure to sync transforms after teleporting to ensure rigidbody/transforms are all updated even if a frame hasn't passed
 
                     Vector3 target = new Vector3(
                         newPosition.x,
@@ -1512,10 +1573,12 @@ namespace Thor.Procedural {
                 if (newRotation != null) {
                     bfps.transform.rotation = Quaternion.Euler(newRotation);
                 }
-                if (newHorizon != null) {
-                    bfps.m_Camera.transform.localEulerAngles = new Vector3(newHorizon, 0, 0);
+                if (newHorizon.HasValue) {
+                    bfps.m_Camera.transform.localEulerAngles = new Vector3(
+                        newHorizon.Value, bfps.m_Camera.transform.localEulerAngles.y, 0
+                    );
                 }
-                if (agentManager.agentMode != "locobot" && newStanding != null) {
+                if (agentManager.agentMode != "locobot" && agentManager.agentMode != "stretch" && newStanding != null) {
                     PhysicsRemoteFPSAgentController pfps = bfps as PhysicsRemoteFPSAgentController;
                     if (newStanding == true) {
                         pfps.stand();
@@ -1523,6 +1586,7 @@ namespace Thor.Procedural {
                         pfps.crouch();
                     }
                 }
+                Physics.autoSyncTransforms = savedAutoSyncTransforms;
             }
         }
 
@@ -1550,27 +1614,159 @@ namespace Thor.Procedural {
 
         }
 
-        public static void tagObjectNavmesh(GameObject gameObject, string navMeshAreaName = "Walkable") {
+        public static void tagObjectNavmesh(GameObject gameObject, string navMeshAreaName = "Walkable", bool ignore = false) {
             var modifier = gameObject.GetComponent<NavMeshModifier>();
             if (modifier == null) {
                 modifier = gameObject.AddComponent<NavMeshModifier>();
             }
+            modifier.ignoreFromBuild = ignore;
             modifier.overrideArea = true;
             modifier.area = NavMesh.GetAreaFromName(navMeshAreaName);
         }
 
 
+        public static string NavMeshSurfaceName(int index) {
+            return $"NavMeshSurface_{index}";
+        }
+
+        public static GameObject buildNavMeshSurface(NavMeshBuildSettings buildSettings, int index) {
+            var go = new GameObject(NavMeshSurfaceName(index));
+            var navMeshSurface = go.AddComponent<NavMeshSurfaceExtended>();
+            navMeshSurface.agentTypeID = buildSettings.agentTypeID;
+            navMeshSurface.voxelSize = buildSettings.voxelSize;
+            navMeshSurface.overrideVoxelSize = buildSettings.overrideVoxelSize;
+            navMeshSurface.BuildNavMesh(buildSettings);
+            Debug.Log($"Created navmesh w agentType id {navMeshSurface.agentTypeID}");
+            return go;
+        }
+
+        public static GameObject buildNavMeshSurface(NavMeshConfig navMeshConfig, int index) {
+
+            var go = new GameObject(NavMeshSurfaceName(index));
+
+            var navMeshSurface = go.AddComponent<NavMeshSurfaceExtended>();
+            var buildSettings = navMeshConfigToBuildSettings(navMeshConfig, NavMesh.GetSettingsByIndex(0));
+            navMeshSurface.agentTypeID = buildSettings.agentTypeID;
+            navMeshSurface.voxelSize = buildSettings.voxelSize;
+            navMeshSurface.overrideVoxelSize = buildSettings.overrideVoxelSize;
+            navMeshSurface.BuildNavMesh(buildSettings);
+            Debug.Log($"Created navmesh w agentType id {navMeshSurface.agentTypeID}");
+            return go;
+        }
+
+        public static NavMeshBuildSettings navMeshConfigToBuildSettings(NavMeshConfig config, NavMeshBuildSettings defaultBuildSettings) {
+            defaultBuildSettings.agentTypeID = config.id;
+            defaultBuildSettings.agentRadius = config.agentRadius;
+            defaultBuildSettings.tileSize = config.tileSize.GetValueOrDefault(defaultBuildSettings.tileSize);
+            defaultBuildSettings.agentClimb = config.agentClimb.GetValueOrDefault(defaultBuildSettings.agentClimb);
+            defaultBuildSettings.agentHeight = config.agentHeight.GetValueOrDefault(defaultBuildSettings.agentHeight);
+            defaultBuildSettings.agentSlope = config.agentSlope.GetValueOrDefault(defaultBuildSettings.agentSlope);
+            defaultBuildSettings.voxelSize = config.voxelSize.GetValueOrDefault(defaultBuildSettings.voxelSize);
+            defaultBuildSettings.overrideVoxelSize = config.overrideVoxelSize.GetValueOrDefault(defaultBuildSettings.overrideVoxelSize);
+            return defaultBuildSettings;
+        }
+
+        public static NavMeshConfig navMeshBuildSettingsToConfig(NavMeshBuildSettings navMeshBuildSettings) {
+            var navMeshConfig = new NavMeshConfig();
+            navMeshConfig.id = navMeshBuildSettings.agentTypeID;
+            navMeshConfig.agentRadius = navMeshBuildSettings.agentRadius;
+            navMeshConfig.tileSize = navMeshBuildSettings.tileSize;
+            navMeshConfig.agentClimb = navMeshBuildSettings.agentClimb;
+            navMeshConfig.agentHeight = navMeshBuildSettings.agentHeight;
+            navMeshConfig.agentSlope = navMeshBuildSettings.agentSlope;
+            navMeshConfig.voxelSize = navMeshBuildSettings.voxelSize;
+            navMeshConfig.overrideVoxelSize = navMeshBuildSettings.overrideVoxelSize;
+            return navMeshConfig;
+        }
+
+        public static NavMeshBuildSettings navMeshConfigToBuildSettings(NavMeshConfig config) {
+            return navMeshConfigToBuildSettings(config, NavMesh.GetSettingsByIndex(0));
+        }
+
+        public static string NavMeshSurfaceParent() { return  "NavMeshSurfaces"; }
+
+
+        public static void buildNavMeshes(GameObject floorGameObject, List<NavMeshConfig> navMeshes) {
+
+            var defaultSettings = NavMesh.GetSettingsByIndex(0);
+            if (navMeshes == null || navMeshes.Count == 0) {
+                navMeshes = new List<NavMeshConfig>() {
+                    navMeshBuildSettingsToConfig(defaultSettings)
+                };
+            }
+
+             var navMeshAgent = GameObject.FindObjectOfType<NavMeshAgent>();
+             tagObjectNavmesh(navMeshAgent.gameObject, ignore: true);
+
+             var navmeshesGameObject = new GameObject($"NavMeshSurfaces");
+
+             navmeshesGameObject.transform.parent = floorGameObject.transform;
+
+             
+
+             var newConfigs = navMeshes.Select(c => defaultSettings).Select((c, i) => {
+                return navMeshConfigToBuildSettings(navMeshes[i], c);
+             });
+
+            Debug.Log($"Creating Navmeshes for Configs: {string.Join(", ", newConfigs.Select(c => $"{c.agentTypeID}: {c.agentRadius}, {c.voxelSize}"))}");
+
+            var count = 0;
+            foreach (var config in newConfigs) {
+                var go = buildNavMeshSurface(config, count);
+                go.transform.parent = navmeshesGameObject.transform;
+                count++;
+            }
+        }
+
+
+        // TODO: Old navmesh build function
         public static void buildNavMesh(GameObject floorGameObject, float? voxelSize = null) {
 
-            var navMesh = floorGameObject.AddComponent<NavMeshSurface>();
+
+             var navMeshAgent = GameObject.FindObjectOfType<NavMeshAgent>();
+             tagObjectNavmesh(navMeshAgent.gameObject, ignore: true);
+
+            
+            var navMesh = floorGameObject.AddComponent<NavMeshSurfaceExtended>();
             // TODO multiple agents
-            var navMeshAgent = GameObject.FindObjectOfType<NavMeshAgent>();
+           
+            // navMeshAgent.agentTypeID = 1;
+
+            // var settingsNew = NavMesh.CreateSettings();
+
+            // var sett = NavMesh.GetSettingsByIndex(1);
+            // navMeshAgent.agentTypeID = sett.agentTypeID;
+            // Debug.Log($"Radius navmesh build {sett.agentRadius} id {sett.agentTypeID}");
+
+            
+            // // settingsNew.
+            // // settingsNew.agentTypeID = 1;
+            // settingsNew.agentRadius = 0.1f;
+
+            // //settingsNew.
+            // navMeshAgent.agentTypeID = settingsNew.agentTypeID;
+
+
+            ///NavMeshBuildSettings s = ref NavMesh.GetSettingsByID(navMeshAgent.agentTypeID);
+            //s.agentRadius = 0.2f;
+            
+
+            //Debug.Log($"--- NAVMESH AGENT type {navMeshAgent.agentTypeID}, settings id {settingsNew.agentTypeID} settings count {NavMesh.GetSettingsCount()} radius {NavMesh.GetSettingsByID(navMeshAgent.agentTypeID).agentRadius}");
+
+            // navMeshAgent.radius = 0.2f;
+
+            
 
             navMesh.agentTypeID = navMeshAgent.agentTypeID;
+            // navMesh.agentTypeID = 1;
             var settings = navMesh.GetBuildSettings();
+
+            Debug.Log($"Current navmesh build settings, id {settings.agentTypeID} radius {settings.agentRadius}");
             
             navMesh.overrideVoxelSize = voxelSize != null;
             navMesh.voxelSize = voxelSize.GetValueOrDefault(0.0f);
+
+            // navMesh.
 
             navMesh.BuildNavMesh();
 
@@ -1636,7 +1832,8 @@ namespace Thor.Procedural {
         //not sure if this is needed, a helper function like this might exist somewhere already?
         public static AssetMap<GameObject> getAssetMap() {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
-            return new AssetMap<GameObject>(assetDB.prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
+            return assetDB.assetMap;
+            // return new AssetMap<GameObject>(assetDB.prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
         }
 
         //generic function to spawn object in scene. No bounds or collision checks done
@@ -1914,7 +2111,7 @@ namespace Thor.Procedural {
             SimObjPhysics receptacleSimObj,
             FlexibleRotation rotation = null
         ) {
-            var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTopOfTriggerBox();
+            var spawnCoordinates = receptacleSimObj.FindMySpawnPointsFromTriggerBox();
             var go = goDb.getAsset(prefabName);
             var pos = spawnCoordinates.Shuffle_().First();
             //to potentially support multiagent down the line, reference fpsAgent via agentManager's array of active agents
@@ -2067,9 +2264,293 @@ namespace Thor.Procedural {
         public static AssetMap<GameObject> GetPrefabs() {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDB != null) {
-                return new AssetMap<GameObject>(assetDB.prefabs.GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+                return new AssetMap<GameObject>(assetDB.GetPrefabs().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
             }
             return null;
+        }
+
+        public static Dictionary<string, object> getAssetMetadata(GameObject asset) {
+
+            if (asset.GetComponent<SimObjPhysics>() == null) {
+                return null;
+            }
+
+            var simObj = asset.GetComponent<SimObjPhysics>();
+            var bb = simObj.AxisAlignedBoundingBox;
+
+            return new Dictionary<string, object>() {
+                ["name"] = simObj.gameObject.name,
+                ["objectType"] = simObj.Type.ToString(),
+                ["primaryProperty"] = simObj.PrimaryProperty.ToString(),
+                ["secondaryProperties"] = simObj.SecondaryProperties.Select(s => s.ToString()).ToList(),
+                ["boundingBox"] = new BoundingBox() {
+                    min = bb.center - bb.size / 2.0f,
+                    max = bb.center + bb.size / 2.0f
+                }
+            };
+        }
+
+        // TODO refactor to recieve a ProceduralAsset
+        public static Dictionary<string, object> CreateAsset(
+            Vector3[] vertices,
+            Vector3[] normals,
+            string name,
+            int[] triangles,
+            Vector2[]? uvs = null,
+            string albedoTexturePath = null,
+            string normalTexturePath = null,
+            string emissionTexturePath = null,
+            SerializableCollider[]? colliders = null,
+            PhysicalProperties physicalProperties = null,
+            Vector3[]? visibilityPoints = null,
+            ObjectAnnotations annotations = null,
+            bool receptacleCandidate = false,
+            float yRotOffset = 0f,
+            bool serializable = false,
+            bool returnObject = false,
+            Transform parent = null,
+            bool addAnotationComponent = false,
+            string parentTexturesDir = ""
+        ) {
+            // create a new game object
+            GameObject go = new GameObject();
+
+            // create a new mesh
+            GameObject meshObj = new GameObject("mesh");
+            meshObj.transform.parent = go.transform;
+            Mesh mesh = new Mesh();
+            if (vertices.Length >= 65535) {
+                mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            }
+            mesh.vertices = vertices;
+            mesh.triangles = triangles;
+            mesh.normals = normals;
+            if (uvs != null) {
+                mesh.uv = uvs;
+            }
+
+            // add the mesh to the object
+            meshObj.AddComponent<MeshRenderer>();
+            MeshFilter meshFilter = meshObj.AddComponent<MeshFilter>();
+            meshFilter.mesh = mesh;
+
+            // add the mesh colliders
+            GameObject triggerCollidersObj = new GameObject("TriggerColliders");
+            triggerCollidersObj.layer = LayerMask.NameToLayer("SimObjVisible");
+            triggerCollidersObj.transform.parent = go.transform;
+
+            GameObject meshCollidersObj = new GameObject("Colliders");
+            meshCollidersObj.layer = LayerMask.NameToLayer("SimObjVisible");
+            meshCollidersObj.transform.parent = go.transform;
+            List<Collider> meshColliders = new List<Collider>();
+            if (colliders != null && colliders.Length > 0) {
+                int i = 0;
+                foreach (var collider in colliders) {
+                    // create a mesh of the collider
+                    Mesh colliderMesh = new Mesh();
+                    colliderMesh.vertices = collider.vertices;
+                    colliderMesh.triangles = collider.triangles;
+
+                    // add the mesh collider
+                    GameObject meshColliderObj = new GameObject($"collider_{i}");
+                    meshColliderObj.layer = LayerMask.NameToLayer("SimObjVisible");
+                    meshColliderObj.transform.parent = meshCollidersObj.transform;
+                    MeshCollider meshCollider = meshColliderObj.AddComponent<MeshCollider>();
+                    meshCollider.sharedMesh = colliderMesh;
+                    meshCollider.convex = true;
+                    meshColliders.Add(meshCollider);
+
+                    // add the trigger collider
+                    GameObject triggerColliderObj = new GameObject($"trigger_{i}");
+                    triggerColliderObj.layer = LayerMask.NameToLayer("SimObjVisible");
+                    triggerColliderObj.transform.parent = triggerCollidersObj.transform;
+                    MeshCollider triggerCollider = triggerColliderObj.AddComponent<MeshCollider>();
+                    triggerCollider.sharedMesh = colliderMesh;
+                    triggerCollider.convex = true;
+                    triggerCollider.isTrigger = true;
+
+                    i++;
+                }
+            }
+
+            // add the visibility points
+            GameObject visPoints = new GameObject("VisibilityPoints");
+            visPoints.transform.parent = go.transform;
+            Transform[] visPointTransforms = new Transform[visibilityPoints.Length];
+            for (int i = 0; i < visibilityPoints.Length; i++) {
+                GameObject visPoint = new GameObject($"visPoint_{i}");
+                visPoint.transform.parent = visPoints.transform;
+                visPoint.transform.localPosition = visibilityPoints[i];
+                visPointTransforms[i] = visPoint.transform;
+                visPoint.layer = LayerMask.NameToLayer("SimObjVisible");
+            }
+
+            // Rotate the object, this requires reassigning things to a new game object
+            go.transform.Rotate(Vector3.up, yRotOffset);
+            GameObject newGo = new GameObject();
+
+            foreach (Transform t in go.GetComponentsInChildren<Transform>()) {
+                if (t.parent == go.transform) {
+                    Debug.Log($"Moving transform of {t.gameObject.name}");
+                    t.parent = newGo.transform;
+                }
+            }
+            var oldGo = go;
+            go.SetActive(false);
+            go = newGo;
+
+            go.name = name;
+            go.layer = LayerMask.NameToLayer("SimObjVisible");
+            go.tag = "SimObjPhysics";
+
+            if (addAnotationComponent) {
+                go.AddComponent<Objaverse.ObjaverseAnnotation>();
+            }
+
+            Material mat = null;
+            RuntimePrefab runtimePrefab = null;
+            
+            // load image from disk
+            if (albedoTexturePath != null) {
+                albedoTexturePath = !Path.IsPathRooted(albedoTexturePath) ? Path.Combine(parentTexturesDir, albedoTexturePath) : albedoTexturePath;
+                // textures aren't saved as part of the prefab, so we load them from disk
+                runtimePrefab = go.AddComponent<RuntimePrefab>();
+                runtimePrefab.albedoTexturePath = albedoTexturePath;
+
+                byte[] imageBytes = File.ReadAllBytes(albedoTexturePath);
+                // Is this size right?
+                Texture2D tex = new Texture2D(2, 2);
+                tex.LoadImage(imageBytes);
+
+                // create a new material
+                mat = new Material(Shader.Find("Standard"));
+                mat.mainTexture = tex;
+
+                // assign the material to the game object
+                meshObj.GetComponent<Renderer>().material = mat;
+                runtimePrefab.sharedMaterial = mat;
+            } else {
+                // create a new material
+                mat = new Material(Shader.Find("Standard"));
+                meshObj.GetComponent<Renderer>().material = mat;
+            }
+
+            mat.SetFloat("_Glossiness", 0f);
+
+            if (normalTexturePath != null) {
+                normalTexturePath = !Path.IsPathRooted(normalTexturePath) ? Path.Combine(parentTexturesDir, normalTexturePath) : normalTexturePath;
+                if (runtimePrefab == null) {
+                    runtimePrefab = go.AddComponent<RuntimePrefab>();
+                }
+                runtimePrefab.normalTexturePath = normalTexturePath;
+                mat.EnableKeyword("_NORMALMAP");
+                byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
+                Texture2D tex = new Texture2D(2, 2);
+                tex.LoadImage(imageBytes);
+                
+                mat.SetTexture("_BumpMap", tex);
+            }
+
+            if (emissionTexturePath != null) {
+                emissionTexturePath = !Path.IsPathRooted(emissionTexturePath) ? Path.Combine(parentTexturesDir, emissionTexturePath) : emissionTexturePath;
+                 if (runtimePrefab == null) {
+                    runtimePrefab = go.AddComponent<RuntimePrefab>();
+                }
+                runtimePrefab.emissionTexturePath = emissionTexturePath;
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+                mat.EnableKeyword("_EMISSION");
+                byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);
+                Texture2D tex = new Texture2D(2, 2);
+                tex.LoadImage(imageBytes);
+                mat.SetTexture("_EmissionMap", tex);
+                mat.SetColor("_EmissionColor", Color.white);
+            }
+
+            // have the mesh refer to the mesh at meshPath
+            meshObj.GetComponent<MeshFilter>().sharedMesh = mesh;
+
+            // add the rigidbody
+            Rigidbody rb = go.AddComponent<Rigidbody>();
+            if (physicalProperties != null) {
+                rb.mass = physicalProperties.mass;
+                rb.drag = physicalProperties.drag;
+                rb.angularDrag = physicalProperties.angularDrag;
+                rb.useGravity = physicalProperties.useGravity;
+                rb.isKinematic = physicalProperties.isKinematic;
+            }
+
+            // add the SimObjPhysics component
+            SimObjPhysics sop = go.AddComponent<SimObjPhysics>();
+            sop.VisibilityPoints = visPointTransforms;
+            sop.MyColliders = meshColliders.ToArray();
+            sop.assetID = name;
+            sop.objectID = name;
+
+            // add the annotations of the object
+            if (annotations == null) {
+                annotations = new ObjectAnnotations();
+            }
+            sop.PrimaryProperty = (SimObjPrimaryProperty)Enum.Parse(
+                typeof(SimObjPrimaryProperty), annotations.primaryProperty
+            );
+            sop.Type = (SimObjType)Enum.Parse(typeof(SimObjType), annotations.objectType);
+            if (annotations.secondaryProperties == null) {
+                annotations.secondaryProperties = new string[0];
+            }
+            sop.SecondaryProperties = annotations.secondaryProperties.Select(
+                p => (SimObjSecondaryProperty)Enum.Parse(typeof(SimObjSecondaryProperty), p)
+            ).ToArray();
+            sop.syncBoundingBoxes(forceCacheReset: true, forceCreateObjectOrientedBoundingBox: true);
+
+            if (receptacleCandidate) {
+                BaseFPSAgentController.TryToAddReceptacleTriggerBox(sop: sop);
+                GameObject receptacleTriggerBoxes = go.transform.Find("ReceptacleTriggerBoxes").gameObject;
+                if (receptacleTriggerBoxes.transform.childCount > 0) {
+                    sop.SecondaryProperties = new SimObjSecondaryProperty[] { SimObjSecondaryProperty.Receptacle };
+                }
+            }
+
+            // Add the asset to the procedural asset database
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            Transform prefabParentTransform = parent;
+            if (assetDb != null && assetDb.assetMap != null) {
+                assetDb.addAsset(go, procedural: true);
+                // get child object on assetDb's game object that's called "Prefabs"
+                // and add the prefab to that
+                prefabParentTransform = assetDb.transform.Find("Prefabs");
+                if (prefabParentTransform == null) {
+                    var prefabParent = new GameObject("Prefabs");
+                    prefabParent.transform.parent = assetDb.transform;
+                    prefabParent.SetActive(false);
+                    prefabParentTransform = prefabParent.transform;
+                }
+            }
+
+            // Compute the object metadata
+            // IMPORTANT: this must happen before the object is added to the prefabParent object below,
+            //            otherwise the object's bounding box will be incorrect! This has something to do with how
+            //            our bounding box computation code works where it ignores some unactive components of an object
+            var assetMeta = getAssetMetadata(sop.gameObject);
+
+            var objectMeta =  SimObjPhysics.ObjectMetadataFromSimObjPhysics(sop, true, true);
+            
+            go.transform.parent = prefabParentTransform;
+
+            var result =  new Dictionary<string, object>{
+                {"assetMetadata", assetMeta},
+                {"objectMetadata", objectMeta}
+            };
+
+            MonoBehaviour.Destroy(oldGo);
+
+            if (serializable) {
+                // meshObj.AddComponent<SerializeMesh>();
+                if (returnObject) {
+                    result["gameObject"] = go;
+                    //result["intermediateGameObject"] = oldGo;
+                }
+            }
+            return result;
         }
     }
 

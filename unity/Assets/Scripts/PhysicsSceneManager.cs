@@ -82,6 +82,10 @@ public class PhysicsSceneManager : MonoBehaviour {
 
     public static float PhysicsSimulateTimeSeconds;
 
+    public bool placeDecalSurfaceOnReceptacles = false;
+
+    public GameObject receptaclesDirtyDecalSurface;
+
     public static PhysicsSimulationParams defaultPhysicsSimulationParams {
         get;
         private set;

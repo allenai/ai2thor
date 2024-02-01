@@ -82,7 +82,7 @@ namespace Tests {
             MultiAgentMetadata multiMeta = new MultiAgentMetadata();
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[agentManager.GetThirdPartyCameraCount()];
             List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
-            agentManager.createPayload(multiMeta, cameraMetadata, renderPayload, true);
+            agentManager.createPayload(multiMeta, cameraMetadata, renderPayload, true, true);
             this.renderPayload = renderPayload;
             this.cameraMetadata = cameraMetadata;
             this.metadata = multiMeta;

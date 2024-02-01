@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityStandardAssets.Characters.FirstPerson;
+using System.Linq;
 
 public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
@@ -64,6 +65,26 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
     public virtual bool ShouldHalt() {
         return collisionListener.ShouldHalt();
+    }
+
+    public virtual string GetHaltMessage() {
+        var staticCollisions = collisionListener?.StaticCollisions().ToList();
+
+            // decide if we want to return to original property or last known property before collision
+            if (staticCollisions.Count > 0) {
+                var sc = staticCollisions[0];
+
+                // if we hit a sim object
+                if (sc.isSimObj) {
+                    return "Collided with static/kinematic sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + armTarget + "'.";
+                }
+
+                // if we hit a structural object that isn't a sim object but still has static collision
+                if (!sc.isSimObj) {
+                    return "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + armTarget + "'.";
+                }
+            }
+            return "";
     }
 
     public bool IsArmColliding() {

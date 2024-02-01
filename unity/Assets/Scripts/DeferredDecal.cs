@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using System.Linq;
 
 public enum DecalType {
     DIFFUSE_ONLY,
@@ -22,13 +23,24 @@ public class DeferredDecal : MonoBehaviour {
     [SerializeField]
     private CameraEvent atRenderEvent = CameraEvent.BeforeLighting;
     private CommandBuffer buffer;
-    private Camera viewCamera;
+
+    private List<Camera> cameras;
 
     void Start() {
         this.buffer = new CommandBuffer();
         buffer.name = "Deferred Decals";
-        this.viewCamera = Camera.main;
-        viewCamera.AddCommandBuffer(atRenderEvent, buffer);
+        var sceneM = GameObject.Find("PhysicsSceneManager");
+        var manager = sceneM.GetComponent<AgentManager>();
+        // Debug.Log("agents")
+        // This doesn't work as `agents` only has SecondaryCamera for stretch, bug to rework agentmanager
+        // this.cameras = manager.agents.Select(a => a.gameObject.GetComponentInChildren<Camera>()).ToList();//.Concat(manager.thirdPartyCameras).ToList();
+        // Debug.Log($"agents { manager.agents.Count} names { string.Join(", ", manager.agents.Select(a => a.gameObject.name))} cams {string.Join(", ", cameras.Select(a => a.gameObject.name))}" );
+        
+        this.cameras = new List<Camera>() {manager.primaryAgent.m_Camera}.Concat(manager.thirdPartyCameras).ToList();
+        foreach (var cam in cameras) {
+            cam.AddCommandBuffer(atRenderEvent, buffer);
+        }
+        
     }
 
     public void OnWillRenderObject() {
@@ -61,6 +73,14 @@ public class DeferredDecal : MonoBehaviour {
         buffer.DrawMesh(this.cubeMesh, this.transform.localToWorldMatrix, this.material);
 
 
+    }
+
+    private void OnDisable()
+    {
+        foreach (var cam in cameras) {
+            
+            cam.RemoveCommandBuffer(atRenderEvent, buffer);
+        }
     }
     void OnDrawGizmos() {
 

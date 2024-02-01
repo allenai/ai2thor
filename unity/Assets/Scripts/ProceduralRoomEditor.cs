@@ -14,6 +14,7 @@ using Thor.Procedural;
 using Thor.Procedural.Data;
 using System.Linq;
 using System.IO;
+using Thor.Utils;
 
 [ExecuteInEditMode]
 public class ProceduralRoomEditor : MonoBehaviour {
@@ -1057,8 +1058,11 @@ public class ProceduralRoomEditor : MonoBehaviour {
         var proceduralADB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
         // proceduralADB.prefabs = new AssetMap<GameObject>(ProceduralTools.FindPrefabsInAssets().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
         // proceduralADB.materials = new AssetMap<Material>(ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
-
+        
         proceduralADB.prefabs = ProceduralTools.FindPrefabsInAssets();
+        // proceduralADB.assetMap.Clear();
+        // proceduralADB.addAssets(prefabs);
+
         proceduralADB.materials = ProceduralTools.FindAssetsByType<Material>();
         proceduralADB.totalMats = proceduralADB.materials.Count();
         EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
@@ -1128,3 +1132,5 @@ public class ProceduralRoomEditor : MonoBehaviour {
     }
     #endif
 }
+
+

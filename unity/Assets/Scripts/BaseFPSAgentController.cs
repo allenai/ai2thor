@@ -7,6 +7,7 @@ using System.Reflection;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
 using Random = UnityEngine.Random;
 using UnityStandardAssets.ImageEffects;
 using System.Linq;
@@ -15,6 +16,14 @@ using Newtonsoft.Json.Linq;
 using MIConvexHull;
 using Thor.Procedural;
 using Thor.Procedural.Data;
+using Newtonsoft.Json;
+
+using MessagePack.Resolvers;
+using MessagePack.Formatters;
+using MessagePack;
+
+using System.IO;
+using System.IO.Compression;
 using System.Linq.Expressions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
@@ -40,6 +49,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public SimObjPhysics[] VisibleSimObjPhysics;
 
+        public GameObject AgentCamera {
+            get => this.baseAgentComponent.AgentCamera;
+        }
+
         public GameObject AgentHand {
             get => this.baseAgentComponent.AgentHand;
         }
@@ -62,6 +75,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected GameObject DebugTargetPointPrefab {
             get => this.baseAgentComponent.DebugPointPrefab;
+        }
+
+        public GameObject FixedCameraGimbalPrimary {
+            get => this.baseAgentComponent.FixedCameraGimbalPrimary;
+        }
+        
+        public GameObject FixedCameraGimbalSecondary {
+            get => this.baseAgentComponent.FixedCameraGimbalSecondary;
+        }
+
+        public GameObject MotorCameraGimbals {
+            get => this.baseAgentComponent.MotorCameraGimbals;
         }
 
         public GameObject VisibilityCapsule {
@@ -122,6 +147,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             get => this.baseAgentComponent.TargetCircles;
         }
 
+        public bool UseMotorCameraGimbals {
+            get => this.baseAgentComponent.UseMotorCameraGimbals;
+        }
+
+        public GameObject[] GripperOpennessStates {
+            get => this.baseAgentComponent.GripperOpennessStates;
+        }
+
+        public float InitialGripperOpenness {
+            get => this.baseAgentComponent.initialGripperOpenness;
+        }
+
 
         protected bool IsHandDefault = true;
         public GameObject ItemInHand = null; // current object in inventory
@@ -166,6 +203,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public bool clearRandomizeMaterialsOnReset = false;
 
+        private List<DebugSphere> debugSpheres = new List<DebugSphere>();
+            
+            
+
         // these object types can have a placeable surface mesh associated ith it
         // this is to be used with screenToWorldTarget to filter out raycasts correctly
         protected List<SimObjType> hasPlaceableSurface = new List<SimObjType>() {
@@ -188,6 +229,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.m_CharacterController = GetComponent<CharacterController>();
             collidedObjects = new string[0];
             collisionsInAction = new List<string>();
+            
             // set agent initial states
             targetRotation = transform.rotation;
 
@@ -195,7 +237,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // this hides renderers not used in tall mode, and also sets renderer
             // culling in FirstPersonCharacterCull.cs to ignore tall mode renderers
             HideAllAgentRenderers();
-
             // default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
             if(this.GetComponentInChildren<NavMeshAgent>())
             this.GetComponentInChildren<NavMeshAgent>().enabled = false;
@@ -662,6 +703,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             this.InitializeBody(action);
+            if (action.antiAliasing != null) {
+                agentManager.updateAntiAliasing(
+                    postProcessLayer: m_Camera.gameObject.GetComponentInChildren<PostProcessLayer>(),
+                    antiAliasing: action.antiAliasing
+                );
+            }
             m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
 
             if (action.gridSize == 0) {
@@ -896,7 +943,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool? useValMaterials = null,
             bool? useTestMaterials = null,
             bool? useExternalMaterials = null,
-            string[] inRoomTypes = null
+            string[] inRoomTypes = null,
+            List<string> excludedObjectIds = null
         ) {
             string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             HashSet<string> validRoomTypes = new HashSet<string>() {
@@ -920,6 +968,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+            if ((!scene.StartsWith("Procedural")) && excludedObjectIds != null) {
+                // The reason for the error below is that we need to be sure that every
+                // object contains references to its own materials. This is not
+                // necessarily the case in some ithor scenes because some objects
+                // are "fake" in the sense that part of them might correspond
+                // to scene geometry (e.g. the CounterTop in FloorPlan1).
+                throw new ArgumentException(
+                    "excludedObjectIds can only be set in a Procedural scene."
+                );
+            }
+
+            if (excludedObjectIds == null) {
+                excludedObjectIds = new List<string>();
+            }
+
+            HashSet<string> excludedMaterialNames = new HashSet<string>();
+            foreach (string objectId in excludedObjectIds) {
+                Debug.Log($"Exclude materials from {objectId}");
+                SimObjPhysics objectWhoseMaterialsToExclude = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+                foreach (var renderer in objectWhoseMaterialsToExclude.GetComponentsInChildren<Renderer>()) {
+                    foreach (var mat in renderer.sharedMaterials) {
+                        if (mat != null && mat.name != null) {
+                            Debug.Log($"excluding {mat.name}");
+                            excludedMaterialNames.Add(mat.name);
+                        }
+                    }
+                }
+            }
+
             ColorChanger colorChangeComponent;
             if (scene.StartsWith("Procedural")) {
                 colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
@@ -928,7 +1006,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     useValMaterials: useValMaterials.HasValue ? useValMaterials.Value : true,
                     useTestMaterials: useTestMaterials.HasValue ? useTestMaterials.Value : true,
                     useExternalMaterials: useExternalMaterials.HasValue ? useExternalMaterials.Value : true,
-                    inRoomTypes: inRoomTypes != null ? chosenRoomTypes : validRoomTypes
+                    inRoomTypes: inRoomTypes != null ? chosenRoomTypes : validRoomTypes,
+                    excludedMaterialNames: excludedMaterialNames
                 );
 
                 // Keep it here to make sure the action succeeds first
@@ -1030,7 +1109,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 useValMaterials: useValMaterials.Value,
                 useTestMaterials: useTestMaterials.Value,
                 useExternalMaterials: useExternalMaterials.Value,
-                inRoomTypes: chosenRoomTypes.Count == 0 ? null : chosenRoomTypes
+                inRoomTypes: chosenRoomTypes.Count == 0 ? null : chosenRoomTypes,
+                excludedMaterialNames: excludedMaterialNames
             );
 
             // Keep it here to make sure the action succeeds first
@@ -1306,7 +1386,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public bool CheckIfAgentCanMove(
             Vector3 offset,
-            HashSet<Collider> ignoreColliders = null
+            HashSet<Collider> ignoreColliders = null,
+            bool ignoreAgentColliders = true
         ) {
 
             RaycastHit[] sweepResults = capsuleCastAllForAgent(
@@ -1317,6 +1398,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 offset.magnitude,
                 LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent")
             );
+
+            if (ignoreColliders == null) {
+                ignoreColliders = new HashSet<Collider>();
+            }
+
+            // Make sure to ignore all of the colliders of the agent itself
+            if (ignoreAgentColliders) {
+                foreach (Collider c in GetComponentsInChildren<Collider>()) {
+                    ignoreColliders.Add(c);
+                }
+            }
+
             // check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
             if (sweepResults.Length > 0) {
                 foreach (RaycastHit res in sweepResults) {
@@ -1529,7 +1622,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
             Debug.Log("Echoes! Three Freeze!");
 #endif
-
             actionFinished(true);
         }
 
@@ -1572,8 +1664,383 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // freeze y-axis
             transform.rotation = Quaternion.Euler(eulerX, eulerY, 0);
-
         }
+
+        // Helper used with OpenObject commands, which controls the physics
+        // of actually opening an object. Instead of calling this directly,
+        // one is recommended to call openObject, which runs more checks.
+        // Previously named InteractAndWait.
+        private protected IEnumerator openAnimation(
+            CanOpen_Object openableObject,
+            bool markActionFinished,
+            float openness = 1.0f,
+            bool forceAction = false,
+            bool returnToStart = true,
+            bool ignoreAgentInTransition = false,
+            bool stopAtNonStaticCol = false,
+            bool useGripper = false,
+            float? physicsInterval = null,
+            bool freezeContained = false,
+            GameObject posRotManip = null,
+            GameObject posRotRef = null
+        ) {
+            if (openableObject == null) {
+                if (markActionFinished) {
+                    errorMessage = "Must pass in openable object!";
+                    actionFinished(false);
+                }
+                yield break;
+            }
+
+            // stores the object id of each object within this openableObject
+            Dictionary<string, Transform> objectIdToOldParent = null;
+            if (freezeContained) {
+                SimObjPhysics target = ancestorSimObjPhysics(openableObject.gameObject);
+                objectIdToOldParent = new Dictionary<string, Transform>();
+
+                foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
+                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                    objectIdToOldParent[objectId] = toReParent.transform.parent;
+                    toReParent.transform.parent = openableObject.transform;
+                    toReParent.GetComponent<Rigidbody>().isKinematic = true;
+                }
+            }
+            
+            // set conditions for ignoring certain fail-conditions or not
+            // (must be stored on CanOpen_Object component for OnTriggerEnter event to work)
+            openableObject.SetForceAction(forceAction);
+            openableObject.SetIgnoreAgentInTransition(ignoreAgentInTransition);
+            openableObject.SetStopAtNonStaticCol(stopAtNonStaticCol);
+
+            // open the object to openness
+            openableObject.SetIsCurrentlyLerping(true);
+            openableObject.Interact(
+                targetOpenness: openness,
+                physicsInterval: physicsInterval,
+                returnToStart: returnToStart,
+                useGripper: useGripper,
+                returnToStartMode: false,
+                posRotManip: posRotManip,
+                posRotRef: posRotRef);
+            // Wait until all animating is done
+            yield return new WaitUntil(() => (openableObject.GetIsCurrentlyLerping() == false));
+            yield return null;
+            bool succeeded = true;
+            
+            // if failure occurred, revert back to backup state (either start or lastSuccessful), and then report failure
+            if (openableObject.GetFailState() != CanOpen_Object.failState.none) {
+                succeeded = false;
+
+                openableObject.SetIsCurrentlyLerping(true);
+                openableObject.Interact(
+                    targetOpenness: openableObject.GetStartOpenness(),
+                    physicsInterval: physicsInterval,
+                    returnToStart: returnToStart,
+                    useGripper: useGripper,
+                    returnToStartMode: true,
+                    posRotManip: posRotManip,
+                    posRotRef: posRotRef);
+                yield return new WaitUntil(() => (openableObject.GetIsCurrentlyLerping() == false));
+                yield return null;
+                if (openableObject.GetFailState() == CanOpen_Object.failState.collision) {
+                    errorMessage = "Openable object collided with " + openableObject.GetFailureCollision().name;
+                }
+                else if (openableObject.GetFailState() == CanOpen_Object.failState.hyperextension) {
+                    errorMessage = "Agent hyperextended arm while opening object";
+                }
+            }
+
+            // stops any object located within this openableObject from moving
+            if (freezeContained) {
+                foreach (string objectId in objectIdToOldParent.Keys) {
+                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                    toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
+                    Rigidbody rb = toReParent.GetComponent<Rigidbody>();
+                    rb.velocity = new Vector3(0f, 0f, 0f);
+                    rb.angularVelocity = new Vector3(0f, 0f, 0f);
+                    rb.isKinematic = false;
+                }
+            }
+
+            // Reset conditions for next interaction
+            openableObject.SetFailState(CanOpen_Object.failState.none);
+            openableObject.SetFailureCollision(null);
+            
+            openableObject.SetForceAction(false);
+            openableObject.SetIgnoreAgentInTransition(false);
+            openableObject.SetStopAtNonStaticCol(false);
+
+            // Remove PosRotRef from MovingPart
+            if (posRotRef != null) {
+                UnityEngine.Object.Destroy(posRotRef);
+            }
+
+            if (markActionFinished) {
+                actionFinished(succeeded);
+            }
+        }
+
+        // private helper used with OpenObject commands
+        protected void openObject(
+            SimObjPhysics target,
+            float openness,
+            bool forceAction,
+            bool markActionFinished,
+            bool returnToStart = true,
+            bool ignoreAgentInTransition = false,
+            bool stopAtNonStaticCol = false,
+            bool useGripper = false,
+            float? physicsInterval = null,
+            bool simplifyPhysics = false,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+        ) {
+            // backwards compatibility support
+            if (moveMagnitude != null) {
+                // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
+                openness = ((float)moveMagnitude) == 0 ? 1 : (float)moveMagnitude;
+            }
+
+            if (openness > 1 || openness < 0) {
+                errorMessage = "openness must be in [0:1]";
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
+                return;
+            }
+
+            if (target == null) {
+                errorMessage = "Object not found!";
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
+                return;
+            }
+
+            if (!forceAction && !IsInteractable(target)) {
+                errorMessage = "object is visible but occluded by something: " + target.ObjectID;
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
+                return;
+            }
+
+            if (!target.GetComponent<CanOpen_Object>()) {
+                errorMessage = $"{target.ObjectID} is not an Openable object";
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
+                return;
+            }
+
+            CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
+
+            // This is a style choice that applies to Microwaves and Laptops,
+            // where it doesn't make a ton of sense to open them, while they are in use.
+            if (codd.WhatReceptaclesMustBeOffToOpen().Contains(target.Type) && target.GetComponent<CanToggleOnOff>().isOn) {
+                errorMessage = "Target must be OFF to open!";
+                if (markActionFinished) {
+                    actionFinished(false);
+                }
+                return;
+            }
+
+            if (useGripper == true) {
+                // Opening objects with the gripper only works with the IK-Arm
+                // (it'd be preferable to reference the agentMode directly, but no such universal metadata exists)
+                if (this.GetComponent<BaseAgentComponent>().IKArm.activeInHierarchy == false) {
+                    errorMessage = "IK-Arm is required to open objects with gripper";
+                    if (markActionFinished) {
+                        actionFinished(false);
+                    }
+                    return;
+                }
+
+                // Opening objects with the gripper only works with an empty hand
+                if (ItemInHand != null) {
+                    errorMessage = "An empty hand is required to open objects with gripper";
+                    if (markActionFinished) {
+                        actionFinished(false);
+                    }
+                    return;
+                }
+
+                // Opening objects with the gripper currently requires the gripper-sphere to have some overlap with the moving parts' collision geometry
+                GameObject parentMovingPart = FindOverlappingMovingPart(codd);
+                if (parentMovingPart == null) {
+                    errorMessage = "Gripper must be making contact with at least one moving part's surface to open it!";
+                    if (markActionFinished) {
+                        actionFinished(false);
+                    }
+                    return;
+                }
+
+                GameObject posRotManip = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmTarget();
+                GameObject posRotRef = new GameObject("PosRotReference");
+                posRotRef.transform.parent = parentMovingPart.transform;
+                posRotRef.transform.position = posRotManip.transform.position;
+                posRotRef.transform.rotation = posRotManip.transform.rotation;
+                StartCoroutine(openAnimation(
+                    openableObject: codd,
+                    markActionFinished: markActionFinished,
+                    openness: openness,
+                    forceAction: forceAction,
+                    returnToStart: returnToStart,
+                    ignoreAgentInTransition: ignoreAgentInTransition,
+                    stopAtNonStaticCol: stopAtNonStaticCol,
+                    useGripper: useGripper,
+                    physicsInterval: physicsInterval,
+                    freezeContained: simplifyPhysics,
+                    posRotManip: posRotManip,
+                    posRotRef: posRotRef
+                ));
+                return;
+            }
+
+            StartCoroutine(openAnimation(
+                openableObject: codd,
+                markActionFinished: markActionFinished,
+                openness: openness,
+                forceAction: forceAction,
+                returnToStart: returnToStart,
+                ignoreAgentInTransition: ignoreAgentInTransition,
+                stopAtNonStaticCol: stopAtNonStaticCol,
+                useGripper: useGripper,
+                physicsInterval: physicsInterval,
+                freezeContained: simplifyPhysics
+            ));
+        }
+
+        //helper action to set the openness of a "rotate" typed open/close object immediately (no tween over time)
+        public void OpenObjectImmediate(
+            string objectId,
+            float openness = 1.0f
+        ) {
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+            target.GetComponent<CanOpen_Object>().SetOpennessImmediate(openness);
+            actionFinished(true);
+        }
+
+        //helper function to confirm if GripperSphere overlaps with openable object's moving part(s), and which one
+
+        public GameObject FindOverlappingMovingPart(CanOpen_Object codd) {
+            int layerMask = 1 << 8;
+            GameObject magnetSphere = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetMagnetSphere();
+            foreach (GameObject movingPart in codd.GetComponent<CanOpen_Object>().MovingParts) {
+                foreach(Collider col in movingPart.GetComponentsInChildren<Collider>()) {
+                    // Checking for matches between moving parts' colliders and colliders inside of gripper-sphere
+                    foreach(Collider containedCol in Physics.OverlapSphere(
+                        magnetSphere.transform.TransformPoint(magnetSphere.GetComponent<SphereCollider>().center),
+                        magnetSphere.transform.GetComponent<SphereCollider>().radius,
+                        layerMask)) {
+                            if (col == containedCol)
+                            {
+                                return movingPart;
+                            }
+                    }
+                }
+            }
+            return null;
+        }
+
+        public void OpenObject(
+            string objectId,
+            float openness = 1,
+            bool forceAction = false,
+            bool returnToStart = true,
+            bool ignoreAgentInTransition = false,
+            bool stopAtNonStaticCol = false,
+            float? physicsInterval = null,
+            bool useGripper = false,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. Its new name is 'openness'.
+        ) {
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
+            openObject(
+                target: target,
+                openness: openness,
+                forceAction: forceAction,
+                returnToStart: returnToStart,
+                ignoreAgentInTransition: ignoreAgentInTransition,
+                stopAtNonStaticCol: stopAtNonStaticCol,
+                useGripper: useGripper,
+                physicsInterval: physicsInterval,
+                moveMagnitude: moveMagnitude,
+                markActionFinished: true
+            );
+        }
+
+        public void OpenObject(
+            float x,
+            float y,
+            bool forceAction = false,
+            float openness = 1,
+            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
+        ) {
+            SimObjPhysics target = getInteractableSimObjectFromXY(
+                x: x, y: y, forceAction: forceAction
+            );
+            openObject(
+                target: target,
+                openness: openness,
+                forceAction: forceAction,
+                moveMagnitude: moveMagnitude,
+                markActionFinished: true
+            );
+        }
+
+        public void PhysicsSyncTransforms() {
+            Physics.SyncTransforms();
+            actionFinished(true);
+        }
+
+        // pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
+        // additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
+        public void PausePhysicsAutoSim() {
+            physicsSceneManager.PausePhysicsAutoSim();
+            actionFinished(true);
+        }
+
+        // if physics AutoSimulation is paused, manually advance the physics timestep by action.timeStep's value. Only use values for timeStep no less than zero and no greater than 0.05
+        public void AdvancePhysicsStep(
+            float timeStep = 0.02f,
+            float? simSeconds = null,
+            bool allowAutoSimulation = false
+        ) {
+            if ((!allowAutoSimulation) && Physics.autoSimulation) {
+                errorMessage = (
+                    "AdvancePhysicsStep can only be called if Physics AutoSimulation is currently " +
+                    "paused or if you have passed allowAutoSimulation=true! Either use the" +
+                    " PausePhysicsAutoSim() action first, or if you already used it, Physics" +
+                    " AutoSimulation has been turned back on already."
+                );
+                actionFinished(false);
+                return;
+            }
+
+            if (timeStep <= 0.0f || timeStep > 0.05f) {
+                errorMessage = "Please use a timeStep between 0.0f and 0.05f. Larger timeSteps produce inconsistent simulation results.";
+                actionFinished(false);
+                return;
+            }
+
+            if (!simSeconds.HasValue) {
+                simSeconds = timeStep;
+            }
+            if (simSeconds.Value < 0.0f) {
+                errorMessage = $"simSeconds must be non-negative (simSeconds=={simSeconds}).";
+                actionFinished(false);
+                return;
+            }
+
+            physicsSceneManager.AdvancePhysicsStep(timeStep, simSeconds, allowAutoSimulation);
+            actionFinished(true);
+        }
+
+        // Use this to immediately unpause physics autosimulation and allow physics to resolve automatically like normal
+        public void UnpausePhysicsAutoSim() {
+            physicsSceneManager.UnpausePhysicsAutoSim();
+            actionFinished(true);
+        }
+
 
         // Check if agent is collided with other objects
         protected bool IsCollided() {
@@ -1594,10 +2061,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ResetObjectFilter() {
             this.simObjFilter = null;
-            // this could technically be a FastEmit action
-            // but could cause confusion since the result of this
-            // action should return all the objects. Resetting the filter
-            // should cause all the objects to get returned, which FastEmit would not do.
+            // The result of this action should return all the objects. Thus we should NOT
+            // make this return a `actionFinishedEmit`
             actionFinished(true);
         }
         public void SetObjectFilter(string[] objectIds) {
@@ -1610,12 +2075,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
             simObjFilter = filter.ToArray();
-            // this could technically be a FastEmit action
-            // but could cause confusion since the result of this
-            // action should return a limited set of objects. Setting the filter
-            // should cause only the objects in the filter to get returned,
-            // which FastEmit would not do.
-            actionFinished(true);
+            // Could cause confusion since the result of this
+            // action will not initially filter the metadata (due to the actionFinishedEmit).
+            actionFinishedEmit(true);
         }
 
         public void SetObjectFilterForType(string[] objectTypes) {
@@ -1623,19 +2085,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             HashSet<SimObjPhysics> filter = new HashSet<SimObjPhysics>();
             HashSet<string> filterObjectTypes = new HashSet<string>(objectTypes);
             foreach (var simObj in simObjects) {
-
-
                 if (filterObjectTypes.Contains( Enum.GetName(typeof(SimObjType), simObj.Type) )) {
                     filter.Add(simObj);
                 }
             }
             simObjFilter = filter.ToArray();
-            // this could technically be a FastEmit action
-            // but could cause confusion since the result of this
-            // action should return a limited set of objects. Setting the filter
-            // should cause only the objects in the filter to get returned,
-            // which FastEmit would not do.
-            actionFinished(true);
+            // Could cause confusion since the result of this
+            // action will not initially filter the metadata (due to the actionFinishedEmit).
+            actionFinishedEmit(true);
+        }
+
+        public ObjectMetadata setReceptacleMetadata(ObjectMetadata meta) {
+
+
+            return meta;
         }
 
         public virtual ObjectMetadata[] generateObjectMetadata(SimObjPhysics[] simObjects) {
@@ -1663,7 +2126,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             for (int k = 0; k < numObj; k++) {
                 SimObjPhysics simObj = simObjects[k];
-                ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(simObj, visibleSimObjsHash.Contains(simObj), interactableSimObjsHash.Contains(simObj));
+                ObjectMetadata meta = SimObjPhysics.ObjectMetadataFromSimObjPhysics(
+                    simObj,
+                    visibleSimObjsHash.Contains(simObj),
+                    interactableSimObjsHash.Contains(simObj)
+                );
                 if (meta.toggleable) {
                     SimObjPhysics[] controlled = simObj.GetComponent<CanToggleOnOff>().ReturnControlledSimObjects();
                     List<string> controlledList = new List<string>();
@@ -1812,14 +2279,63 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return objMeta;
         }
 
-        public void GetObjectMetadata(List<string> objectIds) {
+
+        public virtual MinimalObjectMetadata[] generateMinimalObjectMetadata(SimObjPhysics[] simObjects) {
+            if (simObjects == null) {
+                throw new NullReferenceException("null SimObjPhysics passed to generateObjectMetadata");
+            }
+
+            int numObj = simObjects.Length;
+            List<MinimalObjectMetadata> metadata = new List<MinimalObjectMetadata>();
+
+            for (int k = 0; k < numObj; k++) {
+                SimObjPhysics simObj = simObjects[k];
+
+                MinimalObjectMetadata objMeta = new MinimalObjectMetadata();
+                GameObject o = simObj.gameObject;
+
+                objMeta.name = o.name;
+                objMeta.objectType = Enum.GetName(typeof(SimObjType), simObj.Type);
+                objMeta.objectId = simObj.ObjectID;
+                objMeta.assetId = simObj.assetID;
+
+                metadata.Add(objMeta);
+            }
+
+            return metadata.ToArray();
+        }
+
+        public void GetMinimalObjectMetadata(List<string> objectIds = null) {
             List<SimObjPhysics> sops = new List<SimObjPhysics>();
-            foreach (string objectId in objectIds) {
-                if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                    sops.Add(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
-                } else {
-                    Debug.Log($"Object ID {objectId} not found in scene.");
-                    continue;
+            if (objectIds == null) {
+                sops = physicsSceneManager.ObjectIdToSimObjPhysics.Values.ToList();
+            } else {
+                foreach (string objectId in objectIds) {
+                    if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                        sops.Add(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
+                    } else {
+                        Debug.Log($"Object ID {objectId} not found in scene.");
+                        continue;
+                    }
+                }
+            }
+
+            var objectMetadata = generateMinimalObjectMetadata(sops.ToArray());
+            actionFinishedEmit(true, objectMetadata);
+        }
+
+        public void GetObjectMetadata(List<string> objectIds = null) {
+            List<SimObjPhysics> sops = new List<SimObjPhysics>();
+            if (objectIds == null) {
+                sops = physicsSceneManager.ObjectIdToSimObjPhysics.Values.ToList();
+            } else {
+                foreach (string objectId in objectIds) {
+                    if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                        sops.Add(physicsSceneManager.ObjectIdToSimObjPhysics[objectId]);
+                    } else {
+                        Debug.Log($"Object ID {objectId} not found in scene.");
+                        continue;
+                    }
                 }
             }
 
@@ -1877,6 +2393,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             agentMeta.rotation = transform.eulerAngles;
 
             float cameraX = m_Camera.transform.rotation.eulerAngles.x;
+            // agentMeta.cameraMeridian = // HALLO!!!!!;
             agentMeta.cameraHorizon = cameraX > 180 ? cameraX - 360 : cameraX;
             agentMeta.inHighFrictionArea = inHighFrictionArea;
 
@@ -2914,7 +3431,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (this.imageSynthesis && this.imageSynthesis.enabled) {
                 this.imageSynthesis.OnSceneChange();
             }
-
             actionFinished(success, errorMessage);
         }
 
@@ -3495,7 +4011,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public VisibilityCheck isSimObjVisible(Camera camera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
             // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
             VisibilityCheck visCheck = new VisibilityCheck();
-            if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
+
+            if (sop.VisibilityPoints != null
+                && sop.VisibilityPoints.Length > 0
+            ) {
+                AxisAlignedBoundingBox aabb = sop.AxisAlignedBoundingBox;
+                if (!GeometryUtility.TestPlanesAABB(
+                    planes: planes,
+                    bounds: new Bounds(center: aabb.center, size:aabb.size)
+                )) {
+                    return visCheck;
+                }
                 Transform[] visPoints = sop.VisibilityPoints;
                 float maxDistanceSquared = maxDistance * maxDistance;
                 foreach (Transform point in visPoints) {
@@ -3510,7 +4036,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (outsidePlane) {
                         continue;
                     }
-
 
                     float xdelta = Math.Abs(camera.transform.position.x - point.position.x);
                     if (xdelta > maxDistance) {
@@ -3593,7 +4118,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void GetVisibleObjects(float? maxDistance = null, string visibilityScheme = null) {
+        protected VisibilityScheme getVisibilityScheme(string visibilityScheme = null) {
             VisibilityScheme visSchemeEnum;
             if (visibilityScheme != null) {
                 visibilityScheme = visibilityScheme.ToLower();
@@ -3614,27 +4139,101 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 visSchemeEnum = this.visibilityScheme;
             }
+            return visSchemeEnum;
+        }
+
+        public void GetVisibleObjects(
+            float? maxDistance = null,
+            string visibilityScheme = null,
+            int? thirdPartyCameraIndex = null,
+            List<string> objectIds = null
+        ) {
+            VisibilityScheme visSchemeEnum = getVisibilityScheme(visibilityScheme);
+
+            Camera camera;
+            if (thirdPartyCameraIndex.HasValue) {
+                camera = agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value];
+                if (visSchemeEnum != VisibilityScheme.Distance) {
+                    throw new System.NotImplementedException(
+                        $"Visibility scheme {visSchemeEnum} is not implemented for third party cameras. Must be 'distance'."
+                    );
+                }
+            } else {
+                camera = m_Camera;
+            }
+
+            List<SimObjPhysics> filterSimObjs = null;
+            if (objectIds != null) {
+                foreach (string objectId in objectIds) {
+                    if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                        throw new ArgumentException($"Object with id {objectId} does not exist in scene.");
+                    }
+                }
+                filterSimObjs = objectIds.Select(
+                    objectId => physicsSceneManager.ObjectIdToSimObjPhysics[objectId]
+                ).ToList();
+            }
 
             SimObjPhysics[] interactable;
             SimObjPhysics[] visible;
             if (visSchemeEnum == VisibilityScheme.Collider) {
                 visible = GetAllVisibleSimObjPhysicsCollider(
-                    camera: m_Camera,
+                    camera: camera,
                     maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
-                    filterSimObjs: null,
+                    filterSimObjs: filterSimObjs,
+                    interactable: out interactable
+                );
+            } else if (visSchemeEnum == VisibilityScheme.Distance) {
+                visible = GetAllVisibleSimObjPhysicsDistance(
+                    camera: camera,
+                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
+                    filterSimObjs: filterSimObjs,
                     interactable: out interactable
                 );
             } else {
-                visible = GetAllVisibleSimObjPhysicsDistance(
-                    camera: m_Camera,
-                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
-                    filterSimObjs: null,
-                    interactable: out interactable
+                throw new System.NotImplementedException(
+                    $"Visibility scheme {visSchemeEnum} is not implemented. Must be 'distance' or 'collider'."
                 );
             }
+            #if UNITY_EDITOR
+                foreach (SimObjPhysics sop in visible) {
+                    Debug.Log("Visible: " + sop.name);
+                }
+            #endif
 
             // Return only the ObjectIds of the visible objects
             actionFinishedEmit(true, visible.Select(sop => sop.ObjectID).ToList());
+        }
+
+        public void GetObjaverseAnnotations() {
+            Dictionary<string, Dictionary<string, string>> annotations = new Dictionary<string, Dictionary<string, string>>();
+
+            foreach (Thor.Objaverse.ObjaverseAnnotation oa in GameObject.FindObjectsOfType<Thor.Objaverse.ObjaverseAnnotation>()) {
+                SimObjPhysics sop = oa.gameObject.GetComponent<SimObjPhysics>();
+                annotations[sop.ObjectID] = new Dictionary<string, string>();
+
+                annotations[sop.ObjectID]["objectType"] = oa.ObjectCategory;
+                annotations[sop.ObjectID]["dataset"] = oa.MostSpecificDataset.ToString();
+
+//                Debug.Log(sop.ObjectID);
+//                Debug.Log(oa.ObjectCategory);
+//                Debug.Log(oa.MostSpecificDataset.ToString());
+            }
+
+            actionFinishedEmit(true, annotations);
+        }
+
+        [ObsoleteAttribute(message: "This action is deprecated. Call GetVisibleObjects instead.", error: false)]
+        public void ObjectsVisibleFromThirdPartyCamera(
+            int thirdPartyCameraIndex,
+            float? maxDistance = null,
+            string visibilityScheme = null
+        ) {
+            GetVisibleObjects(
+                maxDistance: maxDistance,
+                visibilityScheme: visibilityScheme,
+                thirdPartyCameraIndex: thirdPartyCameraIndex
+            );
         }
 
         // this is a faster version of the visibility check, but is not entirely
@@ -3814,11 +4413,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return currentlyVisibleItemsToList.ToArray();
         }
 
-        // check if the visibility point on a sim object, sop, is within the viewport
-        // has a inclueInvisible bool to check against triggerboxes as well, to check for visibility with things like Cabinets/Drawers
+
+// check if the visibility point on a sim object, sop, is within the viewport
+        // has a includeInvisible bool to check against triggerboxes as well, to check for visibility with things like Cabinets/Drawers
         protected VisibilityCheck CheckIfVisibilityPointRaycast(
             SimObjPhysics sop,
-            Transform point,
+            Vector3 position,
             Camera camera,
             bool includeInvisible
         ) {
@@ -3826,7 +4426,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // now cast a ray out toward the point, if anything occludes this point, that point is not visible
             RaycastHit hit;
 
-            float distFromPointToCamera = Vector3.Distance(point.position, camera.transform.position);
+            float distFromPointToCamera = Vector3.Distance(position, camera.transform.position);
 
             // adding slight buffer to this distance to ensure the ray goes all the way to the collider of the object being cast to
             float raycastDistance = distFromPointToCamera + 0.5f;
@@ -3844,7 +4444,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
             // ignored by the other raycast
             if (includeInvisible) {
-                if (Physics.Raycast(camera.transform.position, point.position - camera.transform.position, out hit, raycastDistance, mask)) {
+                if (Physics.Raycast(camera.transform.position, position - camera.transform.position, out hit, raycastDistance, mask)) {
                     if (
                         hit.transform == sop.transform
                         || ( isSopHeldByArm && ((Arm != null && Arm.heldObjects[sop].Contains(hit.collider)) || (SArm != null && SArm.heldObjects[sop].Contains(hit.collider))) )
@@ -3852,7 +4452,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         visCheck.visible = true;
                         visCheck.interactable = true;
 #if UNITY_EDITOR
-                        Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
+                        Debug.DrawLine(camera.transform.position, hit.point, Color.cyan, 0f);
 #endif
                     }
                 }
@@ -3863,7 +4463,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else if (
                 Physics.Raycast(
                     camera.transform.position,
-                    point.position - camera.transform.position,
+                    position - camera.transform.position,
                     out hit,
                     raycastDistance,
                     LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent")
@@ -3888,7 +4488,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         RaycastHit[] hits;
                         hits = Physics.RaycastAll(
                             camera.transform.position,
-                            point.position - camera.transform.position,
+                            position - camera.transform.position,
                             raycastDistance,
                             LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
                             QueryTriggerInteraction.Ignore
@@ -3926,13 +4526,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 #if UNITY_EDITOR
                 if (visCheck.visible) {
-                    Debug.DrawLine(camera.transform.position, point.position, Color.cyan);
+                    Debug.DrawLine(camera.transform.position, hit.point, Color.cyan, 0f);
                 }
 #endif
             }
 
             return visCheck;
         }
+
+        protected VisibilityCheck CheckIfVisibilityPointRaycast(
+            SimObjPhysics sop,
+            Transform point,
+            Camera camera,
+            bool includeInvisible
+        ) {
+            VisibilityCheck visCheck = new VisibilityCheck();
+            // now cast a ray out toward the point, if anything occludes this point, that point is not visible
+            RaycastHit hit;
+
+            float distFromPointToCamera = Vector3.Distance(point.position, camera.transform.position);
+
+            return CheckIfVisibilityPointRaycast(
+                sop: sop,
+                position: point.position,
+                camera: camera,
+                includeInvisible: includeInvisible
+            );
+        }
+
 
         protected VisibilityCheck CheckIfVisibilityPointInViewport(
             SimObjPhysics sop,
@@ -3977,6 +4598,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ResetAgentHandRotation() {
             AgentHand.transform.rotation = this.transform.rotation;
+        }
+
+        public void ApproximateAgentRadius(int n = 12) {
+            Quaternion oldRot = this.transform.rotation;
+
+            float radius = 0.0f;
+            for (int i = 0; i < n; i++) {
+                this.transform.Rotate(0.0f, 360.0f / n, 0.0f);
+                Physics.SyncTransforms();
+
+                Bounds b = UtilityFunctions.CreateEmptyBounds();
+                foreach (Collider c in this.GetComponentsInChildren<Collider>()) {
+                    if (c.enabled && !c.isTrigger) {
+                        b.Encapsulate(c.bounds);
+                    }
+                }
+                #if UNITY_EDITOR
+                Debug.Log(Mathf.Sqrt(b.extents.x * b.extents.x + b.extents.z * b.extents.z));
+                #endif
+                radius = Mathf.Max(
+                    radius,
+                    Mathf.Max(b.extents.x, b.extents.z)
+                );
+            }
+            this.transform.rotation = oldRot;
+            Physics.SyncTransforms();
+
+                #if UNITY_EDITOR
+                Debug.Log("Final radius");
+                Debug.Log(radius);
+                #endif
+            actionFinishedEmit(true, radius);
+        }
+
+        public void SetAgentCapsuleRadius(float radius) {
+            if (radius < 0.0f) {
+                errorMessage = "Radius must be greater than 0.0";
+                actionFinishedEmit(false);
+                return;
+            }
+            CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+            cc.radius = radius;
+            Physics.SyncTransforms();
+
+            actionFinishedEmit(true);
         }
 
         // set random seed used by unity
@@ -4414,7 +5080,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, toReturn);
         }
 
-        protected string whatObjectOn(SimObjPhysics sop, int divisions, float belowDistance) {
+        /// <summary>
+        /// Determines the objects on which a specified simulation object is resting.
+        /// </summary>
+        /// <param name="sop">The object for which the objects it rests on are to be determined.</param>
+        /// <param name="divisions">The number of divisions to consider for each dimension of the object's bounding box.</param>
+        /// <param name="belowDistance">The maximum distance to consider below the object's bounding box for possible resting objects.</param>
+        /// <param name="returnOnFirstHit">Whether to stop checking for further resting objects after the first is found.</param>
+        /// <returns>A set of IDs for simulation objects that the specified object is resting on. If no such objects are found, the set will be empty.</returns>
+        /// <remarks>
+        /// This method uses raycasting from points on the surface of the simulation object's bounding box downwards to detect resting objects.
+        /// For performance reasons, in non-Unity editor builds, the method may terminate early if <paramref name="returnOnFirstHit"/> is set to true.
+        /// </remarks>
+        protected HashSet<string> whatObjectOn(
+            SimObjPhysics sop,
+            int divisions,
+            float belowDistance,
+            bool returnOnFirstHit
+        ) {
             sop.syncBoundingBoxes(forceCreateObjectOrientedBoundingBox: true); // Ensures the sop has an object oriented bounding box attached
 
             List<Vector3> points = pointsOnSurfaceOfBoxCollider(
@@ -4437,7 +5120,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Debug.DrawLine(point + transform.up * 1e-3f, point - transform.up * belowDistance, Color.red, 10.0f);
 # endif
                     RaycastHit hit;
-                    if (Physics.Raycast(point + transform.up * 1e-3f, -transform.up, out hit, belowDistance + 1e-3f, LayerMask.GetMask("SimObjVisible"))) {
+                    if (
+                        Physics.Raycast(
+                            point + transform.up * 1e-3f, -transform.up,
+                            out hit,
+                            belowDistance + 1e-3f,
+                            LayerMask.GetMask("SimObjVisible"))
+                    ) {
                         SimObjPhysics onSop = ancestorSimObjPhysics(hit.collider.gameObject);
                         if (onSop != null) {
 # if UNITY_EDITOR
@@ -4448,7 +5137,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                             onObjectIds.Add(onSop.ObjectID);
 # if !UNITY_EDITOR
-                            break;
+                            if (returnOnFirstHit) {
+                                break;
+                            }
 # endif
                         }
                     }
@@ -4458,7 +5149,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     c.enabled = true;
                 }
             }
-            return (onObjectIds.Count != 0 ? onObjectIds.ToList()[0] : null);
+            return onObjectIds;
         }
 
         public void CheckWhatObjectOn(string objectId, int divisions=3, float belowDistance=1e-2f) {
@@ -4469,19 +5160,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             actionFinishedEmit(
                 true,
-                whatObjectOn(sop: sop, divisions: divisions, belowDistance: belowDistance)
+                whatObjectOn(sop: sop, divisions: divisions, belowDistance: belowDistance, returnOnFirstHit: false).ToList()
             );
         }
 
         public void CheckWhatObjectsOn(List<string> objectIds, int divisions=3, float belowDistance=1e-2f) {
-            Dictionary<string, string> objectIdToOnObjectId = new Dictionary<string, string>();
+            Dictionary<string, List<string>> objectIdToOnObjectId = new Dictionary<string, List<string>>();
             foreach (string objectId in objectIds) {
                 SimObjPhysics sop = getSimObjectFromId(objectId);
                 if (sop == null) {
                     actionFinishedEmit(false); // Error message set already by getSimObjectFromId
                     return;
                 }
-                objectIdToOnObjectId[objectId] = whatObjectOn(sop: sop, divisions: divisions, belowDistance: belowDistance);
+                objectIdToOnObjectId[objectId] = whatObjectOn(
+                    sop: sop, divisions: divisions, belowDistance: belowDistance, returnOnFirstHit: false
+                ).ToList();
             }
             actionFinishedEmit(
                 true,
@@ -4836,30 +5529,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, reachablePositions);
         }
 
-        public void ObjectNavExpertAction(ServerAction action) {
+        public string objectNavExpertAction(
+            string objectId = null,
+            string objectType = null,
+            Vector3? position = null,
+            int? navMeshId = null
+        ) {
             NavMeshPath path = new UnityEngine.AI.NavMeshPath();
             Func<bool> visibilityTest;
-            if (!String.IsNullOrEmpty(action.objectType) || !String.IsNullOrEmpty(action.objectId)) {
-                SimObjPhysics sop = getSimObjectFromTypeOrId(action);
-                path = getShortestPath(sop, true);
+            if (!String.IsNullOrEmpty(objectType) || !String.IsNullOrEmpty(objectId)) {
+                SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
+                path = getShortestPath(sop, true, navMeshId: navMeshId);
                 visibilityTest = () => objectIsWithinViewport(sop);
             }
             else {
                 var startPosition = this.transform.position;
                 var startRotation = this.transform.rotation;
-                SafelyComputeNavMeshPath(startPosition, action.position, path, DefaultAllowedErrorInShortestPath);
+                SafelyComputeNavMeshPath(startPosition, position.Value, path, DefaultAllowedErrorInShortestPath, navMeshId);
                 visibilityTest = () => true;
             }
 
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-
-                int parts = (int)Math.Round(360f / rotateStepDegrees);
+                int parts = (int) Math.Round(360f / rotateStepDegrees);
                 if (Math.Abs((parts * 1.0f) - 360f / rotateStepDegrees) > 1e-5) {
                     errorMessage = "Invalid rotate step degrees for agent, must divide 360 without a remainder.";
-                    actionFinished(false);
-                    return;
+                    return null;
                 }
-
                 int numLeft = parts / 2;
                 int numRight = numLeft + (parts % 2 == 0 ? 1 : 0);
                 Vector3 startPosition = this.transform.position;
@@ -4868,8 +5563,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 if (path.corners.Length <= 1) {
                     if (visibilityTest()) {
-                        actionFinished(true);
-                        return;
+                        return null;
                     }
 
                     int relRotate = 0;
@@ -4897,35 +5591,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Debug.Log(relRotate);
                     Debug.Log(relHorizon);
                     // When in the editor, rotate the agent and camera into the expert direction
-                    m_Camera.transform.localEulerAngles = new Vector3(startCameraRot.x + 30f * relHorizon, 0.0f, 0.0f);
-                    transform.Rotate(0.0f, relRotate * rotateStepDegrees, 0.0f);
+                    //m_Camera.transform.localEulerAngles = new Vector3(startCameraRot.x + 30f * relHorizon, 0.0f, 0.0f);
+                    //transform.Rotate(0.0f, relRotate * rotateStepDegrees, 0.0f);
 #endif
 
                     if (relRotate != 0) {
                         if (relRotate < 0) {
-                            actionFinished(true, "RotateLeft");
+                            return "RotateLeft";
                         } else {
-                            actionFinished(true, "RotateRight");
+                            return "RotateRight";
                         }
                     } else if (relHorizon != 0) {
                         if (relHorizon < 0) {
-                            actionFinished(true, "LookUp");
+                            return "LookUp";
                         } else {
-                            actionFinished(true, "LookDown");
+                            return "LookDown";
                         }
                     } else {
                         errorMessage = "Object doesn't seem visible from any rotation/horizon.";
-                        actionFinished(false);
                     }
-                    return;
+                    return null;
                 }
 
                 Vector3 nextCorner = path.corners[1];
 
                 int whichBest = 0;
                 float bestDistance = 1000f;
+                string errorMessages = "";
                 for (int i = -numLeft; i <= numRight; i++) {
                     transform.Rotate(0.0f, i * rotateStepDegrees, 0.0f);
+                    Physics.SyncTransforms();
 
                     bool couldMove = moveInDirection(this.transform.forward * gridSize);
                     if (couldMove) {
@@ -4934,40 +5629,57 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             bestDistance = newDistance;
                             whichBest = i;
                         }
+                    } else {
+                        errorMessages = errorMessages + " " + errorMessage;
                     }
                     transform.position = startPosition;
                     transform.rotation = startRotation;
                 }
 
                 if (bestDistance >= 1000f) {
-                    errorMessage = "Can't seem to move in any direction...";
-                    actionFinished(false);
+                    errorMessage = "Can't seem to move in any direction. Error messages: " + errorMessages;
+                    return null;
                 }
 
 #if UNITY_EDITOR
-                transform.Rotate(0.0f, Math.Sign(whichBest) * rotateStepDegrees, 0.0f);
-                if (whichBest == 0) {
-                    moveInDirection(this.transform.forward * gridSize);
-                }
+                //transform.Rotate(0.0f, Math.Sign(whichBest) * rotateStepDegrees, 0.0f);
+                //if (whichBest == 0) {
+                //    moveInDirection(this.transform.forward * gridSize);
+                //}
                 Debug.Log(whichBest);
 #endif
 
                 if (whichBest < 0) {
-                    actionFinished(true, "RotateLeft");
+                    return "RotateLeft";
                 } else if (whichBest > 0) {
-                    actionFinished(true, "RotateRight");
+                    return "RotateRight";
                 } else {
-                    actionFinished(true, "MoveAhead");
+                    return "MoveAhead";
                 }
-                return;
             } else {
                 errorMessage = "Path to target could not be found";
+                return null;
+            }
+        }
+
+        public void ObjectNavExpertAction(
+            string objectId = null,
+            string objectType = null,
+            Vector3? position = null,
+            int? navMeshId = null
+        ) {
+            string action = objectNavExpertAction(objectId, objectType, position, navMeshId: navMeshId);
+
+            if (action != null) {
+                actionFinished(true, action);
+                return;
+            } else {
                 actionFinished(false);
                 return;
             }
         }
 
-        public UnityEngine.AI.NavMeshPath getShortestPath(SimObjPhysics sop, bool useAgentTransform, ServerAction action = null) {
+        public UnityEngine.AI.NavMeshPath getShortestPath(SimObjPhysics sop, bool useAgentTransform, ServerAction action = null, int? navMeshId = null) {
             var startPosition = this.transform.position;
             var startRotation = this.transform.rotation;
             if (!useAgentTransform) {
@@ -4975,7 +5687,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 startRotation = Quaternion.Euler(action.rotation);
             }
 
-            return GetSimObjectNavMeshTarget(sop, startPosition, startRotation, DefaultAllowedErrorInShortestPath);
+            return GetSimObjectNavMeshTarget(sop, startPosition, startRotation, DefaultAllowedErrorInShortestPath, navMeshId: navMeshId);
         }
 
 
@@ -4984,10 +5696,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectId,
             Vector3 startPosition,
             Quaternion startRotation,
-            float allowedError
+            float allowedError,
+            int? navMeshId = null
         ) {
             SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
-            var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation, allowedError);
+            var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation, allowedError, navMeshId: navMeshId);
             // VisualizePath(startPosition, path);
             actionFinishedEmit(success: true, actionReturn: path);
         }
@@ -4997,26 +5710,50 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 rotation,
             string objectType = null,
             string objectId = null,
-            float allowedError = DefaultAllowedErrorInShortestPath
+            float allowedError = DefaultAllowedErrorInShortestPath,
+            int? navMeshId = null
         ) {
-            getShortestPath(objectType, objectId, position, Quaternion.Euler(rotation), allowedError);
+            getShortestPath(objectType: objectType, objectId: objectId, startPosition: position, startRotation: Quaternion.Euler(rotation), allowedError: allowedError, navMeshId: navMeshId);
         }
+
+        // public void GetShortestPathNew(
+        //     Vector3 position,
+        //     Vector3 rotation,
+        //     string objectId = null,
+        //     float allowedError = DefaultAllowedErrorInShortestPath,
+        //     int navMeshId = 
+        // ) {
+        //     Debug.Log("----- GetShortestPathNew");
+        //     getShortestPath(objectType: null, objectId: objectId, startPosition: position, startRotation: Quaternion.Euler(rotation), allowedError: allowedError, navMeshId: navMeshId);
+        // }
+
+        // public void GetShortestPathNewTest(
+        //     Vector3 position,
+        //     Vector3 rotation,
+        //     string objectId = null,
+        //     float allowedError = DefaultAllowedErrorInShortestPath,
+        //     int navMeshId = -1
+        // ) {
+        //     getShortestPath(objectType: null, objectId: objectId, startPosition: position, startRotation: Quaternion.Euler(rotation), allowedError: allowedError, navMeshId: navMeshId);
+        // }
 
         public void GetShortestPath(
             Vector3 position,
             string objectType = null,
             string objectId = null,
-            float allowedError = DefaultAllowedErrorInShortestPath
+            float allowedError = DefaultAllowedErrorInShortestPath,
+            int? navMeshId = null
         ) {
-            getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero), allowedError);
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero), allowedError, navMeshId);
         }
 
         public void GetShortestPath(
             string objectType = null,
             string objectId = null,
-            float allowedError = DefaultAllowedErrorInShortestPath
+            float allowedError = DefaultAllowedErrorInShortestPath,
+            int? navMeshId = null
         ) {
-            getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation, allowedError);
+            getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation, allowedError, navMeshId);
         }
 
         private bool GetPathFromReachablePositions(
@@ -5279,7 +6016,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (shouldEnqueue) {
                             pointsQueue.Enqueue(newPosition);
 #if UNITY_EDITOR
-                            Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+                            Debug.DrawLine(p, newPosition, Color.cyan, 10f);
 #endif
                         }
                     }
@@ -5304,7 +6041,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 initialPosition,
             Quaternion initialRotation,
             float allowedError,
-            bool visualize = false
+            bool visualize = false,
+            int? navMeshId = null
         ) {
             var targetTransform = targetSOP.transform;
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
@@ -5337,7 +6075,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 start: initialPosition,
                 target: fixedPosition,
                 path: path,
-                allowedError: allowedError
+                allowedError: allowedError,
+                navMeshId: navMeshId
             );
 
             var pathDistance = 0.0f;
@@ -5381,8 +6120,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 start,
             Vector3 target,
             UnityEngine.AI.NavMeshPath path,
-            float allowedError
+            float allowedError,
+            int? navMeshId = null
         ) {
+             Debug.Log($"---Safely compute mesh.");
             float floorY = Math.Min(
                 getFloorY(start.x, start.y, start.z),
                 getFloorY(target.x, target.y, target.z)
@@ -5390,7 +6131,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 startPosition = new Vector3(start.x, floorY, start.z);
             Vector3 targetPosition = new Vector3(target.x, floorY, target.z);
 
-            this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = true;
+            var navMeshAgent = this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>();
+            navMeshAgent.enabled = true;
 
             NavMeshHit startHit;
             bool startWasHit = UnityEngine.AI.NavMesh.SamplePosition(
@@ -5415,7 +6157,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     );
                 }
             }
-
+            
             float startOffset = Vector3.Distance(
                 startHit.position,
                 new Vector3(startPosition.x, startHit.position.y, startPosition.z)
@@ -5437,10 +6179,59 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 #if UNITY_EDITOR
             Debug.Log($"Attempting to find path from {startHit.position} to {targetHit.position}.");
+            Debug.Log($"NavmeshAgent start position {navMeshAgent.transform.position}");
 #endif
+
+            var prevPosition = this.transform.position;
+            var prevId = navMeshAgent.agentTypeID;
+            this.transform.position = startHit.position;
+            navMeshAgent.radius = 2.0f;
+            // navMeshAgent.agentTypeID = 
+
+            
+            var navmeshSurfaces = GameObject.FindObjectsOfType<NavMeshSurfaceExtended>();
+
+            Debug.Log($"-----Navmesh  Query {navMeshId} navmesh count: {navmeshSurfaces.Count()} extended active count: {NavMeshSurfaceExtended.activeSurfaces.Count} navmesh active count: {NavMeshSurface.activeSurfaces.Count}");
+
+            var queryAgentId = getNavMeshAgentId(navMeshId);
+            // var useNavmeshSurface = queryAgentId.HasValue;
+
+            var navMesh = getNavMeshSurfaceForAgentId(queryAgentId);
+
+            Debug.Log("---- Reached agent navmeshid " + queryAgentId);
+
+            
+
+
+            // bool pathSuccess = navMeshAgent.CalculatePath(
+            //     targetHit.position, path
+            // );
+            
+            foreach (var nvms in navmeshSurfaces) {
+                if (nvms != navMesh) {
+                    nvms.enabled = false; 
+                }
+            }
+            Debug.Log($"-----Navmesh  Query {queryAgentId} navmesh count: {navmeshSurfaces.Count()}");
+            // Useless more of unity's broken APIS for runtime >:(
+            // NavMeshQueryFilter queryFilter = new NavMeshQueryFilter() {
+            //     agentTypeID = queryAgentId,
+            //     areaMask = navMesh.layerMask
+            // };
             bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
                 startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
             );
+
+            Debug.Log($"-----Navmesh  Pathsuccess {pathSuccess}");
+
+            foreach(var nvms in navmeshSurfaces) {
+                nvms.enabled = true;
+            }
+
+            this.transform.position = prevPosition;
+            // bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
+            //     startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
+            // );
             if (path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                 this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 throw new InvalidOperationException(
@@ -5452,6 +6243,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             VisualizePath(startHit.position, path);
 #endif
             this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
+            
         }
 
         private void randomizeSmoothness(string objectId) {
@@ -5469,7 +6261,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void MakeAllObjectsUnbreakable() {
+            UpdateBreakabilityOfAllObjects(true);
 
+        }
+
+        public void MakeAllObjectsBreakable() {
+            UpdateBreakabilityOfAllObjects(false);
+        }
+
+        private void UpdateBreakabilityOfAllObjects(bool isUnbreakable) {
+            SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
+            if (simObjs != null) {
+                foreach (SimObjPhysics sop in simObjs) {
+                    if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
+                        sop.GetComponentInChildren<Break>().Unbreakable = isUnbreakable;
+                    }
+                }
+            }
+            actionFinished(true);
+        }
+        
         public void RandomizeSmoothness(string objectId) {
             randomizeSmoothness(objectId: objectId);
             actionFinished(success: true);
@@ -5486,19 +6298,49 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetShortestPathToPoint(
-            Vector3 position, Vector3 target, float allowedError = DefaultAllowedErrorInShortestPath
+            Vector3 position, Vector3 target, float allowedError = DefaultAllowedErrorInShortestPath, int? navMeshId = null
         ) {
             var path = new UnityEngine.AI.NavMeshPath();
-            SafelyComputeNavMeshPath(position, target, path, allowedError);
+            SafelyComputeNavMeshPath(position, target, path, allowedError, navMeshId);
             actionFinished(success: true, actionReturn: path);
         }
 
         public void GetShortestPathToPoint(
             Vector3 target,
-            float allowedError = DefaultAllowedErrorInShortestPath
+            float allowedError = DefaultAllowedErrorInShortestPath,
+             int? navMeshId = null
         ) {
             var startPosition = this.transform.position;
-            GetShortestPathToPoint(startPosition, target, allowedError);
+            GetShortestPathToPoint(startPosition, target, allowedError, navMeshId);
+        }
+
+        public int getNavMeshAgentId(int? navMeshId = null) {
+            var idSet = new HashSet<int>(NavMeshSurfaceExtended.activeSurfaces.Select(n => n.agentTypeID));
+            Debug.Log($"------ id set  {string.Join(",", idSet.Select(i => $"i"))}");
+            if (!navMeshId.HasValue) {
+                if (NavMeshSurfaceExtended.activeSurfaces.Count > 0) {
+                    return NavMeshSurfaceExtended.activeSurfaces[0].agentTypeID;
+                }
+                // TODO consider IthorScenes, not sure we use NavMeshSurface
+                // else {
+                //     return null;
+                // }
+            }
+            else if (!idSet.Contains(navMeshId.GetValueOrDefault()))  {
+                // actionFinished(success: false, errorMessage: $"Invalid agent id: '{navMeshId.GetValueOrDefault()}' provide a valid agent id for using with the NavMeshes available or bake a new NavMesh. Available: '{string.Join(", ",idSet.Select(i => i.ToString()) )}'");
+                // errorMessage = $"Invalid agent id: '{navMeshId.GetValueOrDefault()}' provide a valid agent id for using with the NavMeshes available or bake a new NavMesh. Available: '{string.Join(", ",idSet.Select(i => i.ToString()) )}'";
+                throw new InvalidOperationException(
+                        $"Invalid agent id: '{navMeshId.GetValueOrDefault()}' provide a valid agent id for using with the NavMeshes available or bake a new NavMesh. Available: '{string.Join(", ",idSet.Select(i => i.ToString()) )}'"
+                
+                );
+                
+                // return null;
+            }
+            return navMeshId.GetValueOrDefault();
+        } 
+
+        public NavMeshSurfaceExtended getNavMeshSurfaceForAgentId(int agentId) {
+            return NavMeshSurface.activeSurfaces.Find(s => s.agentTypeID == agentId) as NavMeshSurfaceExtended;
         }
 
         public void VisualizeShortestPaths(ServerAction action) {
@@ -5539,12 +6381,62 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, results.ToArray());
         }
 
+        public void VisualizeWaypoints(List<Waypoint> waypoints, bool grid = false, Color? gridColor = null) {
+
+            getReachablePositions(1.0f, 10000, grid, gridColor);
+
+            for (var i = 0; i < waypoints.Count; i++) {
+                var waypoint = waypoints[i];
+                var pos = waypoint.position;
+                var go = Instantiate(DebugPointPrefab, pos, Quaternion.identity);
+                var textMesh = go.GetComponentInChildren<TextMesh>();
+                textMesh.text = waypoint.text;
+
+                var mr = go.GetComponent<MeshRenderer>();
+                go.transform.localScale = Vector3.one * waypoint.radius;
+                mr.material.color = waypoint.color.toUnityColor();
+
+                // var lineRenderer = go.GetComponentInChildren<LineRenderer>();
+            }
+            actionFinished(true);
+        }
+
         public void CameraCrack(int randomSeed = 0) {
             GameObject canvas = Instantiate(CrackedCameraCanvas);
             CrackedCameraManager camMan = canvas.GetComponent<CrackedCameraManager>();
 
             camMan.SpawnCrack(randomSeed);
             actionFinished(true);
+        }
+
+        public void SimObjPhysicsTypeIsReceptacle(float receptacleRatioTolerance = 0.001f) {
+
+            var sops = GameObject.FindObjectOfType<ProceduralAssetDatabase>()
+                .GetPrefabs()
+                .Select(a => a.GetComponent<SimObjPhysics>())
+                .Where(sop => sop != null);
+            
+
+            var categoriesCount = sops.GroupBy(sop => sop.ObjType).ToDictionary(g => g.Key, g => g.Count());
+
+            var result = sops
+                .Where(sop => sop.SecondaryProperties.Contains(SimObjSecondaryProperty.Receptacle))
+                .GroupBy(sop => sop.ObjType)
+                .Select(g => new {
+                    simObjType = g.Key.ToString(),
+                    totalInCategory = categoriesCount[g.Key],
+                    totalIsReceptacle = categoriesCount[g.Key]
+                })
+                .Where(
+                    s => s.totalIsReceptacle / (0.0f + s.totalIsReceptacle) > receptacleRatioTolerance
+                )
+                .Select(s => s.simObjType);
+
+            Debug.Log(result);
+            actionFinished(
+                true,
+                actionReturn: result.ToList()
+            );
         }
 
         public static void TryToAddReceptacleTriggerBox(SimObjPhysics sop, float yThresMax = 0.075f, float worldOffset=-100f) {
@@ -5588,7 +6480,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 Physics.SyncTransforms();
-                
+
+                sop.syncBoundingBoxes(forceCacheReset: true);
                 AxisAlignedBoundingBox aabb = sop.AxisAlignedBoundingBox;
 
                 Vector3 center = aabb.center;
@@ -5705,6 +6598,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
 
+                // TODO: Improve this logic so that we get rectangles more intelligently
                 var groupToRectangles = new Dictionary<int, List<((int, int), (int, int))>>();
                 foreach (int group in groupToPos.Keys) {
                     var posSet = new HashSet<(int, int)>(groupToPos[group]);
@@ -5747,6 +6641,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
 
                         rectangles.Add(((startIX, startIZ), (endIX, endIZ)));
+                        // Debug.Log($"Group {group}: ({startIX}, {startIZ}), ({endIX}, {endIZ})");
                     }
                     groupToRectangles[group] = rectangles;
                 }
@@ -5874,206 +6769,200 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
-        public void CreateObjectPrefab(
-            Vector3[] vertices,
-            Vector3[] normals,
-            string name,
-            int[] triangles,
-            Vector2[]? uvs = null,
-            string texturePath = null,
-            SerializableCollider[]? colliders = null,
-            PhysicalProperties physicalProperties = null,
-            Vector3[]? visibilityPoints = null,
-            ObjectAnnotations annotations = null,
-            bool receptacleCandidate = false
+        public void CreateRuntimeAsset(
+            ProceduralAsset asset
         ) {
-            // create a new game object
-            GameObject go = new GameObject(name);
-            go.layer = LayerMask.NameToLayer("SimObjVisible");
-            go.tag = "SimObjPhysics";
+            var assetData = ProceduralTools.CreateAsset(
+                vertices: asset.vertices,
+                normals: asset.normals,
+                name: asset.name,
+                triangles: asset.triangles,
+                uvs: asset.uvs,
+                albedoTexturePath: asset.albedoTexturePath ,
+                normalTexturePath: asset.normalTexturePath ,
+                emissionTexturePath: asset.emissionTexturePath,
+                colliders: asset.colliders ,
+                physicalProperties: asset.physicalProperties,
+                visibilityPoints: asset.visibilityPoints ,
+                annotations: asset.annotations ,
+                receptacleCandidate: asset.receptacleCandidate ,
+                yRotOffset: asset.yRotOffset ,
+                serializable: asset.serializable,
+                parentTexturesDir: asset.parentTexturesDir
+            );
+            actionFinished(success: true, actionReturn: assetData);
+        }
 
-            // create a new mesh
-            GameObject meshObj = new GameObject("mesh");
-            meshObj.transform.parent = go.transform;
-            Mesh mesh = new Mesh();
-            mesh.vertices = vertices;
-            mesh.triangles = triangles;
-            mesh.normals = normals;
-            if (uvs != null) {
-                mesh.uv = uvs;
+        public void CreateRuntimeAsset(
+            string id,
+            string dir,
+            string extension = ".msgpack.gz",
+            ObjectAnnotations annotations = null
+        ) {
+            var validDirs = new List<string>() {
+                Application.persistentDataPath,
+                Application.streamingAssetsPath
+            };
+            var supportedExtensions = new HashSet<string>(){
+                ".gz", ".msgpack", ".msgpack.gz", ".json"
+            };
+            Debug.Log($"------- CreateRuntimeAsset for  '{id}' extension: = {extension}");
+            extension = !extension.StartsWith(".") ? $".{extension}" : extension;
+            extension = extension.Trim();
+            if (!supportedExtensions.Contains(extension)) {
+                actionFinished(success: false, errorMessage: $"Unsupported extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
+                return;
+            }
+            var filename = $"{id}{extension}";
+            var filepath = Path.Combine(dir, id, filename);
+            if (!File.Exists(filepath)) {
+                 actionFinished(success: false, actionReturn: null, errorMessage: $"Asset fiile '{filepath}' does not exist.");
+                 return;
             }
 
-            // add the mesh to the object
-            meshObj.AddComponent<MeshRenderer>();
-            MeshFilter meshFilter = meshObj.AddComponent<MeshFilter>();
-            meshFilter.mesh = mesh;
+            // to support different
+            var presentStages = extension.Split('.').Reverse().Where(s => !string.IsNullOrEmpty(s)).ToArray();
 
-            // load image from disk
-            if (texturePath != null) {
-                // textures aren't saved as part of the prefab, so we load them from disk
-                RuntimePrefab runtimePrefab = go.AddComponent<RuntimePrefab>();
-                runtimePrefab.localTexturePath = texturePath;
+            // var stages = new Dictionary<string, Func(Stream, MemoryStream)>() {
 
-                byte[] imageBytes = File.ReadAllBytes(texturePath);
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
+            //     "gz": (stream: Stream) => {
+            //         using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
+            //         using var resultStream = new MemoryStream();
+            //         decompressor.CopyTo(resultStream);
+            //         return resultStream;
+            //     },
+            //     "msgpack": (stream: Stream) => {
 
-                // create a new material
-                Material mat = new Material(Shader.Find("Standard"));
-                mat.mainTexture = tex;
+            //     }
+
+            // };
+
+            
+            // if (!validDirs.Any(prefix => dir.StartsWith(prefix))) {
+            //     actionFinished(
+            //         success: false,
+            //         errorMessage: $"Runtime filesystem access is restricted. `dir` must be a sub-directory in one of the following Unity designated paths: {string.Join(", ", validDirs.Select(d => $"'{d}'"))} ",
+            //         actionReturn: null
+            //     );
+            // }
+            // var filepath = Path.Combine(Application.persistentDataPath, id, $"{id}.msgpack.gz");
+            
+            // var outpath = Path.Combine(Application.persistentDataPath, "out", $"{id}.msgpack.gz");
+            using FileStream rawFileStream = File.Open(filepath, FileMode.Open);
+            using var resultStream = new MemoryStream();
+            Debug.Log($"------- raw file read at for  '{filepath}'");
+            var stageIndex = 0;
+            if ("gz" == presentStages[stageIndex]) {
+                using var decompressor = new GZipStream(rawFileStream, CompressionMode.Decompress);
+                decompressor.CopyTo(resultStream);
+                stageIndex++;
+
+            }
+            else {
+                rawFileStream.CopyTo(resultStream);
+            }
+
+            ProceduralAsset procAsset = null;
+            var debug = stageIndex < presentStages.Length ? presentStages[stageIndex] : "null";
+            Debug.Log($"presentStages {presentStages}, at index {stageIndex}: {debug} , {debug == "msgpack"},  {presentStages.Length} ");
+
+            if (stageIndex < presentStages.Length && presentStages[stageIndex] == "msgpack") {
+                Debug.Log("Deserialize raw json");
+                 procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
+                    resultStream.ToArray(),
+                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options
+                );
+            }
+            else if (presentStages.Length == 1) {
+                resultStream.Seek(0, SeekOrigin.Begin);
+                using var reader = new StreamReader(resultStream);
                 
-                // assign the material to the game object
-                meshObj.GetComponent<Renderer>().material = mat;
-                runtimePrefab.sharedMaterial = mat;
-            } else {
-                // create a new material
-                Material mat = new Material(Shader.Find("Standard"));
-                meshObj.GetComponent<Renderer>().material = mat;
+                var jsonResolver = new ShouldSerializeContractResolver();
+                var serializer = new Newtonsoft.Json.JsonSerializerSettings() {
+                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                    ContractResolver = jsonResolver,
+                    ObjectCreationHandling = ObjectCreationHandling.Replace
+                };
+                var json = reader.ReadToEnd();
+                Debug.Log($"Deserialize raw json at {filepath}: str {json}");
+                // procAsset = Newtonsoft.Json.JsonConvert.DeserializeObject<ProceduralAsset>(reader.ReadToEnd(), serializer);
+                procAsset = JsonConvert.DeserializeObject<ProceduralAsset>(json);
+            }
+            else {
+                 actionFinished(success: false, errorMessage: $"Unexpected error with extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
+                 return;
             }
 
-            // have the mesh refer to the mesh at meshPath
-            meshObj.GetComponent<MeshFilter>().sharedMesh = mesh;
+            /// WORKING
+            /*
+            using FileStream compressedFileStream = File.Open(filepath, FileMode.Open);
+            //using FileStream outputFileStream = File.Create(DecompressedFileName);
+            //using FileStream outputFileStream = File.Create(DecompressedFileName);
+            using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
+            
 
-            // add the mesh colliders
-            GameObject triggerCollidersObj = new GameObject("TriggerColliders");
-            triggerCollidersObj.layer = LayerMask.NameToLayer("SimObjVisible");
-            triggerCollidersObj.transform.parent = go.transform;
+            using var resultStream = new MemoryStream();
+            decompressor.CopyTo(resultStream);
+            var bytes = resultStream.ToArray();
 
-            GameObject meshCollidersObj = new GameObject("Colliders");
-            meshCollidersObj.layer = LayerMask.NameToLayer("SimObjVisible");
-            meshCollidersObj.transform.parent = go.transform;
-            List<Collider> meshColliders = new List<Collider>();
-            if (colliders != null && colliders.Length > 0) {
-                int i = 0;
-                foreach (var collider in colliders) {
-                    // create a mesh of the collider
-                    Mesh colliderMesh = new Mesh();
-                    colliderMesh.vertices = collider.vertices;
-                    colliderMesh.triangles = collider.triangles;
+            ProceduralAsset procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(bytes,
+                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+            */
 
-                    // add the mesh collider
-                    GameObject meshColliderObj = new GameObject($"collider_{i}");
-                    meshColliderObj.layer = LayerMask.NameToLayer("SimObjVisible");
-                    meshColliderObj.transform.parent = meshCollidersObj.transform;
-                    MeshCollider meshCollider = meshColliderObj.AddComponent<MeshCollider>();
-                    meshCollider.sharedMesh = colliderMesh;
-                    meshCollider.convex = true;
-                    meshColliders.Add(meshCollider);
 
-                    // add the trigger collider
-                    GameObject triggerColliderObj = new GameObject($"trigger_{i}");
-                    triggerColliderObj.layer = LayerMask.NameToLayer("SimObjVisible");
-                    triggerColliderObj.transform.parent = triggerCollidersObj.transform;
-                    MeshCollider triggerCollider = triggerColliderObj.AddComponent<MeshCollider>();
-                    triggerCollider.sharedMesh = colliderMesh;
-                    triggerCollider.convex = true;
-                    triggerCollider.isTrigger = true;
+            // decompressor.CopyTo(outputFileStream);
+            //outputFileStream.
 
-                    i++;
-                }
-            }
+            // Debugging write contents
+            // var jsonResolver = new ShouldSerializeContractResolver();
+            // var str = Newtonsoft.Json.JsonConvert.SerializeObject(
+            //     procAsset,
+            //     Newtonsoft.Json.Formatting.None,
+            //     new Newtonsoft.Json.JsonSerializerSettings() {
+            //         ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+            //         ContractResolver = jsonResolver
+            //     });
 
-            // add the rigidbody
-            Rigidbody rb = go.AddComponent<Rigidbody>();
-            if (physicalProperties != null) {
-                rb.mass = physicalProperties.mass;
-                rb.drag = physicalProperties.drag;
-                rb.angularDrag = physicalProperties.angularDrag;
-                rb.useGravity = physicalProperties.useGravity;
-                rb.isKinematic = physicalProperties.isKinematic;
-            }
+            // System.IO.File.WriteAllText(outpath, str);
 
-            // add the visibility points
-            GameObject visPoints = new GameObject("VisibilityPoints");
-            visPoints.transform.parent = go.transform;
-            Transform[] visPointTransforms = new Transform[visibilityPoints.Length];
-            for (int i = 0; i < visibilityPoints.Length; i++) {
-                GameObject visPoint = new GameObject($"visPoint_{i}");
-                visPoint.transform.parent = visPoints.transform;
-                visPoint.transform.localPosition = visibilityPoints[i];
-                visPointTransforms[i] = visPoint.transform;
-                visPoint.layer = LayerMask.NameToLayer("SimObjVisible");
-            }
+            //object assetData = null;
+            //var parent  =  GameObject.Find("Objects").transform;
+            Debug.Log($"procAsset is null? {procAsset == null} -  {procAsset}, albedo rooted? {!Path.IsPathRooted(procAsset.albedoTexturePath)} {procAsset.albedoTexturePath}");
 
-            // add the SimObjPhysics component
-            SimObjPhysics sop = go.AddComponent<SimObjPhysics>();
-            sop.VisibilityPoints = visPointTransforms;
-            sop.MyColliders = meshColliders.ToArray();
-            sop.assetID = name;
-            sop.objectID = name;
+            procAsset.parentTexturesDir =  Path.Combine(dir, id);
+            Debug.Log($" albedo after fix? {procAsset.albedoTexturePath}");
 
-            // add the annotations of the object
-            if (annotations == null) {
-                annotations = new ObjectAnnotations();
-            }
-            sop.PrimaryProperty = (SimObjPrimaryProperty)Enum.Parse(
-                typeof(SimObjPrimaryProperty), annotations.primaryProperty
-            );
-            sop.Type = (SimObjType)Enum.Parse(typeof(SimObjType), annotations.objectType);
-            if (annotations.secondaryProperties == null) {
-                annotations.secondaryProperties = new string[0];
-            }
-            sop.SecondaryProperties = annotations.secondaryProperties.Select(
-                p => (SimObjSecondaryProperty)Enum.Parse(typeof(SimObjSecondaryProperty), p)
-            ).ToArray();
+            var assetData = ProceduralTools.CreateAsset(
+                    procAsset.vertices,
+                    procAsset.normals,
+                    procAsset.name,
+                    procAsset.triangles,
+                    procAsset.uvs,
+                    procAsset.albedoTexturePath ,
+                    procAsset.normalTexturePath ,
+                    procAsset.emissionTexturePath,
+                    procAsset.colliders ,
+                    procAsset.physicalProperties,
+                    procAsset.visibilityPoints ,
+                    procAsset.annotations ?? annotations,
+                    procAsset.receptacleCandidate ,
+                    procAsset.yRotOffset ,
+                    returnObject: true,
+                    parent:null,
+                    addAnotationComponent: false,
+                    parentTexturesDir: procAsset.parentTexturesDir
+                );
 
-            // seutp the bounding box
-            GameObject boundingBox = new GameObject("BoundingBox");
-            boundingBox.transform.parent = go.transform;
-            BoxCollider boxCollider = boundingBox.AddComponent<BoxCollider>();
-            boxCollider.enabled = false;
-            float minX = float.MaxValue;
-            float minY = float.MaxValue;
-            float minZ = float.MaxValue;
-            float maxX = float.MinValue;
-            float maxY = float.MinValue;
-            float maxZ = float.MinValue;
-            foreach (var vertex in vertices) {
-                minX = Mathf.Min(minX, vertex.x);
-                minY = Mathf.Min(minY, vertex.y);
-                minZ = Mathf.Min(minZ, vertex.z);
-                maxX = Mathf.Max(maxX, vertex.x);
-                maxY = Mathf.Max(maxY, vertex.y);
-                maxZ = Mathf.Max(maxZ, vertex.z);
-            }
-            boxCollider.center = new Vector3(
-                x: (minX + maxX) / 2.0f,
-                y: (minY + maxY) / 2.0f,
-                z: (minZ + maxZ) / 2.0f
-            );
-            boxCollider.size = new Vector3(
-                x: maxX - minX,
-                y: maxY - minY,
-                z: maxZ - minZ
-            );
-            sop.BoundingBox = boundingBox;
+                // Debug.Log($"root is null? {parent == null} -  {parent}");
+           actionFinished(success: true, actionReturn: null);
+        }
 
-            if (receptacleCandidate) {
-                BaseFPSAgentController.TryToAddReceptacleTriggerBox(sop: sop);
-                GameObject receptacleTriggerBoxes = go.transform.Find("ReceptacleTriggerBoxes").gameObject;
-                if (receptacleTriggerBoxes.transform.childCount > 0) {
-                    sop.SecondaryProperties = new SimObjSecondaryProperty[] { SimObjSecondaryProperty.Receptacle };
-                }
-            }
+        public void GetStreamingAssetsPath() {
+            actionFinished(success: true, actionReturn: Application.streamingAssetsPath);
+        }
 
-            // Add the asset to the procedural asset database
-            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
-            if (assetDb != null) {
-                assetDb.prefabs.Add(go);
-            }
-
-            // get child object on assetDb's game object that's called "Prefabs"
-            // and add the prefab to that
-            var prefabParentTransform = assetDb.transform.Find("Prefabs");
-            if (prefabParentTransform == null) {
-                var prefabParent = new GameObject("Prefabs");
-                prefabParent.transform.parent = assetDb.transform;
-                prefabParent.SetActive(false);
-                prefabParentTransform = prefabParent.transform;
-            }
-            go.transform.parent = prefabParentTransform;
-
-            actionFinished(success: true);
+        public void GetPersistentDataPath() {
+            actionFinished(success: true, actionReturn: Application.persistentDataPath);
         }
 
         public void CreateHouse(ProceduralHouse house) {
@@ -6164,42 +7053,105 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, house);
         }
 
+        protected Dictionary<string, object> getAssetMetadata(GameObject asset) {
+
+            if (asset.GetComponent<SimObjPhysics>() == null) {
+                return null;
+            }
+
+            var simObj = asset.GetComponent<SimObjPhysics>();
+            var bb = simObj.AxisAlignedBoundingBox;
+
+            return new Dictionary<string, object>() {
+                ["name"] = simObj.gameObject.name,
+                ["objectType"] = simObj.Type.ToString(),
+                ["primaryProperty"] = simObj.PrimaryProperty.ToString(),
+                ["secondaryProperties"] = simObj.SecondaryProperties.Select(s => s.ToString()).ToList(),
+                ["boundingBox"] = new BoundingBox() {
+                    min = bb.center - bb.size / 2.0f,
+                    max = bb.center + bb.size / 2.0f
+                }
+            };
+        }
+
         public void GetAssetDatabase() {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
                 errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
             var metadata = new Dictionary<string, Dictionary<string, object>>();
-            foreach (GameObject p in assetDb.prefabs) {
-                if (p.GetComponent<SimObjPhysics>() == null) {
+            foreach (GameObject p in assetDb.GetPrefabs()) {
+
+                var meta = getAssetMetadata(p);
+                if (meta == null) {
                     continue;
                 }
 
-                var simObj = p.GetComponent<SimObjPhysics>();
-                var bb = simObj.AxisAlignedBoundingBox;
-
-                if (metadata.ContainsKey(simObj.gameObject.name)) {
+                var name = meta["name"].ToString();
+                if (metadata.ContainsKey(name)) {
                     throw new InvalidOperationException(
-                        $"There are duplicate assets with the name {simObj.gameObject.name}."
+                        $"There are duplicate assets with the name '{name}'."
                     );
-                    continue;
                 }
 
-                metadata.Add(simObj.gameObject.name, new Dictionary<string, object>() {
-                    ["objectType"] = simObj.Type.ToString(),
-                    ["primaryProperty"] = simObj.PrimaryProperty.ToString(),
-                    ["secondaryProperties"] = simObj.SecondaryProperties.Select(s => s.ToString()).ToList(),
-                    ["boundingBox"] = new BoundingBox() {
-                        min = bb.center - bb.size / 2.0f,
-                        max = bb.center + bb.size / 2.0f
-                    }
-                });
+                metadata.Add(name, meta);
             }
 
-            actionFinished(true, metadata);
+            actionFinishedEmit(true, metadata);
+        }
+
+        public void AssetInDatabase(string assetId) {
+            var assetMap = ProceduralTools.getAssetMap();
+
+            actionFinishedEmit(
+                success: true,
+                actionReturn: assetMap.ContainsKey(assetId)
+            );
+        }
+
+        public void TouchProceduralLRUCache(List<string> assetIds) {
+            var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            assetDB.touchProceduralLRUCache(assetIds);
+            actionFinishedEmit(success: true);
+        }
+
+        public void DeleteLRUFromProceduralCache(int assetLimit) {
+            var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDB == null) {
+                errorMessage = "No ProceduralAssetDatabase seems to exist.";
+//                Debug.Log(errorMessage);
+                actionFinishedEmit(success: false);
+                return;
+            }
+//            Debug.Log($"Attempting to remove until {assetLimit}");
+            assetDB.removeLRUItems(assetLimit);
+//            Debug.Log($"Items removed.");
+            actionFinishedEmit(success: true);
+        }
+
+        public void GetLRUCacheKeys() {
+            var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            actionFinishedEmit(
+                success: true,
+                actionReturn: assetDB.assetMap.proceduralAssetQueue.ToList()
+            );
+        }
+
+
+        public void AssetsInDatabase(List<string> assetIds, bool updateProceduralLRUCache = false) {
+            var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            
+            if (updateProceduralLRUCache) {
+                assetDB.touchProceduralLRUCache(assetIds);
+            }
+            var assetMap = assetDB.assetMap;
+            actionFinishedEmit(
+                success: true,
+                actionReturn: assetIds.Select(id => (id, inDatabase: assetMap.ContainsKey(id))).ToDictionary(it => it.id, it => it.inDatabase)
+            );
         }
 
         // returns manually annotated "hole" metadata for connectors like doors of windows, to generate
@@ -6207,7 +7159,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetAssetHoleMetadata(string assetId) {
              var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: "ProceduralAssetDatabase not in scene."
                 );
@@ -6215,7 +7167,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var assetMap = ProceduralTools.getAssetMap();
 
             if (!assetMap.ContainsKey(assetId)) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: $"Asset '{assetId}' is not contained in asset database, you may need to rebuild asset database."
                 );
@@ -6226,14 +7178,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var result = ProceduralTools.getHoleAssetBoundingBox(assetId);
 
             if (result == null) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: $"Asset '{assetId}' does not have a HoleMetadata component, it's probably not a connector like a door or window or component has to be added in the prefab."
                 );
             
             }
             else {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     actionReturn: result
                 );
@@ -6296,14 +7248,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
                 errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             var assetMap = ProceduralTools.getAssetMap();
 
             if (!assetMap.ContainsKey(assetId)) {
                 errorMessage = $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -6330,7 +7282,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: "ProceduralAssetDatabase not in scene."
                 );
@@ -6338,7 +7290,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var assetMap = ProceduralTools.getAssetMap();
 
             if (!assetMap.ContainsKey(assetId)) {
-                actionFinished(
+                actionFinishedEmit(
                     success: false,
                     errorMessage: $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database."
                 );
@@ -6377,13 +7329,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
                 errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             var assetMap = ProceduralTools.getAssetMap();
             if (!assetMap.ContainsKey(assetId)) {
                 errorMessage = $"Asset '{assetId}' is not contained in asset database, you may need to rebuild asset database.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -6391,18 +7343,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var bounds = GetObjectSphereBounds(asset);
 
-            actionFinished(true, new ObjectSphereBounds() {
+            actionFinishedEmit(true, new ObjectSphereBounds() {
                 id = assetId,
                 worldSpaceCenter = bounds.center,
                 radius = bounds.extents.magnitude
             });
         }
 
-        public void LookAtObjectCenter(string objectId = "asset_0", Color? skyboxColor = null, Vector3? position = null) {
+        public void LookAtObjectCenter(string objectId = "asset_0", Vector3? position = null) {
             var obj = GameObject.Find(objectId);
             if (obj == null) {
                 errorMessage = $"Object does not exist in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             LookAtObjectCenter(obj);
@@ -6414,7 +7366,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var materialDb = ProceduralTools.GetMaterials();
             if (materialDb == null) {
                 errorMessage = "ProceduralAssetDatabase not in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             RenderSettings.skybox = materialDb.getAsset(materialId);
@@ -6432,8 +7384,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // var size = 2.0f * Mathf.Tan(m_Camera.fieldOfView / 2.0f) * bounds.extents.magnitude;
             var radius = bounds.extents.magnitude;
             var dist = radius / Mathf.Tan(m_Camera.fieldOfView / 2.0f);
+            // Debug.Log($"Center: {bounds.center} radius: {radius} dist: {dist} sum: {radius + dist}");
             m_CharacterController.transform.rotation = Quaternion.identity;
             m_CharacterController.transform.position = bounds.center + Vector3.forward * (radius + dist);
+            #if UNITY_EDITOR
+                debugSpheres.Add(new DebugSphere() {
+                    color = Color.yellow,
+                    radius = radius,
+                    worldSpaceCenter = bounds.center
+                });
+            #endif
 
             m_Camera.transform.localPosition = Vector3.zero;
             m_Camera.transform.LookAt(bounds.center, Vector3.up);
@@ -6452,7 +7412,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var obj = GameObject.Find(objectId);
             if (obj == null) {
                 errorMessage = $"Object does not exist in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
 
@@ -6464,7 +7424,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var obj = GameObject.Find(objectId);
             if (obj == null) {
                 errorMessage = $"Object does not exist in scene.";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
             var bounds = GetObjectSphereBounds(obj);
@@ -6485,11 +7445,96 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void BakeNavMesh() {
             var navmesh = GameObject.FindObjectOfType<NavMeshSurface>();
             if (navmesh == null) {
-                actionFinished(false, null, "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouse`.");
+                actionFinishedEmit(false, null, "No NavMeshSurface component found, make sure scene was proceduraly created by `CreateHouse`.");
                 return;
             }
+            ProceduralTools.tagObjectNavmesh(this.gameObject, ignore: true);
             navmesh.BuildNavMesh();
-            actionFinished(true);
+            actionFinishedEmit(true);
+        }
+
+        public void OverwriteNavMeshes(List<NavMeshConfig> navMeshConfigs) {
+            var navmesh = GameObject.FindObjectOfType<NavMeshSurfaceExtended>();
+            Transform parent;
+            if (navmesh == null) { 
+                var go = GameObject.Find(ProceduralTools.NavMeshSurfaceParent());
+                if (go == null) {
+                    actionFinishedEmit(false, null, $"No '{ProceduralTools.NavMeshSurfaceParent()}' gameobject found, make sure scene was proceduraly created by `CreateHouse`.");
+                    return;
+                }
+                parent = go.transform;
+            }
+            else {
+                parent = navmesh.transform.parent;
+            }
+            var floorGo = parent.parent;
+
+            for (var i =0; i< parent.transform.childCount;  i++) {
+                var navmeshObj = parent.transform.GetChild(i);
+                var navMeshSurf = navmeshObj.GetComponent<NavMeshSurfaceExtended>();
+                navMeshSurf.RemoveData();
+                Destroy(navmeshObj.gameObject);
+            }
+            Destroy(parent.gameObject);
+
+            
+            ProceduralTools.buildNavMeshes(floorGo.gameObject, navMeshConfigs);
+            actionFinishedEmit(success: true);
+
+        }
+
+        public void ReBakeNavMeshes(List<NavMeshConfig> navMeshConfigs = null) {
+            var navmeshes = GameObject.FindObjectsOfType<NavMeshSurfaceExtended>();
+            if (navmeshes == null || navmeshes.Count() == 0) {
+                actionFinishedEmit(false, null, "No NavMeshSurfaceExtended component found, make sure scene was proceduraly created by `CreateHouse`.");
+                return;
+            }
+            if (navMeshConfigs != null && navMeshConfigs.Count != navmeshes.Count()) {
+                actionFinishedEmit(success: false, errorMessage: $"Provided `navMeshConfigs` count does not match active navmeshSurfaces, provided: {navMeshConfigs.Count} current: {navmeshes.Count()}");
+            } 
+            else if (navMeshConfigs != null){
+                for (var i = 0; i < navmeshes.Count(); i++) {
+                    navmeshes[i].BuildNavMesh(ProceduralTools.navMeshConfigToBuildSettings(navMeshConfigs[i]));
+                }
+            }
+            else {
+                foreach (var navmesh in navmeshes) {
+                    navmesh.BuildNavMesh(navmesh.buildSettings);
+                }
+            }
+            actionFinishedEmit(success: true);
+        }
+
+        public void GetNavMeshConfigs() {
+            var navmeshes = GameObject.FindObjectsOfType<NavMeshSurfaceExtended>();
+            if (navmeshes == null || navmeshes.Count() == 0) {
+                actionFinishedEmit(false, null, "No NavMeshSurfaceExtended component found, make sure scene was proceduraly created by `CreateHouse`.");
+                return;
+            }
+            actionFinishedEmit(success: true, actionReturn: navmeshes.Select(n => ProceduralTools.navMeshBuildSettingsToConfig(n.buildSettings)).ToList());
+
+        }
+
+
+        public void CreateNewNavMesh(NavMeshConfig navMeshConfig) {
+            
+            var navmesh = GameObject.FindObjectOfType<NavMeshSurfaceExtended>();
+             if (navmesh == null) {
+                actionFinishedEmit(false, null, "No NavMeshSurfaceExtended component found, make sure scene was proceduraly created by `CreateHouse`.");
+                return;
+            }
+            var navMeshParent = navmesh.transform.parent;
+
+            var id = NavMeshSurfaceExtended.activeSurfaces.Count();
+            
+
+            var go = ProceduralTools.buildNavMeshSurface(navMeshConfig, id);
+            go.transform.parent = navMeshParent.transform;
+
+           
+            // ProceduralTools.tagObjectNavmesh(this.gameObject, ignore: true);
+            // navmesh.BuildNavMesh();
+            actionFinishedEmit(true);
         }
 
         public void OnTriggerStay(Collider other) {
@@ -6537,6 +7582,102 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
+        protected List<Vector2> approxObjectMask(
+            SimObjPhysics sop, int divisions, int? thirdPartyCameraIndex = null
+        ) {
+            if (divisions <= 2) {
+                throw new ArgumentException("divisions must be >=3");
+            }
+            ObjectOrientedBoundingBox oobb = sop.ObjectOrientedBoundingBox;
+
+            if (oobb == null) {
+                sop.syncBoundingBoxes(forceCacheReset: true, forceCreateObjectOrientedBoundingBox: true);
+                oobb = sop.ObjectOrientedBoundingBox;
+                if (oobb == null) {
+                    throw new ArgumentException($"{sop.objectID} does not have an object oriented bounding box");
+                }
+            }
+            float[][] oobbPoints = oobb.cornerPoints;
+
+            Camera camera = m_Camera;
+            if (thirdPartyCameraIndex.HasValue) {
+                camera = agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value];
+            }
+
+            List<Vector3> worldSpaceCornerPoints = new List<Vector3>();
+            float minX = 1.0f;
+            float maxX = 0.0f;
+            float minY = 1.0f;
+            float maxY = 0.0f;
+            float maxDist = 0.0f;
+            for (int i = 0; i < 8; i++) {
+                Vector3 worldSpaceCornerPoint = new Vector3(oobbPoints[i][0], oobbPoints[i][1], oobbPoints[i][2]);
+                maxDist = Mathf.Max(Vector3.Distance(worldSpaceCornerPoint, camera.transform.position), maxDist);
+                Vector3 viewPoint = camera.WorldToViewportPoint(worldSpaceCornerPoint);
+
+                minX = Math.Min(viewPoint.x, minX);
+                maxX = Math.Max(viewPoint.x, maxX);
+                minY = Math.Min(viewPoint.y, minY);
+                maxY = Math.Max(viewPoint.y, maxY);
+            }
+
+            minX = Math.Max(minX, 0f);
+            maxX = Math.Min(maxX, 1f);
+            minY = Math.Max(minY, 0f);
+            maxY = Math.Min(maxY, 1f);
+
+            List<Vector2> points = new List<Vector2>();
+            if (maxX - minX < 1e-3f || maxY - minY < 1e-3f) {
+                return points;
+            }
+
+            // Here we shift minX and maxX slightly 2% towards one another so that we're
+            // not sampling directly along the boundary
+            float alpha = 0.02f;
+            float shrunkMinX = minX * (1-alpha) + maxX * alpha;
+            float shrunkMaxX = minX * alpha + maxX * (1-alpha);
+
+            // Same for minY and maxY
+            float shrunkMinY = minY * (1-alpha) + maxY * alpha;
+            float shrunkMaxY = minY * alpha + maxY * (1-alpha);
+
+            for (int i = 0; i < divisions; i++) {
+                for (int j = 0; j < divisions; j++) {
+                    float x = shrunkMinX + (shrunkMaxX - shrunkMinX) * i / (divisions - 1);
+                    float y = shrunkMinY + (shrunkMaxY - shrunkMinY) * j / (divisions - 1);
+
+                    // Convert x,y to a worldspace coordinate at distance maxDist from the camera
+                    Vector3 point = camera.ViewportToWorldPoint(new Vector3(x, y, maxDist));
+
+                    if (CheckIfVisibilityPointRaycast(sop: sop, position: point, camera: camera, includeInvisible: false).visible) {
+                        points.Add(new Vector2(x, y));
+                    }
+                }
+            }
+            return points;
+        }
+
+        public void GetApproxObjectMask(
+            string objectId,
+            int divisions = 10,
+            int? thirdPartyCameraIndex = null
+        ) {
+            SimObjPhysics sop = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+            List<Vector2> points = approxObjectMask(
+                sop,
+                divisions: divisions,
+                thirdPartyCameraIndex: thirdPartyCameraIndex
+            );
+            actionFinishedEmit(success: true, actionReturn: points);
+        }
+
+        public void unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
+            ContinuousMovement.unrollSimulatePhysics(
+                enumerator,
+                fixedDeltaTime
+            );
+        }
+
         public void GetSceneBounds() {
             Vector3[] positions = new Vector3[2];
             positions[0] = agentManager.SceneBounds.min;
@@ -6546,7 +7687,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Debug.Log(positions[0]);
             Debug.Log(positions[1]);
 #endif
-            actionFinished(true, positions);
+            actionFinishedEmit(true, positions);
         }
 
         public void GetLights() {
@@ -6629,6 +7770,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Gizmos.color = Color.yellow;
             // Gizmos.DrawWireSphere(objectBounds.center, objectBounds.extents.magnitude);
+            foreach (var sphere in debugSpheres) {
+                Gizmos.color = sphere.color;
+                Gizmos.DrawWireSphere(sphere.worldSpaceCenter, sphere.radius);
+            }
         }
 #endif
 

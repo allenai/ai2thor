@@ -4,11 +4,14 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System;
 using System.Linq;
+using UnityEditor.PackageManager;
 
     public interface MovableContinuous {
         public bool ShouldHalt();
         public void ContinuousUpdate(float fixedDeltaTime);
         public ActionFinished FinishContinuousMove(BaseFPSAgentController controller);
+
+        public string GetHaltMessage();
     }
 
 
@@ -37,7 +40,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Quaternion targetRotation,
             float fixedDeltaTime,
             float radiansPerSecond,
-            bool returnToStartPropIfFailed = false
+            bool returnToStartPropIfFailed = false,
+            Quaternion? secTargetRotation = null
         ) {
             bool teleport = (radiansPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
 
@@ -64,7 +68,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 distanceMetric: (target, current) => Quaternion.Angle(current, target),
                 fixedDeltaTime: fixedDeltaTime,
                 returnToStartPropIfFailed: returnToStartPropIfFailed,
-                epsilon: 1e-3
+                epsilon: 1e-3,
+                secTarget: secTargetRotation
             );
         }
 
@@ -210,7 +215,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     epsilon: 1e-3
                 )
             );
-
         }
 
         public static IEnumerator continuousUpdateAB(            
@@ -252,10 +256,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Func<T, T, float> distanceMetric,
             float fixedDeltaTime,
             bool returnToStartPropIfFailed,
-            double epsilon
-            
-        ) {
-            Debug.Log("starting updateTransformPropertyFixedUpdate");
+            double epsilon,
+            T? secTarget = null
+        ) where T : struct {
             T originalProperty = getProp(moveTransform);
             var previousProperty = originalProperty;
 
@@ -266,32 +269,55 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // commenting out the WaitForEndOfFrame here since we shoudn't need 
             // this as we already wait for a frame to pass when we execute each action
             // yield return yieldInstruction;
+            
+            int transformIterations = 1;
+            if (secTarget != null) {
+                transformIterations = 2;
+            }
 
+            T? currentTarget = null;
+            T directionToTarget;
             var currentProperty = getProp(moveTransform);
-            float currentDistance = distanceMetric(target, currentProperty);
-
-            T directionToTarget = getDirection(target, currentProperty);
-
+            Debug.Log("currentProperty is " + currentProperty);
+            float currentDistance = 0;
             bool haveGottenWithinEpsilon = currentDistance <= epsilon;
-            while (!arm.ShouldHalt()) {
-                previousProperty = getProp(moveTransform);
 
-                T next = nextProp(moveTransform, directionToTarget);
-                float nextDistance = distanceMetric(target, next);
-
-                // allows for snapping behaviour to target when the target is close
-                // if nextDistance is too large then it will overshoot, in this case we snap to the target
-                // this can happen if the speed it set high
-                if (
-                    nextDistance <= epsilon
-                    || nextDistance > distanceMetric(target, getProp(moveTransform))
-                ) {
-                    setProp(moveTransform, target);
+            for (int i = 0; i < transformIterations; i++) {
+                // This syntax is a new method of pattern-matching that was introduced in C# 7.0, where the type check and
+                // variable assignment are performed in a single step
+                if (i == 0) {
+                    currentTarget = target;
                 } else {
-                    setProp(moveTransform, next);
+                    currentTarget = (T)secTarget;
                 }
-                Debug.Log("1");
-                // update?.Invoke();
+
+                currentDistance = distanceMetric((T)currentTarget, currentProperty);
+                directionToTarget = getDirection((T)currentTarget, currentProperty);
+
+                // view target rotation
+                // if (currentTarget is Quaternion printTarget) {
+                //     Debug.Log("Oh, currentTarget is " + printTarget.eulerAngles.y);
+                // }
+
+                while (!arm.ShouldHalt()) {
+                // TODO: put in movable && !collisionListener.TransformChecks(controller, moveTransform)) {
+                    previousProperty = getProp(moveTransform);
+
+                    T next = nextProp(moveTransform, directionToTarget);
+
+                    float nextDistance = distanceMetric((T)currentTarget, next);
+                    
+                    // allows for snapping behaviour to target when the target is close
+                    // if nextDistance is too large then it will overshoot, in this case we snap to the target
+                    // this can happen if the speed it set high
+                    if (
+                        nextDistance <= epsilon
+                        || nextDistance > distanceMetric((T)currentTarget, getProp(moveTransform))
+                    ) {
+                        setProp(moveTransform, (T)currentTarget);
+                    } else {
+                        setProp(moveTransform, next);
+                    }
 
                 // this will be a NOOP for Rotate/Move/Height actions
                 arm.ContinuousUpdate(fixedDeltaTime);
@@ -307,22 +333,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 Debug.Log("3.2");
 
-                yield return new WaitForFixedUpdate();
+                    yield return new WaitForFixedUpdate();
 
-                currentDistance = distanceMetric(target, getProp(moveTransform));
-                Debug.Log("3.3");
+                    currentDistance = distanceMetric((T)currentTarget, getProp(moveTransform));
 
-                if (currentDistance <= epsilon) {
-                    // This logic is a bit unintuitive but it ensures we run the
-                    // `setProp(moveTransform, target);` line above once we get within epsilon
-                    if (haveGottenWithinEpsilon) {
-                        break;
-                    } else {
-                        haveGottenWithinEpsilon = true;
+                    if (currentDistance <= epsilon) {
+                        // This logic is a bit unintuitive but it ensures we run the
+                        // `setProp(moveTransform, currentTarget);` line above once we get within epsilon
+                        if (haveGottenWithinEpsilon) {
+                            break;
+                        } else {
+                            haveGottenWithinEpsilon = true;
+                        }
                     }
                 }
-                Debug.Log("3.4");
-
             }
 
             Debug.Log("4");
@@ -335,7 +359,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 arm,
                 moveTransform,
                 setProp,
-                target,
                 resetProp
             );
 
@@ -348,34 +371,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private static ActionFinished continuousMoveFinish<T>(
-            ArmController arm,
+            MovableContinuous movable,
             Transform moveTransform,
             System.Action<Transform, T> setProp,
-            T target,
             T resetProp
         ) {
-            bool actionSuccess = true;
-            string errorMessage = "";
-
-            var staticCollisions = arm.collisionListener?.StaticCollisions().ToList();
-
-            if (staticCollisions.Count > 0) {
-                var sc = staticCollisions[0];
-
-                // decide if we want to return to original property or last known property before collision
-                setProp(moveTransform, resetProp);
-
-                // if we hit a sim object
-                if (sc.isSimObj) {
-                    errorMessage = "Collided with static/kinematic sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
-                }
-
-                // if we hit a structural object that isn't a sim object but still has static collision
-                if (!sc.isSimObj) {
-                    errorMessage = "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + target + "'.";
-                }
-
-                actionSuccess = false;
+            bool actionSuccess = !movable.ShouldHalt();
+            string errorMessage = movable.GetHaltMessage();
+            if (actionSuccess) {
+                 setProp(moveTransform, resetProp);
             }
 
             return new ActionFinished() {

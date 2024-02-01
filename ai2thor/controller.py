@@ -27,7 +27,7 @@ from functools import lru_cache
 from itertools import product
 from platform import architecture as platform_architecture
 from platform import system as platform_system
-from typing import Dict, Any, Union, Optional
+from typing import Dict, Any, Union, Optional, List
 
 import numpy as np
 
@@ -37,10 +37,12 @@ import ai2thor.platform
 import ai2thor.wsgi_server
 from ai2thor._quality_settings import DEFAULT_QUALITY, QUALITY_SETTINGS
 from ai2thor.exceptions import RestartError, UnityCrashException
+from ai2thor.hooks.metadata_hook import MetadataHook
 from ai2thor.interact import DefaultActions, InteractiveControllerPrompt
-from ai2thor.server import DepthFormat
+from ai2thor.server import DepthFormat, Event, MetadataWrapper
 from ai2thor.util import atomic_write, makedirs
 from ai2thor.util.lock import LockEx
+from ai2thor.util.runtime_assets import create_assets
 
 logger = logging.getLogger(__name__)
 
@@ -397,6 +399,11 @@ class Controller(object):
         platform=None,
         server_timeout: Optional[float] = 100.0,
         server_start_timeout: float = 300.0,
+        runtime_assets_dir="",
+        runtime_asset_ids: Optional[List] = None,
+        # objaverse_asset_ids=[], TODO add and implement when objaverse.load_thor_objects is available
+        action_hook_runner=None,
+        metadata_hook: Optional[MetadataHook] = None,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -438,8 +445,24 @@ class Controller(object):
             )
         )
 
-        if self.gpu_device is not None:
+        if runtime_asset_ids is None:
+            runtime_asset_ids = []
 
+        self.action_hook_runner = action_hook_runner
+        self.action_hooks = (
+            {
+                func
+                for func in dir(action_hook_runner)
+                if callable(getattr(action_hook_runner, func))
+                and not func.startswith("__")
+            }
+            if self.action_hook_runner is not None
+            else None
+        )
+
+        self.metadata_hook = metadata_hook
+
+        if self.gpu_device is not None:
             # numbers.Integral works for numpy.int32/64 and Python int
             if not isinstance(self.gpu_device, numbers.Integral) or self.gpu_device < 0:
                 raise ValueError(
@@ -599,8 +622,14 @@ class Controller(object):
                 self.server.set_init_params(init_return)
                 logging.info(f"Initialize return: {init_return}")
 
-    def _build_server(self, host, port, width, height):
+            if len(runtime_asset_ids):
+                create_assets(
+                    self,
+                    asset_ids=runtime_asset_ids,
+                    asset_directory=runtime_assets_dir,
+                )
 
+    def _build_server(self, host, port, width, height):
         if self.server is not None:
             return
 
@@ -623,8 +652,8 @@ class Controller(object):
             )
 
         elif self.server_class == ai2thor.fifo_server.FifoServer:
-            #Not supported on Windows
-            if os.name == 'nt':
+            # Not supported on Windows
+            if os.name == "nt":
                 raise ValueError("FIFO server not supported on Windows platform.")
             self.server = ai2thor.fifo_server.FifoServer(
                 width=width,
@@ -757,9 +786,19 @@ class Controller(object):
         elif server_type == ai2thor.wsgi_server.WsgiServer.server_type:
             return ai2thor.wsgi_server.WsgiServer
         else:
-            valid_servers = str.join([f"'{x}'" for x in [ai2thor.fifo_server.FifoServer.server_type, ai2thor.wsgi_server.WsgiServer.server_type]], ",")
-            raise ValueError(f"Invalid server type '{server_type}'. Only valid values: {valid_servers} ")
-
+            valid_servers = str.join(
+                [
+                    f"'{x}'"
+                    for x in [
+                        ai2thor.fifo_server.FifoServer.server_type,
+                        ai2thor.wsgi_server.WsgiServer.server_type,
+                    ]
+                ],
+                ",",
+            )
+            raise ValueError(
+                f"Invalid server type '{server_type}'. Only valid values: {valid_servers} "
+            )
 
     def random_initialize(
         self,
@@ -770,7 +809,6 @@ class Controller(object):
         max_num_repeats=1,
         remove_prob=0.5,
     ):
-
         raise Exception(
             "RandomInitialize has been removed.  Use InitialRandomSpawn - https://ai2thor.allenai.org/ithor/documentation/actions/initialization/#object-position-randomization"
         )
@@ -951,10 +989,43 @@ class Controller(object):
 
         return events
 
-    def step(self, action: Union[str, Dict[str, Any]]=None, **action_args):
+    def run_action_hook(self, action):
+        if self.action_hooks is not None and action["action"] in self.action_hooks:
+            try:
+                # print(f"action hooks: {self.action_hooks}")
+                method = getattr(self.action_hook_runner, action["action"])
+                event = method(action, self)
+                if isinstance(event, list):
+                    self.last_event = event[-1]
+                elif isinstance(event, object):
+                    self.last_event = event
+            except AttributeError:
+                traceback.print_stack()
+                raise NotImplementedError(
+                    "Action Hook Runner `{}` does not implement method `{}`,"
+                    " actions hooks are meant to run before an action, make sure that `action_hook_runner`"
+                    " passed to the controller implements a method for the desired action.".format(
+                        self.action_hook_runner.__class__.__name__, action["action"]
+                    )
+                )
+            return True
+        return False
 
+    def run_metadata_hook(self, metadata: MetadataWrapper) -> bool:
+        if self.metadata_hook is not None:
+            out = self.metadata_hook(metadata=metadata, controller=self)
+            assert (
+                out is None
+            ), "`metadata_hook` must return `None` and change the metadata in place."
+            return True
+        return False
+
+    def step(self, action: Union[str, Dict[str, Any]] = None, **action_args):
         if isinstance(action, Dict):
-            action = copy.deepcopy(action)  # prevent changes from leaking
+            # We attempt to prevent changes from leaking, doing a deep copy
+            # isn't a good idea as the action may have huge arguments (e.g. when
+            # generating a house)
+            action = {**action}
         else:
             action = dict(action=action)
 
@@ -963,9 +1034,6 @@ class Controller(object):
 
         if self.headless:
             action["renderImage"] = False
-
-        # prevent changes to the action from leaking
-        action = copy.deepcopy(action)
 
         # XXX should be able to get rid of this with some sort of deprecation warning
         if "AI2THOR_VISIBILITY_DISTANCE" in os.environ:
@@ -995,9 +1063,12 @@ class Controller(object):
                 # not deleting to allow for older builds to continue to work
                 # del action[old]
 
+        self.run_action_hook(action)
+
         self.server.send(action)
         try:
             self.last_event = self.server.receive()
+            self.run_metadata_hook(metadata=self.last_event.metadata)
         except UnityCrashException:
             self.server.stop()
             self.server = None
@@ -1005,8 +1076,11 @@ class Controller(object):
             # is only thrown from the FifoServer, start_unity is also
             # not passed since Unity would have to have been started
             # for this to be thrown
+            action_as_str = str(action)
+            if len(action_as_str) > 1000:
+                action_as_str = action_as_str[:950] + " ... " + action_as_str[-50:]
             message = (
-                f"Restarting unity due to crash when when running action {action}"
+                f"Restarting unity due to crash when when running action {action_as_str}"
                 f" in scene {self.last_event.metadata['sceneName']}:\n{traceback.format_exc()}"
             )
             warnings.warn(message)
@@ -1015,8 +1089,11 @@ class Controller(object):
             raise RestartError(message)
         except Exception as e:
             self.server.stop()
+            action_as_str = str(action)
+            if len(action_as_str) > 1000:
+                action_as_str = action_as_str[:950] + " ... " + action_as_str[-50:]
             raise (TimeoutError if isinstance(e, TimeoutError) else RuntimeError)(
-                f"Error encountered when running action {action}"
+                f"Error encountered when running action {action_as_str}"
                 f" in scene {self.last_event.metadata['sceneName']}."
             )
 
@@ -1054,7 +1131,9 @@ class Controller(object):
             # code finds the device_uuids for each GPU and then figures out the mapping
             # between the CUDA device ids and the Vulkan device ids.
 
-            cuda_vulkan_mapping_path = os.path.join(self.base_dir, "cuda-vulkan-mapping.json")
+            cuda_vulkan_mapping_path = os.path.join(
+                self.base_dir, "cuda-vulkan-mapping.json"
+            )
             with LockEx(cuda_vulkan_mapping_path):
                 if not os.path.exists(cuda_vulkan_mapping_path):
                     vulkan_result = None
@@ -1063,7 +1142,7 @@ class Controller(object):
                             ["vulkaninfo"],
                             stdout=subprocess.PIPE,
                             stderr=subprocess.DEVNULL,
-                            universal_newlines=True
+                            universal_newlines=True,
                         )
                     except FileNotFoundError:
                         pass
@@ -1083,9 +1162,14 @@ class Controller(object):
                         elif "deviceUUID" in l:
                             device_uuid = l.split("=")[1].strip()
                             if device_uuid in device_uuid_to_vulkan_gpu_index:
-                                assert current_gpu == device_uuid_to_vulkan_gpu_index[device_uuid]
+                                assert (
+                                    current_gpu
+                                    == device_uuid_to_vulkan_gpu_index[device_uuid]
+                                )
                             else:
-                                device_uuid_to_vulkan_gpu_index[device_uuid] = current_gpu
+                                device_uuid_to_vulkan_gpu_index[
+                                    device_uuid
+                                ] = current_gpu
 
                     nvidiasmi_result = None
                     try:
@@ -1093,7 +1177,7 @@ class Controller(object):
                             ["nvidia-smi", "-L"],
                             stdout=subprocess.PIPE,
                             stderr=subprocess.DEVNULL,
-                            universal_newlines=True
+                            universal_newlines=True,
                         )
                     except FileNotFoundError:
                         pass
@@ -1111,23 +1195,32 @@ class Controller(object):
 
                         current_gpu = int(gpu_match.group(1))
                         uuid_match = re.match(".*\\(UUID: GPU-([^)]+)\\)", l)
-                        nvidia_gpu_index_to_device_uuid[current_gpu] = uuid_match.group(1)
+                        nvidia_gpu_index_to_device_uuid[current_gpu] = uuid_match.group(
+                            1
+                        )
 
                     cuda_vulkan_mapping = {}
-                    for cuda_gpu_index, device_uuid in nvidia_gpu_index_to_device_uuid.items():
+                    for (
+                        cuda_gpu_index,
+                        device_uuid,
+                    ) in nvidia_gpu_index_to_device_uuid.items():
                         if device_uuid not in device_uuid_to_vulkan_gpu_index:
                             raise RuntimeError(
                                 f"Could not find a Vulkan device corresponding"
                                 f" to the CUDA device with UUID {device_uuid}."
                             )
-                        cuda_vulkan_mapping[cuda_gpu_index] = device_uuid_to_vulkan_gpu_index[device_uuid]
+                        cuda_vulkan_mapping[
+                            cuda_gpu_index
+                        ] = device_uuid_to_vulkan_gpu_index[device_uuid]
 
                     with open(cuda_vulkan_mapping_path, "w") as f:
                         json.dump(cuda_vulkan_mapping, f)
                 else:
                     with open(cuda_vulkan_mapping_path, "r") as f:
                         # JSON dictionaries always have strings as keys, need to re-map here
-                        cuda_vulkan_mapping = {int(k):v for k, v in json.load(f).items()}
+                        cuda_vulkan_mapping = {
+                            int(k): v for k, v in json.load(f).items()
+                        }
 
             command += f" -force-device-index {cuda_vulkan_mapping[self.gpu_device]}"
 
@@ -1150,15 +1243,15 @@ class Controller(object):
         )
 
         makedirs(self.log_dir)
-        extra_args={}
-        if os.name == 'nt':
+        extra_args = {}
+        if os.name == "nt":
             extra_args = dict(shell=True)
         self.server.unity_proc = proc = subprocess.Popen(
             command,
             env=env,
             stdout=open(os.path.join(self.log_dir, "unity.log"), "a"),
             stderr=open(os.path.join(self.log_dir, "unity.log"), "a"),
-            **extra_args
+            **extra_args,
         )
 
         try:
@@ -1278,7 +1371,6 @@ class Controller(object):
         return [c["sha"] for c in payload]
 
     def local_commits(self):
-
         git_dir = os.path.normpath(
             os.path.dirname(os.path.realpath(__file__)) + "/../.git"
         )
@@ -1305,7 +1397,6 @@ class Controller(object):
             commits = self.local_commits()
 
         if local_build:
-
             releases_dir = os.path.normpath(
                 os.path.dirname(os.path.realpath(__file__)) + "/../unity/builds"
             )
@@ -1412,7 +1503,6 @@ class Controller(object):
         self._build_server(host, port, width, height)
 
         if "AI2THOR_VISIBILITY_DISTANCE" in os.environ:
-
             warnings.warn(
                 "AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use \
                 the parameter visibilityDistance parameter with the Initialize action instead"
@@ -1436,7 +1526,6 @@ class Controller(object):
             raise Exception("Screen resolution must be > 0x0")
 
         if self.server.started:
-
             warnings.warn(
                 "start method depreciated. The server started when the Controller was initialized."
             )
@@ -1452,7 +1541,6 @@ class Controller(object):
         self.server.start()
 
         if start_unity:
-
             self._build.lock_sh()
             self.prune_releases()
 
@@ -1601,7 +1689,6 @@ class BFSController(Controller):
                 graph.add_edge(self.key_for_point(point), self.key_for_point(p))
 
     def move_relative_points(self, all_points, graph, position, rotation):
-
         action_orientation = {
             0: dict(x=0, z=1, action="MoveAhead"),
             90: dict(x=1, z=0, action="MoveRight"),
@@ -1697,7 +1784,6 @@ class BFSController(Controller):
         return actions
 
     def enqueue_point(self, point):
-
         # ensure there are no points near the new point
         if self._check_visited or not any(
             map(
@@ -1709,7 +1795,6 @@ class BFSController(Controller):
             self.queue.append(point)
 
     def enqueue_points(self, agent_position):
-
         if not self.allow_enqueue:
             return
 
@@ -1752,7 +1837,6 @@ class BFSController(Controller):
         current_receptacle_object_pairs,
         randomize=True,
     ):
-
         self.seen_points = []
         self.visited_seen_points = []
         self.queue = deque()
@@ -1935,7 +2019,6 @@ class BFSController(Controller):
         return receptacle_pivot_points, receptacle_points
 
     def find_visible_objects(self):
-
         seen_target_objects = defaultdict(list)
 
         for point in self.grid_points:
@@ -1960,7 +2043,6 @@ class BFSController(Controller):
                     lambda x: x["visible"] and x["pickupable"],
                     event.metadata["objects"],
                 ):
-
                     # if obj['objectId'] in object_receptacle and\
                     #        object_receptacle[obj['objectId']]['openable'] and not \
                     #        object_receptacle[obj['objectId']]['isopen']:
@@ -1999,7 +2081,6 @@ class BFSController(Controller):
                     obj["objectId"] in self.object_receptacle
                     and self.object_receptacle[obj["objectId"]]["openable"]
                 ):
-
                     open_pickupable[oid] = obj["objectId"]
                 else:
                     pickupable[oid] = obj["objectId"]
