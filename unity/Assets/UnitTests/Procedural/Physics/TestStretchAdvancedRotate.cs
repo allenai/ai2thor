@@ -14,8 +14,6 @@ namespace Tests {
             UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan1_physics");
         }
 
-        // These unit-tests assume that the wrist-rotation at initialization is 180 degrees (i.e. fingers facing back towards the main agent body)
-
         [UnityTest]
         public IEnumerator TestAbsoluteRotating() {
 
@@ -26,6 +24,14 @@ namespace Tests {
                     { "renderInstanceSegmentation", true}
                 });
             yield return new WaitForSeconds(2f);
+
+            // set wrist to default 180-state (i.e. fingers facing back towards the main agent body)
+            yield return step(new Dictionary<string, object>() {
+                    { "action", "RotateWrist"},
+                    { "yaw", 180f},
+                    { "disableRendering", true},
+                    { "returnToStart", false}
+                });
 
             // These two commands stress-test the degree input-normalization, the procedural directionality, AND the dead-zone encroachment of the wrist-rotation
             yield return step(new Dictionary<string, object>() {
@@ -57,6 +63,14 @@ namespace Tests {
                     { "renderInstanceSegmentation", true}
                 });
             yield return new WaitForSeconds(2f);
+
+            // set wrist to default 180-state (i.e. fingers facing back towards the main agent body)
+            yield return step(new Dictionary<string, object>() {
+                    { "action", "RotateWrist"},
+                    { "yaw", 180f},
+                    { "disableRendering", true},
+                    { "returnToStart", false}
+                });
             
             // These two commands stress-test the degree input-normalization AND the dead-zone encroachment of the wrist relative-rotation
             yield return step(new Dictionary<string, object>() {
