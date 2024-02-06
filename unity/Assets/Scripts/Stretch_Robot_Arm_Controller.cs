@@ -9,7 +9,8 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
     [SerializeField]
     private Transform armBase, handCameraTransform, FirstJoint;
 
-    private PhysicsRemoteFPSAgentController PhysicsController;
+    [SerializeField]
+    public PhysicsRemoteFPSAgentController PhysicsController;
 
     // Distance from joint containing gripper camera to armTarget
     private Vector3 WristToManipulator = new Vector3 (0, -0.09872628f, 0);
@@ -141,6 +142,143 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
         armTarget.rotation = rot;
     }
 
+    
+    // public  override IEnumerator rotateWrist(
+    //     PhysicsRemoteFPSAgentController controller,
+    //     Quaternion rotation,
+    //     float degreesPerSecond,
+    //     float fixedDeltaTime,
+    //     bool returnToStartPositionIfFailed
+    // ) {
+        
+    // }
+    public void rotateWrist(
+        PhysicsRemoteFPSAgentController controller,
+        float rotation,
+        float degreesPerSecond,
+        bool disableRendering = false,
+        float fixedDeltaTime = 0.02f,
+        bool returnToStartPositionIfFailed = false,
+        bool isRelativeRotation = true
+    ) {
+
+        // float clockwiseLocalRotationLimit = 77.5f;
+        // float counterClockwiseLocalRotationLimit = 102.5f;
+        float currentContinuousRotation, targetRelativeRotation, targetContinuousRotation;
+        float continuousClockwiseLocalRotationLimit = wristClockwiseLocalRotationLimit;
+        float continuousCounterClockwiseLocalRotationLimit = wristCounterClockwiseLocalRotationLimit;
+
+        currentContinuousRotation = armTarget.transform.localEulerAngles.y;
+        Quaternion targetRotation;
+        Quaternion? secTargetRotation = null;
+
+        // currentContinuousRotation is the start-rotation state on the bounds number-range
+        // targetContinuousRotation is the end-rotation state on the bounds number-range
+        // (which allows acute and obtuse rotation end-states to be distinct)
+        // targetRelativeRotation is simply the final relative-rotation
+        if (isRelativeRotation) {
+            if (Mathf.Abs(rotation) <= 180) {
+                targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,rotation,0);
+            } else {
+                // Calculate target and secTargetRotation
+                targetRelativeRotation = rotation / 2;
+                targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,targetRelativeRotation,0);
+                secTargetRotation = targetRotation * Quaternion.Euler(0,targetRelativeRotation,0);
+            }
+        } else {
+            // Consolidate reachable euler-rotations (which are normally bounded by [0, 360)) into a continuous number line,
+            // bounded instead by [continuousCounterClockwiseLocalRotationLimit, continuousClockwiseLocalRotationLimit + 360)
+            if (continuousClockwiseLocalRotationLimit < continuousCounterClockwiseLocalRotationLimit) {
+                continuousClockwiseLocalRotationLimit += 360;
+                if (currentContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
+                    currentContinuousRotation += 360;
+                }
+            }
+
+            targetContinuousRotation = currentContinuousRotation + rotation;
+
+            // if angle is reachable via non-reflex rotation
+            if (targetContinuousRotation > continuousCounterClockwiseLocalRotationLimit
+                && targetContinuousRotation < continuousClockwiseLocalRotationLimit) {
+                targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,rotation,0);
+            
+            // if angle is NOT reachable, find how close it can get from that direction
+            } else {
+                float nonReflexAngularDistance, reflexAngularDistance;
+
+                // Calculate proximity of non-reflex angle extreme to target
+                if (targetContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
+                    nonReflexAngularDistance = continuousCounterClockwiseLocalRotationLimit - targetContinuousRotation;
+                } else {
+                    nonReflexAngularDistance = targetContinuousRotation - continuousClockwiseLocalRotationLimit;
+                }
+
+                // Reflex targetContinuousRotation calculation
+                targetRelativeRotation = (Mathf.Abs(rotation) - 360) * Mathf.Sign(rotation) / 2;
+                float secTargetContinuousRotation = currentContinuousRotation + 2 * targetRelativeRotation;
+
+                // If angle is reachable via reflex rotation
+                if (secTargetContinuousRotation > continuousCounterClockwiseLocalRotationLimit
+                    && secTargetContinuousRotation < continuousClockwiseLocalRotationLimit)
+                {
+                    targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,targetRelativeRotation,0);
+                    secTargetRotation = targetRotation * Quaternion.Euler(0,targetRelativeRotation,0);
+                } else {
+                    // Calculate proximity of reflex angle extreme to target
+                    if (secTargetContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
+                        reflexAngularDistance = continuousCounterClockwiseLocalRotationLimit - secTargetContinuousRotation;
+                    } else {// if (secTargetContinuousRotation > continuousClockwiseLocalRotationLimit) {
+                        reflexAngularDistance = secTargetContinuousRotation - continuousClockwiseLocalRotationLimit;
+                    }
+
+                    // Calculate which distance gets wrist closer to target
+                    if (nonReflexAngularDistance <= reflexAngularDistance) {
+                        targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,rotation,0);
+                    } else {
+                        targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,targetRelativeRotation,0);
+                        secTargetRotation = targetRotation * Quaternion.Euler(0,targetRelativeRotation,0);
+                    }
+                }
+            }
+        }
+
+        // view target rotation
+        // Debug.Log("Rotating to " + targetRotation.eulerAngles + " degrees");
+        // if (secTargetRotation is Quaternion currentSecTargetRotation) {
+        //     Debug.Log("Rotating to " + targetRotation.eulerAngles + " degrees, and then to " + currentSecTargetRotation.eulerAngles);
+        // }
+
+        // Rotate wrist
+        collisionListener.Reset();
+
+        // Activate check for dead-zone encroachment inside of CollisionListener
+        collisionListener.enableDeadZoneCheck();
+
+        // IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
+        //     ContinuousMovement.rotate(
+        //         controller,
+        //         collisionListener,
+        //         armTarget.transform,
+        //         targetRotation,
+        //         disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+        //         degreesPerSecond,
+        //         returnToStartPositionIfFailed,
+        //         secTargetRotation
+        //     )
+        // );
+
+        // if (disableRendering) {
+        //     controller.unrollSimulatePhysics(
+        //         rotate,
+        //         fixedDeltaTime
+        //     );
+
+        // } else {
+        //     StartCoroutine(rotate);
+        // }
+        
+    }
+
     public override ArmMetadata GenerateMetadata() {
         ArmMetadata meta = new ArmMetadata();
         // meta.handTarget = armTarget.position;
@@ -248,12 +386,17 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
 
         meta.heldObjects = heldObjectIDs;
         meta.handSphereCenter = magnetSphere.transform.TransformPoint(magnetSphere.center);
+
+        meta.rootRelativeHandSphereCenter = armBase.InverseTransformPoint(meta.handSphereCenter);
+
         meta.handSphereRadius = magnetSphere.radius;
         List<SimObjPhysics> objectsInMagnet = WhatObjectsAreInsideMagnetSphereAsSOP(false);
         meta.pickupableObjects = objectsInMagnet.Where(
             x => x.PrimaryProperty == SimObjPrimaryProperty.CanPickup
         ).Select(x => x.ObjectID).ToList();
         meta.touchedNotHeldObjects = objectsInMagnet.Select(x => x.ObjectID).ToList();
+        meta.gripperOpennessState = ((StretchAgentController) PhysicsController).gripperOpennessState;
+        
         return meta;
     }
 

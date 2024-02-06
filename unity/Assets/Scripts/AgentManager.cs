@@ -1708,6 +1708,10 @@ public class ArmMetadata {
     // world coordinates of the center of the hand's sphere
     public Vector3 handSphereCenter;
 
+    public Vector3 rootRelativeHandSphereCenter;
+
+    public int gripperOpennessState;
+
     // current radius of the hand sphere
     public float handSphereRadius;
 }

@@ -306,6 +306,9 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 return shouldStop;
             }
         }
+    
+        // TODO remove from API
+        public virtual string GetHaltMessage() { return ""; }
 
     public ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
         Debug.Log("starting continuousMoveFinishAB");

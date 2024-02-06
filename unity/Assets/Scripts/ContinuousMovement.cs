@@ -227,7 +227,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             while(!movable.ShouldHalt())
             {
                 movable.ContinuousUpdate(fixedDeltaTime);
-                //Debug.Log($"what is autosim state: {Physics.autoSimulation}");
+                // TODO: Remove below?
                 if (!Physics.autoSimulation) {
                     //Debug.Log("manual simulate from PhysicsManager");
                     PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
@@ -294,7 +294,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 currentDistance = distanceMetric((T)currentTarget, currentProperty);
                 directionToTarget = getDirection((T)currentTarget, currentProperty);
 
-                // view target rotation
+                // // view target rotation
                 // if (currentTarget is Quaternion printTarget) {
                 //     Debug.Log("Oh, currentTarget is " + printTarget.eulerAngles.y);
                 // }
