@@ -69,6 +69,9 @@ namespace Tests {
                 });
             yield return new WaitForSeconds(2f);
 
+            Debug.Log("0 rot_manipulator " + GameObject.Find("stretch_robot_pos_rot_manipulator").transform.eulerAngles.y);
+
+
             // set wrist to default 180-state (i.e. fingers facing back towards the main agent body)
             yield return step(new Dictionary<string, object>() {
                     { "action", "RotateWrist"},
@@ -76,6 +79,9 @@ namespace Tests {
                     { "physicsSimulationParams", new PhysicsSimulationParams() { autoSimulation = false}},
                     { "returnToStart", false}
                 });
+
+            Debug.Log("180 rot_manipulator " + GameObject.Find("stretch_robot_pos_rot_manipulator").transform.eulerAngles.y);
+
             
             // These two commands stress-test the degree input-normalization AND the dead-zone encroachment of the wrist relative-rotation
             yield return step(new Dictionary<string, object>() {
@@ -84,6 +90,8 @@ namespace Tests {
                     { "physicsSimulationParams", new PhysicsSimulationParams() { autoSimulation = false}},
                     { "returnToStart", false}
                 });
+            Debug.Log("630 rot_manipulator " + GameObject.Find("stretch_robot_pos_rot_manipulator").transform.eulerAngles.y);
+
             Assert.AreEqual(Mathf.Approximately(GameObject.Find("stretch_robot_pos_rot_manipulator").transform.eulerAngles.y, 69.56489f), true);
 
             yield return step(new Dictionary<string, object>() {
@@ -92,6 +100,8 @@ namespace Tests {
                     { "physicsSimulationParams", new PhysicsSimulationParams() { autoSimulation = false}},
                     { "returnToStart", false}
                 });
+            Debug.Log("-699 rot_manipulator " + GameObject.Find("stretch_robot_pos_rot_manipulator").transform.eulerAngles.y);
+
             Assert.AreEqual(Mathf.Approximately(GameObject.Find("stretch_robot_pos_rot_manipulator").transform.eulerAngles.y, 110.8419f), true);
         }
 
