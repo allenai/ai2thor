@@ -78,7 +78,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
         var errorMessage = base.GetHaltMessage();
         if (errorMessage == "") {
             if (DeadZoneCheck()) {
-                errorMessage = "Rotated up against Stretch arm wrist's dead-zone, could not reach target: '" + armTarget + "'.";
+                errorMessage = "Rotated up against Stretch arm wrist's dead-zone, could not reach target: '" + armTarget.rotation + "'.";
             }
         }
         return errorMessage;
@@ -136,12 +136,17 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
     }
 
     protected override void lastStepCallback() {
-        Vector3 pos = handCameraTransform.transform.position + WristToManipulator;
-        Quaternion rot = handCameraTransform.transform.rotation;
-        armTarget.position = pos;
-        armTarget.rotation = rot;
+        // Vector3 pos = handCameraTransform.transform.position + WristToManipulator;
+        // Quaternion rot = handCameraTransform.transform.rotation;
+        // armTarget.position = pos;
+        // armTarget.rotation = rot;
+        setDeadZoneCheck(false);
     }
+    
 
+    public void setDeadZoneCheck(bool enabled) {
+        deadZoneCheck = enabled;
+    }
     
     
     public IEnumerator rotateWrist(
@@ -154,7 +159,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
 
         // float clockwiseLocalRotationLimit = 77.5f;
         // float counterClockwiseLocalRotationLimit = 102.5f;
-        float currentContinuousRotation, targetRelativeRotation, targetContinuousRotation;
+        float currentContinuousRotation, targetRelativeRotation=0.0f, targetContinuousRotation;
         float continuousClockwiseLocalRotationLimit = wristClockwiseLocalRotationLimit;
         float continuousCounterClockwiseLocalRotationLimit = wristCounterClockwiseLocalRotationLimit;
 
@@ -238,11 +243,14 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
         //     Debug.Log("Rotating to " + targetRotation.eulerAngles + " degrees, and then to " + currentSecTargetRotation.eulerAngles);
         // }
 
+        Debug.Log($"Rotate wrist args rotation: {targetRelativeRotation}, rotation {targetRotation.eulerAngles} sec {secTargetRotation?.eulerAngles}");
+
         // Rotate wrist
         collisionListener.Reset();
+        setDeadZoneCheck(true);
 
         // Activate check for dead-zone encroachment inside of CollisionListener
-        collisionListener.enableDeadZoneCheck();
+        // collisionListener.enableDeadZoneCheck();
 
         yield return withLastStepCallback(
             ContinuousMovement.rotate(

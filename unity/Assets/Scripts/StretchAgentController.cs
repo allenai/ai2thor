@@ -226,7 +226,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void RotateWrist(
+        public IEnumerator RotateWrist(
             float pitch = 0f,
             float yaw = 0f,
             float roll = 0f,
@@ -256,7 +256,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 yaw = (Mathf.Abs(yaw) - 360) * Mathf.Sign(yaw);
             }
 
-            arm.rotateWrist(
+            return arm.rotateWrist(
                 controller: this,
                 rotation: yaw,
                 degreesPerSecond: speed,

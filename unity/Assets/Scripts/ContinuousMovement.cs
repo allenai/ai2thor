@@ -321,17 +321,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // this will be a NOOP for Rotate/Move/Height actions
                 arm.ContinuousUpdate(fixedDeltaTime);
-                Debug.Log("2");
+                //Debug.Log("2");
 
                 if (!Physics.autoSimulation) {
-                Debug.Log("3.1");
+                //Debug.Log("3.1");
                     if (fixedDeltaTime == 0f) {
                         Physics.SyncTransforms();
                     } else {
                         PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
                     }
                 }
-                Debug.Log("3.2");
+                //Debug.Log("3.2");
 
                     yield return new WaitForFixedUpdate();
 
@@ -349,12 +349,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            Debug.Log("4");
+            //Debug.Log("4");
             T resetProp = previousProperty;
             if (returnToStartPropIfFailed) {
                 resetProp = originalProperty;
             }
-            Debug.Log("about to continuousMoveFinish");
+            //Debug.Log("about to continuousMoveFinish");
             var actionFinished = continuousMoveFinish(
                 arm,
                 moveTransform,
@@ -379,7 +379,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             bool actionSuccess = !movable.ShouldHalt();
             string errorMessage = movable.GetHaltMessage();
-            if (actionSuccess) {
+            if (!actionSuccess) {
                  setProp(moveTransform, resetProp);
             }
 
