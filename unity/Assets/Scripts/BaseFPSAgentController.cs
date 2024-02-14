@@ -683,7 +683,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void Initialize(ServerAction action) {
 
-            Debug.Log("RUNNING B");
+            // Debug.Log("RUNNING B");
             // limit camera from looking too far down/up
             //default max are 30 up and 60 down, different agent types may overwrite this
             if (Mathf.Approximately(action.maxUpwardLookAngle, 0.0f)) {
@@ -841,7 +841,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 float[] xs = new float[] { grid_x1, grid_x1 + gridSize };
                 float[] zs = new float[] { grid_z1, grid_z1 + gridSize };
                 List<Vector3> validMovements = new List<Vector3>();
-                Debug.Log("STAGE 1. Starting position is (" + this.transform.position.x + ", " + this.transform.position.y + ", " + this.transform.position.z + ")");
                 foreach (float x in xs) {
                     foreach (float z in zs) {
                         this.transform.position = startingPosition;
@@ -853,16 +852,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         
                         Vector3 dir = target - this.transform.position;
                         Vector3 movement = dir.normalized * 100.0f;
-                        Debug.Log("Target is at " + target + ", dir is at " + dir.y + ", and movement is " + movement);
+                        // Debug.Log("Target is at " + target + ", dir is at " + dir.y + ", and movement is " + movement);
                         if (movement.magnitude > dir.magnitude) {
                             movement = dir;
                         }
-                        Debug.Log("PRE: movement-y is " + movement.y);
+                        // Debug.Log("PRE: movement-y is " + movement.y);
                         movement.y = Physics.gravity.y * this.m_GravityMultiplier;
-                        Debug.Log("POST: movement-y is  " + movement.y);
+                        // Debug.Log("POST: movement-y is  " + movement.y);
                     if (agentManager.agentMode != "stretchab") {
                         m_CharacterController.Move(movement);
-                        Debug.Log("THIS SHOULDN'T BE SHOWING, but somehow agentMode is " + agentManager.agentMode);
+                        // Debug.Log("THIS SHOULDN'T BE SHOWING, but somehow agentMode is " + agentManager.agentMode);
                     }
                         for (int i = 0; i < actionDuration; i++) {
                             yield return null;
@@ -874,7 +873,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 break;
                             }
                         }
-                        Debug.Log("STAGE 2. Starting position is (" + this.transform.position.x + ", " + this.transform.position.y + ", " + this.transform.position.z + ")");
+                        //Debug.Log("STAGE 2. Starting position is (" + this.transform.position.x + ", " + this.transform.position.y + ", " + this.transform.position.z + ")");
                     }
                 }
                 this.transform.position = startingPosition;
@@ -882,15 +881,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 yield return null;
                 
                 if (validMovements.Count > 0) {
-                    Debug.Log("Initialize: got total valid initial targets: " + validMovements.Count);
+                    //Debug.Log("Initialize: got total valid initial targets: " + validMovements.Count);
                     Vector3 firstMove = validMovements[0];
-                    Debug.Log("First move is this: " + firstMove);
-                    Debug.Log("STAGE 3. Starting position is (" + this.transform.position.x + ", " + this.transform.position.y + ", " + this.transform.position.z + ")");
+                    // Debug.Log("First move is this: " + firstMove);
+                    // Debug.Log("STAGE 3. Starting position is (" + this.transform.position.x + ", " + this.transform.position.y + ", " + this.transform.position.z + ")");
                     
                     firstMove.y = Physics.gravity.y * this.m_GravityMultiplier;
 
                     m_CharacterController.Move(firstMove);
-                    Debug.Log("STAGE 4. Starting position is (" + this.transform.position.x + ", " + this.transform.position.y + ", " + this.transform.position.z + ")");
+                    // Debug.Log("STAGE 4. Starting position is (" + this.transform.position.x + ", " + this.transform.position.y + ", " + this.transform.position.z + ")");
                     snapAgentToGrid();
                     
                     actionFinished(true, new InitializeReturn {
@@ -898,7 +897,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         cameraFarPlane = m_Camera.farClipPlane
                     });
                 } else {
-                    Debug.Log("Initialize: no valid starting positions found");
+                    // Debug.Log("Initialize: no valid starting positions found");
                     actionFinished(false);
                 }
             } else {

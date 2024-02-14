@@ -87,6 +87,8 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
             return "";
     }
 
+    // public virtual ActionFinished FinishContinuousMove(
+
     public bool IsArmColliding() {
         HashSet<Collider> colliders = this.currentArmCollisions();
         return colliders.Count > 0;

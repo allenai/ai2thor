@@ -143,21 +143,11 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
     }
 
     
-    // public  override IEnumerator rotateWrist(
-    //     PhysicsRemoteFPSAgentController controller,
-    //     Quaternion rotation,
-    //     float degreesPerSecond,
-    //     float fixedDeltaTime,
-    //     bool returnToStartPositionIfFailed
-    // ) {
-        
-    // }
-    public void rotateWrist(
+    
+    public IEnumerator rotateWrist(
         PhysicsRemoteFPSAgentController controller,
         float rotation,
         float degreesPerSecond,
-        bool disableRendering = false,
-        float fixedDeltaTime = 0.02f,
         bool returnToStartPositionIfFailed = false,
         bool isRelativeRotation = true
     ) {
@@ -254,6 +244,17 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
         // Activate check for dead-zone encroachment inside of CollisionListener
         collisionListener.enableDeadZoneCheck();
 
+        yield return withLastStepCallback(
+            ContinuousMovement.rotate(
+                controller: controller,
+                moveTransform: armTarget.transform,
+                targetRotation: targetRotation,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
+                radiansPerSecond: degreesPerSecond,
+                returnToStartPropIfFailed: returnToStartPositionIfFailed,
+                secTargetRotation: secTargetRotation
+            )
+        );
         // IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
         //     ContinuousMovement.rotate(
         //         controller,

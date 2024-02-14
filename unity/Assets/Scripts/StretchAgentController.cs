@@ -226,6 +226,45 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public void RotateWrist(
+            float pitch = 0f,
+            float yaw = 0f,
+            float roll = 0f,
+            float speed = 10f,
+            bool returnToStart = true
+        ) {
+            // pitch and roll are not supported for the stretch and so we throw an error
+            if (pitch != 0f || roll != 0f) {
+                throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
+            }
+
+            // GameObject posRotManip = this.GetComponent<BaseAgentComponent>().StretchArm.GetComponent<Stretch_Robot_Arm_Controller>().GetArmTarget();
+
+            var arm = getArmImplementation() as Stretch_Robot_Arm_Controller;
+            float startingRotation = arm.GetArmTarget().transform.localEulerAngles.y;
+
+            // Normalize target yaw to be bounded by [0, 360) (startingRotation is defaults to this)
+            yaw %= 360;
+            if (yaw < 0) {
+                yaw += 360;
+            }
+
+            // Find shortest relativeRotation to feed into rotateWrist
+            yaw -= startingRotation;
+
+            if (Mathf.Abs(yaw) > 180) {
+                yaw = (Mathf.Abs(yaw) - 360) * Mathf.Sign(yaw);
+            }
+
+            arm.rotateWrist(
+                controller: this,
+                rotation: yaw,
+                degreesPerSecond: speed,
+                returnToStartPositionIfFailed: returnToStart,
+                isRelativeRotation: false
+            );
+        }
+
         public void SetGripperOpenness(float openness) {
             foreach (GameObject opennessState in GripperOpennessStates) {
                 opennessState.SetActive(false);

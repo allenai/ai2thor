@@ -25,27 +25,32 @@ namespace Tests {
                 });
             yield return new WaitForSeconds(2f);
 
+            Debug.Log("0 rot_manipulator " + GameObject.Find("stretch_robot_pos_rot_manipulator").transform.eulerAngles.y);
+
             // set wrist to default 180-state (i.e. fingers facing back towards the main agent body)
             yield return step(new Dictionary<string, object>() {
                     { "action", "RotateWrist"},
                     { "yaw", 180f},
-                    { "disableRendering", true},
+                    { "physicsSimulationParams", new PhysicsSimulationParams() { autoSimulation = false}},
                     { "returnToStart", false}
                 });
+            Debug.Log("180 rot_manipulator " + GameObject.Find("stretch_robot_pos_rot_manipulator").transform.eulerAngles.y);
 
             // These two commands stress-test the degree input-normalization, the procedural directionality, AND the dead-zone encroachment of the wrist-rotation
             yield return step(new Dictionary<string, object>() {
                     { "action", "RotateWrist"},
                     { "yaw", -271f},
-                    { "disableRendering", true},
+                    { "physicsSimulationParams", new PhysicsSimulationParams() { autoSimulation = false}},
                     { "returnToStart", false}
                 });
+
+            Debug.Log("rot_manipulator " + GameObject.Find("stretch_robot_pos_rot_manipulator").transform.eulerAngles.y);
             Assert.AreEqual(Mathf.Approximately(GameObject.Find("stretch_robot_pos_rot_manipulator").transform.eulerAngles.y, 69.06705f), true);
             
             yield return step(new Dictionary<string, object>() {
                     { "action", "RotateWrist"},
                     { "yaw", 451f},
-                    { "disableRendering", true},
+                    { "physicsSimulationParams", new PhysicsSimulationParams() { autoSimulation = false}},
                     { "returnToStart",false}
                 });
             Assert.AreEqual(Mathf.Approximately(GameObject.Find("stretch_robot_pos_rot_manipulator").transform.eulerAngles.y, 111.0896f), true);
@@ -68,7 +73,7 @@ namespace Tests {
             yield return step(new Dictionary<string, object>() {
                     { "action", "RotateWrist"},
                     { "yaw", 180f},
-                    { "disableRendering", true},
+                    { "physicsSimulationParams", new PhysicsSimulationParams() { autoSimulation = false}},
                     { "returnToStart", false}
                 });
             
@@ -76,7 +81,7 @@ namespace Tests {
             yield return step(new Dictionary<string, object>() {
                     { "action", "RotateWristRelative"},
                     { "yaw", 630f},
-                    { "disableRendering", true},
+                    { "physicsSimulationParams", new PhysicsSimulationParams() { autoSimulation = false}},
                     { "returnToStart", false}
                 });
             Assert.AreEqual(Mathf.Approximately(GameObject.Find("stretch_robot_pos_rot_manipulator").transform.eulerAngles.y, 69.56489f), true);
@@ -84,7 +89,7 @@ namespace Tests {
             yield return step(new Dictionary<string, object>() {
                     { "action", "RotateWristRelative"},
                     { "yaw", -699.56489f},
-                    { "disableRendering", true},
+                    { "physicsSimulationParams", new PhysicsSimulationParams() { autoSimulation = false}},
                     { "returnToStart", false}
                 });
             Assert.AreEqual(Mathf.Approximately(GameObject.Find("stretch_robot_pos_rot_manipulator").transform.eulerAngles.y, 110.8419f), true);

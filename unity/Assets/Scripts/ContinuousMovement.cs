@@ -10,7 +10,7 @@ using UnityEditor.PackageManager;
         public bool ShouldHalt();
         public void ContinuousUpdate(float fixedDeltaTime);
         public ActionFinished FinishContinuousMove(BaseFPSAgentController controller);
-
+        // TODO remove from API integrate in FinishContinuousMove
         public string GetHaltMessage();
     }
 
@@ -370,6 +370,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             yield return actionFinished;
         }
 
+        // Old Action finish
         private static ActionFinished continuousMoveFinish<T>(
             MovableContinuous movable,
             Transform moveTransform,
@@ -387,5 +388,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = errorMessage
             };
         }
+        // TODO: move to new way
+        // private static ActionFinished continuousMoveFinish<T>(
+        //     MovableContinuous movable,
+        //     BaseFPSAgentController controller,
+        //     Transform moveTransform,
+        //     System.Action<Transform, T> setProp,
+        //     T resetProp
+        // ) {
+
+        //     ActionFinished actionFinished = movable.FinishContinuousMove(controller);
+            
+        //     if (!actionFinished.success) {
+        //          setProp(moveTransform, resetProp);
+        //     }
+
+        //     return actionFinished;
+        // }
     }
 }
