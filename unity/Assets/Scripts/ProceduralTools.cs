@@ -2328,6 +2328,8 @@ namespace Thor.Procedural {
             if (uvs != null) {
                 mesh.uv = uvs;
             }
+            mesh.RecalculateTangents();
+            
 
             // add the mesh to the object
             meshObj.AddComponent<MeshRenderer>();
