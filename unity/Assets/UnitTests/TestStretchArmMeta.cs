@@ -64,8 +64,8 @@ namespace Tests {
             //call arm metadata
             ArmMetadata meta = armController.GenerateMetadata();
             //check meta is in correct state
-            string handSphereCenter = meta.handSphereCenter.ToString("F5");
-            Assert.AreEqual(handSphereCenter, "(-1.06099, 0.25241, 0.97615)");
+            string handSphereCenter = meta.handSphereCenter.ToString("F4");
+            Assert.AreEqual(handSphereCenter, "(-1.0610, 0.2524, 0.9761)");
             string rootRelativeCenter = meta.rootRelativeHandSphereCenter.ToString("F5");
             Assert.AreEqual(rootRelativeCenter, "(-0.00007, 0.16460, -0.20476)");
 

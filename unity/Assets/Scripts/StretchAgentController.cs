@@ -217,12 +217,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
             }
 
-            return base.RotateWristRelative(
-                pitch: 0f,
-                yaw: yaw,
-                roll: 0f,
-                speed: speed,
-                returnToStart: returnToStart
+            var arm = getArmImplementation() as Stretch_Robot_Arm_Controller;
+
+            yaw %= 360;
+
+            return arm.rotateWrist(
+                controller: this,
+                rotation: yaw,
+                degreesPerSecond: speed,
+                returnToStartPositionIfFailed: returnToStart,
+                isRelativeRotation: true
             );
         }
 

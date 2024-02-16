@@ -522,7 +522,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     // return mass of object
     public float Mass {
         get {
-            return this.GetComponent<Rigidbody>().mass;
+            var rb = this.GetComponent<Rigidbody>();
+            return rb != null? rb.mass : 0.0f;
         }
     }
 

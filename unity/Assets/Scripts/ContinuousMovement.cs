@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System;
-using System.Linq;
-using UnityEditor.PackageManager;
 
     public interface MovableContinuous {
         public bool ShouldHalt();
@@ -323,14 +321,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 arm.ContinuousUpdate(fixedDeltaTime);
                 //Debug.Log("2");
 
-                if (!Physics.autoSimulation) {
-                //Debug.Log("3.1");
-                    if (fixedDeltaTime == 0f) {
-                        Physics.SyncTransforms();
-                    } else {
-                        PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
-                    }
-                }
+                // if (!Physics.autoSimulation) {
+                // //Debug.Log("3.1");
+                //     if (fixedDeltaTime == 0f) {
+                //         Physics.SyncTransforms();
+                //     } else {
+                //         PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+                //     }
+                // }
+                yield return new WaitForFixedUpdate();
                 //Debug.Log("3.2");
 
                     yield return new WaitForFixedUpdate();
