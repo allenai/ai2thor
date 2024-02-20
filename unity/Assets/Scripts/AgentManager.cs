@@ -287,6 +287,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         action.snapToGrid = false;
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(StretchAgentController), baseAgentComponent);
+        baseAgentComponent.StretchBodyColliders.SetActive(true);
     }
 
     private void SetUpStretchABController(ServerAction action) {
