@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System;
 using System.Linq;
-using UnityEditor.PackageManager;
+//using UnityEditor.PackageManager;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class ContinuousMovement {
