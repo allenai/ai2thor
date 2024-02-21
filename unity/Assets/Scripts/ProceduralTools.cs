@@ -2451,6 +2451,7 @@ namespace Thor.Procedural {
                 
                 mat.SetTexture("_MetallicGlossMap", tex);
             } else {
+                mat.SetFloat("_Metallic", 0f);
                 mat.SetFloat("_Glossiness", 0f);
             }
 
