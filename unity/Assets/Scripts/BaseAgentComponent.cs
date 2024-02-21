@@ -24,6 +24,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject StretchVisCap; // meshes used for Stretch mode
         public GameObject IKArm; // reference to the IK_Robot_Arm_Controller arm
         public GameObject StretchArm; // reference to the Stretch_Arm_Controller arm
+        public GameObject StretchBodyColliders; //reference to the
         public GameObject BotVisCap;// meshes used for Bot mode
         public GameObject DroneBasket;// reference to the drone's basket object
         public GameObject CrackedCameraCanvas = null;
