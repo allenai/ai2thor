@@ -143,10 +143,15 @@ public class ColorChanger : MonoBehaviour {
         bool useValMaterials,
         bool useTestMaterials,
         bool useExternalMaterials,
-        HashSet<string> inRoomTypes
+        HashSet<string> inRoomTypes,
+        HashSet<string> excludedMaterialNames = null
     ) {
         if (objectMaterials == null) {
             cacheMaterials();
+        }
+
+        if (excludedMaterialNames == null) {
+            excludedMaterialNames = new HashSet<string>();
         }
 
         Dictionary<string, string> roomTypeLabelMap = new Dictionary<string, string>() {
@@ -166,7 +171,7 @@ public class ColorChanger : MonoBehaviour {
         HashSet<string> activeMaterialNames = new HashSet<string>();
         foreach (var renderer in GameObject.FindObjectsOfType<Renderer>()) {
             foreach (var mat in renderer.sharedMaterials) {
-                if (mat != null && mat.name != null) {
+                if (mat != null && mat.name != null && !excludedMaterialNames.Contains(mat.name)) {
 #if UNITY_EDITOR
                     Debug.Log("Found material: " + mat.name);
 #endif

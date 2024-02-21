@@ -109,6 +109,7 @@ public class Build {
 
         if (IncludePrivateScenes()) {
             files.AddRange(Directory.GetFiles("Assets/Private/Scenes/"));
+            files.AddRange(Directory.GetFiles("Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets/Scenes"));
         }
 
         files.AddRange(Directory.GetFiles("Assets/Scenes/Procedural"));
@@ -118,6 +119,10 @@ public class Build {
         foreach (string f in files) {
             // ignore entryway scenes in build since these are not yet complete
             if (f.Contains("FloorPlan5") && !f.EndsWith("FloorPlan5_physics.unity")) {
+                continue;
+            }
+
+            if (f.EndsWith("_Screenshot.unity")) {
                 continue;
             }
 

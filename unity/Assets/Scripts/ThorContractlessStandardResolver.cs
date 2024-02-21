@@ -73,8 +73,38 @@ namespace MessagePack.Resolvers {
             writer.Write(value.w);
         }
         public global::UnityEngine.Vector4 Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options) {
-            throw new System.NotImplementedException();
+             if (reader.TryReadNil()) {
+                throw new InvalidOperationException("Cannot deserialize a nil value to a Vector3.");
+            }
+
+            int mapLength = reader.ReadMapHeader();
+            float x = 0, y = 0, z = 0, w = 0; 
+
+            for (int i = 0; i < mapLength; i++) {
+                string property = reader.ReadString();
+
+                switch (property) {
+                    case "x":
+                        x = reader.ReadSingle();
+                        break;
+                    case "y":
+                        y = reader.ReadSingle();
+                        break;
+                    case "z":
+                        z = reader.ReadSingle();
+                        break;
+                     case "w":
+                        w = reader.ReadSingle();
+                        break;
+                    default:
+                        reader.Skip(); // Skip unknown fields
+                        break;
+                }
+            }
+
+            return new global::UnityEngine.Vector4(x, y, z, w);
         }
+    
 
     }
     
@@ -111,7 +141,33 @@ namespace MessagePack.Resolvers {
             writer.Write(value.z);
         }
         public global::UnityEngine.Vector3 Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options) {
-            throw new System.NotImplementedException();
+            if (reader.TryReadNil()) {
+                throw new InvalidOperationException("Cannot deserialize a nil value to a Vector3.");
+            }
+
+            int mapLength = reader.ReadMapHeader();
+            float x = 0, y = 0, z = 0;
+
+            for (int i = 0; i < mapLength; i++) {
+                string property = reader.ReadString();
+
+                switch (property) {
+                    case "x":
+                        x = reader.ReadSingle();
+                        break;
+                    case "y":
+                        y = reader.ReadSingle();
+                        break;
+                    case "z":
+                        z = reader.ReadSingle();
+                        break;
+                    default:
+                        reader.Skip(); // Skip unknown fields
+                        break;
+                }
+            }
+
+            return new global::UnityEngine.Vector3(x, y, z);
         }
 
     }

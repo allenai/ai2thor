@@ -15,7 +15,9 @@ namespace Thor.Procedural {
 
         [SerializeField] public ProceduralLRUCacheAssetMap<GameObject> assetMap;
 
-        void Awake() {
+        public bool dontDestroyOnLoad = true;
+
+        public void Awake() {
             if (Instance != null) {
                 Destroy(gameObject);
                 return;
@@ -23,7 +25,13 @@ namespace Thor.Procedural {
 
             Instance = this;
             this.assetMap = new ProceduralLRUCacheAssetMap<GameObject>(prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
-            DontDestroyOnLoad(gameObject);
+            if (dontDestroyOnLoad) {
+                DontDestroyOnLoad(gameObject);
+            }
+            else {
+                // Reset it back to enable caching for next time object is created
+                dontDestroyOnLoad = true;
+            }
         }
 
         public void addAsset(GameObject asset, bool procedural = false) {
@@ -64,7 +72,7 @@ namespace Thor.Procedural {
         }
         private int originalPriorityMinValue;
         private int originalPriorityMaxValue;
-        public ProceduralLRUCacheAssetMap(int priorityMinValue = 0, int piorityMaxValue = 1) : this(new Dictionary<string, T>(), priorityMinValue, piorityMaxValue) {
+        public ProceduralLRUCacheAssetMap(int priorityMinValue = 0, int priorityMaxValue = 1) : this(new Dictionary<string, T>(), priorityMinValue, priorityMaxValue) {
         }
         public ProceduralLRUCacheAssetMap(Dictionary<string, T> assetMap, int rankingMinValue = 0, int rankingMaxValue = 1) : base(assetMap) {
             this.priorityMinValue = this.originalPriorityMinValue = rankingMinValue;
@@ -98,9 +106,12 @@ namespace Thor.Procedural {
         }
 
         public AsyncOperation removeLRU(int limit, bool deleteWithHighestPriority = true) {
+//            Debug.Log($"Running removeLRU with {limit}, {deleteWithHighestPriority}");
             if (proceduralAssetQueue.Count == 0) {
+//                Debug.Log($"Queue empty, returning");
                 return null;
             }
+//            Debug.Log($"Queue not empty");
 
             var current = proceduralAssetQueue.First;
             var toDequeuePrio = proceduralAssetQueue.GetPriority(current);
@@ -108,17 +119,43 @@ namespace Thor.Procedural {
             // Do not delete items with the highest priority if !deleteWithHighestPriority
             while (proceduralAssetQueue.Count > limit && (deleteWithHighestPriority || toDequeuePrio < this.priorityMaxValue)) {
                 var removed = proceduralAssetQueue.Dequeue();
-                this.assetMap.Remove(removed);
+                if (this.getAsset(removed) is GameObject go) {
+                    go.transform.parent = null;
+                    go.SetActive(false);
+                    this.assetMap.Remove(removed);
+                    GameObject.Destroy(go);
+                } else {
+                    this.assetMap.Remove(removed);
+                }
+//                Debug.Log($"Removing {removed}");
                 dequeueCount++;
+                if (proceduralAssetQueue.Count == 0) {
+                    break;
+                }
                 current = proceduralAssetQueue.First;
                 toDequeuePrio = proceduralAssetQueue.GetPriority(current);
             }
+//            Debug.Log($"Remaining in queue {proceduralAssetQueue.Count}");
             AsyncOperation asyncOp = null;
             if (dequeueCount > 0) { 
                 // WARNING: Async operation, should be ok for deleting assets if using the same creation-deletion hook
                 // cache should be all driven within one system, currently python driven
-                asyncOp = Resources.UnloadUnusedAssets();
-                asyncOp.completed += (op) => GC.Collect();
+                
+                    asyncOp = Resources.UnloadUnusedAssets();
+                    asyncOp.completed += (op) => {
+                        Debug.Log("Asyncop callback called calling GC");
+                        GC.Collect();
+                    };
+                   
+                    // #if !UNITY_EDITOR && !UNITY_WEBGL
+                        float timeout = 2.0f;
+                        float startTime = Time.realtimeSinceStartup;
+                        while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
+                            // waiting
+                            continue;
+                        }
+                        GC.Collect();
+                    // #endif
             }
             return asyncOp;
         }

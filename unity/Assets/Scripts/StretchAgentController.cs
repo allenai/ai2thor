@@ -6,15 +6,18 @@ using System.Linq;
 using RandomExtensions;
 using UnityEngine.AI;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.UIElements;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
         
     public partial class StretchAgentController : PhysicsRemoteFPSAgentController {
 
         protected Transform gimbalBase, primaryGimbal, secondaryGimbal;
-        protected float gimbalBaseStartingXPosition, gimbalBaseStartingZPosition, gimbalBaseStartingYRotation;
+        protected float gimbalBaseStartingXPosition, gimbalBaseStartingZPosition, gimbalBaseStartingXRotation, gimbalBaseStartingYRotation;
         protected float primaryStartingXRotation, secondaryStartingXRotation;
+        protected float maxBaseXZOffset = 0.25f, maxBaseXYRotation = 10f;
         protected float minGimbalXRotation = -80.001f, maxGimbalXRotation = 80.001f;
+        public int gripperOpennessState = 0;
 
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
@@ -63,6 +66,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             gimbalBaseStartingXPosition = gimbalBase.transform.localPosition.x;
             gimbalBaseStartingZPosition = gimbalBase.transform.localPosition.z;
+            gimbalBaseStartingXRotation = gimbalBase.transform.localEulerAngles.x;
             gimbalBaseStartingYRotation = gimbalBase.transform.localEulerAngles.y;
             primaryStartingXRotation = primaryGimbal.transform.localEulerAngles.x;
             secondaryStartingXRotation = secondaryGimbal.transform.localEulerAngles.x;
@@ -133,7 +137,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // enable stretch arm component
             Debug.Log("initializing stretch arm");
             StretchArm.SetActive(true);
+            //initialize all things needed for the stretch arm controller
             SArm = this.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+            SArm.PhysicsController = this;
             var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
             Vector3 pos = armTarget.transform.localPosition;
             pos.z = 0.0f; // pulls the arm in to be fully contracted
@@ -153,7 +159,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             return arm;
         }
-
 
         /*
         Toggles the visibility of the magnet sphere at the end of the arm.
@@ -348,6 +353,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 //         // perhaps this should fail if no object is picked up?
 //         // currently action success happens as long as the arm is
 //         // enabled because it is a successful "attempt" to pickup something
+
+        public void SetGripperOpenness(float openness) {
+            foreach (GameObject opennessState in GripperOpennessStates) {
+                opennessState.SetActive(false);
+            }
+            if (-100 <= openness && openness < 0) {
+                GripperOpennessStates[0].SetActive(true);
+                gripperOpennessState = 0;
+            } else if (0 <= openness && openness < 5) {
+                GripperOpennessStates[1].SetActive(true);
+                gripperOpennessState = 1;
+            } else if (5 <= openness && openness < 15) {
+                GripperOpennessStates[2].SetActive(true);
+                gripperOpennessState = 2;
+            } else if (15 <= openness && openness < 25) {
+                GripperOpennessStates[3].SetActive(true);
+                gripperOpennessState = 3;
+            } else if (25 <= openness && openness < 35) {
+                GripperOpennessStates[4].SetActive(true);
+                gripperOpennessState = 4;
+            } else if (35 <= openness && openness < 45) {
+                GripperOpennessStates[5].SetActive(true);
+                gripperOpennessState = 5;
+            } else if (45 <= openness && openness <= 50) {
+                GripperOpennessStates[6].SetActive(true);
+                gripperOpennessState = 6;
+            } else {
+                throw new InvalidOperationException(
+                    $"Invalid value for `openness`: '{openness}'. Value should be between -100 and 50"
+                );
+            }
+            actionFinished(true);
+        }
+
         public void PickupObject(List<string> objectIdCandidates = null) {
             Stretch_Robot_Arm_Controller arm = getArm();
             actionFinished(arm.PickupObject(objectIdCandidates, ref errorMessage), errorMessage);
@@ -736,13 +775,59 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Stretch_Robot_Arm_Controller arm = getArm();
 
+            yaw %= 360;
+
             arm.rotateWrist(
                 controller: this,
-                rotation: Quaternion.Euler(0, yaw, 0),
+                rotation: yaw,
                 degreesPerSecond: speed,
                 disableRendering: disableRendering,
                 fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
-                returnToStartPositionIfFailed: returnToStart
+                returnToStartPositionIfFailed: returnToStart,
+                isRelativeRotation: true
+            );
+        }
+
+        public void RotateWrist(
+            float pitch = 0f,
+            float yaw = 0f,
+            float roll = 0f,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            // pitch and roll are not supported for the stretch and so we throw an error
+            if (pitch != 0f || roll != 0f) {
+                throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
+            }
+
+            // GameObject posRotManip = this.GetComponent<BaseAgentComponent>().StretchArm.GetComponent<Stretch_Robot_Arm_Controller>().GetArmTarget();
+
+            Stretch_Robot_Arm_Controller arm = getArm();
+            float startingRotation = arm.GetArmTarget().transform.localEulerAngles.y;
+
+            // Normalize target yaw to be bounded by [0, 360) (startingRotation is defaults to this)
+            yaw %= 360;
+            if (yaw < 0) {
+                yaw += 360;
+            }
+
+            // Find shortest relativeRotation to feed into rotateWrist
+            yaw -= startingRotation;
+
+            if (Mathf.Abs(yaw) > 180) {
+                yaw = (Mathf.Abs(yaw) - 360) * Mathf.Sign(yaw);
+            }
+
+            arm.rotateWrist(
+                controller: this,
+                rotation: yaw,
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart,
+                isRelativeRotation: false
             );
         }
 
@@ -860,30 +945,48 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void MoveCameraBase(float positionOffset, string positionAxis) {
+        public void MoveCameraBase(float xPositionOffset, float zPositionOffset) {
             var target = gimbalBase;
-            var startingPosition = 0f;
+            var maxOffset = maxBaseXZOffset;
 
-            if (positionAxis == "x" || positionAxis == "X") {
-                startingPosition = gimbalBaseStartingXPosition;
-                gimbalBase.localPosition += new Vector3((gimbalBaseStartingXPosition + positionOffset) - gimbalBase.transform.localPosition.x, 0, 0);
-                actionFinished(true);
-
-            } else if (positionAxis == "z" || positionAxis == "Z") {
-                startingPosition = gimbalBaseStartingZPosition;
-                gimbalBase.localPosition += new Vector3(0, 0, (gimbalBaseStartingZPosition + positionOffset) - gimbalBase.transform.localPosition.z);
-                actionFinished(true);
-
-            } else {
+            if (xPositionOffset < -maxOffset || maxOffset < xPositionOffset) {
                 throw new InvalidOperationException(
-                    $"{positionAxis} is not a valid axis for position change!"
+                    $"Invalid value for `positionOffset`: '{xPositionOffset}'. Value should be between '{-maxOffset}' and '{maxOffset}'."
                 );
+            } else if (zPositionOffset < -maxOffset || maxOffset < zPositionOffset) {
+                throw new InvalidOperationException(
+                    $"Invalid value for `positionOffset`: '{zPositionOffset}'. Value should be between '{-maxOffset}' and '{maxOffset}'."
+                );
+            } else {
+                gimbalBase.localPosition = new Vector3(
+                    gimbalBaseStartingXPosition + xPositionOffset,
+                    gimbalBase.transform.localPosition.y,
+                    gimbalBaseStartingZPosition + zPositionOffset
+                );
+                actionFinished(true);
             }
         }
 
-        public void RotateCameraBase(float degrees) {
+        public void RotateCameraBase(float yawDegrees, float rollDegrees) {
             var target = gimbalBase;
-            gimbalBase.localEulerAngles += new Vector3(0, (gimbalBaseStartingYRotation + degrees) - gimbalBase.transform.localEulerAngles.z, 0);
+            var maxDegree = maxBaseXYRotation;
+            Debug.Log("yaw is " + yawDegrees + " and roll is " + rollDegrees);
+            if (yawDegrees < -maxDegree || maxDegree < yawDegrees) {
+                throw new InvalidOperationException(
+                    $"Invalid value for `yawDegrees`: '{yawDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+                );
+            } else if (rollDegrees < -maxDegree || maxDegree < rollDegrees) {
+                throw new InvalidOperationException(
+                    $"Invalid value for `rollDegrees`: '{rollDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+                );
+            } else {
+                gimbalBase.localEulerAngles = new Vector3(
+                    gimbalBaseStartingXRotation + rollDegrees,
+                    gimbalBaseStartingYRotation + yawDegrees,
+                    gimbalBase.transform.localEulerAngles.z
+                );
+            }
+            actionFinished(true);
         }
 
         public void RotateCameraMount(float degrees, bool secondary = false) {
