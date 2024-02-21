@@ -2298,6 +2298,7 @@ namespace Thor.Procedural {
             int[] triangles,
             Vector2[]? uvs = null,
             string albedoTexturePath = null,
+            string metallicSmoothnessTexturePath = null,
             string normalTexturePath = null,
             string emissionTexturePath = null,
             SerializableCollider[]? colliders = null,
@@ -2437,7 +2438,21 @@ namespace Thor.Procedural {
                 meshObj.GetComponent<Renderer>().material = mat;
             }
 
-            mat.SetFloat("_Glossiness", 0f);
+            if (metallicSmoothnessTexturePath != null) {
+                metallicSmoothnessTexturePath = !Path.IsPathRooted(metallicSmoothnessTexturePath) ? Path.Combine(parentTexturesDir, metallicSmoothnessTexturePath) : metallicSmoothnessTexturePath;
+                 if (runtimePrefab == null) {
+                    runtimePrefab = go.AddComponent<RuntimePrefab>();
+                }
+                runtimePrefab.metallicSmoothnessTexturePath = metallicSmoothnessTexturePath;
+                mat.EnableKeyword("_METALLICGLOSSMAP");
+                byte[] imageBytes = File.ReadAllBytes(metallicSmoothnessTexturePath);
+                Texture2D tex = new Texture2D(2, 2);
+                tex.LoadImage(imageBytes);
+                
+                mat.SetTexture("_MetallicGlossMap", tex);
+            } else {
+                mat.SetFloat("_Glossiness", 0f);
+            }
 
             if (normalTexturePath != null) {
                 normalTexturePath = !Path.IsPathRooted(normalTexturePath) ? Path.Combine(parentTexturesDir, normalTexturePath) : normalTexturePath;
