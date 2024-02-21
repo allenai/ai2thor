@@ -32,7 +32,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public MeshRenderer MyFaceMesh;
         public GameObject[] TargetCircles = null;
         public bool UseMotorCameraGimbals = false;
-        public float initialGripperOpenness = 0f;
         public GameObject[] GripperOpennessStates = new GameObject[7];
 
         [HideInInspector]

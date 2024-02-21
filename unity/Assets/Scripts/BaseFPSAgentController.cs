@@ -16,7 +16,14 @@ using Newtonsoft.Json.Linq;
 using MIConvexHull;
 using Thor.Procedural;
 using Thor.Procedural.Data;
+using Newtonsoft.Json;
 
+using MessagePack.Resolvers;
+using MessagePack.Formatters;
+using MessagePack;
+
+using System.IO;
+using System.IO.Compression;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
@@ -141,10 +148,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public GameObject[] GripperOpennessStates {
             get => this.baseAgentComponent.GripperOpennessStates;
-        }
-
-        public float InitialGripperOpenness {
-            get => this.baseAgentComponent.initialGripperOpenness;
         }
 
 
@@ -869,7 +872,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool? useValMaterials = null,
             bool? useTestMaterials = null,
             bool? useExternalMaterials = null,
-            string[] inRoomTypes = null
+            string[] inRoomTypes = null,
+            List<string> excludedObjectIds = null
         ) {
             string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             HashSet<string> validRoomTypes = new HashSet<string>() {
@@ -893,6 +897,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+            if ((!scene.StartsWith("Procedural")) && excludedObjectIds != null) {
+                // The reason for the error below is that we need to be sure that every
+                // object contains references to its own materials. This is not
+                // necessarily the case in some ithor scenes because some objects
+                // are "fake" in the sense that part of them might correspond
+                // to scene geometry (e.g. the CounterTop in FloorPlan1).
+                throw new ArgumentException(
+                    "excludedObjectIds can only be set in a Procedural scene."
+                );
+            }
+
+            if (excludedObjectIds == null) {
+                excludedObjectIds = new List<string>();
+            }
+
+            HashSet<string> excludedMaterialNames = new HashSet<string>();
+            foreach (string objectId in excludedObjectIds) {
+                Debug.Log($"Exclude materials from {objectId}");
+                SimObjPhysics objectWhoseMaterialsToExclude = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+                foreach (var renderer in objectWhoseMaterialsToExclude.GetComponentsInChildren<Renderer>()) {
+                    foreach (var mat in renderer.sharedMaterials) {
+                        if (mat != null && mat.name != null) {
+                            Debug.Log($"excluding {mat.name}");
+                            excludedMaterialNames.Add(mat.name);
+                        }
+                    }
+                }
+            }
+
             ColorChanger colorChangeComponent;
             if (scene.StartsWith("Procedural")) {
                 colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
@@ -901,7 +935,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     useValMaterials: useValMaterials.HasValue ? useValMaterials.Value : true,
                     useTestMaterials: useTestMaterials.HasValue ? useTestMaterials.Value : true,
                     useExternalMaterials: useExternalMaterials.HasValue ? useExternalMaterials.Value : true,
-                    inRoomTypes: inRoomTypes != null ? chosenRoomTypes : validRoomTypes
+                    inRoomTypes: inRoomTypes != null ? chosenRoomTypes : validRoomTypes,
+                    excludedMaterialNames: excludedMaterialNames
                 );
 
                 // Keep it here to make sure the action succeeds first
@@ -1003,7 +1038,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 useValMaterials: useValMaterials.Value,
                 useTestMaterials: useTestMaterials.Value,
                 useExternalMaterials: useExternalMaterials.Value,
-                inRoomTypes: chosenRoomTypes.Count == 0 ? null : chosenRoomTypes
+                inRoomTypes: chosenRoomTypes.Count == 0 ? null : chosenRoomTypes,
+                excludedMaterialNames: excludedMaterialNames
             );
 
             // Keep it here to make sure the action succeeds first
@@ -1515,7 +1551,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
             Debug.Log("Echoes! Three Freeze!");
 #endif
-
             actionFinished(true);
         }
 
@@ -2020,7 +2055,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             for (int k = 0; k < numObj; k++) {
                 SimObjPhysics simObj = simObjects[k];
-                ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(
+                ObjectMetadata meta = SimObjPhysics.ObjectMetadataFromSimObjPhysics(
                     simObj,
                     visibleSimObjsHash.Contains(simObj),
                     interactableSimObjsHash.Contains(simObj)
@@ -4083,6 +4118,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, visible.Select(sop => sop.ObjectID).ToList());
         }
 
+        public void GetObjaverseAnnotations() {
+            Dictionary<string, Dictionary<string, string>> annotations = new Dictionary<string, Dictionary<string, string>>();
+
+            foreach (Thor.Objaverse.ObjaverseAnnotation oa in GameObject.FindObjectsOfType<Thor.Objaverse.ObjaverseAnnotation>()) {
+                SimObjPhysics sop = oa.gameObject.GetComponent<SimObjPhysics>();
+                annotations[sop.ObjectID] = new Dictionary<string, string>();
+
+                annotations[sop.ObjectID]["objectType"] = oa.ObjectCategory;
+                annotations[sop.ObjectID]["dataset"] = oa.MostSpecificDataset.ToString();
+
+//                Debug.Log(sop.ObjectID);
+//                Debug.Log(oa.ObjectCategory);
+//                Debug.Log(oa.MostSpecificDataset.ToString());
+            }
+
+            actionFinishedEmit(true, annotations);
+        }
+
         [ObsoleteAttribute(message: "This action is deprecated. Call GetVisibleObjects instead.", error: false)]
         public void ObjectsVisibleFromThirdPartyCamera(
             int thirdPartyCameraIndex,
@@ -4312,7 +4365,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         visCheck.visible = true;
                         visCheck.interactable = true;
 #if UNITY_EDITOR
-                        Debug.DrawLine(camera.transform.position, hit.point, Color.cyan, 10f);
+                        Debug.DrawLine(camera.transform.position, hit.point, Color.cyan, 0f);
 #endif
                     }
                 }
@@ -4386,7 +4439,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 #if UNITY_EDITOR
                 if (visCheck.visible) {
-                    Debug.DrawLine(camera.transform.position, hit.point, Color.cyan, 10f);
+                    Debug.DrawLine(camera.transform.position, hit.point, Color.cyan, 0f);
                 }
 #endif
             }
@@ -5876,7 +5929,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (shouldEnqueue) {
                             pointsQueue.Enqueue(newPosition);
 #if UNITY_EDITOR
-                            Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+                            Debug.DrawLine(p, newPosition, Color.cyan, 10f);
 #endif
                         }
                     }
@@ -5904,7 +5957,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool visualize = false,
             int? navMeshId = null
         ) {
-            Debug.Log("----- GetSimObjectNavMeshTarget");
             var targetTransform = targetSOP.transform;
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
             var agentTransform = this.transform;
@@ -6630,229 +6682,200 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
-        public void CreateObjectPrefab(
-            Vector3[] vertices,
-            Vector3[] normals,
-            string name,
-            int[] triangles,
-            Vector2[]? uvs = null,
-            string albedoTexturePath = null,
-            string normalTexturePath = null,
-            string emissionTexturePath = null,
-            SerializableCollider[]? colliders = null,
-            PhysicalProperties physicalProperties = null,
-            Vector3[]? visibilityPoints = null,
-            ObjectAnnotations annotations = null,
-            bool receptacleCandidate = false,
-            float yRotOffset = 0f
+        public void CreateRuntimeAsset(
+            ProceduralAsset asset
         ) {
-            // create a new game object
-            GameObject go = new GameObject();
-
-            // create a new mesh
-            GameObject meshObj = new GameObject("mesh");
-            meshObj.transform.parent = go.transform;
-            Mesh mesh = new Mesh();
-            if (vertices.Length >= 65535) {
-                mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-            }
-            mesh.vertices = vertices;
-            mesh.triangles = triangles;
-            mesh.normals = normals;
-            if (uvs != null) {
-                mesh.uv = uvs;
-            }
-
-            // add the mesh to the object
-            meshObj.AddComponent<MeshRenderer>();
-            MeshFilter meshFilter = meshObj.AddComponent<MeshFilter>();
-            meshFilter.mesh = mesh;
-
-            // add the mesh colliders
-            GameObject triggerCollidersObj = new GameObject("TriggerColliders");
-            triggerCollidersObj.layer = LayerMask.NameToLayer("SimObjVisible");
-            triggerCollidersObj.transform.parent = go.transform;
-
-            GameObject meshCollidersObj = new GameObject("Colliders");
-            meshCollidersObj.layer = LayerMask.NameToLayer("SimObjVisible");
-            meshCollidersObj.transform.parent = go.transform;
-            List<Collider> meshColliders = new List<Collider>();
-            if (colliders != null && colliders.Length > 0) {
-                int i = 0;
-                foreach (var collider in colliders) {
-                    // create a mesh of the collider
-                    Mesh colliderMesh = new Mesh();
-                    colliderMesh.vertices = collider.vertices;
-                    colliderMesh.triangles = collider.triangles;
-
-                    // add the mesh collider
-                    GameObject meshColliderObj = new GameObject($"collider_{i}");
-                    meshColliderObj.layer = LayerMask.NameToLayer("SimObjVisible");
-                    meshColliderObj.transform.parent = meshCollidersObj.transform;
-                    MeshCollider meshCollider = meshColliderObj.AddComponent<MeshCollider>();
-                    meshCollider.sharedMesh = colliderMesh;
-                    meshCollider.convex = true;
-                    meshColliders.Add(meshCollider);
-
-                    // add the trigger collider
-                    GameObject triggerColliderObj = new GameObject($"trigger_{i}");
-                    triggerColliderObj.layer = LayerMask.NameToLayer("SimObjVisible");
-                    triggerColliderObj.transform.parent = triggerCollidersObj.transform;
-                    MeshCollider triggerCollider = triggerColliderObj.AddComponent<MeshCollider>();
-                    triggerCollider.sharedMesh = colliderMesh;
-                    triggerCollider.convex = true;
-                    triggerCollider.isTrigger = true;
-
-                    i++;
-                }
-            }
-
-            // add the visibility points
-            GameObject visPoints = new GameObject("VisibilityPoints");
-            visPoints.transform.parent = go.transform;
-            Transform[] visPointTransforms = new Transform[visibilityPoints.Length];
-            for (int i = 0; i < visibilityPoints.Length; i++) {
-                GameObject visPoint = new GameObject($"visPoint_{i}");
-                visPoint.transform.parent = visPoints.transform;
-                visPoint.transform.localPosition = visibilityPoints[i];
-                visPointTransforms[i] = visPoint.transform;
-                visPoint.layer = LayerMask.NameToLayer("SimObjVisible");
-            }
-
-            // Rotate the object, this requires reassigning things to a new game object
-            go.transform.Rotate(Vector3.up, yRotOffset);
-            GameObject newGo = new GameObject();
-
-            foreach (Transform t in go.GetComponentsInChildren<Transform>()) {
-                if (t.parent == go.transform) {
-                    Debug.Log($"Moving transform of {t.gameObject.name}");
-                    t.parent = newGo.transform;
-                }
-            }
-            go.SetActive(false);
-            go = newGo;
-
-            go.name = name;
-            go.layer = LayerMask.NameToLayer("SimObjVisible");
-            go.tag = "SimObjPhysics";
-
-            Material mat = null;
-            // load image from disk
-            if (albedoTexturePath != null) {
-                // textures aren't saved as part of the prefab, so we load them from disk
-                RuntimePrefab runtimePrefab = go.AddComponent<RuntimePrefab>();
-                runtimePrefab.localTexturePath = albedoTexturePath;
-
-                byte[] imageBytes = File.ReadAllBytes(albedoTexturePath);
-                // Is this size right?
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
-
-                // create a new material
-                mat = new Material(Shader.Find("Standard"));
-                mat.mainTexture = tex;
-
-                // assign the material to the game object
-                meshObj.GetComponent<Renderer>().material = mat;
-                runtimePrefab.sharedMaterial = mat;
-            } else {
-                // create a new material
-                mat = new Material(Shader.Find("Standard"));
-                meshObj.GetComponent<Renderer>().material = mat;
-            }
-
-            mat.SetFloat("_Glossiness", 0f);
-
-            if (normalTexturePath != null) {
-                mat.EnableKeyword("_NORMALMAP");
-                byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
-                mat.SetTexture("_BumpMap", tex);
-            }
-
-            if (emissionTexturePath != null) {
-                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-                mat.EnableKeyword("_EMISSION");
-                byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
-                mat.SetTexture("_EmissionMap", tex);
-                mat.SetColor("_EmissionColor", Color.white);
-            }
-
-            // have the mesh refer to the mesh at meshPath
-            meshObj.GetComponent<MeshFilter>().sharedMesh = mesh;
-
-            // add the rigidbody
-            Rigidbody rb = go.AddComponent<Rigidbody>();
-            if (physicalProperties != null) {
-                rb.mass = physicalProperties.mass;
-                rb.drag = physicalProperties.drag;
-                rb.angularDrag = physicalProperties.angularDrag;
-                rb.useGravity = physicalProperties.useGravity;
-                rb.isKinematic = physicalProperties.isKinematic;
-            }
-
-            // add the SimObjPhysics component
-            SimObjPhysics sop = go.AddComponent<SimObjPhysics>();
-            sop.VisibilityPoints = visPointTransforms;
-            sop.MyColliders = meshColliders.ToArray();
-            sop.assetID = name;
-            sop.objectID = name;
-
-            // add the annotations of the object
-            if (annotations == null) {
-                annotations = new ObjectAnnotations();
-            }
-            sop.PrimaryProperty = (SimObjPrimaryProperty)Enum.Parse(
-                typeof(SimObjPrimaryProperty), annotations.primaryProperty
+            var assetData = ProceduralTools.CreateAsset(
+                vertices: asset.vertices,
+                normals: asset.normals,
+                name: asset.name,
+                triangles: asset.triangles,
+                uvs: asset.uvs,
+                albedoTexturePath: asset.albedoTexturePath ,
+                normalTexturePath: asset.normalTexturePath ,
+                emissionTexturePath: asset.emissionTexturePath,
+                colliders: asset.colliders ,
+                physicalProperties: asset.physicalProperties,
+                visibilityPoints: asset.visibilityPoints ,
+                annotations: asset.annotations ,
+                receptacleCandidate: asset.receptacleCandidate ,
+                yRotOffset: asset.yRotOffset ,
+                serializable: asset.serializable,
+                parentTexturesDir: asset.parentTexturesDir
             );
-            sop.Type = (SimObjType)Enum.Parse(typeof(SimObjType), annotations.objectType);
-            if (annotations.secondaryProperties == null) {
-                annotations.secondaryProperties = new string[0];
+            actionFinished(success: true, actionReturn: assetData);
+        }
+
+        public void CreateRuntimeAsset(
+            string id,
+            string dir,
+            string extension = ".msgpack.gz",
+            ObjectAnnotations annotations = null
+        ) {
+            var validDirs = new List<string>() {
+                Application.persistentDataPath,
+                Application.streamingAssetsPath
+            };
+            var supportedExtensions = new HashSet<string>(){
+                ".gz", ".msgpack", ".msgpack.gz", ".json"
+            };
+            Debug.Log($"------- CreateRuntimeAsset for  '{id}' extension: = {extension}");
+            extension = !extension.StartsWith(".") ? $".{extension}" : extension;
+            extension = extension.Trim();
+            if (!supportedExtensions.Contains(extension)) {
+                actionFinished(success: false, errorMessage: $"Unsupported extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
+                return;
             }
-            sop.SecondaryProperties = annotations.secondaryProperties.Select(
-                p => (SimObjSecondaryProperty)Enum.Parse(typeof(SimObjSecondaryProperty), p)
-            ).ToArray();
-            sop.syncBoundingBoxes(forceCacheReset: true, forceCreateObjectOrientedBoundingBox: true);
-
-            if (receptacleCandidate) {
-                BaseFPSAgentController.TryToAddReceptacleTriggerBox(sop: sop);
-                GameObject receptacleTriggerBoxes = go.transform.Find("ReceptacleTriggerBoxes").gameObject;
-                if (receptacleTriggerBoxes.transform.childCount > 0) {
-                    sop.SecondaryProperties = new SimObjSecondaryProperty[] { SimObjSecondaryProperty.Receptacle };
-                }
+            var filename = $"{id}{extension}";
+            var filepath = Path.Combine(dir, id, filename);
+            if (!File.Exists(filepath)) {
+                 actionFinished(success: false, actionReturn: null, errorMessage: $"Asset fiile '{filepath}' does not exist.");
+                 return;
             }
 
-            // Add the asset to the procedural asset database
-            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
-            if (assetDb != null) {
-                assetDb.addAsset(go, procedural: true);
+            // to support different
+            var presentStages = extension.Split('.').Reverse().Where(s => !string.IsNullOrEmpty(s)).ToArray();
+
+            // var stages = new Dictionary<string, Func(Stream, MemoryStream)>() {
+
+            //     "gz": (stream: Stream) => {
+            //         using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
+            //         using var resultStream = new MemoryStream();
+            //         decompressor.CopyTo(resultStream);
+            //         return resultStream;
+            //     },
+            //     "msgpack": (stream: Stream) => {
+
+            //     }
+
+            // };
+
+            
+            // if (!validDirs.Any(prefix => dir.StartsWith(prefix))) {
+            //     actionFinished(
+            //         success: false,
+            //         errorMessage: $"Runtime filesystem access is restricted. `dir` must be a sub-directory in one of the following Unity designated paths: {string.Join(", ", validDirs.Select(d => $"'{d}'"))} ",
+            //         actionReturn: null
+            //     );
+            // }
+            // var filepath = Path.Combine(Application.persistentDataPath, id, $"{id}.msgpack.gz");
+            
+            // var outpath = Path.Combine(Application.persistentDataPath, "out", $"{id}.msgpack.gz");
+            using FileStream rawFileStream = File.Open(filepath, FileMode.Open);
+            using var resultStream = new MemoryStream();
+            Debug.Log($"------- raw file read at for  '{filepath}'");
+            var stageIndex = 0;
+            if ("gz" == presentStages[stageIndex]) {
+                using var decompressor = new GZipStream(rawFileStream, CompressionMode.Decompress);
+                decompressor.CopyTo(resultStream);
+                stageIndex++;
+
+            }
+            else {
+                rawFileStream.CopyTo(resultStream);
             }
 
-            // Compute the object metadata
-            // IMPORTANT: this must happen before the object is added to the prefabParent object below,
-            //            otherwise the object's bounding box will be incorrect! This has something to do with how
-            //            our bounding box computation code works where it ignores some unactive components of an object
-            var assetMeta = getAssetMetadata(sop.gameObject);
-            var objectMeta = ObjectMetadataFromSimObjPhysics(sop, true, true);
+            ProceduralAsset procAsset = null;
+            var debug = stageIndex < presentStages.Length ? presentStages[stageIndex] : "null";
+            Debug.Log($"presentStages {presentStages}, at index {stageIndex}: {debug} , {debug == "msgpack"},  {presentStages.Length} ");
 
-            // get child object on assetDb's game object that's called "Prefabs"
-            // and add the prefab to that
-            var prefabParentTransform = assetDb.transform.Find("Prefabs");
-            if (prefabParentTransform == null) {
-                var prefabParent = new GameObject("Prefabs");
-                prefabParent.transform.parent = assetDb.transform;
-                prefabParent.SetActive(false);
-                prefabParentTransform = prefabParent.transform;
+            if (stageIndex < presentStages.Length && presentStages[stageIndex] == "msgpack") {
+                Debug.Log("Deserialize raw json");
+                 procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
+                    resultStream.ToArray(),
+                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options
+                );
             }
-            go.transform.parent = prefabParentTransform;
+            else if (presentStages.Length == 1) {
+                resultStream.Seek(0, SeekOrigin.Begin);
+                using var reader = new StreamReader(resultStream);
+                
+                var jsonResolver = new ShouldSerializeContractResolver();
+                var serializer = new Newtonsoft.Json.JsonSerializerSettings() {
+                    ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                    ContractResolver = jsonResolver,
+                    ObjectCreationHandling = ObjectCreationHandling.Replace
+                };
+                var json = reader.ReadToEnd();
+                Debug.Log($"Deserialize raw json at {filepath}: str {json}");
+                // procAsset = Newtonsoft.Json.JsonConvert.DeserializeObject<ProceduralAsset>(reader.ReadToEnd(), serializer);
+                procAsset = JsonConvert.DeserializeObject<ProceduralAsset>(json);
+            }
+            else {
+                 actionFinished(success: false, errorMessage: $"Unexpected error with extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
+                 return;
+            }
 
-            actionFinished(success: true, actionReturn: new Dictionary<string, object>{
-                {"assetMetadata", assetMeta},
-                {"objectMetadata", objectMeta}
-            });
+            /// WORKING
+            /*
+            using FileStream compressedFileStream = File.Open(filepath, FileMode.Open);
+            //using FileStream outputFileStream = File.Create(DecompressedFileName);
+            //using FileStream outputFileStream = File.Create(DecompressedFileName);
+            using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
+            
+
+            using var resultStream = new MemoryStream();
+            decompressor.CopyTo(resultStream);
+            var bytes = resultStream.ToArray();
+
+            ProceduralAsset procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(bytes,
+                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+            */
+
+
+            // decompressor.CopyTo(outputFileStream);
+            //outputFileStream.
+
+            // Debugging write contents
+            // var jsonResolver = new ShouldSerializeContractResolver();
+            // var str = Newtonsoft.Json.JsonConvert.SerializeObject(
+            //     procAsset,
+            //     Newtonsoft.Json.Formatting.None,
+            //     new Newtonsoft.Json.JsonSerializerSettings() {
+            //         ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+            //         ContractResolver = jsonResolver
+            //     });
+
+            // System.IO.File.WriteAllText(outpath, str);
+
+            //object assetData = null;
+            //var parent  =  GameObject.Find("Objects").transform;
+            Debug.Log($"procAsset is null? {procAsset == null} -  {procAsset}, albedo rooted? {!Path.IsPathRooted(procAsset.albedoTexturePath)} {procAsset.albedoTexturePath}");
+
+            procAsset.parentTexturesDir =  Path.Combine(dir, id);
+            Debug.Log($" albedo after fix? {procAsset.albedoTexturePath}");
+
+            var assetData = ProceduralTools.CreateAsset(
+                procAsset.vertices,
+                procAsset.normals,
+                procAsset.name,
+                procAsset.triangles,
+                procAsset.uvs,
+                procAsset.albedoTexturePath,
+                procAsset.normalTexturePath,
+                procAsset.emissionTexturePath,
+                procAsset.colliders,
+                procAsset.physicalProperties,
+                procAsset.visibilityPoints,
+                procAsset.annotations ?? annotations,
+                procAsset.receptacleCandidate,
+                procAsset.yRotOffset,
+                returnObject: true,
+                parent: null,
+                addAnotationComponent: false,
+                parentTexturesDir: procAsset.parentTexturesDir
+            );
+
+            // Debug.Log($"root is null? {parent == null} -  {parent}");
+           actionFinished(success: true, actionReturn: assetData);
+        }
+
+        public void GetStreamingAssetsPath() {
+            actionFinished(success: true, actionReturn: Application.streamingAssetsPath);
+        }
+
+        public void GetPersistentDataPath() {
+            actionFinished(success: true, actionReturn: Application.persistentDataPath);
         }
 
         public void CreateHouse(ProceduralHouse house) {
@@ -7471,7 +7494,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        protected List<Vector2> approxObjectMask(SimObjPhysics sop, int divisions) {
+        protected List<Vector2> approxObjectMask(
+            SimObjPhysics sop, int divisions, int? thirdPartyCameraIndex = null
+        ) {
             if (divisions <= 2) {
                 throw new ArgumentException("divisions must be >=3");
             }
@@ -7486,6 +7511,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             float[][] oobbPoints = oobb.cornerPoints;
 
+            Camera camera = m_Camera;
+            if (thirdPartyCameraIndex.HasValue) {
+                camera = agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value];
+            }
+
             List<Vector3> worldSpaceCornerPoints = new List<Vector3>();
             float minX = 1.0f;
             float maxX = 0.0f;
@@ -7494,8 +7524,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxDist = 0.0f;
             for (int i = 0; i < 8; i++) {
                 Vector3 worldSpaceCornerPoint = new Vector3(oobbPoints[i][0], oobbPoints[i][1], oobbPoints[i][2]);
-                maxDist = Mathf.Max(Vector3.Distance(worldSpaceCornerPoint, m_Camera.transform.position), maxDist);
-                Vector3 viewPoint = m_Camera.WorldToViewportPoint(worldSpaceCornerPoint);
+                maxDist = Mathf.Max(Vector3.Distance(worldSpaceCornerPoint, camera.transform.position), maxDist);
+                Vector3 viewPoint = camera.WorldToViewportPoint(worldSpaceCornerPoint);
 
                 minX = Math.Min(viewPoint.x, minX);
                 maxX = Math.Max(viewPoint.x, maxX);
@@ -7529,9 +7559,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     float y = shrunkMinY + (shrunkMaxY - shrunkMinY) * j / (divisions - 1);
 
                     // Convert x,y to a worldspace coordinate at distance maxDist from the camera
-                    Vector3 point = m_Camera.ViewportToWorldPoint(new Vector3(x, y, maxDist));
+                    Vector3 point = camera.ViewportToWorldPoint(new Vector3(x, y, maxDist));
 
-                    if (CheckIfVisibilityPointRaycast(sop: sop, position: point, camera: m_Camera, includeInvisible: false).visible) {
+                    if (CheckIfVisibilityPointRaycast(sop: sop, position: point, camera: camera, includeInvisible: false).visible) {
                         points.Add(new Vector2(x, y));
                     }
                 }
@@ -7539,9 +7569,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return points;
         }
 
-        public void GetApproxObjectMask(string objectId, int divisions = 10) {
+        public void GetApproxObjectMask(
+            string objectId,
+            int divisions = 10,
+            int? thirdPartyCameraIndex = null
+        ) {
             SimObjPhysics sop = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
-            List<Vector2> points = approxObjectMask(sop, divisions: divisions);
+            List<Vector2> points = approxObjectMask(
+                sop,
+                divisions: divisions,
+                thirdPartyCameraIndex: thirdPartyCameraIndex
+            );
             actionFinishedEmit(success: true, actionReturn: points);
         }
 
@@ -7581,6 +7619,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             actionFinishedEmit(true);
         }
+
+        public void SetAssetDatabaseCaching(bool enable) {
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDb == null) {
+                errorMessage = "ProceduralAssetDatabase not in scene.";
+                actionFinishedEmit(false);
+                return;
+            }
+            assetDb.dontDestroyOnLoad = enable;
+            actionFinishedEmit(true);
+        }
+
 
 #if UNITY_EDITOR
         void OnDrawGizmos() {

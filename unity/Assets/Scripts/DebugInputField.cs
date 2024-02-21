@@ -499,17 +499,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                case "testing": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
-                    action["action"] = "CreateObjectPrefabObj";
-                    action["name"] = "TESTING";
-                    action["albedoTexturePath"] = "/Users/lucaw/tmp/debug/processed/637a8eb96f4b4de6a80de5fc9e693763/albedo.jpg";
-                    action["normalTexturePath"] = "/Users/lucaw/tmp/debug/processed/637a8eb96f4b4de6a80de5fc9e693763/normal.jpg";
-                    action["emissionTexturePath"] = "/Users/lucaw/tmp/debug/processed/637a8eb96f4b4de6a80de5fc9e693763/emission.jpg";
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
-
                 case "sim": {
                     var collisionListener = this.CurrentActiveController().GetComponent<CollisionListener>();
                     Physics.Simulate(0.02f);
@@ -635,7 +624,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     CurrentActiveController().ProcessControlCommand(action);
                     break;
                 }
-                 
+
+                case "adbdol": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "SetAssetDatabaseCaching";
+
+                    if (splitcommand.Length > 1) {
+                        action["enable"] = bool.Parse(splitcommand[1]);
+                    }
+                    
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+
+                }
                 case "mabd": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
@@ -1409,8 +1411,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // materials, and you'll have to call "git restore *.mat *maT"
                 // to revert the materials.
                 case "dangerouslyChangeMaterial":
+                    List<string> excludedObjectIds = new List<string>();
+
+                    if (splitcommand.Length > 1) {
+                        excludedObjectIds.Add(splitcommand[1]);
+                    }
+
                     CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                        ["action"] = "RandomizeMaterials"
+                        ["action"] = "RandomizeMaterials",
+                        ["excludedObjectIds"] = excludedObjectIds
                     });
                     break;
                 case "resetMaterial":
@@ -2788,6 +2797,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "rwr": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "RotateWristRelative";
+                        action["disableRendering"] = false;
+
+                        if (splitcommand.Length > 1) {
+                            action["yaw"] = float.Parse(splitcommand[1]);
+                        }
+
+                        // action.manualInteract = true;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                }
+
+                // rotate wrist absolute
+                case "rw": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RotateWrist";
                         action["disableRendering"] = false;
 
                         if (splitcommand.Length > 1) {
@@ -4420,7 +4444,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         JObject obj = JObject.Parse(jsonStr);
 
-                        obj["action"] = "CreateObjectPrefab";
+                        obj["action"] = "CreateRuntimeAsset";
+                        obj["serializable"] = true;
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(obj));
 
                         break;
@@ -4716,6 +4741,80 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Debug.Log($"Geometry. vertexCount: {geo.vertices.Length}, triangleCount: {geo.triangleIndices.Length / 3}, some: {string.Join(", ", geo.triangleIndices.Take(12))}");
                         break;
                     }
+
+                     case "ca_msg": {
+                   
+                    
+
+                    if (splitcommand.Length == 2) {
+
+                        var objectId = splitcommand[1];
+
+                        var fname = objectId.Trim();
+                        if (!fname.EndsWith(".json")) {
+                            fname += ".msgpack.gz";
+                        }
+                        
+                        var pathSplit = Application.dataPath.Split('/');
+
+                        var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
+                        Debug.Log(string.Join("/", repoRoot));
+
+                        var objaverseRoot = $"{string.Join("/", repoRoot)}/objaverse";
+                        var objectDir = $"{objaverseRoot}/{objectId}";
+                        var objectPath = $"{objectDir}/{fname}";
+
+                         
+                        
+                        var filename = Path.GetFileName(objectPath);
+
+                        var pathOut = Application.dataPath + $"/Resources/msgpack_test/{objectId}.json";
+
+                        CurrentActiveController().CreateRuntimeAsset(
+                            objectPath,
+                            pathOut
+                        );
+                    }
+                    
+                    break;
+                }
+                case "caid_msg": {
+                   
+                    
+
+                    if (splitcommand.Length == 2) {
+
+                        var objectId = splitcommand[1];
+
+                        var fname = objectId.Trim();
+                        if (!fname.EndsWith(".json")) {
+                            fname += ".msgpack.gz";
+                        }
+                        
+                        var pathSplit = Application.dataPath.Split('/');
+
+                        var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
+                        Debug.Log(string.Join("/", repoRoot));
+
+                        var objaverseRoot = $"{string.Join("/", repoRoot)}/objaverse";
+                        var objectDir = $"{objaverseRoot}/{objectId}";
+                        var objectPath = $"{objectDir}/{fname}";
+                        var dir = Application.persistentDataPath;
+
+                         
+                        
+                        var filename = Path.GetFileName(objectPath);
+
+                        var pathOut = Application.dataPath + $"/Resources/msgpack_test/{objectId}.json";
+
+                        CurrentActiveController().CreateRuntimeAsset(
+                            objectId,
+                            dir
+                        );
+                    }
+                    
+                    break;
+                }
 
                 case "proc_mats": {
                         var mats = ProceduralTools.GetMaterials();

@@ -17,6 +17,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected float primaryStartingXRotation, secondaryStartingXRotation;
         protected float maxBaseXZOffset = 0.25f, maxBaseXYRotation = 10f;
         protected float minGimbalXRotation = -80.001f, maxGimbalXRotation = 80.001f;
+        public int gripperOpennessState = 0;
 
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
@@ -136,11 +137,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // enable stretch arm component
             Debug.Log("initializing stretch arm");
             StretchArm.SetActive(true);
+            //initialize all things needed for the stretch arm controller
             SArm = this.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+            SArm.PhysicsController = this;
             var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
             Vector3 pos = armTarget.transform.localPosition;
             pos.z = 0.0f; // pulls the arm in to be fully contracted
-            //SetGripperOpenness(InitialGripperOpenness); // set initial amount of gripper openness
             armTarget.transform.localPosition = pos;
             var StretchSolver = this.GetComponentInChildren<Stretch_Arm_Solver>();
             Debug.Log("running manipulate stretch arm");
@@ -358,18 +360,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             if (-100 <= openness && openness < 0) {
                 GripperOpennessStates[0].SetActive(true);
+                gripperOpennessState = 0;
             } else if (0 <= openness && openness < 5) {
                 GripperOpennessStates[1].SetActive(true);
+                gripperOpennessState = 1;
             } else if (5 <= openness && openness < 15) {
                 GripperOpennessStates[2].SetActive(true);
+                gripperOpennessState = 2;
             } else if (15 <= openness && openness < 25) {
                 GripperOpennessStates[3].SetActive(true);
+                gripperOpennessState = 3;
             } else if (25 <= openness && openness < 35) {
                 GripperOpennessStates[4].SetActive(true);
+                gripperOpennessState = 4;
             } else if (35 <= openness && openness < 45) {
                 GripperOpennessStates[5].SetActive(true);
+                gripperOpennessState = 5;
             } else if (45 <= openness && openness <= 50) {
                 GripperOpennessStates[6].SetActive(true);
+                gripperOpennessState = 6;
             } else {
                 throw new InvalidOperationException(
                     $"Invalid value for `openness`: '{openness}'. Value should be between -100 and 50"
@@ -766,13 +775,59 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Stretch_Robot_Arm_Controller arm = getArm();
 
+            yaw %= 360;
+
             arm.rotateWrist(
                 controller: this,
-                rotation: Quaternion.Euler(0, yaw, 0),
+                rotation: yaw,
                 degreesPerSecond: speed,
                 disableRendering: disableRendering,
                 fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
-                returnToStartPositionIfFailed: returnToStart
+                returnToStartPositionIfFailed: returnToStart,
+                isRelativeRotation: true
+            );
+        }
+
+        public void RotateWrist(
+            float pitch = 0f,
+            float yaw = 0f,
+            float roll = 0f,
+            float speed = 10f,
+            float? fixedDeltaTime = null,
+            bool returnToStart = true,
+            bool disableRendering = true
+        ) {
+            // pitch and roll are not supported for the stretch and so we throw an error
+            if (pitch != 0f || roll != 0f) {
+                throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
+            }
+
+            // GameObject posRotManip = this.GetComponent<BaseAgentComponent>().StretchArm.GetComponent<Stretch_Robot_Arm_Controller>().GetArmTarget();
+
+            Stretch_Robot_Arm_Controller arm = getArm();
+            float startingRotation = arm.GetArmTarget().transform.localEulerAngles.y;
+
+            // Normalize target yaw to be bounded by [0, 360) (startingRotation is defaults to this)
+            yaw %= 360;
+            if (yaw < 0) {
+                yaw += 360;
+            }
+
+            // Find shortest relativeRotation to feed into rotateWrist
+            yaw -= startingRotation;
+
+            if (Mathf.Abs(yaw) > 180) {
+                yaw = (Mathf.Abs(yaw) - 360) * Mathf.Sign(yaw);
+            }
+
+            arm.rotateWrist(
+                controller: this,
+                rotation: yaw,
+                degreesPerSecond: speed,
+                disableRendering: disableRendering,
+                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                returnToStartPositionIfFailed: returnToStart,
+                isRelativeRotation: false
             );
         }
 

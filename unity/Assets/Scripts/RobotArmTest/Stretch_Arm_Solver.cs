@@ -6,7 +6,7 @@ public class Stretch_Arm_Solver : MonoBehaviour {
     public Transform armRoot, armTarget;
     Transform arm1, arm2, arm3, arm4, arm5, wrist1;
     float liftInitialLocalHeightOffset = 0f, armHeight, armExtensionLength;
-    private float lowerArmHeightLimit = -0.056f, upperArmHeightLimit = 1.045f, backArmExtensionLimit = 0f, frontArmExtensionLimit = 0.5186f;
+    private float lowerArmHeightLimit = -0.056f, upperArmHeightLimit = 1.045f, backArmExtensionLimit = 0f, frontArmExtensionLimit = 0.516f;
 
     #if UNITY_EDITOR
         void Update() {
