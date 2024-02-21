@@ -6846,28 +6846,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Debug.Log($" albedo after fix? {procAsset.albedoTexturePath}");
 
             var assetData = ProceduralTools.CreateAsset(
-                    procAsset.vertices,
-                    procAsset.normals,
-                    procAsset.name,
-                    procAsset.triangles,
-                    procAsset.uvs,
-                    procAsset.albedoTexturePath ,
-                    procAsset.normalTexturePath ,
-                    procAsset.emissionTexturePath,
-                    procAsset.colliders ,
-                    procAsset.physicalProperties,
-                    procAsset.visibilityPoints ,
-                    procAsset.annotations ?? annotations,
-                    procAsset.receptacleCandidate ,
-                    procAsset.yRotOffset ,
-                    returnObject: true,
-                    parent:null,
-                    addAnotationComponent: false,
-                    parentTexturesDir: procAsset.parentTexturesDir
-                );
+                procAsset.vertices,
+                procAsset.normals,
+                procAsset.name,
+                procAsset.triangles,
+                procAsset.uvs,
+                procAsset.albedoTexturePath
+                procAsset.normalTexturePath,
+                procAsset.emissionTexturePath,
+                procAsset.colliders,
+                procAsset.physicalProperties,
+                procAsset.visibilityPoints,
+                procAsset.annotations ?? annotations,
+                procAsset.receptacleCandidate,
+                procAsset.yRotOffset,
+                returnObject: true,
+                parent: null,
+                addAnotationComponent: false,
+                parentTexturesDir: procAsset.parentTexturesDir
+            );
 
-                // Debug.Log($"root is null? {parent == null} -  {parent}");
-           actionFinished(success: true, actionReturn: null);
+            // Debug.Log($"root is null? {parent == null} -  {parent}");
+           actionFinished(success: true, actionReturn: assetData);
         }
 
         public void GetStreamingAssetsPath() {
