@@ -129,6 +129,7 @@ namespace Thor.Procedural {
             Debug.Log($"---- SaveTextures {outTextureBasePath}");
 
             var newAlbedo = copyTexture(runtimeP.albedoTexturePath, outTextureBasePath);
+            var newMetallicSmoothness = copyTexture(runtimeP.metallicSmoothnessTexturePath, outTextureBasePath);
             var newNormal = copyTexture(runtimeP.normalTexturePath, outTextureBasePath);
             var newEmission = copyTexture(runtimeP.emissionTexturePath, outTextureBasePath);
             
@@ -145,6 +146,7 @@ namespace Thor.Procedural {
             normalImporter.textureType = TextureImporterType.NormalMap;
             
             sharedMaterial.SetTexture("_MainTex", loadTexture(newAlbedo));//Resources.Load<Texture2D>(newAlbedo));
+            sharedMaterial.SetTexture("_MetallicGlossMap", loadTexture(newMetallicSmoothness));
             sharedMaterial.SetTexture("_BumpMap",  loadTexture(newNormal));
             sharedMaterial.SetTexture("_EmissionMap",  loadTexture(newEmission));
 
@@ -226,6 +228,7 @@ namespace Thor.Procedural {
                     procAsset.triangles,
                     procAsset.uvs,
                     procAsset.albedoTexturePath ,
+                    procAsset.metallicSmoothnessTexturePath ,
                     procAsset.normalTexturePath ,
                     procAsset.emissionTexturePath,
                     procAsset.colliders ,
@@ -366,6 +369,7 @@ namespace Thor.Procedural {
             //         procAsset.triangles,
             //         procAsset.uvs,
             //         procAsset.albedoTexturePath ,
+            //         procAsset.metallicSmoothnessTexturePath ,
             //         procAsset.normalTexturePath ,
             //         procAsset.emissionTexturePath,
             //         procAsset.colliders ,

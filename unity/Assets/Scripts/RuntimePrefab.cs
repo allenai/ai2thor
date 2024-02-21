@@ -21,6 +21,8 @@ public class RuntimePrefab : MonoBehaviour {
     // we store a local reference to the texture.
     public string albedoTexturePath;
 
+    public string metallicSmoothnessTexturePath;
+
     public string normalTexturePath;
 
     public string emissionTexturePath;
@@ -43,7 +45,15 @@ public class RuntimePrefab : MonoBehaviour {
             }
         }
 
-         if (normalTexturePath != null) {
+        if (metallicSmoothnessTexturePath != null) {
+                sharedMaterial.EnableKeyword("_METALLICGLOSSMAP");
+                byte[] imageBytes = File.ReadAllBytes(metallicSmoothnessTexturePath);
+                Texture2D tex = new Texture2D(2, 2);
+                tex.LoadImage(imageBytes);
+                sharedMaterial.SetTexture("_MetallicGlossMap", tex);
+            }
+
+        if (normalTexturePath != null) {
                 sharedMaterial.EnableKeyword("_NORMALMAP");
                 byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
                 Texture2D tex = new Texture2D(2, 2);
@@ -51,7 +61,7 @@ public class RuntimePrefab : MonoBehaviour {
                 sharedMaterial.SetTexture("_BumpMap", tex);
             }
 
-            if (emissionTexturePath != null) {
+        if (emissionTexturePath != null) {
                 sharedMaterial.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
                 sharedMaterial.EnableKeyword("_EMISSION");
                 byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);
