@@ -750,12 +750,13 @@ def test_toggle_stove(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_open_interactable_with_filter(controller):
-    position = {"x": -1.0, "y": 0.9009982347488403, "z": -0.5}
+    position = {"x": -1.2, "y": 0.9009982347488403, "z": -0.5}
     action = position.copy()
     action["rotation"] = dict(y=90)
     action["horizon"] = 0
     action["standing"] = True
     action["action"] = "TeleportFull"
+    action["forceAction"] = True
     controller.step(action, raise_for_failure=True)
 
     fridge = next(
@@ -786,12 +787,13 @@ def test_open_interactable_with_filter(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_open_interactable(controller):
-    position = {"x": -1.0, "y": 0.9009982347488403, "z": -0.5}
+    position = {"x": -1.2, "y": 0.9009982347488403, "z": -0.5}
     action = position.copy()
     action["rotation"] = dict(y=90)
     action["horizon"] = 0
     action["standing"] = True
     action["action"] = "TeleportFull"
+    action["forceAction"] = True
     controller.step(action, raise_for_failure=True)
 
     fridge = next(
