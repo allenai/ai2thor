@@ -6851,7 +6851,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 procAsset.name,
                 procAsset.triangles,
                 procAsset.uvs,
-                procAsset.albedoTexturePath
+                procAsset.albedoTexturePath,
                 procAsset.normalTexturePath,
                 procAsset.emissionTexturePath,
                 procAsset.colliders,
