@@ -669,6 +669,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     action["objectId"] = splitcommand[1];
                     action["renderResolution"] = new Vector2(512, 512);
                     action["angles"] = new List<float> { 0, 90, 180, 270 };
+
+                    action["cameraHeightMultiplier"] = 0.0f;
+                    if (splitcommand.Length > 2) {
+                        action["cameraHeightMultiplier"] = float.Parse(splitcommand[2]);
+                    }
+
                     CurrentActiveController().ProcessControlCommand(action);
                     break;
                 }

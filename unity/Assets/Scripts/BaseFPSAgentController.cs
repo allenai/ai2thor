@@ -7403,15 +7403,86 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 });
         }
 
-        // Helper method to calculate the required distance of the camera based on the object size and camera's FOV
-        protected float CalculateCameraDistance(Camera camera, float objectSize) {
-            float cameraFOV = camera.fieldOfView;
-            float cameraAspect = camera.aspect;
-            float distance = objectSize / (2f * Mathf.Tan(0.5f * cameraFOV * Mathf.Deg2Rad));
-            // Adjust distance based on the aspect ratio
-            distance /= cameraAspect;
-            // Additional adjustment to ensure object fits well within the viewport
-            return distance * 1.2f; // Factor of 1.2 to ensure the object is well within the view
+        protected static Vector3[] GetBoundsCorners(Bounds bounds) {
+            Vector3[] corners = new Vector3[8];
+
+            for (int i = 0; i < 8; i++) {
+                corners[i] = new Vector3(
+                    (i & 1) == 0 ? bounds.min.x : bounds.max.x,
+                    (i & 2) == 0 ? bounds.min.y : bounds.max.y,
+                    (i & 4) == 0 ? bounds.min.z : bounds.max.z
+                );
+            }
+
+            return corners;
+        }
+
+        protected static bool IsPointInView(Camera camera, Vector3 point, float minSlack) {
+            Vector3 viewportPoint = camera.WorldToViewportPoint(point);
+            return (
+                viewportPoint.z > 0
+                && viewportPoint.x >= minSlack
+                && viewportPoint.x <= 1-minSlack
+                && viewportPoint.y >= minSlack
+                && viewportPoint.y <= 1-minSlack
+            );
+        }
+
+        private static bool AreBoundsInViewAtDistance(Camera camera, Bounds bounds, float distance, float minSlack) {
+            // Position the camera temporarily to calculate the visibility at the given distance
+            Vector3 originalPosition = camera.transform.position;
+            Quaternion originalRotation = camera.transform.rotation;
+
+            camera.transform.position = bounds.center + Vector3.Normalize(camera.transform.position + bounds.center) * distance;
+            camera.transform.LookAt(bounds.center);
+
+            // Check each corner of the bounds to see if it's visible
+            bool allCornersInView = true;
+            Vector3[] corners = GetBoundsCorners(bounds);
+            foreach (Vector3 corner in corners) {
+                if (!IsPointInView(camera, corner, minSlack: minSlack)) {
+                    allCornersInView = false;
+                    break;
+                }
+            }
+
+            // Restore camera's original position and rotation
+            camera.transform.position = originalPosition;
+            camera.transform.rotation = originalRotation;
+
+            return allCornersInView;
+        }
+
+
+        public float FindClosestDistance(Camera camera, Bounds objectBounds, float minSlack = 0.01f) {
+            float minDistance = 0.01f; // Minimum possible distance, avoid division by zero or negative values
+
+            // Find a reasonable max distance by doubling until the object is in view
+            float maxDistance = 1f;
+            for (int i = 0; i < 10; i++) {
+                if (!AreBoundsInViewAtDistance(camera, objectBounds, maxDistance, minSlack: minSlack)) {
+                    maxDistance *= 2;
+                } else {
+                    break;
+                }
+            }
+            if (!AreBoundsInViewAtDistance(camera, objectBounds, maxDistance, minSlack: minSlack)) {
+                return -1.0f;
+            }
+
+            float targetAccuracy = 0.01f; // How close we need to get to the answer
+            while (minDistance < maxDistance - targetAccuracy) {
+                float midDistance = (minDistance + maxDistance) / 2;
+                Debug.Log(midDistance);
+                if (AreBoundsInViewAtDistance(camera, objectBounds, midDistance, minSlack: minSlack)) {
+                    maxDistance = midDistance;
+                } else {
+                    minDistance = midDistance;
+                }
+            }
+
+            // Optionally, adjust by a small factor to ensure it's fully within view
+            return maxDistance;
         }
 
         protected IEnumerator renderObjectFromAngles(
@@ -7432,9 +7503,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (Renderer renderer in renderers) {
                 bounds.Encapsulate(renderer.bounds);
             }
+            foreach (Collider c in targetObject.GetComponentsInChildren<Collider>()) {
+                bounds.Encapsulate(c.bounds);
+            }
 
             float objectSize = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-            float cameraDistance = CalculateCameraDistance(renderCamera, objectSize);
+            float objectRadius = Mathf.Sqrt(bounds.extents.x * bounds.extents.x + bounds.extents.z * bounds.extents.z);
             float cameraHeight = bounds.size.y * cameraHeightMultiplier; // Adjust for 3/4 view
 
             RenderTexture renderTexture = new RenderTexture((int)renderResolution.x, (int)renderResolution.y, 24);
@@ -7444,11 +7518,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (float angle in angles) {
                 // Calculate camera position for 3/4 view
                 float radians = (90f - angle) * Mathf.Deg2Rad;
-                Vector3 cameraPosition = new Vector3(Mathf.Cos(radians), 0, Mathf.Sin(radians)) * cameraDistance;
+                Vector3 cameraPosition = new Vector3(
+                    objectRadius * Mathf.Cos(radians),
+                    bounds.extents.y * cameraHeightMultiplier,
+                    objectRadius * Mathf.Sin(radians)
+                );
                 cameraPosition += bounds.center; // Center on object
-                cameraPosition.y += cameraHeight; // Adjust height for 3/4 view
                 renderCamera.transform.position = cameraPosition;
                 renderCamera.transform.LookAt(bounds.center);
+
+                float dist = FindClosestDistance(renderCamera, bounds, minSlack: 0.025f);
+
+                if (dist < 0) {
+                    errorMessage = "Could not find a suitable distance to render the object.";
+                    byte_arrays = null;
+                    break;
+                }
+//                Debug.Log($"Computed dist: {dist}");
+
+                cameraPosition = bounds.center + Vector3.Normalize(cameraPosition - bounds.center) * dist;
+                renderCamera.transform.position = cameraPosition;
 
                 // Render
                 yield return new WaitForEndOfFrame(); // Ensure the frame is rendered
@@ -7476,14 +7565,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             RenderTexture.active = null;
             RenderTexture.Destroy(renderTexture);
 
-            actionFinished(true, byte_arrays);
+            actionFinished(byte_arrays != null, byte_arrays);
         }
 
         public void RenderObjectFromAngles(
             string objectId,
             Vector2 renderResolution,
             float[] angles,
-            float cameraHeightMultiplier = 0.75f
+            float cameraHeightMultiplier = 0.5f
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = "No object with ID " + objectId;
