@@ -113,15 +113,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             string serverPipePath = LoadStringVariable(null, "FIFO_SERVER_PIPE_PATH");
             string clientPipePath = LoadStringVariable(null, "FIFO_CLIENT_PIPE_PATH");
 
-            // TODO: Create dir if not exists
-            if (string.IsNullOrEmpty(serverPipePath)) {
-                serverPipePath = "fifo_pipe/server.pipe";
-                
-            }
-            if (string.IsNullOrEmpty(clientPipePath)) {
-                clientPipePath = "fifo_pipe/client.pipe";
-            }
-
             Debug.Log("creating fifo server: " + serverPipePath);
             Debug.Log("client fifo path: " + clientPipePath);
             this.fifoClient = FifoServer.Client.GetInstance(serverPipePath, clientPipePath);
@@ -165,6 +156,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             jsInterface.enabled = true;
         }
 #endif
+        Debug.Log("AgentManager Started Coroutine with EmitFrame");
         StartCoroutine(EmitFrame());
     }
 
@@ -203,11 +195,11 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 throw new ArgumentException($"Invalid agentMode {action.agentMode}");
             }
 
-            // if (action.agentMode != "stretchab") {
-            //     action.autoSimulation = false;
-            // } else {
-            //     action.autoSimulation = true;
-            // }
+            if (action.agentMode != "stretchab") {
+                action.autoSimulation = false;
+            } else {
+                action.autoSimulation = true;
+            }
             physicsSceneManager.MakeAllObjectsMoveable();
         } else {
             var error = $"Invalid agentMode {action.agentMode}";
@@ -1067,7 +1059,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
     public IEnumerator EmitFrame() {
         while (true) {
-           
+            Debug.Log("EmitFrame loop start");
             bool shouldRender = this.renderImage && serverSideScreenshot;
 
             bool shouldRenderImageSynthesis = shouldRender && this.renderImageSynthesis;
@@ -1081,7 +1073,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 }
             }
 
+            Debug.Log("Before yield waitenofframe loop start");
             yield return new WaitForEndOfFrame();
+
+            Debug.Log("After yield waitenofframe");
 
             frameCounter += 1;
             
@@ -1095,6 +1090,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 }
             }
             
+            Debug.Log($"Can emmit check? canEmit {this.canEmit()} agentState {this.GetActiveAgent().agentState}");
             if (!this.canEmit()) {
                 continue;
             }
@@ -1102,8 +1098,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
             List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
+            Debug.Log($"BeforeCreate payload");
             createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender, shouldRenderImageSynthesis);
-            Debug.Log("------ payload");
+            Debug.Log($"After Create payload");
+            
 #if UNITY_WEBGL
                 JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
                 if (jsInterface != null) {
@@ -1209,7 +1207,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     ProcessControlCommand(msg);
                 }
             } else if (serverType == serverTypes.FIFO) {
-
+                
+                 Debug.Log($"Server type fifo ");
                 byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(multiMeta,
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
                 

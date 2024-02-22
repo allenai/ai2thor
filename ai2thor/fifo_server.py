@@ -10,7 +10,6 @@ import os
 import select
 import struct
 import tempfile
-import shutil
 import time
 from collections import defaultdict
 from enum import IntEnum, unique
@@ -58,23 +57,11 @@ class FifoServer(ai2thor.server.Server):
         timeout: Optional[float] = 100.0,
         depth_format=ai2thor.server.DepthFormat.Meters,
         add_depth_noise: bool = False,
-        start_unity: bool = True
     ):
-        if start_unity:
-            self.tmp_dir = tempfile.TemporaryDirectory()
 
-            self.server_pipe_path = os.path.join(self.tmp_dir.name, "server.pipe")
-            self.client_pipe_path = os.path.join(self.tmp_dir.name, "client.pipe")
-        else:
-
-            pipe_path = os.path.join(os.getcwd(), "unity/fifo_pipe/")
-            if os.path.exists(pipe_path):
-                shutil.rmtree(pipe_path)
-            os.makedirs(pipe_path, exist_ok=True)
-            self.server_pipe_path = os.path.join(pipe_path, "server.pipe")
-            self.client_pipe_path = os.path.join(pipe_path, "client.pipe")
-
-        print("--- pipe path " + self.server_pipe_path + " client: " + self.client_pipe_path)
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.server_pipe_path = os.path.join(self.tmp_dir.name, "server.pipe")
+        self.client_pipe_path = os.path.join(self.tmp_dir.name, "client.pipe")
         self.server_pipe: Optional[TextIOWrapper] = None
         self.client_pipe: Optional[TextIOWrapper] = None
         self.raw_metadata = None

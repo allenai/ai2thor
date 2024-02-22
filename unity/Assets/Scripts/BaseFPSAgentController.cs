@@ -6961,6 +6961,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void CreateHouse(ProceduralHouse house) {
+            Debug.Log($"---- BaseFPS CreateHouse");
             var rooms = house.rooms.SelectMany(room => house.rooms);
 
             var materials = ProceduralTools.GetMaterials();

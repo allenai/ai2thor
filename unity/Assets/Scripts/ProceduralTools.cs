@@ -1201,6 +1201,7 @@ namespace Thor.Procedural {
            AssetMap<Material> materialDb,
            Vector3? position = null
        ) {
+            Debug.Log($"---- Calling CreateHouse {house.metadata.schema}");
             // raise exception if metadata contains schema
             if (house.metadata == null || house.metadata.schema == null) {
                 throw new ArgumentException(

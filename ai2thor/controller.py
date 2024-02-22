@@ -661,7 +661,8 @@ class Controller(object):
                 timeout=self.server_timeout,
                 depth_format=self.depth_format,
                 add_depth_noise=self.add_depth_noise,
-                start_unity=self.start_unity
+                # TODO add back to support editor fifo server
+                # start_unity=self.start_unity
             )
 
     def __enter__(self):
