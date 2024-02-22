@@ -6949,7 +6949,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
 
                 // Debug.Log($"root is null? {parent == null} -  {parent}");
-           actionFinished(success: true, actionReturn: null);
+           actionFinished(success: true, actionReturn: assetData);
         }
 
         public void GetStreamingAssetsPath() {
@@ -7418,7 +7418,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Camera renderCamera,
             GameObject targetObject,
             Vector2 renderResolution,
-            float[] angles
+            float[] angles,
+            float cameraHeightMultiplier
         ) {
             // Save the original camera settings
             Vector3 originalPosition = renderCamera.transform.position;
@@ -7434,7 +7435,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float objectSize = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
             float cameraDistance = CalculateCameraDistance(renderCamera, objectSize);
-            float cameraHeight = bounds.size.y * 0.75f; // Adjust for 3/4 view
+            float cameraHeight = bounds.size.y * cameraHeightMultiplier; // Adjust for 3/4 view
 
             RenderTexture renderTexture = new RenderTexture((int)renderResolution.x, (int)renderResolution.y, 24);
             renderCamera.targetTexture = renderTexture;
@@ -7481,7 +7482,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void RenderObjectFromAngles(
             string objectId,
             Vector2 renderResolution,
-            float[] angles
+            float[] angles,
+            float cameraHeightMultiplier = 0.75f
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = "No object with ID " + objectId;
@@ -7492,7 +7494,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         renderCamera: m_Camera,
                         targetObject: physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject,
                         renderResolution: renderResolution,
-                        angles: angles
+                        angles: angles,
+                        cameraHeightMultiplier: cameraHeightMultiplier
                     )
                 );
             }
