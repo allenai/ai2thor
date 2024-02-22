@@ -197,6 +197,7 @@ def _build(
     full_env.update(env)
     full_env["UNITY_BUILD_NAME"] = target_path
 
+    print(f"Running build command:\n{command}\nwith env\n{full_env}")
     process = subprocess.Popen(command, shell=True, env=full_env)
 
     start = time.time()
