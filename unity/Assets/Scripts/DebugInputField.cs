@@ -662,6 +662,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     CurrentActiveController().ProcessControlCommand(action);
                     break;
                 }
+                case "render": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "RenderObjectFromAngles";
+                    action["objectId"] = splitcommand[1];
+                    action["renderResolution"] = new Vector2(512, 512);
+                    action["angles"] = new List<float> { 0, 90, 180, 270 };
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
 
                 case "sgo": {
                     Dictionary<string, object> action = new Dictionary<string, object>();

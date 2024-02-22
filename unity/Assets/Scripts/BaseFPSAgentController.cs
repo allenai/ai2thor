@@ -7403,6 +7403,101 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 });
         }
 
+        // Helper method to calculate the required distance of the camera based on the object size and camera's FOV
+        protected float CalculateCameraDistance(Camera camera, float objectSize) {
+            float cameraFOV = camera.fieldOfView;
+            float cameraAspect = camera.aspect;
+            float distance = objectSize / (2f * Mathf.Tan(0.5f * cameraFOV * Mathf.Deg2Rad));
+            // Adjust distance based on the aspect ratio
+            distance /= cameraAspect;
+            // Additional adjustment to ensure object fits well within the viewport
+            return distance * 1.2f; // Factor of 1.2 to ensure the object is well within the view
+        }
+
+        protected IEnumerator renderObjectFromAngles(
+            Camera renderCamera,
+            GameObject targetObject,
+            Vector2 renderResolution,
+            float[] angles
+        ) {
+            // Save the original camera settings
+            Vector3 originalPosition = renderCamera.transform.position;
+            Quaternion originalRotation = renderCamera.transform.rotation;
+            RenderTexture originalRenderTexture = renderCamera.targetTexture;
+
+            // Calculate bounds of the target object
+            Renderer[] renderers = targetObject.GetComponentsInChildren<Renderer>();
+            Bounds bounds = new Bounds(targetObject.transform.position, Vector3.zero);
+            foreach (Renderer renderer in renderers) {
+                bounds.Encapsulate(renderer.bounds);
+            }
+
+            float objectSize = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+            float cameraDistance = CalculateCameraDistance(renderCamera, objectSize);
+            float cameraHeight = bounds.size.y * 0.75f; // Adjust for 3/4 view
+
+            RenderTexture renderTexture = new RenderTexture((int)renderResolution.x, (int)renderResolution.y, 24);
+            renderCamera.targetTexture = renderTexture;
+
+            List<byte[]> byte_arrays = new List<byte[]>();
+            foreach (float angle in angles) {
+                // Calculate camera position for 3/4 view
+                float radians = (90f - angle) * Mathf.Deg2Rad;
+                Vector3 cameraPosition = new Vector3(Mathf.Cos(radians), 0, Mathf.Sin(radians)) * cameraDistance;
+                cameraPosition += bounds.center; // Center on object
+                cameraPosition.y += cameraHeight; // Adjust height for 3/4 view
+                renderCamera.transform.position = cameraPosition;
+                renderCamera.transform.LookAt(bounds.center);
+
+                // Render
+                yield return new WaitForEndOfFrame(); // Ensure the frame is rendered
+
+                Texture2D renderResult = new Texture2D(renderTexture.width, renderTexture.height);
+                RenderTexture.active = renderTexture;
+                renderResult.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
+                renderResult.Apply();
+
+                // Save the image
+                byte[] byteArray = renderResult.EncodeToPNG();
+                byte_arrays.Add(byteArray);
+
+//                string filePath = Path.Combine("/Users/lucaw/tmp/yar", $"render_{angle}.png");
+//                File.WriteAllBytes(filePath, byteArray);
+
+                // Clean up
+                Texture2D.Destroy(renderResult);
+            }
+
+            // Reset the camera parameters
+            renderCamera.transform.position = originalPosition;
+            renderCamera.transform.rotation = originalRotation;
+            renderCamera.targetTexture = originalRenderTexture;
+            RenderTexture.active = null;
+            RenderTexture.Destroy(renderTexture);
+
+            actionFinished(true, byte_arrays);
+        }
+
+        public void RenderObjectFromAngles(
+            string objectId,
+            Vector2 renderResolution,
+            float[] angles
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "No object with ID " + objectId;
+                actionFinished(false, errorMessage: errorMessage);
+            } else {
+                StartCoroutine(
+                    renderObjectFromAngles(
+                        renderCamera: m_Camera,
+                        targetObject: physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject,
+                        renderResolution: renderResolution,
+                        angles: angles
+                    )
+                );
+            }
+        }
+
         public void RemoveObject(string objectId) {
             var obj = GameObject.Find(objectId);
             if (obj == null) {
