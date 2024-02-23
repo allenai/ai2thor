@@ -459,6 +459,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
         if(!agentRelativeCoordinates) {
             // update the position and rotation
+            camera.transform.SetParent(null);
             camera.gameObject.transform.position = position;
             camera.gameObject.transform.eulerAngles = rotation;
         } else {
