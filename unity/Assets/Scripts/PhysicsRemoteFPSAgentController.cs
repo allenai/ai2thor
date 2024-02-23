@@ -5242,15 +5242,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(true);
                 }
                 else {
-                    var cameras = new List<Camera>(){m_Camera}.Concat(this.agentManager.thirdPartyCameras);
-                    var matches = cameras.Where(cam => cam.name == camera);
+                    var cameraTuples = new List<(Camera camera, bool isThirdPartyCamera, int id)>(){(camera: m_Camera, isThirdPartyCamera: false, id: -1)}.Concat(this.agentManager.thirdPartyCameras.Select((c, i) => (camera: c, isThirdPartyCamera: true, id: i)));
+                    var matches = cameraTuples;
+                    if (camera != "*") {
+                        matches = cameraTuples.Where(t => t.camera.name == camera);
+                    }
+                    // Debug.Log($"Camera matches: {matches.Count()} {string.Join(", ", matches.Select(m => m.camera.name))}");
                     if (matches.Count() == 0) {
-                         errorMessage = $"Camera '{camera}' is not present in the agent, make sure the agent was initialized correctly or camera was added via 'AddThirdPartyCamera'.";
+                        errorMessage = $"Camera '{camera}' is not present in the agent, make sure the agent was initialized correctly or camera was added via 'AddThirdPartyCamera'.";
                         actionFinished(false);
                     }
                     else {
-                        foreach (var cam in matches) {
-                            cam.fieldOfView = fieldOfView;
+                        foreach (var tuple in matches) {
+                            if (tuple.isThirdPartyCamera) {
+                                agentManager.UpdateThirdPartyCamera(
+                                    tuple.id,
+                                    fieldOfView: fieldOfView
+                                );
+                            }
+                            else {
+                                tuple.camera.fieldOfView = fieldOfView;
+                            }
+                            
                         }
                         actionFinished(true);
                     }

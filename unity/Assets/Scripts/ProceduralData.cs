@@ -480,6 +480,7 @@ namespace Thor.Procedural.Data {
         public int[] triangles;
         public Vector2[]? uvs = null;
         public string albedoTexturePath = null;
+        public string metallicSmoothnessTexturePath = null;
         public string normalTexturePath = null;
         public string emissionTexturePath = null;
         public SerializableCollider[]? colliders = null;
