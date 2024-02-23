@@ -1957,16 +1957,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "atpc": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "AddThirdPartyCamera",
-                            ["position"] = Vector3.zero,
-                            ["rotation"] = Vector3.zero,
-                            ["orthographic"] = true,
-                            ["orthographicSize"] = 5,
+                            ["position"] = new Vector3(1, 1, 1),
+                            ["rotation"] = new Vector3(10, 20, 30),
+                            ["agentRelativeCoordinates"] = true
                         };
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
                     }
+                case "utpc": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateThirdPartyCamera",
+                            ["position"] = new Vector3(2, 2, 2),
+                            ["rotation"] = new Vector3(15, 25, 35),
+                            ["thirdPartyCameraId"] = 1,
+                            ["agentRelativeCoordinates"] = true
+                        };
 
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
                 case "to": {
                         ServerAction action = new ServerAction();
                         action.action = "TeleportObject";
