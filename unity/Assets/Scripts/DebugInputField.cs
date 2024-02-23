@@ -4890,9 +4890,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                     case "ca_msg": {
-                   
-                    
+                case "ca_msg": {
 
                     if (splitcommand.Length == 2) {
 
@@ -4948,8 +4946,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         var objectDir = $"{objaverseRoot}/{objectId}";
                         var objectPath = $"{objectDir}/{fname}";
                         var dir = Application.persistentDataPath;
-
-                         
                         
                         var filename = Path.GetFileName(objectPath);
 

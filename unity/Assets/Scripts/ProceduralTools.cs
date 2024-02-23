@@ -2290,6 +2290,19 @@ namespace Thor.Procedural {
             };
         }
 
+        public static Texture2D SwapChannelsRGBAtoRRRB(Texture2D originalTexture) {
+            Color[] pixels = originalTexture.GetPixels();
+            for (int i = 0; i < pixels.Length; i++) {
+                Color temp = pixels[i];
+                pixels[i] = new Color(temp.r, temp.r, temp.r, temp.b);
+            }
+
+            Texture2D newTexture = new Texture2D(originalTexture.width, originalTexture.height);
+            newTexture.SetPixels(pixels);
+            newTexture.Apply();
+            return newTexture;
+        }
+
         // TODO refactor to recieve a ProceduralAsset
         public static Dictionary<string, object> CreateAsset(
             Vector3[] vertices,
@@ -2447,6 +2460,9 @@ namespace Thor.Procedural {
                 mat.EnableKeyword("_METALLICGLOSSMAP");
                 byte[] imageBytes = File.ReadAllBytes(metallicSmoothnessTexturePath);
                 Texture2D tex = new Texture2D(2, 2);
+                if (metallicSmoothnessTexturePath.ToLower().EndsWith(".jpg")) {
+                    tex = SwapChannelsRGBAtoRRRB(tex);
+                }
                 tex.LoadImage(imageBytes);
                 
                 mat.SetTexture("_MetallicGlossMap", tex);
