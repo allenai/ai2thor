@@ -664,6 +664,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     CurrentActiveController().ProcessControlCommand(action);
                     break;
                 }
+                case "render": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "RenderObjectFromAngles";
+                    action["objectId"] = splitcommand[1];
+                    action["renderResolution"] = new Vector2(512, 512);
+                    action["angles"] = new List<float> { 0, 90, 180, 270 };
+
+                    action["cameraHeightMultiplier"] = 0.0f;
+                    if (splitcommand.Length > 2) {
+                        action["cameraHeightMultiplier"] = float.Parse(splitcommand[2]);
+                    }
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
 
                 case "sgo": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
@@ -4874,9 +4890,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                     case "ca_msg": {
-                   
-                    
+                case "ca_msg": {
 
                     if (splitcommand.Length == 2) {
 
@@ -4932,8 +4946,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         var objectDir = $"{objaverseRoot}/{objectId}";
                         var objectPath = $"{objectDir}/{fname}";
                         var dir = Application.persistentDataPath;
-
-                         
                         
                         var filename = Path.GetFileName(objectPath);
 
