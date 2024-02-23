@@ -448,7 +448,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         bool agentRelativeCoordinates = false
     ) {
         Camera camera = primaryAgent.m_Camera;
-        
+
         if (orthographic != true && orthographicSize != null) {
             throw new InvalidOperationException(
                 $"orthographicSize(: {orthographicSize}) can only be set when orthographic=True.\n" +
@@ -548,6 +548,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
         if(!agentRelativeCoordinates) {
             // update the position and rotation
+            camera.transform.SetParent(null);
             camera.gameObject.transform.position = position;
             camera.gameObject.transform.eulerAngles = rotation;
         } else {
