@@ -131,6 +131,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     }
 
     void Start() {
+        Debug.Log("Entered agent manager Start");
+
         // default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
         initializePrimaryAgent();
         // primaryAgent.stand
@@ -1058,12 +1060,17 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     }
 
     public IEnumerator EmitFrame() {
+        Debug.Log("Initial yield null start");
+        yield return null;
+        Debug.Log("Initial yield null end");
+
         while (true) {
-            Debug.Log("EmitFrame loop start");
+            Debug.Log($"EmitFrame loop start {frameCounter}");
             bool shouldRender = this.renderImage && serverSideScreenshot;
 
             bool shouldRenderImageSynthesis = shouldRender && this.renderImageSynthesis;
             if (renderImageSynthesisChanged) {
+                Debug.Log($"Image synthesis changed!");
                 foreach (BaseFPSAgentController agent in this.agents) {
                     foreach (ImageSynthesis ims in agent.gameObject.GetComponentsInChildren<ImageSynthesis>()) {
                         if (ims.enabled) {
@@ -1073,10 +1080,13 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 }
             }
 
-            Debug.Log("Before yield waitenofframe loop start");
+            Debug.Log("Before yield WaitForEndOfFrame");
             yield return new WaitForEndOfFrame();
+            Debug.Log("After yield WaitForEndOfFrame");
 
-            Debug.Log("After yield waitenofframe");
+//            Debug.Log("Before yield waitenofframe loop start");
+//            yield return new WaitForEndOfFrame();
+//            Debug.Log("After yield waitenofframe");
 
             frameCounter += 1;
             
@@ -1090,7 +1100,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 }
             }
             
-            Debug.Log($"Can emmit check? canEmit {this.canEmit()} agentState {this.GetActiveAgent().agentState}");
+            Debug.Log($"Can emit check? canEmit {this.canEmit()} agentState {this.GetActiveAgent().agentState}");
             if (!this.canEmit()) {
                 continue;
             }
@@ -1208,7 +1218,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 }
             } else if (serverType == serverTypes.FIFO) {
                 
-                 Debug.Log($"Server type fifo ");
+                Debug.Log($"Server type fifo creating msgpack metadata");
                 byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(multiMeta,
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
                 
@@ -1222,16 +1232,23 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                         Debug.LogWarning("EmitFrame WILL STOP RUNNING. createPayload will not be called after every action. Possible environment mismatch. Use python server to match standalone environment.");
                         break;
                     }
-                #else 
+                #else
+                    Debug.Log($"Sending metadata via fifo client");
                     this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
                 #endif
 
+                Debug.Log($"Running AsyncGPUReadback.WaitAllRequests()");
                 AsyncGPUReadback.WaitAllRequests();
+
+                Debug.Log($"Sending render data via fifo client");
                 foreach (var item in renderPayload) {
                     this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
                 }
+                Debug.Log($"Sending EOM via fifo client");
                 this.fifoClient.SendEOM();
+                Debug.Log($"Waiting on response");
                 string msg = this.fifoClient.ReceiveMessage();
+                Debug.Log($"Response received from client. Processing command...");
                 ProcessControlCommand(msg);
 
                 while (canEmit() && this.fastActionEmit) {
