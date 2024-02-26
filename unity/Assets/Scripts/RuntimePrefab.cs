@@ -32,6 +32,19 @@ public class RuntimePrefab : MonoBehaviour {
     // the texture again, since they can share it.
     public Material sharedMaterial;
 
+    Texture2D SwapChannelsRGBAtoRRRB(Texture2D originalTexture) {
+        Color[] pixels = originalTexture.GetPixels();
+        for (int i = 0; i < pixels.Length; i++) {
+            Color temp = pixels[i];
+            pixels[i] = new Color(temp.r, temp.r, temp.r, temp.b); // Swap R and B
+        }
+
+        Texture2D newTexture = new Texture2D(originalTexture.width, originalTexture.height);
+        newTexture.SetPixels(pixels);
+        newTexture.Apply();
+        return newTexture;
+    }
+
     private void reloadtextures() {
          GameObject mesh = transform.Find("mesh").gameObject;
         // load the texture from disk
@@ -46,30 +59,33 @@ public class RuntimePrefab : MonoBehaviour {
         }
 
         if (metallicSmoothnessTexturePath != null) {
-                sharedMaterial.EnableKeyword("_METALLICGLOSSMAP");
-                byte[] imageBytes = File.ReadAllBytes(metallicSmoothnessTexturePath);
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
-                sharedMaterial.SetTexture("_MetallicGlossMap", tex);
+            sharedMaterial.EnableKeyword("_METALLICGLOSSMAP");
+            byte[] imageBytes = File.ReadAllBytes(metallicSmoothnessTexturePath);
+            Texture2D tex = new Texture2D(2, 2);
+            tex.LoadImage(imageBytes);
+            if (metallicSmoothnessTexturePath.ToLower().EndsWith(".jpg")) {
+                tex = SwapChannelsRGBAtoRRRB(tex);
             }
+            sharedMaterial.SetTexture("_MetallicGlossMap", tex);
+        }
 
         if (normalTexturePath != null) {
-                sharedMaterial.EnableKeyword("_NORMALMAP");
-                byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
-                sharedMaterial.SetTexture("_BumpMap", tex);
-            }
+            sharedMaterial.EnableKeyword("_NORMALMAP");
+            byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
+            Texture2D tex = new Texture2D(2, 2);
+            tex.LoadImage(imageBytes);
+            sharedMaterial.SetTexture("_BumpMap", tex);
+        }
 
         if (emissionTexturePath != null) {
-                sharedMaterial.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-                sharedMaterial.EnableKeyword("_EMISSION");
-                byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
-                sharedMaterial.SetTexture("_EmissionMap", tex);
-                sharedMaterial.SetColor("_EmissionColor", Color.white);
-            }
+            sharedMaterial.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            sharedMaterial.EnableKeyword("_EMISSION");
+            byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);
+            Texture2D tex = new Texture2D(2, 2);
+            tex.LoadImage(imageBytes);
+            sharedMaterial.SetTexture("_EmissionMap", tex);
+            sharedMaterial.SetColor("_EmissionColor", Color.white);
+        }
     }
 
     public void Awake() {
