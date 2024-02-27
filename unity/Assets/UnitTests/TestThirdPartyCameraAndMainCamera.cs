@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 namespace Tests {
-    public class TestThirdPartyCamera : TestBase {
+    public class TestThirdPartyCameraAndMainCamera : TestBase {
         [UnityTest]
         public IEnumerator TestAddThirdPartyCamera() {
             Dictionary<string, object> action = new Dictionary<string, object>();
@@ -50,6 +50,41 @@ namespace Tests {
             Assert.NotNull(GameObject.Find("ThirdPartyCamera0"));
             Assert.NotNull(GameObject.Find("ThirdPartyCamera1"));
 
+        }
+
+
+        [UnityTest]
+        public IEnumerator TestUpdateMainCamera() {
+            Dictionary<string, object> action = new Dictionary<string, object>();
+
+            action["action"] = "Initialize";
+            action["fieldOfView"] = 90f;
+            action["snapToGrid"] = true;
+            yield return step(action);
+
+            action.Clear();
+
+            action["action"] = "UpdateMainCamera";
+            action["position"] = Vector3.zero;
+            action["rotation"] = Vector3.zero;
+            yield return step(action);
+
+            GameObject camera = GameObject.Find("FirstPersonCharacter");
+            bool result = false;
+            //check position changed as expected
+            result = Mathf.Approximately(camera.transform.position.x, 0.0f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(camera.transform.position.y, 0.0f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(camera.transform.position.z, 0.0f);
+            Assert.AreEqual(result, true);
+
+            result = Mathf.Approximately(camera.transform.rotation.eulerAngles.x, 0.0f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(camera.transform.rotation.eulerAngles.y, 0.0f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(camera.transform.rotation.eulerAngles.z, 0.0f);
+            Assert.AreEqual(result, true);
         }
 
     }
