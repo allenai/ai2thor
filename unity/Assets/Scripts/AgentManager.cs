@@ -1130,6 +1130,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 cMetadata.position = camera.gameObject.transform.position;
                 cMetadata.rotation = camera.gameObject.transform.eulerAngles;
                 cMetadata.fieldOfView = camera.fieldOfView;
+                if(camera.GetComponentInParent<BaseAgentComponent>()) {
+                    cMetadata.agentRelativePosition = camera.gameObject.transform.localPosition;
+                    cMetadata.agentRelativeRotation = camera.gameObject.transform.localEulerAngles;
+                }
                 cameraMetadata[i] = cMetadata;
                 addThirdPartyCameraImage(renderPayload, camera);
                 if (shouldRenderImageSynthesis) {
@@ -1139,7 +1143,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     addImageSynthesisImage(renderPayload, imageSynthesis, this.renderInstanceSegmentation, "_id", "image_thirdParty_image_ids");
                     addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_class", "image_thirdParty_classes");
                     addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_flow", "image_thirdParty_flow");// XXX fix this in a bit
-                 }
+                }
             }
         }
         for (int i = 0; i < this.agents.Count; i++) {
@@ -1171,8 +1175,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         if (shouldRender) {
             RenderTexture.active = currentTexture;
         }
-
-
     }
 
     private string serializeMetadataJson(MultiAgentMetadata multiMeta) {
@@ -1549,6 +1551,10 @@ public class ThirdPartyCameraMetadata {
     public Vector3 position;
     public Vector3 rotation;
     public float fieldOfView;
+    //note these should only be returned with values
+    //if the third party camera is a child of the agent
+    public Vector3 agentRelativePosition;
+    public Vector3 agentRelativeRotation;
 }
 
 [Serializable]
