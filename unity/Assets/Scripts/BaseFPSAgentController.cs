@@ -2410,6 +2410,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             metaMessage.screenWidth = Screen.width;
             metaMessage.screenHeight = Screen.height;
             metaMessage.cameraPosition = m_Camera.transform.position;
+            metaMessage.cameraRotation = m_Camera.transform.eulerAngles;
+            metaMessage.agentRelativeCameraPosition = m_Camera.transform.localPosition;
+            metaMessage.agentRelativeCameraRotation = m_Camera.transform.localEulerAngles;
             metaMessage.cameraOrthSize = cameraOrthSize;
             cameraOrthSize = -1f;
             metaMessage.fov = m_Camera.fieldOfView;

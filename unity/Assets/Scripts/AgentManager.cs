@@ -1962,6 +1962,9 @@ public struct MetadataWrapper {
     public ArticulationArmMetadata articulationArm;
     public float fov;
     public Vector3 cameraPosition;
+    public Vector3 cameraRotation;
+    public Vector3 agentRelativeCameraPosition;
+    public Vector3 agentRelativeCameraRotation;
     public float cameraOrthSize;
     public ThirdPartyCameraMetadata[] thirdPartyCameras;
     public bool collided;
