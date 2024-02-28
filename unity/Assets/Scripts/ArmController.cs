@@ -31,7 +31,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
     public BoxCollider[] ArmBoxColliders {get; protected set; }
 
     [SerializeField]
-    public CapsuleCollider[] agentCapsuleCollider {get; protected set; } = null;
+    public CapsuleCollider agentCapsuleCollider {get; protected set; } = null;
 
     [HideInInspector]
     public CollisionListener collisionListener;
@@ -106,8 +106,9 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
          // add the AgentCapsule to the ArmCapsuleColliders for the capsule collider check
          List<CapsuleCollider> capsules = new List<CapsuleCollider>();
+
         capsules.AddRange(ArmCapsuleColliders);
-        capsules.AddRange(agentCapsuleCollider);
+        capsules.Add(agentCapsuleCollider);
 
         // create overlap box/capsule for each collider and check the result I guess
         foreach (CapsuleCollider c in capsules) {
