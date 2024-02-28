@@ -140,7 +140,7 @@ namespace Tests {
             
             yield return step(new Dictionary<string, object>() {
                     { "action", "TeleportFull"},
-                    { "position", new Vector3(3f, 1.0f, 1.0f)},
+                    { "position", new Vector3(3f, 0.91f, 1.0f)}, //adjusting Y value to be within the error (0.05) of the floor. 
                     { "rotation", new Vector3(0f, 180f, 0f)},
                     // {"forceAction", true},
                     { "horizon", -20f},
@@ -149,10 +149,10 @@ namespace Tests {
 
              Debug.Log($"ActionSuccess: {lastActionSuccess}");
 
-             yield return new WaitForSeconds(60f);
+            //yield return new WaitForSeconds(60f);
 
             // TODO add back assert as it is failing without forceAction
-            //Assert.IsTrue(lastActionSuccess);
+            Assert.IsTrue(lastActionSuccess);
 
             //Assert.Tr(cache.priorityMinValue, minRankingVal);lastActionSuccess
 
