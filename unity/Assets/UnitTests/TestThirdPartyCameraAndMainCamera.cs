@@ -72,18 +72,18 @@ namespace Tests {
             GameObject camera = GameObject.Find("FirstPersonCharacter");
             bool result = false;
             //check position changed as expected
-            result = Mathf.Approximately(camera.transform.position.x, 0.0f);
+            result = Mathf.Approximately(camera.transform.localPosition.x, 0.0f);
             Assert.AreEqual(result, true);
-            result = Mathf.Approximately(camera.transform.position.y, 0.0f);
+            result = Mathf.Approximately(camera.transform.localPosition.y, 0.0f);
             Assert.AreEqual(result, true);
-            result = Mathf.Approximately(camera.transform.position.z, 0.0f);
+            result = Mathf.Approximately(camera.transform.localPosition.z, 0.0f);
             Assert.AreEqual(result, true);
 
-            result = Mathf.Approximately(camera.transform.rotation.eulerAngles.x, 0.0f);
+            result = Mathf.Approximately(camera.transform.localEulerAngles.x, 0.0f);
             Assert.AreEqual(result, true);
-            result = Mathf.Approximately(camera.transform.rotation.eulerAngles.y, 0.0f);
+            result = Mathf.Approximately(camera.transform.localEulerAngles.y, 0.0f);
             Assert.AreEqual(result, true);
-            result = Mathf.Approximately(camera.transform.rotation.eulerAngles.z, 0.0f);
+            result = Mathf.Approximately(camera.transform.localEulerAngles.z, 0.0f);
             Assert.AreEqual(result, true);
         }
 
