@@ -1975,7 +1975,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ["action"] = "AddThirdPartyCamera",
                             ["position"] = new Vector3(1, 1, 1),
                             ["rotation"] = new Vector3(10, 20, 30),
-                            ["agentRelativeCoordinates"] = true
+                            ["attachToPrimaryAgent"] = true
                         };
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
@@ -1988,7 +1988,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ["position"] = new Vector3(2, 2, 2),
                             ["rotation"] = new Vector3(15, 25, 35),
                             ["thirdPartyCameraId"] = 1,
-                            ["agentRelativeCoordinates"] = true
+                            ["agentPositionRelativeCoordinates"] = true
+                        };
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+
+                case "umc": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateMainCamera",
+                            ["position"] = new Vector3(2, 2, 2),
+                            ["rotation"] = new Vector3(15, 25, 35),
+                            ["agentPositionRelativeCoordinates"] = false
                         };
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);

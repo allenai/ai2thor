@@ -2388,6 +2388,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     this.simObjFilter
                 )
             );
+            
             metaMessage.isSceneAtRest = physicsSceneManager.isSceneAtRest;
             metaMessage.sceneBounds = GenerateSceneBounds(agentManager.SceneBounds);
 
@@ -2405,13 +2406,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var worldSpaceCameraPosition = m_Camera.transform.position;
             //now convert camera position to agent relative local space
             metaMessage.agentPositionRelativeCameraPosition = transform.InverseTransformPoint(worldSpaceCameraPosition);
-            Debug.Log($"agentRelativeCameraPosition: {metaMessage.agentPositionRelativeCameraPosition}");
+            //Debug.Log($"agentRelativeCameraPosition: {metaMessage.agentPositionRelativeCameraPosition}");
 
             //ok to get local euler angles we need to do... some shenanigans lets go
             var worldSpaceCameraRotationAsQuaternion = m_Camera.transform.rotation;
             var localSpaceCameraRotationAsQuaternion = Quaternion.Inverse(transform.rotation) * worldSpaceCameraRotationAsQuaternion;
             metaMessage.agentPositionRelativeCameraRotation = localSpaceCameraRotationAsQuaternion.eulerAngles;
-            Debug.Log($"agentRelativeCameraRotation: {metaMessage.agentPositionRelativeCameraRotation}");
+            //Debug.Log($"agentRelativeCameraRotation: {metaMessage.agentPositionRelativeCameraRotation}");
 
             metaMessage.cameraOrthSize = cameraOrthSize;
             cameraOrthSize = -1f;

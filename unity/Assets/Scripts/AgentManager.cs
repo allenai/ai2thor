@@ -435,97 +435,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         }
     }
 
-    private void updateMainCameraProperties(
-        Vector3 position,
-        Vector3 rotation,
-        float fieldOfView,
-        string skyboxColor,
-        bool? orthographic,
-        float? orthographicSize,
-        float? nearClippingPlane,
-        float? farClippingPlane,
-        string antiAliasing,
-        bool agentRelativeCoordinates = false
-    ) {
-        Camera camera = primaryAgent.m_Camera;
-
-        if (orthographic != true && orthographicSize != null) {
-            throw new InvalidOperationException(
-                $"orthographicSize(: {orthographicSize}) can only be set when orthographic=True.\n" +
-                "Otherwise, we use assume perspective camera setting." +
-                "Hint: call .step(..., orthographic=True)."
-            );
-        }
-
-        if(!agentRelativeCoordinates) {
-            // update the position and rotation
-            camera.transform.SetParent(null);
-            camera.gameObject.transform.position = position;
-            camera.gameObject.transform.eulerAngles = rotation;
-        } else {
-            //convert coordinates into agent relative local space using
-            //agent position as origin of this coordinate system for now
-            camera.transform.SetParent(null);
-            camera.gameObject.transform.position = position;
-            camera.gameObject.transform.eulerAngles = rotation;
-            camera.transform.SetParent(primaryAgent.transform, false);
-        }
-
-        // updates the camera's perspective
-        camera.fieldOfView = fieldOfView;
-        if (orthographic != null) {
-            camera.orthographic = (bool)orthographic;
-            if (orthographic == true && orthographicSize != null) {
-                camera.orthographicSize = (float)orthographicSize;
-            }
-        }
-
-        //updates camera near and far clipping planes
-        //default to near and far clipping planes of agent camera, which are currently
-        //static values and are not exposed in anything like Initialize
-        if (nearClippingPlane != null) {
-            camera.nearClipPlane = (float)nearClippingPlane;
-        }
-
-        //default to primary agent's near clip plane value
-        else {
-            camera.nearClipPlane = this.primaryAgent.m_Camera.nearClipPlane;
-        }
-
-        if (farClippingPlane != null) {
-            camera.farClipPlane = (float)farClippingPlane;
-        }
-
-        //default to primary agent's far clip plane value
-        else {
-            camera.farClipPlane = this.primaryAgent.m_Camera.farClipPlane;
-        }
-
-        // supports a solid color skybox, which work well with videos and images (i.e., white/black/orange/blue backgrounds)
-        if (skyboxColor == "default") {
-            camera.clearFlags = CameraClearFlags.Skybox;
-        } else if (skyboxColor != null) {
-            Color color;
-            bool successfullyParsed = ColorUtility.TryParseHtmlString(skyboxColor, out color);
-            if (successfullyParsed) {
-                camera.clearFlags = CameraClearFlags.SolidColor;
-                camera.backgroundColor = color;
-            } else {
-                throw new ArgumentException($"Invalid skyboxColor: {skyboxColor}! Cannot be parsed as an HTML color.");
-            }
-        }
-
-        // Anti-aliasing
-        if (antiAliasing != null) {
-            updateAntiAliasing(
-                postProcessLayer: camera.gameObject.GetComponentInChildren<PostProcessLayer>(),
-                antiAliasing: antiAliasing
-            );
-        }
-
-        this.activeAgent().actionFinished(success: true);
-    }
-
     private void updateCameraProperties(
         Camera camera,
         Vector3 position,
@@ -537,7 +446,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         float? nearClippingPlane,
         float? farClippingPlane,
         string antiAliasing,
-        bool agentRelativeCoordinates = false
+        bool agentPositionRelativeCoordinates = false
     ) {
         if (orthographic != true && orthographicSize != null) {
             throw new InvalidOperationException(
@@ -547,18 +456,24 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             );
         }
 
-        if(!agentRelativeCoordinates) {
-            // update the position and rotation
+        //note if updating the primary agent's main camera, this allows it to be detached! use at your own risk
+        if(!agentPositionRelativeCoordinates) {
+            // update the position and rotation and keep camera in world space coordinates
             camera.transform.SetParent(null);
             camera.gameObject.transform.position = position;
             camera.gameObject.transform.eulerAngles = rotation;
         } else {
-            //convert coordinates into agent relative local space using
-            //agent position as origin of this coordinate system for now
-            camera.transform.SetParent(null);
-            camera.gameObject.transform.position = position;
-            camera.gameObject.transform.eulerAngles = rotation;
-            camera.transform.SetParent(primaryAgent.transform, false);
+            //makes sure camera is child of agent, and reposition in agent relative space
+            if(camera.transform.parent != primaryAgent.transform) {
+                camera.transform.SetParent(primaryAgent.transform);
+                //for some reason reparenting sometimes makes the scale slightly off...
+                //so we are gonna force it to be uniform just in case cause floats suck
+                camera.transform.localScale = Vector3.one;
+            }
+
+            //now that camera is in agent local space, assign changes relative to agent
+            camera.gameObject.transform.localPosition = position;
+            camera.gameObject.transform.localEulerAngles = rotation;
         }
 
         // updates the camera's perspective
@@ -657,7 +572,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         float? nearClippingPlane = null,
         float? farClippingPlane = null,
         string antiAliasing = "none",
-        bool agentRelativeCoordinates = false
+        bool attachToPrimaryAgent = false //note we can only add these cameras to the primary agent at the moment
     ) {
         // adds error if fieldOfView is out of bounds
         assertFovInBounds(fov: fieldOfView);
@@ -688,7 +603,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             nearClippingPlane: nearClippingPlane,
             farClippingPlane: farClippingPlane,
             antiAliasing: antiAliasing,
-            agentRelativeCoordinates: agentRelativeCoordinates
+            agentPositionRelativeCoordinates: attachToPrimaryAgent //local pos/rot of camera will be using agent.position as the origin if this is true
         );
     }
 
@@ -714,6 +629,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         public float? z = null;
     }
 
+    //allows repositioning and changing of values of agent's primary camera
+    //note this does not support changing the main camera of multiple agents beyond the primary for now
     public void UpdateMainCamera (
         OptionalVector3 position = null,
         OptionalVector3 rotation = null,
@@ -723,8 +640,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         float? orthographicSize = null,
         float? nearClippingPlane = null,
         float? farClippingPlane = null,
-        string antiAliasing = null,
-        bool agentRelativeCoordinates = false
+        string antiAliasing = null
     ) {
         // adds error if fieldOfView is out of bounds
         if (fieldOfView != null) {
@@ -742,7 +658,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         Vector3 oldRotation = agentMainCam.gameObject.transform.localEulerAngles;
         Vector3 targetRotation = parseOptionalVector3(optionalVector3: rotation, defaultsOnNull: oldRotation);
 
-        updateMainCameraProperties(
+        updateCameraProperties(
+            camera: primaryAgent.m_Camera,
             position: targetPosition,
             rotation: targetRotation,
             fieldOfView: fieldOfView == null ? agentMainCam.fieldOfView : (float)fieldOfView,
@@ -752,12 +669,11 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             nearClippingPlane: nearClippingPlane,
             farClippingPlane: farClippingPlane,
             antiAliasing: antiAliasing,
-            agentRelativeCoordinates: agentRelativeCoordinates
+            agentPositionRelativeCoordinates: true //always keep main camera relative to agent so other functions like visibility don't break
         );
     }
 
-    // note that using a using a Dictionary<string, float> allows for only x, y, or z
-    // to be passed in, individually, whereas using Vector3 would require each of x/y/z.
+    // Updates third party cameras, including secondary camera of stretch agent
     public void UpdateThirdPartyCamera(
         int thirdPartyCameraId = 0,
         OptionalVector3 position = null,
@@ -769,7 +685,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         float? nearClippingPlane = null,
         float? farClippingPlane = null,
         string antiAliasing = null,
-        bool agentRelativeCoordinates = false
+        bool agentPositionRelativeCoordinates = false
     ) {
         // adds error if fieldOfView is out of bounds
         if (fieldOfView != null) {
@@ -804,7 +720,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             nearClippingPlane: nearClippingPlane,
             farClippingPlane: farClippingPlane,
             antiAliasing: antiAliasing,
-            agentRelativeCoordinates: agentRelativeCoordinates
+            agentPositionRelativeCoordinates: agentPositionRelativeCoordinates
         );
     }
 
@@ -1127,15 +1043,24 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
                 Camera camera = thirdPartyCameras.ToArray()[i];
                 cMetadata.thirdPartyCameraId = i;
+
                 cMetadata.position = camera.gameObject.transform.position;
                 cMetadata.rotation = camera.gameObject.transform.eulerAngles;
-                cMetadata.fieldOfView = camera.fieldOfView;
 
                 //agent relative third party camera metadata here
+                //if the camera is a child of the base agent, then return local space values
                 if(camera.GetComponentInParent<BaseAgentComponent>()) {
                     cMetadata.agentPositionRelativeThirdPartyCameraPosition = camera.gameObject.transform.localPosition;
                     cMetadata.agentPositionRelativeThirdPartyCameraRotation = camera.gameObject.transform.localEulerAngles;
+                } else {
+                    //if this third party camera is not a child of the agent, then the agent relative coordinates
+                    //are the same as the world coordinates so
+                    cMetadata.agentPositionRelativeThirdPartyCameraPosition = camera.gameObject.transform.position;
+                    cMetadata.agentPositionRelativeThirdPartyCameraRotation = camera.gameObject.transform.eulerAngles;                
                 }
+                
+                cMetadata.fieldOfView = camera.fieldOfView;
+
                 cameraMetadata[i] = cMetadata;
                 addThirdPartyCameraImage(renderPayload, camera);
                 if (shouldRenderImageSynthesis) {
