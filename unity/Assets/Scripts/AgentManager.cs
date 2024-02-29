@@ -1130,9 +1130,11 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 cMetadata.position = camera.gameObject.transform.position;
                 cMetadata.rotation = camera.gameObject.transform.eulerAngles;
                 cMetadata.fieldOfView = camera.fieldOfView;
+
+                //agent relative third party camera metadata here
                 if(camera.GetComponentInParent<BaseAgentComponent>()) {
-                    cMetadata.agentRelativePosition = camera.gameObject.transform.localPosition;
-                    cMetadata.agentRelativeRotation = camera.gameObject.transform.localEulerAngles;
+                    cMetadata.agentPositionRelativeThirdPartyCameraPosition = camera.gameObject.transform.localPosition;
+                    cMetadata.agentPositionRelativeThirdPartyCameraRotation = camera.gameObject.transform.localEulerAngles;
                 }
                 cameraMetadata[i] = cMetadata;
                 addThirdPartyCameraImage(renderPayload, camera);
@@ -1553,8 +1555,8 @@ public class ThirdPartyCameraMetadata {
     public float fieldOfView;
     //note these should only be returned with values
     //if the third party camera is a child of the agent
-    public Vector3 agentRelativePosition;
-    public Vector3 agentRelativeRotation;
+    public Vector3 agentPositionRelativeThirdPartyCameraPosition;
+    public Vector3 agentPositionRelativeThirdPartyCameraRotation;
 }
 
 [Serializable]
@@ -1963,8 +1965,8 @@ public struct MetadataWrapper {
     public float fov;
     public Vector3 cameraPosition;
     public Vector3 cameraRotation;
-    public Vector3 agentRelativeCameraPosition;
-    public Vector3 agentRelativeCameraRotation;
+    public Vector3 agentPositionRelativeCameraPosition;
+    public Vector3 agentPositionRelativeCameraRotation;
     public float cameraOrthSize;
     public ThirdPartyCameraMetadata[] thirdPartyCameras;
     public bool collided;

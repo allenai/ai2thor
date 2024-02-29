@@ -1994,6 +1994,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
                     }
+
+                case "debugmaincamera": {
+                        CurrentActiveController().generateMetadataWrapper();
+                        break;
+                    }
                 case "to": {
                         ServerAction action = new ServerAction();
                         action.action = "TeleportObject";
