@@ -7,7 +7,6 @@ needed to control the in-game agent through ai2thor.server.
 
 """
 import atexit
-import copy
 import json
 import logging
 import math
@@ -36,10 +35,11 @@ import ai2thor.fifo_server
 import ai2thor.platform
 import ai2thor.wsgi_server
 from ai2thor._quality_settings import DEFAULT_QUALITY, QUALITY_SETTINGS
-from ai2thor.exceptions import RestartError, UnityCrashException
+from ai2thor.exceptions import UnityCrashException
 from ai2thor.hooks.metadata_hook import MetadataHook
 from ai2thor.interact import DefaultActions, InteractiveControllerPrompt
-from ai2thor.server import DepthFormat, Event, MetadataWrapper
+from ai2thor.platform import STR_PLATFORM_MAP
+from ai2thor.server import DepthFormat, MetadataWrapper
 from ai2thor.util import atomic_write, makedirs
 from ai2thor.util.lock import LockEx
 from ai2thor.util.runtime_assets import create_assets
@@ -432,6 +432,7 @@ class Controller(object):
         self.include_private_scenes = include_private_scenes
         self.x_display = None
         self.gpu_device = gpu_device
+
         cuda_visible_devices = list(
             map(
                 int,
@@ -771,7 +772,6 @@ class Controller(object):
             raise_for_failure=True,
             **self.initialization_parameters,
         )
-        print(f'Last event {self.last_event.metadata["lastActionSuccess"]} error {self.last_event.metadata["errorMessage"]}')
 
         if is_procedural:
             self.last_event = self.step(action="CreateHouse", house=scene)
@@ -1080,13 +1080,10 @@ class Controller(object):
             if len(action_as_str) > 1000:
                 action_as_str = action_as_str[:950] + " ... " + action_as_str[-50:]
             message = (
-                f"Restarting unity due to crash when when running action {action_as_str}"
+                f"Unity crashed when running {action_as_str}"
                 f" in scene {self.last_event.metadata['sceneName']}:\n{traceback.format_exc()}"
             )
-            warnings.warn(message)
-            self.start(width=self.width, height=self.height, x_display=self.x_display)
-            self.reset()
-            raise RestartError(message)
+            raise UnityCrashException(message)
         except Exception as e:
             self.server.stop()
             action_as_str = str(action)
@@ -1410,7 +1407,7 @@ class Controller(object):
         if platform is None:
             candidate_platforms = ai2thor.platform.select_platforms(request)
         else:
-            candidate_platforms = [platform]
+            candidate_platforms = [STR_PLATFORM_MAP[platform]]
 
         builds = self.find_platform_builds(
             candidate_platforms, request, commits, releases_dir, local_build
