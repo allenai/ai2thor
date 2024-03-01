@@ -1407,7 +1407,7 @@ class Controller(object):
         if platform is None:
             candidate_platforms = ai2thor.platform.select_platforms(request)
         else:
-            candidate_platforms = [STR_PLATFORM_MAP[platform]]
+            candidate_platforms = [STR_PLATFORM_MAP[platform] if isinstance(platform, str) else platform]
 
         builds = self.find_platform_builds(
             candidate_platforms, request, commits, releases_dir, local_build
