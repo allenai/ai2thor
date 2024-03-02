@@ -598,6 +598,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     break;
                 }
+                case "initfs": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "Initialize";
+                    action["agentMode"] = "stretch";
+                    action["agentControllerType"] = "stretch";
+                    action["visibilityScheme"] = "Distance";
+                    action["renderInstanceSegmentation"] = true;
+                    action["renderDepth"] = true;
+                    action["massThreshold"] = 10.0f;
+                    action["useFPINCollider"] = true;
+                    action["colliderScaleRatio"] = new Vector3(1.0f, 1.0f, 1.0f);
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+
+                    break;
+                }
                 case "obig": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 

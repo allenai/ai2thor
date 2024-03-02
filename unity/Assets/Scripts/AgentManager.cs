@@ -288,6 +288,9 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(StretchAgentController), baseAgentComponent);
         baseAgentComponent.StretchBodyColliders.SetActive(true);
+        if (action.useFPINCollider) {
+            primaryAgent.SpawnBoxCollider(primaryAgent.gameObject, action.colliderScaleRatio);
+        }
     }
 
     private void SetUpStretchABController(ServerAction action) {
@@ -2135,7 +2138,8 @@ public class ServerAction {
     public Vector3 rotation;
     public Vector3 position;
     public Vector3 direction;
-
+    public Vector3 colliderScaleRatio;
+    public bool useFPINCollider;
     public bool allowAgentsToIntersect = false;
     public float handDistance;// used for max distance agent's hand can move
     public List<Vector3> positions = null;
