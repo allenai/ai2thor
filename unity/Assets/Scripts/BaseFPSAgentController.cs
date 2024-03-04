@@ -7275,15 +7275,41 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, geoList);
         }
 
-        public void SpawnBoxCollider(GameObject agent, Vector3 scaleRatio) {
-            var bounds = GetObjectSphereBounds(agent);
+        private Bounds GetAgentBounds(GameObject gameObject, Type agentType) {
+            Debug.Log(agentType);
+            Debug.Log(typeof(StretchAgentController));
+            Bounds bounds = new Bounds(gameObject.transform.position, Vector3.zero);
+            MeshRenderer[] meshRenderers = gameObject.GetComponentsInChildren<MeshRenderer>();
+            if (agentType == typeof(LocobotFPSAgentController)) {
+                meshRenderers = this.baseAgentComponent.BotVisCap.GetComponentsInChildren<MeshRenderer>();
+            } else if (agentType == typeof(StretchAgentController)) {
+                meshRenderers = this.baseAgentComponent.StretchVisCap.GetComponentsInChildren<MeshRenderer>();
+            }
+            foreach (MeshRenderer meshRenderer in meshRenderers) {
+                bounds.Encapsulate(meshRenderer.bounds);
+            }
+            return bounds;
+        }
+
+        protected void HideBoxRenderers(GameObject box) {
+            foreach (Renderer r in box.GetComponentsInChildren<Renderer>()) {
+                if (r.enabled) {
+                    r.enabled = false;
+                }
+            }
+        }
+
+        public void SpawnBoxCollider(GameObject agent, Type agentType, Vector3 scaleRatio) {
+            var bounds = GetAgentBounds(agent, agentType);
             GameObject box = GameObject.CreatePrimitive(PrimitiveType.Cube);
             box.transform.position = new Vector3(bounds.center.x, bounds.center.y, agent.transform.position.z);
-            box.transform.localScale = new Vector3(scaleRatio.x * bounds.extents.x / 2, scaleRatio.y * bounds.size.y, scaleRatio.z * bounds.extents.z / 2); // Scale the box to the agent's size
+            // box.transform.localScale = new Vector3(scaleRatio.x * bounds.extents.x / 2, scaleRatio.y * bounds.size.y, scaleRatio.z * bounds.extents.z / 2); // Scale the box to the agent's size
+            box.transform.localScale = new Vector3(scaleRatio.x * bounds.extents.x * 2, scaleRatio.y * bounds.size.y, scaleRatio.z * bounds.extents.z * 2); // Scale the box to the agent's size
             box.transform.parent = agent.transform;
-            box.transform.localPosition = new Vector3(0, bounds.center.y - agent.transform.position.y, 0);
+            // box.transform.localPosition = new Vector3(0, bounds.center.y - agent.transform.position.y, 0);
             BoxCollider boxCollider = box.GetComponent<BoxCollider>();
             boxCollider.enabled = true;
+            HideBoxRenderers(box);
         }
 
         public void SpawnAsset(
