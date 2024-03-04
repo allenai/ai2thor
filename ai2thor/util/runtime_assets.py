@@ -17,6 +17,7 @@ EXTENSIONS_LOADABLE_IN_UNITY = {
 
 logger = logging.getLogger(__name__)
 
+
 def get_msgpack_save_path(out_dir, object_name):
     return os.path.join(out_dir, f"{object_name}.msgpack")
 
@@ -67,7 +68,9 @@ def get_existing_thor_asset_file_path(out_dir, asset_id, force_extension=None):
         for path in possible_paths.values():
             if os.path.exists(path):
                 return path
-    raise Exception(f"Could not find existing THOR object file for {asset_id}, Path: `{path}`")
+    raise Exception(
+        f"Could not find existing THOR object file for {asset_id}, Path: `{path}`"
+    )
 
 
 def load_existing_thor_asset_file(out_dir, object_name, force_extension=None):
@@ -150,9 +153,11 @@ def save_thor_asset_file(asset_json, save_path: str):
         raise NotImplementedError(
             f"Unsupported file extension for save path: {save_path}"
         )
-    
+
+
 def get_runtime_asset_filelock(save_dir, asset_id):
     return os.path.join(save_dir, f"{asset_id}.lock")
+
 
 # TODO  remove  load_file_in_unity param
 def create_runtime_asset_file(
@@ -224,22 +229,13 @@ def create_runtime_asset_file(
 
 
 def change_asset_paths(asset, save_dir):
-    asset["normalTexturePath"] = os.path.join(
-        save_dir,
-        asset["name"],
-        os.path.basename(asset["normalTexturePath"]),
-    )
-    asset["albedoTexturePath"] = os.path.join(
-        save_dir,
-        asset["name"],
-        os.path.basename(asset["albedoTexturePath"]),
-    )
-    if "emissionTexturePath" in asset:
-        asset["emissionTexturePath"] = os.path.join(
-            save_dir,
-            asset["name"],
-            os.path.basename(asset["emissionTexturePath"]),
-        )
+    for key in asset:
+        if key.lower().endswith("texturepath"):
+            asset[key] = os.path.join(
+                save_dir,
+                asset["name"],
+                os.path.basename(asset[key]),
+            )
     return asset
 
 
@@ -251,9 +247,7 @@ def add_default_annotations(asset, asset_directory, verbose=False):
     thor_obj_md = load_existing_thor_metadata_file(out_dir=asset_directory)
     if thor_obj_md is None:
         if verbose:
-            logger.info(
-                f"Object metadata is missing annotations, assuming pickupable."
-            )
+            logger.info(f"Object metadata is missing annotations, assuming pickupable.")
 
         asset["annotations"] = {
             "objectType": "Undefined",
@@ -354,6 +348,7 @@ def create_asset(
 
     return evt
 
+
 def download_objaverse_assets(controller, asset_ids):
     import objaverse
 
@@ -387,6 +382,7 @@ def create_assets(
             events.append(evt)
     return success, events
 
+
 def make_single_object_house(
     asset_id,
     instance_id="asset_0",
@@ -413,6 +409,7 @@ def make_single_object_house(
         "b": skybox_color[2],
     }
     return house
+
 
 # def create_assets_from_paths(controller, asset_paths, asset_symlink=True, return_events=False, verbose=False):
 def view_asset_in_thor(
