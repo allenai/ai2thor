@@ -627,6 +627,12 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         public float? x = null;
         public float? y = null;
         public float? z = null;
+
+        public OptionalVector3(float? x = null, float? y = null, float? z = null) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
     }
 
     //allows repositioning and changing of values of agent's primary camera
@@ -650,14 +656,13 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         //allow specifiying agent id later for multi agent???
         Camera agentMainCam = primaryAgent.m_Camera;
 
-        // keeps positions at default values, if unspecified.
-        Vector3 oldPosition = agentMainCam.gameObject.transform.position;
+        // keeps positions/rotations at default values, if unspecified.
+        // NOTE: MUST BE LOCAL POSITION/ROTATION as agentPositionRelativeCoordinates == true
+        Vector3 oldPosition = agentMainCam.transform.localPosition;
+        Vector3 oldRotation = agentMainCam.transform.localEulerAngles;
+
         Vector3 targetPosition = parseOptionalVector3(optionalVector3: position, defaultsOnNull: oldPosition);
-
-        // keeps rotations at default values, if unspecified.
-        Vector3 oldRotation = agentMainCam.gameObject.transform.localEulerAngles;
         Vector3 targetRotation = parseOptionalVector3(optionalVector3: rotation, defaultsOnNull: oldRotation);
-
         updateCameraProperties(
             camera: primaryAgent.m_Camera,
             position: targetPosition,
@@ -669,7 +674,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             nearClippingPlane: nearClippingPlane,
             farClippingPlane: farClippingPlane,
             antiAliasing: antiAliasing,
-            agentPositionRelativeCoordinates: true //always keep main camera relative to agent so other functions like visibility don't break
+            agentPositionRelativeCoordinates: true // always keep main camera relative to agent so other functions like visibility don't break
         );
     }
 
@@ -701,14 +706,20 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
         Camera thirdPartyCamera = thirdPartyCameras[thirdPartyCameraId];
 
-        // keeps positions at default values, if unspecified.
-        Vector3 oldPosition = thirdPartyCamera.gameObject.transform.position;
+        Vector3 oldPosition;
+        Vector3 oldRotation;
+        if (agentPositionRelativeCoordinates) {
+            // keeps positions/rotations at default values, if unspecified.
+            oldPosition = thirdPartyCamera.transform.localPosition;
+            oldRotation = thirdPartyCamera.transform.localEulerAngles;
+        } else {
+            // keeps positions/rotations at default values, if unspecified.
+            oldPosition = thirdPartyCamera.transform.position;
+            oldRotation = thirdPartyCamera.transform.eulerAngles;
+        }
+
         Vector3 targetPosition = parseOptionalVector3(optionalVector3: position, defaultsOnNull: oldPosition);
-
-        // keeps rotations at default values, if unspecified.
-        Vector3 oldRotation = thirdPartyCamera.gameObject.transform.localEulerAngles;
         Vector3 targetRotation = parseOptionalVector3(optionalVector3: rotation, defaultsOnNull: oldRotation);
-
         updateCameraProperties(
             camera: thirdPartyCamera,
             position: targetPosition,

@@ -268,38 +268,52 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void RotateCameraBase(float yawDegrees, float rollDegrees) {
-            var target = gimbalBase;
-            var maxDegree = maxBaseXYRotation;
-            Debug.Log("yaw is " + yawDegrees + " and roll is " + rollDegrees);
-            if (yawDegrees < -maxDegree || maxDegree < yawDegrees) {
-                throw new InvalidOperationException(
-                    $"Invalid value for `yawDegrees`: '{yawDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
-                );
-            } else if (rollDegrees < -maxDegree || maxDegree < rollDegrees) {
-                throw new InvalidOperationException(
-                    $"Invalid value for `rollDegrees`: '{rollDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
-                );
-            } else {
-                gimbalBase.localEulerAngles = new Vector3(
-                    gimbalBaseStartingXRotation + rollDegrees,
-                    gimbalBaseStartingYRotation + yawDegrees,
-                    gimbalBase.transform.localEulerAngles.z
-                );
-            }
-            actionFinished(true);
-        }
+//        public void RotateCameraBase(float yawDegrees, float rollDegrees) {
+//            var target = gimbalBase;
+//            var maxDegree = maxBaseXYRotation;
+//            Debug.Log("yaw is " + yawDegrees + " and roll is " + rollDegrees);
+//            if (yawDegrees < -maxDegree || maxDegree < yawDegrees) {
+//                throw new InvalidOperationException(
+//                    $"Invalid value for `yawDegrees`: '{yawDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+//                );
+//            } else if (rollDegrees < -maxDegree || maxDegree < rollDegrees) {
+//                throw new InvalidOperationException(
+//                    $"Invalid value for `rollDegrees`: '{rollDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+//                );
+//            } else {
+//                gimbalBase.localEulerAngles = new Vector3(
+//                    gimbalBaseStartingXRotation + rollDegrees,
+//                    gimbalBaseStartingYRotation + yawDegrees,
+//                    gimbalBase.transform.localEulerAngles.z
+//                );
+//            }
+//            actionFinished(true);
+//        }
 
         public void RotateCameraMount(float degrees, bool secondary = false) {
-            var target = !secondary ? primaryGimbal : secondaryGimbal;
-            var startingXRotation = !secondary ? primaryStartingXRotation : secondaryStartingXRotation;
-            // var minDegree = Mathf.Round(startingXRotation - 15.0001f);
-            // var maxDegree = Mathf.Round(startingXRotation + 15.0001f);
-            var minDegree = minGimbalXRotation;
-            var maxDegree = maxGimbalXRotation;
+            var minDegree = -80.00001f;
+            var maxDegree = 80.00001f;
             if (degrees >= minDegree && degrees <= maxDegree) {
-                target.localEulerAngles = new Vector3(degrees, target.localEulerAngles.y, target.localEulerAngles.z);
-                actionFinished(true);
+
+                Camera cam;
+                if (secondary) {
+                    cam = agentManager.thirdPartyCameras[0];
+                } else {
+                    cam = m_Camera;
+                }
+                AgentManager.OptionalVector3 localEulerAngles = new AgentManager.OptionalVector3(
+                    x: degrees, y: cam.transform.localEulerAngles.y, z: cam.transform.localEulerAngles.z
+                );
+
+                if (secondary) {
+                    agentManager.UpdateThirdPartyCamera(
+                        thirdPartyCameraId: 0,
+                        rotation: localEulerAngles,
+                        agentPositionRelativeCoordinates: true
+                    );
+                } else {
+                    agentManager.UpdateMainCamera(rotation: localEulerAngles);
+                }
             }
             else {
                 errorMessage = $"Invalid value for `degrees`: '{degrees}'. Value should be between '{minDegree}' and '{maxDegree}'.";
