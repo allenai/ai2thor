@@ -305,11 +305,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     x: degrees, y: cam.transform.localEulerAngles.y, z: cam.transform.localEulerAngles.z
                 );
 
+                int agentId = -1;
+                for (int i = 0; i < agentManager.agents.Count; i++) {
+                    if (agentManager.agents[i] == this) {
+                        agentId = i;
+                        break;
+                    }
+                }
+                if (agentId != 0) {
+                    errorMessage = "Only the primary agent can rotate the camera for now.";
+                    actionFinished(false);
+                    return;
+                }
+
                 if (secondary) {
                     agentManager.UpdateThirdPartyCamera(
                         thirdPartyCameraId: 0,
                         rotation: localEulerAngles,
-                        agentPositionRelativeCoordinates: true
+                        agentPositionRelativeCoordinates: true,
+                        agentId: agentId
                     );
                 } else {
                     agentManager.UpdateMainCamera(rotation: localEulerAngles);
