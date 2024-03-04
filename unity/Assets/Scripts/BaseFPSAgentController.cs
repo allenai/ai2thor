@@ -77,18 +77,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             get => this.baseAgentComponent.DebugPointPrefab;
         }
 
-        public GameObject FixedCameraGimbalPrimary {
-            get => this.baseAgentComponent.FixedCameraGimbalPrimary;
-        }
-        
-        public GameObject FixedCameraGimbalSecondary {
-            get => this.baseAgentComponent.FixedCameraGimbalSecondary;
-        }
-
-        public GameObject MotorCameraGimbals {
-            get => this.baseAgentComponent.MotorCameraGimbals;
-        }
-
         public GameObject VisibilityCapsule {
             get => this.baseAgentComponent.VisibilityCapsule;
             set => this.baseAgentComponent.VisibilityCapsule = value;
@@ -145,10 +133,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
         public GameObject[] TargetCircles {
             get => this.baseAgentComponent.TargetCircles;
-        }
-
-        public bool UseMotorCameraGimbals {
-            get => this.baseAgentComponent.UseMotorCameraGimbals;
         }
 
         public GameObject[] GripperOpennessStates {
@@ -2381,6 +2365,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual MetadataWrapper generateMetadataWrapper() {
+            Debug.Log("calling generateMetadataWrapper");
             // AGENT METADATA
             AgentMetadata agentMeta = new AgentMetadata();
             agentMeta.name = "agent";
@@ -2403,13 +2388,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     this.simObjFilter
                 )
             );
+            
             metaMessage.isSceneAtRest = physicsSceneManager.isSceneAtRest;
             metaMessage.sceneBounds = GenerateSceneBounds(agentManager.SceneBounds);
+
             metaMessage.collided = collidedObjects.Length > 0;
             metaMessage.collidedObjects = collidedObjects;
+
             metaMessage.screenWidth = Screen.width;
             metaMessage.screenHeight = Screen.height;
+
             metaMessage.cameraPosition = m_Camera.transform.position;
+            metaMessage.cameraRotation = m_Camera.transform.eulerAngles;
+
+            //we need to transform these relative to the agent position
+            //main camera's local space coordinates need to be translated to world space first
+            var worldSpaceCameraPosition = m_Camera.transform.position;
+            //now convert camera position to agent relative local space
+            metaMessage.agentPositionRelativeCameraPosition = transform.InverseTransformPoint(worldSpaceCameraPosition);
+            //Debug.Log($"agentRelativeCameraPosition: {metaMessage.agentPositionRelativeCameraPosition}");
+
+            //ok to get local euler angles we need to do... some shenanigans lets go
+            var worldSpaceCameraRotationAsQuaternion = m_Camera.transform.rotation;
+            var localSpaceCameraRotationAsQuaternion = Quaternion.Inverse(transform.rotation) * worldSpaceCameraRotationAsQuaternion;
+            metaMessage.agentPositionRelativeCameraRotation = localSpaceCameraRotationAsQuaternion.eulerAngles;
+            //Debug.Log($"agentRelativeCameraRotation: {metaMessage.agentPositionRelativeCameraRotation}");
+
             metaMessage.cameraOrthSize = cameraOrthSize;
             cameraOrthSize = -1f;
             metaMessage.fov = m_Camera.fieldOfView;

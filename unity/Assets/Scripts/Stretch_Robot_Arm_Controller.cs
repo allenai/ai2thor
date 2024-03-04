@@ -124,6 +124,8 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
 
         ArmBoxColliders = cleanedBoxes.ToArray();
 
+        agentCapsuleCollider = PhysicsController.GetComponent<CapsuleCollider>();
+
         // TODO: Currently explicitly ignoring all arm self collisions (for efficiency)!
         var colliders = this.GetComponentsInChildren<Collider>();
         foreach (Collider c0 in colliders) {

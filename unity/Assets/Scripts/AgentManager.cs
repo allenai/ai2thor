@@ -65,7 +65,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     private bool fastActionEmit = true;
 
     // it is public to be accessible from the debug input field.
-    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera", "ChangeQuality" };
+    public HashSet<string> agentManagerActions = new HashSet<string> { "Reset", "Initialize", "AddThirdPartyCamera", "UpdateMainCamera", "UpdateThirdPartyCamera", "ChangeResolution", "CoordinateFromRaycastThirdPartyCamera", "ChangeQuality" };
     public HashSet<string> errorAllowedActions = new HashSet<string>  { "Reset" };
 
     public bool doResetMaterials = false;
@@ -445,7 +445,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         float? orthographicSize,
         float? nearClippingPlane,
         float? farClippingPlane,
-        string antiAliasing
+        string antiAliasing,
+        bool agentPositionRelativeCoordinates = false
     ) {
         if (orthographic != true && orthographicSize != null) {
             throw new InvalidOperationException(
@@ -455,9 +456,25 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             );
         }
 
-        // update the position and rotation
-        camera.gameObject.transform.position = position;
-        camera.gameObject.transform.eulerAngles = rotation;
+        //note if updating the primary agent's main camera, this allows it to be detached! use at your own risk
+        if(!agentPositionRelativeCoordinates) {
+            // update the position and rotation and keep camera in world space coordinates
+            camera.transform.SetParent(null);
+            camera.gameObject.transform.position = position;
+            camera.gameObject.transform.eulerAngles = rotation;
+        } else {
+            //makes sure camera is child of agent, and reposition in agent relative space
+            if(camera.transform.parent != primaryAgent.transform) {
+                camera.transform.SetParent(primaryAgent.transform);
+                //for some reason reparenting sometimes makes the scale slightly off...
+                //so we are gonna force it to be uniform just in case cause floats suck
+                camera.transform.localScale = Vector3.one;
+            }
+
+            //now that camera is in agent local space, assign changes relative to agent
+            camera.gameObject.transform.localPosition = position;
+            camera.gameObject.transform.localEulerAngles = rotation;
+        }
 
         // updates the camera's perspective
         camera.fieldOfView = fieldOfView;
@@ -554,7 +571,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         float? orthographicSize = null,
         float? nearClippingPlane = null,
         float? farClippingPlane = null,
-        string antiAliasing = "none"
+        string antiAliasing = "none",
+        bool attachToPrimaryAgent = false //note we can only add these cameras to the primary agent at the moment
     ) {
         // adds error if fieldOfView is out of bounds
         assertFovInBounds(fov: fieldOfView);
@@ -584,7 +602,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             orthographicSize: orthographicSize,
             nearClippingPlane: nearClippingPlane,
             farClippingPlane: farClippingPlane,
-            antiAliasing: antiAliasing
+            antiAliasing: antiAliasing,
+            agentPositionRelativeCoordinates: attachToPrimaryAgent //local pos/rot of camera will be using agent.position as the origin if this is true
         );
     }
 
@@ -610,8 +629,51 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         public float? z = null;
     }
 
-    // note that using a using a Dictionary<string, float> allows for only x, y, or z
-    // to be passed in, individually, whereas using Vector3 would require each of x/y/z.
+    //allows repositioning and changing of values of agent's primary camera
+    //note this does not support changing the main camera of multiple agents beyond the primary for now
+    public void UpdateMainCamera (
+        OptionalVector3 position = null,
+        OptionalVector3 rotation = null,
+        float? fieldOfView = null,
+        string skyboxColor = null,
+        bool? orthographic = null,
+        float? orthographicSize = null,
+        float? nearClippingPlane = null,
+        float? farClippingPlane = null,
+        string antiAliasing = null
+    ) {
+        // adds error if fieldOfView is out of bounds
+        if (fieldOfView != null) {
+            assertFovInBounds(fov: (float)fieldOfView);
+        }
+
+        //allow specifiying agent id later for multi agent???
+        Camera agentMainCam = primaryAgent.m_Camera;
+
+        // keeps positions at default values, if unspecified.
+        Vector3 oldPosition = agentMainCam.gameObject.transform.position;
+        Vector3 targetPosition = parseOptionalVector3(optionalVector3: position, defaultsOnNull: oldPosition);
+
+        // keeps rotations at default values, if unspecified.
+        Vector3 oldRotation = agentMainCam.gameObject.transform.localEulerAngles;
+        Vector3 targetRotation = parseOptionalVector3(optionalVector3: rotation, defaultsOnNull: oldRotation);
+
+        updateCameraProperties(
+            camera: primaryAgent.m_Camera,
+            position: targetPosition,
+            rotation: targetRotation,
+            fieldOfView: fieldOfView == null ? agentMainCam.fieldOfView : (float)fieldOfView,
+            skyboxColor: skyboxColor,
+            orthographic: orthographic,
+            orthographicSize: orthographicSize,
+            nearClippingPlane: nearClippingPlane,
+            farClippingPlane: farClippingPlane,
+            antiAliasing: antiAliasing,
+            agentPositionRelativeCoordinates: true //always keep main camera relative to agent so other functions like visibility don't break
+        );
+    }
+
+    // Updates third party cameras, including secondary camera of stretch agent
     public void UpdateThirdPartyCamera(
         int thirdPartyCameraId = 0,
         OptionalVector3 position = null,
@@ -622,7 +684,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         float? orthographicSize = null,
         float? nearClippingPlane = null,
         float? farClippingPlane = null,
-        string antiAliasing = null
+        string antiAliasing = null,
+        bool agentPositionRelativeCoordinates = false
     ) {
         // adds error if fieldOfView is out of bounds
         if (fieldOfView != null) {
@@ -656,7 +719,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             orthographicSize: orthographicSize,
             nearClippingPlane: nearClippingPlane,
             farClippingPlane: farClippingPlane,
-            antiAliasing: antiAliasing
+            antiAliasing: antiAliasing,
+            agentPositionRelativeCoordinates: agentPositionRelativeCoordinates
         );
     }
 
@@ -979,9 +1043,24 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
                 Camera camera = thirdPartyCameras.ToArray()[i];
                 cMetadata.thirdPartyCameraId = i;
+
                 cMetadata.position = camera.gameObject.transform.position;
                 cMetadata.rotation = camera.gameObject.transform.eulerAngles;
+
+                //agent relative third party camera metadata here
+                //if the camera is a child of the base agent, then return local space values
+                if(camera.GetComponentInParent<BaseAgentComponent>()) {
+                    cMetadata.agentPositionRelativeThirdPartyCameraPosition = camera.gameObject.transform.localPosition;
+                    cMetadata.agentPositionRelativeThirdPartyCameraRotation = camera.gameObject.transform.localEulerAngles;
+                } else {
+                    //if this third party camera is not a child of the agent, then the agent relative coordinates
+                    //are the same as the world coordinates so
+                    cMetadata.agentPositionRelativeThirdPartyCameraPosition = camera.gameObject.transform.position;
+                    cMetadata.agentPositionRelativeThirdPartyCameraRotation = camera.gameObject.transform.eulerAngles;                
+                }
+                
                 cMetadata.fieldOfView = camera.fieldOfView;
+
                 cameraMetadata[i] = cMetadata;
                 addThirdPartyCameraImage(renderPayload, camera);
                 if (shouldRenderImageSynthesis) {
@@ -991,7 +1070,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     addImageSynthesisImage(renderPayload, imageSynthesis, this.renderInstanceSegmentation, "_id", "image_thirdParty_image_ids");
                     addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_class", "image_thirdParty_classes");
                     addImageSynthesisImage(renderPayload, imageSynthesis, this.renderSemanticSegmentation, "_flow", "image_thirdParty_flow");// XXX fix this in a bit
-                 }
+                }
             }
         }
         for (int i = 0; i < this.agents.Count; i++) {
@@ -1023,8 +1102,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         if (shouldRender) {
             RenderTexture.active = currentTexture;
         }
-
-
     }
 
     private string serializeMetadataJson(MultiAgentMetadata multiMeta) {
@@ -1401,6 +1478,10 @@ public class ThirdPartyCameraMetadata {
     public Vector3 position;
     public Vector3 rotation;
     public float fieldOfView;
+    //note these should only be returned with values
+    //if the third party camera is a child of the agent
+    public Vector3 agentPositionRelativeThirdPartyCameraPosition;
+    public Vector3 agentPositionRelativeThirdPartyCameraRotation;
 }
 
 [Serializable]
@@ -1808,6 +1889,9 @@ public struct MetadataWrapper {
     public ArticulationArmMetadata articulationArm;
     public float fov;
     public Vector3 cameraPosition;
+    public Vector3 cameraRotation;
+    public Vector3 agentPositionRelativeCameraPosition;
+    public Vector3 agentPositionRelativeCameraRotation;
     public float cameraOrthSize;
     public ThirdPartyCameraMetadata[] thirdPartyCameras;
     public bool collided;
