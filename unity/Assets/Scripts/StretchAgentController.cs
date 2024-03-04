@@ -11,17 +11,20 @@ using UnityEngine.UIElements;
 namespace UnityStandardAssets.Characters.FirstPerson {
         
     public partial class StretchAgentController : ArmAgentController {
-
-        protected Transform gimbalBase, primaryGimbal, secondaryGimbal;
-        protected float gimbalBaseStartingXPosition, gimbalBaseStartingZPosition, gimbalBaseStartingXRotation, gimbalBaseStartingYRotation;
-        protected float primaryStartingXRotation, secondaryStartingXRotation;
-        protected float maxBaseXZOffset = 0.25f, maxBaseXYRotation = 10f;
-        protected float minGimbalXRotation = -80.001f, maxGimbalXRotation = 80.001f;
         public int gripperOpennessState = 0;
+
+        //define default parameters for both main camera and secondary camera, specific to real-life stretch bot rig
+        //these are kind of magic numbers, but can be adjusted via UpdateMainCamera and UpdateThirdPartyCamera as needed if our
+        //real rig changes
+        private Vector3 defaultMainCameraLocalPosition = new Vector3(0.001920350f, 0.544700900f, 0.067880400f);
+        private Vector3 defaultMainCameraLocalRotation = new Vector3(30f, 0, 0);
+        private float defaultMainCameraFieldOfView = 59f;
+        private Vector3 defaultSecondaryCameraLocalPosition = new Vector3(0.053905130f, 0.523833600f, -0.058848570f);
+        private Vector3 defaultSecondaryCameraLocalRotation =new Vector3(50f, 90f, 0);
+        private float defaultSecondaryCameraFieldOfView = 59f;
 
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
-        GameObject CameraGimbal2;
 
         public override void updateImageSynthesis(bool status) {
             base.updateImageSynthesis(status);
@@ -55,21 +58,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera.fieldOfView = 65f;
 
             var secondaryCameraName = "SecondaryCamera";
-            
-            var gimbalBaseName = "FixedCameraGimbalBase";
-            var primaryGimbalName = "FixedCameraGimbalPrimary";
-            var secondaryGimbalName = "FixedCameraGimbalSecondary";
-
-            this.gimbalBase = m_CharacterController.transform.FirstChildOrDefault(x => x.name == gimbalBaseName);
-            this.primaryGimbal = m_CharacterController.transform.FirstChildOrDefault(x => x.name == primaryGimbalName);
-            this.secondaryGimbal = m_CharacterController.transform.FirstChildOrDefault(x => x.name == secondaryGimbalName);
-
-            gimbalBaseStartingXPosition = gimbalBase.transform.localPosition.x;
-            gimbalBaseStartingZPosition = gimbalBase.transform.localPosition.z;
-            gimbalBaseStartingXRotation = gimbalBase.transform.localEulerAngles.x;
-            gimbalBaseStartingYRotation = gimbalBase.transform.localEulerAngles.y;
-            primaryStartingXRotation = primaryGimbal.transform.localEulerAngles.x;
-            secondaryStartingXRotation = secondaryGimbal.transform.localEulerAngles.x;
 
             // activate arm-camera
             Camera fp_camera_2 = m_CharacterController.transform.Find(secondaryCameraName).GetComponent<Camera>();
@@ -82,37 +70,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
 
-            // motor gimbals setup
-            if (UseMotorCameraGimbals == true) {
-                CameraGimbal2 = MotorCameraGimbals.transform.GetChild(0).gameObject;
+            // set up primary camera parameters for stretch specific parameters
+            m_Camera.transform.localPosition = defaultMainCameraLocalPosition;
+            m_Camera.transform.localEulerAngles = defaultMainCameraLocalRotation;
+            m_Camera.fieldOfView = defaultMainCameraFieldOfView;
 
-                // rehierchize primary camera to motorized gimbals, to accurately reflect real-life camera rotation
-                m_Camera.transform.SetParent(CameraGimbal2.transform);
-
-                // set up primary camera parameters
-                m_Camera.transform.localPosition = new Vector3(0.03f, 0.007f, 0.044f);
-                m_Camera.transform.localEulerAngles = Vector3.zero;
-                fp_camera_2.fieldOfView = 69f;
-
-                // set up arm-camera parameters
-                // ???
-
-            // fixed gimbals setup
-            } else {
-                // rehierchize cameras to fixed gimbals
-                m_Camera.transform.SetParent(FixedCameraGimbalPrimary.transform);
-                fp_camera_2.transform.SetParent(FixedCameraGimbalSecondary.transform);
-
-                // set up primary camera parameters
-                m_Camera.transform.localPosition = new Vector3(0.015f, 0.01832385f, 0.06322689f);
-                m_Camera.transform.localEulerAngles = Vector3.zero;
-                m_Camera.fieldOfView = 59f;
-
-                // set up arm-camera parameters
-                fp_camera_2.transform.localPosition = new Vector3(0.015f, 0.01832385f, 0.06322689f);
-                m_Camera.transform.localEulerAngles = Vector3.zero;
-                fp_camera_2.fieldOfView = 59f;
-            }
+            // set up secondary camera paremeters for stretch bot
+            fp_camera_2.transform.localPosition = defaultSecondaryCameraLocalPosition;
+            fp_camera_2.transform.localEulerAngles = defaultSecondaryCameraLocalRotation;
+            fp_camera_2.fieldOfView = defaultSecondaryCameraFieldOfView;
 
             // limit camera from looking too far down/up
             if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f)) {
@@ -302,38 +268,52 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void RotateCameraBase(float yawDegrees, float rollDegrees) {
-            var target = gimbalBase;
-            var maxDegree = maxBaseXYRotation;
-            Debug.Log("yaw is " + yawDegrees + " and roll is " + rollDegrees);
-            if (yawDegrees < -maxDegree || maxDegree < yawDegrees) {
-                throw new InvalidOperationException(
-                    $"Invalid value for `yawDegrees`: '{yawDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
-                );
-            } else if (rollDegrees < -maxDegree || maxDegree < rollDegrees) {
-                throw new InvalidOperationException(
-                    $"Invalid value for `rollDegrees`: '{rollDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
-                );
-            } else {
-                gimbalBase.localEulerAngles = new Vector3(
-                    gimbalBaseStartingXRotation + rollDegrees,
-                    gimbalBaseStartingYRotation + yawDegrees,
-                    gimbalBase.transform.localEulerAngles.z
-                );
-            }
-            actionFinished(true);
-        }
+//        public void RotateCameraBase(float yawDegrees, float rollDegrees) {
+//            var target = gimbalBase;
+//            var maxDegree = maxBaseXYRotation;
+//            Debug.Log("yaw is " + yawDegrees + " and roll is " + rollDegrees);
+//            if (yawDegrees < -maxDegree || maxDegree < yawDegrees) {
+//                throw new InvalidOperationException(
+//                    $"Invalid value for `yawDegrees`: '{yawDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+//                );
+//            } else if (rollDegrees < -maxDegree || maxDegree < rollDegrees) {
+//                throw new InvalidOperationException(
+//                    $"Invalid value for `rollDegrees`: '{rollDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+//                );
+//            } else {
+//                gimbalBase.localEulerAngles = new Vector3(
+//                    gimbalBaseStartingXRotation + rollDegrees,
+//                    gimbalBaseStartingYRotation + yawDegrees,
+//                    gimbalBase.transform.localEulerAngles.z
+//                );
+//            }
+//            actionFinished(true);
+//        }
 
         public void RotateCameraMount(float degrees, bool secondary = false) {
-            var target = !secondary ? primaryGimbal : secondaryGimbal;
-            var startingXRotation = !secondary ? primaryStartingXRotation : secondaryStartingXRotation;
-            // var minDegree = Mathf.Round(startingXRotation - 15.0001f);
-            // var maxDegree = Mathf.Round(startingXRotation + 15.0001f);
-            var minDegree = minGimbalXRotation;
-            var maxDegree = maxGimbalXRotation;
+            var minDegree = -80.00001f;
+            var maxDegree = 80.00001f;
             if (degrees >= minDegree && degrees <= maxDegree) {
-                target.localEulerAngles = new Vector3(degrees, target.localEulerAngles.y, target.localEulerAngles.z);
-                actionFinished(true);
+
+                Camera cam;
+                if (secondary) {
+                    cam = agentManager.thirdPartyCameras[0];
+                } else {
+                    cam = m_Camera;
+                }
+                AgentManager.OptionalVector3 localEulerAngles = new AgentManager.OptionalVector3(
+                    x: degrees, y: cam.transform.localEulerAngles.y, z: cam.transform.localEulerAngles.z
+                );
+
+                if (secondary) {
+                    agentManager.UpdateThirdPartyCamera(
+                        thirdPartyCameraId: 0,
+                        rotation: localEulerAngles,
+                        agentPositionRelativeCoordinates: true
+                    );
+                } else {
+                    agentManager.UpdateMainCamera(rotation: localEulerAngles);
+                }
             }
             else {
                 errorMessage = $"Invalid value for `degrees`: '{degrees}'. Value should be between '{minDegree}' and '{maxDegree}'.";

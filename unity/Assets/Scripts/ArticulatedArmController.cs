@@ -116,6 +116,7 @@ public partial class ArticulatedArmController : ArmController {
 
     void Start() {
         wristPlaceholderForwardOffset = wristPlaceholderTransform.transform.localPosition.z;
+        agentCapsuleCollider = PhysicsController.GetComponent<CapsuleCollider>();
         //Debug.Log($"wrist offset is: {wristPlaceholderForwardOffset}");
 
         // standingLocalCameraPosition = m_Camera.transform.localPosition;

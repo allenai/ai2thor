@@ -9,7 +9,7 @@ public partial class IK_Robot_Arm_Controller : ArmController {
     [SerializeField]
     private Transform armBase, elbowTarget, handCameraTransform, FirstJoint;
 
-    private PhysicsRemoteFPSAgentController PhysicsController;
+    public PhysicsRemoteFPSAgentController PhysicsController;
 
     // dict to track which picked up object has which set of trigger colliders
     // which we have to parent and reparent in order for arm collision to detect
@@ -92,6 +92,7 @@ public partial class IK_Robot_Arm_Controller : ArmController {
 
         List<CapsuleCollider> armCaps = new List<CapsuleCollider>();
         List<BoxCollider> armBoxes = new List<BoxCollider>();
+        agentCapsuleCollider = PhysicsController.GetComponent<CapsuleCollider>();
 
         // get references to all colliders in arm. Remove trigger colliders so there are no duplicates when using these as reference for
         // overlap casts since the trigger colliders are themselves duplicates of the nontrigger colliders.
