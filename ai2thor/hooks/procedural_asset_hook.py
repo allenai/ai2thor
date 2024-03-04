@@ -8,6 +8,7 @@ controller.step to locally run some local code
 """
 import logging
 import os
+import warnings
 from typing import Dict, Any, List
 
 from ai2thor.util.runtime_assets import create_asset, get_existing_thor_asset_file_path
@@ -32,7 +33,16 @@ def get_all_asset_ids_recursively(
 
 
 def create_assets_if_not_exist(
-    controller, asset_ids, asset_directory, copy_to_dir, asset_symlink, stop_if_fail, load_file_in_unity, extension=None, verbose=False
+    controller,
+    asset_ids,
+    asset_directory,
+    copy_to_dir,
+    asset_symlink,
+    stop_if_fail,
+    load_file_in_unity,
+    extension=None,
+    verbose=False,
+    raise_for_failure=True,
 ):
     evt = controller.step(
         action="AssetsInDatabase", assetIds=asset_ids, updateProceduralLRUCache=True
@@ -53,13 +63,14 @@ def create_assets_if_not_exist(
             asset_symlink=asset_symlink,
             verbose=verbose,
             load_file_in_unity=load_file_in_unity,
-            extension=None
+            extension=None,
+            raise_for_failure=raise_for_failure,
         )
         if not evt.metadata["lastActionSuccess"]:
-            logger.info(
+            warnings.warn(
                 f"Could not create asset `{get_existing_thor_asset_file_path(out_dir=asset_dir, asset_id=asset_id)}`."
+                f"\nError: {evt.metadata['errorMessage']}"
             )
-            logger.info(f"Error: {evt.metadata['errorMessage']}")
         if stop_if_fail:
             return evt
     return evt
@@ -75,7 +86,7 @@ class ProceduralAssetHookRunner:
         stop_if_fail=False,
         asset_limit=-1,
         extension=None,
-        verbose=True
+        verbose=True,
     ):
         self.asset_directory = asset_directory
         self.asset_symlink = asset_symlink
@@ -104,7 +115,7 @@ class ProceduralAssetHookRunner:
             stop_if_fail=self.stop_if_fail,
             load_file_in_unity=self.load_file_in_unity,
             extension=self.extension,
-            verbose=self.verbose
+            verbose=self.verbose,
         )
 
     def SpawnAsset(self, action, controller):
@@ -118,7 +129,7 @@ class ProceduralAssetHookRunner:
             stop_if_fail=self.stop_if_fail,
             load_file_in_unity=self.load_file_in_unity,
             extension=self.extension,
-            verbose=self.verbose
+            verbose=self.verbose,
         )
 
     def GetHouseFromTemplate(self, action, controller):
@@ -135,7 +146,7 @@ class ProceduralAssetHookRunner:
             stop_if_fail=self.stop_if_fail,
             load_file_in_unity=self.load_file_in_unity,
             extension=self.extension,
-            verbose=self.verbose
+            verbose=self.verbose,
         )
 
 
