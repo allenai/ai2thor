@@ -1,6 +1,7 @@
 import os
 import signal
 import sys
+import traceback
 
 if os.name != "nt":
     import fcntl
@@ -107,8 +108,8 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
         s3.Object(bucket, sha256_key).put(
             Body=sha.hexdigest(), ACL=acl, ContentType="text/plain"
         )
-    except botocore.exceptions.ClientError as e:
-        logger.error("caught error uploading archive %s: %s" % (build_archive_name, e))
+    except botocore.exceptions.ClientError:
+        logger.error("caught error uploading archive %s: %s" % (build_archive_name, traceback.format_exc()))
 
     logger.info("pushed build %s to %s" % (bucket, build_archive_name))
 

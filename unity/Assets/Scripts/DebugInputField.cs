@@ -1973,16 +1973,44 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "atpc": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "AddThirdPartyCamera",
-                            ["position"] = Vector3.zero,
-                            ["rotation"] = Vector3.zero,
-                            ["orthographic"] = true,
-                            ["orthographicSize"] = 5,
+                            ["position"] = new Vector3(1, 1, 1),
+                            ["rotation"] = new Vector3(10, 20, 30),
+                            ["attachToPrimaryAgent"] = true
                         };
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
                     }
 
+                case "utpc": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateThirdPartyCamera",
+                            ["position"] = new Vector3(2, 2, 2),
+                            ["rotation"] = new Vector3(15, 25, 35),
+                            ["thirdPartyCameraId"] = 1,
+                            ["agentPositionRelativeCoordinates"] = true
+                        };
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+
+                case "umc": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateMainCamera",
+                            ["position"] = new Vector3(2, 2, 2),
+                            ["rotation"] = new Vector3(15, 25, 35),
+                            ["agentPositionRelativeCoordinates"] = false
+                        };
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+
+                case "debugmaincamera": {
+                        CurrentActiveController().generateMetadataWrapper();
+                        break;
+                    }
                 case "to": {
                         ServerAction action = new ServerAction();
                         action.action = "TeleportObject";
@@ -4177,9 +4205,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "telefull": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "TeleportFull";
-                        action["x"] = -1.5f;
+                        action["x"] = -1f;
                         action["y"] = 0.9009995460510254f;
-                        action["z"] = -1.5f;
+                        action["z"] = 1.5f;
                         Vector3 rotation = new Vector3(0, 135.0f, 0);
                         float horizon = Agent.GetComponent<BaseAgentComponent>().AgentCamera.transform.eulerAngles.x;
                         bool standing = true;

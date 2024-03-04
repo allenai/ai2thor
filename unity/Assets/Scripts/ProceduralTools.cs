@@ -820,7 +820,7 @@ namespace Thor.Procedural {
 
             var collider = new GameObject("Col");
             // SimObjVisible
-            collider.layer = LayerMask.NameToLayer("FloorAgent");
+            collider.layer = LayerMask.NameToLayer("SimObjVisible");
             collider.tag = "SimObjPhysics";
             var box = collider.AddComponent<BoxCollider>();
 
@@ -832,6 +832,10 @@ namespace Thor.Procedural {
             collider.transform.parent = colliders.transform;
 
             colliders.transform.parent = floorGameObject.transform;
+
+            GameObject duplicateCol = UnityEngine.Object.Instantiate(collider, colliders.transform);
+            duplicateCol.layer = LayerMask.NameToLayer("FloorAgent");
+            duplicateCol.name = "Col1";
 
             var triggerColliders = new GameObject("TriggerColliders");
             var triggerCollider = new GameObject("Col");
@@ -2343,7 +2347,6 @@ namespace Thor.Procedural {
                 mesh.uv = uvs;
             }
             mesh.RecalculateTangents();
-            
 
             // add the mesh to the object
             meshObj.AddComponent<MeshRenderer>();
@@ -2578,10 +2581,8 @@ namespace Thor.Procedural {
             MonoBehaviour.Destroy(oldGo);
 
             if (serializable) {
-                // meshObj.AddComponent<SerializeMesh>();
                 if (returnObject) {
                     result["gameObject"] = go;
-                    //result["intermediateGameObject"] = oldGo;
                 }
             }
             return result;

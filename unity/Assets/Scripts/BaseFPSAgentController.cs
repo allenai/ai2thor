@@ -77,18 +77,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             get => this.baseAgentComponent.DebugPointPrefab;
         }
 
-        public GameObject FixedCameraGimbalPrimary {
-            get => this.baseAgentComponent.FixedCameraGimbalPrimary;
-        }
-        
-        public GameObject FixedCameraGimbalSecondary {
-            get => this.baseAgentComponent.FixedCameraGimbalSecondary;
-        }
-
-        public GameObject MotorCameraGimbals {
-            get => this.baseAgentComponent.MotorCameraGimbals;
-        }
-
         public GameObject VisibilityCapsule {
             get => this.baseAgentComponent.VisibilityCapsule;
             set => this.baseAgentComponent.VisibilityCapsule = value;
@@ -145,10 +133,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
         public GameObject[] TargetCircles {
             get => this.baseAgentComponent.TargetCircles;
-        }
-
-        public bool UseMotorCameraGimbals {
-            get => this.baseAgentComponent.UseMotorCameraGimbals;
         }
 
         public GameObject[] GripperOpennessStates {
@@ -2381,6 +2365,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual MetadataWrapper generateMetadataWrapper() {
+            Debug.Log("calling generateMetadataWrapper");
             // AGENT METADATA
             AgentMetadata agentMeta = new AgentMetadata();
             agentMeta.name = "agent";
@@ -2403,13 +2388,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     this.simObjFilter
                 )
             );
+            
             metaMessage.isSceneAtRest = physicsSceneManager.isSceneAtRest;
             metaMessage.sceneBounds = GenerateSceneBounds(agentManager.SceneBounds);
+
             metaMessage.collided = collidedObjects.Length > 0;
             metaMessage.collidedObjects = collidedObjects;
+
             metaMessage.screenWidth = Screen.width;
             metaMessage.screenHeight = Screen.height;
+
             metaMessage.cameraPosition = m_Camera.transform.position;
+            metaMessage.cameraRotation = m_Camera.transform.eulerAngles;
+
+            //we need to transform these relative to the agent position
+            //main camera's local space coordinates need to be translated to world space first
+            var worldSpaceCameraPosition = m_Camera.transform.position;
+            //now convert camera position to agent relative local space
+            metaMessage.agentPositionRelativeCameraPosition = transform.InverseTransformPoint(worldSpaceCameraPosition);
+            //Debug.Log($"agentRelativeCameraPosition: {metaMessage.agentPositionRelativeCameraPosition}");
+
+            //ok to get local euler angles we need to do... some shenanigans lets go
+            var worldSpaceCameraRotationAsQuaternion = m_Camera.transform.rotation;
+            var localSpaceCameraRotationAsQuaternion = Quaternion.Inverse(transform.rotation) * worldSpaceCameraRotationAsQuaternion;
+            metaMessage.agentPositionRelativeCameraRotation = localSpaceCameraRotationAsQuaternion.eulerAngles;
+            //Debug.Log($"agentRelativeCameraRotation: {metaMessage.agentPositionRelativeCameraRotation}");
+
             metaMessage.cameraOrthSize = cameraOrthSize;
             cameraOrthSize = -1f;
             metaMessage.fov = m_Camera.fieldOfView;
@@ -6764,9 +6768,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
-        public void CreateRuntimeAsset(
-            ProceduralAsset asset
-        ) {
+        public void CreateRuntimeAsset(ProceduralAsset asset) {
             var assetData = ProceduralTools.CreateAsset(
                 vertices: asset.vertices,
                 normals: asset.normals,
@@ -6819,31 +6821,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // to support different
             var presentStages = extension.Split('.').Reverse().Where(s => !string.IsNullOrEmpty(s)).ToArray();
 
-            // var stages = new Dictionary<string, Func(Stream, MemoryStream)>() {
-
-            //     "gz": (stream: Stream) => {
-            //         using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
-            //         using var resultStream = new MemoryStream();
-            //         decompressor.CopyTo(resultStream);
-            //         return resultStream;
-            //     },
-            //     "msgpack": (stream: Stream) => {
-
-            //     }
-
-            // };
-
-            
-            // if (!validDirs.Any(prefix => dir.StartsWith(prefix))) {
-            //     actionFinished(
-            //         success: false,
-            //         errorMessage: $"Runtime filesystem access is restricted. `dir` must be a sub-directory in one of the following Unity designated paths: {string.Join(", ", validDirs.Select(d => $"'{d}'"))} ",
-            //         actionReturn: null
-            //     );
-            // }
-            // var filepath = Path.Combine(Application.persistentDataPath, id, $"{id}.msgpack.gz");
-            
-            // var outpath = Path.Combine(Application.persistentDataPath, "out", $"{id}.msgpack.gz");
             using FileStream rawFileStream = File.Open(filepath, FileMode.Open);
             using var resultStream = new MemoryStream();
             Debug.Log($"------- raw file read at for  '{filepath}'");
@@ -6852,9 +6829,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 using var decompressor = new GZipStream(rawFileStream, CompressionMode.Decompress);
                 decompressor.CopyTo(resultStream);
                 stageIndex++;
-
-            }
-            else {
+            } else {
                 rawFileStream.CopyTo(resultStream);
             }
 
@@ -6864,12 +6839,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (stageIndex < presentStages.Length && presentStages[stageIndex] == "msgpack") {
                 Debug.Log("Deserialize raw json");
-                 procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
+                procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
                     resultStream.ToArray(),
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options
                 );
-            }
-            else if (presentStages.Length == 1) {
+            } else if (presentStages.Length == 1) {
                 resultStream.Seek(0, SeekOrigin.Begin);
                 using var reader = new StreamReader(resultStream);
                 
@@ -6883,46 +6857,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.Log($"Deserialize raw json at {filepath}: str {json}");
                 // procAsset = Newtonsoft.Json.JsonConvert.DeserializeObject<ProceduralAsset>(reader.ReadToEnd(), serializer);
                 procAsset = JsonConvert.DeserializeObject<ProceduralAsset>(json);
-            }
-            else {
+            } else {
                  actionFinished(success: false, errorMessage: $"Unexpected error with extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
                  return;
             }
 
-            /// WORKING
-            /*
-            using FileStream compressedFileStream = File.Open(filepath, FileMode.Open);
-            //using FileStream outputFileStream = File.Create(DecompressedFileName);
-            //using FileStream outputFileStream = File.Create(DecompressedFileName);
-            using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
-            
 
-            using var resultStream = new MemoryStream();
-            decompressor.CopyTo(resultStream);
-            var bytes = resultStream.ToArray();
-
-            ProceduralAsset procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(bytes,
-                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
-            */
-
-
-            // decompressor.CopyTo(outputFileStream);
-            //outputFileStream.
-
-            // Debugging write contents
-            // var jsonResolver = new ShouldSerializeContractResolver();
-            // var str = Newtonsoft.Json.JsonConvert.SerializeObject(
-            //     procAsset,
-            //     Newtonsoft.Json.Formatting.None,
-            //     new Newtonsoft.Json.JsonSerializerSettings() {
-            //         ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-            //         ContractResolver = jsonResolver
-            //     });
-
-            // System.IO.File.WriteAllText(outpath, str);
-
-            //object assetData = null;
-            //var parent  =  GameObject.Find("Objects").transform;
             Debug.Log($"procAsset is null? {procAsset == null} -  {procAsset}, albedo rooted? {!Path.IsPathRooted(procAsset.albedoTexturePath)} {procAsset.albedoTexturePath}");
 
             procAsset.parentTexturesDir =  Path.Combine(dir, id);
