@@ -302,6 +302,45 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void RotateCameraBase(float yawDegrees, float rollDegrees) {
+            var target = gimbalBase;
+            var maxDegree = maxBaseXYRotation;
+            Debug.Log("yaw is " + yawDegrees + " and roll is " + rollDegrees);
+            if (yawDegrees < -maxDegree || maxDegree < yawDegrees) {
+                throw new InvalidOperationException(
+                    $"Invalid value for `yawDegrees`: '{yawDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+                );
+            } else if (rollDegrees < -maxDegree || maxDegree < rollDegrees) {
+                throw new InvalidOperationException(
+                    $"Invalid value for `rollDegrees`: '{rollDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+                );
+            } else {
+                gimbalBase.localEulerAngles = new Vector3(
+                    gimbalBaseStartingXRotation + rollDegrees,
+                    gimbalBaseStartingYRotation + yawDegrees,
+                    gimbalBase.transform.localEulerAngles.z
+                );
+            }
+            actionFinished(true);
+        }
+
+        public void RotateCameraMount(float degrees, bool secondary = false) {
+            var target = !secondary ? primaryGimbal : secondaryGimbal;
+            var startingXRotation = !secondary ? primaryStartingXRotation : secondaryStartingXRotation;
+            // var minDegree = Mathf.Round(startingXRotation - 15.0001f);
+            // var maxDegree = Mathf.Round(startingXRotation + 15.0001f);
+            var minDegree = minGimbalXRotation;
+            var maxDegree = maxGimbalXRotation;
+            if (degrees >= minDegree && degrees <= maxDegree) {
+                target.localEulerAngles = new Vector3(degrees, target.localEulerAngles.y, target.localEulerAngles.z);
+                actionFinished(true);
+            }
+            else {
+                errorMessage = $"Invalid value for `degrees`: '{degrees}'. Value should be between '{minDegree}' and '{maxDegree}'.";
+                actionFinished(false);
+            }
+        }
+
     }
 
 }
