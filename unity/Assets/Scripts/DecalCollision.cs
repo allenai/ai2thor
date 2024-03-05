@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-enum DecalRotationAxis {
+public enum DecalRotationAxis {
     NONE,
     FORWARD,
     SIDE
@@ -134,6 +134,16 @@ public class DecalCollision : Break {
                 spawnDecal(this.transform.position + this.transform.rotation * transparentDecalSpawnOffset, this.transform.rotation, this.transform.localScale);
             }
         }
+    }
+
+    public void SpawnDecal(Vector3 position, bool worldSpace = false, Vector3? scale = null,  DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE) {
+
+        // var pos = this.transform.InverseTransformPoint(worldPos);
+        var pos = position;
+        if (worldSpace) {
+            pos =  this.transform.InverseTransformPoint(position);
+        }
+        spawnDecal(pos, this.transform.rotation, scale.GetValueOrDefault(this.decalScale), randomRotationAxis);
     }
 
     private void spawnDecal(Vector3 position, Quaternion rotation, Vector3 scale, DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE, int index = -1) {

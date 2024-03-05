@@ -1,6 +1,7 @@
 import os
 import signal
 import sys
+import traceback
 
 if os.name != "nt":
     import fcntl
@@ -107,8 +108,8 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
         s3.Object(bucket, sha256_key).put(
             Body=sha.hexdigest(), ACL=acl, ContentType="text/plain"
         )
-    except botocore.exceptions.ClientError as e:
-        logger.error("caught error uploading archive %s: %s" % (build_archive_name, e))
+    except botocore.exceptions.ClientError:
+        logger.error("caught error uploading archive %s: %s" % (build_archive_name, traceback.format_exc()))
 
     logger.info("pushed build %s to %s" % (bucket, build_archive_name))
 
@@ -197,11 +198,13 @@ def _build(
     full_env.update(env)
     full_env["UNITY_BUILD_NAME"] = target_path
 
+    print(f"Running build command:\n{command}\nwith env\n{full_env}")
     process = subprocess.Popen(command, shell=True, env=full_env)
 
     start = time.time()
+    sleep_time = 10
     while True:
-        time.sleep(10)  # Check for build completion every 10 seconds
+        time.sleep(sleep_time)  # Check for build completion every `sleep_time` seconds
 
         if process.poll() is not None:  # Process has finished.
             break
@@ -215,10 +218,8 @@ def _build(
             os.waitpid(-1, os.WNOHANG)
             return False
 
-        if elapsed // print_interval > (elapsed - print_interval) // print_interval:
-            print(
-                f"{print_interval}-second interval reached. Process is still running."
-            )
+        if elapsed // print_interval > (elapsed - sleep_time) // print_interval:
+            logger.info(f"Build has been running for {elapsed:.2f} seconds.")
 
     logger.info(f"Exited with code {process.returncode}")
 
@@ -482,7 +483,7 @@ def local_build(
 
     build = ai2thor.build.Build(arch, prefix, False)
     env = dict()
-    if os.path.isdir("unity/Assets/Private/Scenes"):
+    if os.path.isdir("unity/Assets/Private/Scenes") or os.path.isdir("Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets/Scenes"):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
 
     build_dir = os.path.join("builds", build.name)
@@ -872,6 +873,8 @@ def pre_test(context):
     )
 
 import scripts.update_private
+
+
 def clean(private_repos=tuple()):
     subprocess.check_call("git reset --hard", shell=True)
     subprocess.check_call("git clean -f -d -x", shell=True)
@@ -1074,6 +1077,7 @@ def ci_pytest(branch, commit_id):
     logger.info(
         f"finished pytest for {branch} {commit_id} in {time.time() - start_time:.2f} seconds"
     )
+
 # Type hints break build server's invoke version 
 @task
 def ci_build(
@@ -1172,7 +1176,7 @@ def ci_build(
 
                 private_scene_options = [novelty_thor_scenes]
 
-                build_archs = ["OSXIntel64", "Linux64"]
+                build_archs = ["OSXIntel64"] #, "Linux64"]
 
                 # CloudRendering only supported with 2020.3.25
                 # should change this in the future to automatically install
@@ -1180,7 +1184,7 @@ def ci_build(
                 if _unity_version() == "2020.3.25f1":
                     build_archs.append("CloudRendering")
 
-                build_archs.reverse()  # Let's do CloudRendering first as it's more likely to fail
+                # build_archs.reverse()  # Let's do CloudRendering first as it's more likely to fail
 
                 has_any_build_failed = False
                 for include_private_scenes in private_scene_options:
@@ -4631,17 +4635,23 @@ def run_benchmark_from_s3_config(ctx):
 
 @task
 def run_benchmark_from_local_config(
-    ctx, config_path, house_from_s3=True, houses_path="./unity/Assets/Resources/rooms"
+    ctx, config_path, 
+    house_from_s3=False, 
+    houses_path="./unity/Assets/Resources/rooms",
+    output="out.json",
+    local_build=False,
+    arch=None
 ):
     import copy
     from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET, UnityActionBenchmarkRunner
 
-    client = boto3.client("s3")
+    if house_from_s3:
+        client = boto3.client("s3")
 
-    response = client.list_objects_v2(
-        Bucket=BENCHMARKING_S3_BUCKET, Prefix="benchmark_jobs/"
-    )
-    s3 = boto3.resource("s3", region_name="us-west-2")
+        response = client.list_objects_v2(
+            Bucket=BENCHMARKING_S3_BUCKET, Prefix="benchmark_jobs/"
+        )
+        s3 = boto3.resource("s3", region_name="us-west-2")
     benchmark_runs = []
     key = config_path
     if key.split(".")[-1] == "json":
@@ -4676,6 +4686,16 @@ def run_benchmark_from_local_config(
                     elif isinstance(procedural_house, dict):
                         procedural_houses_transformed.append(procedural_house)
         benchmark_run_config["procedural_houses"] = procedural_houses_transformed
+
+        if arch is not None:
+            benchmark_results["init_params"]["platform"] = arch
+
+        if local_build:
+            benchmark_run_config["init_params"]["commit_id"] = None
+            benchmark_run_config["init_params"]["local_build"] = True
+            del benchmark_run_config["init_params"]["platform"]
+        
+        
         # benchmark_run_config['verbose'] = True
 
         action_groups = copy.deepcopy(benchmark_run_config["action_groups"])
@@ -4687,9 +4707,10 @@ def run_benchmark_from_local_config(
     for benchmark_runner, action_group in benchmark_runs:
         benchmark_result = benchmark_runner.benchmark(action_group)
         benchmark_results.append(benchmark_result)
-    print(benchmark_result)
 
-    with open("out_3.json", "w") as f:
+    # print(benchmark_result)
+
+    with open(output, "w") as f:
         json.dump(benchmark_results[0], f, indent=4)
 
     # TODO remove older benchmarks
@@ -4795,9 +4816,10 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
+    import ai2thor.util.runtime_assets as ra
 
     hook_runner = ProceduralAssetHookRunner(
-        asset_directory=asset_dir, asset_symlink=True, verbose=True
+        asset_directory=asset_dir, asset_symlink=True, verbose=True, load_file_in_unity=True
     )
     controller = ai2thor.controller.Controller(
         # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",
@@ -4812,36 +4834,70 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
         visibilityScheme="Distance",
         action_hook_runner=hook_runner,
     )
-
-    with open(house_path, "r") as f:
-        house = json.load(f)
-    instance_id = "asset_0"
-    if asset_id != "":
-        house["objects"] = [
-            {
-                "assetId": asset_id,
-                "id": instance_id,
-                "kinematic": True,
-                "position": {"x": 0, "y": 0, "z": 0},
-                "rotation": {"x": 0, "y": 0, "z": 0},
-                "layer": "Procedural2",
-                "material": None,
-            }
-        ]
-    evt = controller.step(action="CreateHouse", house=house)
-
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    
+    #TODO bug why skybox is not changing? from just procedural pipeline
+    evt = controller.step(
+        action="SetSkybox", 
+        color={
+            "r": 0,
+            "g": 0,
+            "b": 0,
+        }
     )
-    print(f'Error: {evt.metadata["errorMessage"]}')
 
-    evt = controller.step(dict(action="LookAtObjectCenter", objectId=instance_id))
-
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    angle_increment = 45
+    angles = [n * angle_increment for n in range(0, round(360 / angle_increment))]
+    axes = [(0, 1, 0), (1, 0, 0)]
+    rotations = [(x, y, z, degrees) for degrees in angles for (x, y, z) in axes]
+    ra.view_asset_in_thor(
+        asset_id=asset_id,
+        controller=controller,
+        output_dir="./output-test",
+        rotations=rotations,
+        house_path=house_path,
+        skybox_color=(0, 0, 0)
     )
-    print(f'Error: {evt.metadata["errorMessage"]}')
 
+    # with open(house_path, "r") as f:
+    #     house = json.load(f)
+    # instance_id = "asset_0"
+    # if asset_id != "":
+    #     house["objects"] = [
+    #         {
+    #             "assetId": asset_id,
+    #             "id": instance_id,
+    #             "kinematic": True,
+    #             "position": {"x": 0, "y": 0, "z": 0},
+    #             "rotation": {"x": 0, "y": 0, "z": 0},
+    #             "layer": "Procedural2",
+    #             "material": None,
+    #         }
+    #     ]
+    # evt = controller.step(action="CreateHouse", house=house)
+
+   
+    # print(
+    #     f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    # )
+    # print(f'Error: {evt.metadata["errorMessage"]}')
+
+    # evt = controller.step(
+    #     action="SetSkybox", 
+    #     color={
+    #         "r": 0,
+    #         "g": 0,
+    #         "b": 0,
+    #     }
+    # )
+
+
+    # evt = controller.step(dict(action="LookAtObjectCenter", objectId=instance_id))
+
+    # print(
+    #     f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    # )
+    # print(f'Error: {evt.metadata["errorMessage"]}')
+    # input()
 
 @task
 def procedural_asset_cache_test(
@@ -4850,6 +4906,7 @@ def procedural_asset_cache_test(
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
+    import ai2thor.util.runtime_assets as ra
 
     hook_runner = ProceduralAssetHookRunner(
         asset_directory=asset_dir, asset_symlink=True, verbose=True, asset_limit=1
@@ -4955,3 +5012,4 @@ def procedural_asset_cache_test(
     )
     print(f'Error: {evt.metadata["errorMessage"]}')
     print(f'return {evt.metadata["actionReturn"]}')
+    

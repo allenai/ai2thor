@@ -434,19 +434,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, points);
         }
 
-        public void ObjectsVisibleFromThirdPartyCamera(int thirdPartyCameraIndex, float? maxDistance = null) {
-            if (!maxDistance.HasValue) {
-                maxDistance = maxVisibleDistance;
-            }
-
-            SimObjPhysics[] interactable;
-            actionFinishedEmit(true,
-              GetAllVisibleSimObjPhysicsDistance(
-                agentManager.thirdPartyCameras[thirdPartyCameraIndex], maxDistance.Value, null, out interactable
-              ).Select(sop => sop.ObjectID).ToList()
-            );
-        }
-
         public void ProportionOfObjectVisible(
             string objectId, int? thirdPartyCameraIndex = null
         ) {

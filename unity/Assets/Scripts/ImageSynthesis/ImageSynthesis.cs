@@ -54,6 +54,14 @@ public class ImageSynthesis : MonoBehaviour {
         return false;
     }
 
+    public void updateCameraStatuses(bool enabled) {
+        for (int i = 0; i < capturePasses.Length; i++) {
+            if (capturePasses[i].camera != null && capturePasses[i].name != "_img") {
+                capturePasses[i].camera.enabled = enabled;
+            }
+        }
+    }
+
     private Shader uberReplacementShader;
     private Shader opticalFlowShader;
     private Shader depthShader;

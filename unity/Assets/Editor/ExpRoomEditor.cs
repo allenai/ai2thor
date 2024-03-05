@@ -275,5 +275,98 @@ public class ExpRoomEditor : EditorWindow {
         return sopAndPrefabTuples;
     }
 
+//    [MenuItem("ExpRoom/Fix All Moveable Object Prefabs")]
+//    public static void FixAllMoveableObjectPrefabs() {
+//        string[] allPrefabGUIDs = AssetDatabase.FindAssets("t:Prefab");
+//
+//        List<GameObject> toFixGOs = new List<GameObject>();
+//        List<string> toFixPrefabPaths = new List<string>();
+//        Dictionary<SimObjType, CanOpen_Object.MovementType> sopTypeToMovementType = new Dictionary<SimObjType, CanOpen_Object.MovementType>();
+//
+//        foreach (string guid in allPrefabGUIDs) {
+//            string prefab = AssetDatabase.GUIDToAssetPath(guid);
+//            GameObject go = null;
+//            try {
+//                go = AssetDatabase.LoadAssetAtPath<GameObject>(prefab);
+//                SimObjPhysics sop = go.GetComponent<SimObjPhysics>();
+//
+//                if (sop != null) {
+//                    CanOpen_Object coo = go.GetComponentInChildren<CanOpen_Object>();
+//                    if (coo != null) {
+//                        Debug.Log($"Checking {prefab}");
+//                        if (coo.movementType != CanOpen_Object.MovementType.Invalid) {
+//                            if (!sopTypeToMovementType.ContainsKey(sop.Type)) {
+//                                sopTypeToMovementType[sop.Type] = coo.movementType;
+//                            }
+//                            if (sopTypeToMovementType[sop.Type] != coo.movementType) {
+//                                throw new Exception($"Found two different movement types for {sop.Type}.");
+//                            }
+//                        } else {
+//                            toFixGOs.Add(go);
+//                            toFixPrefabPaths.Add(prefab);
+//                        }
+//                    }
+//                }
+//            } catch {
+//                Debug.LogWarning($"Prefab {prefab} failed to load.");
+//            }
+//        }
+//
+//        if (!sopTypeToMovementType.ContainsKey(SimObjType.ScreenFrame)) {
+//            sopTypeToMovementType[SimObjType.ScreenFrame] = CanOpen_Object.MovementType.Scale;
+//        }
+//        if (!sopTypeToMovementType.ContainsKey(SimObjType.Blinds)) {
+//            sopTypeToMovementType[SimObjType.Blinds] = CanOpen_Object.MovementType.Scale;
+//        }
+//
+//        foreach (SimObjType sopType in sopTypeToMovementType.Keys) {
+//            Debug.Log($"{sopType} has movement type {sopTypeToMovementType[sopType]}");
+//        }
+//
+//        foreach (string path in toFixPrefabPaths) {
+//            using (var editingScope = new PrefabUtility.EditPrefabContentsScope(path)) {
+//                GameObject go = editingScope.prefabContentsRoot;
+//                SimObjPhysics sop = go.GetComponentInChildren<SimObjPhysics>();
+//                CanOpen_Object coo = go.GetComponentInChildren<CanOpen_Object>();
+//
+//                if (!sopTypeToMovementType.ContainsKey(sop.Type)) {
+//                    Debug.LogError($"No movement type found for {sop.Type}.");
+//                    continue;
+//                }
+//                Debug.Log($"{go} does not have a valid movement type. Setting based on object type to {sopTypeToMovementType[sop.Type]}");
+//                coo.movementType = sopTypeToMovementType[sop.Type];
+//            }
+//        }
+//
+//
+//        // Loop through each scene
+//        Dictionary<string, List<string>> sceneToSopsThatNeedFix = new Dictionary<string, List<string>>();
+//        foreach (string scenePath in Build.GetAllScenePaths()) {
+//            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
+//            sceneToSopsThatNeedFix[scenePath] = new List<string>();
+//
+//            // Update game objects in the scene
+//            foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
+//                CanOpen_Object coo = sop.GetComponentInChildren<CanOpen_Object>();
+//                if (coo != null) {
+//                    if (coo.movementType == CanOpen_Object.MovementType.Invalid) {
+//                        Debug.Log($"Found invalid movement type for {sop.name} in {scenePath}");
+//                        sceneToSopsThatNeedFix[scenePath].Add(sop.name);
+//                    }
+//                }
+//            }
+//        }
+//
+//        // Print out scenes and sops that need fix
+//        foreach (string scenePath in sceneToSopsThatNeedFix.Keys) {
+//            if (sceneToSopsThatNeedFix[scenePath].Count > 0) {
+//                Debug.Log($"Scene {scenePath} has {sceneToSopsThatNeedFix[scenePath].Count} sops that need fix:");
+//                foreach (string sopName in sceneToSopsThatNeedFix[scenePath]) {
+//                    Debug.Log($"    {sopName}");
+//                }
+//            }
+//        }
+//
+//    }
 
 }

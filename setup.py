@@ -42,7 +42,7 @@ setup(
     author_email="ai2thor@allenai.org",
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=[
-        "flask",
+        "Flask==2.0.1",
         "numpy",
         "pyyaml",
         "requests",
@@ -53,7 +53,8 @@ setup(
         "Pillow",
         "python-xlib",
         "opencv-python",
-        "werkzeug>=0.15.0",  # needed for unix socket support
+        "Werkzeug==2.0.1",  # needed for unix socket support
+        "compress_pickle"
     ],
     setup_requires=["pytest-runner"],
     tests_require=["pytest", "pytest-timeout", "pytest-cov", "jsonschema", "shapely", "pytest-mock", "dictdiffer"],

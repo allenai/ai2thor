@@ -49,7 +49,9 @@ public class Break : MonoBehaviour {
     // Start is called before the first frame update
     void Start() {
 #if UNITY_EDITOR
-        if (gameObject.GetComponentInParent<SimObjPhysics>() != null && !gameObject.GetComponentInParent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
+    // TODO refactor Break logic as separate from DecalCollision.cs to avoid error, and remove last part of AND 
+        if ((gameObject.GetComponentInParent<SimObjPhysics>() != null && !gameObject.GetComponentInParent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) && !gameObject.GetComponentInParent<SimObjPhysics>().IsReceptacle) {
+           
             Debug.LogError(gameObject.name + " is missing the CanBreak secondary property!");
         }
 

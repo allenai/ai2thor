@@ -351,7 +351,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void TeleportFull(
-            Vector3 position, Vector3 rotation, float horizon, bool forceAction = false
+            Vector3? position, Vector3? rotation, float? horizon, bool forceAction = false
         ) {
             base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
             actionFinished(success: true);

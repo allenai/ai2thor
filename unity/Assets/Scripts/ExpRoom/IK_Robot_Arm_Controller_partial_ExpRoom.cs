@@ -13,7 +13,7 @@ using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
 using RandomExtensions;
 
-public partial class IK_Robot_Arm_Controller : MonoBehaviour {
+public partial class IK_Robot_Arm_Controller : ArmController {
 
     public bool AttachObjectToArmWithFixedJoint(SimObjPhysics target) {
         foreach (FixedJoint fj in magnetSphere.gameObject.GetComponents<FixedJoint>()) {

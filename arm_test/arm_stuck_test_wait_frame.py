@@ -23,7 +23,7 @@ actions = [
         "action": "MoveArmBase",
         "y": 0.5203709825292535,
         "speed": 2,
-        "disableRendering": True,
+        "physicsSimulationParams": {"autoSimulation": False},
         "returnToStart": True,
     },
     {
@@ -31,7 +31,7 @@ actions = [
         "position": {"x": 0.01000303, "y": -1.63912773e-06, "z": 0.558107364},
         "speed": 2,
         "handCameraSpace": False,
-        "disableRendering": True,
+        "physicsSimulationParams": {"autoSimulation": True},
         "returnToStart": True,
     },
 ]
