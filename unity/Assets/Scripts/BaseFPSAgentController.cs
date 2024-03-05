@@ -3084,9 +3084,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3? position, Vector3? rotation, float? horizon, bool forceAction
         ) {
             teleportFull(
-                position: position == null ? transform.position : (Vector3)position,
-                rotation: rotation == null ? transform.localEulerAngles : (Vector3)rotation,
-                horizon: horizon == null ? m_Camera.transform.localEulerAngles.x : (float)horizon,
+                position: position,
+                rotation: rotation,
+                horizon: horizon,
                 forceAction: forceAction
             );
         }
@@ -3120,45 +3120,50 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected virtual void teleportFull(
-            Vector3 position, Vector3 rotation, float horizon, bool forceAction
+            Vector3? position,
+            Vector3? rotation,
+            float? horizon,
+            bool forceAction
         ) {
-            // Note: using Mathf.Approximately uses Mathf.Epsilon, which is significantly
-            // smaller than 1e-2f. I'm not confident that will work in many cases.
-            if (!forceAction && (Mathf.Abs(rotation.x) >= 1e-2f || Mathf.Abs(rotation.z) >= 1e-2f)) {
+            if (rotation.HasValue && (!Mathf.Approximately(rotation.Value.x, 0f) || !Mathf.Approximately(rotation.Value.z, 0f))) {
                 throw new ArgumentOutOfRangeException(
                     "No agents currently can change in pitch or roll. So, you must set rotation(x=0, y=yaw, z=0)." +
-                    $" You gave {rotation.ToString("F6")}."
+                    $" You gave {rotation.Value.ToString("F6")}."
                 );
             }
 
             // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
-            if (!forceAction && (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle)) {
+            if (!forceAction && horizon.HasValue && (horizon.Value > maxDownwardLookAngle || horizon.Value < -maxUpwardLookAngle)) {
                 throw new ArgumentOutOfRangeException(
                     $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
                 );
             }
 
-            if (!forceAction && !agentManager.SceneBounds.Contains(position)) {
+            if (!forceAction && position.HasValue && !agentManager.SceneBounds.Contains(position.Value)) {
                 throw new ArgumentOutOfRangeException(
-                    $"Teleport position {position.ToString("F6")} out of scene bounds! Ignore this by setting forceAction=true."
+                    $"Teleport position {position.Value.ToString("F6")} out of scene bounds! Ignore this by setting forceAction=true."
                 );
             }
 
-            if (!forceAction && !isPositionOnGrid(position)) {
+            if (!forceAction && position.HasValue && !isPositionOnGrid(position.Value)) {
                 throw new ArgumentOutOfRangeException(
-                    $"Teleport position {position.ToString("F6")} is not on the grid of size {gridSize}."
+                    $"Teleport position {position.Value.ToString("F6")} is not on the grid of size {gridSize}."
                 );
             }
 
             // cache old values in case there's a failure
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
-            float oldHorizon = m_Camera.transform.localEulerAngles.x;
+            Vector3 oldCameraLocalEulerAngles = m_Camera.transform.localEulerAngles;
 
             // here we actually teleport
-            transform.position = position;
-            transform.localEulerAngles = new Vector3(0, rotation.y, 0);
-            m_Camera.transform.localEulerAngles = new Vector3(horizon, 0, 0);
+            transform.position = position.GetValueOrDefault(transform.position);
+            transform.localEulerAngles = rotation.GetValueOrDefault(transform.localEulerAngles);
+            m_Camera.transform.localEulerAngles = new Vector3(
+                horizon.GetValueOrDefault(oldCameraLocalEulerAngles.x),
+                oldCameraLocalEulerAngles.y,
+                oldCameraLocalEulerAngles.z
+            );
 
             if (!forceAction &&
                 isAgentCapsuleColliding(
@@ -3167,7 +3172,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ) {
                 transform.position = oldPosition;
                 transform.rotation = oldRotation;
-                m_Camera.transform.localEulerAngles = new Vector3(oldHorizon, 0, 0);
+                m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngles;
                 throw new InvalidOperationException(errorMessage);
             }
         }
