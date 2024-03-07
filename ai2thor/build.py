@@ -73,7 +73,7 @@ class EditorBuild(object):
 class ExternalBuild(object):
     def __init__(self, executable_path):
         self.executable_path = executable_path
-        external_system_platforms = dict(Linux=Linux64, Darwin=OSXIntel64)
+        external_system_platforms = dict(Linux=Linux64, Darwin=OSXIntel64, Windows=StandaloneWindows64)
         self.platform = external_system_platforms[platform.system()]
 
         # assuming that an external build supports both server types
