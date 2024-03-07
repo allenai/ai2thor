@@ -7254,6 +7254,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             triggeredEncapsulatingBox.transform.parent = agent.transform;
         }
 
+        public void DestroyAgentBoxCollider(ServerAction action){
+            GameObject nonTriggeredEncapsulatingBox = GameObject.Find("NonTriggeredEncapsulatingBox");
+            GameObject triggeredEncapsulatingBox = GameObject.Find("triggeredEncapsulatingBox");
+            if (nonTriggeredEncapsulatingBox != null) {
+                GameObject.Destroy(nonTriggeredEncapsulatingBox);
+            }
+            if (triggeredEncapsulatingBox != null) {
+                GameObject.Destroy(triggeredEncapsulatingBox);
+            }
+            actionFinished(true);
+            return;
+        }
+
+        public void UpdateAgentBoxCollider(ServerAction action) {
+            this.DestroyAgentBoxCollider(action);
+            this.SpawnBoxCollider(this.gameObject, this.GetType(), action.colliderScaleRatio);
+            actionFinished(true);
+            return;
+        }
+
         public void SpawnAsset(
             string assetId,
             string generatedId,

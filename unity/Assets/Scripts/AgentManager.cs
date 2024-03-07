@@ -271,9 +271,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         action.snapToGrid = false;
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(LocobotFPSAgentController), baseAgentComponent);
-        if (action.useFPINCollider) {
-            primaryAgent.SpawnBoxCollider(primaryAgent.gameObject, typeof(LocobotFPSAgentController), action.colliderScaleRatio);
-        }
     }
 
     private void SetUpDroneController(ServerAction action) {
@@ -291,9 +288,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(StretchAgentController), baseAgentComponent);
         baseAgentComponent.StretchBodyColliders.SetActive(true);
-        if (action.useFPINCollider) {
-            primaryAgent.SpawnBoxCollider(primaryAgent.gameObject, typeof(StretchAgentController), action.colliderScaleRatio);
-        }
     }
 
     private void SetUpStretchABController(ServerAction action) {
@@ -302,9 +296,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         action.snapToGrid = false;
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(ArticulatedAgentController), baseAgentComponent);
-        if (action.useFPINCollider) {
-            primaryAgent.SpawnBoxCollider(primaryAgent.gameObject, typeof(ArticulatedAgentController), action.colliderScaleRatio);
-        }
     }
 
     // note: this doesn't take a ServerAction because we don't have to force the snpToGrid bool
@@ -2192,7 +2183,6 @@ public class ServerAction {
     public Vector3 position;
     public Vector3 direction;
     public Vector3 colliderScaleRatio;
-    public bool useFPINCollider;
     public bool allowAgentsToIntersect = false;
     public float handDistance;// used for max distance agent's hand can move
     public List<Vector3> positions = null;
