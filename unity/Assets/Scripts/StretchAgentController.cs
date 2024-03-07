@@ -268,6 +268,73 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+//        public void RotateCameraBase(float yawDegrees, float rollDegrees) {
+//            var target = gimbalBase;
+//            var maxDegree = maxBaseXYRotation;
+//            Debug.Log("yaw is " + yawDegrees + " and roll is " + rollDegrees);
+//            if (yawDegrees < -maxDegree || maxDegree < yawDegrees) {
+//                throw new InvalidOperationException(
+//                    $"Invalid value for `yawDegrees`: '{yawDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+//                );
+//            } else if (rollDegrees < -maxDegree || maxDegree < rollDegrees) {
+//                throw new InvalidOperationException(
+//                    $"Invalid value for `rollDegrees`: '{rollDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+//                );
+//            } else {
+//                gimbalBase.localEulerAngles = new Vector3(
+//                    gimbalBaseStartingXRotation + rollDegrees,
+//                    gimbalBaseStartingYRotation + yawDegrees,
+//                    gimbalBase.transform.localEulerAngles.z
+//                );
+//            }
+//            actionFinished(true);
+//        }
+
+        public void RotateCameraMount(float degrees, bool secondary = false) {
+            var minDegree = -80.00001f;
+            var maxDegree = 80.00001f;
+            if (degrees >= minDegree && degrees <= maxDegree) {
+
+                Camera cam;
+                if (secondary) {
+                    cam = agentManager.thirdPartyCameras[0];
+                } else {
+                    cam = m_Camera;
+                }
+                AgentManager.OptionalVector3 localEulerAngles = new AgentManager.OptionalVector3(
+                    x: degrees, y: cam.transform.localEulerAngles.y, z: cam.transform.localEulerAngles.z
+                );
+
+                int agentId = -1;
+                for (int i = 0; i < agentManager.agents.Count; i++) {
+                    if (agentManager.agents[i] == this) {
+                        agentId = i;
+                        break;
+                    }
+                }
+                if (agentId != 0) {
+                    errorMessage = "Only the primary agent can rotate the camera for now.";
+                    actionFinished(false);
+                    return;
+                }
+
+                if (secondary) {
+                    agentManager.UpdateThirdPartyCamera(
+                        thirdPartyCameraId: 0,
+                        rotation: localEulerAngles,
+                        agentPositionRelativeCoordinates: true,
+                        agentId: agentId
+                    );
+                } else {
+                    agentManager.UpdateMainCamera(rotation: localEulerAngles);
+                }
+            }
+            else {
+                errorMessage = $"Invalid value for `degrees`: '{degrees}'. Value should be between '{minDegree}' and '{maxDegree}'.";
+                actionFinished(false);
+            }
+        }
+
     }
 
 }

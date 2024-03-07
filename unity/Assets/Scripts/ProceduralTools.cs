@@ -2347,7 +2347,6 @@ namespace Thor.Procedural {
                 mesh.uv = uvs;
             }
             mesh.RecalculateTangents();
-            
 
             // add the mesh to the object
             meshObj.AddComponent<MeshRenderer>();
@@ -2582,10 +2581,8 @@ namespace Thor.Procedural {
             MonoBehaviour.Destroy(oldGo);
 
             if (serializable) {
-                // meshObj.AddComponent<SerializeMesh>();
                 if (returnObject) {
                     result["gameObject"] = go;
-                    //result["intermediateGameObject"] = oldGo;
                 }
             }
             return result;

@@ -54,7 +54,7 @@ namespace Tests {
             action["rotation"] = new Vector3(15, 20, 89);
             action["orthographic"] = true;
             action["orthographicSize"] = 5;
-            action["attachToPrimaryAgent"] = true;
+            action["attachToAgent"] = true;
             yield return step(action);
 
             Assert.NotNull(GameObject.Find("ThirdPartyCamera1"));

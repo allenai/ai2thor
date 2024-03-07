@@ -1,12 +1,11 @@
 import json
 import logging
-import os
-import shutil
 import multiprocessing
+import os
 import pathlib
+import shutil
+import warnings
 from collections import OrderedDict
-
-from filelock import FileLock
 
 EXTENSIONS_LOADABLE_IN_UNITY = {
     ".json",
@@ -16,6 +15,7 @@ EXTENSIONS_LOADABLE_IN_UNITY = {
 }
 
 logger = logging.getLogger(__name__)
+
 
 def get_msgpack_save_path(out_dir, object_name):
     return os.path.join(out_dir, f"{object_name}.msgpack")
@@ -67,7 +67,9 @@ def get_existing_thor_asset_file_path(out_dir, asset_id, force_extension=None):
         for path in possible_paths.values():
             if os.path.exists(path):
                 return path
-    raise Exception(f"Could not find existing THOR object file for {asset_id}, Path: `{path}`")
+    raise Exception(
+        f"Could not find existing THOR object file for {asset_id}, Path: `{path}`"
+    )
 
 
 def load_existing_thor_asset_file(out_dir, object_name, force_extension=None):
@@ -150,9 +152,11 @@ def save_thor_asset_file(asset_json, save_path: str):
         raise NotImplementedError(
             f"Unsupported file extension for save path: {save_path}"
         )
-    
+
+
 def get_runtime_asset_filelock(save_dir, asset_id):
     return os.path.join(save_dir, f"{asset_id}.lock")
+
 
 # TODO  remove  load_file_in_unity param
 def create_runtime_asset_file(
@@ -224,22 +228,13 @@ def create_runtime_asset_file(
 
 
 def change_asset_paths(asset, save_dir):
-    asset["normalTexturePath"] = os.path.join(
-        save_dir,
-        asset["name"],
-        os.path.basename(asset["normalTexturePath"]),
-    )
-    asset["albedoTexturePath"] = os.path.join(
-        save_dir,
-        asset["name"],
-        os.path.basename(asset["albedoTexturePath"]),
-    )
-    if "emissionTexturePath" in asset:
-        asset["emissionTexturePath"] = os.path.join(
-            save_dir,
-            asset["name"],
-            os.path.basename(asset["emissionTexturePath"]),
-        )
+    for key in asset:
+        if key.lower().endswith("texturepath"):
+            asset[key] = os.path.join(
+                save_dir,
+                asset["name"],
+                os.path.basename(asset[key]),
+            )
     return asset
 
 
@@ -251,9 +246,7 @@ def add_default_annotations(asset, asset_directory, verbose=False):
     thor_obj_md = load_existing_thor_metadata_file(out_dir=asset_directory)
     if thor_obj_md is None:
         if verbose:
-            logger.info(
-                f"Object metadata is missing annotations, assuming pickupable."
-            )
+            logger.info(f"Object metadata is missing annotations, assuming pickupable.")
 
         asset["annotations"] = {
             "objectType": "Undefined",
@@ -280,6 +273,7 @@ def create_asset(
     verbose=False,
     load_file_in_unity=False,
     extension=None,
+    raise_for_failure=True,
 ):
     # Verifies the file exists
     create_prefab_action = {}
@@ -330,29 +324,32 @@ def create_asset(
             asset=create_prefab_action, asset_directory=asset_directory, verbose=verbose
         )
 
-    evt = thor_controller.step(**create_prefab_action)
+    evt = thor_controller.step(
+        **create_prefab_action, raise_for_failure=raise_for_failure
+    )
     print(f"Last Action: {thor_controller.last_action['action']}")
     if not evt.metadata["lastActionSuccess"]:
-        logger.info(f"Last Action: {thor_controller.last_action['action']}")
-        logger.info(f"Action success: {evt.metadata['lastActionSuccess']}")
-        logger.info(f'Error: {evt.metadata["errorMessage"]}')
-
-        logger.info(
-            {
-                k: v
-                for k, v in create_prefab_action.items()
-                if k
-                in [
-                    "action",
-                    "name",
-                    "receptacleCandidate",
-                    "albedoTexturePath",
-                    "normalTexturePath",
-                ]
-            }
+        warnings.warn(
+            f"Last Action: {thor_controller.last_action['action']}"
+            f"Action success: {evt.metadata['lastActionSuccess']}"
+            f'Error: {evt.metadata["errorMessage"]}'
+            + str(
+                {
+                    k: v
+                    for k, v in create_prefab_action.items()
+                    if k
+                    in [
+                        "action",
+                        "name",
+                        "receptacleCandidate",
+                    ]
+                    or k.lower().endswith("path")
+                }
+            )
         )
 
     return evt
+
 
 def download_objaverse_assets(controller, asset_ids):
     import objaverse
@@ -387,6 +384,7 @@ def create_assets(
             events.append(evt)
     return success, events
 
+
 def make_single_object_house(
     asset_id,
     instance_id="asset_0",
@@ -413,6 +411,7 @@ def make_single_object_house(
         "b": skybox_color[2],
     }
     return house
+
 
 # def create_assets_from_paths(controller, asset_paths, asset_symlink=True, return_events=False, verbose=False):
 def view_asset_in_thor(

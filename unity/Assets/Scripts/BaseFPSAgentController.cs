@@ -3084,9 +3084,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3? position, Vector3? rotation, float? horizon, bool forceAction
         ) {
             teleportFull(
-                position: position == null ? transform.position : (Vector3)position,
-                rotation: rotation == null ? transform.localEulerAngles : (Vector3)rotation,
-                horizon: horizon == null ? m_Camera.transform.localEulerAngles.x : (float)horizon,
+                position: position,
+                rotation: rotation,
+                horizon: horizon,
                 forceAction: forceAction
             );
         }
@@ -3120,45 +3120,50 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected virtual void teleportFull(
-            Vector3 position, Vector3 rotation, float horizon, bool forceAction
+            Vector3? position,
+            Vector3? rotation,
+            float? horizon,
+            bool forceAction
         ) {
-            // Note: using Mathf.Approximately uses Mathf.Epsilon, which is significantly
-            // smaller than 1e-2f. I'm not confident that will work in many cases.
-            if (!forceAction && (Mathf.Abs(rotation.x) >= 1e-2f || Mathf.Abs(rotation.z) >= 1e-2f)) {
+            if (rotation.HasValue && (!Mathf.Approximately(rotation.Value.x, 0f) || !Mathf.Approximately(rotation.Value.z, 0f))) {
                 throw new ArgumentOutOfRangeException(
                     "No agents currently can change in pitch or roll. So, you must set rotation(x=0, y=yaw, z=0)." +
-                    $" You gave {rotation.ToString("F6")}."
+                    $" You gave {rotation.Value.ToString("F6")}."
                 );
             }
 
             // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
-            if (!forceAction && (horizon > maxDownwardLookAngle || horizon < -maxUpwardLookAngle)) {
+            if (!forceAction && horizon.HasValue && (horizon.Value > maxDownwardLookAngle || horizon.Value < -maxUpwardLookAngle)) {
                 throw new ArgumentOutOfRangeException(
                     $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
                 );
             }
 
-            if (!forceAction && !agentManager.SceneBounds.Contains(position)) {
+            if (!forceAction && position.HasValue && !agentManager.SceneBounds.Contains(position.Value)) {
                 throw new ArgumentOutOfRangeException(
-                    $"Teleport position {position.ToString("F6")} out of scene bounds! Ignore this by setting forceAction=true."
+                    $"Teleport position {position.Value.ToString("F6")} out of scene bounds! Ignore this by setting forceAction=true."
                 );
             }
 
-            if (!forceAction && !isPositionOnGrid(position)) {
+            if (!forceAction && position.HasValue && !isPositionOnGrid(position.Value)) {
                 throw new ArgumentOutOfRangeException(
-                    $"Teleport position {position.ToString("F6")} is not on the grid of size {gridSize}."
+                    $"Teleport position {position.Value.ToString("F6")} is not on the grid of size {gridSize}."
                 );
             }
 
             // cache old values in case there's a failure
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
-            float oldHorizon = m_Camera.transform.localEulerAngles.x;
+            Vector3 oldCameraLocalEulerAngles = m_Camera.transform.localEulerAngles;
 
             // here we actually teleport
-            transform.position = position;
-            transform.localEulerAngles = new Vector3(0, rotation.y, 0);
-            m_Camera.transform.localEulerAngles = new Vector3(horizon, 0, 0);
+            transform.position = position.GetValueOrDefault(transform.position);
+            transform.localEulerAngles = rotation.GetValueOrDefault(transform.localEulerAngles);
+            m_Camera.transform.localEulerAngles = new Vector3(
+                horizon.GetValueOrDefault(oldCameraLocalEulerAngles.x),
+                oldCameraLocalEulerAngles.y,
+                oldCameraLocalEulerAngles.z
+            );
 
             if (!forceAction &&
                 isAgentCapsuleColliding(
@@ -3167,7 +3172,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ) {
                 transform.position = oldPosition;
                 transform.rotation = oldRotation;
-                m_Camera.transform.localEulerAngles = new Vector3(oldHorizon, 0, 0);
+                m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngles;
                 throw new InvalidOperationException(errorMessage);
             }
         }
@@ -6768,9 +6773,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
-        public void CreateRuntimeAsset(
-            ProceduralAsset asset
-        ) {
+        public void CreateRuntimeAsset(ProceduralAsset asset) {
             var assetData = ProceduralTools.CreateAsset(
                 vertices: asset.vertices,
                 normals: asset.normals,
@@ -6823,31 +6826,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // to support different
             var presentStages = extension.Split('.').Reverse().Where(s => !string.IsNullOrEmpty(s)).ToArray();
 
-            // var stages = new Dictionary<string, Func(Stream, MemoryStream)>() {
-
-            //     "gz": (stream: Stream) => {
-            //         using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
-            //         using var resultStream = new MemoryStream();
-            //         decompressor.CopyTo(resultStream);
-            //         return resultStream;
-            //     },
-            //     "msgpack": (stream: Stream) => {
-
-            //     }
-
-            // };
-
-            
-            // if (!validDirs.Any(prefix => dir.StartsWith(prefix))) {
-            //     actionFinished(
-            //         success: false,
-            //         errorMessage: $"Runtime filesystem access is restricted. `dir` must be a sub-directory in one of the following Unity designated paths: {string.Join(", ", validDirs.Select(d => $"'{d}'"))} ",
-            //         actionReturn: null
-            //     );
-            // }
-            // var filepath = Path.Combine(Application.persistentDataPath, id, $"{id}.msgpack.gz");
-            
-            // var outpath = Path.Combine(Application.persistentDataPath, "out", $"{id}.msgpack.gz");
             using FileStream rawFileStream = File.Open(filepath, FileMode.Open);
             using var resultStream = new MemoryStream();
             Debug.Log($"------- raw file read at for  '{filepath}'");
@@ -6856,9 +6834,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 using var decompressor = new GZipStream(rawFileStream, CompressionMode.Decompress);
                 decompressor.CopyTo(resultStream);
                 stageIndex++;
-
-            }
-            else {
+            } else {
                 rawFileStream.CopyTo(resultStream);
             }
 
@@ -6868,12 +6844,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (stageIndex < presentStages.Length && presentStages[stageIndex] == "msgpack") {
                 Debug.Log("Deserialize raw json");
-                 procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
+                procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
                     resultStream.ToArray(),
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options
                 );
-            }
-            else if (presentStages.Length == 1) {
+            } else if (presentStages.Length == 1) {
                 resultStream.Seek(0, SeekOrigin.Begin);
                 using var reader = new StreamReader(resultStream);
                 
@@ -6887,46 +6862,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.Log($"Deserialize raw json at {filepath}: str {json}");
                 // procAsset = Newtonsoft.Json.JsonConvert.DeserializeObject<ProceduralAsset>(reader.ReadToEnd(), serializer);
                 procAsset = JsonConvert.DeserializeObject<ProceduralAsset>(json);
-            }
-            else {
+            } else {
                  actionFinished(success: false, errorMessage: $"Unexpected error with extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
                  return;
             }
 
-            /// WORKING
-            /*
-            using FileStream compressedFileStream = File.Open(filepath, FileMode.Open);
-            //using FileStream outputFileStream = File.Create(DecompressedFileName);
-            //using FileStream outputFileStream = File.Create(DecompressedFileName);
-            using var decompressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
-            
 
-            using var resultStream = new MemoryStream();
-            decompressor.CopyTo(resultStream);
-            var bytes = resultStream.ToArray();
-
-            ProceduralAsset procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(bytes,
-                    MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
-            */
-
-
-            // decompressor.CopyTo(outputFileStream);
-            //outputFileStream.
-
-            // Debugging write contents
-            // var jsonResolver = new ShouldSerializeContractResolver();
-            // var str = Newtonsoft.Json.JsonConvert.SerializeObject(
-            //     procAsset,
-            //     Newtonsoft.Json.Formatting.None,
-            //     new Newtonsoft.Json.JsonSerializerSettings() {
-            //         ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-            //         ContractResolver = jsonResolver
-            //     });
-
-            // System.IO.File.WriteAllText(outpath, str);
-
-            //object assetData = null;
-            //var parent  =  GameObject.Find("Objects").transform;
             Debug.Log($"procAsset is null? {procAsset == null} -  {procAsset}, albedo rooted? {!Path.IsPathRooted(procAsset.albedoTexturePath)} {procAsset.albedoTexturePath}");
 
             procAsset.parentTexturesDir =  Path.Combine(dir, id);
