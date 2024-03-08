@@ -7239,13 +7239,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return bounds;
         }
 
-        public void SpawnBoxCollider(GameObject agent, Type agentType, Vector3 scaleRatio) {
+        public void SpawnBoxCollider(GameObject agent, Type agentType, Vector3 scaleRatio, bool useAbsoluteSize = false) {
             var bounds = GetAgentBounds(agent, agentType);
             GameObject noneTriggeredEncapsulatingBox = new GameObject("NonTriggeredEncapsulatingBox");
             noneTriggeredEncapsulatingBox.transform.position = new Vector3(bounds.center.x, bounds.center.y, agent.transform.position.z);
 
+            Vector3 colliderSize = new Vector3(
+                scaleRatio.x * bounds.extents.x * 2,
+                scaleRatio.y * bounds.size.y,
+                scaleRatio.z * bounds.extents.z * 2
+            );
+            if (useAbsoluteSize) {
+                colliderSize = new Vector3(
+                    scaleRatio.x,
+                    scaleRatio.y,
+                    scaleRatio.z
+                );
+            }
+
             BoxCollider nonTriggeredBoxCollider = noneTriggeredEncapsulatingBox.AddComponent<BoxCollider>();
-            nonTriggeredBoxCollider.size = new Vector3(scaleRatio.x * bounds.extents.x * 2, scaleRatio.y * bounds.size.y, scaleRatio.z * bounds.extents.z * 2); // Scale the box to the agent's size
+            nonTriggeredBoxCollider.size = colliderSize; // Scale the box to the agent's size
             nonTriggeredBoxCollider.enabled = true;
 
             noneTriggeredEncapsulatingBox.transform.parent = agent.transform;
@@ -7254,7 +7267,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             triggeredEncapsulatingBox.transform.position = new Vector3(bounds.center.x, bounds.center.y, agent.transform.position.z);
 
             BoxCollider triggeredBoxCollider = triggeredEncapsulatingBox.AddComponent<BoxCollider>();
-            triggeredBoxCollider.size = new Vector3(scaleRatio.x * bounds.extents.x * 2, scaleRatio.y * bounds.size.y, scaleRatio.z * bounds.extents.z * 2); // Scale the box to the agent's size
+            triggeredBoxCollider.size = colliderSize; // Scale the box to the agent's size
             triggeredBoxCollider.enabled = true;
             triggeredBoxCollider.isTrigger = true;
 
@@ -7276,7 +7289,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void UpdateAgentBoxCollider(ServerAction action) {
             this.DestroyAgentBoxCollider(action);
-            this.SpawnBoxCollider(this.gameObject, this.GetType(), action.colliderScaleRatio);
+            this.SpawnBoxCollider(this.gameObject, this.GetType(), action.colliderScaleRatio, action.useAbsoluteSize);
             actionFinished(true);
             return;
         }
