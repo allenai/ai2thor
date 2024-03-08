@@ -465,7 +465,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         }
 
         var agent = this.agents[agentId];
-        // ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis>();
 
         if (agentPositionRelativeCoordinates) {
             Transform oldParent = camera.transform.parent;
@@ -556,7 +555,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis>();
         if (imageSynthesis != null && imageSynthesis.enabled) {
             imageSynthesis.OnCameraChange();
-            imageSynthesis.OnSceneChange();
         }
 
         this.activeAgent().actionFinished(success: true);
