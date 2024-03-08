@@ -465,6 +465,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         }
 
         var agent = this.agents[agentId];
+        // ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis>();
 
         if (agentPositionRelativeCoordinates) {
             Transform oldParent = camera.transform.parent;
@@ -550,6 +551,12 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 postProcessLayer: camera.gameObject.GetComponentInChildren<PostProcessLayer>(),
                 antiAliasing: antiAliasing
             );
+        }
+
+        ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis>();
+        if (imageSynthesis != null && imageSynthesis.enabled) {
+            imageSynthesis.OnCameraChange();
+            imageSynthesis.OnSceneChange();
         }
 
         this.activeAgent().actionFinished(success: true);
@@ -1559,6 +1566,7 @@ public class AgentMetadata {
     public bool inHighFrictionArea;
 
     public Vector3 colliderSize;
+
     public AgentMetadata() { }
 }
 

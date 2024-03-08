@@ -2014,9 +2014,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "umc": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "UpdateMainCamera",
-                            ["position"] = new Vector3(2, 2, 2),
+                            ["position"] = new Vector3(-1, 0.9f, 1),
                             ["rotation"] = new Vector3(15, 25, 35),
-                            ["agentPositionRelativeCoordinates"] = false
+                            ["fieldOfView"] = 120f,
+                            // ["agentPositionRelativeCoordinates"] = false
                         };
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
