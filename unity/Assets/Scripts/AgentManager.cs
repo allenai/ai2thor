@@ -1557,6 +1557,8 @@ public class AgentMetadata {
     public bool? isStanding = null;
 
     public bool inHighFrictionArea;
+
+    public Vector3 colliderSize;
     public AgentMetadata() { }
 }
 
