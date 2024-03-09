@@ -1461,7 +1461,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "sbc": {
                         var action = new Dictionary<string, object>() {
                             ["action"] = "UpdateAgentBoxCollider",
-                            ["colliderScaleRatio"] = new Vector3(2.0f, 1.0f, 2.0f)
+                            ["colliderScaleRatio"] = new Vector3(1.3f, 1.0f, 1.0f),
+                            ["useVisibleColliderBase"] = false
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "sbc2": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(1.0f, 1.0f, 1.3f),
+                            ["useVisibleColliderBase"] = false
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "sbcv": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(1.3f, 1.0f, 1.0f),
+                            ["useVisibleColliderBase"] = true
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "sbcv2": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(1.0f, 1.0f, 1.3f),
+                            ["useVisibleColliderBase"] = true
                         };
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -1470,7 +1501,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "sbca": {
                         var action = new Dictionary<string, object>() {
                             ["action"] = "UpdateAgentBoxCollider",
-                            ["colliderScaleRatio"] = new Vector3(0.2f, 1.0f, 0.2f),
+                            ["colliderScaleRatio"] = new Vector3(0.5f, 1.0f, 0.3f),
+                            ["useAbsoluteSize"] = true
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                
+                case "sbca2": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(0.3f, 1.0f, 0.5f),
                             ["useAbsoluteSize"] = true
                         };
                         CurrentActiveController().ProcessControlCommand(action);
