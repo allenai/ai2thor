@@ -7239,20 +7239,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return bounds;
         }
 
-        public void SpawnBoxCollider(GameObject agent, Type agentType, Vector3 scaleRatio, bool useAbsoluteSize = false, bool useVisibleColliderBase = false) {
+        public void spawnAgentBoxCollider(GameObject agent, Type agentType, Vector3 scaleRatio, bool useAbsoluteSize = false, bool useVisibleColliderBase = false) {
             // Store the current rotation
+            Vector3 originalPosition = this.transform.position;
             Quaternion originalRotation = this.transform.rotation;
 
-            // Align the agent's rotation with the world coordinate system
+            // Move the agent to a safe place and align the agent's rotation with the world coordinate system
+            this.transform.position = new Vector3(originalPosition.x + 100, originalPosition.y + 100, originalPosition.z + 100);
             this.transform.rotation = Quaternion.identity;
 
+            // Get the agent's bounds
             var bounds = GetAgentBounds(agent, agentType);
-            Vector3 absoluteSizeInWorld = new Vector3(scaleRatio.x, scaleRatio.y, scaleRatio.z);
 
+            // Move the agent back to its original position and rotation
+            this.transform.position = originalPosition;
+            this.transform.rotation = originalRotation;
+
+            // Check if the spawned boxCollider is colliding with other objects
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
+            Vector3 newBoxCenter = new Vector3(bounds.center.x - 100, bounds.center.y - 100, bounds.center.z - 100);
+            if (Physics.CheckBox(newBoxCenter, bounds.extents, originalRotation, layerMask)) {
+                errorMessage = "Spawned box collider is colliding with other objects. Cannot spawn box collider.";
+                actionFinished(false);
+                return;
+            }
+
+            // Move the agent to the pose aligned with bounds' center and rotation
+            this.transform.position = new Vector3(originalPosition.x + 100, originalPosition.y + 100, originalPosition.z + 100);
+            this.transform.rotation = Quaternion.identity;
+
+            // Spawn the box collider
             Vector3 colliderSize = new Vector3(
-                scaleRatio.x * bounds.extents.x * 2,
+                scaleRatio.x * bounds.size.x,
                 scaleRatio.y * bounds.size.y,
-                scaleRatio.z * bounds.extents.z * 2
+                scaleRatio.z * bounds.size.z
             );
             if (useAbsoluteSize) {
                 colliderSize = scaleRatio;
@@ -7279,6 +7299,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             triggeredEncapsulatingBox.transform.parent = agent.transform;
 
+            // Spawn the visible box if useVisibleColliderBase is true
             if (useVisibleColliderBase){
                 if (useAbsoluteSize) {
                     colliderSize = new Vector3(
@@ -7288,22 +7309,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     );
                 } else {
                     colliderSize = new Vector3(
-                        scaleRatio.x * bounds.extents.x * 2,
+                        scaleRatio.x * bounds.size.x,
                         0.15f,
-                        scaleRatio.z * bounds.extents.z * 2
+                        scaleRatio.z * bounds.size.z
                     );
                 }
                 GameObject visibleBox = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 visibleBox.name = "VisibleBox";
-                visibleBox.transform.position = new Vector3(bounds.center.x, 0.05f, bounds.center.z);
+                visibleBox.transform.position = new Vector3(bounds.center.x, bounds.center.y - bounds.extents.y + 0.1f, bounds.center.z);
                 visibleBox.transform.localScale = colliderSize;
                 visibleBox.transform.parent = agent.transform;
             }
 
+            // Move the agent back to its original position and rotation
+            this.transform.position = originalPosition;
             this.transform.rotation = originalRotation;
         }
 
-        public void DestroyAgentBoxCollider(ServerAction action){
+        public void DestroyAgentBoxCollider(){
             GameObject nonTriggeredEncapsulatingBox = GameObject.Find("NonTriggeredEncapsulatingBox");
             GameObject triggeredEncapsulatingBox = GameObject.Find("triggeredEncapsulatingBox");
             GameObject visibleBox = GameObject.Find("VisibleBox");
@@ -7320,9 +7343,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        public void UpdateAgentBoxCollider(ServerAction action) {
-            this.DestroyAgentBoxCollider(action);
-            this.SpawnBoxCollider(this.gameObject, this.GetType(), action.colliderScaleRatio, action.useAbsoluteSize, action.useVisibleColliderBase);
+        public void UpdateAgentBoxCollider(Vector3 colliderScaleRatio, bool useAbsoluteSize = false, bool useVisibleColliderBase = false) {
+            this.DestroyAgentBoxCollider();
+            this.spawnAgentBoxCollider(this.gameObject, this.GetType(), colliderScaleRatio, useAbsoluteSize, useVisibleColliderBase);
             actionFinished(true);
             return;
         }
