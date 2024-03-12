@@ -1205,7 +1205,7 @@ def ci_build(
                         os.makedirs(temp_dir)
                         logger.info(f"copying unity data to {temp_dir}")
                         # -c uses MacOS clonefile
-                        subprocess.check_call(f"cp -a -c unity {temp_dir}", shell=True)
+                        subprocess.check_call(f"cp -a unity {temp_dir}", shell=True)
                         logger.info(f"completed unity data copy to {temp_dir}")
                         rdir = os.path.join(temp_dir, "unity/builds")
                         commit_build = ai2thor.build.Build(
