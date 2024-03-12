@@ -7239,34 +7239,61 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return bounds;
         }
 
+
+
         public void spawnAgentBoxCollider(GameObject agent, Type agentType, Vector3 scaleRatio, bool useAbsoluteSize = false, bool useVisibleColliderBase = false) {
             // Store the current rotation
             Vector3 originalPosition = this.transform.position;
             Quaternion originalRotation = this.transform.rotation;
 
+            Debug.Log($"the original position of the agent is: {originalPosition:F8}");
+
             // Move the agent to a safe place and align the agent's rotation with the world coordinate system
-            this.transform.position = new Vector3(originalPosition.x + 100, originalPosition.y + 100, originalPosition.z + 100);
+            this.transform.position = new Vector3(originalPosition.x + 100f, originalPosition.y + 100f, originalPosition.z + 100f);
             this.transform.rotation = Quaternion.identity;
+
+            Debug.Log($"agent position after moving it out of the way is: {this.transform.position:F8}");
 
             // Get the agent's bounds
             var bounds = GetAgentBounds(agent, agentType);
 
-            // Move the agent back to its original position and rotation
-            this.transform.position = originalPosition;
-            this.transform.rotation = originalRotation;
+            Debug.Log($"the global position of the agent bounds is: {bounds.center:F8}");
 
             // Check if the spawned boxCollider is colliding with other objects
             int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
-            Vector3 newBoxCenter = new Vector3(bounds.center.x - 100, bounds.center.y - 100, bounds.center.z - 100);
+            
+            Vector3 newBoxCenter = new Vector3(bounds.center.x - 100f, bounds.center.y - 100f, bounds.center.z - 100f);
+            Debug.Log($"the center for the new box should be at the agent's original position but is: {newBoxCenter:F8}");
+
+            #if UNITY_EDITOR
+            /////////////////////////////////////////////////
+            this.baseAgentComponent.boxCenter = newBoxCenter;
+            this.baseAgentComponent.boxHalfExtents = bounds.extents;
+            this.baseAgentComponent.boxOrientation = originalRotation;
+            this.baseAgentComponent.drawBox = true;
+
+            //for visualization lets spawna cube at the center of where the boxCenter supposedly is
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.transform.position = this.baseAgentComponent.boxCenter;
+            cube.transform.rotation = this.baseAgentComponent.boxOrientation;
+            cube.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f); //scale is small just so we can see it a little
+
+
+            Debug.Log("draw gizmos set for debug draw!");
+            ////////////////////////////////////////////////
+            #endif
+
             if (Physics.CheckBox(newBoxCenter, bounds.extents, originalRotation, layerMask)) {
-                errorMessage = "Spawned box collider is colliding with other objects. Cannot spawn box collider.";
-                actionFinished(false);
-                return;
+                this.transform.position = originalPosition;
+                this.transform.rotation = originalRotation;
+                throw new InvalidOperationException(
+                    "Spawned box collider is colliding with other objects. Cannot spawn box collider."
+                );
             }
 
             // Move the agent to the pose aligned with bounds' center and rotation
-            this.transform.position = new Vector3(originalPosition.x + 100, originalPosition.y + 100, originalPosition.z + 100);
-            this.transform.rotation = Quaternion.identity;
+            // this.transform.position = new Vector3(originalPosition.x + 100f, originalPosition.y + 100f, originalPosition.z + 100f);
+            // this.transform.rotation = Quaternion.identity;
 
             // Spawn the box collider
             Vector3 colliderSize = new Vector3(
@@ -7280,7 +7307,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             GameObject noneTriggeredEncapsulatingBox = new GameObject("NonTriggeredEncapsulatingBox");
             // noneTriggeredEncapsulatingBox.transform.position = new Vector3(bounds.center.x, bounds.center.y, agent.transform.position.z);
-            noneTriggeredEncapsulatingBox.transform.position = new Vector3(bounds.center.x, bounds.center.y, bounds.center.z);
+            noneTriggeredEncapsulatingBox.transform.position = bounds.center;
 
             BoxCollider nonTriggeredBoxCollider = noneTriggeredEncapsulatingBox.AddComponent<BoxCollider>();
             nonTriggeredBoxCollider.size = colliderSize; // Scale the box to the agent's size
@@ -7290,7 +7317,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             GameObject triggeredEncapsulatingBox = new GameObject("triggeredEncapsulatingBox");
             // triggeredEncapsulatingBox.transform.position = new Vector3(bounds.center.x, bounds.center.y, agent.transform.position.z);
-            triggeredEncapsulatingBox.transform.position = new Vector3(bounds.center.x, bounds.center.y, bounds.center.z);
+            triggeredEncapsulatingBox.transform.position = bounds.center;
 
             BoxCollider triggeredBoxCollider = triggeredEncapsulatingBox.AddComponent<BoxCollider>();
             triggeredBoxCollider.size = colliderSize; // Scale the box to the agent's size
@@ -8033,10 +8060,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Gizmos.color = Color.yellow;
             // Gizmos.DrawWireSphere(objectBounds.center, objectBounds.extents.magnitude);
-            foreach (var sphere in debugSpheres) {
-                Gizmos.color = sphere.color;
-                Gizmos.DrawWireSphere(sphere.worldSpaceCenter, sphere.radius);
-            }
+            // foreach (var sphere in debugSpheres) {
+            //     Gizmos.color = sphere.color;
+            //     Gizmos.DrawWireSphere(sphere.worldSpaceCenter, sphere.radius);
+            // }
         }
 #endif
 
