@@ -100,5 +100,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // body.AddForceAtPosition (m_CharacterController.velocity * 15f, hit.point, ForceMode.Acceleration);// might have to adjust the force vector scalar later
         }
 
+        #if UNITY_EDITOR
+        public void OnDrawGizmos() {
+
+        }
+        #endif
+
     }
 }

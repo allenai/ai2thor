@@ -1425,9 +1425,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)]
         public void TeleportFull(
             float x, float y, float z,
-            Vector3 rotation,
-            float horizon,
-            bool standing,
+            Vector3? rotation,
+            float? horizon,
+            bool? standing,
             bool forceAction = false
         ) {
             TeleportFull(
@@ -1458,10 +1458,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // has to consider both the arm and standing
         public void TeleportFull(
-            Vector3 position,
-            Vector3 rotation,
-            float horizon,
-            bool standing,
+            Vector3? position,
+            Vector3? rotation,
+            float? horizon,
+            bool? standing,
             bool forceAction = false
         ) {
             Debug.Log($"------- Teleport Full physicsFPS type {this.GetType()}");
@@ -1488,10 +1488,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     forceAction: forceAction
                 );
 
-                if (standing) {
-                    stand();
-                } else {
-                    crouch();
+                if (standing.HasValue) {
+                    if (standing.Value) {
+                        stand();
+                    } else {
+                        crouch();
+                    }
                 }
 
                 // add arm value cases

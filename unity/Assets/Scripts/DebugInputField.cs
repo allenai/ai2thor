@@ -359,7 +359,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["fieldOfView"] = 90;
                         action["gridSize"] = 0.25f;
 
-
                         action["applyActionNoise"] = true;
                         action["continuousMode"] = true;
                         //action["snapToGrid"] = false;
@@ -1458,6 +1457,74 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+                
+                case "sbc": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(1.0f, 1.0f, 1.0f),
+                            ["useVisibleColliderBase"] = false
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "sbc2": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(1.1f, 1.0f, 1.3f),
+                            ["useVisibleColliderBase"] = false
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "sbcv": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(1.3f, 1.0f, 1.0f),
+                            ["useVisibleColliderBase"] = true
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "sbcv2": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(1.0f, 1.0f, 1.3f),
+                            ["useVisibleColliderBase"] = true
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                
+                case "sbca": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(0.5f, 1.0f, 0.3f),
+                            ["useAbsoluteSize"] = true
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                
+                case "sbca2": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(0.3f, 1.0f, 0.5f),
+                            ["useAbsoluteSize"] = true
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                
+                case "dbc": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "DestroyAgentBoxCollider",
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
 
                 // This is dangerous because it will modify the underlying
                 // materials, and you'll have to call "git restore *.mat *maT"
@@ -1975,7 +2042,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ["action"] = "AddThirdPartyCamera",
                             ["position"] = new Vector3(1, 1, 1),
                             ["rotation"] = new Vector3(10, 20, 30),
-                            ["attachToPrimaryAgent"] = true
+                            ["attachToAgent"] = true
                         };
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
@@ -1998,9 +2065,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "umc": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "UpdateMainCamera",
-                            ["position"] = new Vector3(2, 2, 2),
+                            ["position"] = new Vector3(-1, 0.9f, 1),
                             ["rotation"] = new Vector3(15, 25, 35),
-                            ["agentPositionRelativeCoordinates"] = false
+                            ["fieldOfView"] = 120f,
+                            // ["agentPositionRelativeCoordinates"] = false
                         };
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
