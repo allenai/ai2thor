@@ -185,6 +185,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private List<DebugSphere> debugSpheres = new List<DebugSphere>();
             
+        private static readonly Vector3 agentSpawnOffset = new Vector3(100.0f, 100.0f, 100.0f);
             
 
         // these object types can have a placeable surface mesh associated ith it
@@ -7249,7 +7250,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Debug.Log($"the original position of the agent is: {originalPosition:F8}");
 
             // Move the agent to a safe place and align the agent's rotation with the world coordinate system
-            this.transform.position = new Vector3(originalPosition.x + 100f, originalPosition.y + 100f, originalPosition.z + 100f);
+            this.transform.position = originalPosition + agentSpawnOffset;
             this.transform.rotation = Quaternion.identity;
 
             Debug.Log($"agent position after moving it out of the way is: {this.transform.position:F8}");
@@ -7262,25 +7263,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Check if the spawned boxCollider is colliding with other objects
             int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             
-            Vector3 newBoxCenter = new Vector3(bounds.center.x - 100f, bounds.center.y - 100f, bounds.center.z - 100f);
+            Vector3 newBoxCenter = bounds.center - agentSpawnOffset;
+            newBoxCenter = originalRotation * (newBoxCenter - originalPosition) + originalPosition;
+            Vector3 newBoxExtents = new Vector3(
+                scaleRatio.x * bounds.extents.x,
+                scaleRatio.y * bounds.extents.y,
+                scaleRatio.z * bounds.extents.z
+            );
+            if (useAbsoluteSize){
+                newBoxExtents = new Vector3(
+                    scaleRatio.x,
+                    scaleRatio.y,
+                    scaleRatio.z
+                );
+            }
             Debug.Log($"the center for the new box should be at the agent's original position but is: {newBoxCenter:F8}");
-
-            var rotateAroundAgentOriginalPosition = originalRotation * (newBoxCenter - originalPosition) + originalPosition;
             
             #if UNITY_EDITOR
             /////////////////////////////////////////////////
-            this.baseAgentComponent.boxCenter = rotateAroundAgentOriginalPosition;
-            this.baseAgentComponent.boxHalfExtents = bounds.extents;
+            this.baseAgentComponent.boxCenter = newBoxCenter;
+            this.baseAgentComponent.boxHalfExtents = newBoxExtents;
             this.baseAgentComponent.boxOrientation = originalRotation;
-            this.baseAgentComponent.drawBox = true;
+            this.baseAgentComponent.drawBox = false;
 
             //for visualization lets spawna cube at the center of where the boxCenter supposedly is
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = "VisualizedBoxCollider";
             cube.transform.position = this.baseAgentComponent.boxCenter;
             cube.transform.rotation = this.baseAgentComponent.boxOrientation;
-            // cube.transform.localScale = new Vector3(0.2f, 0.2f, 0.2f); //scale is small just so we can see it a little
 
-            cube.transform.localScale = bounds.extents * 2.0f;
+            cube.transform.localScale = newBoxExtents * 2;
             var material = cube.GetComponent<MeshRenderer>().material;
             material.SetColor("_Color", new Color(1.0f, 0.0f, 0.0f, 0.4f));
             // Set transparency XD ...
@@ -7293,6 +7305,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
             material.renderQueue = 3000;
 
+            // cube.transform.parent = agent.transform;
 
             Debug.Log("draw gizmos set for debug draw!");
             ////////////////////////////////////////////////
@@ -7300,7 +7313,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             
             // And rotation should be originalRotation * boxRotation but since it's a world-axis-aligned bounding box boxRotation is Identity
-            if (Physics.CheckBox(rotateAroundAgentOriginalPosition, bounds.extents, originalRotation, layerMask)) {
+            if (Physics.CheckBox(newBoxCenter, newBoxExtents, originalRotation, layerMask)) {
                 this.transform.position = originalPosition;
                 this.transform.rotation = originalRotation;
                 throw new InvalidOperationException(
@@ -7309,26 +7322,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // Move the agent back to its original position and rotation
-            this.transform.position = originalPosition;
             this.transform.rotation = originalRotation;
-
-            // Move the agent to the pose aligned with bounds' center and rotation
-            // this.transform.position = new Vector3(originalPosition.x + 100f, originalPosition.y + 100f, originalPosition.z + 100f);
-            // this.transform.rotation = Quaternion.identity;
+            this.transform.position = originalPosition;
 
             // Spawn the box collider
-            Vector3 colliderSize = new Vector3(
-                scaleRatio.x * bounds.size.x,
-                scaleRatio.y * bounds.size.y,
-                scaleRatio.z * bounds.size.z
-            );
-            if (useAbsoluteSize) {
-                colliderSize = scaleRatio;
-            }
+            Vector3 colliderSize = newBoxExtents * 2;
 
             GameObject noneTriggeredEncapsulatingBox = new GameObject("NonTriggeredEncapsulatingBox");
-            // noneTriggeredEncapsulatingBox.transform.position = new Vector3(bounds.center.x, bounds.center.y, agent.transform.position.z);
-            noneTriggeredEncapsulatingBox.transform.position = rotateAroundAgentOriginalPosition;
+            noneTriggeredEncapsulatingBox.transform.position = newBoxCenter;
 
             BoxCollider nonTriggeredBoxCollider = noneTriggeredEncapsulatingBox.AddComponent<BoxCollider>();
             nonTriggeredBoxCollider.size = colliderSize; // Scale the box to the agent's size
@@ -7339,8 +7340,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             noneTriggeredEncapsulatingBox.transform.localRotation = Quaternion.identity;
 
             GameObject triggeredEncapsulatingBox = new GameObject("triggeredEncapsulatingBox");
-            // triggeredEncapsulatingBox.transform.position = new Vector3(bounds.center.x, bounds.center.y, agent.transform.position.z);
-            triggeredEncapsulatingBox.transform.position = rotateAroundAgentOriginalPosition;
+            triggeredEncapsulatingBox.transform.position = newBoxCenter;
 
             BoxCollider triggeredBoxCollider = triggeredEncapsulatingBox.AddComponent<BoxCollider>();
             triggeredBoxCollider.size = colliderSize; // Scale the box to the agent's size
@@ -7354,29 +7354,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Spawn the visible box if useVisibleColliderBase is true
             if (useVisibleColliderBase){
-                if (useAbsoluteSize) {
-                    colliderSize = new Vector3(
-                        scaleRatio.x,
-                        0.15f,
-                        scaleRatio.z
-                    );
-                } else {
-                    colliderSize = new Vector3(
-                        scaleRatio.x * bounds.size.x,
-                        0.15f,
-                        scaleRatio.z * bounds.size.z
-                    );
-                }
+                colliderSize = new Vector3(colliderSize.x, 0.15f, colliderSize.z);
                 GameObject visibleBox = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 visibleBox.name = "VisibleBox";
-                visibleBox.transform.position = new Vector3(bounds.center.x, bounds.center.y - bounds.extents.y + 0.1f, bounds.center.z);
+                visibleBox.transform.position = new Vector3(newBoxCenter.x, newBoxCenter.y - newBoxExtents.y + 0.1f, newBoxCenter.z);
                 visibleBox.transform.localScale = colliderSize;
                 visibleBox.transform.parent = agent.transform;
                 // Attatching it to the parent changes the rotation so set it back to none
                 visibleBox.transform.localRotation = Quaternion.identity;
             }
-
-            
         }
 
         public void DestroyAgentBoxCollider(){
@@ -7392,6 +7378,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (visibleBox != null) {
                 GameObject.Destroy(visibleBox);
             }
+            #if UNITY_EDITOR
+            GameObject visualizedBoxCollider = GameObject.Find("VisualizedBoxCollider");
+            if (visualizedBoxCollider != null) {
+                GameObject.Destroy(visualizedBoxCollider);
+            }
+            #endif
             actionFinished(true);
             return;
         }
