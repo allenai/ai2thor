@@ -129,6 +129,43 @@ def _unity_version():
     return project_version["m_EditorVersion"]
 
 
+def _unity_playback_engines_path():
+    unity_version = _unity_version()
+    standalone_path = None
+
+    if sys.platform.startswith("darwin"):
+        unity_hub_path = (
+            "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
+                unity_version
+            )
+        )
+        # /Applications/Unity/2019.4.20f1/Unity.app/Contents/MacOS
+
+        standalone_path = (
+            "/Applications/Unity/{}/PlaybackEngines".format(
+                unity_version
+            )
+        )
+    elif "win" in sys.platform:
+        raise ValueError("Windows not supported yet, verify PlaybackEnginesPath")
+        unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Data/PlaybackEngines".format(
+            unity_version
+        )
+        # TODO: Verify windows unity standalone path
+        standalone_path = "C:/PROGRA~1/{}/Editor/Unity.exe".format(unity_version)
+    elif sys.platform.startswith("linux"):
+        unity_hub_path = "{}/Unity/Hub/Editor/{}/Editor/Data/PlaybackEngines".format(
+            os.environ["HOME"], unity_version
+        )
+
+    if standalone_path and os.path.exists(standalone_path):
+        unity_path = standalone_path
+    else:
+        unity_path = unity_hub_path
+
+    return unity_path
+
+
 def _unity_path():
     unity_version = _unity_version()
     standalone_path = None
@@ -1356,12 +1393,13 @@ def ci_build(
 
 @task
 def install_cloudrendering_engine(context, force=False):
-    if not sys.platform.startswith("darwin"):
-        raise Exception("CloudRendering Engine can only be installed on Mac")
+    # if not sys.platform.startswith("darwin"):
+    #     raise Exception("CloudRendering Engine can only be installed on Mac")
     s3 = boto3.resource("s3")
-    target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
-        _unity_version()
-    )
+    # target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
+    #     _unity_version()
+    # )
+    target_base_dir = _unity_playback_engines_path()
     full_dir = os.path.join(target_base_dir, "CloudRendering")
     if os.path.isdir(full_dir):
         if force:
