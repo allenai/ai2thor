@@ -1408,17 +1408,18 @@ def set_gi_cache_folder(arch):
         os.environ["HOME"], "Library/Preferences/com.unity3d.UnityEditor5.x.plist"
     )
     # done to avoid race conditions when modifying GICache from more than one build
-    subprocess.check_call(
-        "plutil -replace GICacheEnableCustomPath -bool TRUE %s" % plist_path, shell=True
-    )
-    subprocess.check_call(
-        "plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path),
-        shell=True,
-    )
-    subprocess.check_call(
-        "plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,),
-        shell=True,
-    )
+    # Not available in Linux
+    # subprocess.check_call(
+    #     "plutil -replace GICacheEnableCustomPath -bool TRUE %s" % plist_path, shell=True
+    # )
+    # subprocess.check_call(
+    #     "plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path),
+    #     shell=True,
+    # )
+    # subprocess.check_call(
+    #     "plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,),
+    #     shell=True,
+    # )
 
 
 def ci_build_arch(
