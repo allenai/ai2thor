@@ -1471,7 +1471,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "sbc2": {
                         var action = new Dictionary<string, object>() {
                             ["action"] = "UpdateAgentBoxCollider",
-                            ["colliderScaleRatio"] = new Vector3(1.0f, 1.0f, 1.3f),
+                            ["colliderScaleRatio"] = new Vector3(1.1f, 1.0f, 1.3f),
                             ["useVisibleColliderBase"] = false
                         };
                         CurrentActiveController().ProcessControlCommand(action);

@@ -30,15 +30,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject[] TargetCircles = null;
         public GameObject[] GripperOpennessStates = new GameObject[7];
 
-        #if UNITY_EDITOR
-        //debug cache for overlap box cast to debug in OnDrawGizmos//////////////
-        public Vector3 boxCenter = Vector3.zero;
-        public Vector3 boxHalfExtents = Vector3.one;
-        public Quaternion boxOrientation = Quaternion.identity;
-        public bool drawBox = false;
-        ///////////////////////////////////////////////////
-        #endif
-
         [HideInInspector]
         public BaseFPSAgentController agent;
 
@@ -111,25 +102,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         #if UNITY_EDITOR
         public void OnDrawGizmos() {
-            //debug draw for spawnAgentBoxCollider//////////////////////////////
-            if(drawBox) {
-                // Set the color of the Gizmo (optional)
-                Gizmos.color = Color.red;
 
-                // Calculate the world-space center of the box
-                Vector3 worldCenter = boxCenter;
-
-                // // Save the current Gizmo matrix, then set it to the box's transformation matrix
-                // Matrix4x4 originalMatrix = Gizmos.matrix;
-                Gizmos.matrix = Matrix4x4.TRS(worldCenter, boxOrientation, Vector3.one);
-
-                // Draw a wireframe cube with the given size
-                Gizmos.DrawWireCube(Vector3.zero, boxHalfExtents * 2);
-
-                // Restore the original Gizmo matrix
-                //Gizmos.matrix = originalMatrix;
-            }
-            //////////////////////////////////////////////////////////////////////
         }
         #endif
 
