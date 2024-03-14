@@ -1256,6 +1256,7 @@ def ci_build(
                             logger.info(
                                 f"found build for commit {build['commit_id']} {arch}"
                             )
+                            
                             # download the build so that we can run the tests
                             if arch == "CloudRendering":
                                 commit_build.download()
