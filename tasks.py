@@ -1124,6 +1124,7 @@ def ci_build(
     skip_pip = False, # bool
     novelty_thor_scenes = False,
     skip_delete_tmp_dir = False, # bool
+    cloudrendering_first = False
 ):
     assert (commit_id is None) == (
         branch is None
@@ -1220,8 +1221,8 @@ def ci_build(
                 # cloudrendering engine if available
                 if _unity_version() == "2020.3.25f1":
                     build_archs.append("CloudRendering")
-
-                build_archs.reverse()  # Let's do CloudRendering first as it's more likely to fail
+                if cloudrendering_first:
+                    build_archs.reverse()  # Let's do CloudRendering first as it's more likely to fail
 
                 has_any_build_failed = False
                 for include_private_scenes in private_scene_options:
@@ -1256,7 +1257,7 @@ def ci_build(
                                 f"found build for commit {build['commit_id']} {arch}"
                             )
                             # download the build so that we can run the tests
-                            if arch == "OSXIntel64":
+                            if arch == "CloudRendering":
                                 commit_build.download()
                         else:
                             # this is done here so that when a tag build request arrives and the commit_id has already
