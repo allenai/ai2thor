@@ -208,7 +208,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             // } else {
             //     action.autoSimulation = true;
             // }
+
             physicsSceneManager.MakeAllObjectsMoveable();
+        } else if (agentMode == "fpin") {
+            SetUpFpinController(action);
         } else {
             var error = $"Invalid agentMode {action.agentMode}";
             Debug.Log(error);
@@ -234,6 +237,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             Application.targetFrameRate = action.targetFrameRate;
         }
 
+        Debug.Log("about to update primaryAgent.IsVisible");
         primaryAgent.IsVisible = action.makeAgentsVisible;
         this.renderSemanticSegmentation = action.renderSemanticSegmentation;
         this.renderDepthImage = action.renderDepthImage;
@@ -304,6 +308,13 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         this.agents.Clear();
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(PhysicsRemoteFPSAgentController), baseAgentComponent);
+    }
+
+    public void SetUpFpinController(ServerAction action) {
+        Debug.Log("inside SetUpFpinController");
+        this.agents.Clear();
+        BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
+        primaryAgent = createAgentType(typeof(FpinAgentController), baseAgentComponent);
     }
 
     private BaseFPSAgentController createAgentType(Type agentType, BaseAgentComponent agentComponent) {
@@ -2176,6 +2187,7 @@ public class ServerAction {
     public string[] excludeObjectIds;
     public string[] objectIds;
     public string objectId;
+    public string assetId = null;
     public int agentId;
     public int thirdPartyCameraId;
     public float y;

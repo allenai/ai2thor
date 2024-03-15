@@ -377,6 +377,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // defaults all agent renderers, from all modes (tall, bot, drone), to hidden for initialization default
         protected void HideAllAgentRenderers() {
+            Debug.Log("running HideAllAgentRenderers");
             if (TallVisCap != null && BotVisCap != null && DroneVisCap != null && StretchVisCap != null) {
                 foreach (Renderer r in TallVisCap.GetComponentsInChildren<Renderer>()) {
                     if (r.enabled) {
@@ -668,7 +669,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void Initialize(ServerAction action) {
 
-            // Debug.Log("RUNNING B");
+            Debug.Log("RUNNING Initialize from BaseFPSAgentController.cs");
             // limit camera from looking too far down/up
             //default max are 30 up and 60 down, different agent types may overwrite this
             if (Mathf.Approximately(action.maxUpwardLookAngle, 0.0f)) {

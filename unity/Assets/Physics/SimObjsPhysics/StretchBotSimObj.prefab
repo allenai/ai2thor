@@ -173,7 +173,6 @@ GameObject:
   - component: {fileID: 6046755205974396664}
   - component: {fileID: 3993090921524126045}
   - component: {fileID: 7871284814442468932}
-  - component: {fileID: 6859567251882693664}
   m_Layer: 0
   m_Name: stretch_robot_head_3
   m_TagString: Untagged
@@ -245,21 +244,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &6859567251882693664
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 438487174233131129}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2eae1dc79734c4e6988a0a9e034e8df5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  WhichTransformPropertyAmITracking: 0
-  ThingIamTracking: {fileID: 0}
-  StopSyncingForASecond: 0
 --- !u!1 &539198935326396575
 GameObject:
   m_ObjectHideFlags: 0
@@ -2032,9 +2016,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3852882033805843476}
-  - component: {fileID: 8720338538364983728}
-  - component: {fileID: 8578310054518526138}
-  - component: {fileID: 694392446208654850}
   m_Layer: 10
   m_Name: stretch_arm_rig_gripper
   m_TagString: Untagged
@@ -2058,59 +2039,6 @@ Transform:
   m_Father: {fileID: 8576935521878138785}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
---- !u!114 &8720338538364983728
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5822248014863849928}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e77b22020d86bc44ba02ab3f9dcf0b9c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  FinalJoint: {fileID: 3087406158166086770}
-  armTarget: {fileID: 8491964872510657154}
-  magnetSphereComp: {fileID: 0}
-  magnetSphere: {fileID: 0}
-  MagnetRenderer: {fileID: 0}
-  collisionListener: {fileID: 0}
-  armBase: {fileID: 2682839581569240090}
-  handCameraTransform: {fileID: 3087406158166086770}
-  FirstJoint: {fileID: 3689772891548000791}
-  wristClockwiseLocalRotationLimit: 77.5
-  wristCounterClockwiseLocalRotationLimit: 102.5
---- !u!54 &8578310054518526138
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5822248014863849928}
-  serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 1
-  m_AngularDrag: 1
-  m_UseGravity: 0
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
---- !u!114 &694392446208654850
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5822248014863849928}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1d5f9a22cdc97485c8a769f4fa32157b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  bodyColliderIgnore: {fileID: 0}
-  bodyCollidersParent: {fileID: 0}
 --- !u!1 &6003934568992168969
 GameObject:
   m_ObjectHideFlags: 0

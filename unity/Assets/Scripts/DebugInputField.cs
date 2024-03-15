@@ -575,6 +575,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     break;
                 }
+
+                case "initf": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "Initialize";
+                    action["agentMode"] = "fpin";
+                    action["assetId"] = "StretchBotSimObj"; //or LocoBotSimObj
+                    action["visibilityScheme"] = "Distance";
+                    action["renderInstanceSegmentation"] = true;
+                    action["renderDepth"] = true;
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
                 case "inits-cp": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
