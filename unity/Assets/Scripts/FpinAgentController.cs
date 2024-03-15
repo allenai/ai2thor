@@ -32,8 +32,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             CopyMeshChildrenRecursive(source.transform, target.transform);
         }
 
-        private void CopyMeshChildrenRecursive(Transform sourceTransform, Transform targetParent)
+        private void CopyMeshChildrenRecursive(Transform sourceTransform, Transform targetParent, bool isTopMost = true)
         {
+            Transform thisTransform = null;
+
             foreach (Transform child in sourceTransform)
             {
                 GameObject copiedChild = null;
@@ -49,9 +51,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (HasMeshInChildren(child))
                 {
                     Transform parentForChildren = (copiedChild != null) ? copiedChild.transform : CreateContainerForHierarchy(child, targetParent).transform;
-                    CopyMeshChildrenRecursive(child, parentForChildren);
+                    CopyMeshChildrenRecursive(child, parentForChildren, false);
+                    if(isTopMost) {
+                        thisTransform = parentForChildren;
+                    }
                 }
             }
+
+            if(isTopMost) {
+              GameObject viscap = new GameObject("fpinVisibilityCapsule");
+              thisTransform.SetParent(viscap.transform);
+              thisTransform.localPosition = Vector3.zero;
+              thisTransform.localRotation = Quaternion.identity;
+
+              viscap.transform.SetParent(targetParent);
+              viscap.transform.localPosition = Vector3.zero;
+              viscap.transform.localRotation = Quaternion.identity;
+              viscap.transform.localScale = new Vector3(1,1,1);
+            }
+
+            //now parent all copied meshes and their heirarchis under a single child gameobject to make the new "visibility capsule"
+            // container.transform.SetParent(targetParent);
+            // container.transform.localPosition = child.localPosition;
+            // container.transform.localRotation = child.localRotation;
+            // container.transform.localScale = child.localScale;
         }
 
         private GameObject CopyMeshToTarget(Transform child, Transform targetParent)
@@ -110,9 +133,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             VisibilityCapsule = null;
 
             Debug.Log("running InitializeBody in FpingAgentController");
-            
-            if(initializeAction.assetId == null) {
-            throw new ArgumentNullException("assetId is null");
+
+            if (initializeAction.assetId == null) {
+                throw new ArgumentNullException("assetId is null");
             }
 
             //spawn in a default mesh to base the created box collider on
@@ -123,6 +146,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             CopyMeshChildren(source: spawnedMesh.transform.gameObject, target: this.transform.gameObject);
 
             //remove the spawned mesh cause we are done with it
+            UnityEngine.Object.DestroyImmediate(spawnedMesh);
+
+            //assign agent visibility capsule to new meshes
+            VisibilityCapsule = GameObject.Find("fpinVisibilityCapsule");
+
 
             //adjust agent character controller and capsule according to extents of box collider
 
