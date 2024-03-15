@@ -576,13 +576,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
-                case "initpin": {
+                //fpin using stretch bot as source mesh
+                case "initpins": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
                     action["action"] = "Initialize";
                     action["agentMode"] = "fpin";
-                    action["assetId"] = "StretchBotSimObj"; //or LocoBotSimObj
+                    action["assetId"] = "StretchBotSimObj"; 
                     action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                    action["newRelativeOriginX"] = -0.09938055f;
+                    action["newRelativeOriginz"] = 0.1157837f;
+                    //action["useAbsoluteSize"] = true;
+                    action["visibilityScheme"] = "Distance";
+                    action["renderInstanceSegmentation"] = true;
+                    action["renderDepth"] = true;
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
+                //fpin using locobot as source mesh
+                case "initpinl": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "Initialize";
+                    action["agentMode"] = "fpin";
+                    action["assetId"] = "LocoBotSimObj"; 
+                    action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                    action["newRelativeOriginX"] = 0.0f;
+                    action["newRelativeOriginz"] = -0.025f;
                     //action["useAbsoluteSize"] = true;
                     action["visibilityScheme"] = "Distance";
                     action["renderInstanceSegmentation"] = true;

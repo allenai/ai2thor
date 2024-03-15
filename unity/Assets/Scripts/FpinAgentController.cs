@@ -135,6 +135,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 useVisibleColliderBase: initializeAction.useVisibleColliderBase
             );
 
+            var spawnedBox = GameObject.Find("NonTriggeredEncapsulatingBox");
+            //reposition agent transform relative to the generated box
+            //i think we need to unparent the FPSController from all its children.... then reposition
+            repositionAgentOrigin(
+                spawnedBox: spawnedBox.GetComponent<BoxCollider>(), 
+                newRelativeOrigin: new Vector3 (initializeAction.newRelativeOriginX, 0.0f, initializeAction.newRelativeOriginZ));
+
             //adjust agent character controller and capsule according to extents of box collider
 
             //enable cameras I suppose
@@ -147,6 +154,47 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // m_Camera.fieldOfView = defaultMainCameraFieldOfView;
 
             //probably don't need camera limits since we are going to manipulate camera via the updateCameraProperties
+
+        }
+
+        //helper function to re-center the agent's transform relative to the 
+        //currently generated box collider's center
+        public void repositionAgentOrigin (BoxCollider spawnedBox, Vector3 newRelativeOrigin) {
+            //get the world coordinates of the center of the spawned box
+            Vector3 spawnedBoxWorldCenter = spawnedBox.transform.TransformPoint(spawnedBox.center);
+
+            List<Transform> allMyChildren = new List<Transform>();
+
+            foreach (Transform child in this.transform) {
+                allMyChildren.Add(child);
+            }
+            //OK WHY DONT WE JUST DO THIS IN THE ABOVE LOOP WELL LET ME TELL YOU WHY
+            //TURNS OUT the SetParent() call doesn't execute instantly as it seems to rely on
+            //the transform heirarchy changing and the order is ambiguous??
+            foreach(Transform child in allMyChildren) {
+                child.SetParent(null);
+            }
+
+            //ensure all transforms are fully updated
+            Physics.SyncTransforms();
+
+            //ok now reposition this.transform in world space relative to the center of the box collider
+            this.transform.SetParent(spawnedBox.transform);
+
+            float distanceToBottom = spawnedBox.size.y * 0.5f * spawnedBox.transform.localScale.y;
+            Vector3 origin = new Vector3(newRelativeOrigin.x, 0.0f - distanceToBottom, newRelativeOrigin.z);
+            this.transform.localPosition = origin;
+
+            //ensure all transforms are fully updated
+            Physics.SyncTransforms();
+
+            //ok now reparent everything accordingly
+            this.transform.SetParent(null);
+            Physics.SyncTransforms();
+
+            foreach(Transform child in allMyChildren) {
+                child.SetParent(this.transform);
+            }
 
         }
 

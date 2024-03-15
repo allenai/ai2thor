@@ -2205,6 +2205,8 @@ public class ServerAction {
     public Vector3 colliderScaleRatio;
     public bool useAbsoluteSize = false;
     public bool useVisibleColliderBase = true;
+    public float newRelativeOriginX;
+    public float newRelativeOriginZ;
     public bool allowAgentsToIntersect = false;
     public float handDistance;// used for max distance agent's hand can move
     public List<Vector3> positions = null;
