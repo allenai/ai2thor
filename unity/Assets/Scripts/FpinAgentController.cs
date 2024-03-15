@@ -10,6 +10,10 @@ using UnityEngine.UIElements;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class FpinAgentController : PhysicsRemoteFPSAgentController {
+
+        private static readonly Vector3 agentSpawnOffset = new Vector3(100.0f, 100.0f, 100.0f);
+        public GameObject spawnedBoxCollider;
+        public GameObject spawnedTriggerBoxCollider;
         public FpinAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
@@ -17,6 +21,170 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //put stuff we need here when we need it maybe
         }
 
+        private Bounds GetAgentBoundsFromMesh(GameObject gameObject, Type agentType) {
+            Debug.Log(agentType);
+            Debug.Log(typeof(StretchAgentController));
+            Bounds bounds = new Bounds(gameObject.transform.position, Vector3.zero);
+            MeshRenderer[] meshRenderers = gameObject.GetComponentsInChildren<MeshRenderer>();
+            if (agentType == typeof(LocobotFPSAgentController)) {
+                meshRenderers = this.baseAgentComponent.BotVisCap.GetComponentsInChildren<MeshRenderer>();
+            } else if (agentType == typeof(StretchAgentController)) {
+                meshRenderers = this.baseAgentComponent.StretchVisCap.GetComponentsInChildren<MeshRenderer>();
+            } else if (agentType == typeof(FpinAgentController)) { 
+                meshRenderers = this.baseAgentComponent.VisibilityCapsule.GetComponentsInChildren<MeshRenderer>();
+            }
+            foreach (MeshRenderer meshRenderer in meshRenderers) {
+                bounds.Encapsulate(meshRenderer.bounds);
+            }
+            return bounds;
+        }
+
+        public void spawnAgentBoxCollider(GameObject agent, Type agentType, Vector3 scaleRatio, bool useAbsoluteSize = false, bool useVisibleColliderBase = false) {
+            // Store the current rotation
+            Vector3 originalPosition = this.transform.position;
+            Quaternion originalRotation = this.transform.rotation;
+
+            //Debug.Log($"the original position of the agent is: {originalPosition:F8}");
+
+            // Move the agent to a safe place and align the agent's rotation with the world coordinate system
+            this.transform.position = originalPosition + agentSpawnOffset;
+            this.transform.rotation = Quaternion.identity;
+
+            //Debug.Log($"agent position after moving it out of the way is: {this.transform.position:F8}");
+
+            // Get the agent's bounds
+            var bounds = GetAgentBoundsFromMesh(agent, agentType);
+
+            //Debug.Log($"the global position of the agent bounds is: {bounds.center:F8}");
+
+            // Check if the spawned boxCollider is colliding with other objects
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
+            
+            Vector3 newBoxCenter = bounds.center - agentSpawnOffset;
+            newBoxCenter = originalRotation * (newBoxCenter - originalPosition) + originalPosition;
+            Vector3 newBoxExtents = new Vector3(
+                scaleRatio.x * bounds.extents.x,
+                scaleRatio.y * bounds.extents.y,
+                scaleRatio.z * bounds.extents.z
+            );
+            if (useAbsoluteSize){
+                newBoxExtents = new Vector3(
+                    scaleRatio.x,
+                    scaleRatio.y,
+                    scaleRatio.z
+                );
+            }
+            
+            #if UNITY_EDITOR
+            /////////////////////////////////////////////////
+            //for visualization lets spawna cube at the center of where the boxCenter supposedly is
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = "VisualizedBoxCollider";
+            cube.transform.position = newBoxCenter;
+            cube.transform.rotation = originalRotation;
+
+            cube.transform.localScale = newBoxExtents * 2;
+            var material = cube.GetComponent<MeshRenderer>().material;
+            material.SetColor("_Color", new Color(1.0f, 0.0f, 0.0f, 0.4f));
+            // Set transparency XD ...
+            material.SetFloat("_Mode", 3);
+            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetInt("_ZWrite", 0);
+            material.DisableKeyword("_ALPHATEST_ON");
+            material.EnableKeyword("_ALPHABLEND_ON");
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            material.renderQueue = 3000;
+            ////////////////////////////////////////////////
+            #endif
+
+            
+            // And rotation should be originalRotation * boxRotation but since it's a world-axis-aligned bounding box boxRotation is Identity
+            if (Physics.CheckBox(newBoxCenter, newBoxExtents, originalRotation, layerMask)) {
+                this.transform.position = originalPosition;
+                this.transform.rotation = originalRotation;
+                throw new InvalidOperationException(
+                    "Spawned box collider is colliding with other objects. Cannot spawn box collider."
+                );
+            }
+
+            // Move the agent back to its original position and rotation
+            this.transform.rotation = originalRotation;
+            this.transform.position = originalPosition;
+
+            // Spawn the box collider
+            Vector3 colliderSize = newBoxExtents * 2;
+
+            spawnedBoxCollider = new GameObject("NonTriggeredEncapsulatingBox");
+            spawnedBoxCollider.transform.position = newBoxCenter;
+
+            BoxCollider nonTriggeredBoxCollider = spawnedBoxCollider.AddComponent<BoxCollider>();
+            nonTriggeredBoxCollider.size = colliderSize; // Scale the box to the agent's size
+            nonTriggeredBoxCollider.enabled = true;
+
+            spawnedBoxCollider.transform.parent = agent.transform;
+            // Attatching it to the parent changes the rotation so set it back to none
+            spawnedBoxCollider.transform.localRotation = Quaternion.identity;
+
+            spawnedTriggerBoxCollider = new GameObject("triggeredEncapsulatingBox");
+            spawnedTriggerBoxCollider.transform.position = newBoxCenter;
+
+            BoxCollider triggeredBoxCollider = spawnedTriggerBoxCollider.AddComponent<BoxCollider>();
+            triggeredBoxCollider.size = colliderSize; // Scale the box to the agent's size
+            triggeredBoxCollider.enabled = true;
+            triggeredBoxCollider.isTrigger = true;
+            spawnedTriggerBoxCollider.transform.parent = agent.transform;
+
+            // triggeredEncapsulatingBox.transform.localRotation = Quaternion.identity;
+            // Attatching it to the parent changes the rotation so set it back to identity
+            spawnedTriggerBoxCollider.transform.localRotation = Quaternion.identity;
+
+            //make sure to set the collision layer correctly as part of the `agent` layer so the collision matrix is happy
+            spawnedBoxCollider.layer = LayerMask.NameToLayer("Agent");
+            spawnedTriggerBoxCollider.layer = LayerMask.NameToLayer("Agent");
+
+            // Spawn the visible box if useVisibleColliderBase is true
+            if (useVisibleColliderBase){
+                colliderSize = new Vector3(colliderSize.x, 0.15f, colliderSize.z);
+                GameObject visibleBox = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                visibleBox.name = "VisibleBox";
+                visibleBox.transform.position = new Vector3(newBoxCenter.x, newBoxCenter.y - newBoxExtents.y + 0.1f, newBoxCenter.z);
+                visibleBox.transform.localScale = colliderSize;
+                visibleBox.transform.parent = agent.transform;
+                // Attatching it to the parent changes the rotation so set it back to none
+                visibleBox.transform.localRotation = Quaternion.identity;
+            }
+        }
+
+        public void DestroyAgentBoxCollider(){
+            GameObject nonTriggeredEncapsulatingBox = GameObject.Find("NonTriggeredEncapsulatingBox");
+            GameObject triggeredEncapsulatingBox = GameObject.Find("triggeredEncapsulatingBox");
+            GameObject visibleBox = GameObject.Find("VisibleBox");
+            if (nonTriggeredEncapsulatingBox != null) {
+                GameObject.Destroy(nonTriggeredEncapsulatingBox);
+            }
+            if (triggeredEncapsulatingBox != null) {
+                GameObject.Destroy(triggeredEncapsulatingBox);
+            }
+            if (visibleBox != null) {
+                GameObject.Destroy(visibleBox);
+            }
+            #if UNITY_EDITOR
+            GameObject visualizedBoxCollider = GameObject.Find("VisualizedBoxCollider");
+            if (visualizedBoxCollider != null) {
+                GameObject.Destroy(visualizedBoxCollider);
+            }
+            #endif
+            actionFinished(true);
+            return;
+        }
+
+        public void UpdateAgentBoxCollider(Vector3 colliderScaleRatio, bool useAbsoluteSize = false, bool useVisibleColliderBase = false) {
+            this.DestroyAgentBoxCollider();
+            this.spawnAgentBoxCollider(this.gameObject, this.GetType(), colliderScaleRatio, useAbsoluteSize, useVisibleColliderBase);
+            actionFinished(true);
+            return;
+        }
         public void CopyMeshChildren(GameObject source, GameObject target) {
             // Initialize the recursive copying process
             CopyMeshChildrenRecursive(source.transform, target.transform);
@@ -138,9 +306,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var spawnedBox = GameObject.Find("NonTriggeredEncapsulatingBox");
             //reposition agent transform relative to the generated box
             //i think we need to unparent the FPSController from all its children.... then reposition
-            repositionAgentOrigin(
-                spawnedBox: spawnedBox.GetComponent<BoxCollider>(), 
-                newRelativeOrigin: new Vector3 (initializeAction.newRelativeOriginX, 0.0f, initializeAction.newRelativeOriginZ));
+            repositionAgentOrigin(newRelativeOrigin: new Vector3 (initializeAction.newRelativeOriginX, 0.0f, initializeAction.newRelativeOriginZ));
 
             //adjust agent character controller and capsule according to extents of box collider
 
@@ -157,11 +323,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         }
 
-        //helper function to re-center the agent's transform relative to the 
-        //currently generated box collider's center
-        public void repositionAgentOrigin (BoxCollider spawnedBox, Vector3 newRelativeOrigin) {
+        //function to reassign the agent's origin relativ to the spawned in box collider
+        //should be able to use this after initialization as well to adjust the origin on the fly as needed
+        public void RepositionAgentOrigin(Vector3 newRelativeOrigin) {
+            repositionAgentOrigin(newRelativeOrigin);
+            actionFinishedEmit(true);
+        }
+
+        //assumes the agent origin will only be repositioned via local x and z values relative to
+        //the generated box collider's center. This will automatically set the local Y value
+        //to the bottom of the spawned box collider's lowest extent in the -Y direction
+        public void repositionAgentOrigin (Vector3 newRelativeOrigin) {
             //get the world coordinates of the center of the spawned box
-            Vector3 spawnedBoxWorldCenter = spawnedBox.transform.TransformPoint(spawnedBox.center);
+            var addedCollider = spawnedBoxCollider.GetComponent<BoxCollider>();
+            Vector3 spawnedBoxWorldCenter = spawnedBoxCollider.transform.TransformPoint(spawnedBoxCollider.GetComponent<BoxCollider>().center);
 
             List<Transform> allMyChildren = new List<Transform>();
 
@@ -179,9 +354,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Physics.SyncTransforms();
 
             //ok now reposition this.transform in world space relative to the center of the box collider
-            this.transform.SetParent(spawnedBox.transform);
+            this.transform.SetParent(spawnedBoxCollider.transform);
 
-            float distanceToBottom = spawnedBox.size.y * 0.5f * spawnedBox.transform.localScale.y;
+            float distanceToBottom = addedCollider.size.y * 0.5f * addedCollider.transform.localScale.y;
             Vector3 origin = new Vector3(newRelativeOrigin.x, 0.0f - distanceToBottom, newRelativeOrigin.z);
             this.transform.localPosition = origin;
 
@@ -195,7 +370,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach(Transform child in allMyChildren) {
                 child.SetParent(this.transform);
             }
-
         }
 
         public IEnumerator MoveAgent(

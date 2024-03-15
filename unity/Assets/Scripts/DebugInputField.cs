@@ -618,6 +618,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+                //fpin using TOASTER!!! as source mesh
+                case "initpint": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "Initialize";
+                    action["agentMode"] = "fpin";
+                    action["assetId"] = "Toaster_5"; 
+                    action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                    action["newRelativeOriginX"] = 0.0f;
+                    action["newRelativeOriginz"] = 0.0f;
+                    //action["useAbsoluteSize"] = true;
+                    action["visibilityScheme"] = "Distance";
+                    action["renderInstanceSegmentation"] = true;
+                    action["renderDepth"] = true;
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
                 case "inits-cp": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
