@@ -9,76 +9,56 @@ using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UIElements;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-    public class FpinAgentController : PhysicsRemoteFPSAgentController
-    {
+    public class FpinAgentController : PhysicsRemoteFPSAgentController {
         public FpinAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
-        // Start is called before the first frame update
-        void Start()
-        {
-            
+        void Start() {
+            //put stuff we need here when we need it maybe
         }
 
-        // Update is called once per frame
-        void Update()
-        {
-            
-        }
-
-        public void CopyMeshChildren(GameObject source, GameObject target)
-        {
+        public void CopyMeshChildren(GameObject source, GameObject target) {
             // Initialize the recursive copying process
             CopyMeshChildrenRecursive(source.transform, target.transform);
         }
 
-        private void CopyMeshChildrenRecursive(Transform sourceTransform, Transform targetParent, bool isTopMost = true)
-        {
+        private void CopyMeshChildrenRecursive(Transform sourceTransform, Transform targetParent, bool isTopMost = true) {
             Transform thisTransform = null;
 
-            foreach (Transform child in sourceTransform)
-            {
+            foreach (Transform child in sourceTransform) {
                 GameObject copiedChild = null;
 
                 // Check if the child has a MeshFilter component
                 MeshFilter meshFilter = child.GetComponent<MeshFilter>();
-                if (meshFilter != null)
-                {
+                if (meshFilter != null) {
                     copiedChild = CopyMeshToTarget(child, targetParent);
                 }
 
                 // Process children only if necessary (i.e., they contain MeshFilters)
-                if (HasMeshInChildren(child))
-                {
+                if (HasMeshInChildren(child)) {
                     Transform parentForChildren = (copiedChild != null) ? copiedChild.transform : CreateContainerForHierarchy(child, targetParent).transform;
                     CopyMeshChildrenRecursive(child, parentForChildren, false);
-                    if(isTopMost) {
+                    if (isTopMost) {
                         thisTransform = parentForChildren;
                     }
                 }
             }
 
-            if(isTopMost) {
-              GameObject viscap = new GameObject("fpinVisibilityCapsule");
-              thisTransform.SetParent(viscap.transform);
-              thisTransform.localPosition = Vector3.zero;
-              thisTransform.localRotation = Quaternion.identity;
+            //organize the heirarchy of all the meshes copied under a single vis cap so we can use it real nice
+            if (isTopMost) {
+                GameObject viscap = new GameObject("fpinVisibilityCapsule");
+                thisTransform.SetParent(viscap.transform);
+                thisTransform.localPosition = Vector3.zero;
+                thisTransform.localRotation = Quaternion.identity;
 
-              viscap.transform.SetParent(targetParent);
-              viscap.transform.localPosition = Vector3.zero;
-              viscap.transform.localRotation = Quaternion.identity;
-              viscap.transform.localScale = new Vector3(1,1,1);
+                viscap.transform.SetParent(targetParent);
+                viscap.transform.localPosition = Vector3.zero;
+                viscap.transform.localRotation = Quaternion.identity;
+                viscap.transform.localScale = new Vector3(1, 1, 1);
             }
-
-            //now parent all copied meshes and their heirarchis under a single child gameobject to make the new "visibility capsule"
-            // container.transform.SetParent(targetParent);
-            // container.transform.localPosition = child.localPosition;
-            // container.transform.localRotation = child.localRotation;
-            // container.transform.localScale = child.localScale;
         }
 
-        private GameObject CopyMeshToTarget(Transform child, Transform targetParent)
-        {
+        private GameObject CopyMeshToTarget(Transform child, Transform targetParent) {
             // Create a new GameObject and copy components
             GameObject copiedChild = new GameObject(child.name);
             copiedChild.transform.SetParent(targetParent);
@@ -88,8 +68,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             copiedMeshFilter.mesh = meshFilter.mesh;
 
             MeshRenderer sourceMeshRenderer = child.GetComponent<MeshRenderer>();
-            if (sourceMeshRenderer != null)
-            {
+            if (sourceMeshRenderer != null) {
                 MeshRenderer copiedMeshRenderer = copiedChild.AddComponent<MeshRenderer>();
                 copiedMeshRenderer.sharedMaterials = sourceMeshRenderer.sharedMaterials;
             }
@@ -101,20 +80,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return copiedChild;
         }
 
-        private bool HasMeshInChildren(Transform transform)
-        {
-            foreach (Transform child in transform)
-            {
-                if (child.GetComponent<MeshFilter>() != null || HasMeshInChildren(child))
-                {
+        private bool HasMeshInChildren(Transform transform) {
+            foreach (Transform child in transform) {
+                if (child.GetComponent<MeshFilter>() != null || HasMeshInChildren(child)) {
                     return true;
                 }
             }
             return false;
         }
 
-        private GameObject CreateContainerForHierarchy(Transform child, Transform targetParent)
-        {
+        private GameObject CreateContainerForHierarchy(Transform child, Transform targetParent) {
             GameObject container = new GameObject(child.name + "_Container");
             container.transform.SetParent(targetParent);
             container.transform.localPosition = child.localPosition;
@@ -157,7 +132,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //enable cameras I suppose
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
-            
+
             //default camera position somewhere??????
             // m_Camera.transform.localPosition = defaultMainCameraLocalPosition;
             // m_Camera.transform.localEulerAngles = defaultMainCameraLocalRotation;
