@@ -126,6 +126,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //assign agent visibility capsule to new meshes
             VisibilityCapsule = GameObject.Find("fpinVisibilityCapsule");
 
+            //ok now create box collider based on the mesh
+            this.spawnAgentBoxCollider(
+                agent: this.gameObject,
+                agentType: this.GetType(),
+                scaleRatio: initializeAction.colliderScaleRatio,
+                useAbsoluteSize: initializeAction.useAbsoluteSize,
+                useVisibleColliderBase: initializeAction.useVisibleColliderBase
+            );
 
             //adjust agent character controller and capsule according to extents of box collider
 

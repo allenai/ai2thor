@@ -576,12 +576,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
-                case "initf": {
+                case "initpin": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
                     action["action"] = "Initialize";
                     action["agentMode"] = "fpin";
                     action["assetId"] = "StretchBotSimObj"; //or LocoBotSimObj
+                    action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                    //action["useAbsoluteSize"] = true;
                     action["visibilityScheme"] = "Distance";
                     action["renderInstanceSegmentation"] = true;
                     action["renderDepth"] = true;

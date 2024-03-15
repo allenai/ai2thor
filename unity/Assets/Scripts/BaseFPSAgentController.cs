@@ -7225,7 +7225,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, geoList);
         }
 
-        private Bounds GetAgentBounds(GameObject gameObject, Type agentType) {
+        private Bounds GetAgentBoundsFromMesh(GameObject gameObject, Type agentType) {
             Debug.Log(agentType);
             Debug.Log(typeof(StretchAgentController));
             Bounds bounds = new Bounds(gameObject.transform.position, Vector3.zero);
@@ -7234,14 +7234,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 meshRenderers = this.baseAgentComponent.BotVisCap.GetComponentsInChildren<MeshRenderer>();
             } else if (agentType == typeof(StretchAgentController)) {
                 meshRenderers = this.baseAgentComponent.StretchVisCap.GetComponentsInChildren<MeshRenderer>();
+            } else if (agentType == typeof(FpinAgentController)) { 
+                meshRenderers = this.baseAgentComponent.VisibilityCapsule.GetComponentsInChildren<MeshRenderer>();
             }
             foreach (MeshRenderer meshRenderer in meshRenderers) {
                 bounds.Encapsulate(meshRenderer.bounds);
             }
             return bounds;
         }
-
-
 
         public void spawnAgentBoxCollider(GameObject agent, Type agentType, Vector3 scaleRatio, bool useAbsoluteSize = false, bool useVisibleColliderBase = false) {
             // Store the current rotation
@@ -7257,7 +7257,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //Debug.Log($"agent position after moving it out of the way is: {this.transform.position:F8}");
 
             // Get the agent's bounds
-            var bounds = GetAgentBounds(agent, agentType);
+            var bounds = GetAgentBoundsFromMesh(agent, agentType);
 
             //Debug.Log($"the global position of the agent bounds is: {bounds.center:F8}");
 
