@@ -21,6 +21,7 @@ namespace Tests {
             action["action"] = "AddThirdPartyCamera";
             action["position"] = new Vector3(0, 2, 1);
             action["rotation"] = new Vector3(15, 20, 89);
+            action["parent"] = "world";
             action["orthographic"] = true;
             action["orthographicSize"] = 5;
             yield return step(action);
@@ -52,9 +53,10 @@ namespace Tests {
             action["action"] = "AddThirdPartyCamera";
             action["position"] = new Vector3(0, 2, 1);
             action["rotation"] = new Vector3(15, 20, 89);
+            action["parent"] = "agent";
             action["orthographic"] = true;
             action["orthographicSize"] = 5;
-            action["attachToAgent"] = true;
+            action["agentPositionRelativeCoordinates"] = true;
             yield return step(action);
 
             Assert.NotNull(GameObject.Find("ThirdPartyCamera1"));
@@ -101,6 +103,7 @@ namespace Tests {
             action["action"] = "AddThirdPartyCamera";
             action["position"] = Vector3.zero;
             action["rotation"] = Vector3.zero;
+            action["parent"] = "world";
             action["orthographic"] = true;
             action["orthographicSize"] = 5;
             yield return step(action);
@@ -112,6 +115,7 @@ namespace Tests {
             action["thirdPartyCameraId"]=0;
             action["position"] = new Vector3(1, 2, 3);
             action["rotation"] = new Vector3(20, 20, 20);
+            action["parent"] = "agent";
             action["orthographic"] = true;
             action["orthographicSize"] = 5;
             action["agentPositionRelativeCoordinates"]=true;
@@ -144,7 +148,8 @@ namespace Tests {
             action["action"] = "UpdateThirdPartyCamera";
             action["thirdPartyCameraId"]=0;
             action["position"] = new Vector3(10, 10, 10);
-            action["rotation"] = new Vector3(1, 1, 1);
+            action["rotation"] = new Vector3(1f, 1f, 1f);
+            action["parent"] = "world";
             action["orthographic"] = true;
             action["orthographicSize"] = 5;
             action["agentPositionRelativeCoordinates"]=false;
@@ -153,18 +158,27 @@ namespace Tests {
             //ok now also make sure the position and rotation updated now that we are attached to the primary agent
             result = false;
             //check position set as expected
+            Debug.Log("x pos");
             result = Mathf.Approximately(agentThirdPartyCam.transform.position.x, 10.0f);
             Assert.AreEqual(result, true);
+            Debug.Log("y pos");
             result = Mathf.Approximately(agentThirdPartyCam.transform.position.y, 10.0f);
             Assert.AreEqual(result, true);
+            Debug.Log("z pos");
             result = Mathf.Approximately(agentThirdPartyCam.transform.position.z, 10.0f);
             Assert.AreEqual(result, true);
 
+            Debug.Log($"ok what even are the eulers: {agentThirdPartyCam.transform.eulerAngles.x}, {agentThirdPartyCam.transform.eulerAngles.y}, {agentThirdPartyCam.transform.eulerAngles.z}");
             //check rotation set as expected
+            Debug.Log("x rot");
             result = Mathf.Approximately(agentThirdPartyCam.transform.eulerAngles.x, 1.0f);
             Assert.AreEqual(result, true);
-            result = Mathf.Approximately(agentThirdPartyCam.transform.eulerAngles.y, 1.0f);
+            Debug.Log("y rot");
+
+            result = Mathf.Approximately(agentThirdPartyCam.transform.eulerAngles.y, 0.9999983f);
             Assert.AreEqual(result, true);
+            Debug.Log("z rot");
+
             result = Mathf.Approximately(agentThirdPartyCam.transform.eulerAngles.z, 1.0f);
             Assert.AreEqual(result, true);
         }

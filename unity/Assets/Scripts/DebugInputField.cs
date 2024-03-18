@@ -2106,7 +2106,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ["action"] = "AddThirdPartyCamera",
                             ["position"] = new Vector3(1, 1, 1),
                             ["rotation"] = new Vector3(10, 20, 30),
-                            ["attachToAgent"] = true
+                            ["parent"] = "agent",
+                            ["agentPositionRelativeCoordinates"] = true
                         };
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
@@ -2119,6 +2120,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ["position"] = new Vector3(2, 2, 2),
                             ["rotation"] = new Vector3(15, 25, 35),
                             ["thirdPartyCameraId"] = 1,
+                            ["parent"] = "agent",
                             ["agentPositionRelativeCoordinates"] = true
                         };
 
