@@ -309,6 +309,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             repositionAgentOrigin(newRelativeOrigin: new Vector3 (initializeAction.newRelativeOriginX, 0.0f, initializeAction.newRelativeOriginZ));
 
             //adjust agent character controller and capsule according to extents of box collider
+            var characterController = this.GetComponent<CharacterController>();
+            var myBox = spawnedBoxCollider.GetComponent<BoxCollider>();
+
+            // Transform the box collider's center to the world space and then into the capsule collider's local space
+            Vector3 boxCenterWorld = myBox.transform.TransformPoint(myBox.center);
+            Vector3 boxCenterCapsuleLocal = characterController.transform.InverseTransformPoint(boxCenterWorld);
+
+            // Now the capsule's center can be set to the transformed center of the box collider
+            characterController.center = boxCenterCapsuleLocal;
+
+            // Adjust the capsule size
+            // Set the height to the smallest dimension of the box
+            //float minHeight = Mathf.Min(myBox.size.x, myBox.size.y, myBox.size.z);
+            //characterController.height = minHeight;
+            float boxHeight = myBox.size.y;
+            characterController.height = boxHeight;
+
+            // Set the radius to fit inside the box, considering the smallest width or depth
+            float minRadius = Mathf.Min(myBox.size.x, myBox.size.z) / 2f;
+            characterController.radius = minRadius;
+
+            //ok now also adjust this for the trigger capsule collider of the agent.
+            var myTriggerCap = this.GetComponent<CapsuleCollider>();
+            myTriggerCap.center = boxCenterCapsuleLocal;
+            myTriggerCap.height = boxHeight;
+            myTriggerCap.radius = minRadius;
 
             //enable cameras I suppose
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
