@@ -21,6 +21,77 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //put stuff we need here when we need it maybe
         }
 
+        public List<Vector3> SamplePointsOnNavMesh(
+            int sampleCount, float maxDistance = 0.05f
+        ) {
+            float minX = agentManager.SceneBounds.min.x;
+            float minZ = agentManager.SceneBounds.min.z;
+            float maxX = agentManager.SceneBounds.max.x;
+            float maxZ = agentManager.SceneBounds.max.z;
+
+            int n = (int) Mathf.Ceil(Mathf.Sqrt(sampleCount));
+
+            List<Vector3> initPoints = new List<Vector3>();
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    initPoints.Add(new Vector3(
+                        Mathf.Lerp(minX, maxX, (i + 0.5f) / n),
+                        0f,
+                        Mathf.Lerp(minZ, maxZ, (j + 0.5f) / n)
+                    ));
+                }
+            }
+            initPoints.Shuffle_();
+
+            List<Vector3> pointsOnMesh = new List<Vector3>();
+            for (int i = 0; i < initPoints.Count; i++) {
+                if (pointsOnMesh.Count >= sampleCount) {
+                    break;
+                }
+
+                NavMeshHit hit;
+                Vector3 randomPoint = initPoints[i];
+                if (NavMesh.SamplePosition(randomPoint, out hit, maxDistance, NavMesh.AllAreas)) {
+# if UNITY_EDITOR
+                    Debug.DrawLine(hit.position, hit.position + new Vector3(0f, 0.1f, 0f), Color.cyan, 15f);
+# endif
+                    pointsOnMesh.Add(hit.position);
+                }
+            }
+
+            return pointsOnMesh;
+        }
+
+        public void RandomlyPlaceAgentOnNavMesh(int n = 200) {
+            List<Vector3> pointsOnMesh = SamplePointsOnNavMesh(n);
+            if (pointsOnMesh.Count == 0) {
+                throw new InvalidOperationException("No points on the navmesh");
+            }
+
+            Bounds b = UtilityFunctions.CreateEmptyBounds();
+            foreach (Collider c in GetComponentsInChildren<Collider>()) {
+                b.Encapsulate(c.bounds);
+            }
+            float yOffset = 0.01f + transform.position.y - b.min.y;
+
+            bool success = false;
+            foreach (Vector3 point in pointsOnMesh) {
+                try {
+                    teleportFull(
+                        position: point + new Vector3(0, yOffset, 0),
+                        rotation: new Vector3(0f, UnityEngine.Random.Range(0, 360) * 1f, 0f),
+                        null,
+                        true
+                    );
+                    success = true;
+                    break;
+                } catch (InvalidOperationException) {
+                    continue;
+                }
+            }
+            actionFinished(success);
+        }
+
         private Bounds GetAgentBoundsFromMesh(GameObject gameObject, Type agentType) {
             Debug.Log(agentType);
             Debug.Log(typeof(StretchAgentController));
