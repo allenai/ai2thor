@@ -336,6 +336,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             myTriggerCap.height = boxHeight;
             myTriggerCap.radius = minRadius;
 
+            //ok recalibrate navmesh child component based on the new agent capsule now that its updated
+            var navmeshchild = this.transform.GetComponentInChildren<NavMeshAgent>();
+            navmeshchild.transform.localPosition = new Vector3(boxCenterCapsuleLocal.x, 0.0f, boxCenterCapsuleLocal.z);
+            navmeshchild.baseOffset = 0.0f;
+            navmeshchild.height = boxHeight;
+            navmeshchild.radius = minRadius;
+
             //enable cameras I suppose
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
