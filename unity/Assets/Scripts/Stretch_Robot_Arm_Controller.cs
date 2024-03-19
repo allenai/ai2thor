@@ -256,6 +256,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
 
         yield return withLastStepCallback(
             ContinuousMovement.rotate(
+                movable: this,
                 controller: controller,
                 moveTransform: armTarget.transform,
                 targetRotation: targetRotation,
