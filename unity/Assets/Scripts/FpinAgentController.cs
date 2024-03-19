@@ -9,17 +9,29 @@ using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UIElements;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-    public class FpinAgentController : PhysicsRemoteFPSAgentController {
+
+    public class BoxBounds {
+        public Vector3 center;
+        public Vector3 size;
+    }
+    public class FpinAgentController : PhysicsRemoteFPSAgentController{
 
         private static readonly Vector3 agentSpawnOffset = new Vector3(100.0f, 100.0f, 100.0f);
+        private FpinMovableContinuous fpinMovable;
         public GameObject spawnedBoxCollider;
         public GameObject spawnedTriggerBoxCollider;
+
+        public BoxBounds boxBounds;
+
+        public CollisionListener collisionListener;
+        
         public FpinAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
-        void Start() {
+        public void Start() {
             //put stuff we need here when we need it maybe
         }
+        
 
         public List<Vector3> SamplePointsOnNavMesh(
             int sampleCount, float maxDistance = 0.05f
@@ -110,7 +122,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return bounds;
         }
 
-        public void spawnAgentBoxCollider(GameObject agent, Type agentType, Vector3 scaleRatio, bool useAbsoluteSize = false, bool useVisibleColliderBase = false) {
+        public BoxBounds spawnAgentBoxCollider(GameObject agent, Type agentType, Vector3 scaleRatio, bool useAbsoluteSize = false, bool useVisibleColliderBase = false) {
             // Store the current rotation
             Vector3 originalPosition = this.transform.position;
             Quaternion originalRotation = this.transform.rotation;
@@ -183,6 +195,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.transform.rotation = originalRotation;
             this.transform.position = originalPosition;
 
+            var boxBounds = new BoxBounds {
+                center = newBoxCenter,
+                size = newBoxExtents
+            };
+
             // Spawn the box collider
             Vector3 colliderSize = newBoxExtents * 2;
 
@@ -225,6 +242,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // Attatching it to the parent changes the rotation so set it back to none
                 visibleBox.transform.localRotation = Quaternion.identity;
             }
+            return boxBounds;
         }
 
         public void DestroyAgentBoxCollider(){
@@ -337,13 +355,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return container;
         }
 
-        public new void Initialize(ServerAction action) {
-
-            this.InitializeBody(action);
-
+        public ActionFinished Initialize(ServerAction action) {
+            return this.InitializeBody(action);
         }
 
-        public override void InitializeBody(ServerAction initializeAction) {
+        public override ActionFinished InitializeBody(ServerAction initializeAction) {
             VisibilityCapsule = null;
 
             Debug.Log("running InitializeBody in FpingAgentController");
@@ -353,7 +369,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //spawn in a default mesh to base the created box collider on
-            SpawnAsset(initializeAction.assetId, "agentMesh", new Vector3(200f, 200f, 200f));
+            var spawnAssetActionFinished = SpawnAsset(initializeAction.assetId, "agentMesh", new Vector3(200f, 200f, 200f));
+            // Return early if spawn failed
+            if (!spawnAssetActionFinished.success) {
+                return spawnAssetActionFinished;
+            }
             var spawnedMesh = GameObject.Find("agentMesh");
 
             //copy all mesh renderers found on the spawnedMesh onto this agent now
@@ -366,7 +386,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             VisibilityCapsule = GameObject.Find("fpinVisibilityCapsule");
 
             //ok now create box collider based on the mesh
-            this.spawnAgentBoxCollider(
+            this.boxBounds = this.spawnAgentBoxCollider(
                 agent: this.gameObject,
                 agentType: this.GetType(),
                 scaleRatio: initializeAction.colliderScaleRatio,
@@ -417,6 +437,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //enable cameras I suppose
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
+
+            fpinMovable = new FpinMovableContinuous(this.GetComponentInParent<CollisionListener>());
+
+            return new ActionFinished(spawnAssetActionFinished) {
+                // TODO: change to a proper class once metadata return is defined
+                actionReturn = new Dictionary<string, object>() {
+                    {"objectSphereBounds", spawnAssetActionFinished.actionReturn as ObjectSphereBounds},
+                    {"boxBounds", this.boxBounds}
+                }
+            };
 
             //default camera position somewhere??????
             // m_Camera.transform.localPosition = defaultMainCameraLocalPosition;
@@ -487,7 +517,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             Vector3 direction = new Vector3(x: right, y: 0, z: ahead);
 
-            CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
+            CollisionListener collisionListener = fpinMovable.collisionListener;
 
             Vector3 directionWorld = transform.TransformDirection(direction);
             Vector3 targetPosition = transform.position + directionWorld;
@@ -495,6 +525,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             collisionListener.Reset();
 
             return ContinuousMovement.move(
+                movable: fpinMovable,
                 controller: this,
                 moveTransform: this.transform,
                 targetPosition: targetPosition,
@@ -582,11 +613,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 1.0f,
             bool returnToStart = true
         ) {
-            CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
+            CollisionListener collisionListener = fpinMovable.collisionListener;
             collisionListener.Reset();
 
             // this.transform.Rotate()
             return ContinuousMovement.rotate(
+                movable: this.fpinMovable,
                 controller: this,
                 moveTransform: this.transform,
                 targetRotation: this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),

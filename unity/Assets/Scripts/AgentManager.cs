@@ -232,6 +232,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
         //initialize primary agent now that its controller component has been added
         primaryAgent.ProcessControlCommand(action.dynamicServerAction);
+        Debug.Log($"Initialize of AgentController. lastActionSuccess: {primaryAgent.lastActionSuccess}, actionReturn: {primaryAgent.actionReturn}, agentState: {primaryAgent.agentState}");
         Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         if (action.targetFrameRate > 0) {
             Application.targetFrameRate = action.targetFrameRate;
@@ -245,8 +246,9 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         this.renderInstanceSegmentation = this.initializedInstanceSeg = action.renderInstanceSegmentation;
         this.renderFlowImage = action.renderFlowImage;
         this.fastActionEmit = action.fastActionEmit;
-
+        
         PhysicsSceneManager.SetDefaultSimulationParams(action.defaultPhysicsSimulationParams);
+        Time.fixedDeltaTime = (action.defaultPhysicsSimulationParams?.fixedDeltaTime).GetValueOrDefault(Time.fixedDeltaTime);
         // we default Physics.autoSimulation to False in the built Player, but
         // set ServerAction.autoSimulation = True for backwards compatibility. Keeping
         // this value False allows the user complete control of all Physics Simulation

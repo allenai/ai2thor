@@ -659,7 +659,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public abstract void InitializeBody(ServerAction initializeAction);
+        public abstract ActionFinished InitializeBody(ServerAction initializeAction);
 
          private bool ValidRotateStepDegreesWithSnapToGrid(float rotateDegrees) {
             // float eps = 0.00001f;
@@ -7224,7 +7224,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, geoList);
         }
 
-        public void SpawnAsset(
+        public ActionFinished SpawnAsset(
             string assetId,
             string generatedId,
             Vector3? position = null,
@@ -7232,18 +7232,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {
-                actionFinishedEmit(
-                    success: false,
-                    errorMessage: "ProceduralAssetDatabase not in scene."
-                );
+                 return new ActionFinished() {
+                     toEmitState = true,
+                    success = false,
+                    errorMessage = "ProceduralAssetDatabase not in scene."
+                 };
             }
             var assetMap = ProceduralTools.getAssetMap();
 
             if (!assetMap.ContainsKey(assetId)) {
-                actionFinishedEmit(
-                    success: false,
-                    errorMessage: $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database."
-                );
+                return new ActionFinished() {
+                    toEmitState = true,
+                    success = false,
+                    errorMessage = $"Object '{assetId}' is not contained in asset database, you may need to rebuild asset database."
+                };
             }
 
             GameObject asset = assetMap.getAsset(assetId);
@@ -7265,14 +7267,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             physicsSceneManager.SetupScene(generateObjectIds: false);
 
             var bounds = GetObjectSphereBounds(spawned);
-            actionFinished(
-                success: true,
-                actionReturn: new ObjectSphereBounds() {
+            return new ActionFinished() {
+                success = true,
+                actionReturn = new ObjectSphereBounds() {
                     id = spawned.name,
                     worldSpaceCenter = bounds.center,
                     radius = bounds.extents.magnitude
                 }
-            );
+            };
         }
 
         public void GetAssetSphereBounds(string assetId) {

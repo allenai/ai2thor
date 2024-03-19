@@ -9,7 +9,7 @@ using System;
         public void ContinuousUpdate(float fixedDeltaTime);
         public ActionFinished FinishContinuousMove(BaseFPSAgentController controller);
         // TODO remove from API integrate in FinishContinuousMove
-        public string GetHaltMessage();
+        // public string GetHaltMessage();
     }
 
 
@@ -32,6 +32,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public static IEnumerator rotate(
+            MovableContinuous movable,
             PhysicsRemoteFPSAgentController controller,
             Transform moveTransform,
             Quaternion targetRotation,
@@ -53,6 +54,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             return updateTransformPropertyFixedUpdate(
+                movable: movable,
                 controller: controller,
                 moveTransform: moveTransform,
                 target: targetRotation,
@@ -71,6 +73,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public static IEnumerator move(
+            MovableContinuous movable,
             PhysicsRemoteFPSAgentController controller,
             Transform moveTransform,
             Vector3 targetPosition,
@@ -83,6 +86,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>, IEnumerator> moveClosure =
                 (get, set, next) => updateTransformPropertyFixedUpdate(
+                    movable: movable,
                     controller: controller,
                     moveTransform: moveTransform,
                     target: targetPosition,
@@ -146,6 +150,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public static IEnumerator rotateAroundPoint(
+            MovableContinuous movable,
             PhysicsRemoteFPSAgentController controller,
             Transform updateTransform,
             Vector3 rotatePoint,
@@ -199,6 +204,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return finallyDestroyGameObjects(
                 gameObjectsToDestroy: tmpObjects,
                 steps: updateTransformPropertyFixedUpdate(
+                    movable: movable,
                     controller: controller,
                     moveTransform: fulcrum.transform,
                     target: targetRotation,
@@ -240,6 +246,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public static IEnumerator updateTransformPropertyFixedUpdate<T>(
+            MovableContinuous movable,
             PhysicsRemoteFPSAgentController controller,
             Transform moveTransform,
             T target,
@@ -261,7 +268,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // TODO: do not pass controller, and pass a lambda for the update function or an
             // interface 
-            var arm = controller.GetComponentInChildren<ArmController>();
+            // var arm = controller.GetComponentInChildren<ArmController>();
 
             // commenting out the WaitForEndOfFrame here since we shoudn't need 
             // this as we already wait for a frame to pass when we execute each action
@@ -296,7 +303,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //     Debug.Log("Oh, currentTarget is " + printTarget.eulerAngles.y);
                 // }
 
-                while (!arm.ShouldHalt()) {
+                while (!movable.ShouldHalt()) {
                 // TODO: put in movable && !collisionListener.TransformChecks(controller, moveTransform)) {
                     previousProperty = getProp(moveTransform);
 
@@ -317,7 +324,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 // this will be a NOOP for Rotate/Move/Height actions
-                arm.ContinuousUpdate(fixedDeltaTime);
+                movable.ContinuousUpdate(fixedDeltaTime);
                 //Debug.Log("2");
 
                 // if (!Physics.autoSimulation) {
@@ -353,15 +360,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 resetProp = originalProperty;
             }
             //Debug.Log("about to continuousMoveFinish");
-            var actionFinished = continuousMoveFinish(
-                arm,
-                moveTransform,
-                setProp,
-                resetProp
-            );
+
+            //  TODO changed to
+            // var actionFinished = continuousMoveFinish(
+            //     movable,
+            //     moveTransform,
+            //     setProp,
+            //     resetProp
+            // );
+            var actionFinished = movable.FinishContinuousMove(controller);
+            if (!actionFinished.success) {
+                setProp(moveTransform, resetProp);
+            }
 
             // we call this one more time in the event that the arm collided and was reset
-            arm.ContinuousUpdate(fixedDeltaTime);
+            movable.ContinuousUpdate(fixedDeltaTime);
 
             yield return new WaitForFixedUpdate();
 
@@ -369,23 +382,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // Old Action finish
-        private static ActionFinished continuousMoveFinish<T>(
-            MovableContinuous movable,
-            Transform moveTransform,
-            System.Action<Transform, T> setProp,
-            T resetProp
-        ) {
-            bool actionSuccess = !movable.ShouldHalt();
-            string errorMessage = movable.GetHaltMessage();
-            if (!actionSuccess) {
-                 setProp(moveTransform, resetProp);
-            }
+        // private static ActionFinished continuousMoveFinish<T>(
+        //     MovableContinuous movable,
+        //     Transform moveTransform,
+        //     System.Action<Transform, T> setProp,
+        //     T resetProp
+        // ) {
+        //     bool actionSuccess = !movable.ShouldHalt();
+        //     string errorMessage = movable.GetHaltMessage();
+        //     if (!actionSuccess) {
+        //          setProp(moveTransform, resetProp);
+        //     }
 
-            return new ActionFinished() {
-                success = actionSuccess,
-                errorMessage = errorMessage
-            };
-        }
+        //     return new ActionFinished() {
+        //         success = actionSuccess,
+        //         errorMessage = errorMessage
+        //     };
+        // }
+
+
         // TODO: move to new way
         // private static ActionFinished continuousMoveFinish<T>(
         //     MovableContinuous movable,

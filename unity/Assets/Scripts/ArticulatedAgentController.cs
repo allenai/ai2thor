@@ -38,7 +38,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // TODO: Reimplement for Articulation body
-        public override void InitializeBody(ServerAction initializeAction) {
+        public override ActionFinished InitializeBody(ServerAction initializeAction) {
             // TODO; Articulation Body init
             VisibilityCapsule = StretchVisCap;
             m_CharacterController.center = new Vector3(0, 1.5f, 0);
@@ -121,6 +121,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FloorColliderPhysicsMaterial = FloorCollider.material;
 
             getArmImplementation().ContinuousUpdate(Time.fixedDeltaTime);
+            return ActionFinished.Success;
         }
 
         private ArticulatedArmController getArmImplementation() {

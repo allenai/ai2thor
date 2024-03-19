@@ -150,6 +150,7 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         collisionListener.Reset();
         return withLastStepCallback(
             ContinuousMovement.rotateAroundPoint(
+                movable: this,
                 controller: controller,
                 updateTransform: armTarget.transform,
                 rotatePoint: rotatePoint,
@@ -173,6 +174,7 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         Quaternion rotation = Quaternion.Euler(0f, 0f, degrees);
         return withLastStepCallback(
             ContinuousMovement.rotate(
+                movable: this,
                 controller: controller,
                 moveTransform: poleManipulator.transform,
                 targetRotation: poleManipulator.transform.rotation * rotation,

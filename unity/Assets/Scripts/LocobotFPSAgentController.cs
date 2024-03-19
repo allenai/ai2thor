@@ -26,7 +26,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public LocobotFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
-        public override void InitializeBody(ServerAction initializeAction) {
+        public override ActionFinished InitializeBody(ServerAction initializeAction) {
             // toggle FirstPersonCharacterCull
 
             VisibilityCapsule = BotVisCap;
@@ -64,6 +64,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
             }
+            return ActionFinished.Success;
         }
 
         public new void Initialize(ServerAction action) {

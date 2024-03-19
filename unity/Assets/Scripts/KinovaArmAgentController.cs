@@ -12,7 +12,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public KinovaArmAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
-        public override void InitializeBody(ServerAction initializeAction) {
+        public override ActionFinished InitializeBody(ServerAction initializeAction) {
             base.InitializeBody(initializeAction);
             Debug.Log("initializing arm");
             IKArm.SetActive(true);
@@ -25,6 +25,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var ikSolver = this.GetComponentInChildren<FK_IK_Solver>();
             Debug.Log("running manipulate arm");
             ikSolver.ManipulateArm();
+            return ActionFinished.Success;
         }
 
         private IK_Robot_Arm_Controller getArmImplementation() {
