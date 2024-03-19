@@ -1166,8 +1166,8 @@ class Controller(object):
                 if self.server.unity_proc.returncode is not None:
                     message = (
                         "Unity process has exited - check "
-                        "~/.config/unity3d/Allen\ Institute\ for\ "
-                        "Artificial\ Intelligence/AI2-THOR/Player.log for errors. "
+                        "~/.config/unity3d/Allen\\ Institute\\ for\\ "
+                        "Artificial\\ Intelligence/AI2-THOR/Player.log for errors. "
                         "Confirm that Vulkan is properly configured on this system "
                         "using vulkaninfo from the vulkan-utils package. returncode=%s"
                         % (self.server.unity_proc.returncode,)
