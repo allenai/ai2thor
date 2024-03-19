@@ -639,6 +639,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+               //fpin using apple
+                case "initpina": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "Initialize";
+                    action["agentMode"] = "fpin";
+                    action["assetId"] = "Apple_1"; 
+                    action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                    action["newRelativeOriginX"] = 0.0f;
+                    action["newRelativeOriginz"] = 0.0f;
+                    action["visibilityScheme"] = "Distance";
+
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
                 case "inits-cp": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 

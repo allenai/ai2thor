@@ -271,10 +271,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Spawn the visible box if useVisibleColliderBase is true
             if (useVisibleColliderBase){
-                colliderSize = new Vector3(colliderSize.x, 0.15f, colliderSize.z);
+                colliderSize = new Vector3(colliderSize.x, 0.15f * colliderSize.y, colliderSize.z);
                 GameObject visibleBox = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 visibleBox.name = "VisibleBox";
-                visibleBox.transform.position = new Vector3(newBoxCenter.x, newBoxCenter.y - newBoxExtents.y + 0.1f, newBoxCenter.z);
+                visibleBox.transform.position = new Vector3(newBoxCenter.x, newBoxCenter.y - newBoxExtents.y + 0.01f, newBoxCenter.z);
                 visibleBox.transform.localScale = colliderSize;
                 visibleBox.transform.parent = agent.transform;
                 // Attatching it to the parent changes the rotation so set it back to none
@@ -338,7 +338,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // Process children only if necessary (i.e., they contain MeshFilters)
-                if (HasMeshInChildren(child)) {
+                if (HasMeshInChildrenOrSelf(child)) {
                     Transform parentForChildren = (copiedChild != null) ? copiedChild.transform : CreateContainerForHierarchy(child, targetParent).transform;
                     CopyMeshChildrenRecursive(child, parentForChildren, false);
                     if (isTopMost) {
@@ -383,12 +383,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return copiedChild;
         }
 
-        private bool HasMeshInChildren(Transform transform) {
+        private bool HasMeshInChildrenOrSelf(Transform transform) {
             foreach (Transform child in transform) {
-                if (child.GetComponent<MeshFilter>() != null || HasMeshInChildren(child)) {
+                if (child.GetComponent<MeshFilter>() != null || HasMeshInChildrenOrSelf(child)) {
                     return true;
                 }
             }
+            
+            if (transform.GetComponent<MeshFilter>() != null) {
+                return true;
+            }
+
             return false;
         }
 

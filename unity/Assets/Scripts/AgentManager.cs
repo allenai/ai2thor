@@ -2208,7 +2208,7 @@ public class ServerAction {
     public Vector3 direction;
     public Vector3 colliderScaleRatio;
     public bool useAbsoluteSize = false;
-    public bool useVisibleColliderBase = true;
+    public bool useVisibleColliderBase = false;
     public float newRelativeOriginX;
     public float newRelativeOriginZ;
     public bool allowAgentsToIntersect = false;
