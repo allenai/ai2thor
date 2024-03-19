@@ -1576,7 +1576,9 @@ public class AgentMetadata {
 
     public bool inHighFrictionArea;
 
-    public Vector3 colliderSize;
+    public Vector3 fpinColliderSize; //size of extents of the fpin agent's generated box
+    public Vector3 fpinColliderWorldCenter; //center of the fpin agent's generated box collider in world space
+    public Vector3 fpinColliderAgentRelativeCenter; //center of the fpin agent's generated box collider relative to the agent's position
 
     public AgentMetadata() { }
 }
