@@ -420,6 +420,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return container;
         }
 
+
+        public ActionFinished GetBoxBounds() {
+            return new ActionFinished() {
+                success = true,
+                actionReturn = this.BoxBounds
+            };
+        }
+
         public ActionFinished Initialize(
             BodyAsset bodyAsset,
             // TODO: do we want to allow non relative to the box offsets?
@@ -440,13 +448,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 useVisibleColliderBase: useVisibleColliderBase
             );
 
-        }
-
-        public ActionFinished GetBoxBounds() {
-            return new ActionFinished() {
-                success = true,
-                actionReturn = this.BoxBounds
-            };
         }
 
         public ActionFinished InitializeBody(
@@ -575,7 +576,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 spawnedMesh = GameObject.Find("agentMesh");
             }
             else if (bodyAsset.dynamicAsset != null) {
-                Debug.Log("--- dynamicAsset create");
                 actionFinished = this.CreateRuntimeAsset(
                     id: bodyAsset.dynamicAsset.id,
                     dir: bodyAsset.dynamicAsset.dir,
@@ -592,11 +592,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
             if (bodyAsset.dynamicAsset != null || bodyAsset.asset != null) {
-                Debug.Log($"--- dynamicAsset create {actionFinished.success} msg: {actionFinished.errorMessage} {actionFinished.actionReturn} ");
                 var assetData = actionFinished.actionReturn as Dictionary<string, object>;
-                Debug.Log($"Keys: {string.Join("," , assetData.Keys)}");
                 spawnedMesh = assetData["gameObject"] as GameObject;//.transform.Find("mesh").gameObject;
-                Debug.Log($"mesh : {spawnedMesh ==null} { spawnedMesh}");
             }
             return actionFinished;
         }

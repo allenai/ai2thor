@@ -2378,7 +2378,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             agentMeta.cameraHorizon = cameraX > 180 ? cameraX - 360 : cameraX;
             agentMeta.inHighFrictionArea = inHighFrictionArea;
 
-
+            GameObject nonTriggeredEncapsulatingBox = GameObject.Find("NonTriggeredEncapsulatingBox");
+            if (nonTriggeredEncapsulatingBox != null) {
+                agentMeta.colliderSize = nonTriggeredEncapsulatingBox.GetComponent<BoxCollider>().size;
+            } else {
+                agentMeta.colliderSize = new Vector3(0, 0, 0);
+            }
 
             // OTHER METADATA
             MetadataWrapper metaMessage = new MetadataWrapper();
