@@ -235,7 +235,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         // Pass new agentInitializationParams to agent's Initialize instead of the whole original action,
         // Allows to segment specific agent initialization params and move away from bloated ServerAction class
         primaryAgent.ProcessControlCommand(
-            action.dynamicServerAction.agentInitializationParams ?? action.dynamicServerAction
+            // action.dynamicServerAction.agentInitializationParams ?? action.dynamicServerAction
+            !action.dynamicServerAction.HasAgentInitializationParams() ?
+            action.dynamicServerAction :
+            action.dynamicServerAction.agentInitializationParams
         );
         Debug.Log($"Initialize of AgentController. lastActionSuccess: {primaryAgent.lastActionSuccess}, actionReturn: {primaryAgent.actionReturn}, agentState: {primaryAgent.agentState}");
         Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
@@ -2055,6 +2058,10 @@ public class DynamicServerAction {
         get {
             return this.jObject[physicsSimulationParamsVariable]?.ToObject<PhysicsSimulationParams>();
         }
+    }
+
+    public bool HasAgentInitializationParams() {
+        return this.ContainsKey(agentInitializationParamsVariable);
     }
 
     public DynamicServerAction agentInitializationParams {
