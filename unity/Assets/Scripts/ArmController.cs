@@ -68,17 +68,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
             errorMessage = errorMessage
         };
     }
-
-    // bool actionSuccess = !movable.ShouldHalt();
-            // string errorMessage = movable.GetHaltMessage();
-            // if (!actionSuccess) {
-            //      setProp(moveTransform, resetProp);
-            // }
-
-            // return new ActionFinished() {
-            //     success = actionSuccess,
-            //     errorMessage = errorMessage
-            // };
+    
     public abstract GameObject GetArmTarget();
     public abstract ArmMetadata GenerateMetadata();
 

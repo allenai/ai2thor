@@ -6781,7 +6781,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
-        public void CreateRuntimeAsset(ProceduralAsset asset) {
+        public ActionFinished CreateRuntimeAsset(ProceduralAsset asset) {
             var assetData = ProceduralTools.CreateAsset(
                 vertices: asset.vertices,
                 normals: asset.normals,
@@ -6801,14 +6801,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 serializable: asset.serializable,
                 parentTexturesDir: asset.parentTexturesDir
             );
-            actionFinished(success: true, actionReturn: assetData);
+            return new ActionFinished{ success = true, actionReturn = assetData};
         }
 
-        public void CreateRuntimeAsset(
+        public ActionFinished CreateRuntimeAsset(
             string id,
             string dir,
             string extension = ".msgpack.gz",
-            ObjectAnnotations annotations = null
+            ObjectAnnotations annotations = null,
+            bool serializable = false
         ) {
             var validDirs = new List<string>() {
                 Application.persistentDataPath,
@@ -6821,14 +6822,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             extension = !extension.StartsWith(".") ? $".{extension}" : extension;
             extension = extension.Trim();
             if (!supportedExtensions.Contains(extension)) {
-                actionFinished(success: false, errorMessage: $"Unsupported extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
-                return;
+                return new ActionFinished(success: false, errorMessage: $"Unsupported extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
             }
             var filename = $"{id}{extension}";
             var filepath = Path.Combine(dir, id, filename);
             if (!File.Exists(filepath)) {
-                 actionFinished(success: false, actionReturn: null, errorMessage: $"Asset fiile '{filepath}' does not exist.");
-                 return;
+                 return new ActionFinished(success: false, actionReturn: null, errorMessage: $"Asset fiile '{filepath}' does not exist.");
             }
 
             // to support different
@@ -6871,8 +6870,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // procAsset = Newtonsoft.Json.JsonConvert.DeserializeObject<ProceduralAsset>(reader.ReadToEnd(), serializer);
                 procAsset = JsonConvert.DeserializeObject<ProceduralAsset>(json);
             } else {
-                 actionFinished(success: false, errorMessage: $"Unexpected error with extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
-                 return;
+                return  new ActionFinished(
+                    success: false, 
+                    errorMessage: $"Unexpected error with extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", 
+                    actionReturn: null
+                 );
             }
 
 
@@ -6898,13 +6900,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     procAsset.receptacleCandidate ,
                     procAsset.yRotOffset ,
                     returnObject: true,
+                    serializable: serializable,
                     parent:null,
                     addAnotationComponent: false,
                     parentTexturesDir: procAsset.parentTexturesDir
                 );
 
            // Debug.Log($"root is null? {parent == null} -  {parent}");
-           actionFinished(success: true, actionReturn: assetData);
+           return new ActionFinished(success: true, actionReturn: assetData);
         }
 
         public void GetStreamingAssetsPath() {

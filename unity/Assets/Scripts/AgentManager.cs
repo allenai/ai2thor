@@ -29,6 +29,7 @@ using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
 using UnityStandardAssets.ImageEffects;
 using Thor.Procedural.Data;
+using System.Runtime.InteropServices;
 
 public class AgentManager : MonoBehaviour, ActionInvokable {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
@@ -231,7 +232,11 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         }
 
         //initialize primary agent now that its controller component has been added
-        primaryAgent.ProcessControlCommand(action.dynamicServerAction);
+        // Pass new agentInitializationParams to agent's Initialize instead of the whole original action,
+        // Allows to segment specific agent initialization params and move away from bloated ServerAction class
+        primaryAgent.ProcessControlCommand(
+            action.dynamicServerAction.agentInitializationParams ?? action.dynamicServerAction
+        );
         Debug.Log($"Initialize of AgentController. lastActionSuccess: {primaryAgent.lastActionSuccess}, actionReturn: {primaryAgent.actionReturn}, agentState: {primaryAgent.agentState}");
         Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         if (action.targetFrameRate > 0) {
@@ -2021,6 +2026,7 @@ public class DynamicServerAction {
     };
 
     public const string physicsSimulationParamsVariable = "physicsSimulationParams";
+    public const string agentInitializationParamsVariable = "agentInitializationParams";
 
     public JObject jObject {
         get;
@@ -2048,6 +2054,23 @@ public class DynamicServerAction {
     public PhysicsSimulationParams physicsSimulationParams {
         get {
             return this.jObject[physicsSimulationParamsVariable]?.ToObject<PhysicsSimulationParams>();
+        }
+    }
+
+    public DynamicServerAction agentInitializationParams {
+        get {
+            var dict = this.jObject[agentInitializationParamsVariable]?.ToObject<Dictionary<string, object>>();
+            dict ??= new Dictionary<string, object>();
+            foreach (var extraneousParam in AllowedExtraneousParameters) {
+                var parmaValue = this.GetValue(extraneousParam);
+                if (parmaValue != null) {
+                    dict.Add(
+                        extraneousParam,
+                        this.GetValue(extraneousParam)//?.ToObject<object>()
+                    );
+                }
+            }
+            return new DynamicServerAction(dict);
         }
     }
 
@@ -2207,8 +2230,9 @@ public class ServerAction {
     public Vector3 colliderScaleRatio;
     public bool useAbsoluteSize = false;
     public bool useVisibleColliderBase = true;
-    public float newRelativeOriginX;
-    public float newRelativeOriginZ;
+    public float originOffsetX;
+    public float originOffsetY;
+    public float originOffsetZ;
     public bool allowAgentsToIntersect = false;
     public float handDistance;// used for max distance agent's hand can move
     public List<Vector3> positions = null;

@@ -11,6 +11,7 @@ using Thor.Procedural;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine.AI;
+using MessagePack.Resolvers;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class DebugInputField : MonoBehaviour {
@@ -623,17 +624,99 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
                     action["action"] = "Initialize";
+                    // AgentManager Initialize Args
                     action["agentMode"] = "fpin";
+                    action["visibilityScheme"] = "Distance";
+                    action["renderInstanceSegmentation"] = true;
+                    action["renderDepth"] = true;
+
+                    // Fpin agent Initialize args
+                    action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<string, object>() {
+                        {"bodyAsset", new BodyAsset() { assetId = "Toaster_5"}},
+                        {"originOffsetX", 0.0f},
+                        {"originOffsetZ", 0.0f},
+                        {"colliderScaleRatio", new Vector3(1, 1, 1)}
+                    };
+                    //action["useAbsoluteSize"] = true;
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
+                case "initpinobja": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+                    BodyAsset ba = null;
+
+                    if (splitcommand.Length == 2) {
+
+                        var objectId = splitcommand[1];
+
+                        objectId = objectId.Trim();
+                        var pathSplit = Application.dataPath.Split('/');
+
+                        var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
+                        Debug.Log(string.Join("/", repoRoot));
+
+                        var objaverseRoot = $"{string.Join("/", repoRoot)}/objaverse";
+                        ba = new BodyAsset() { 
+                            dynamicAsset = new LoadInUnityProceduralAsset() {
+                                id = objectId,
+                                dir = objaverseRoot
+                            }
+                        };
+                    }
+
+                    action["action"] = "Initialize";
+                    // AgentManager Initialize Args
+                    action["agentMode"] = "fpin";
+                    action["visibilityScheme"] = "Distance";
+                    action["renderInstanceSegmentation"] = true;
+                    action["renderDepth"] = true;
+
+                    // Fpin agent Initialize args
+                    action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<string, object>() {
+                        {"bodyAsset", ba},
+                        {"originOffsetX", 0.0f},
+                        {"originOffsetZ", 0.0f},
+                        {"colliderScaleRatio", new Vector3(1, 1, 1)}
+                    };
+                    //action["useAbsoluteSize"] = true;
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+                case "finitbodys": {
+                    
+                      Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "InitializeBody";
                     action["assetId"] = "Toaster_5"; 
                     action["colliderScaleRatio"] = new Vector3(1, 1, 1);
                     action["newRelativeOriginX"] = 0.0f;
                     action["newRelativeOriginz"] = 0.0f;
                     //action["useAbsoluteSize"] = true;
-                    action["visibilityScheme"] = "Distance";
-                    action["renderInstanceSegmentation"] = true;
-                    action["renderDepth"] = true;
 
-                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+                case "finitbodyl": {
+                    
+                      Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "InitializeBody";
+                    action["assetId"] = "StretchBotSimObj"; 
+                    action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                    action["newRelativeOriginX"] = 0.0f;
+                    action["newRelativeOriginz"] = 0.0f;
+                    //action["useAbsoluteSize"] = true;
+
+                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                     //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
 
                     break;
@@ -660,6 +743,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
 
                     break;
+                }
+                case "rpanm" : {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "RandomlyPlaceAgentOnNavMesh";
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+                case "ftele": {
+                     Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "TeleportFull";
+                        action["position"] = new Vector3(10.0f, 0.009f, 2.75f);
+                        action["rotation"] = new Vector3(0f, 0f, 0f);
+                        action["horizon"] = -20f;
+                        action["standing"] = true;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
                 }
                 case "obig": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
@@ -5059,9 +5159,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         var objectId = splitcommand[1];
 
                         var fname = objectId.Trim();
-                        if (!fname.EndsWith(".json")) {
-                            fname += ".msgpack.gz";
-                        }
+                        // if (!fname.EndsWith(".json")) {
+                        //     fname += ".msgpack.gz";
+                        // }
                         
                         var pathSplit = Application.dataPath.Split('/');
 
@@ -5074,14 +5174,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                          
                         
-                        var filename = Path.GetFileName(objectPath);
+                        // var filename = Path.GetFileName(objectPath);
 
-                        var pathOut = Application.dataPath + $"/Resources/msgpack_test/{objectId}.json";
+                        //var pathOut = Application.dataPath + $"/Resources/msgpack_test/{objectId}.json";
 
-                        CurrentActiveController().CreateRuntimeAsset(
-                            objectPath,
-                            pathOut
+                        var af = CurrentActiveController().CreateRuntimeAsset(
+                            fname,
+                            objaverseRoot
                         );
+                        Debug.Log($"ActionFinished {af.success} {af.errorMessage}");
                     }
                     
                     break;

@@ -6,9 +6,10 @@ using System;
 using System.Linq;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 
- public class ActionFinished {
+public class ActionFinished {
     public bool success;
     public object actionReturn;
     public string errorMessage;
@@ -19,7 +20,15 @@ using Newtonsoft.Json.Linq;
     // TODO: Remove when backcompat actions are gone
     public bool isDummy;
 
-    public ActionFinished() {}
+    // public ActionFinished() {}
+    public ActionFinished(bool success = true, object actionReturn = null, string errorMessage = "", bool toEmitState = false, ServerActionErrorCode errorCode = 0, bool isDummy = false) { 
+        this.success = success;
+        this.actionReturn = actionReturn;
+        this.errorMessage = errorMessage;
+        this.toEmitState = toEmitState;
+        this.errorCode = errorCode;
+        this.isDummy = isDummy;
+    } 
     public ActionFinished(ActionFinished toCopy) {
         this.success = toCopy.success;
         this.actionReturn = toCopy.actionReturn;
@@ -30,6 +39,8 @@ using Newtonsoft.Json.Linq;
     }
 
     public static ActionFinished Success = new ActionFinished() { success = true} ;
+    public static ActionFinished Fail = new ActionFinished() { success = false} ;
+
 
     public static ActionFinished SuccessToEmitState = new ActionFinished() { success = true, toEmitState = true} ;
 
@@ -302,6 +313,8 @@ public static class ActionDispatcher {
         MethodInfo matchedMethod = null;
         int bestMatchCount = -1; // we do this so that 
 
+        // Debug.Log($"getDispatch method -- targettype {targetType}, methods {string.Join("/n", actionMethods.Select(m => $"method: {m.Name} in class '{m.DeclaringType}' with params {$"{string.Join(", ", m.GetParameters().Select(p => $"{p.ParameterType} {p.Name}"))}"}"))}");
+
         // This is where the the actual matching occurs.  The matching is done strictly based on
         // variable names.  In the future, this could be modified to include type information from
         // the inbound JSON object by mapping JSON types to csharp primitive types 
@@ -310,13 +323,27 @@ public static class ActionDispatcher {
             int matchCount = 0;
             ParameterInfo[] mParams = method.GetParameters();
 
+
+            var childmostType = actionMethods.Aggregate(method.DeclaringType, (acc, m) => m.DeclaringType.IsSubclassOf(acc) ? m.DeclaringType : acc);
+            var childMostTypeMethods = actionMethods.Where(m => m.DeclaringType.Equals(childmostType));
             // mixing a ServerAction action with non-server action creates an ambiguous situation
             // if one parameter is missing from the overloaded method its not clear whether the caller
             // intended to call the ServerAction action or was simply missing on of the parameters for the overloaded
             // variant
-            if (actionMethods.Count > 1 && mParams.Length == 1 && mParams[0].ParameterType == typeof(ServerAction)) {
-                throw new AmbiguousActionException("Mixing a ServerAction method with overloaded methods is not permitted");
+            var ambiguousMethods = childMostTypeMethods
+                .Select(m => (method: m, parameters: m.GetParameters()))
+                .Where(m => m.parameters.Length == 1 && m.parameters[0].ParameterType == typeof(ServerAction));
+            // Throw the exception only if there are more than one methods at the same childmost class level, 
+            // if not, the child most method will be chosen so there is no ambiguity
+            if (ambiguousMethods.Count() > 1) {
+                throw new AmbiguousActionException($"Mixing a ServerAction method with overloaded methods is not permitted. Ambiguous methods: {string.Join(" | ", ambiguousMethods.Select(m => $"method: {m.method.Name} in class '{m.method.DeclaringType}' with params {$"{string.Join(", ", m.parameters.Select(p => $"{p.ParameterType} {p.Name}"))}"}"))}");
             }
+
+            
+            // if (actionMethods.Count > 1 && mParams.Length == 1 && mParams[0].ParameterType == typeof(ServerAction)) {
+                
+            //     throw new AmbiguousActionException("Mixing a ServerAction method with overloaded methods is not permitted");
+            // }
 
             // default to ServerAction method
             // this is also necessary, to allow Initialize to be

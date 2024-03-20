@@ -7,6 +7,7 @@ using RandomExtensions;
 using UnityEngine.AI;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UIElements;
+using Thor.Procedural.Data;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
@@ -14,6 +15,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Vector3 center;
         public Vector3 size;
     }
+
+    public class LoadInUnityProceduralAsset {
+        public string id;
+        public string dir;
+        public string extension = ".msgpack.gz";
+        public ObjectAnnotations annotations = null;
+    }
+
+    #nullable enable
+    public class BodyAsset {
+        public string? assetId = null;
+        public LoadInUnityProceduralAsset? dynamicAsset = null;
+        public ProceduralAsset? asset = null;
+        
+    }
+    #nullable disable
     public class FpinAgentController : PhysicsRemoteFPSAgentController{
 
         private static readonly Vector3 agentSpawnOffset = new Vector3(100.0f, 100.0f, 100.0f);
@@ -276,24 +293,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
         public void CopyMeshChildren(GameObject source, GameObject target) {
             // Initialize the recursive copying process
+             Debug.Log($"is null {source == null} {target == null}");
             CopyMeshChildrenRecursive(source.transform, target.transform);
         }
 
         private void CopyMeshChildrenRecursive(Transform sourceTransform, Transform targetParent, bool isTopMost = true) {
-            Transform thisTransform = null;
-
+            Transform thisTransform = targetParent;
+           
+            Debug.Log($" {sourceTransform.name} has any childrem {sourceTransform.childCount}");
             foreach (Transform child in sourceTransform) {
                 GameObject copiedChild = null;
 
                 // Check if the child has a MeshFilter component
                 MeshFilter meshFilter = child.GetComponent<MeshFilter>();
                 if (meshFilter != null) {
+                    Debug.Log($"--CopyinMesh {child.name} to {targetParent.name}");
                     copiedChild = CopyMeshToTarget(child, targetParent);
                 }
 
                 // Process children only if necessary (i.e., they contain MeshFilters)
                 if (HasMeshInChildren(child)) {
+                    
                     Transform parentForChildren = (copiedChild != null) ? copiedChild.transform : CreateContainerForHierarchy(child, targetParent).transform;
+                    Debug.Log($"--CopyinMesh {child == null} to {parentForChildren.name}");
                     CopyMeshChildrenRecursive(child, parentForChildren, false);
                     if (isTopMost) {
                         thisTransform = parentForChildren;
@@ -304,6 +326,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //organize the heirarchy of all the meshes copied under a single vis cap so we can use it real nice
             if (isTopMost) {
                 GameObject viscap = new GameObject("fpinVisibilityCapsule");
+                Debug.Log($"{thisTransform==null} {viscap==null} {viscap}");
                 thisTransform.SetParent(viscap.transform);
                 thisTransform.localPosition = Vector3.zero;
                 thisTransform.localRotation = Quaternion.identity;
@@ -355,27 +378,76 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return container;
         }
 
-        public ActionFinished Initialize(ServerAction action) {
-            return this.InitializeBody(action);
+        public ActionFinished Initialize(
+            BodyAsset bodyAsset,
+            // TODO: do we want to allow non relative to the box offsets?
+            float originOffsetX = 0.0f,
+            float originOffsetY = 0.0f,
+            float originOffsetZ = 0.0f,
+            Vector3? colliderScaleRatio = null,  
+            bool useAbsoluteSize = false, 
+            bool useVisibleColliderBase = true
+        ) {
+            return this.InitializeBody(
+                bodyAsset: bodyAsset,
+                originOffsetX: originOffsetX,
+                originOffsetY: originOffsetY,
+                originOffsetZ: originOffsetZ,
+                colliderScaleRatio: colliderScaleRatio,
+                useAbsoluteSize: useAbsoluteSize,
+                useVisibleColliderBase: useVisibleColliderBase
+            );
+
         }
 
-        public override ActionFinished InitializeBody(ServerAction initializeAction) {
+        public ActionFinished GetBoxBounds() {
+            return new ActionFinished() {
+                success = true,
+                actionReturn = this.boxBounds
+            };
+        }
+
+        //  OLD way requires to add every single variable to ServerAction
+        // public new ActionFinished Initialize(
+        //     ServerAction action
+        // ) {
+        //     return this.InitializeBody(
+        //         assetId: action.assetId,
+        //         originOffsetX: action.originOffsetX,
+        //         originOffsetY: action.originOffsetY,
+        //         originOffsetZ: action.originOffsetZ,
+        //         colliderScaleRatio: action.colliderScaleRatio,
+        //         useAbsoluteSize: action.useAbsoluteSize,
+        //         useVisibleColliderBase: action.useVisibleColliderBase
+        //     );
+
+        // }
+
+        public ActionFinished InitializeBody(
+            BodyAsset bodyAsset,
+            // TODO: do we want to allow non relative to the box offsets?
+            float originOffsetX = 0.0f,
+            float originOffsetY = 0.0f,
+            float originOffsetZ = 0.0f,
+            Vector3? colliderScaleRatio = null,  
+            bool useAbsoluteSize = false, 
+            bool useVisibleColliderBase = true
+        ) {
             VisibilityCapsule = null;
 
             Debug.Log("running InitializeBody in FpingAgentController");
 
-            if (initializeAction.assetId == null) {
-                throw new ArgumentNullException("assetId is null");
-            }
-
             //spawn in a default mesh to base the created box collider on
-            var spawnAssetActionFinished = SpawnAsset(initializeAction.assetId, "agentMesh", new Vector3(200f, 200f, 200f));
+            var spawnAssetActionFinished = spawnBodyAsset(bodyAsset, out GameObject spawnedMesh);
             // Return early if spawn failed
             if (!spawnAssetActionFinished.success) {
                 return spawnAssetActionFinished;
             }
-            var spawnedMesh = GameObject.Find("agentMesh");
 
+            VisibilityCapsule = GameObject.Find("fpinVisibilityCapsule");
+            if (VisibilityCapsule != null) {
+                UnityEngine.Object.DestroyImmediate(VisibilityCapsule);
+            }
             //copy all mesh renderers found on the spawnedMesh onto this agent now
             CopyMeshChildren(source: spawnedMesh.transform.gameObject, target: this.transform.gameObject);
 
@@ -389,15 +461,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.boxBounds = this.spawnAgentBoxCollider(
                 agent: this.gameObject,
                 agentType: this.GetType(),
-                scaleRatio: initializeAction.colliderScaleRatio,
-                useAbsoluteSize: initializeAction.useAbsoluteSize,
-                useVisibleColliderBase: initializeAction.useVisibleColliderBase
+                scaleRatio: colliderScaleRatio.GetValueOrDefault(Vector3.one),
+                useAbsoluteSize: useAbsoluteSize,
+                useVisibleColliderBase: useVisibleColliderBase
             );
 
             var spawnedBox = GameObject.Find("NonTriggeredEncapsulatingBox");
             //reposition agent transform relative to the generated box
             //i think we need to unparent the FPSController from all its children.... then reposition
-            repositionAgentOrigin(newRelativeOrigin: new Vector3 (initializeAction.newRelativeOriginX, 0.0f, initializeAction.newRelativeOriginZ));
+            repositionAgentOrigin(newRelativeOrigin: new Vector3 (originOffsetX, originOffsetY, originOffsetZ));
 
             //adjust agent character controller and capsule according to extents of box collider
             var characterController = this.GetComponent<CharacterController>();
@@ -457,6 +529,46 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         }
 
+        private ActionFinished spawnBodyAsset(BodyAsset bodyAsset, out GameObject spawnedMesh) {
+            if (bodyAsset == null) {
+                throw new ArgumentNullException("bodyAsset is null");
+            }
+            else if (bodyAsset.assetId == null && bodyAsset.dynamicAsset == null && bodyAsset.asset == null) {
+                throw new ArgumentNullException("`bodyAsset.assetId`, `bodyAsset.dynamicAsset` or `bodyAsset.asset` must be provided all are null.");
+            }
+            ActionFinished actionFinished = new ActionFinished(success: false, errorMessage: "No body specified");
+            spawnedMesh = null;
+            if (bodyAsset.assetId != null) {
+                actionFinished = SpawnAsset(bodyAsset.assetId, "agentMesh", new Vector3(200f, 200f, 200f));
+                spawnedMesh = GameObject.Find("agentMesh");
+            }
+            else if (bodyAsset.dynamicAsset != null) {
+                Debug.Log("--- dynamicAsset create");
+                actionFinished = this.CreateRuntimeAsset(
+                    id: bodyAsset.dynamicAsset.id,
+                    dir: bodyAsset.dynamicAsset.dir,
+                    extension: bodyAsset.dynamicAsset.extension,
+                    annotations: bodyAsset.dynamicAsset.annotations,
+                    serializable: true
+                );
+                
+            }
+            else if (bodyAsset.asset != null) {
+                bodyAsset.asset.serializable = true;
+                actionFinished = this.CreateRuntimeAsset(
+                    asset: bodyAsset.asset
+                );
+            }
+            if (bodyAsset.dynamicAsset != null || bodyAsset.asset != null) {
+                Debug.Log($"--- dynamicAsset create {actionFinished.success} msg: {actionFinished.errorMessage} {actionFinished.actionReturn} ");
+                var assetData = actionFinished.actionReturn as Dictionary<string, object>;
+                Debug.Log($"Keys: {string.Join("," , assetData.Keys)}");
+                spawnedMesh = assetData["gameObject"] as GameObject;//.transform.Find("mesh").gameObject;
+                Debug.Log($"mesh : {spawnedMesh ==null} { spawnedMesh}");
+            }
+            return actionFinished;
+        }
+
         //function to reassign the agent's origin relativ to the spawned in box collider
         //should be able to use this after initialization as well to adjust the origin on the fly as needed
         public void RepositionAgentOrigin(Vector3 newRelativeOrigin) {
@@ -491,7 +603,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.transform.SetParent(spawnedBoxCollider.transform);
 
             float distanceToBottom = addedCollider.size.y * 0.5f * addedCollider.transform.localScale.y;
-            Vector3 origin = new Vector3(newRelativeOrigin.x, 0.0f - distanceToBottom, newRelativeOrigin.z);
+            Vector3 origin = new Vector3(newRelativeOrigin.x, newRelativeOrigin.y - distanceToBottom, newRelativeOrigin.z);
             this.transform.localPosition = origin;
 
             //ensure all transforms are fully updated

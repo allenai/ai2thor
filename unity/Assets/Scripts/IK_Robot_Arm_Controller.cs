@@ -72,10 +72,10 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         armTarget.rotation = rot;
     }
 
-    public override ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
-        // TODO: does not do anything need to change Continuous Move to call this instead of continuousMoveFinish
-        return ActionFinished.Success;
-     }
+    // public override ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
+    //     // TODO: does not do anything need to change Continuous Move to call this instead of continuousMoveFinish
+    //     return ActionFinished.Success;
+    //  }
 
    
     void Start() {
