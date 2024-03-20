@@ -583,14 +583,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     action["action"] = "Initialize";
                     action["agentMode"] = "fpin";
-                    action["assetId"] = "StretchBotSimObj"; 
-                    action["colliderScaleRatio"] = new Vector3(1, 1, 1);
-                    action["newRelativeOriginX"] = -0.09938055f;
-                    action["newRelativeOriginz"] = 0.1157837f;
                     //action["useAbsoluteSize"] = true;
                     action["visibilityScheme"] = "Distance";
                     action["renderInstanceSegmentation"] = true;
                     action["renderDepth"] = true;
+
+                    action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<string, object>() {
+                        {"bodyAsset", new BodyAsset() { assetId = "StretchBotSimObj"}},
+                        {"originOffsetX", -0.09938055f},
+                        {"originOffsetZ", 0.1157837f},
+                        {"colliderScaleRatio", new Vector3(1, 1, 1)}
+                    };
 
                     ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                     //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
@@ -604,14 +607,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     action["action"] = "Initialize";
                     action["agentMode"] = "fpin";
-                    action["assetId"] = "LocoBotSimObj"; 
-                    action["colliderScaleRatio"] = new Vector3(1, 1, 1);
-                    action["newRelativeOriginX"] = 0.0f;
-                    action["newRelativeOriginz"] = -0.025f;
                     //action["useAbsoluteSize"] = true;
                     action["visibilityScheme"] = "Distance";
                     action["renderInstanceSegmentation"] = true;
                     action["renderDepth"] = true;
+
+                    action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<string, object>() {
+                        {"bodyAsset", new BodyAsset() { assetId = "LocoBotSimObj"}},
+                        {"originOffsetX", 0.0f},
+                        {"originOffsetZ", -0.025f},
+                        {"colliderScaleRatio", new Vector3(1, 1, 1)}
+                    };
 
                     ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                     //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
@@ -689,15 +695,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     break;
                 }
-                case "finitbodys": {
+                case "initbodyt": {
                     
                       Dictionary<string, object> action = new Dictionary<string, object>();
 
                     action["action"] = "InitializeBody";
-                    action["assetId"] = "Toaster_5"; 
+                    action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5"};
                     action["colliderScaleRatio"] = new Vector3(1, 1, 1);
-                    action["newRelativeOriginX"] = 0.0f;
-                    action["newRelativeOriginz"] = 0.0f;
+                    action["originOffsetX"] = 0.0f;
+                    action["originOffsetZ"] = 0.0f;
                     //action["useAbsoluteSize"] = true;
 
                     CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
@@ -705,18 +711,57 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     break;
                 }
-                case "finitbodyl": {
+                case "initbodys": {
                     
                       Dictionary<string, object> action = new Dictionary<string, object>();
 
                     action["action"] = "InitializeBody";
-                    action["assetId"] = "StretchBotSimObj"; 
+                    action["bodyAsset"] = new BodyAsset() { assetId = "StretchBotSimObj"};
                     action["colliderScaleRatio"] = new Vector3(1, 1, 1);
-                    action["newRelativeOriginX"] = 0.0f;
-                    action["newRelativeOriginz"] = 0.0f;
+                    action["originOffsetX"] = 0.0f;
+                    action["originOffsetZ"] = 0.0f;
                     //action["useAbsoluteSize"] = true;
 
                     CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
+                case "initbodya": {
+                    
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "InitializeBody";
+                    action["bodyAsset"] = new BodyAsset() { assetId = "Apple_1"};
+                    action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                    action["originOffsetX"] = 0.0f;
+                    action["originOffsetZ"] = 0.0f;
+                    //action["useAbsoluteSize"] = true;
+
+                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
+               //fpin using apple
+                case "initpina": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "Initialize";
+                    action["agentMode"] = "fpin";
+                    action["visibilityScheme"] = "Distance";
+
+                     action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<string, object>() {
+                        {"bodyAsset", new BodyAsset() { assetId = "Apple_1"}},
+                        {"originOffsetX", 0.0f},
+                        {"originOffsetZ", 0.0f},
+                        {"colliderScaleRatio", new Vector3(1, 1, 1)}
+                    };
+
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
                     //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
 
                     break;
