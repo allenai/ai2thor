@@ -38,6 +38,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private FpinMovableContinuous fpinMovable;
         public BoxCollider spawnedBoxCollider = null;
         public BoxCollider spawnedTriggerBoxCollider = null;
+        public GameObject fpinVisibilityCapsule = null;
 
         public BoxBounds boxBounds = null;
 
@@ -315,20 +316,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void destroyAgentBoxCollider(){
             GameObject visibleBox = GameObject.Find("VisibleBox");
             if (spawnedBoxCollider != null) {
-                GameObject.Destroy(spawnedBoxCollider.transform.gameObject);
+                UnityEngine.Object.DestroyImmediate(spawnedBoxCollider.transform.gameObject);
                 spawnedBoxCollider = null;
             }
             if (spawnedTriggerBoxCollider != null) {
-                GameObject.Destroy(spawnedTriggerBoxCollider.transform.gameObject);
+                UnityEngine.Object.DestroyImmediate(spawnedTriggerBoxCollider.transform.gameObject);
                 spawnedTriggerBoxCollider = null;
             }
             if (visibleBox != null) {
-                GameObject.Destroy(visibleBox);
+                UnityEngine.Object.DestroyImmediate(visibleBox);
             }
             #if UNITY_EDITOR
             GameObject visualizedBoxCollider = GameObject.Find("VisualizedBoxCollider");
             if (visualizedBoxCollider != null) {
-                GameObject.Destroy(visualizedBoxCollider);
+                UnityEngine.Object.DestroyImmediate(visualizedBoxCollider);
             }
             #endif
 
@@ -382,6 +383,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 viscap.transform.localScale = new Vector3(1, 1, 1);
 
                 //return reference to viscap so we can scaaaale it
+                fpinVisibilityCapsule = viscap;
                 return viscap.transform;
             }
 
@@ -473,10 +475,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool useAbsoluteSize = false, 
             bool useVisibleColliderBase = false
         ) {
-            VisibilityCapsule = null;
-
-            Debug.Log("running InitializeBody in FpingAgentController");
-
             //spawn in a default mesh to base the created box collider on
             var spawnAssetActionFinished = spawnBodyAsset(bodyAsset, out GameObject spawnedMesh);
             // Return early if spawn failed
@@ -484,33 +482,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return spawnAssetActionFinished;
             }
 
-            VisibilityCapsule = GameObject.Find("fpinVisibilityCapsule");
+            //remove any previously generated colliders
+            destroyAgentBoxCollider();
             
-            if (VisibilityCapsule != null) {
-                UnityEngine.Object.DestroyImmediate(VisibilityCapsule);
+            //remove old fpin visibility capsule since we are using a new mesh
+            if (fpinVisibilityCapsule != null) {
+                UnityEngine.Object.DestroyImmediate(fpinVisibilityCapsule);
             }
 
-            var VisibleBox = GameObject.Find("VisibleBox");
-            if (VisibleBox != null) {
-                UnityEngine.Object.DestroyImmediate(VisibleBox);
-            }
             //copy all mesh renderers found on the spawnedMesh onto this agent now
             Transform visCap = CopyMeshChildren(source: spawnedMesh.transform.gameObject, target: this.transform.gameObject);
 
-            //scale the copied meshes with the scale ratio so that if we wanted to scale non uniform, the mesh stretches accordingly
-            Vector3 ratio = colliderScaleRatio.GetValueOrDefault(Vector3.one);
-            Vector3 newVisCapScale = new Vector3(
-                ratio.x * visCap.localScale.x,
-                ratio.y * visCap.localScale.y,
-                ratio.z * visCap.localScale.z
-
-            );
-            if(useAbsoluteSize){
-                newVisCapScale = new Vector3(ratio.x, ratio.y, ratio.z);
-            }
-
-            Debug.Log($"new vis cap scale is {newVisCapScale}");
-            visCap.localScale = newVisCapScale;
+            //This is where we would scale the spawned meshes based on the collider scale but uhhhhhhhHHHHHHHHHHH
+            // Vector3 ratio = colliderScaleRatio.GetValueOrDefault(Vector3.one);
+            // Vector3 newVisCapScale = new Vector3(
+            //     ratio.x * visCap.localScale.x,
+            //     ratio.y * visCap.localScale.y,
+            //     ratio.z * visCap.localScale.z
+            // );
+            // if(useAbsoluteSize){
+            //     newVisCapScale = new Vector3(ratio.x, ratio.y, ratio.z);
+            // }
+            // visCap.localScale = newVisCapScale;
 
             //remove the spawned mesh cause we are done with it
             UnityEngine.Object.DestroyImmediate(spawnedMesh);

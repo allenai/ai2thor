@@ -654,7 +654,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 //fpin using TOASTER!!! as source mesh
-                case "initpint1": {
+                case "initpint321": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
                     action["action"] = "Initialize";
@@ -669,7 +669,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         {"bodyAsset", new BodyAsset() { assetId = "Toaster_5"}},
                         {"originOffsetX", 0.0f},
                         {"originOffsetZ", 0.0f},
-                        {"colliderScaleRatio", new Vector3(3, 2, 1.5f)},
+                        {"colliderScaleRatio", new Vector3(3, 2, 1f)},
                         {"useAbsoluteSize", false},
                         {"useVisibleColliderBase", false}
                     };
@@ -682,7 +682,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 //fpin using TOASTER!!! as source mesh
-                case "initpint2": {
+                case "initpint321vcb": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
                     action["action"] = "Initialize";
@@ -697,7 +697,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         {"bodyAsset", new BodyAsset() { assetId = "Toaster_5"}},
                         {"originOffsetX", 0.0f},
                         {"originOffsetZ", 0.0f},
-                        {"colliderScaleRatio", new Vector3(3, 2, 1.5f)},
+                        {"colliderScaleRatio", new Vector3(3, 2, 1f)},
                         {"useAbsoluteSize", false},
                         {"useVisibleColliderBase", true}
                     };
@@ -820,6 +820,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+                case "initbodyc": {
+                    
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "InitializeBody";
+                    action["bodyAsset"] = new BodyAsset() { assetId = "Chair_227_1"};
+                    action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                    action["originOffsetX"] = 0.0f;
+                    action["originOffsetZ"] = 0.0f;
+                    //action["useAbsoluteSize"] = true;
+
+                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
                //fpin using apple
                 case "initpina": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
