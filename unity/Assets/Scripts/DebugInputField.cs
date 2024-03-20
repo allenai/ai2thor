@@ -641,7 +641,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         {"bodyAsset", new BodyAsset() { assetId = "Toaster_5"}},
                         {"originOffsetX", 0.0f},
                         {"originOffsetZ", 0.0f},
-                        {"colliderScaleRatio", new Vector3(1, 1, 1)}
+                        {"colliderScaleRatio", new Vector3(1, 1, 1)},
+                        {"useAbsoluteSize", false},
+                        {"useVisibleColliderBase", true}
                     };
                     //action["useAbsoluteSize"] = true;
 
@@ -651,6 +653,61 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+                //fpin using TOASTER!!! as source mesh
+                case "initpint1": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "Initialize";
+                    // AgentManager Initialize Args
+                    action["agentMode"] = "fpin";
+                    action["visibilityScheme"] = "Distance";
+                    action["renderInstanceSegmentation"] = true;
+                    action["renderDepth"] = true;
+
+                    // Fpin agent Initialize args
+                    action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<string, object>() {
+                        {"bodyAsset", new BodyAsset() { assetId = "Toaster_5"}},
+                        {"originOffsetX", 0.0f},
+                        {"originOffsetZ", 0.0f},
+                        {"colliderScaleRatio", new Vector3(3, 2, 1.5f)},
+                        {"useAbsoluteSize", false},
+                        {"useVisibleColliderBase", false}
+                    };
+                    //action["useAbsoluteSize"] = true;
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
+                //fpin using TOASTER!!! as source mesh
+                case "initpint2": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "Initialize";
+                    // AgentManager Initialize Args
+                    action["agentMode"] = "fpin";
+                    action["visibilityScheme"] = "Distance";
+                    action["renderInstanceSegmentation"] = true;
+                    action["renderDepth"] = true;
+
+                    // Fpin agent Initialize args
+                    action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<string, object>() {
+                        {"bodyAsset", new BodyAsset() { assetId = "Toaster_5"}},
+                        {"originOffsetX", 0.0f},
+                        {"originOffsetZ", 0.0f},
+                        {"colliderScaleRatio", new Vector3(3, 2, 1.5f)},
+                        {"useAbsoluteSize", false},
+                        {"useVisibleColliderBase", true}
+                    };
+                    //action["useAbsoluteSize"] = true;
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
                 case "initpinobja": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
                     BodyAsset ba = null;
@@ -704,6 +761,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     action["colliderScaleRatio"] = new Vector3(1, 1, 1);
                     action["originOffsetX"] = 0.0f;
                     action["originOffsetZ"] = 0.0f;
+                    //action["useAbsoluteSize"] = true;
+
+                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
+                case "initbodybigt": {
+                    
+                      Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "InitializeBody";
+                    action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5"};
+                    action["colliderScaleRatio"] = new Vector3(3, 2, 1);
+                    action["originOffsetX"] = 0.0f;
+                    action["originOffsetZ"] = 0.0f;
+                    action["useVisibleColliderBase"] = true;
                     //action["useAbsoluteSize"] = true;
 
                     CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));

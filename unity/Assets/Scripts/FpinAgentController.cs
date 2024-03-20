@@ -221,23 +221,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             #if UNITY_EDITOR
             /////////////////////////////////////////////////
             //for visualization lets spawna cube at the center of where the boxCenter supposedly is
-            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.name = "VisualizedBoxCollider";
-            cube.transform.position = newBoxCenter;
-            cube.transform.rotation = originalRotation;
+            // GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            // cube.name = "VisualizedBoxCollider";
+            // cube.transform.position = newBoxCenter;
+            // cube.transform.rotation = originalRotation;
 
-            cube.transform.localScale = newBoxExtents * 2;
-            var material = cube.GetComponent<MeshRenderer>().material;
-            material.SetColor("_Color", new Color(1.0f, 0.0f, 0.0f, 0.4f));
-            // Set transparency XD ...
-            material.SetFloat("_Mode", 3);
-            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            material.SetInt("_ZWrite", 0);
-            material.DisableKeyword("_ALPHATEST_ON");
-            material.EnableKeyword("_ALPHABLEND_ON");
-            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            material.renderQueue = 3000;
+            // cube.transform.localScale = newBoxExtents * 2;
+            // cube.GetComponent<BoxCollider>().enabled = false;
+            // var material = cube.GetComponent<MeshRenderer>().material;
+            // material.SetColor("_Color", new Color(1.0f, 0.0f, 0.0f, 0.4f));
+            // // Set transparency XD ...
+            // material.SetFloat("_Mode", 3);
+            // material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            // material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            // material.SetInt("_ZWrite", 0);
+            // material.DisableKeyword("_ALPHATEST_ON");
+            // material.EnableKeyword("_ALPHABLEND_ON");
+            // material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            // material.renderQueue = 3000;
             ////////////////////////////////////////////////
             #endif
 
@@ -291,9 +292,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 colliderSize = new Vector3(colliderSize.x, 0.15f * colliderSize.y, colliderSize.z);
                 GameObject visibleBox = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 visibleBox.name = "VisibleBox";
-                visibleBox.transform.position = new Vector3(newBoxCenter.x, newBoxCenter.y - newBoxExtents.y + 0.01f, newBoxCenter.z);
+                visibleBox.transform.position = new Vector3(newBoxCenter.x, newBoxCenter.y - newBoxExtents.y, newBoxCenter.z);
                 visibleBox.transform.localScale = colliderSize;
                 visibleBox.transform.parent = agent.transform;
+
+                var bc = visibleBox.GetComponent<BoxCollider>();
+                //also offset it by the distance from this box's transform to the bottom of its extents
+                var distanceToBottomOfVisibleBoxCollider = bc.size.y * 0.5f * bc.transform.localScale.y;
+                bc.enabled = false;
+
+                visibleBox.transform.localPosition = new Vector3(visibleBox.transform.localPosition.x, visibleBox.transform.localPosition.y + distanceToBottomOfVisibleBoxCollider, visibleBox.transform.localPosition.z);
                 // Attatching it to the parent changes the rotation so set it back to none
                 visibleBox.transform.localRotation = Quaternion.identity;
             }
@@ -337,13 +345,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
             return;
         }
-        public void CopyMeshChildren(GameObject source, GameObject target) {
+        public Transform CopyMeshChildren(GameObject source, GameObject target) {
             // Initialize the recursive copying process
-             Debug.Log($"is null {source == null} {target == null}");
-            CopyMeshChildrenRecursive(source.transform, target.transform);
+            //Debug.Log($"is null {source == null} {target == null}");
+            return CopyMeshChildrenRecursive(source.transform, target.transform);
         }
 
-        private void CopyMeshChildrenRecursive(Transform sourceTransform, Transform targetParent, bool isTopMost = true) {
+        private Transform CopyMeshChildrenRecursive(Transform sourceTransform, Transform targetParent, bool isTopMost = true) {
             Transform thisTransform = null;
             foreach (Transform child in sourceTransform) {
                 GameObject copiedChild = null;
@@ -372,7 +380,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 viscap.transform.localPosition = Vector3.zero;
                 viscap.transform.localRotation = Quaternion.identity;
                 viscap.transform.localScale = new Vector3(1, 1, 1);
+
+                //return reference to viscap so we can scaaaale it
+                return viscap.transform;
             }
+
+            return null;
         }
 
         private GameObject CopyMeshToTarget(Transform child, Transform targetParent) {
@@ -482,7 +495,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 UnityEngine.Object.DestroyImmediate(VisibleBox);
             }
             //copy all mesh renderers found on the spawnedMesh onto this agent now
-            CopyMeshChildren(source: spawnedMesh.transform.gameObject, target: this.transform.gameObject);
+            Transform visCap = CopyMeshChildren(source: spawnedMesh.transform.gameObject, target: this.transform.gameObject);
+
+            //scale the copied meshes with the scale ratio so that if we wanted to scale non uniform, the mesh stretches accordingly
+            Vector3 ratio = colliderScaleRatio.GetValueOrDefault(Vector3.one);
+            Vector3 newVisCapScale = new Vector3(
+                ratio.x * visCap.localScale.x,
+                ratio.y * visCap.localScale.y,
+                ratio.z * visCap.localScale.z
+
+            );
+            if(useAbsoluteSize){
+                newVisCapScale = new Vector3(ratio.x, ratio.y, ratio.z);
+            }
+
+            Debug.Log($"new vis cap scale is {newVisCapScale}");
+            visCap.localScale = newVisCapScale;
 
             //remove the spawned mesh cause we are done with it
             UnityEngine.Object.DestroyImmediate(spawnedMesh);
