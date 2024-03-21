@@ -191,7 +191,7 @@ def fpin_tutorial(
 
     
     ## Change Body!
-    # default change to apple
+    # default change to stretch robot
     body = {"assetId": "StretchBotSimObj"}
     # For objaverse assets loaded in unity
     if objaverse_asset_id != None and objaverse_dir != None:
