@@ -8,6 +8,7 @@ using UnityEngine.AI;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UIElements;
 using Thor.Procedural.Data;
+using MessagePack;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
@@ -17,6 +18,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Vector3 size;
     }
 
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
     public class LoadInUnityProceduralAsset {
         public string id;
         public string dir;
@@ -25,6 +28,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     }
 
     #nullable enable
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
     public class BodyAsset {
         public string? assetId = null;
         public LoadInUnityProceduralAsset? dynamicAsset = null;
@@ -506,6 +511,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // visCap.localScale = newVisCapScale;
 
             //remove the spawned mesh cause we are done with it
+            foreach (var sop in spawnedMesh.GetComponentsInChildren<SimObjPhysics>()) {
+                agentManager.physicsSceneManager.RemoveFromObjectsInScene(sop);
+            }
             UnityEngine.Object.DestroyImmediate(spawnedMesh);
 
             //assign agent visibility capsule to new meshes
@@ -570,7 +578,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // TODO: change to a proper class once metadata return is defined
                 actionReturn = new Dictionary<string, object>() {
                     {"objectSphereBounds", spawnAssetActionFinished.actionReturn as ObjectSphereBounds},
-                    {"BoxBounds", this.BoxBounds}
+                    {"BoxBounds", this.BoxBounds},
+                    {"cameraNearPlane", m_Camera.nearClipPlane},
+                    {"cameraFarPlane", m_Camera.farClipPlane}
                 }
             };
 
@@ -614,6 +624,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             if (bodyAsset.dynamicAsset != null || bodyAsset.asset != null) {
                 var assetData = actionFinished.actionReturn as Dictionary<string, object>;
+                Debug.Log($"-- dynamicAsset keys {string.Join(", ", assetData.Keys)}");
                 spawnedMesh = assetData["gameObject"] as GameObject;//.transform.Find("mesh").gameObject;
             }
             return actionFinished;

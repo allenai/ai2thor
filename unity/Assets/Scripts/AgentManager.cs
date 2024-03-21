@@ -58,7 +58,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     private Color[] agentColors = new Color[] { Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey };
     public int actionDuration = 3;
     public BaseFPSAgentController primaryAgent;
-    private PhysicsSceneManager physicsSceneManager;
+    public PhysicsSceneManager physicsSceneManager {
+        get;
+        private set;
+    }
     private FifoServer.Client fifoClient = null;
     private enum serverTypes { WSGI, FIFO };
     private serverTypes serverType;

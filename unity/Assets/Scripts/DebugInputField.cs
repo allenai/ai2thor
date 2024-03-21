@@ -738,6 +738,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     action["renderInstanceSegmentation"] = true;
                     action["renderDepth"] = true;
 
+                    Debug.Log($"--initpinobja id: {ba.dynamicAsset.id}, objadir: {ba.dynamicAsset.dir}");
+
                     // Fpin agent Initialize args
                     action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<string, object>() {
                         {"bodyAsset", ba},
