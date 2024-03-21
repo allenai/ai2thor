@@ -129,6 +129,42 @@ def _unity_version():
     return project_version["m_EditorVersion"]
 
 
+def _unity_playback_engines_path():
+    unity_version = _unity_version()
+    standalone_path = None
+
+    if sys.platform.startswith("darwin"):
+        unity_hub_path = (
+            "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
+                unity_version
+            )
+        )
+        # /Applications/Unity/2019.4.20f1/Unity.app/Contents/MacOS
+
+        standalone_path = (
+            "/Applications/Unity/{}/PlaybackEngines".format(
+                unity_version
+            )
+        )
+    elif "win" in sys.platform:
+        raise ValueError("Windows not supported yet, verify PlaybackEnginesPath")
+        unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Data/PlaybackEngines".format(
+            unity_version
+        )
+        # TODO: Verify windows unity standalone path
+        standalone_path = "C:/PROGRA~1/{}/Editor/Unity.exe".format(unity_version)
+    elif sys.platform.startswith("linux"):
+        unity_hub_path = "{}/Unity/Hub/Editor/{}/Editor/Data/PlaybackEngines".format(
+            os.environ["HOME"], unity_version
+        )
+
+    if standalone_path and os.path.exists(standalone_path):
+        unity_path = standalone_path
+    else:
+        unity_path = unity_hub_path
+
+    return unity_path
+
 def _unity_path():
     unity_version = _unity_version()
     standalone_path = None
@@ -1087,6 +1123,7 @@ def ci_build(
     skip_pip = False, # bool
     novelty_thor_scenes = False,
     skip_delete_tmp_dir = False, # bool
+    cloudrendering_first = False
 ):
     assert (commit_id is None) == (
         branch is None
@@ -1184,7 +1221,8 @@ def ci_build(
                 if _unity_version() == "2020.3.25f1":
                     build_archs.append("CloudRendering")
 
-                # build_archs.reverse()  # Let's do CloudRendering first as it's more likely to fail
+                if cloudrendering_first:
+                    build_archs.reverse()  # Let's do CloudRendering first as it's more likely to fail
 
                 has_any_build_failed = False
                 for include_private_scenes in private_scene_options:
@@ -1205,7 +1243,10 @@ def ci_build(
                         os.makedirs(temp_dir)
                         logger.info(f"copying unity data to {temp_dir}")
                         # -c uses MacOS clonefile
-                        subprocess.check_call(f"cp -a -c unity {temp_dir}", shell=True)
+                        if sys.platform.startswith("darwin"):
+                            subprocess.check_call(f"cp -a -c unity {temp_dir}", shell=True)
+                        else:
+                            subprocess.check_call(f"cp -a unity {temp_dir}", shell=True)
                         logger.info(f"completed unity data copy to {temp_dir}")
                         rdir = os.path.join(temp_dir, "unity/builds")
                         commit_build = ai2thor.build.Build(
