@@ -75,35 +75,37 @@ def fpin_tutorial(
 
     print(f"Init action success: {controller.last_event.metadata['lastActionSuccess']} error: {controller.last_event.metadata['errorMessage']}")
     # Get the fpin box bounds, vector3 with the box sides lenght
-    bodyBoxSides = controller.last_event.metadata["agent"]["fpinColliderSize"]
-    print(bodyBoxSides)
+    box_body_sides = controller.last_event.metadata["agent"]["fpinColliderSize"]
+    print(f"box_body_sides: {box_body_sides}")
 
 
     # Compute the desired capsule for the navmesh
-    capsuleHeight = bodyBoxSides["y"]
-    halfBoxX = bodyBoxSides["x"]/2.0
-    halfBoxZ = bodyBoxSides["z"]/2.0
+    def get_nav_mesh_config_from_box(box_body_sides, nav_mesh_id, min_side_as_radius=False):
+        # This can be changed to fit specific needs
+        capsuleHeight = box_body_sides["y"]
+        halfBoxX = box_body_sides["x"]
+        halfBoxZ = box_body_sides["z"]
 
-    # Navmesh ids use integers
+        capsuleOverEstimateRadius = math.sqrt(halfBoxX * halfBoxX + halfBoxZ * halfBoxZ)
+        capsuleUnderEstimateRadius = min(halfBoxX, halfBoxZ)
+
+        return {
+            "id": navMeshOverEstimateId,
+            "agentRadius": capsuleUnderEstimateRadius if min_side_as_radius else capsuleOverEstimateRadius,
+            "agentHeight": capsuleHeight,
+        }
+
+    
+     # Navmesh ids use integers, you can pass to GetShortestPath or actions of the type to compute on that particular navmesh
     navMeshOverEstimateId = 0
-    capsuleOverEstimateRadius = math.sqrt(halfBoxX * halfBoxX + halfBoxZ * halfBoxZ)
-
     navMeshUnderEstimateId = 1
-    capsuleUnderEstimateRadius = min(halfBoxX, halfBoxZ)
 
     # build 2 nav meshes, you can build however many
     house["metadata"]["navMeshes"] = [
-      {
-        "id": navMeshOverEstimateId,
-        "agentRadius": capsuleOverEstimateRadius,
-        "agentHeight": capsuleHeight,
-      },
-      {
-        "id": navMeshUnderEstimateId,
-        "agentRadius": capsuleUnderEstimateRadius,
-        "agentHeight": capsuleHeight,
-      }
+        get_nav_mesh_config_from_box(box_body_sides= box_body_sides, nav_mesh_id= navMeshOverEstimateId, min_side_as_radius= False),
+        # get_nav_mesh_config_from_box(box_body_sides= box_body_sides, nav_mesh_id= navMeshUnderEstimateId, min_side_as_radius= True)
     ]
+    print(f"navmeshes: { house['metadata']['navMeshes']}")
 
     # Create the house, here the navmesh is created
     evt = controller.step(action="CreateHouse", house=house)
@@ -225,6 +227,37 @@ def fpin_tutorial(
     print(
         f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']} Error: {evt.metadata['errorMessage']}"
     )
+
+    # Create new navmesh, you don't need to do this if you call CreateHouse just setting house["metadata"]["navMeshes"] will be fastest
+    box_body_sides = evt.metadata["agent"]["fpinColliderSize"]
+    print(f"box_body_sides: {box_body_sides}")
+    navmesh_config = get_nav_mesh_config_from_box(box_body_sides= box_body_sides, nav_mesh_id= navMeshOverEstimateId, min_side_as_radius= False)
+    print(f"navmeshes: {navmesh_config}")
+    print(navmesh_config)
+
+    # house["metadata"]["navMeshes"] = [
+    #      {
+    #         "id": navmesh_config["id"],
+    #         "agentRadius": navmesh_config["agentRadius"], 
+    #         "agentHeight": navmesh_config["agentHeight"],
+    #     }
+
+    #  ]
+    # house["metadata"]["navMeshes"] = [navmesh_config]
+    # controller.reset(house)
+
+    controller.step(
+        action="OverwriteNavMeshes",
+        #  action = "ReBakeNavMeshes",
+        #  navMeshConfigs=[navmesh_config]
+        navMeshConfigs = [navmesh_config]
+
+    )
+
+    print(
+        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']} Error: {evt.metadata['errorMessage']}"
+    )
+    # 
     # input()
 
 if __name__ == "__main__":
