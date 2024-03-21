@@ -467,7 +467,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool useAbsoluteSize = false, 
             bool useVisibleColliderBase = false
         ) {
-            return this.InitializeBody(
+            var actionFinished = this.InitializeBody(
                 bodyAsset: bodyAsset,
                 originOffsetX: originOffsetX,
                 originOffsetY: originOffsetY,
@@ -476,6 +476,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 useAbsoluteSize: useAbsoluteSize,
                 useVisibleColliderBase: useVisibleColliderBase
             );
+            // Needs to be done to update Agent's imageSynthesis reference, should be removed... and just get the component
+            this.updateImageSynthesis(true);
+            return actionFinished;
 
         }
 

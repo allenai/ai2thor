@@ -111,6 +111,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         robosimsPort = LoadIntVariable(robosimsPort, "PORT");
         robosimsHost = LoadStringVariable(robosimsHost, "HOST");
         serverSideScreenshot = LoadBoolVariable(serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
+        // serverSideScreenshot = true;
         robosimsClientToken = LoadStringVariable(robosimsClientToken, "CLIENT_TOKEN");
         serverType = (serverTypes)Enum.Parse(typeof(serverTypes), LoadStringVariable(serverTypes.WSGI.ToString(), "SERVER_TYPE").ToUpper());
         if (serverType == serverTypes.FIFO) {
@@ -1048,6 +1049,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         ref MetadataWrapper metadata
     ) {
         if (this.renderInstanceSegmentation || this.renderSemanticSegmentation) {
+            Debug.Log($"imageSynthesis null {agent.imageSynthesis==null}");
             if (!agent.imageSynthesis.hasCapturePass("_id")) {
                 Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
             }
@@ -1113,6 +1115,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
         RenderTexture currentTexture = null;
 
+        Debug.Log($"-- createPayload {shouldRender} {shouldRenderImageSynthesis}");
         if (shouldRender) {
             currentTexture = RenderTexture.active;
             for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
@@ -1165,6 +1168,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 if (shouldRenderImageSynthesis) {
                     addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
                     addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
+                    Debug.Log($"--- createPayload for agent {agent} {agent == null}");
                     addObjectImage(renderPayload, agent, ref metadata);
                     addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderSemanticSegmentation, "_class", "image_classes");
                     addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");

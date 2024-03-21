@@ -54,8 +54,8 @@ def fpin_tutorial(
             
         agentMode="fpin",
         visibilityScheme="Distance",
-        # renderInstanceSegmentation=True,
-        # renderDepth=True,
+        renderInstanceSegmentation=True,
+        renderDepth=True,
         
         # New parameter to pass to agent's initializer
         agentInitializationParams=agentInitializationParams,
@@ -103,8 +103,9 @@ def fpin_tutorial(
 
     # build 2 nav meshes, you can build however many
     house["metadata"]["navMeshes"] = [
-        get_nav_mesh_config_from_box(box_body_sides= box_body_sides, nav_mesh_id= navMeshOverEstimateId, min_side_as_radius= False),
-        # get_nav_mesh_config_from_box(box_body_sides= box_body_sides, nav_mesh_id= navMeshUnderEstimateId, min_side_as_radius= True)
+        #  The overestimated navmesh makes RandomlyPlaceAgentOnNavMesh
+        # get_nav_mesh_config_from_box(box_body_sides= box_body_sides, nav_mesh_id= navMeshOverEstimateId, min_side_as_radius= False),
+        get_nav_mesh_config_from_box(box_body_sides= box_body_sides, nav_mesh_id= navMeshUnderEstimateId, min_side_as_radius= True)
     ]
     print(f"navmeshes: { house['metadata']['navMeshes']}")
 
@@ -115,15 +116,19 @@ def fpin_tutorial(
     # controller.reset(house)
 
     print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']} Error: {evt.metadata['errorMessage']}"
     )
-    print(f'Error: {evt.metadata["errorMessage"]}')
 
     # Teleport using new RandomlyPlaceAgentOnNavMesh
     evt = controller.step(
         action="RandomlyPlaceAgentOnNavMesh",
         n = 200 # Number of sampled points in Navmesh defaults to 200
     )
+
+    print(
+        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']} Error: {evt.metadata['errorMessage']}"
+    )
+
     
     
     # Teleport agent using Teleport full
