@@ -3,6 +3,7 @@ import ai2thor.controller
 import argparse
 import sys
 import math
+import os
 
 
 def fpin_tutorial(
@@ -53,8 +54,8 @@ def fpin_tutorial(
             
         agentMode="fpin",
         visibilityScheme="Distance",
-        renderInstanceSegmentation=True,
-        renderDepth=True,
+        # renderInstanceSegmentation=True,
+        # renderDepth=True,
         
         # New parameter to pass to agent's initializer
         agentInitializationParams=agentInitializationParams,
@@ -325,6 +326,6 @@ if __name__ == "__main__":
          commit_id=args.commit_id,
          platform=args.platform,
          objaverse_asset_id=args.objaverse_asset_id,
-         objaverse_dir=args.objaverse_dir
+         objaverse_dir=os.path.abspath(args.objaverse_dir)
     ) #platform="CloudRendering")
     # input()
