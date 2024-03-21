@@ -41,7 +41,7 @@ def fpin_tutorial(
     )
 
     # Initialization params
-    init_args = dict(
+    init_params = dict(
          # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",
         # local_build=True,
         
@@ -66,11 +66,11 @@ def fpin_tutorial(
         house = json.load(f)
 
     print('Controller args: ')
-    print(init_args)
+    print(init_params)
 
     # Build controller, Initialize will be called here
     controller = ai2thor.controller.Controller(
-        **init_args
+        **init_params
     )
 
     print(f"Init action success: {controller.last_event.metadata['lastActionSuccess']} error: {controller.last_event.metadata['errorMessage']}")
@@ -219,40 +219,61 @@ def fpin_tutorial(
         useVisibleColliderBase=False
     )
 
+    ### Currently working on this bug, so works for some object not for others
     # Call InitializeBody with flattened parameters
-    evt = controller.step(
-        action = "InitializeBody",
-        **bodyParams
+    if False:
+        evt = controller.step(
+            action = "InitializeBody",
+            **bodyParams
+        )
+        print(
+            f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']} Error: {evt.metadata['errorMessage']}"
+        )
+
+        # Create new navmesh, you don't need to do this if you call CreateHouse just setting house["metadata"]["navMeshes"] will be fastest
+        box_body_sides = evt.metadata["agent"]["fpinColliderSize"]
+        print(f"box_body_sides: {box_body_sides}")
+        navmesh_config = get_nav_mesh_config_from_box(box_body_sides= box_body_sides, nav_mesh_id= navMeshOverEstimateId, min_side_as_radius= False)
+        print(f"navmeshes: {navmesh_config}")
+        print(navmesh_config)
+
+        controller.step(
+            action="OverwriteNavMeshes",
+            #  action = "ReBakeNavMeshes",
+            #  navMeshConfigs=[navmesh_config]
+            navMeshConfigs = [navmesh_config]
+
+        )
+
+    # Reset the scene and pass the agentInitializationParams and other desired initparams agane
+    evt = controller.reset(house, agentInitializationParams = bodyParams)
+    box_body_sides = controller.last_event.metadata["agent"]["fpinColliderSize"]
+
+    navmesh_config = get_nav_mesh_config_from_box(box_body_sides= box_body_sides, nav_mesh_id= navMeshOverEstimateId, min_side_as_radius= False)
+
+    # Rebake Navmeshes
+    controller.step(
+        action="OverwriteNavMeshes",
+        navMeshConfigs = [navmesh_config]
+
     )
     print(
         f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']} Error: {evt.metadata['errorMessage']}"
     )
 
-    # Create new navmesh, you don't need to do this if you call CreateHouse just setting house["metadata"]["navMeshes"] will be fastest
-    box_body_sides = evt.metadata["agent"]["fpinColliderSize"]
-    print(f"box_body_sides: {box_body_sides}")
-    navmesh_config = get_nav_mesh_config_from_box(box_body_sides= box_body_sides, nav_mesh_id= navMeshOverEstimateId, min_side_as_radius= False)
-    print(f"navmeshes: {navmesh_config}")
-    print(navmesh_config)
-
-    # house["metadata"]["navMeshes"] = [
-    #      {
-    #         "id": navmesh_config["id"],
-    #         "agentRadius": navmesh_config["agentRadius"], 
-    #         "agentHeight": navmesh_config["agentHeight"],
-    #     }
-
-    #  ]
-    # house["metadata"]["navMeshes"] = [navmesh_config]
-    # controller.reset(house)
-
-    controller.step(
-        action="OverwriteNavMeshes",
-        #  action = "ReBakeNavMeshes",
-        #  navMeshConfigs=[navmesh_config]
-        navMeshConfigs = [navmesh_config]
-
+    #Teleport
+    evt = controller.step(
+        action="TeleportFull",
+        x=position['x'],
+        y=position['y'],
+        z=position['z'],
+        rotation=rotation,
+        horizon=agent["horizon"],
+        standing=agent["standing"],
+        forceAction=True
     )
+
+    
 
     print(
         f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']} Error: {evt.metadata['errorMessage']}"
