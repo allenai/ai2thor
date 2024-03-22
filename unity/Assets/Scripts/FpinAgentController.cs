@@ -687,12 +687,69 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return actionFinished;
         }
 
-        //function to reassign the agent's origin relativ to the spawned in box collider
-        //should be able to use this after initialization as well to adjust the origin on the fly as needed
-        // public void RepositionAgentOrigin(Vector3 newRelativeOrigin) {
-        //     repositionAgentOrigin(newRelativeOrigin);
-        //     actionFinishedEmit(true);
-        // }
+        protected override void teleportFull(
+            Vector3? position,
+            Vector3? rotation,
+            float? horizon,
+            bool forceAction
+        ) {
+            if (rotation.HasValue && (!Mathf.Approximately(rotation.Value.x, 0f) || !Mathf.Approximately(rotation.Value.z, 0f))) {
+                throw new ArgumentOutOfRangeException(
+                    "No agents currently can change in pitch or roll. So, you must set rotation(x=0, y=yaw, z=0)." +
+                    $" You gave {rotation.Value.ToString("F6")}."
+                );
+            }
+
+            // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
+            if (!forceAction && horizon.HasValue && (horizon.Value > maxDownwardLookAngle || horizon.Value < -maxUpwardLookAngle)) {
+                throw new ArgumentOutOfRangeException(
+                    $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
+                );
+            }
+
+            if (!forceAction && position.HasValue && !agentManager.SceneBounds.Contains(position.Value)) {
+                throw new ArgumentOutOfRangeException(
+                    $"Teleport position {position.Value.ToString("F6")} out of scene bounds! Ignore this by setting forceAction=true."
+                );
+            }
+
+            if (!forceAction && position.HasValue && !isPositionOnGrid(position.Value)) {
+                throw new ArgumentOutOfRangeException(
+                    $"Teleport position {position.Value.ToString("F6")} is not on the grid of size {gridSize}."
+                );
+            }
+
+            // cache old values in case there's a failure
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            Vector3 oldCameraLocalEulerAngles = m_Camera.transform.localEulerAngles;
+
+            // here we actually teleport
+            transform.position = position.GetValueOrDefault(transform.position);
+            transform.localEulerAngles = rotation.GetValueOrDefault(transform.localEulerAngles);
+            m_Camera.transform.localEulerAngles = new Vector3(
+                horizon.GetValueOrDefault(oldCameraLocalEulerAngles.x),
+                oldCameraLocalEulerAngles.y,
+                oldCameraLocalEulerAngles.z
+            );
+
+            if (!forceAction) {
+
+                if (isAgentCapsuleColliding(collidersToIgnore: collidersToIgnoreDuringMovement, includeErrorMessage: true)) {
+                    transform.position = oldPosition;
+                    transform.rotation = oldRotation;
+                    m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngles;
+                    throw new InvalidOperationException(errorMessage);
+                }
+
+                if (isAgentBoxColliding(collidersToIgnore: collidersToIgnoreDuringMovement, includeErrorMessage: true)) {
+                    transform.position = oldPosition;
+                    transform.rotation = oldRotation;
+                    m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngles;
+                    throw new InvalidOperationException(errorMessage);
+                }
+            }
+        }
 
         //assumes the agent origin will only be repositioned via local x and z values relative to
         //the generated box collider's center. This will automatically set the local Y value

@@ -5925,6 +5925,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
+        protected bool isAgentBoxColliding(
+            HashSet<Collider> collidersToIgnore = null,
+            bool includeErrorMessage = false
+        ) {
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
+            foreach (
+                Collider c in PhysicsExtensions.OverlapBox(
+                    GetComponent<BoxCollider>(), layerMask, QueryTriggerInteraction.Ignore
+                )
+            ) {
+                if ((!hasAncestor(c.transform.gameObject, gameObject)) && (
+                    collidersToIgnore == null || !collidersToIgnoreDuringMovement.Contains(c))
+                ) {
+                    if (includeErrorMessage) {
+                        SimObjPhysics sop = ancestorSimObjPhysics(c.gameObject);
+                        String collidedWithName;
+                        if (sop != null) {
+                            collidedWithName = sop.ObjectID;
+                        } else {
+                            collidedWithName = c.gameObject.name;
+                        }
+                        errorMessage = $"Collided with: {collidedWithName}.";
+                    }
+#if UNITY_EDITOR
+                    Debug.Log("Collided with: ");
+                    Debug.Log(c);
+                    Debug.Log(c.enabled);
+#endif
+                    return true;
+                }
+            }
+            return false;
+        }
+
         protected Collider[] objectsCollidingWithAgent() {
             int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             return PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore);
