@@ -228,7 +228,7 @@ def fpin_tutorial(
 
     ### Currently working on this bug, so works for some object not for others
     # Call InitializeBody with flattened parameters
-    if True:
+    if False:
         evt = controller.step(
             action = "InitializeBody",
             **bodyParams
