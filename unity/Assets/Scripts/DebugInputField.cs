@@ -788,6 +788,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     break;
                 }
+
+                case "initbodyl": {
+                    
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "InitializeBody";
+                    action["bodyAsset"] = new BodyAsset() { assetId = "LocoBotSimObj"};
+                    action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                    action["originOffsetX"] = 0.0f;
+                    action["originOffsetZ"] = 0.0f;
+                    //action["useAbsoluteSize"] = true;
+
+                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
                 case "initbodys": {
                     
                       Dictionary<string, object> action = new Dictionary<string, object>();
@@ -838,6 +856,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     break;
                 }
+
+
                //fpin using apple
                 case "initpina": {
                     Dictionary<string, object> action = new Dictionary<string, object>();

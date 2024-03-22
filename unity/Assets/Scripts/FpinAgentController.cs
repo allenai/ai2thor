@@ -387,9 +387,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //organize the heirarchy of all the meshes copied under a single vis cap so we can use it real nice
             if (isTopMost) {
                 GameObject viscap = new GameObject("fpinVisibilityCapsule");
+
+                Debug.Log($"what is thisTransform: {thisTransform.name}");
+
+                //get teh bounds of all the meshes we have copied over so far
+                Bounds thisBounds = new Bounds(thisTransform.position, Vector3.zero);
+
+                MeshRenderer[] meshRenderers = thisTransform.gameObject.GetComponentsInChildren<MeshRenderer>();
+                foreach(MeshRenderer mr in meshRenderers) {
+                    thisBounds.Encapsulate(mr.bounds);
+                }
+
+                Debug.Log($"thisBounds center is now at {thisBounds.center}, and the size is {thisBounds.size}");
+                Debug.Log($"world position of the bottom of the bounds is {thisBounds.min.y}");
+
+                float distanceFromTransformToBottomOfBounds = thisTransform.position.y - thisBounds.min.y;
+
+                Debug.Log($"distance from transform to bottom of bounds {distanceFromTransformToBottomOfBounds}");
+
+                Physics.SyncTransforms();
+
+                //set all the meshes up as children of the viscap
                 thisTransform.SetParent(viscap.transform);
-                thisTransform.localPosition = Vector3.zero;
+                thisTransform.localPosition = new Vector3(0.0f, distanceFromTransformToBottomOfBounds, 0.0f);
                 thisTransform.localRotation = Quaternion.identity;
+                Physics.SyncTransforms();
+
+                //set viscap up as child of FPSAgent
                 viscap.transform.SetParent(targetParent);
                 viscap.transform.localPosition = Vector3.zero;
                 viscap.transform.localRotation = Quaternion.identity;
