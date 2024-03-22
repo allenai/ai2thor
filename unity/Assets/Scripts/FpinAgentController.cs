@@ -411,23 +411,43 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 Debug.Log($"distance from transform to bottom of bounds {distanceFromTransformToBottomOfBounds}");
 
-                Physics.SyncTransforms();
-
                 //set all the meshes up as children of the viscap
                 thisTransform.SetParent(viscap.transform);
                 thisTransform.localPosition = new Vector3(0.0f, distanceFromTransformToBottomOfBounds, 0.0f);
+
+                Physics.SyncTransforms();
+
+                //update bounds again because we have no moved in world space
+                thisBounds = new Bounds(thisTransform.position, Vector3.zero);
+                meshRenderers = thisTransform.gameObject.GetComponentsInChildren<MeshRenderer>();
+                foreach(MeshRenderer mr in meshRenderers) {
+                    thisBounds.Encapsulate(mr.bounds);
+                }
+
+                Debug.Log($"thisBounds center is now at {thisBounds.center}, and the size is {thisBounds.size}");
+
+                Vector3 dirFromBoundsCenterToVisCapTransform = viscap.transform.position - thisBounds.center;
+                Debug.Log($"dirFromBoundsCenterToVisCapTransform: {dirFromBoundsCenterToVisCapTransform:f8}");
+
+                thisTransform.localPosition = new Vector3(dirFromBoundsCenterToVisCapTransform.x, thisTransform.localPosition.y, dirFromBoundsCenterToVisCapTransform.z);
+
+                Physics.SyncTransforms();
+
                 thisTransform.localRotation = Quaternion.identity;
+
                 Physics.SyncTransforms();
 
                 //set viscap up as child of FPSAgent
                 viscap.transform.SetParent(targetParent);
+                Physics.SyncTransforms();
                 viscap.transform.localPosition = Vector3.zero;
+                Physics.SyncTransforms();
                 viscap.transform.localRotation = Quaternion.identity;
                 viscap.transform.localScale = new Vector3(1, 1, 1);
+                
 
                 //return reference to viscap so we can scaaaale it
                 fpinVisibilityCapsule = viscap;
-                Physics.SyncTransforms();
                 return viscap.transform;
             }
 
@@ -539,7 +559,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //copy all mesh renderers found on the spawnedMesh onto this agent now
             Transform visCap = CopyMeshChildren(source: spawnedMesh.transform.gameObject, target: this.transform.gameObject);
-
             //This is where we would scale the spawned meshes based on the collider scale but uhhhhhhhHHHHHHHHHHH
             // Vector3 ratio = colliderScaleRatio.GetValueOrDefault(Vector3.one);
             // Vector3 newVisCapScale = new Vector3(
@@ -629,14 +648,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     {"cameraFarPlane", m_Camera.farClipPlane}
                 }
             };
-
-            //default camera position somewhere??????
-            // m_Camera.transform.localPosition = defaultMainCameraLocalPosition;
-            // m_Camera.transform.localEulerAngles = defaultMainCameraLocalRotation;
-            // m_Camera.fieldOfView = defaultMainCameraFieldOfView;
-
-            //probably don't need camera limits since we are going to manipulate camera via the updateCameraProperties
-
         }
 
         private ActionFinished spawnBodyAsset(BodyAsset bodyAsset, out GameObject spawnedMesh) {
