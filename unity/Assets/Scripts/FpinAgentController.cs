@@ -216,7 +216,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Check if the spawned boxCollider is colliding with other objects
             int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             
+            
             Vector3 newBoxCenter = bounds.center - agentSpawnOffset;
+
+            // var m = (newBoxCenter +  bounds.extents) - originalPosition;
+            
             newBoxCenter = originalRotation * (newBoxCenter - originalPosition) + originalPosition;
             Vector3 newBoxExtents = new Vector3(
                 scaleRatio.x * bounds.extents.x,
@@ -256,14 +260,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             #endif
 
             if (Physics.CheckBox(newBoxCenter, newBoxExtents, originalRotation, layerMask)) {
-                throw new InvalidOperationException(
-                    "Spawned box collider is colliding with other objects. Cannot spawn box collider."
-                );
+                // throw new InvalidOperationException(
+                //     "Spawned box collider is colliding with other objects. Cannot spawn box collider."
+                // );
             }
             
             // Move the agent back to its original position and rotation because CheckBox passed
             this.transform.rotation = originalRotation;
             this.transform.position = originalPosition;
+
+            // agent.transform.localPosition = agent.transform.localPosition + toBottomBoxOffset;
             Physics.SyncTransforms();
 
             // Spawn the box collider

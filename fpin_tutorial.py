@@ -201,12 +201,13 @@ def fpin_tutorial(
     ## Change Body!
     # default change to stretch robot
     body = {"assetId": "StretchBotSimObj"}
+    # body = {"assetId": "Apple_1"}
     # For objaverse assets loaded in unity
     if objaverse_asset_id != None and objaverse_dir != None:
         body = dict(
             dynamicAsset = {
                 "id": objaverse_asset_id,
-                "dir": objaverse_dir
+                "dir": os.path.abspath(objaverse_dir)
             }
         )
 
@@ -227,7 +228,7 @@ def fpin_tutorial(
 
     ### Currently working on this bug, so works for some object not for others
     # Call InitializeBody with flattened parameters
-    if False:
+    if True:
         evt = controller.step(
             action = "InitializeBody",
             **bodyParams
@@ -250,6 +251,7 @@ def fpin_tutorial(
             navMeshConfigs = [navmesh_config]
 
         )
+        return
 
     # Reset the scene and pass the agentInitializationParams and other desired initparams agane
     evt = controller.reset(house, agentInitializationParams = bodyParams)
@@ -331,6 +333,6 @@ if __name__ == "__main__":
          commit_id=args.commit_id,
          platform=args.platform,
          objaverse_asset_id=args.objaverse_asset_id,
-         objaverse_dir=os.path.abspath(args.objaverse_dir)
+         objaverse_dir=args.objaverse_dir
     ) #platform="CloudRendering")
     # input()
