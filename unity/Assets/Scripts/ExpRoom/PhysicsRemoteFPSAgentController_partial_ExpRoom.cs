@@ -360,13 +360,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void PointOnObjectsCollidersClosestToPoint(
+        public List<Vector3> pointOnObjectsCollidersClosestToPoint(
             string objectId, Vector3 point
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                actionFinishedEmit(false);
-                return;
+                return null;
             }
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
@@ -405,7 +404,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
             }
             closePoints = closePoints.OrderBy(x => Vector3.Distance(point, x)).ToList();
-            actionFinishedEmit(true, closePoints);
+            return closePoints;
+        }
+
+
+        /// <summary>
+        /// Finds the points on an object's colliders that are closest to a specified point in space.
+        /// </summary>
+        /// <param name="objectId">The ID of the object to check against.</param>
+        /// <param name="point">The reference point in space to find the closest points to on the object's colliders.</param>
+        /// <returns>
+        /// A list of <see cref="Vector3"/> points representing the closest points on the object's colliders to the specified point.
+        /// If the object does not have any supported colliders (BoxCollider, SphereCollider, CapsuleCollider, or convex MeshCollider),
+        /// or if the object cannot be found, it returns null or a list with a single point from the object's bounding box.
+        /// </returns>
+        /// <remarks>
+        /// This method iterates through all the colliders of the object identified by <paramref name="objectId"/>,
+        /// including children colliders in the scene's hierarchy. It computes the closest point on each collider to the provided <paramref name="point"/>.
+        ///
+        /// Only enabled and non-trigger colliders of specific types (BoxCollider, SphereCollider, CapsuleCollider, or convex MeshCollider) are considered.
+        /// If the object has no colliders of these types, or if all relevant colliders do not have a point closer than the object's bounding box to the specified point,
+        /// the method falls back to using the object's bounding box to compute a closest point.
+        ///
+        /// The method orders the resulting points by their distance to <paramref name="point"/>, ensuring the closest points are listed first.
+        ///
+        /// In the Unity Editor, this method also logs the distance from the closest points to the specified point, aiding in debugging and visualization.
+        /// </remarks>
+        public void PointOnObjectsCollidersClosestToPoint(
+            string objectId, Vector3 point
+        ) {
+            List<Vector3> closePoints = pointOnObjectsCollidersClosestToPoint(objectId: objectId, point: point);
+            actionFinishedEmit(closePoints != null, closePoints);
         }
 
         public void PointOnObjectsMeshClosestToPoint(

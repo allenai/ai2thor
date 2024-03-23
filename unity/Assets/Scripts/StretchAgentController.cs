@@ -130,14 +130,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return getArmImplementation();
         }
 
-        
-        public void TeleportArm(
+
+        public bool teleportArm(
             Vector3? position = null,
             float? rotation = null,
             bool worldRelative = false,
             bool forceAction = false
         ) {
-            GameObject posRotManip = this.GetComponent<BaseAgentComponent>().StretchArm.GetComponent<Stretch_Robot_Arm_Controller>().GetArmTarget();
+            Stretch_Robot_Arm_Controller arm = getArmImplementation() as Stretch_Robot_Arm_Controller;
+            GameObject posRotManip = arm.GetArmTarget();
 
             // cache old values in case there's a failure
             Vector3 oldLocalPosition = posRotManip.transform.localPosition;
@@ -161,15 +162,302 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 posRotManip.transform.eulerAngles = new Vector3 (0, (float)rotation % 360, 0);
             }
 
-            if (SArm.IsArmColliding() && !forceAction) {
+            bool success = false;
+            arm.ContinuousUpdate(0f);
+            if ((!forceAction) && SArm.IsArmColliding()) {
                 errorMessage = "collision detected at desired transform, cannot teleport";
                 posRotManip.transform.localPosition = oldLocalPosition;
                 posRotManip.transform.localEulerAngles = new Vector3(0, oldLocalRotationAngle, 0);
-                actionFinished(false);
+                arm.ContinuousUpdate(0f);
             } else {
-                actionFinished(true);
+                success = true;
             }
+            arm.resetPosRotManipulator();
+            return success;
         }
+
+        public void TeleportArm(
+            Vector3? position = null,
+            float? rotation = null,
+            bool worldRelative = false,
+            bool forceAction = false
+        ) {
+            actionFinished(
+                teleportArm(
+                    position: position,
+                    rotation: rotation,
+                    worldRelative: worldRelative,
+                    forceAction: forceAction
+                )
+            );
+        }
+
+        /// <summary>
+        /// Attempts to reach a specified object in the scene by teleporting the agent and its arm towards the object.
+        /// </summary>
+        /// <param name="objectId">The ID of the object to reach.</param>
+        /// <param name="position">Optional. The target position for teleporting the agent. If null, the agent's current position is used.</param>
+        /// <param name="returnToInitialPosition">If true, the agent and its arm return to their initial positions after the attempt, regardless of success.</param>
+        /// <returns>
+        /// An <see cref="ActionFinished"/> object containing the outcome of the attempt. This includes whether the action was successful, and, if so, details about the final position and orientation of the agent and its arm, and the point on the object that was reached. If <paramref name="returnToInitialPosition"/> is true, the state is emitted after returning.
+        /// </returns>
+        /// <remarks>
+        /// This method first checks if the specified object exists within the scene. If not, it returns an unsuccessful result. If the object exists, the agent and its arm attempt to teleport to a position close to the object, adjusting their orientation to face the object and reach it with the arm's gripper.
+        /// The method calculates the closest points on the object to the agent and iteratively attempts to position the arm such that it can reach the object without causing any collisions. If a successful position is found, the agent's arm is teleported to that position, and the method returns success. If the attempt is unsuccessful or if the arm cannot reach the object without colliding, the action is marked as failed.
+        /// Optionally, the agent and its arm can return to their initial positions after the attempt. This is useful for scenarios where the agent's position before the attempt is critical to maintain regardless of the outcome.
+        /// Finally: grip positions ALWAYS assume that the gripper has been openned to its maximum size (50 degrees) so if you
+        /// are trying to reach an object with a closed gripper, you will need to open the gripper first, then reach the object.
+        /// </remarks>
+        public ActionFinished TryReachObject(
+            string objectId,
+            Vector3? position = null,
+            bool returnToInitialPosition = false
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                return new ActionFinished() {
+                    success = false,
+                    toEmitState = true
+                };
+            }
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            Vector3 oldPos = transform.position;
+            Quaternion oldRot = transform.rotation;
+
+            Stretch_Robot_Arm_Controller arm = getArmImplementation() as Stretch_Robot_Arm_Controller;
+            GameObject armTarget = arm.GetArmTarget();
+
+            Vector3 oldArmLocalPosition = armTarget.transform.localPosition;
+            Vector3 oldArmLocalEulerAngles = armTarget.transform.localEulerAngles;
+            int oldGripperOpenState = gripperOpennessState;
+
+            if (position.HasValue) {
+                transform.position = position.Value;
+                Physics.SyncTransforms();
+            }
+
+            // Find points on object closest to agent
+            List<Vector3> closePoints = pointOnObjectsCollidersClosestToPoint(
+                objectId: objectId,
+                point: new Vector3(
+                    transform.position.x,
+                    target.AxisAlignedBoundingBox.center.y + target.AxisAlignedBoundingBox.size.y / 2f, // Y from the object
+                    transform.position.z
+                )
+            );
+
+            teleportArm(
+                position: armTarget.transform.localPosition,
+                rotation: 0f,
+                worldRelative: false,
+                forceAction: true
+            );
+            SetGripperOpenness(openness: 50f);
+            Physics.SyncTransforms();
+
+            bool success = false;
+            Vector3 pointOnObject = Vector3.zero;
+
+            foreach (Vector3 point in closePoints) {
+#if UNITY_EDITOR
+                Debug.DrawLine(
+                    point,
+                    point + transform.up * 0.3f,
+                    Color.red,
+                    20f
+                );
+#endif
+                transform.LookAt(
+                    worldPosition: new Vector3(
+                        point.x, transform.position.y, point.z
+                    ),
+                    worldUp: transform.up
+                );
+
+                Physics.SyncTransforms();
+
+                Vector3 agentPos = transform.position;
+                Vector3 magnetSpherePos = arm.MagnetSphereWorldCenter();
+
+                Vector3 agentToPoint = point - agentPos;
+                Vector3 agentToMagnetSphere = magnetSpherePos - agentPos;
+                float angle = Vector3.Angle(
+                    from: new Vector3(agentToPoint.x, 0f, agentToPoint.z),
+                    to: new Vector3(agentToMagnetSphere.x, 0f, agentToMagnetSphere.z)
+                );
+
+                // Rotate transform by angle around y
+                transform.localEulerAngles = new Vector3(
+                    transform.localEulerAngles.x,
+                    transform.localEulerAngles.y - angle,
+                    transform.localEulerAngles.z
+                );
+                Physics.SyncTransforms();
+
+                agentToMagnetSphere = arm.MagnetSphereWorldCenter() - transform.position;
+                Vector3 agentToMagnetSphereDir2D = new Vector3(agentToMagnetSphere.x, 0f, agentToMagnetSphere.z).normalized;
+
+                if (
+                    !teleportArm(
+                        position: (
+                            point
+                            + (armTarget.transform.position - arm.MagnetSphereWorldCenter())
+                            - 0.25f * arm.magnetSphere.radius * agentToMagnetSphereDir2D
+                        ),
+                        rotation: armTarget.transform.eulerAngles.y,
+                        worldRelative: true
+                    )
+                ) {
+# if UNITY_EDITOR
+                    Debug.Log("Agent arm is colliding after teleporting arm");
+# endif
+                    continue;
+                }
+
+                Physics.SyncTransforms();
+                if (isAgentCapsuleColliding(null)) {
+# if UNITY_EDITOR
+                    Debug.Log("Agent capsule is colliding after teleporting arm");
+# endif
+                    continue;
+                }
+
+                bool touchingObject = false;
+                foreach (SimObjPhysics sop in arm.WhatObjectsAreInsideMagnetSphereAsSOP(false)) {
+                    if (sop.ObjectID == objectId) {
+                        touchingObject = true;
+                        break;
+                    }
+                }
+
+                if (!touchingObject) {
+# if UNITY_EDITOR
+                    Debug.Log("Agent is not touching object after teleporting arm");
+# endif
+                    continue;
+                }
+
+
+# if UNITY_EDITOR
+                Debug.Log($"Found successful position {point}.");
+# endif
+                success = true;
+                pointOnObject = point;
+                break;
+            }
+
+            Dictionary<string, Vector3> actionReturn = null;
+            if (success) {
+                actionReturn = new Dictionary<string, Vector3>() {
+                    {"position", transform.position},
+                    {"rotation", transform.rotation.eulerAngles},
+                    {"localArmPosition", armTarget.transform.localPosition},
+                    {"localArmRotation", armTarget.transform.localEulerAngles},
+                    {"pointOnObject", pointOnObject}
+                };
+            }
+
+            if (returnToInitialPosition) {
+                teleportArm(
+                    position: oldArmLocalPosition,
+                    rotation: oldArmLocalEulerAngles.y,
+                    worldRelative: false,
+                    forceAction: true
+                );
+                transform.position = oldPos;
+                transform.rotation = oldRot;
+                SetGripperOpenness(openness: null, openState: oldGripperOpenState);
+                Physics.SyncTransforms();
+            }
+
+            return new ActionFinished() {
+                success = success,
+                actionReturn = actionReturn,
+                toEmitState = returnToInitialPosition
+            };
+        }
+
+        /// <summary>
+        /// Retrieves a list of positions from which an agent can successfully touch a specified object within a given distance.
+        /// </summary>
+        /// <param name="objectId">The ID of the object the agent attempts to touch.</param>
+        /// <param name="positions">Optional. An array of Vector3 positions to test for the ability to touch the object. If null, the method computes reachable positions based on the agent's current environment.</param>
+        /// <param name="maxDistance">The maximum distance from the object at which a position is considered for a successful touch. Default is 1 meter.</param>
+        /// <param name="maxPoses">The maximum number of touching poses to return. Acts as a cap to limit the result size. Default is <see cref="int.MaxValue"/>, which effectively means no limit.</param>
+        /// <returns>
+        /// An <see cref="ActionFinished"/> object containing the outcome of the retrieval. This includes a success flag and, if successful, a list of dictionaries detailing the successful positions and related data for touching the object. Each dictionary in the list provides details such as the agent's position, rotation, local arm position, local arm rotation, and the point on the object that was successfully touched.
+        /// </returns>
+        /// <remarks>
+        /// This method first validates the existence of the specified object and the positivity of <paramref name="maxPoses"/>. It computes a set of candidate positions based on the provided positions or, if none are provided, based on reachable positions within the environment. It then filters these positions to include only those within a certain distance threshold from the object, adjusted for the object's bounding box size.
+        ///
+        /// For each candidate position, the method attempts to touch the object by invoking <see cref="TryReachObject"/> with the option to return the agent to its initial position after each attempt. This ensures that the agent's initial state is preserved between attempts. The method accumulates successful attempts up to the specified <paramref name="maxPoses"/> limit.
+        ///
+        /// The method is particularly useful in simulations where determining potential interaction points with objects is necessary for planning or executing tasks that involve direct physical manipulation or contact with objects in the environment.
+        /// </remarks>
+        /// <exception cref="System.ArgumentOutOfRangeException">Thrown when <paramref name="maxPoses"/> is less than or equal to zero.</exception>
+        public ActionFinished GetTouchingPoses(
+            string objectId,
+            Vector3[] positions = null,
+            float maxDistance = 1f,
+            int maxPoses = int.MaxValue  // works like infinity
+        ) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                return new ActionFinished() {
+                    success = false,
+                    toEmitState = true
+                };
+            }
+            if (maxPoses <= 0) {
+                throw new ArgumentOutOfRangeException("maxPoses must be > 0.");
+            }
+
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            Vector3 bboxSize = sop.AxisAlignedBoundingBox.size;
+            float fudgeFactor = Mathf.Sqrt(bboxSize.x * bboxSize.x + bboxSize.z * bboxSize.z) / 2f;
+
+            if (positions == null) {
+                positions = getReachablePositions();
+            }
+
+            List<Vector3> filteredPositions = positions.Where(
+                p => (Vector3.Distance(a: p, b: sop.transform.position) <= maxDistance + fudgeFactor + gridSize)
+            ).ToList();
+
+            List<object> poses = new List<object>();
+            foreach (Vector3 position in filteredPositions) {
+                ActionFinished af = TryReachObject(
+                    objectId: objectId,
+                    position: position,
+                    returnToInitialPosition: true
+                );
+
+                if (af.success) {
+                    poses.Add(af.actionReturn);
+# if UNITY_EDITOR
+                    Debug.DrawLine(
+                        start: position,
+                        end: ((Dictionary<string, Vector3>) af.actionReturn)["pointOnObject"],
+                        color: Color.green,
+                        duration: 15f
+                    );
+# endif
+                }
+
+                if (poses.Count >= maxPoses) {
+                    break;
+                }
+            }
+
+# if UNITY_EDITOR
+            Debug.Log($"Found {poses.Count} touching poses");
+# endif
+
+            return new ActionFinished() { success = true, actionReturn = poses };
+        }
+
 
         public override IEnumerator RotateWristRelative(
             float pitch = 0f,
@@ -191,6 +479,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 rotation: yaw,
                 degreesPerSecond: speed,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart,
                 isRelativeRotation: true
             );
@@ -230,42 +519,50 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 controller: this,
                 rotation: yaw,
                 degreesPerSecond: speed,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart,
                 isRelativeRotation: false
             );
         }
 
-        public void SetGripperOpenness(float openness) {
-            foreach (GameObject opennessState in GripperOpennessStates) {
-                opennessState.SetActive(false);
-            }
+        protected int gripperOpenFloatToState(float openness) {
             if (-100 <= openness && openness < 0) {
-                GripperOpennessStates[0].SetActive(true);
-                gripperOpennessState = 0;
+                return 0;
             } else if (0 <= openness && openness < 5) {
-                GripperOpennessStates[1].SetActive(true);
-                gripperOpennessState = 1;
+                return 1;
             } else if (5 <= openness && openness < 15) {
-                GripperOpennessStates[2].SetActive(true);
-                gripperOpennessState = 2;
+                return 2;
             } else if (15 <= openness && openness < 25) {
-                GripperOpennessStates[3].SetActive(true);
-                gripperOpennessState = 3;
+                return 3;
             } else if (25 <= openness && openness < 35) {
-                GripperOpennessStates[4].SetActive(true);
-                gripperOpennessState = 4;
+                return 4;
             } else if (35 <= openness && openness < 45) {
-                GripperOpennessStates[5].SetActive(true);
-                gripperOpennessState = 5;
+                return 5;
             } else if (45 <= openness && openness <= 50) {
-                GripperOpennessStates[6].SetActive(true);
-                gripperOpennessState = 6;
+                return 6;
             } else {
                 throw new InvalidOperationException(
                     $"Invalid value for `openness`: '{openness}'. Value should be between -100 and 50"
                 );
             }
-            actionFinished(true);
+        }
+        public ActionFinished SetGripperOpenness(float? openness, int? openState = null) {
+            if (openness.HasValue == openState.HasValue) {
+                throw new InvalidOperationException(
+                    $"Only one of openness or openState should have a value"
+                );
+            }
+            if (openness.HasValue) {
+                openState = gripperOpenFloatToState(openness.Value);
+            }
+
+            foreach (GameObject opennessState in GripperOpennessStates) {
+                opennessState.SetActive(false);
+            }
+            
+            GripperOpennessStates[openState.Value].SetActive(true);
+            gripperOpennessState = openState.Value;
+            return ActionFinished.Success;
         }
 
 //        public void RotateCameraBase(float yawDegrees, float rollDegrees) {
