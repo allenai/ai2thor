@@ -576,7 +576,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (var sop in spawnedMesh.GetComponentsInChildren<SimObjPhysics>()) {
                 agentManager.physicsSceneManager.RemoveFromObjectsInScene(sop);
             }
-            UnityEngine.Object.DestroyImmediate(spawnedMesh);
+            if (spawnedMesh.activeInHierarchy) {
+                UnityEngine.Object.DestroyImmediate(spawnedMesh);
+            }
 
             //assign agent visibility capsule to new meshes
             VisibilityCapsule = visCap.transform.gameObject;
