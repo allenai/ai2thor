@@ -6809,6 +6809,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
         public ActionFinished CreateRuntimeAsset(ProceduralAsset asset) {
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDb.ContainsAssetKey(asset.name)) {
+                return new ActionFinished(
+                    success: false,
+                    errorMessage: $"'{asset.name}' already exists in ProceduralAssetDatabase, trying to create procedural object twice, call `SpawnAsset` instead.",
+                    toEmitState: true
+                );
+            }
             var assetData = ProceduralTools.CreateAsset(
                 vertices: asset.vertices,
                 normals: asset.normals,
@@ -6838,6 +6846,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ObjectAnnotations annotations = null,
             bool serializable = false
         ) {
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDb.ContainsAssetKey(id)) {
+                return new ActionFinished(
+                    success: false,
+                    errorMessage: $"'{id}' already exists in ProceduralAssetDatabase, trying to create procedural object twice, call `SpawnAsset` instead.",
+                    toEmitState: true
+                );
+            }
             var validDirs = new List<string>() {
                 Application.persistentDataPath,
                 Application.streamingAssetsPath

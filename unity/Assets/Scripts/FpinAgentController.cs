@@ -8,6 +8,7 @@ using UnityEngine.AI;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UIElements;
 using Thor.Procedural.Data;
+using Thor.Procedural;
 using MessagePack;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
@@ -659,6 +660,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             ActionFinished actionFinished = new ActionFinished(success: false, errorMessage: "No body specified");
             spawnedMesh = null;
+            
+
+            if ( (bodyAsset.dynamicAsset != null || bodyAsset.asset != null) && bodyAsset.assetId == null) {
+                var id = bodyAsset.dynamicAsset != null ? bodyAsset.dynamicAsset.id : bodyAsset.asset.name;
+
+                var assetMap = ProceduralTools.getAssetMap();
+                // Check if asset is in AssetDatabase already 
+                if (assetMap.ContainsKey(id)) {
+                    Debug.Log("------- Already contains key");
+                    bodyAsset.assetId = id;
+                }
+            }
+            
+
             if (bodyAsset.assetId != null) {
                 actionFinished = SpawnAsset(bodyAsset.assetId, "agentMesh", new Vector3(200f, 200f, 200f));
                 spawnedMesh = GameObject.Find("agentMesh");
@@ -679,9 +694,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     asset: bodyAsset.asset
                 );
             }
-            if (bodyAsset.dynamicAsset != null || bodyAsset.asset != null) {
+            if (bodyAsset.assetId == null && (bodyAsset.dynamicAsset != null || bodyAsset.asset != null)) {
+
+                var id = bodyAsset.dynamicAsset != null ? bodyAsset.dynamicAsset.id : bodyAsset.asset.name;
+                Debug.Log($"-- checks {bodyAsset.assetId == null} {bodyAsset.dynamicAsset != null} {bodyAsset.asset != null} ");
                 var assetData = actionFinished.actionReturn as Dictionary<string, object>;
-                Debug.Log($"-- dynamicAsset keys {string.Join(", ", assetData.Keys)}");
+                Debug.Log($"-- dynamicAsset id: {id} keys {string.Join(", ", assetData.Keys)}");
                 spawnedMesh = assetData["gameObject"] as GameObject;//.transform.Find("mesh").gameObject;
             }
             return actionFinished;

@@ -45,6 +45,10 @@ namespace Thor.Procedural {
             }
         }
 
+        public bool ContainsAssetKey(string key) {
+            return assetMap.ContainsKey(key);
+        }
+
         public void touchProceduralLRUCache(IEnumerable<string> ids) {
             this.assetMap.touch(ids);
         }
