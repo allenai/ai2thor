@@ -222,7 +222,10 @@ class WebGL(BasePlatform):
 class StandaloneWindows64(BasePlatform):
     @classmethod
     def executable_path(cls, base_dir, name):
-        return os.path.join(base_dir, name)
+        path = os.path.join(base_dir, name)
+        # Flip the slashes to avoid losing them during the call to the 
+        # Unity executable
+        return path.replace("\\", "/")
 
     @classmethod
     def old_executable_path(cls, base_dir, name):
