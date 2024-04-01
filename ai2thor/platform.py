@@ -224,6 +224,10 @@ class StandaloneWindows64(BasePlatform):
     def executable_path(cls, base_dir, name):
         return os.path.join(base_dir, name)
 
+    @classmethod
+    def old_executable_path(cls, base_dir, name):
+        return cls.executable_path(base_dir, name)
+
 def select_platforms(request):
     candidates = []
     system_platform_map = dict(Linux=(Linux64,), Darwin=(OSXIntel64,), Windows=(StandaloneWindows64,))
