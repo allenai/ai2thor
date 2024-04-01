@@ -42,7 +42,6 @@ setup(
     author_email="ai2thor@allenai.org",
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=[
-        "flask",
         "numpy",
         "pyyaml",
         "requests",
@@ -53,7 +52,11 @@ setup(
         "Pillow",
         "python-xlib",
         "opencv-python",
-        "werkzeug>=0.15.0",  # needed for unix socket support
+        # last versions where TCP keepalive is enabled in the development server,
+        # required the WsgiServer to work properly
+        # see https://werkzeug.palletsprojects.com/en/2.3.x/changes/#version-2-1-2
+        "flask==2.1.3",
+        "werkzeug==2.1.1"
     ],
     setup_requires=["pytest-runner"],
     tests_require=["pytest", "pytest-timeout", "pytest-cov", "jsonschema", "shapely", "pytest-mock", "dictdiffer"],

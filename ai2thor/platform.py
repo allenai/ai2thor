@@ -222,7 +222,15 @@ class WebGL(BasePlatform):
 class StandaloneWindows64(BasePlatform):
     @classmethod
     def executable_path(cls, base_dir, name):
-        return os.path.join(base_dir, name)
+        # can't run executable without the .exe extension on Windows
+        path = os.path.join(base_dir, name + ".exe")
+        # Flip the slashes to avoid losing them during the call to the 
+        # Unity executable
+        return path.replace("\\", "/")
+
+    @classmethod
+    def old_executable_path(cls, base_dir, name):
+        return cls.executable_path(base_dir, name)
 
 def select_platforms(request):
     candidates = []
