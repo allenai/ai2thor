@@ -601,6 +601,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+                case "initpinsabsolute": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "Initialize";
+                    action["agentMode"] = "fpin";
+                    //action["useAbsoluteSize"] = true;
+                    action["visibilityScheme"] = "Distance";
+                    action["renderInstanceSegmentation"] = true;
+                    action["renderDepth"] = true;
+
+                    action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<string, object>() {
+                        {"bodyAsset", new BodyAsset() { assetId = "StretchBotSimObj"}},
+                        {"originOffsetX", -0.09938055f},
+                        {"originOffsetZ", 0.1157837f},
+                        {"colliderScaleRatio", new Vector3(0.3f, 2.0f, 0.5f)},
+                        {"useAbsoluteSize", true}
+                    };
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
                 //fpin using locobot as source mesh
                 case "initpinl": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
@@ -782,6 +806,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     action["originOffsetZ"] = 0.0f;
                     action["useVisibleColliderBase"] = true;
                     //action["useAbsoluteSize"] = true;
+
+                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
+                case "initbodyabsolutet": {
+                    
+                      Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "InitializeBody";
+                    action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5"};
+                    action["colliderScaleRatio"] = new Vector3(0.5f, 1f, 2f);
+                    action["originOffsetX"] = 0.0f;
+                    action["originOffsetZ"] = 0.0f;
+                    action["useVisibleColliderBase"] = true;
+                    action["useAbsoluteSize"] = true;
 
                     CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                     //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);

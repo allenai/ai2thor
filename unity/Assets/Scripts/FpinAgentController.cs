@@ -230,9 +230,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
             if (useAbsoluteSize){
                 newBoxExtents = new Vector3(
-                    scaleRatio.x,
-                    scaleRatio.y,
-                    scaleRatio.z
+                    scaleRatio.x / 2,
+                    scaleRatio.y / 2,
+                    scaleRatio.z / 2
                 );
             }  
 
