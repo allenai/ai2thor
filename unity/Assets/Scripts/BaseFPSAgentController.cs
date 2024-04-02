@@ -166,6 +166,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected bool snapToGrid;
         protected bool continuousMode;// deprecated, use snapToGrid instead
         public ImageSynthesis imageSynthesis;
+
+        public ImageSynthesis ImageSynthesis {
+            get {
+                if (this.imageSynthesis == null) {
+                    imageSynthesis = this.m_Camera.gameObject.GetComponent<ImageSynthesis>() ;
+                    if (imageSynthesis == null) {
+                        throw new NullReferenceException($"ImageSynthesis component is null or disabled in `{this.m_Camera.gameObject.name}` Gameobject.");
+                    }
+                    
+                    imageSynthesis.enabled = true; 
+                    return imageSynthesis;
+                }
+                else {
+                    return imageSynthesis;
+                }
+               
+            }
+        }
         private bool isVisible = true;
         public bool inHighFrictionArea = false;
         // outbound object filter

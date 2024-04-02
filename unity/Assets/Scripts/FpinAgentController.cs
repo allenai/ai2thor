@@ -110,6 +110,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxX = agentManager.SceneBounds.max.x;
             float maxZ = agentManager.SceneBounds.max.z;
 
+            Debug.Log($"Scene bounds: X: {minX} z: {minZ} max x: {maxX} z: {maxZ}");
+
             int n = (int) Mathf.Ceil(Mathf.Sqrt(sampleCount));
 
             List<Vector3> initPoints = new List<Vector3>();
@@ -123,6 +125,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
             initPoints.Shuffle_();
+            
 
             List<Vector3> pointsOnMesh = new List<Vector3>();
             for (int i = 0; i < initPoints.Count; i++) {
@@ -139,6 +142,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     pointsOnMesh.Add(hit.position);
                 }
             }
+
+            Debug.Log($"On navmesh count {pointsOnMesh} size: {pointsOnMesh.Count}");
 
             return pointsOnMesh;
         }
@@ -700,6 +705,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 var id = bodyAsset.dynamicAsset != null ? bodyAsset.dynamicAsset.id : bodyAsset.asset.name;
                 Debug.Log($"-- checks {bodyAsset.assetId == null} {bodyAsset.dynamicAsset != null} {bodyAsset.asset != null} ");
+                if (!actionFinished.success || actionFinished.actionReturn == null) {
+                    return new ActionFinished(
+                        success: false,
+                        errorMessage: $"Could not create asset `{bodyAsset.dynamicAsset}` error: {actionFinished.errorMessage}"
+                    );
+                }
                 var assetData = actionFinished.actionReturn as Dictionary<string, object>;
                 Debug.Log($"-- dynamicAsset id: {id} keys {string.Join(", ", assetData.Keys)}");
                 spawnedMesh = assetData["gameObject"] as GameObject;//.transform.Find("mesh").gameObject;

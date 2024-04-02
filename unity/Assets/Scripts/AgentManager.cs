@@ -1049,15 +1049,15 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         ref MetadataWrapper metadata
     ) {
         if (this.renderInstanceSegmentation || this.renderSemanticSegmentation) {
-            Debug.Log($"imageSynthesis null {agent.imageSynthesis==null}");
-            if (!agent.imageSynthesis.hasCapturePass("_id")) {
+            Debug.Log($"imageSynthesis null {agent.ImageSynthesis==null}");
+            if (!agent.ImageSynthesis.hasCapturePass("_id")) {
                 Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
             }
-            byte[] bytes = agent.imageSynthesis.Encode("_id");
+            byte[] bytes = agent.ImageSynthesis.Encode("_id");
             payload.Add(new KeyValuePair<string, byte[]>("image_ids", bytes));
 
             List<ColorId> colors = new List<ColorId>();
-            foreach (Color key in agent.imageSynthesis.colorIds.Keys) {
+            foreach (Color key in agent.ImageSynthesis.colorIds.Keys) {
                 ColorId cid = new ColorId();
                 cid.color = new ushort[] {
                     (ushort)Math.Round (key.r * 255),
@@ -1065,7 +1065,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     (ushort)Math.Round (key.b * 255)
                 };
 
-                cid.name = agent.imageSynthesis.colorIds[key];
+                cid.name = agent.ImageSynthesis.colorIds[key];
                 colors.Add(cid);
             }
             metadata.colors = colors.ToArray();
