@@ -615,8 +615,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         {"bodyAsset", new BodyAsset() { assetId = "StretchBotSimObj"}},
                         {"originOffsetX", -0.09938055f},
                         {"originOffsetZ", 0.1157837f},
-                        {"colliderScaleRatio", new Vector3(0.3f, 2.0f, 0.5f)},
-                        {"useAbsoluteSize", true}
+                        {"colliderScaleRatio", new Vector3(0.3f, 1.2f, 0.5f)},
+                        {"useAbsoluteSize", true},
+                        {"useVisibleColliderBase", true}
                     };
 
                     ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
@@ -667,7 +668,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         {"originOffsetZ", 0.0f},
                         {"colliderScaleRatio", new Vector3(1, 1, 1)},
                         {"useAbsoluteSize", false},
-                        {"useVisibleColliderBase", true}
                     };
                     //action["useAbsoluteSize"] = true;
 
@@ -795,6 +795,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+                case "initbodyratiot": {
+                    
+                      Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "InitializeBody";
+                    action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5"};
+                    action["colliderScaleRatio"] = new Vector3(1.2f, 1.5f, 2f);
+                    action["originOffsetX"] = 0.0f;
+                    action["originOffsetZ"] = 0.0f;
+                    //action["useAbsoluteSize"] = true;
+
+                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
                 case "initbodybigt": {
                     
                       Dictionary<string, object> action = new Dictionary<string, object>();
@@ -805,7 +822,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     action["originOffsetX"] = 0.0f;
                     action["originOffsetZ"] = 0.0f;
                     action["useVisibleColliderBase"] = true;
-                    //action["useAbsoluteSize"] = true;
+                    action["useAbsoluteSize"] = true;
 
                     CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                     //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);

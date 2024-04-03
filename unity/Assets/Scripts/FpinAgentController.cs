@@ -59,11 +59,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     boxBounds = currentBounds;
 
-                    Debug.Log($"world center: {boxBounds.worldCenter}");
-                    Debug.Log($"size: {boxBounds.size}");
-                    Debug.Log($"agentRelativeCenter: {boxBounds.agentRelativeCenter}");
+                    // Debug.Log($"world center: {boxBounds.worldCenter}");
+                    // Debug.Log($"size: {boxBounds.size}");
+                    // Debug.Log($"agentRelativeCenter: {boxBounds.agentRelativeCenter}");
                 } else { 
-                    Debug.Log("why is it nullll");
+                    // Debug.Log("why is it nullll");
                     return null;
                 }
 
@@ -198,11 +198,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             GameObject agent, 
             Type agentType, 
             Vector3 scaleRatio, 
-            bool useAbsoluteSize = false, 
-            bool useVisibleColliderBase = false,
-            float originOffsetX = 0.0f, 
-            float originOffsetY = 0.0f, 
-            float originOffsetZ = 0.0f
+            bool useVisibleColliderBase = false
             ) {
             // Store the current rotation
             Vector3 originalPosition = this.transform.position;
@@ -228,19 +224,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // var m = (newBoxCenter +  bounds.extents) - originalPosition;
             
             newBoxCenter = originalRotation * (newBoxCenter - originalPosition) + originalPosition;
-            Vector3 newBoxExtents = new Vector3(
-                scaleRatio.x * bounds.extents.x,
-                scaleRatio.y * bounds.extents.y,
-                scaleRatio.z * bounds.extents.z
-            );
-            if (useAbsoluteSize){
-                newBoxExtents = new Vector3(
-                    scaleRatio.x / 2,
-                    scaleRatio.y / 2,
-                    scaleRatio.z / 2
-                );
-            }  
-
+            Vector3 newBoxExtents = new Vector3(bounds.extents.x, bounds.extents.y, bounds.extents.z);
+            
             #if UNITY_EDITOR
             /////////////////////////////////////////////////
             //for visualization lets spawna cube at the center of where the boxCenter supposedly is
@@ -328,8 +313,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 visibleBox.transform.localRotation = Quaternion.identity;
             }
             
-            repositionAgentOrigin(newRelativeOrigin: new Vector3 (originOffsetX, originOffsetY, originOffsetZ));
-
             //BoxBounds should now be able to retrieve current box information
             return BoxBounds;
         }
@@ -535,7 +518,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Needs to be done to update Agent's imageSynthesis reference, should be removed... and just get the component
             this.updateImageSynthesis(true);
             return actionFinished;
-
         }
 
         public ActionFinished InitializeBody(
@@ -566,16 +548,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //copy all mesh renderers found on the spawnedMesh onto this agent now
             Transform visCap = CopyMeshChildren(source: spawnedMesh.transform.gameObject, target: this.transform.gameObject);
             //This is where we would scale the spawned meshes based on the collider scale but uhhhhhhhHHHHHHHHHHH
-            // Vector3 ratio = colliderScaleRatio.GetValueOrDefault(Vector3.one);
-            // Vector3 newVisCapScale = new Vector3(
-            //     ratio.x * visCap.localScale.x,
-            //     ratio.y * visCap.localScale.y,
-            //     ratio.z * visCap.localScale.z
-            // );
+            Vector3 ratio = colliderScaleRatio.GetValueOrDefault(Vector3.one);
+            Vector3 newVisCapScale = new Vector3(
+                ratio.x * visCap.localScale.x,
+                ratio.y * visCap.localScale.y,
+                ratio.z * visCap.localScale.z
+            );
             // if(useAbsoluteSize){
             //     newVisCapScale = new Vector3(ratio.x, ratio.y, ratio.z);
             // }
-            // visCap.localScale = newVisCapScale;
+            visCap.localScale = newVisCapScale;
 
             //remove the spawned mesh cause we are done with it
             foreach (var sop in spawnedMesh.GetComponentsInChildren<SimObjPhysics>()) {
@@ -593,16 +575,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 agent: this.gameObject,
                 agentType: this.GetType(),
                 scaleRatio: colliderScaleRatio.GetValueOrDefault(Vector3.one),
-                useAbsoluteSize: useAbsoluteSize,
-                useVisibleColliderBase: useVisibleColliderBase, 
-                originOffsetX: originOffsetX,
-                originOffsetY: originOffsetY,
-                originOffsetZ: originOffsetZ
+                useVisibleColliderBase: useVisibleColliderBase
             );
 
             //reposition agent transform relative to the generated box
             //i think we need to unparent the FPSController from all its children.... then reposition
-            //repositionAgentOrigin(newRelativeOrigin: new Vector3 (originOffsetX, originOffsetY, originOffsetZ));
+            repositionAgentOrigin(newRelativeOrigin: new Vector3 (originOffsetX, originOffsetY, originOffsetZ));
 
             Physics.SyncTransforms();
 
@@ -786,9 +764,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //the generated box collider's center. This will automatically set the local Y value
         //to the bottom of the spawned box collider's lowest extent in the -Y direction
         public void repositionAgentOrigin (Vector3 newRelativeOrigin) {
+            Debug.Log($"newRelativeOrigin is: {newRelativeOrigin:F8}");
             //get the world coordinates of the center of the spawned box
             var addedCollider = spawnedBoxCollider.GetComponent<BoxCollider>();
-            Vector3 spawnedBoxWorldCenter = spawnedBoxCollider.transform.TransformPoint(spawnedBoxCollider.GetComponent<BoxCollider>().center);
+            Vector3 spawnedBoxWorldCenter = spawnedBoxCollider.transform.TransformPoint(addedCollider.center);
+            Debug.Log($"spawnedBoxWorldCenter is: {spawnedBoxWorldCenter:F8}");
+
+            float distanceToBottom = addedCollider.size.y * 0.5f * addedCollider.transform.localScale.y;
+            Vector3 newAgentOrigin = new Vector3(
+                spawnedBoxWorldCenter.x + newRelativeOrigin.x,
+                spawnedBoxWorldCenter.y - distanceToBottom,
+                spawnedBoxWorldCenter.z + newRelativeOrigin.z);
+
+            Debug.Log($"newAgentOrigin is: {newAgentOrigin:F8}");
 
             List<Transform> allMyChildren = new List<Transform>();
 
@@ -800,29 +788,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //the transform heirarchy changing and the order is ambiguous??
             foreach(Transform child in allMyChildren) {
                 child.SetParent(null);
+                Physics.SyncTransforms();
             }
 
             //ensure all transforms are fully updated
             Physics.SyncTransforms();
 
             //ok now reposition this.transform in world space relative to the center of the box collider
-            this.transform.SetParent(spawnedBoxCollider.transform);
+            this.transform.position = newAgentOrigin;
 
-            float distanceToBottom = addedCollider.size.y * 0.5f * addedCollider.transform.localScale.y;
-            Vector3 origin = new Vector3(newRelativeOrigin.x, newRelativeOrigin.y - distanceToBottom, newRelativeOrigin.z);
-            this.transform.localPosition = origin;
+            //Vector3 origin = new Vector3(newRelativeOrigin.x, newRelativeOrigin.y - distanceToBottom, newRelativeOrigin.z);
+            // this.transform.localPosition = origin;
 
             //ensure all transforms are fully updated
             Physics.SyncTransforms();
 
-            //ok now reparent everything accordingly
-            this.transform.SetParent(null);
-            Physics.SyncTransforms();
-
             foreach(Transform child in allMyChildren) {
                 child.SetParent(this.transform);
+                Physics.SyncTransforms();
             }
-            Physics.SyncTransforms();
         }
 
         public IEnumerator MoveAgent(
