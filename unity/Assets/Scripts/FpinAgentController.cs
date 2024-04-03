@@ -103,7 +103,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public List<Vector3> SamplePointsOnNavMesh(
-            int sampleCount, float maxDistance = 0.05f
+            int sampleCount, float maxDistance
         ) {
             float minX = agentManager.SceneBounds.min.x;
             float minZ = agentManager.SceneBounds.min.z;
@@ -148,8 +148,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return pointsOnMesh;
         }
 
-        public void RandomlyPlaceAgentOnNavMesh(int n = 200) {
-            List<Vector3> pointsOnMesh = SamplePointsOnNavMesh(n);
+        public void RandomlyPlaceAgentOnNavMesh(int n = 200, float maxDistance = 0.1f) {
+            List<Vector3> pointsOnMesh = SamplePointsOnNavMesh(n, maxDistance: maxDistance);
             if (pointsOnMesh.Count == 0) {
                 throw new InvalidOperationException("No points on the navmesh");
             }
