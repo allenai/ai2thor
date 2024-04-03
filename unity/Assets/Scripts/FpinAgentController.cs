@@ -103,7 +103,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public List<Vector3> SamplePointsOnNavMesh(
-            int sampleCount, float maxDistance = 0.05f
+            int sampleCount, float maxDistance
         ) {
             float minX = agentManager.SceneBounds.min.x;
             float minZ = agentManager.SceneBounds.min.z;
@@ -148,8 +148,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return pointsOnMesh;
         }
 
-        public void RandomlyPlaceAgentOnNavMesh(int n = 200) {
-            List<Vector3> pointsOnMesh = SamplePointsOnNavMesh(n);
+        public void RandomlyPlaceAgentOnNavMesh(int n = 200, float maxDistance = 0.1f) {
+            List<Vector3> pointsOnMesh = SamplePointsOnNavMesh(n, maxDistance: maxDistance);
             if (pointsOnMesh.Count == 0) {
                 throw new InvalidOperationException("No points on the navmesh");
             }
@@ -514,6 +514,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public ActionFinished Initialize(
+            // ServerAction allInitParams,
             BodyAsset bodyAsset,
             // TODO: do we want to allow non relative to the box offsets?
             float originOffsetX = 0.0f,
@@ -523,6 +524,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool useAbsoluteSize = false, 
             bool useVisibleColliderBase = false
         ) {
+            // base.Initialize(allInitParams);
             var actionFinished = this.InitializeBody(
                 bodyAsset: bodyAsset,
                 originOffsetX: originOffsetX,

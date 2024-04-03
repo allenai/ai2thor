@@ -111,7 +111,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         robosimsPort = LoadIntVariable(robosimsPort, "PORT");
         robosimsHost = LoadStringVariable(robosimsHost, "HOST");
         serverSideScreenshot = LoadBoolVariable(serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
-        // serverSideScreenshot = true;
+        serverSideScreenshot = true;
         robosimsClientToken = LoadStringVariable(robosimsClientToken, "CLIENT_TOKEN");
         serverType = (serverTypes)Enum.Parse(typeof(serverTypes), LoadStringVariable(serverTypes.WSGI.ToString(), "SERVER_TYPE").ToUpper());
         if (serverType == serverTypes.FIFO) {
@@ -238,6 +238,9 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         //initialize primary agent now that its controller component has been added
         // Pass new agentInitializationParams to agent's Initialize instead of the whole original action,
         // Allows to segment specific agent initialization params and move away from bloated ServerAction class
+        // if (action.agentMode == "fpin") {
+        //     primaryAgent.Initialize(action);
+        // }
         primaryAgent.ProcessControlCommand(
             // action.dynamicServerAction.agentInitializationParams ?? action.dynamicServerAction
             !action.dynamicServerAction.HasAgentInitializationParams() ?
@@ -2040,6 +2043,8 @@ public class DynamicServerAction {
     public const string physicsSimulationParamsVariable = "physicsSimulationParams";
     public const string agentInitializationParamsVariable = "agentInitializationParams";
 
+    public const string allInitParamsVariable =  "allInitParams";
+
     public JObject jObject {
         get;
         private set;
@@ -2184,6 +2189,11 @@ public class DynamicServerAction {
     public void AddPhysicsSimulationParams(PhysicsSimulationParams physicsSimulationParams) {
         var token = JToken.FromObject(physicsSimulationParams);
         this.jObject.Add(new JProperty(physicsSimulationParamsVariable, token));
+    }
+
+     public void AddAllInitializeParams(ServerAction action) {
+        var token = JToken.FromObject(action);
+        this.jObject.Add(new JProperty(allInitParamsVariable, token));
     }
  }
 

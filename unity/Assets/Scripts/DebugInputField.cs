@@ -948,6 +948,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
                     action["action"] = "RandomlyPlaceAgentOnNavMesh";
+
+                    if (splitcommand.Length > 1) {
+                        action["n"] = int.Parse(splitcommand[1]);
+                    }
                     CurrentActiveController().ProcessControlCommand(action);
                     break;
                 }
@@ -4325,6 +4329,58 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 // };
                             }
                         }
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                case "vpf": {
+                        ServerAction action = new ServerAction();
+                        action.action = "VisualizeShortestPaths";
+
+                        action.objectType = "Dog Bed";
+
+                         Debug.Log($"vpf --- call {splitcommand.Length}");
+
+                        // pass in a min range, max range, delay
+                        // if (splitcommand.Length > 1) {
+                        //     // ID of spawner
+                        //     action.objectType = splitcommand[1];
+
+                        //     Debug.Log($"vpf --- splitcommand lenght {splitcommand.Length}");
+                        //     if (splitcommand.Length == 5) {
+                        //         action.position = new Vector3(
+                        //             float.Parse(splitcommand[2]),
+                        //             float.Parse(splitcommand[3]),
+                        //             float.Parse(splitcommand[4])
+                        //         );
+                        //     } else {
+
+                                // BaseFPSAgentController
+                                
+                                var fpin = CurrentActiveController() as FpinAgentController;
+                                var pos = fpin.SamplePointsOnNavMesh(200, 0.1f);
+                                action.positions = pos.Take(20).ToList();
+
+                                Debug.Log($"Debug input field {action.positions} null? {action.positions == null}");
+                                action.grid = true;
+                                // action.pathGradient = new Gradient() {
+                                //     colorKeys = new GradientColorKey[]{
+                                //          new GradientColorKey(Color.white, 0.0f),
+                                //          new GradientColorKey(Color.blue, 1.0f)
+                                //         },
+                                //     alphaKeys =  new GradientAlphaKey[]{
+                                //         new GradientAlphaKey(1.0f, 0.0f),
+                                //         new GradientAlphaKey(1.0f, 1.0f)
+                                //     },
+                                //     mode = GradientMode.Blend
+                                // };
+                                // action.gridColor = new Color(1.0f, 0.0f, 0.0f, 1.0f);
+                                // action.positions = new List<Vector3>() {
+                                //     new Vector3( 4.258f, 1.0f, -2.69f),
+                                //     new Vector3(4.3f, 1.0f, -3.452f)
+                                // };
+                            // }
+                        // }
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;

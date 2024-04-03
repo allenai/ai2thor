@@ -34,7 +34,10 @@ using UnityEditor.SceneManagement;
             {
                 sourcesBounds = CalculateWorldBounds(sources);
             }
-
+            
+            #if UNITY_EDITOR
+                Debug.Log($"NavMeshSurface, building NavMehs with buildSettings:  agentRadius: {buildSettings.agentRadius} agentHeight: {buildSettings.agentHeight}, sourcesBounds: center: {sourcesBounds.center} extents: {sourcesBounds.extents}");
+            #endif
             var data = NavMeshBuilder.BuildNavMeshData(buildSettings,
                     sources, sourcesBounds, transform.position, transform.rotation);
 
@@ -43,8 +46,12 @@ using UnityEditor.SceneManagement;
                 data.name = gameObject.name;
                 RemoveData();
                 navMeshData = data;
-                if (isActiveAndEnabled)
+                if (isActiveAndEnabled) {
+                    #if UNITY_EDITOR
+                        Debug.Log($"NavMeshSurface: AddData happened.");
+                    #endif
                     AddData();
+                }
             }
         }
 
@@ -137,8 +144,9 @@ using UnityEditor.SceneManagement;
         {
 #if UNITY_EDITOR
             var myStage = StageUtility.GetStageHandle(gameObject);
-            if (!myStage.IsValid())
+            if (!myStage.IsValid()) {
                 return;
+            }
 #endif
             // Modifiers
             List<NavMeshModifierVolume> modifiers;
@@ -154,13 +162,16 @@ using UnityEditor.SceneManagement;
 
             foreach (var m in modifiers)
             {
-                if ((layerMask & (1 << m.gameObject.layer)) == 0)
+                if ((layerMask & (1 << m.gameObject.layer)) == 0) {
                     continue;
-                if (!m.AffectsAgentType(agentTypeID))
+                }
+                if (!m.AffectsAgentType(agentTypeID)) {
                     continue;
+                }
 #if UNITY_EDITOR
-                if (!myStage.Contains(m.gameObject))
+                if (!myStage.Contains(m.gameObject)) {
                     continue;
+                }
 #endif
                 var mcenter = m.transform.TransformPoint(m.center);
                 var scale = m.transform.lossyScale;
@@ -195,10 +206,12 @@ using UnityEditor.SceneManagement;
 
             foreach (var m in modifiers)
             {
-                if ((layerMask & (1 << m.gameObject.layer)) == 0)
+                if ((layerMask & (1 << m.gameObject.layer)) == 0) {
                     continue;
-                if (!m.AffectsAgentType(agentTypeID))
+                }
+                if (!m.AffectsAgentType(agentTypeID)) {
                     continue;
+                }
                 var markup = new NavMeshBuildMarkup();
                 markup.root = m.transform;
                 markup.overrideArea = m.overrideArea;

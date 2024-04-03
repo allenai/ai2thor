@@ -5989,6 +5989,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int maxStepCount = 10000
         ) {
             var capsule = GetAgentCapsule();
+            Debug.Log($"GetAgentCapsule center {capsule.center} radius {capsule.radius} height {capsule.height}");
             float sw = m_CharacterController.skinWidth;
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
             pointsQueue.Enqueue(transform.position);
@@ -6116,13 +6117,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             bool wasObjectVisible = getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
 
+            Debug.Log($"GetSimObjectNavMeshTarget: wasObjectVisible {wasObjectVisible} fixedPosition: {fixedPosition}");
+
             agentTransform.position = originalAgentPosition;
             agentTransform.rotation = originalAgentRotation;
             m_Camera.transform.rotation = originalCameraRotation;
 
             if(!wasObjectVisible) {
                 throw new InvalidOperationException(
-                    $"Target object {targetSOP.objectID} is not visible on navigation path given current agent parameters: maxVisibleDistance ({maxVisibleDistance}), gridSize ({gridSize}), fieldOfView ({m_Camera.fieldOfView}), camera width ({Screen.width}), camera height ({Screen.height})"
+                    $"Target object {targetSOP.objectID} is not visible on navigation path given current agent parameters: initialPosition ({initialPosition}), maxVisibleDistance ({maxVisibleDistance}), gridSize ({gridSize}), fieldOfView ({m_Camera.fieldOfView}), camera width ({Screen.width}), camera height ({Screen.height})"
                 );
             }
 
@@ -6201,16 +6204,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 targetPosition, out targetHit, Math.Max(0.2f, allowedError), UnityEngine.AI.NavMesh.AllAreas
             );
 
+            Debug.Log($"target hit {targetWasHit}");
+
             if (!startWasHit || !targetWasHit) {
                 this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 if (!startWasHit) {
                     throw new InvalidOperationException(
-                        $"No point on NavMesh near startPosition {startPosition}."
+                        $"No point on NavMesh near startPosition {startPosition.ToString("F6")}."
                     );
                 }
                 if (!targetWasHit) {
                     throw new InvalidOperationException(
-                        $"No point on NavMesh near targetPosition {targetPosition}."
+                        $"No point on NavMesh near targetPosition {targetPosition.ToString("F6")}."
                     );
                 }
             }
@@ -6408,7 +6413,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            getReachablePositions(1.0f, 10000, action.grid, action.gridColor);
+            // getReachablePositions(1.0f, 10000, action.grid, action.gridColor);
+            Debug.Log($"positions: {action.positions} +  null? {action.positions == null}");
 
             Instantiate(DebugTargetPointPrefab, sop.transform.position, Quaternion.identity);
             var results = new List<bool>();
