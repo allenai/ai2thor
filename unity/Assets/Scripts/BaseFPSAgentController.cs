@@ -562,18 +562,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                         seenRightForwards.Add(newRightForward);
 
-                        RaycastHit[] hits = capsuleCastAllForAgent(
-                            capsule: capsule,
+                        RaycastHit[] hits = CastBodyTrayectory(
+                            cachedCapsule: capsule,
                             skinWidth: sw,
                             startPosition: p,
-                            dir: right * rightForwardOffset.Item1 + forward * rightForwardOffset.Item2,
+                            direction: right * rightForwardOffset.Item1 + forward * rightForwardOffset.Item2,
                             moveMagnitude: gridSize.Value * gridMultiplier,
                             layerMask: layerMask
                         );
 
                         bool shouldEnqueue = true;
                         foreach (RaycastHit hit in hits) {
-                            if (hit.transform.gameObject.name != "Floor" &&
+                            if (!ancestorHasName(hit.transform.gameObject, "Floor") &&
                                 !ancestorHasName(hit.transform.gameObject, "FPSController") &&
                                 !objectsAlreadyColliding.Contains(hit.collider)
                             ) {
