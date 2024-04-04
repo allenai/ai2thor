@@ -819,7 +819,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
-                case "initbodytorigin": {
+                case "initbodyorigint": {
                     
                       Dictionary<string, object> action = new Dictionary<string, object>();
 
@@ -842,28 +842,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     action["action"] = "InitializeBody";
                     action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5"};
-                    action["colliderScaleRatio"] = new Vector3(1.2f, 1.5f, 2f);
+                    action["colliderScaleRatio"] = new Vector3(2f, 4f, 2f);
                     action["originOffsetX"] = 0.0f;
                     action["originOffsetZ"] = 0.0f;
                     //action["useAbsoluteSize"] = true;
-
-                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
-                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
-
-                    break;
-                }
-
-                case "initbodybigt": {
-                    
-                      Dictionary<string, object> action = new Dictionary<string, object>();
-
-                    action["action"] = "InitializeBody";
-                    action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5"};
-                    action["colliderScaleRatio"] = new Vector3(0.5f, 1.8f, 0.2f);
-                    action["originOffsetX"] = 0.0f;
-                    action["originOffsetZ"] = 0.0f;
-                    action["useVisibleColliderBase"] = true;
-                    action["useAbsoluteSize"] = true;
 
                     CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
                     //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
@@ -877,10 +859,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     action["action"] = "InitializeBody";
                     action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5"};
-                    action["colliderScaleRatio"] = new Vector3(0.5f, 1f, 2f);
+                    action["colliderScaleRatio"] = new Vector3(1f, 1f, 1f);
                     action["originOffsetX"] = 0.0f;
                     action["originOffsetZ"] = 0.0f;
-                    action["useVisibleColliderBase"] = true;
                     action["useAbsoluteSize"] = true;
 
                     CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
