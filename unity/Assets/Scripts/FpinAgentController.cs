@@ -389,7 +389,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // Process children only if necessary (i.e., they contain MeshFilters)
                 if (HasMeshInChildrenOrSelf(child)) {
-                    Transform parentForChildren = (copiedChild != null) ? copiedChild.transform : CreateContainerForHierarchy(child, targetParent).transform;
+                    Transform parentForChildren;
+
+                    //
+                    if (copiedChild != null) {
+                        parentForChildren = copiedChild.transform;
+                    } else {
+                        parentForChildren = CreateContainerForHierarchy(child, targetParent).transform;
+                    }
                     CopyMeshChildrenRecursive(child, parentForChildren, false);
                     if (isTopMost) {
                         thisTransform = parentForChildren;
@@ -455,6 +462,125 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //return reference to viscap so we can scaaaale it
                 fpinVisibilityCapsule = viscap;
                 return viscap.transform;
+            }
+
+            return null;
+        }
+
+        public Transform CopyToasterMeshChildren(GameObject source, GameObject target) {
+            // Initialize the recursive copying process
+            //Debug.Log($"is null {source == null} {target == null}");
+            return CopyToasterMeshChildrenRecursive(source.transform, target.transform);
+        }
+        
+        // sourceTransform - Parent object of mesh-hunt (agentMesh for top iteration)
+        // targetParent - Object to which copied meshes are parented (FPSController for top iteration)
+        // isTopMost - true for top-level iteration, false otherwise (so if(isTopMost) executes at very end...)
+        private Transform CopyToasterMeshChildrenRecursive(Transform sourceTransform, Transform targetParent, bool isTopMost = true) {
+            
+            // 1ST PASS: Initialize thisTransform parameter (it won't come into play until later, but needs to be initialized here because of the recursive structure)
+            // 2ND PASS: REDUNDANT
+            Transform thisTransform = null;
+
+            // For each child of source GameObject...
+            foreach (Transform child in sourceTransform) {
+                
+                // 1ST PASS: Initialize copiedChild parameter for upcoming (potential) duplicate...
+                GameObject copiedChild = null;
+
+                // 1ST PASS: Check if the child has a MeshFilter component
+                MeshFilter meshFilter = child.GetComponent<MeshFilter>();
+                
+                // If the child DOES have a MeshFilter...
+                if (meshFilter != null) {
+                    // Make new copiedChild GameObject with (current child) and (intended parent)
+                    // 1ST PASS: 'child' is "Mesh" (the one under agentMesh, the sourceTransform), and 'targetParent' is "FPSController"
+                    // NTH PASS: 
+                    // Debug.Log(child.gameObject.name + " and " + targetParent.gameObject.name + " are (currentChild) and (intendedParent)");
+                    copiedChild = CopyMeshToTarget(child, targetParent);
+                }
+
+                // 1ST/NTH PASS: If the entire hierarchy within or beneath this child has any meshFilters
+                //              (you must check the whole hierarchy, because there could be a skipped layer)...
+                if (HasMeshInChildrenOrSelf(child)) {
+                    // Declare upcoming parentForChildren
+                    Transform parentForChildren;
+
+                    // copiedChild 
+                    if (copiedChild != null) {
+                        parentForChildren = copiedChild.transform;
+                    } else {
+                        parentForChildren = CreateContainerForHierarchy(child, targetParent).transform;
+                    }
+                    CopyToasterMeshChildrenRecursive(child, parentForChildren, false);
+                    
+                    // 1ST (I.E. FINAL PASS) At the end, repurpose parentForChildren variable to be used 
+                    // 2ND PASS: Ignore
+                    if (isTopMost) {
+                        thisTransform = parentForChildren;
+                    }
+                }
+            }
+            // organize the heirarchy of all the meshes copied under a single vis cap so we can use it real nice
+            if (isTopMost) {
+                // Create new GameObject
+                GameObject viscap = new GameObject("fpinVisibilityCapsule");
+                Debug.Log($"what is thisTransform: {thisTransform.name}");
+
+                // //get the bounds of all the meshes we have copied over so far
+                // Bounds thisBounds = new Bounds(thisTransform.position, Vector3.zero);
+
+                // MeshRenderer[] meshRenderers = thisTransform.gameObject.GetComponentsInChildren<MeshRenderer>();
+                // foreach(MeshRenderer mr in meshRenderers) {
+                //     thisBounds.Encapsulate(mr.bounds);
+                // }
+
+                // Debug.Log($"thisBounds center is now at {thisBounds.center}, and the size is {thisBounds.size}");
+                // Debug.Log($"world position of the bottom of the bounds is {thisBounds.min.y}");
+
+                // float distanceFromTransformToBottomOfBounds = thisTransform.position.y - thisBounds.min.y;
+
+                // Debug.Log($"distance from transform to bottom of bounds {distanceFromTransformToBottomOfBounds}");
+
+                // //set all the meshes up as children of the viscap
+                // thisTransform.SetParent(viscap.transform);
+                // print(thisTransform.gameObject.name + " is the name of the transform being childed to the viscap!!!");
+                // thisTransform.localPosition = Vector3.zero;
+
+                // Physics.SyncTransforms();
+
+                // //update bounds again because we have now moved in world space
+                // thisBounds = new Bounds(thisTransform.position, Vector3.zero);
+                // meshRenderers = thisTransform.gameObject.GetComponentsInChildren<MeshRenderer>();
+                // foreach(MeshRenderer mr in meshRenderers) {
+                //     thisBounds.Encapsulate(mr.bounds);
+                // }
+
+                // Debug.Log($"thisBounds center is now at {thisBounds.center}, and the size is {thisBounds.size}");
+
+                // Vector3 dirFromBoundsCenterToVisCapTransform = viscap.transform.position - thisBounds.center;
+                // Debug.Log($"dirFromBoundsCenterToVisCapTransform: {dirFromBoundsCenterToVisCapTransform:f8}");
+
+                // // THIS SHIT IS CAUSING AN ISSUE!!!
+                // thisTransform.localPosition = new Vector3(dirFromBoundsCenterToVisCapTransform.x, thisTransform.localPosition.y, dirFromBoundsCenterToVisCapTransform.z);
+
+                // Physics.SyncTransforms();
+
+                // // thisTransform.localRotation = Quaternion.identity;
+
+                // Physics.SyncTransforms();
+                // //set viscap up as child of FPSAgent
+                // viscap.transform.SetParent(targetParent);
+                // Physics.SyncTransforms();
+                // viscap.transform.localPosition = Vector3.zero;
+                // Physics.SyncTransforms();
+                // viscap.transform.localRotation = Quaternion.identity;
+                // viscap.transform.localScale = new Vector3(1, 1, 1);
+                
+
+                // //return reference to viscap so we can scaaaale it
+                // fpinVisibilityCapsule = viscap;
+                // return viscap.transform;
             }
 
             return null;
@@ -646,6 +772,156 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
             fpinMovable = new FpinMovableContinuous(this.GetComponentInParent<CollisionListener>());
+
+            return new ActionFinished(spawnAssetActionFinished) {
+                // TODO: change to a proper class once metadata return is defined
+                actionReturn = new Dictionary<string, object>() {
+                    {"objectSphereBounds", spawnAssetActionFinished.actionReturn as ObjectSphereBounds},
+                    {"BoxBounds", this.BoxBounds},
+                    {"cameraNearPlane", m_Camera.nearClipPlane},
+                    {"cameraFarPlane", m_Camera.farClipPlane}
+                }
+            };
+        }
+
+        public ActionFinished InitializeBodyToaster(
+            BodyAsset bodyAsset,
+            // TODO: do we want to allow non relative to the box offsets?
+            float originOffsetX = 0.0f,
+            float originOffsetY = 0.0f,
+            float originOffsetZ = 0.0f,
+            Vector3? colliderScaleRatio = null,  
+            bool useAbsoluteSize = false, 
+            bool useVisibleColliderBase = false
+        ) {
+            Debug.Log("1. Generate Toaster_5..............");
+            //spawn in a default mesh to base the created box collider on
+            var spawnAssetActionFinished = spawnBodyAsset(bodyAsset, out GameObject spawnedMesh);
+            // Return early if spawn failed
+            if (!spawnAssetActionFinished.success) {
+                return spawnAssetActionFinished;
+            }
+
+            Debug.Log("2. Destroy existing agent-collider..........");
+            //remove any previously generated colliders
+            destroyAgentBoxCollider();
+            
+            Debug.Log("3. Destroy existing visibility capsule............");
+            //remove old fpin visibility capsule since we are using a new mesh
+            if (fpinVisibilityCapsule != null) {
+                UnityEngine.Object.DestroyImmediate(fpinVisibilityCapsule);
+            }
+
+            Debug.Log("4. Reset position for all objects........");
+            GameObject surrogateTransform = new GameObject("surrogateTransform");
+            surrogateTransform.transform.SetParent(this.transform);
+
+            // Reset all transforms to FPSController origin
+            surrogateTransform.transform.localPosition = this.transform.GetChild(0).localPosition;
+            surrogateTransform.transform.localRotation = Quaternion.identity;
+            surrogateTransform.transform.localScale = Vector3.one;
+
+            while (this.transform.childCount != 1) {
+                this.transform.GetChild(0).SetParent(surrogateTransform.transform);
+            }
+
+            surrogateTransform.transform.localPosition = Vector3.zero;
+
+            while (surrogateTransform.transform.childCount != 0) {
+                surrogateTransform.transform.GetChild(0).SetParent(this.transform);
+            }
+            
+            Destroy(surrogateTransform);
+            
+            Debug.Log("4. Copy mesh-renderer objects into agant...........");
+            //copy all mesh renderers found on the spawnedMesh onto this agent now
+            Debug.Log(spawnedMesh + " is source object");
+            Debug.Log(spawnedMesh.GetType + " TICVCCCCCCCCCCCCCCCCCCCCCC");
+            // Transform visCap = CopyToasterMeshChildren(source: spawnedMesh.transform.gameObject, target: this.transform.gameObject);
+            //This is where we would scale the spawned meshes based on the collider scale but uhhhhhhhHHHHHHHHHHH
+            // Vector3 ratio = colliderScaleRatio.GetValueOrDefault(Vector3.one);
+            // Vector3 newVisCapScale = new Vector3(
+            //     ratio.x * visCap.localScale.x,
+            //     ratio.y * visCap.localScale.y,
+            //     ratio.z * visCap.localScale.z
+            // );
+            // if(useAbsoluteSize){
+            //     newVisCapScale = new Vector3(ratio.x, ratio.y, ratio.z);
+            // }
+            // visCap.localScale = newVisCapScale;
+            // Debug.Log("4 DONE!!!!!!!!!!!!!!!!!");
+
+            // Debug.Log("4. Remove spawned mesh........");
+            // //remove the spawned mesh cause we are done with it
+            // foreach (var sop in spawnedMesh.GetComponentsInChildren<SimObjPhysics>()) {
+            //     agentManager.physicsSceneManager.RemoveFromObjectsInScene(sop);
+            // }
+            // if (spawnedMesh.activeInHierarchy) {
+            //     UnityEngine.Object.DestroyImmediate(spawnedMesh);
+            // }
+            // Debug.Log("4 DONE!!!!!!!!!!!!!!!!!");
+
+            // //assign agent visibility capsule to new meshes
+            // VisibilityCapsule = visCap.transform.gameObject;
+
+            // //ok now create box collider based on the mesh
+            // this.spawnAgentBoxCollider(
+            //     agent: this.gameObject,
+            //     agentType: this.GetType(),
+            //     scaleRatio: colliderScaleRatio.GetValueOrDefault(Vector3.one),
+            //     useAbsoluteSize: useAbsoluteSize,
+            //     useVisibleColliderBase: useVisibleColliderBase, 
+            //     originOffsetX: originOffsetX,
+            //     originOffsetY: originOffsetY,
+            //     originOffsetZ: originOffsetZ
+            // );
+
+            // //reposition agent transform relative to the generated box
+            // //i think we need to unparent the FPSController from all its children.... then reposition
+            // //repositionAgentOrigin(newRelativeOrigin: new Vector3 (originOffsetX, originOffsetY, originOffsetZ));
+
+            // Physics.SyncTransforms();
+
+            // //adjust agent character controller and capsule according to extents of box collider
+            // var characterController = this.GetComponent<CharacterController>();
+            // var myBox = spawnedBoxCollider.GetComponent<BoxCollider>();
+
+            // // Transform the box collider's center to the world space and then into the capsule collider's local space
+            // Vector3 boxCenterWorld = myBox.transform.TransformPoint(myBox.center);
+            // Vector3 boxCenterCapsuleLocal = characterController.transform.InverseTransformPoint(boxCenterWorld);
+
+            // // Now the capsule's center can be set to the transformed center of the box collider
+            // characterController.center = boxCenterCapsuleLocal;
+
+            // // Adjust the capsule size
+            // // Set the height to the smallest dimension of the box
+            // //float minHeight = Mathf.Min(myBox.size.x, myBox.size.y, myBox.size.z);
+            // //characterController.height = minHeight;
+            // float boxHeight = myBox.size.y;
+            // characterController.height = boxHeight;
+
+            // // Set the radius to fit inside the box, considering the smallest width or depth
+            // float minRadius = Mathf.Min(myBox.size.x, myBox.size.z) / 2f;
+            // characterController.radius = minRadius;
+
+            // //ok now also adjust this for the trigger capsule collider of the agent.
+            // var myTriggerCap = this.GetComponent<CapsuleCollider>();
+            // myTriggerCap.center = boxCenterCapsuleLocal;
+            // myTriggerCap.height = boxHeight;
+            // myTriggerCap.radius = minRadius;
+
+            // //ok recalibrate navmesh child component based on the new agent capsule now that its updated
+            // var navmeshchild = this.transform.GetComponentInChildren<NavMeshAgent>();
+            // navmeshchild.transform.localPosition = new Vector3(boxCenterCapsuleLocal.x, 0.0f, boxCenterCapsuleLocal.z);
+            // navmeshchild.baseOffset = 0.0f;
+            // navmeshchild.height = boxHeight;
+            // navmeshchild.radius = minRadius;
+
+            // //enable cameras I suppose
+            // m_Camera.GetComponent<PostProcessVolume>().enabled = true;
+            // m_Camera.GetComponent<PostProcessLayer>().enabled = true;
+
+            // fpinMovable = new FpinMovableContinuous(this.GetComponentInParent<CollisionListener>());
 
             return new ActionFinished(spawnAssetActionFinished) {
                 // TODO: change to a proper class once metadata return is defined

@@ -782,7 +782,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     
                       Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "InitializeBody";
+                    action["action"] = "InitializeBodyToaster";
                     action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5"};
                     action["colliderScaleRatio"] = new Vector3(1, 1, 1);
                     action["originOffsetX"] = 0.0f;
@@ -869,7 +869,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "InitializeBody";
+                    action["action"] = "InitializeBodyToaster";
                     action["bodyAsset"] = new BodyAsset() { assetId = "Apple_1"};
                     action["colliderScaleRatio"] = new Vector3(1, 1, 1);
                     action["originOffsetX"] = 0.0f;
