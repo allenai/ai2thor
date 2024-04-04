@@ -662,7 +662,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             BodyAsset bodyAsset,
             // TODO: do we want to allow non relative to the box offsets?
             float originOffsetX = 0.0f,
-            float originOffsetY = 0.0f,
             float originOffsetZ = 0.0f,
             Vector3? colliderScaleRatio = null,  
             bool useAbsoluteSize = false, 
@@ -673,7 +672,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var actionFinished = this.InitializeBody(
                 bodyAsset: bodyAsset,
                 originOffsetX: originOffsetX,
-                originOffsetY: originOffsetY,
                 originOffsetZ: originOffsetZ,
                 colliderScaleRatio: colliderScaleRatio,
                 useAbsoluteSize: useAbsoluteSize,
@@ -688,7 +686,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             BodyAsset bodyAsset,
             // TODO: do we want to allow non relative to the box offsets?
             float originOffsetX = 0.0f,
-            float originOffsetY = 0.0f,
             float originOffsetZ = 0.0f,
             Vector3? colliderScaleRatio = null,  
             bool useAbsoluteSize = false, 
@@ -787,9 +784,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //now lets reposition the agent origin so that it is at the base of the colliders, but in the exact center
             //just so we know what position it will be at when we teleport it back to its original position
 
-            repositionAgentPivot(xOffset: 0.0f, zOffset: 0.0f);
+            repositionAgentPivot(xOffset: originOffsetX, zOffset: originOffsetZ);
 
-            //adjust agent character controller and capsule according to extents of box collider
+           //adjust agent character controller and capsule according to extents of box collider
             var characterController = this.GetComponent<CharacterController>();
 
             // Transform the box collider's center to the world space and then into the capsule collider's local space
@@ -821,12 +818,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             navmeshchild.radius = minRadius;
 
             //ok now check if we were to teleport back to our original position and rotation....
-            //will our current box colliders clip with anything? If so, send a failure
+            //will our current box colliders clip with anything? If so, send a failure message
             Vector3 boxCenterAtInitialPosition = spawnedBoxCollider.bounds.center - agentSpawnOffset;
-            boxCenterAtInitialPosition = originalRotation * (boxCenterAtInitialPosition - originalPosition) + originalPosition;
-            boxCenterAtInitialPosition = new Vector3(boxCenterAtInitialPosition.x, boxCenterAtInitialPosition.y + spawnedBoxCollider.bounds.extents.y, boxCenterAtInitialPosition.z);
 
-            //boxCenterAtInitialPosition = originalRotation * (boxCenterAtInitialPosition - originalPosition) + originalPosition;
+            boxCenterAtInitialPosition = new Vector3(boxCenterAtInitialPosition.x - originOffsetX, 
+                                                    boxCenterAtInitialPosition.y + spawnedBoxCollider.bounds.extents.y, 
+                                                    boxCenterAtInitialPosition.z - originOffsetZ);
+
+            boxCenterAtInitialPosition = originalRotation * (boxCenterAtInitialPosition - originalPosition) + originalPosition;
+
             Vector3 newBoxExtents = new Vector3(
                 spawnedBoxCollider.bounds.extents.x,
                 spawnedBoxCollider.bounds.extents.y,
@@ -871,6 +871,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //we are safe to return to our original pose, so lets do that before finally resetting the pivot offset as needed
             this.transform.position = originalPosition;
             this.transform.rotation = originalRotation;
+
+
+
+
+
 
             //enable cameras I suppose
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
@@ -1016,19 +1021,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //to the bottom of the spawned box collider's lowest extent in the -Y direction
         public void repositionAgentPivot (float xOffset, float zOffset) {
 
-            //unparent all children from FPSAgentController
-            List<Transform> allMyChildren = new List<Transform>();
-            foreach (Transform child in this.transform) {
-                allMyChildren.Add(child);
-            }
-
-            //OK WHY DONT WE JUST DO THIS IN THE ABOVE LOOP WELL LET ME TELL YOU WHY
-            //TURNS OUT the SetParent() call doesn't execute instantly as it seems to rely on
-            //the transform heirarchy changing and the order is ambiguous??
-            foreach(Transform child in allMyChildren) {
-                child.SetParent(null);
-                Physics.SyncTransforms();
-            }
+            //remove generated meshes and colliders from agent heirarchy
+            fpinVisibilityCapsule.transform.SetParent(null);
 
             float distanceToBottom = spawnedBoxCollider.bounds.center.y - spawnedBoxCollider.bounds.min.y;
 
@@ -1041,10 +1035,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Physics.SyncTransforms();
 
-            foreach(Transform child in allMyChildren) {
-                child.SetParent(this.transform);
-                Physics.SyncTransforms();
-            }
+            fpinVisibilityCapsule.transform.SetParent(this.transform);
+            Physics.SyncTransforms();
+
         }
 
         public IEnumerator MoveAgent(

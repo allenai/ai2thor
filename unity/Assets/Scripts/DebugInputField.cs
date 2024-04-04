@@ -590,7 +590,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<string, object>() {
                         {"bodyAsset", new BodyAsset() { assetId = "StretchBotSimObj"}},
-                        {"originOffsetX", -0.09938055f},
+                        {"originOffsetX", -0.1f},
                         {"originOffsetZ", 0.1157837f},
                         {"colliderScaleRatio", new Vector3(1, 1, 1)},
                         {"useVisibleColliderBase", true}
@@ -913,8 +913,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     action["action"] = "InitializeBody";
                     action["bodyAsset"] = new BodyAsset() { assetId = "StretchBotSimObj"};
                     action["colliderScaleRatio"] = new Vector3(1, 1, 1);
-                    action["originOffsetX"] = 0.0f;
-                    action["originOffsetZ"] = 0.0f;
+                    action["originOffsetX"] = -0.1f;
+                    action["originOffsetZ"] = 0.1157837f;
                     //action["useAbsoluteSize"] = true;
 
                     CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
