@@ -775,7 +775,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Vector3 desiredSize = colliderScaleRatio.GetValueOrDefault(Vector3.one);
 
                 var xScaleFactor = desiredSize.x / currentSize.x;
-                Debug.Log($"desiredSize x / currentSize x is: {xScaleFactor:F8}");
                 var yScaleFactor = desiredSize.y / currentSize.y;
                 var zScaleFactor = desiredSize.z/ currentSize.z;
 
@@ -800,9 +799,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Now the capsule's center can be set to the transformed center of the box collider
             characterController.center = boxCenterCapsuleLocal;
 
-            // Adjust the capsule size
-            // Set the height to the smallest dimension of the box
-
+            // Adjust the capsule size based on the size of the bounds
             float boxHeight = spawnedBoxCollider.bounds.size.y;
             characterController.height = boxHeight;
 
@@ -810,7 +807,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float minRadius = Mathf.Min(spawnedBoxCollider.bounds.size.x, spawnedBoxCollider.bounds.size.z) / 2.0f;
             characterController.radius = minRadius;
 
-            //ok now also adjust this for the trigger capsule collider of the agent.
+            //ok now also adjust this for the trigger capsule collider of the agent, just copy all the values of the characterController
             var myTriggerCap = this.GetComponent<CapsuleCollider>();
             myTriggerCap.center = boxCenterCapsuleLocal;
             myTriggerCap.height = boxHeight;
@@ -835,7 +832,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 spawnedBoxCollider.bounds.extents.y,
                 spawnedBoxCollider.bounds.extents.z);
 
-            // #if UNITY_EDITOR
+            #if UNITY_EDITOR
             // /////////////////////////////////////////////////
             //for visualization lets spawna cube at the center of where the boxCenter supposedly is
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -857,7 +854,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
             material.renderQueue = 3000;
             // ////////////////////////////////////////////////
-            // #endif
+            #endif
 
             // used to check if there is enough free space given the generated colliders for the agent to return to its original pose
             int checkBoxLayerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
