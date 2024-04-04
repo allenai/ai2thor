@@ -188,7 +188,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public bool inHighFrictionArea = false;
         // outbound object filter
         private SimObjPhysics[] simObjFilter = null;
-        private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
+        protected VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
         protected HashSet<Collider> collidersDisabledForVisbilityCheck = new HashSet<Collider>();
 
         private Dictionary<int, Dictionary<string, object>> originalLightingValues = null;
@@ -562,18 +562,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                         seenRightForwards.Add(newRightForward);
 
-                        RaycastHit[] hits = capsuleCastAllForAgent(
-                            capsule: capsule,
+                        RaycastHit[] hits = CastBodyTrayectory(
+                            cachedCapsule: capsule,
                             skinWidth: sw,
                             startPosition: p,
-                            dir: right * rightForwardOffset.Item1 + forward * rightForwardOffset.Item2,
+                            direction: right * rightForwardOffset.Item1 + forward * rightForwardOffset.Item2,
                             moveMagnitude: gridSize.Value * gridMultiplier,
                             layerMask: layerMask
                         );
 
                         bool shouldEnqueue = true;
                         foreach (RaycastHit hit in hits) {
-                            if (hit.transform.gameObject.name != "Floor" &&
+                            if (!ancestorHasName(hit.transform.gameObject, "Floor") &&
                                 !ancestorHasName(hit.transform.gameObject, "FPSController") &&
                                 !objectsAlreadyColliding.Contains(hit.collider)
                             ) {
@@ -679,7 +679,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public abstract ActionFinished InitializeBody(ServerAction initializeAction);
 
-         private bool ValidRotateStepDegreesWithSnapToGrid(float rotateDegrees) {
+         protected bool ValidRotateStepDegreesWithSnapToGrid(float rotateDegrees) {
             // float eps = 0.00001f;
             return rotateDegrees == 90.0f || rotateDegrees == 180.0f || rotateDegrees == 270.0f || (rotateDegrees % 360.0f) == 0.0f;
         }
@@ -701,7 +701,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.maxDownwardLookAngle = action.maxDownwardLookAngle;
             }
 
-            this.InitializeBody(action);
+            // if (action.agentMode != "fpin") {
+            //     this.InitializeBody(action);
+            // }
             if (action.antiAliasing != null) {
                 agentManager.updateAntiAliasing(
                     postProcessLayer: m_Camera.gameObject.GetComponentInChildren<PostProcessLayer>(),
@@ -2384,7 +2386,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual MetadataWrapper generateMetadataWrapper() {
-            Debug.Log("calling generateMetadataWrapper");
+            // Debug.Log("calling generateMetadataWrapper");
             // AGENT METADATA
             AgentMetadata agentMeta = new AgentMetadata();
             agentMeta.name = "agent";
@@ -4119,7 +4121,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             IEnumerable<SimObjPhysics> filterSimObjs = null
         ) {
             SimObjPhysics[] interactable;
-
+            Debug.Log($" this.visibilityScheme {this.visibilityScheme.ToString()}");
             if (this.visibilityScheme == VisibilityScheme.Collider) {
                 return GetAllVisibleSimObjPhysicsCollider(camera, maxDistance, filterSimObjs, out interactable);
             } else {
@@ -5982,6 +5984,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore);
         }
 
+        public virtual RaycastHit[] CastBodyTrayectory(Vector3 startPosition, Vector3 direction, float skinWidth, float moveMagnitude, int layerMask, CapsuleData cachedCapsule) { 
+            
+            return capsuleCastAllForAgent(
+                capsule: cachedCapsule,
+                skinWidth: skinWidth,
+                startPosition: startPosition,
+                dir: direction,
+                moveMagnitude: moveMagnitude,
+                layerMask: layerMask
+            );
+        }
+
         public bool getReachablePositionToObjectVisible(
             SimObjPhysics targetSOP,
             out Vector3 pos,
@@ -6018,6 +6032,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     bool isVisible = IsInteractable(targetSOP);
 
                     transform.rotation = rot;
+                    Debug.Log($"------ getReachablePositionToObjectVisible point {p.ToString("F8")}");
 
                     if (isVisible) {
                         pos = p;
@@ -6032,18 +6047,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                         seenPoints.Add(newPosition);
 
-                        RaycastHit[] hits = capsuleCastAllForAgent(
-                            capsule: capsule,
+                        RaycastHit[] hits = CastBodyTrayectory(
+                            cachedCapsule: capsule,
                             skinWidth: sw,
                             startPosition: p,
-                            dir: d,
+                            direction: d,
                             moveMagnitude: (gridSize * gridMultiplier),
                             layerMask: layerMask
                         );
 
+                        Debug.Log($"------ getReachablePositionToObjectVisible capsule cast hit at pos {newPosition.ToString("F8")} count {hits.Count()}");
+
                         bool shouldEnqueue = true;
+                        var i = 0;
                         foreach (RaycastHit hit in hits) {
-                            if (hit.transform.gameObject.name != "Floor" &&
+
+                            Debug.Log($"------ getReachablePositionToObjectVisible capsule cast hit {i} {hit.transform.gameObject.name} {!ancestorHasName(hit.transform.gameObject, "FPSController")} {!objectsAlreadyColliding.Contains(hit.collider)} {hit.transform.parent?.parent?.name}");
+                            i++;
+                            if (!ancestorHasName(hit.transform.gameObject, "Floor") &&
+                                // hit.transform.gameObject.name != "Floor" && // Dont know why this worked on procedural
                                 !ancestorHasName(hit.transform.gameObject, "FPSController") &&
                                 !objectsAlreadyColliding.Contains(hit.collider)
                             ) {
@@ -6052,11 +6074,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             }
                         }
 
+                        Debug.Log($"------ getReachablePositionToObjectVisible shouldEnqueue {shouldEnqueue}");
                         if (!shouldEnqueue) {
                             continue;
                         }
 
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
+                        Debug.Log($"------ getReachablePositionToObjectVisible inBounds {inBounds} errorMessage {errorMessage}");
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
                                 UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
@@ -6070,8 +6094,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             handObjectCanFitInPosition(newPosition, 180.0f) ||
                             handObjectCanFitInPosition(newPosition, 270.0f)
                         );
+                        Debug.Log($"------ getReachablePositionToObjectVisible shouldEnqueue {shouldEnqueue} handObjectCanFitInPosition 0 {handObjectCanFitInPosition(newPosition, 0.0f)} 90 {handObjectCanFitInPosition(newPosition, 90.0f)} 180 {handObjectCanFitInPosition(newPosition, 180.0f)} 270 {handObjectCanFitInPosition(newPosition, 270.0f)}");
                         if (shouldEnqueue) {
                             pointsQueue.Enqueue(newPosition);
+                            // if (visualize) {
+                            //     var gridRenderer = Instantiate(GridRenderer, Vector3.zero, Quaternion.identity) as GameObject;
+                            //     var gridLineRenderer = gridRenderer.GetComponentInChildren<LineRenderer>();
+                            //     if (gridColor.HasValue) {
+                            //         gridLineRenderer.startColor = gridColor.Value;
+                            //         gridLineRenderer.endColor = gridColor.Value;
+                            //     }
+                            //     gridLineRenderer.SetWidth(start: gridWidth, end: gridWidth);
+                            //     // gridLineRenderer.startColor = ;
+                            //     // gridLineRenderer.endColor = ;
+                            //     gridLineRenderer.positionCount = 2;
+                            //     // gridLineRenderer.startWidth = 0.01f;
+                            //     // gridLineRenderer.endWidth = 0.01f;
+                            //     gridLineRenderer.SetPositions(new Vector3[] {
+                            //         new Vector3(p.x, gridVisualizeY, p.z),
+                            //         new Vector3(newPosition.x, gridVisualizeY, newPosition.z)
+                            //     });
+                            // }
+#if UNITY_EDITOR
+                            Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+#endif
 #if UNITY_EDITOR
                             Debug.DrawLine(p, newPosition, Color.cyan, 10f);
 #endif

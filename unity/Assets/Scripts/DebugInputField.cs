@@ -4363,6 +4363,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+                case "vpf": {
+
+                    ServerAction action = new ServerAction();
+                        action.action = "VisualizeShortestPaths";
+
+                        action.objectType = "Dog Bed";
+
+                        if (splitcommand.Length > 1) {
+                            // ID of spawner
+                            action.objectType = splitcommand[1];
+                        }
+
+                         Debug.Log($"vpf --- call {splitcommand.Length}");
+
+
+
+                        var fpin = CurrentActiveController() as FpinAgentController;
+                        var pos = fpin.SamplePointsOnNavMesh(200, 0.1f);
+                        action.positions = pos.Take(20).ToList();
+
+                        Debug.Log($"Debug input field {action.positions} null? {action.positions == null}");
+                        action.grid = true;
+                        CurrentActiveController().ProcessControlCommand(action);
+
+                    break;
+                }
                 case "vw": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "VisualizeWaypoints";
