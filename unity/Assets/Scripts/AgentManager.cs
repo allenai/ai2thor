@@ -217,6 +217,45 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             physicsSceneManager.MakeAllObjectsMoveable();
         } else if (agentMode == "fpin") {
             SetUpFpinController(action);
+
+            // TODO refactor initialization funtionality
+            // var newAction = action.DeepClone();
+            // newAction.action = "BackwardsCompatibleInitialize";
+            // primaryAgent.ProcessControlCommand(newAction);
+
+            // TODO make calll using ProcessControlCommand
+            var initp = action.dynamicServerAction.ToObject<BackwardsCompatibleInitializeParams>();
+
+
+            // TODO Decide if we want to run it 
+            // var jsonResolver = new ShouldSerializeContractResolver();
+            // var json = Newtonsoft.Json.JsonConvert.SerializeObject(
+            //     new Dictionary<string, object>() { {"args", initp} },
+            //     Newtonsoft.Json.Formatting.None,
+            //     new Newtonsoft.Json.JsonSerializerSettings() {
+            //         ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+            //         ContractResolver = jsonResolver
+            //     }
+            // );
+            
+            // // var clone = action.dynamicServerAction.jObject.DeepClone().ToObject<JObject>();
+            // // clone["action"] = "BackwardsCompatibleInitialize";
+            // var actionCopy = new DynamicServerAction(json);
+            // actionCopy.jObject.Add(new JProperty("action", "BackwardsCompatibleInitialize"));
+
+            // primaryAgent.ProcessControlCommand(actionCopy);
+            
+
+            var fpin = primaryAgent as FpinAgentController;
+            var actionFinished = fpin.BackwardsCompatibleInitialize(initp);
+            Debug.Log($"BackwardsCompatibleInitialize of AgentController. lastActionSuccess: {actionFinished.success}, errorMessage: {actionFinished.errorMessage} actionReturn: {actionFinished.actionReturn}, agentState: {primaryAgent.agentState}");
+            if (!actionFinished.success) {
+                primaryAgent.actionFinished(false, $"Error running 'BackwardsCompatibleInitialize' failed with error: {actionFinished.errorMessage}");
+                return;
+            }
+            // if (actiongF)
+            // actionFinished.
+
         } else {
             var error = $"Invalid agentMode {action.agentMode}";
             Debug.Log(error);
@@ -244,7 +283,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             action.dynamicServerAction :
             action.dynamicServerAction.agentInitializationParams
         );
-        Debug.Log($"Initialize of AgentController. lastActionSuccess: {primaryAgent.lastActionSuccess}, actionReturn: {primaryAgent.actionReturn}, agentState: {primaryAgent.agentState}");
+        Debug.Log($"Initialize of AgentController. lastActionSuccess: {primaryAgent.lastActionSuccess}, errorMessage: {primaryAgent.errorMessage}, actionReturn: {primaryAgent.actionReturn}, agentState: {primaryAgent.agentState}");
         Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         if (action.targetFrameRate > 0) {
             Application.targetFrameRate = action.targetFrameRate;
@@ -1115,7 +1154,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
         RenderTexture currentTexture = null;
 
-        Debug.Log($"-- createPayload {shouldRender} {shouldRenderImageSynthesis}");
+        // Debug.Log($"-- createPayload {shouldRender} {shouldRenderImageSynthesis}");
         if (shouldRender) {
             currentTexture = RenderTexture.active;
             for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
@@ -2378,7 +2417,7 @@ public class ServerAction {
         return (SimObjType)Enum.Parse(typeof(SimObjType), receptacleObjectType);
     }
 
-    public VisibilityScheme GetVisibilityScheme() {
+    public static VisibilityScheme GetVisibilitySchemeFromString(string visibilityScheme) {
         VisibilityScheme result = VisibilityScheme.Collider;
         try {
             result = (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme, true);
@@ -2391,6 +2430,10 @@ public class ServerAction {
         }
 
         return result;
+    }
+
+    public VisibilityScheme GetVisibilityScheme() {
+        return GetVisibilitySchemeFromString(this.visibilityScheme);
     }
 
     public SimObjType GetSimObjType() {

@@ -38,6 +38,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         
     }
     #nullable disable
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class BackwardsCompatibleInitializeParams {
+        //  Make what parameters it uses explicit
+        public float maxUpwardLookAngle = 0.0f;
+        public float maxDownwardLookAngle = 0.0f;
+        public string antiAliasing = null;
+        public float gridSize;
+        public float fieldOfView;
+        public float cameraNearPlane;
+        public float cameraFarPlane;
+        public float timeScale = 1.0f;
+        public float rotateStepDegrees = 90.0f;
+        public bool snapToGrid = true;
+        public bool renderImage = true;
+        public bool renderImageSynthesis = true;
+        public bool renderDepthImage;
+        public bool renderSemanticSegmentation;
+        public bool renderInstanceSegmentation;
+        public bool renderNormalsImage;
+        public float maxVisibleDistance = 1.5f;
+        public float visibilityDistance;
+        public float TimeToWaitForObjectsToComeToRest = 10.0f;
+        public string visibilityScheme = VisibilityScheme.Collider.ToString();
+    }
+
     public class FpinAgentController : PhysicsRemoteFPSAgentController{
 
         private static readonly Vector3 agentSpawnOffset = new Vector3(100.0f, 100.0f, 100.0f);
@@ -59,11 +86,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     boxBounds = currentBounds;
 
-                    Debug.Log($"world center: {boxBounds.worldCenter}");
-                    Debug.Log($"size: {boxBounds.size}");
-                    Debug.Log($"agentRelativeCenter: {boxBounds.agentRelativeCenter}");
+                    // Debug.Log($"world center: {boxBounds.worldCenter}");
+                    // Debug.Log($"size: {boxBounds.size}");
+                    // Debug.Log($"agentRelativeCenter: {boxBounds.agentRelativeCenter}");
                 } else { 
-                    Debug.Log("why is it nullll");
+                    // Debug.Log("why is it nullll");
                     return null;
                 }
 
@@ -82,6 +109,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void Start() {
             //put stuff we need here when we need it maybe
         }
+
+        public override RaycastHit[] CastBodyTrayectory(Vector3 startPosition, Vector3 direction, float skinWidth, float moveMagnitude, int layerMask, CapsuleData cachedCapsule) { 
+            
+            Vector3 startPositionBoxCenter = startPosition + this.transform.TransformDirection(this.boxBounds.agentRelativeCenter);
+            Debug.Log($"----- CastBodyTrayectory {startPositionBoxCenter.ToString("F8")} {this.boxBounds.agentRelativeCenter.ToString("F8")}");
+
+            return Physics.BoxCastAll(
+                center: startPositionBoxCenter,
+                halfExtents: this.boxBounds.size / 2.0f,
+                direction: direction,
+                orientation: this.transform.rotation,
+                maxDistance: moveMagnitude,
+                layerMask: layerMask,
+                queryTriggerInteraction: QueryTriggerInteraction.Ignore
+            );
+        }
+
 
         //override so we can access to fpin specific stuff
         public override MetadataWrapper generateMetadataWrapper() {
@@ -512,6 +556,140 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionReturn = this.BoxBounds
             };
         }
+        
+
+        public ActionFinished BackwardsCompatibleInitialize(BackwardsCompatibleInitializeParams args) {
+            Debug.Log("RUNNING BackCompatInitialize from FpinAgentController.cs");
+            // limit camera from looking too far down/up
+            //default max are 30 up and 60 down, different agent types may overwrite this
+            if (Mathf.Approximately(args.maxUpwardLookAngle, 0.0f)) {
+                this.maxUpwardLookAngle = 30f;
+            } else {
+                this.maxUpwardLookAngle = args.maxUpwardLookAngle;
+            }
+
+            if (Mathf.Approximately(args.maxDownwardLookAngle, 0.0f)) {
+                this.maxDownwardLookAngle = 60f;
+            } else {
+                this.maxDownwardLookAngle = args.maxDownwardLookAngle;
+            }
+
+            if (args.antiAliasing != null) {
+                agentManager.updateAntiAliasing(
+                    postProcessLayer: m_Camera.gameObject.GetComponentInChildren<PostProcessLayer>(),
+                    antiAliasing: args.antiAliasing
+                );
+            }
+            m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
+
+            if (args.gridSize == 0) {
+                args.gridSize = 0.25f;
+            }
+
+            // note: this overrides the default FOV values set in InitializeBody()
+            if (args.fieldOfView > 0 && args.fieldOfView < 180) {
+                m_Camera.fieldOfView = args.fieldOfView;
+            } else if (args.fieldOfView < 0 || args.fieldOfView >= 180) {
+                errorMessage = "fov must be set to (0, 180) noninclusive.";
+                Debug.Log(errorMessage);
+                return new ActionFinished(success: false, errorMessage: errorMessage);
+            }
+
+            if (args.cameraNearPlane > 0) {
+                m_Camera.nearClipPlane = args.cameraNearPlane;
+            }
+
+            if (args.cameraFarPlane > 0) {
+                m_Camera.farClipPlane = args.cameraFarPlane;
+            }
+
+            if (args.timeScale > 0) {
+                if (Time.timeScale != args.timeScale) {
+                    Time.timeScale = args.timeScale;
+                }
+            } else {
+                errorMessage = "Time scale must be > 0";
+                Debug.Log(errorMessage);
+                return new ActionFinished(success: false, errorMessage: errorMessage);
+            }
+
+            if (args.rotateStepDegrees <= 0.0) {
+                errorMessage = "rotateStepDegrees must be a non-zero, non-negative float";
+                Debug.Log(errorMessage);
+                return new ActionFinished(success: false, errorMessage: errorMessage);
+            }
+
+            // default is 90 defined in the ServerAction class, specify whatever you want the default to be
+            if (args.rotateStepDegrees > 0.0) {
+                this.rotateStepDegrees = args.rotateStepDegrees;
+            }
+
+             if (args.snapToGrid && !ValidRotateStepDegreesWithSnapToGrid(args.rotateStepDegrees)) {
+                errorMessage = $"Invalid values 'rotateStepDegrees': ${args.rotateStepDegrees} and 'snapToGrid':${args.snapToGrid}. 'snapToGrid': 'True' is not supported when 'rotateStepDegrees' is different from grid rotation steps of 0, 90, 180, 270 or 360.";
+                Debug.Log(errorMessage);
+                return new ActionFinished(success: false, errorMessage: errorMessage);
+            }
+
+            if(args.maxDownwardLookAngle < 0) {
+                errorMessage = "maxDownwardLookAngle must be a non-negative float";
+                Debug.Log(errorMessage);
+                return new ActionFinished(success: false, errorMessage: errorMessage);
+            }
+
+            if(args.maxUpwardLookAngle < 0) {
+                errorMessage = "maxUpwardLookAngle must be a non-negative float";
+                Debug.Log(errorMessage);
+                return new ActionFinished(success: false, errorMessage: errorMessage);
+            }
+
+
+            this.snapToGrid = args.snapToGrid;
+
+            if (args.renderDepthImage || args.renderSemanticSegmentation || args.renderInstanceSegmentation || args.renderNormalsImage) {
+                this.updateImageSynthesis(true);
+            }
+
+            if (args.visibilityDistance > 0.0f) {
+                this.maxVisibleDistance = args.visibilityDistance;
+            }
+
+            var navmeshAgent = this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>();
+            var collider = this.GetComponent<CapsuleCollider>();
+
+            if (collider != null && navmeshAgent != null) {
+                navmeshAgent.radius = collider.radius;
+                navmeshAgent.height = collider.height;
+                navmeshAgent.transform.localPosition = new Vector3(navmeshAgent.transform.localPosition.x, navmeshAgent.transform.localPosition.y, collider.center.z);
+            }
+
+            // navmeshAgent.radius =
+
+            if (args.gridSize <= 0 || args.gridSize > 5) {
+                errorMessage = "grid size must be in the range (0,5]";
+                Debug.Log(errorMessage);
+                return new ActionFinished(success: false, errorMessage: errorMessage);
+            } else {
+                gridSize = args.gridSize;
+
+                // Don't know what this was for
+                // StartCoroutine(checkInitializeAgentLocationAction());
+            }
+
+            // initialize how long the default wait time for objects to stop moving is
+            this.TimeToWaitForObjectsToComeToRest = args.TimeToWaitForObjectsToComeToRest;
+
+            // Debug.Log("Object " + action.controllerInitialization.ToString() + " dict "  + (action.controllerInitialization.variableInitializations == null));//+ string.Join(";", action.controllerInitialization.variableInitializations.Select(x => x.Key + "=" + x.Value).ToArray()));
+
+            this.visibilityScheme = ServerAction.GetVisibilitySchemeFromString(args.visibilityScheme);
+            // this.originalLightingValues = null;
+            // Physics.autoSimulation = true;
+            // Debug.Log("True if physics is auto-simulating: " + Physics.autoSimulation);
+
+            return new ActionFinished(success: true, actionReturn: new InitializeReturn {
+                        cameraNearPlane = m_Camera.nearClipPlane,
+                        cameraFarPlane = m_Camera.farClipPlane
+                    });
+        }
 
         public ActionFinished Initialize(
             BodyAsset bodyAsset,
@@ -523,6 +701,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool useAbsoluteSize = false, 
             bool useVisibleColliderBase = false
         ) {
+
+            this.visibilityScheme = VisibilityScheme.Distance;
             var actionFinished = this.InitializeBody(
                 bodyAsset: bodyAsset,
                 originOffsetX: originOffsetX,
