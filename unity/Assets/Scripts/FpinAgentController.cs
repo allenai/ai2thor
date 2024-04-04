@@ -547,7 +547,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     antiAliasing: args.antiAliasing
                 );
             }
-            m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
+            // m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
 
             if (args.gridSize == 0) {
                 args.gridSize = 0.25f;
