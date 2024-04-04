@@ -795,6 +795,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+                case "initbodytorigin": {
+                    
+                      Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "InitializeBody";
+                    action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5"};
+                    action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                    action["originOffsetX"] = 0.05f;
+                    action["originOffsetZ"] = 0.05f;
+                    //action["useAbsoluteSize"] = true;
+
+                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
                 case "initbodyratiot": {
                     
                       Dictionary<string, object> action = new Dictionary<string, object>();

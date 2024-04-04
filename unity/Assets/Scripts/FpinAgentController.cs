@@ -208,7 +208,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Move the agent to a safe place and align the agent's rotation with the world coordinate system
             this.transform.position = originalPosition + agentSpawnOffset;
+            Physics.SyncTransforms();
             this.transform.rotation = Quaternion.identity;
+            Physics.SyncTransforms();  
 
             //Debug.Log($"agent position after moving it out of the way is: {this.transform.position:F8}");
 
@@ -258,9 +260,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
             // Move the agent back to its original position and rotation because CheckBox passed
             this.transform.rotation = originalRotation;
+            Physics.SyncTransforms();
             this.transform.position = originalPosition;
-
-            // agent.transform.localPosition = agent.transform.localPosition + toBottomBoxOffset;
             Physics.SyncTransforms();
 
             // Spawn the box collider
@@ -764,13 +765,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //the generated box collider's center. This will automatically set the local Y value
         //to the bottom of the spawned box collider's lowest extent in the -Y direction
         public void repositionAgentOrigin (Vector3 newRelativeOrigin) {
+            var initialAgentPosition = this.transform.position;
+
             Debug.Log($"newRelativeOrigin is: {newRelativeOrigin:F8}");
             //get the world coordinates of the center of the spawned box
-            var addedCollider = spawnedBoxCollider.GetComponent<BoxCollider>();
-            Vector3 spawnedBoxWorldCenter = spawnedBoxCollider.transform.TransformPoint(addedCollider.center);
+            Vector3 spawnedBoxWorldCenter = spawnedBoxCollider.transform.TransformPoint(spawnedBoxCollider.center);
             Debug.Log($"spawnedBoxWorldCenter is: {spawnedBoxWorldCenter:F8}");
 
-            float distanceToBottom = addedCollider.size.y * 0.5f * addedCollider.transform.localScale.y;
+            float distanceToBottom = spawnedBoxCollider.size.y * 0.5f * spawnedBoxCollider.transform.localScale.y;
+            
+            //the new agent origin should be the offset of newRelativeOrigin relative to the spawned box world center
             Vector3 newAgentOrigin = new Vector3(
                 spawnedBoxWorldCenter.x + newRelativeOrigin.x,
                 spawnedBoxWorldCenter.y - distanceToBottom,
@@ -791,22 +795,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Physics.SyncTransforms();
             }
 
-            //ensure all transforms are fully updated
             Physics.SyncTransforms();
 
             //ok now reposition this.transform in world space relative to the center of the box collider
             this.transform.position = newAgentOrigin;
 
-            //Vector3 origin = new Vector3(newRelativeOrigin.x, newRelativeOrigin.y - distanceToBottom, newRelativeOrigin.z);
-            // this.transform.localPosition = origin;
-
-            //ensure all transforms are fully updated
             Physics.SyncTransforms();
 
             foreach(Transform child in allMyChildren) {
                 child.SetParent(this.transform);
                 Physics.SyncTransforms();
             }
+
+            //this.transform.position = initialAgentPosition;
+            Physics.SyncTransforms();
         }
 
         public IEnumerator MoveAgent(
