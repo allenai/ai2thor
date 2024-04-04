@@ -382,9 +382,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             //organize the heirarchy of all the meshes copied under a single vis cap so we can use it real nice
             if (isTopMost) {
-                GameObject viscap = new GameObject("fpinVisibilityCapsule");
+                
+                thisTransform.rotation = Quaternion.identity;
 
-                Debug.Log($"what is thisTransform: {thisTransform.name}");
+                GameObject viscap = new GameObject("fpinVisibilityCapsule");
 
                 //get teh bounds of all the meshes we have copied over so far
                 Bounds thisBounds = new Bounds(thisTransform.position, Vector3.zero);
@@ -400,32 +401,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 float distanceFromTransformToBottomOfBounds = thisTransform.position.y - thisBounds.min.y;
 
                 Debug.Log($"distance from transform to bottom of bounds {distanceFromTransformToBottomOfBounds}");
+                viscap.transform.position = new Vector3(thisBounds.center.x, thisBounds.min.y, thisBounds.center.z);
+                Physics.SyncTransforms();
 
                 //set all the meshes up as children of the viscap
                 thisTransform.SetParent(viscap.transform);
-                thisTransform.localPosition = new Vector3(0.0f, distanceFromTransformToBottomOfBounds, 0.0f);
+                //thisTransform.localPosition = new Vector3(0.0f, distanceFromTransformToBottomOfBounds, 0.0f);
 
                 Physics.SyncTransforms();
 
                 //update bounds again because we have no moved in world space
-                thisBounds = new Bounds(thisTransform.position, Vector3.zero);
-                meshRenderers = thisTransform.gameObject.GetComponentsInChildren<MeshRenderer>();
-                foreach(MeshRenderer mr in meshRenderers) {
-                    thisBounds.Encapsulate(mr.bounds);
-                }
+                // thisBounds = new Bounds(thisTransform.position, Vector3.zero);
+                // meshRenderers = thisTransform.gameObject.GetComponentsInChildren<MeshRenderer>();
+                // foreach(MeshRenderer mr in meshRenderers) {
+                //     thisBounds.Encapsulate(mr.bounds);
+                // }
 
-                Debug.Log($"thisBounds center is now at {thisBounds.center}, and the size is {thisBounds.size}");
+                // Debug.Log($"thisBounds center is now at {thisBounds.center}, and the size is {thisBounds.size}");
 
-                Vector3 dirFromBoundsCenterToVisCapTransform = viscap.transform.position - thisBounds.center;
-                Debug.Log($"dirFromBoundsCenterToVisCapTransform: {dirFromBoundsCenterToVisCapTransform:f8}");
+                // Vector3 dirFromBoundsCenterToVisCapTransform = viscap.transform.position - thisBounds.center;
+                // Debug.Log($"dirFromBoundsCenterToVisCapTransform: {dirFromBoundsCenterToVisCapTransform:f8}");
 
-                thisTransform.localPosition = new Vector3(dirFromBoundsCenterToVisCapTransform.x, thisTransform.localPosition.y, dirFromBoundsCenterToVisCapTransform.z);
+                // thisTransform.localPosition = new Vector3(dirFromBoundsCenterToVisCapTransform.x, thisTransform.localPosition.y, dirFromBoundsCenterToVisCapTransform.z);
 
-                Physics.SyncTransforms();
+                // Physics.SyncTransforms();
 
-                thisTransform.localRotation = Quaternion.identity;
+                // thisTransform.localRotation = Quaternion.identity;
 
-                Physics.SyncTransforms();
+                // Physics.SyncTransforms();
 
                 //set viscap up as child of FPSAgent
                 viscap.transform.SetParent(targetParent);
@@ -435,7 +438,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 viscap.transform.localRotation = Quaternion.identity;
                 viscap.transform.localScale = new Vector3(1, 1, 1);
                 
-
                 //return reference to viscap so we can scaaaale it
                 fpinVisibilityCapsule = viscap;
                 return viscap.transform;
