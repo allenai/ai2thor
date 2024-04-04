@@ -827,6 +827,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //will our current box colliders clip with anything? If so, send a failure
             Vector3 boxCenterAtInitialPosition = spawnedBoxCollider.bounds.center - agentSpawnOffset;
             boxCenterAtInitialPosition = originalRotation * (boxCenterAtInitialPosition - originalPosition) + originalPosition;
+            boxCenterAtInitialPosition = new Vector3(boxCenterAtInitialPosition.x, boxCenterAtInitialPosition.y + spawnedBoxCollider.bounds.extents.y, boxCenterAtInitialPosition.z);
 
             //boxCenterAtInitialPosition = originalRotation * (boxCenterAtInitialPosition - originalPosition) + originalPosition;
             Vector3 newBoxExtents = new Vector3(
@@ -862,9 +863,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int checkBoxLayerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
 
             if (Physics.CheckBox(boxCenterAtInitialPosition, newBoxExtents, originalRotation, checkBoxLayerMask)) {
-                throw new InvalidOperationException(
-                    "Spawned box collider is colliding with other objects. Cannot spawn box collider."
-                );
+                this.transform.position = originalPosition;
+                this.transform.rotation = originalRotation;
+                string error = "Spawned box collider is colliding with other objects. Cannot spawn box collider.";
+                actionReturn = error;
+                errorMessage = error;
+                throw new InvalidOperationException(error);
             }
 
             //we are safe to return to our original pose, so lets do that before finally resetting the pivot offset as needed

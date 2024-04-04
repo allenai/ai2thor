@@ -859,7 +859,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     action["action"] = "InitializeBody";
                     action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5"};
-                    action["colliderScaleRatio"] = new Vector3(3, 2, 1);
+                    action["colliderScaleRatio"] = new Vector3(0.5f, 1.8f, 0.2f);
                     action["originOffsetX"] = 0.0f;
                     action["originOffsetZ"] = 0.0f;
                     action["useVisibleColliderBase"] = true;
