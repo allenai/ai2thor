@@ -592,7 +592,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         {"bodyAsset", new BodyAsset() { assetId = "StretchBotSimObj"}},
                         {"originOffsetX", -0.09938055f},
                         {"originOffsetZ", 0.1157837f},
-                        {"colliderScaleRatio", new Vector3(1, 1, 1)}
+                        {"colliderScaleRatio", new Vector3(1, 1, 1)},
+                        {"useVisibleColliderBase", true}
                     };
 
                     ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
@@ -615,9 +616,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         {"bodyAsset", new BodyAsset() { assetId = "StretchBotSimObj"}},
                         {"originOffsetX", -0.09938055f},
                         {"originOffsetZ", 0.1157837f},
-                        {"colliderScaleRatio", new Vector3(0.3f, 1.2f, 0.5f)},
+                        {"colliderScaleRatio", new Vector3(1, 1, 1)},
                         {"useAbsoluteSize", true},
                         {"useVisibleColliderBase", true}
+                    };
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
+                case "initpinsratio": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "Initialize";
+                    action["agentMode"] = "fpin";
+                    //action["useAbsoluteSize"] = true;
+                    action["visibilityScheme"] = "Distance";
+                    action["renderInstanceSegmentation"] = true;
+                    action["renderDepth"] = true;
+
+                    action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<string, object>() {
+                        {"bodyAsset", new BodyAsset() { assetId = "StretchBotSimObj"}},
+                        {"originOffsetX", -0.09938055f},
+                        {"originOffsetZ", 0.1157837f},
+                        {"colliderScaleRatio", new Vector3(4, 3, 2)},
                     };
 
                     ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
