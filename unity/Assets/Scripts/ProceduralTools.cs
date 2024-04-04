@@ -680,10 +680,6 @@ namespace Thor.Procedural {
                 //     7, 2, 0, 0, 6, 7, 7, 6, 5, 5, 6, 4, 5, 4, 3, 3, 4, 1, 2, 3, 1, 2, 1, 0
                 // };
                 
-                if (toCreate.id == "wall_0_2") {
-                    
-                    Debug.Log($"---------- globalPos: {globalVertexPositions}, p0: {p0.ToString("F5")}, p1: {p0.ToString("F5")}, p0p1_norm: {p0p1_norm.ToString("F5")}, offset: {offset}");
-                }
                 var toRemove = new List<int>();
                 // const float areaEps = 1e-4f;
                 for (int i = 0; i < triangles.Count/3; i++) {
@@ -1158,7 +1154,9 @@ namespace Thor.Procedural {
             }
             else {
                 var versionSplit = version.Split('.');
-                Debug.Log(string.Join(", ", versionSplit));
+                #if UNITY_EDITOR
+                Debug.Log($"HouseVersion: {string.Join(", ", versionSplit)}");
+                #endif
                 var versionResult = new int[] {0, 0, 0 }.Select((x, i) => {
                     if (versionSplit.Length > i) {
                         int outVersion;
@@ -1503,14 +1501,12 @@ namespace Thor.Procedural {
             }
 
             // buildNavMesh(floorGameObject, house.proceduralParameters.navmeshVoxelSize);
-            // Debug.Log($"Navmeshes {string.Join(", ", house.metadata.navMeshes.Select(n => $"{n.agentTypeID} radius {n.agentRadius}"))}");
-            Debug.Log($"schema {house.metadata.schema}");
+
             buildNavMeshes(floorGameObject, house.metadata.navMeshes);
 
            
             if (string.IsNullOrEmpty(house.proceduralParameters.skyboxId) || !materialDb.ContainsKey(house.proceduralParameters.skyboxId)) {
                 var mat = new Material(Shader.Find("Standard"));
-                Debug.Log("--------- Working");
                 mat.color = house.proceduralParameters.skyboxColor.toUnityColor();
                 RenderSettings.skybox = mat;
                 
@@ -1640,7 +1636,7 @@ namespace Thor.Procedural {
             navMeshSurface.voxelSize = buildSettings.voxelSize;
             navMeshSurface.overrideVoxelSize = buildSettings.overrideVoxelSize;
             navMeshSurface.BuildNavMesh(buildSettings);
-            Debug.Log($"Created navmesh w agentType id {navMeshSurface.agentTypeID}");
+            Debug.Log($"Created navmesh with agentType id: `{navMeshSurface.agentTypeID}`");
             return go;
         }
 
@@ -1654,7 +1650,7 @@ namespace Thor.Procedural {
             navMeshSurface.voxelSize = buildSettings.voxelSize;
             navMeshSurface.overrideVoxelSize = buildSettings.overrideVoxelSize;
             navMeshSurface.BuildNavMesh(buildSettings);
-            Debug.Log($"Created navmesh w agentType id {navMeshSurface.agentTypeID}");
+            Debug.Log($"Created navmesh with agentType id: `{navMeshSurface.agentTypeID}`");
             return go;
         }
 
@@ -1869,7 +1865,7 @@ namespace Thor.Procedural {
                 );
             } else {
 
-                Debug.LogError("Asset not in Database " + ho.assetId);
+                Debug.LogError($"Asset not in Database: `{ho.assetId}`");
                 return null;
             }
         }
@@ -2079,12 +2075,12 @@ namespace Thor.Procedural {
                         LayerMask.GetMask("NonInteractive")
                     )
                 ) {
-                    Debug.Log("FloorCheck");
+                    // Debug.Log("FloorCheck");
                     floorCheck = false;
                 }
 
                 if (!cornerCheck || !floorCheck) {
-                    Debug.Log("corner || floor");
+                    // Debug.Log("corner || floor");
                     success = false;
                 }
 
@@ -2410,7 +2406,6 @@ namespace Thor.Procedural {
 
             foreach (Transform t in go.GetComponentsInChildren<Transform>()) {
                 if (t.parent == go.transform) {
-                    Debug.Log($"Moving transform of {t.gameObject.name}");
                     t.parent = newGo.transform;
                 }
             }
