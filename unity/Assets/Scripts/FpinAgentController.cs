@@ -687,20 +687,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // TODO: do we want to allow non relative to the box offsets?
             float originOffsetX = 0.0f,
             float originOffsetZ = 0.0f,
-            Vector3? colliderScaleRatio = null,  
-            bool useAbsoluteSize = false, 
+            Vector3? colliderScaleRatio = null,
+            bool useAbsoluteSize = false,
             bool useVisibleColliderBase = false
         ) {
 
             // Store the current rotation
             Vector3 originalPosition = this.transform.position;
             Quaternion originalRotation = this.transform.rotation;
-    
+
             // Move the agent to a safe place and align the agent's rotation with the world coordinate system
             this.transform.position = originalPosition + agentSpawnOffset;
             Physics.SyncTransforms();
             this.transform.rotation = Quaternion.identity;
-            Physics.SyncTransforms();  
+            Physics.SyncTransforms();
 
             //remove any old copied meshes or generated colliders now
             destroyAgentBoxCollider();
@@ -717,7 +717,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //copy all mesh renderers found on the spawnedMesh onto this agent now
-            Transform visCap = CopyMeshChildren(source: spawnedMesh.transform.gameObject, target: this.transform.gameObject);
+            CopyMeshChildren(source: spawnedMesh.transform.gameObject, target: this.transform.gameObject);
 
             //remove the spawned mesh cause we are done with it
             foreach (var sop in spawnedMesh.GetComponentsInChildren<SimObjPhysics>()) {
@@ -729,7 +729,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //ok now generate colliders, we are still up at (100,100,100) and aligned with world axes
             spawnAgentBoxCollider(
-                agent: this.gameObject, 
+                agent: this.gameObject,
                 agentType: this.GetType(),
                 scaleRatio: colliderScaleRatio.GetValueOrDefault(Vector3.one),
                 originalPosition: originalPosition,
@@ -737,7 +737,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 useVisibleColliderBase: useVisibleColliderBase);
 
             //spawn the visible collider base if we need to
-            if(useVisibleColliderBase) {
+            if (useVisibleColliderBase) {
                 GameObject visibleBase = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 visibleBase.name = "visibleBase";
                 visibleBase.transform.position = spawnedBoxCollider.transform.position;
@@ -747,12 +747,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     spawnedBoxCollider.size.y * spawnedBoxCollider.transform.localScale.y / 4,
                     spawnedBoxCollider.size.z * spawnedBoxCollider.transform.localScale.z
                 );
-                Physics.SyncTransforms();
 
+                Physics.SyncTransforms();
+                //get the y offset for how low we need to move the visible collider base so it is flush with the bottomost extents of the spawnedBoxCollider
                 var yOffset = visibleBase.GetComponent<BoxCollider>().bounds.min.y - spawnedBoxCollider.bounds.min.y;
                 //we are done with the collider now so turn it off, we just need the mesh for this visible base
                 visibleBase.GetComponent<BoxCollider>().enabled = false;
-
+                //we have the offset now so lets set the local position for the visible base as needed
                 visibleBase.transform.localPosition = new Vector3(
                     visibleBase.transform.localPosition.x,
                     visibleBase.transform.localPosition.y - yOffset,
@@ -760,7 +761,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //ok now scale both the spawned meshes and the spawned colliders according to scale
-            if(useAbsoluteSize) {
+            //because all colliders and the visible base are children of the fpinVisibilityCapsule, we can scale the fpinVisibilityCapsule directly
+            //to influence the scale of everything while keeping their relative heirarchical information intact
+            if (useAbsoluteSize) {
                 //get current size of the box colliders
                 Vector3 currentSize = new Vector3(
                     spawnedBoxCollider.size.x * spawnedBoxCollider.transform.localScale.x,
@@ -773,7 +776,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 var xScaleFactor = desiredSize.x / currentSize.x;
                 var yScaleFactor = desiredSize.y / currentSize.y;
-                var zScaleFactor = desiredSize.z/ currentSize.z;
+                var zScaleFactor = desiredSize.z / currentSize.z;
 
                 //apply the scale factor by changing the fpinVisibilityCapsule's transform scale by this factor
                 fpinVisibilityCapsule.transform.localScale = new Vector3(xScaleFactor, yScaleFactor, zScaleFactor);
@@ -781,12 +784,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fpinVisibilityCapsule.transform.localScale = colliderScaleRatio.GetValueOrDefault(Vector3.one);
             }
 
-            //now lets reposition the agent origin so that it is at the base of the colliders, but in the exact center
-            //just so we know what position it will be at when we teleport it back to its original position
-
+            //now lets reposition the agent origin with any offsets needed
+            //this should place the agent origin's local y position at the same level as the bottomost extents of the spawned collider bounds
+            //but have its x and z offset be whatever the originOffsetX and originOffsetZ is relative to the center of the spawned collider bounds
             repositionAgentPivot(xOffset: originOffsetX, zOffset: originOffsetZ);
 
-           //adjust agent character controller and capsule according to extents of box collider
+            //adjust agent character controller and capsule according to extents of box collider cuase it needs to fit inside the box
             var characterController = this.GetComponent<CharacterController>();
 
             // Transform the box collider's center to the world space and then into the capsule collider's local space
@@ -819,46 +822,58 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //ok now check if we were to teleport back to our original position and rotation....
             //will our current box colliders clip with anything? If so, send a failure message
+
+            //get where the center of our spawned box collider would be if we take away our agent spawn offset, but its not
+            //quite back to its original position yet hang on
             Vector3 boxCenterAtInitialPosition = spawnedBoxCollider.bounds.center - agentSpawnOffset;
 
-            boxCenterAtInitialPosition = new Vector3(boxCenterAtInitialPosition.x - originOffsetX, 
-                                                    boxCenterAtInitialPosition.y + spawnedBoxCollider.bounds.extents.y, 
+            //if the agent's current transform position was placed back to its original position, the relative position of the box colliders
+            //will have shifted so we need to account for if there was an origin offset in the x and z directions depending on
+            //what happened int he repositionAgentPivot() function
+            boxCenterAtInitialPosition = new Vector3(boxCenterAtInitialPosition.x - originOffsetX,
+                                                    boxCenterAtInitialPosition.y + spawnedBoxCollider.bounds.extents.y,
                                                     boxCenterAtInitialPosition.z - originOffsetZ);
 
+            //now apply a quaternion transformation to the box center because the agent may have been at some different rotation originally
             boxCenterAtInitialPosition = originalRotation * (boxCenterAtInitialPosition - originalPosition) + originalPosition;
 
+            //ok now we also have the extents of the box which we can apply now that we know the relative position and rotation
             Vector3 newBoxExtents = new Vector3(
                 spawnedBoxCollider.bounds.extents.x,
                 spawnedBoxCollider.bounds.extents.y,
                 spawnedBoxCollider.bounds.extents.z);
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             // /////////////////////////////////////////////////
             //for visualization lets spawna cube at the center of where the boxCenter supposedly is
-            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.name = "VisualizedBoxCollider";
-            cube.transform.position = boxCenterAtInitialPosition;
-            cube.transform.rotation = originalRotation;
+            // GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            // cube.name = "VisualizedBoxCollider";
+            // cube.transform.position = boxCenterAtInitialPosition;
+            // cube.transform.rotation = originalRotation;
 
-            cube.transform.localScale = newBoxExtents * 2;
-            cube.GetComponent<BoxCollider>().enabled = false;
-            var material = cube.GetComponent<MeshRenderer>().material;
-            material.SetColor("_Color", new Color(1.0f, 0.0f, 0.0f, 0.4f));
-            // Set transparency XD ...
-            material.SetFloat("_Mode", 3);
-            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            material.SetInt("_ZWrite", 0);
-            material.DisableKeyword("_ALPHATEST_ON");
-            material.EnableKeyword("_ALPHABLEND_ON");
-            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            material.renderQueue = 3000;
+            // cube.transform.localScale = newBoxExtents * 2;
+            // cube.GetComponent<BoxCollider>().enabled = false;
+            // var material = cube.GetComponent<MeshRenderer>().material;
+            // material.SetColor("_Color", new Color(1.0f, 0.0f, 0.0f, 0.4f));
+            // // Set transparency XD ...
+            // material.SetFloat("_Mode", 3);
+            // material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            // material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            // material.SetInt("_ZWrite", 0);
+            // material.DisableKeyword("_ALPHATEST_ON");
+            // material.EnableKeyword("_ALPHABLEND_ON");
+            // material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            // material.renderQueue = 3000;
             // ////////////////////////////////////////////////
-            #endif
+#endif
 
             // used to check if there is enough free space given the generated colliders for the agent to return to its original pose
             int checkBoxLayerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
 
+            //check if we were to teleport our agent back to its starting position, will the new box colliders generated clip with anything?
+            //if we do clip with something, leave the agent where it is, and send a message saying there is clipping actively happening
+            //the reccomended thing to do here is either reset the scene entirely and load in with a new agent, or try and use `InitializeBody` with 
+            //a smaller mesh size that would potentially fit here
             if (Physics.CheckBox(boxCenterAtInitialPosition, newBoxExtents, originalRotation, checkBoxLayerMask)) {
                 this.transform.position = originalPosition;
                 this.transform.rotation = originalRotation;
@@ -868,19 +883,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 throw new InvalidOperationException(error);
             }
 
-            //we are safe to return to our original pose, so lets do that before finally resetting the pivot offset as needed
+            //we are safe to return to our original position and rotation
             this.transform.position = originalPosition;
             this.transform.rotation = originalRotation;
 
-
-
-
-
-
-            //enable cameras I suppose
+            //enable cameras now
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
+            //make sure we are hooked up to the collision listener
             fpinMovable = new FpinMovableContinuous(this.GetComponentInParent<CollisionListener>());
 
             return new ActionFinished(spawnAssetActionFinished) {
