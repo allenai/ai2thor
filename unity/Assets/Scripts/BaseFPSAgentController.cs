@@ -699,9 +699,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.maxDownwardLookAngle = action.maxDownwardLookAngle;
             }
 
-            // if (action.agentMode != "fpin") {
-            //     this.InitializeBody(action);
-            // }
+            if (action.agentMode != "fpin") {
+                this.InitializeBody(action);
+            }
+
             if (action.antiAliasing != null) {
                 agentManager.updateAntiAliasing(
                     postProcessLayer: m_Camera.gameObject.GetComponentInChildren<PostProcessLayer>(),
@@ -4032,6 +4033,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public VisibilityCheck isSimObjVisible(Camera camera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
+            Debug.Log("running isSimObjVisible");
             // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
             VisibilityCheck visCheck = new VisibilityCheck();
 
