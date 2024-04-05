@@ -31,9 +31,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // face swap stuff here
 
         public PhysicsRemoteFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
+
+            standingLocalCameraPosition = m_Camera.transform.localPosition;
+            
         }
 
-        public override void InitializeBody(ServerAction initializeAction) {
+        public override ActionFinished InitializeBody(ServerAction initializeAction) {
             VisibilityCapsule = TallVisCap;
             m_CharacterController.center = new Vector3(0, 0, 0);
             m_CharacterController.radius = 0.2f;
@@ -52,10 +55,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // camera FOV
             m_Camera.fieldOfView = 90f;
-
+            
             // set camera stand/crouch local positions for Tall mode
             standingLocalCameraPosition = m_Camera.transform.localPosition;
             crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0); // bigger y offset if tall
+            return ActionFinished.Success;
         }
 
         // change visibility check to use this distance when looking down
@@ -266,7 +270,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
         // checks if a float is a multiple of 0.1f
-        private bool CheckIfFloatIsMultipleOfOneTenth(float f) {
+        protected bool CheckIfFloatIsMultipleOfOneTenth(float f) {
             if (((decimal)f % 0.1M == 0) == false) {
                 return false;
             } else {
@@ -1422,9 +1426,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)]
         public void TeleportFull(
             float x, float y, float z,
-            Vector3 rotation,
-            float horizon,
-            bool standing,
+            Vector3? rotation,
+            float? horizon,
+            bool? standing,
             bool forceAction = false
         ) {
             TeleportFull(
@@ -1455,12 +1459,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // has to consider both the arm and standing
         public void TeleportFull(
-            Vector3 position,
-            Vector3 rotation,
-            float horizon,
-            bool standing,
+            Vector3? position,
+            Vector3? rotation,
+            float? horizon,
+            bool? standing,
             bool forceAction = false
         ) {
+            Debug.Log($"------- Teleport Full physicsFPS type {this.GetType()}");
             // cache old values in case there's a failure
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
@@ -1484,10 +1489,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     forceAction: forceAction
                 );
 
-                if (standing) {
-                    stand();
-                } else {
-                    crouch();
+                if (standing.HasValue) {
+                    if (standing.Value) {
+                        stand();
+                    } else {
+                        crouch();
+                    }
                 }
 
                 // add arm value cases
@@ -1655,12 +1662,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxAgentsDistance = -1f,
             bool forceAction = false,
             bool manualInteract = false,
-            bool allowAgentsToIntersect = false,
-            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
-            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
-            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
-            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
+            bool allowAgentsToIntersect = false
         ) {
+
+            Debug.Log("MoveRight at physics fps? call ");
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
             } else if (moveMagnitude <= 0f) {
@@ -1678,16 +1683,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual void MoveAhead(
-            float? moveMagnitude = null,
-            string objectId = "",
-            float maxAgentsDistance = -1f,
-            bool forceAction = false,
-            bool manualInteract = false,
-            bool allowAgentsToIntersect = false,
-            float speed = 1,              // TODO: Unused, remove when refactoring the controllers
-            float? fixedDeltaTime = null, // TODO: Unused, remove when refactoring the controllers
-            bool returnToStart = true,    // TODO: Unused, remove when refactoring the controllers
-            bool disableRendering = true  // TODO: Unused, remove when refactoring the controllers
+             float? moveMagnitude = null,
+            string objectId = "",                
+            float maxAgentsDistance = -1f,     
+            bool forceAction = false,            
+            bool manualInteract = false,        
+            bool allowAgentsToIntersect = false
         ) {
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
@@ -1902,58 +1903,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // target.GetComponent<SimObjPhysics>().ApplyForce(apply);
             // actionFinished(true);
         }
-        public void PhysicsSyncTransforms() {
-            Physics.SyncTransforms();
-            actionFinished(true);
-        }
 
-        // pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
-        // additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
-        public void PausePhysicsAutoSim() {
-            physicsSceneManager.PausePhysicsAutoSim();
-            actionFinished(true);
-        }
-
-        // if physics AutoSimulation is paused, manually advance the physics timestep by action.timeStep's value. Only use values for timeStep no less than zero and no greater than 0.05
-        public void AdvancePhysicsStep(
-            float timeStep = 0.02f,
-            float? simSeconds = null,
-            bool allowAutoSimulation = false
-        ) {
-            if ((!allowAutoSimulation) && Physics.autoSimulation) {
-                errorMessage = (
-                    "AdvancePhysicsStep can only be called if Physics AutoSimulation is currently " +
-                    "paused or if you have passed allowAutoSimulation=true! Either use the" +
-                    " PausePhysicsAutoSim() action first, or if you already used it, Physics" +
-                    " AutoSimulation has been turned back on already."
-                );
-                actionFinished(false);
-                return;
+        public IEnumerator SimulatePhysics(int steps) {
+            for (var i = 0; i < steps; i++) {
+                yield return new WaitForFixedUpdate();
             }
-
-            if (timeStep <= 0.0f || timeStep > 0.05f) {
-                errorMessage = "Please use a timeStep between 0.0f and 0.05f. Larger timeSteps produce inconsistent simulation results.";
-                actionFinished(false);
-                return;
-            }
-
-            if (!simSeconds.HasValue) {
-                simSeconds = timeStep;
-            }
-            if (simSeconds.Value < 0.0f) {
-                errorMessage = $"simSeconds must be non-negative (simSeconds=={simSeconds}).";
-                actionFinished(false);
-                return;
-            }
-
-            physicsSceneManager.AdvancePhysicsStep(timeStep, simSeconds, allowAutoSimulation);
-            actionFinished(true);
-        }
-
-        // Use this to immediately unpause physics autosimulation and allow physics to resolve automatically like normal
-        public void UnpausePhysicsAutoSim() {
-            physicsSceneManager.UnpausePhysicsAutoSim();
-            actionFinished(true);
+            yield return ActionFinished.Success;
         }
 
         protected void sopApplyForce(ServerAction action, SimObjPhysics sop, float length) {
@@ -2061,6 +2016,88 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // wrapping the SimObjPhysics.ApplyForce function since lots of things use it....
         protected void sopApplyForce(ServerAction action, SimObjPhysics sop) {
             sopApplyForce(action, sop, 0.0f);
+        }
+
+        private IEnumerator checkIfAllObjectsHaveStoppedMoving(
+            float length,
+            double squaredAccelerationEpsilon = 1e-3,
+            bool useTimeout = false) {
+            // yield for the physics update to make sure this yield is consistent regardless of framerate
+            yield return new WaitForFixedUpdate();
+
+            float startTime = Time.time;
+            float waitTime = TimeToWaitForObjectsToComeToRest;
+
+            if (useTimeout) {
+                waitTime = 1.0f;
+            }
+
+            foreach (var sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+
+                Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
+                bool stoppedMoving = false;
+
+                while (Time.time - startTime < waitTime) {
+                    if (sop == null) {
+                        break;
+                    }
+
+                    float currentSqrVelocity = rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude;
+                    float squaredAccel = (currentSqrVelocity - sop.lastVelocity) / (Time.fixedDeltaTime * Time.fixedDeltaTime);
+
+                    // ok the accel is basically zero, so it has stopped moving
+                    if (Mathf.Abs(squaredAccel) <= squaredAccelerationEpsilon) {
+                        // force the rb to stop moving just to be safe
+                        rb.velocity = Vector3.zero;
+                        rb.angularVelocity = Vector3.zero;
+                        rb.Sleep();
+                        stoppedMoving = true;
+                        break;
+                    } else {
+                        yield return new WaitForFixedUpdate();
+                    }
+                }
+
+                // so we never stopped moving and we are using the timeout
+                if (!stoppedMoving && useTimeout) {
+                    errorMessage = "object couldn't come to rest";
+                    // print(errorMessage);
+                    actionFinished(false);
+                    yield break;
+                }
+
+                // we are past the wait time threshold, so force object to stop moving before
+                // rb.velocity = Vector3.zero;
+                // rb.angularVelocity = Vector3.zero;
+                // rb.Sleep();
+
+                // return to metadatawrapper.actionReturn if an object was touched during this interaction
+                if (length != 0.0f) {
+                    WhatDidITouch feedback = new WhatDidITouch() { didHandTouchSomething = true, objectId = sop.objectID, armsLength = length };
+
+#if UNITY_EDITOR
+                    print("yield timed out");
+                    print("didHandTouchSomething: " + feedback.didHandTouchSomething);
+                    print("object id: " + feedback.objectId);
+                    print("armslength: " + feedback.armsLength);
+#endif
+
+                    // force objec to stop moving 
+                    rb.velocity = Vector3.zero;
+                    rb.angularVelocity = Vector3.zero;
+                    rb.Sleep();
+
+                    actionFinished(true, feedback);
+                }
+
+                // if passed in length is 0, don't return feedback cause not all actions need that
+                else {
+                    DefaultAgentHand();
+                    actionFinished(true, sop.transform.position);
+                }
+            
+            }
+
         }
 
         // Sweeptest to see if the object Agent is holding will prohibit movement
@@ -2848,7 +2885,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //generic spawn object in scene, no physics resoultion or bounds/collision check
         public void SpawnObjectInScene(HouseObject ho) {
-            var spawnedObj = ProceduralTools.spawnHouseObject(ProceduralTools.getAssetMap(), ho);
+            CollisionDetectionMode collDet = CollisionDetectionMode.ContinuousSpeculative;
+            Enum.TryParse(ho.collisionDetectionMode, true, out collDet);
+            var spawnedObj = ProceduralTools.spawnHouseObject(ProceduralTools.getAssetMap(), ho, collDet);
             actionFinished(true);
         }
         //used to spawn in a new object at a given position, used with ProceduralTools.spawnObjectAtReceptacle
@@ -3020,7 +3059,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // ok now get spawn points from target
             List<Vector3> targetPoints = new List<Vector3>();
-            targetPoints = target.FindMySpawnPointsFromTopOfTriggerBox();
+            targetPoints = target.FindMySpawnPointsFromTriggerBox();
 
             // by default, action.anywhere = false, so remove all targetPoints that are outside of agent's view
             // if anywhere true, don't do this and just return all points we got from above
@@ -3048,13 +3087,42 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // same as GetSpawnCoordinatesAboveReceptacle(Server Action) but takes a sim obj phys instead
         // returns a list of vector3 coordinates above a receptacle. These coordinates will make up a grid above the receptacle
-        public List<Vector3> getSpawnCoordinatesAboveReceptacle(SimObjPhysics t) {
+        public List<Vector3> getSpawnCoordinatesAboveReceptacle(SimObjPhysics t, bool fromReceptacleTop = true) {
             SimObjPhysics target = t;
             // ok now get spawn points from target
             List<Vector3> targetPoints = new List<Vector3>();
-            targetPoints = target.FindMySpawnPointsFromTopOfTriggerBox();
+            targetPoints = target.FindMySpawnPointsFromTriggerBox(top: fromReceptacleTop);
             return targetPoints;
         }
+
+
+        public void MakeReceptacleDirty(string objectId, float density, int seed = 0, Vector3? scale = null) {
+             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                actionFinished(success: false, errorMessage: $"Object ID {objectId} appears to be invalid.");
+            }
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            if (!sop.IsReceptacle) {
+                actionFinished(success: false, errorMessage: $"Object ID {objectId} is not a Receptacle.");
+
+            }
+
+            var dirtyDensityClamped = Mathf.Clamp(density, 0.0f, 1.0f);
+
+            var dc = sop.GetComponentInChildren<DecalCollision>();
+            var spawnCoordinates = getSpawnCoordinatesAboveReceptacle(sop, fromReceptacleTop: false);
+             // TODO adjust this value as it is to dense still as a percentage, probably base it on the scale and
+             // total receptacle area
+            var coordinateCount = Mathf.RoundToInt(density * spawnCoordinates.Count);
+           
+            Debug.Log($"--- total coords {spawnCoordinates.Count}, selected count {coordinateCount} ");
+            var selectedCoords = spawnCoordinates.Shuffle_(new System.Random(seed)).Take(coordinateCount);
+            foreach (var coord in selectedCoords) {
+                dc.SpawnDecal(position: coord, scale: scale, randomRotationAxis: DecalRotationAxis.FORWARD);
+
+            }
+             actionFinished(success: true);
+        }
+
 
         // instantiate a target circle, and then place it in a "SpawnOnlyOUtsideReceptacle" that is also within camera view
         // If fails, return actionFinished(false) and despawn target circle
@@ -3235,27 +3303,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            actionFinished(true);
-        }
-
-        public void MakeAllObjectsUnbreakable() {
-            UpdateBreakabilityOfAllObjects(true);
-
-        }
-
-        public void MakeAllObjectsBreakable() {
-            UpdateBreakabilityOfAllObjects(false);
-        }
-
-        private void UpdateBreakabilityOfAllObjects(bool isUnbreakable) {
-            SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            if (simObjs != null) {
-                foreach (SimObjPhysics sop in simObjs) {
-                    if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
-                        sop.GetComponentInChildren<Break>().Unbreakable = isUnbreakable;
-                    }
-                }
-            }
             actionFinished(true);
         }
 
@@ -3784,7 +3831,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             bool onlyPointsCloseToAgent = !forceAction;
-
             // if the target is something like a pot or bowl on a table, return all valid points instead of ONLY visible points since
             // the Agent can't see the bottom of the receptacle if it's placed too high on a table
             if (ReceptacleRestrictions.ReturnAllPoints.Contains(targetReceptacle.ObjType)) {
@@ -3926,6 +3972,47 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(success: true, actionReturn: target.ObjectID);
             }
         }
+
+        public void GetDoorHandle(string objectId) {
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+            
+            List<Vector3> doorHandlePositions = new List<Vector3>();
+
+            foreach (Transform child in target.transform.GetComponentsInChildren<Transform>()) {
+                if(child.CompareTag("Handle")) {
+                    doorHandlePositions.Add(child.transform.position);
+                }
+            }
+
+            #if UNITY_EDITOR
+            foreach(Vector3 v in doorHandlePositions) {
+                Debug.Log(v);
+            }
+            #endif
+
+            actionFinished(true, doorHandlePositions);
+        }
+
+        public void GetDoorHinge(string objectId) {
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+
+            List<Vector3> hingePositions = new List<Vector3>();
+
+            foreach (Transform child in target.transform.GetComponentsInChildren<Transform>()) {
+                if(child.CompareTag("Hinge")) {
+                    hingePositions.Add(child.transform.position);
+                }
+            }
+
+            #if UNITY_EDITOR
+            foreach(Vector3 v in hingePositions) {
+                Debug.Log(v);
+            }
+            #endif
+
+            actionFinished(true, hingePositions);
+        }
+    
 
         public virtual void PickupObject(float x, float y, bool forceAction = false, bool manualInteract = false) {
             SimObjPhysics target = getInteractableSimObjectFromXY(x: x, y: y, forceAction: forceAction);
@@ -4311,119 +4398,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             OpenOrCloseObjectAtLocation(false, action);
         }
 
-        // Helper used with OpenObject commands, which controls the physics
-        // of actually opening an object. Instead of calling this directly,
-        // one is recommended to call openObject, which runs more checks.
-        // Previously named InteractAndWait.
-        private protected IEnumerator openAnimation(
-            CanOpen_Object openableObject,
-            bool markActionFinished,
-            float openness = 1.0f,
-            bool forceAction = false,
-            bool returnToStart = true,
-            bool ignoreAgentInTransition = false,
-            bool stopAtNonStaticCol = false,
-            bool useGripper = false,
-            float? physicsInterval = null,
-            bool freezeContained = false,
-            GameObject posRotManip = null,
-            GameObject posRotRef = null
-        ) {
-            if (openableObject == null) {
-                if (markActionFinished) {
-                    errorMessage = "Must pass in openable object!";
-                    actionFinished(false);
-                }
-                yield break;
-            }
-
-            // stores the object id of each object within this openableObject
-            Dictionary<string, Transform> objectIdToOldParent = null;
-            if (freezeContained) {
-                SimObjPhysics target = ancestorSimObjPhysics(openableObject.gameObject);
-                objectIdToOldParent = new Dictionary<string, Transform>();
-
-                foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
-                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                    objectIdToOldParent[objectId] = toReParent.transform.parent;
-                    toReParent.transform.parent = openableObject.transform;
-                    toReParent.GetComponent<Rigidbody>().isKinematic = true;
-                }
-            }
-            
-            // set conditions for ignoring certain fail-conditions or not
-            // (must be stored on CanOpen_Object component for OnTriggerEnter event to work)
-            openableObject.SetForceAction(forceAction);
-            openableObject.SetIgnoreAgentInTransition(ignoreAgentInTransition);
-            openableObject.SetStopAtNonStaticCol(stopAtNonStaticCol);
-
-            // open the object to openness
-            openableObject.SetIsCurrentlyLerping(true);
-            openableObject.Interact(
-                targetOpenness: openness,
-                physicsInterval: physicsInterval,
-                returnToStart: returnToStart,
-                useGripper: useGripper,
-                returnToStartMode: false,
-                posRotManip: posRotManip,
-                posRotRef: posRotRef);
-            // Wait until all animating is done
-            yield return new WaitUntil(() => (openableObject.GetIsCurrentlyLerping() == false));
-            yield return null;
-            bool succeeded = true;
-            
-            // if failure occurred, revert back to backup state (either start or lastSuccessful), and then report failure
-            if (openableObject.GetFailState() != CanOpen_Object.failState.none) {
-                succeeded = false;
-
-                openableObject.SetIsCurrentlyLerping(true);
-                openableObject.Interact(
-                    targetOpenness: openableObject.GetStartOpenness(),
-                    physicsInterval: physicsInterval,
-                    returnToStart: returnToStart,
-                    useGripper: useGripper,
-                    returnToStartMode: true,
-                    posRotManip: posRotManip,
-                    posRotRef: posRotRef);
-                yield return new WaitUntil(() => (openableObject.GetIsCurrentlyLerping() == false));
-                yield return null;
-                if (openableObject.GetFailState() == CanOpen_Object.failState.collision) {
-                    errorMessage = "Openable object collided with " + openableObject.GetFailureCollision().name;
-                }
-                else if (openableObject.GetFailState() == CanOpen_Object.failState.hyperextension) {
-                    errorMessage = "Agent hyperextended arm while opening object";
-                }
-            }
-
-            // stops any object located within this openableObject from moving
-            if (freezeContained) {
-                foreach (string objectId in objectIdToOldParent.Keys) {
-                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-                    toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
-                    Rigidbody rb = toReParent.GetComponent<Rigidbody>();
-                    rb.velocity = new Vector3(0f, 0f, 0f);
-                    rb.angularVelocity = new Vector3(0f, 0f, 0f);
-                    rb.isKinematic = false;
-                }
-            }
-
-            // Reset conditions for next interaction
-            openableObject.SetFailState(CanOpen_Object.failState.none);
-            openableObject.SetFailureCollision(null);
-            
-            openableObject.SetForceAction(false);
-            openableObject.SetIgnoreAgentInTransition(false);
-            openableObject.SetStopAtNonStaticCol(false);
-
-            // Remove PosRotRef from MovingPart
-            if (posRotRef != null) {
-                UnityEngine.Object.Destroy(posRotRef);
-            }
-
-            if (markActionFinished) {
-                actionFinished(succeeded);
-            }
-        }
 
         // swap an object's materials out to the cooked version of the object
         public void CookObject(ServerAction action) {
@@ -4660,214 +4634,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // only return ActionFinished once the object is completely done animating.
             // print(ctof.isOn);
             actionFinished(success);
-        }
-
-        // private helper used with OpenObject commands
-        private void openObject(
-            SimObjPhysics target,
-            float openness,
-            bool forceAction,
-            bool markActionFinished,
-            bool returnToStart = true,
-            bool ignoreAgentInTransition = false,
-            bool stopAtNonStaticCol = false,
-            bool useGripper = false,
-            float? physicsInterval = null,
-            bool simplifyPhysics = false,
-            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
-        ) {
-            // backwards compatibility support
-            if (moveMagnitude != null) {
-                // Previously, when moveMagnitude==0, that meant full openness, since the default float was 0.
-                openness = ((float)moveMagnitude) == 0 ? 1 : (float)moveMagnitude;
-            }
-
-            if (openness > 1 || openness < 0) {
-                errorMessage = "openness must be in [0:1]";
-                if (markActionFinished) {
-                    actionFinished(false);
-                }
-                return;
-            }
-
-            if (target == null) {
-                errorMessage = "Object not found!";
-                if (markActionFinished) {
-                    actionFinished(false);
-                }
-                return;
-            }
-
-            if (!forceAction && !IsInteractable(target)) {
-                errorMessage = "object is visible but occluded by something: " + target.ObjectID;
-                if (markActionFinished) {
-                    actionFinished(false);
-                }
-                return;
-            }
-
-            if (!target.GetComponent<CanOpen_Object>()) {
-                errorMessage = $"{target.ObjectID} is not an Openable object";
-                if (markActionFinished) {
-                    actionFinished(false);
-                }
-                return;
-            }
-
-            CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
-
-            // This is a style choice that applies to Microwaves and Laptops,
-            // where it doesn't make a ton of sense to open them, while they are in use.
-            if (codd.WhatReceptaclesMustBeOffToOpen().Contains(target.Type) && target.GetComponent<CanToggleOnOff>().isOn) {
-                errorMessage = "Target must be OFF to open!";
-                if (markActionFinished) {
-                    actionFinished(false);
-                }
-                return;
-            }
-
-            if (useGripper == true) {
-                // Opening objects with the gripper only works with the IK-Arm
-                // (it'd be preferable to reference the agentMode directly, but no such universal metadata exists)
-                if (this.GetComponent<BaseAgentComponent>().IKArm.activeInHierarchy == false) {
-                    errorMessage = "IK-Arm is required to open objects with gripper";
-                    if (markActionFinished) {
-                        actionFinished(false);
-                    }
-                    return;
-                }
-                
-                // Opening objects with the gripper only works with an empty hand
-                if (ItemInHand != null) {
-                    errorMessage = "An empty hand is required to open objects with gripper";
-                    if (markActionFinished) {
-                        actionFinished(false);
-                    }
-                    return;
-                }
-
-                // Opening objects with the gripper currently requires the gripper-sphere to have some overlap with the moving parts' collision geometry
-                GameObject parentMovingPart = FindOverlappingMovingPart(codd);
-                if (parentMovingPart == null) {
-                    errorMessage = "Gripper must be making contact with at least one moving part's surface to open it!";
-                    if (markActionFinished) {
-                        actionFinished(false);
-                    }
-                    return;
-                }
-
-                GameObject posRotManip = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmTarget();
-                GameObject posRotRef = new GameObject("PosRotReference");
-                posRotRef.transform.parent = parentMovingPart.transform;
-                posRotRef.transform.position = posRotManip.transform.position;
-                posRotRef.transform.rotation = posRotManip.transform.rotation;
-                StartCoroutine(openAnimation(
-                    openableObject: codd,
-                    markActionFinished: markActionFinished,
-                    openness: openness,
-                    forceAction: forceAction,
-                    returnToStart: returnToStart,
-                    ignoreAgentInTransition: ignoreAgentInTransition,
-                    stopAtNonStaticCol: stopAtNonStaticCol,
-                    useGripper: useGripper,
-                    physicsInterval: physicsInterval,
-                    freezeContained: simplifyPhysics,
-                    posRotManip: posRotManip,
-                    posRotRef: posRotRef
-                ));
-                return;
-            }
-
-            StartCoroutine(openAnimation(
-                openableObject: codd,
-                markActionFinished: markActionFinished,
-                openness: openness,
-                forceAction: forceAction,
-                returnToStart: returnToStart,
-                ignoreAgentInTransition: ignoreAgentInTransition,
-                stopAtNonStaticCol: stopAtNonStaticCol,
-                useGripper: useGripper,
-                physicsInterval: physicsInterval,
-                freezeContained: simplifyPhysics
-            ));
-        }
-
-        //helper action to set the openness of a "rotate" typed open/close object immediately (no tween over time)
-        public void OpenObjectImmediate(
-            string objectId,
-            float openness = 1.0f
-        ) {
-            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
-            target.GetComponent<CanOpen_Object>().SetOpennessImmediate(openness);
-            actionFinished(true);
-        }
-        
-        //helper function to confirm if GripperSphere overlaps with openable object's moving part(s), and which one
-    
-        public GameObject FindOverlappingMovingPart(CanOpen_Object codd)
-        {
-            int layerMask = 1 << 8;
-            GameObject magnetSphere = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetMagnetSphere();
-            foreach (GameObject movingPart in codd.GetComponent<CanOpen_Object>().MovingParts) {
-                foreach(Collider col in movingPart.GetComponentsInChildren<Collider>()) {
-                    // Checking for matches between moving parts' colliders and colliders inside of gripper-sphere
-                    foreach(Collider containedCol in Physics.OverlapSphere(
-                        magnetSphere.transform.TransformPoint(magnetSphere.GetComponent<SphereCollider>().center),
-                        magnetSphere.transform.GetComponent<SphereCollider>().radius,
-                        layerMask)) {
-                            if (col == containedCol)
-                            {
-                                return movingPart;
-                            }
-                    }
-                }
-            }
-            return null;
-        }
-
-        public void OpenObject(
-            string objectId,
-            float openness = 1,
-            bool forceAction = false,
-            bool returnToStart = true,
-            bool ignoreAgentInTransition = false,
-            bool stopAtNonStaticCol = false,
-            float? physicsInterval = null,
-            bool useGripper = false,
-            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. Its new name is 'openness'.
-        ) {
-            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
-            openObject(
-                target: target,
-                openness: openness,
-                forceAction: forceAction,
-                returnToStart: returnToStart,
-                ignoreAgentInTransition: ignoreAgentInTransition,
-                stopAtNonStaticCol: stopAtNonStaticCol,
-                useGripper: useGripper,
-                physicsInterval: physicsInterval,
-                moveMagnitude: moveMagnitude,
-                markActionFinished: true
-            );
-        }
-
-        public void OpenObject(
-            float x,
-            float y,
-            bool forceAction = false,
-            float openness = 1,
-            float? moveMagnitude = null // moveMagnitude is supported for backwards compatibility. It's new name is 'openness'.
-        ) {
-            SimObjPhysics target = getInteractableSimObjectFromXY(
-                x: x, y: y, forceAction: forceAction
-            );
-            openObject(
-                target: target,
-                openness: openness,
-                forceAction: forceAction,
-                moveMagnitude: moveMagnitude,
-                markActionFinished: true
-            );
         }
 
         // XXX: This will return contained objects, but should not be used. Likely depracate this later
@@ -5426,7 +5192,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////////////////////////
         ///// Crouch and Stand /////
         ////////////////////////////
-        public void crouch() {
+        virtual public void crouch() {
             m_Camera.transform.localPosition = new Vector3(
                 standingLocalCameraPosition.x,
                 crouchingLocalCameraPosition.y,
@@ -5434,7 +5200,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void stand() {
+        virtual public void stand() {
             m_Camera.transform.localPosition = standingLocalCameraPosition;
         }
 
@@ -5445,11 +5211,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else if (!CheckIfItemBlocksAgentStandOrCrouch()) {
                 actionFinished(false);
             } else {
-                m_Camera.transform.localPosition = new Vector3(
-                    standingLocalCameraPosition.x,
-                    crouchingLocalCameraPosition.y,
-                    standingLocalCameraPosition.z
-                );
+                crouch();
                 actionFinished(true);
             }
         }
@@ -5461,7 +5223,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else if (!CheckIfItemBlocksAgentStandOrCrouch()) {
                 actionFinished(false);
             } else {
-                m_Camera.transform.localPosition = standingLocalCameraPosition;
+                stand();
                 actionFinished(true);
             }
         }
@@ -5475,11 +5237,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void ChangeFOV(ServerAction action) {
-
-            if (action.fieldOfView > 0 && action.fieldOfView < 180) {
-                m_Camera.fieldOfView = action.fieldOfView;
-                actionFinished(true);
+        public void ChangeFOV(float fieldOfView, string camera="") {
+            
+            if (fieldOfView > 0 && fieldOfView < 180) {
+                if (string.IsNullOrEmpty(camera)) {
+                    m_Camera.fieldOfView = fieldOfView;
+                    actionFinished(true);
+                }
+                else {
+                    var cameraTuples = new List<(Camera camera, bool isThirdPartyCamera, int id)>(){(camera: m_Camera, isThirdPartyCamera: false, id: -1)}.Concat(this.agentManager.thirdPartyCameras.Select((c, i) => (camera: c, isThirdPartyCamera: true, id: i)));
+                    var matches = cameraTuples;
+                    if (camera != "*") {
+                        matches = cameraTuples.Where(t => t.camera.name == camera);
+                    }
+                    // Debug.Log($"Camera matches: {matches.Count()} {string.Join(", ", matches.Select(m => m.camera.name))}");
+                    if (matches.Count() == 0) {
+                        errorMessage = $"Camera '{camera}' is not present in the agent, make sure the agent was initialized correctly or camera was added via 'AddThirdPartyCamera'.";
+                        actionFinished(false);
+                    }
+                    else {
+                        foreach (var tuple in matches) {
+                            if (tuple.isThirdPartyCamera) {
+                                agentManager.UpdateThirdPartyCamera(
+                                    tuple.id,
+                                    fieldOfView: fieldOfView
+                                );
+                            }
+                            else {
+                                tuple.camera.fieldOfView = fieldOfView;
+                            }
+                            
+                        }
+                        actionFinished(true);
+                    }
+                }
             } else {
                 errorMessage = "fov must be in (0, 180) noninclusive.";
                 Debug.Log(errorMessage);
@@ -5554,6 +5345,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) {
+            Debug.Log("trying to check if objectIsCurrentlyVisible");
             if (sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
                 updateAllAgentCollidersForVisibilityCheck(false);
@@ -5743,9 +5535,45 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return allVisible;
         }
 
+        //helper function to set transform or position for game objects
+        public void SetTransform(Transform transform, Vector3? position = null, Quaternion? rotation = null) {
+            if(!transform.GetComponent<ArticulationBody>()) {
+                if(position != null) {
+                    transform.position = (Vector3) position;
+
+                }
+
+                if(rotation != null) {
+                    transform.rotation = (Quaternion) rotation;
+                }
+            }
+
+            //handle if this transform we are trying to manipulate is an articulation body and needs to be treated special
+            else {
+                Debug.Log("SetTransform with Articulation Body happening!");
+                ArticulationBody articulationBody = transform.GetComponent<ArticulationBody>();
+
+                if(position != null && rotation != null) {
+                    Debug.Log("Teleporting position and rotation");
+                    articulationBody.TeleportRoot((Vector3) position, (Quaternion) rotation);
+                }
+
+                else if(position != null && rotation == null) {
+                    Debug.Log("Teleporting position, default rotation");
+                    Debug.Log($"Passing to TeleportRoot(): position is {position}, but casting it is {(Vector3) position}");
+                    articulationBody.TeleportRoot((Vector3) position, articulationBody.transform.rotation);
+                }
+
+                else if (position == null && rotation != null) {
+                    Debug.Log("Teleporting rotation, default position");
+                    articulationBody.TeleportRoot(articulationBody.transform.position, (Quaternion) rotation);
+                }
+            }
+        }
+
         // @positions/@rotations/@horizons/@standings are used to override all possible values the agent
         // may encounter with basic agent navigation commands (excluding teleport).
-        private List<Dictionary<string, object>> getInteractablePoses(
+        public virtual List<Dictionary<string, object>> getInteractablePoses(
             string objectId,
             bool markActionFinished,
             Vector3[] positions = null,
@@ -5755,6 +5583,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? maxDistance = null,
             int maxPoses = int.MaxValue  // works like infinity
         ) {
+            Debug.Log($"Position of agent at start of GetInteractablePoses: {this.transform.position}");
             if (360 % rotateStepDegrees != 0 && rotations != null) {
                 throw new InvalidOperationException($"360 % rotateStepDegrees (360 % {rotateStepDegrees} != 0) must be 0, unless 'rotations: float[]' is overwritten.");
             }
@@ -5845,13 +5674,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // set each key to store a list
             List<Dictionary<string, object>> validAgentPoses = new List<Dictionary<string, object>>();
-            string[] keys = { "x", "y", "z", "rotation", "standing", "horizon" };
+
+            //commenting this out because I don't think its actually ever used???
+            //string[] keys = { "x", "y", "z", "rotation", "standing", "horizon" };
 
             // iterate over each reasonable agent pose
             bool stopEarly = false;
             foreach (float horizon in horizons) {
                 m_Camera.transform.localEulerAngles = new Vector3(horizon, 0f, 0f);
-
+                Debug.Log($"setting horizon to: {m_Camera.transform.localEulerAngles.x}");
                 foreach (bool standing in standings) {
                     if (standing) {
                         stand();
@@ -5861,10 +5692,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     foreach (float rotation in rotations) {
                         Vector3 rotationVector = new Vector3(x: 0, y: rotation, z: 0);
-                        transform.rotation = Quaternion.Euler(rotationVector);
+                        //Debug.Log($"initial rotation: {transform.rotation}");
+                        SetTransform(transform: transform, rotation: (Quaternion?) Quaternion.Euler(rotationVector));
+                        //Debug.Log($"Rotation after SetTransform(): {transform.rotation}");
 
                         foreach (Vector3 position in filteredPositions) {
-                            transform.position = position;
+                            Debug.Log("////////////////////");
+                            Debug.Log($"position Before SetTransform: {transform.position}");
+                            Debug.Log($"Passing in position to SetTransform: Vector3 {position}, Vector3? {(Vector3?) position}");
+                            SetTransform(transform: transform, position: (Vector3?) position);
+                            Debug.Log($"Position After SetTransform(): {transform.position}");
+                            Debug.Log("////////////////////");
 
                             // Each of these values is directly compatible with TeleportFull
                             // and should be used with .step(action='TeleportFull', **interactable_positions[0])
@@ -5908,8 +5746,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 crouch();
             }
-            transform.position = oldPosition;
-            transform.rotation = oldRotation;
+            SetTransform(transform: transform, position: (Vector3?) oldPosition, rotation: (Quaternion?) oldRotation);
             m_Camera.transform.localEulerAngles = oldHorizon;
             if (ItemInHand != null) {
                 ItemInHand.gameObject.SetActive(true);
@@ -5929,7 +5766,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Get the poses with which the agent can interact with 'objectId'
         // @rotations: if rotation is not specified, we use rotateStepDegrees, which results in [0, 90, 180, 270] by default.
-        public void GetInteractablePoses(
+        public virtual void GetInteractablePoses(
             string objectId,
             Vector3[] positions = null,
             float[] rotations = null,
@@ -6616,7 +6453,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
             SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
-            actionFinished(true, approxPercentScreenObjectOccupies(sop));
+            actionFinishedEmit(true, approxPercentScreenObjectOccupies(sop));
         }
 
         public void ApproxPercentScreenObjectFromPositions(ServerAction action) {
@@ -6656,7 +6493,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             transform.position = oldPosition;
             transform.rotation = oldRotation;
-            actionFinished(true, positionAndApproxAmountVisible);
+            actionFinishedEmit(true, positionAndApproxAmountVisible);
         }
 
         public void GetVisibilityPointsOfObjects() {
@@ -7744,6 +7581,43 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "object not found: " + action.objectId;
                 actionFinished(false);
             }
+        }
+
+        public void SpawnDirt(
+            string objectId,
+            int howManyDirt = 0,
+            bool forceAction = true,
+            int randomSeed = 0,
+            DirtSpawnPosition[] spawnPositions = null
+            ) {
+            
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, forceAction: forceAction);
+            
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
+            if (target) {
+                target.SpawnDirtOnReceptacle(howManyDirt, randomSeed, spawnPositions);
+            }
+
+            actionFinished(true);
+        }
+
+        //currently only to be used with the Cleaning Table prefab
+        public void GetDirtCoordinateBounds(string objectId) {
+            DirtCoordinateBounds toReturn = null;
+            SimObjPhysics target = getInteractableSimObjectFromId(objectId: objectId, true);
+            
+            if (target == null) {
+                throw new ArgumentNullException();
+            }
+
+            if (target) {
+                toReturn = target.GetDirtCoordinateBounds();
+            }
+
+            actionFinished(true, toReturn);
         }
 
         public void DirtyObject(ServerAction action) {

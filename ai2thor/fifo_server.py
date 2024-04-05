@@ -6,6 +6,7 @@ Handles all communication with Unity through a Flask service.  Messages
 are sent to the controller using a pair of request/response queues.
 """
 import json
+import math
 import os
 import select
 import struct
@@ -43,6 +44,12 @@ class FieldType(IntEnum):
     THIRD_PARTY_FLOW = 16
     END_OF_MESSAGE = 255
 
+import signal
+
+# Define the function to be called on timeout
+def handle_fifo_connect_timeout(signum, frame):
+    raise TimeoutError("FIFO server failed to conect to Unity in time.")
+
 
 class FifoServer(ai2thor.server.Server):
     header_format = "!BI"
@@ -57,11 +64,15 @@ class FifoServer(ai2thor.server.Server):
         timeout: Optional[float] = 100.0,
         depth_format=ai2thor.server.DepthFormat.Meters,
         add_depth_noise: bool = False,
+        start_unity: bool = True
     ):
+        if not start_unity:
+            raise NotImplemented
 
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.server_pipe_path = os.path.join(self.tmp_dir.name, "server.pipe")
         self.client_pipe_path = os.path.join(self.tmp_dir.name, "client.pipe")
+
         self.server_pipe: Optional[TextIOWrapper] = None
         self.client_pipe: Optional[TextIOWrapper] = None
         self.raw_metadata = None
@@ -106,13 +117,15 @@ class FifoServer(ai2thor.server.Server):
             height=height,
             timeout=timeout,
             depth_format=depth_format,
-            add_depth_noise=add_depth_noise
+            add_depth_noise=add_depth_noise,
         )
 
     def _create_header(self, message_type, body):
         return struct.pack(self.header_format, message_type, len(body))
 
-    def _read_with_timeout(self, server_pipe, message_size: int, timeout: Optional[float]):
+    def _read_with_timeout(
+        self, server_pipe, message_size: int, timeout: Optional[float]
+    ):
         if timeout is None:
             return server_pipe.read(message_size)
 
@@ -131,13 +144,34 @@ class FifoServer(ai2thor.server.Server):
                 break
 
         if message_size != 0:
-            raise TimeoutError(f"Reading from AI2-THOR backend timed out (using {timeout}s) timeout.")
+            raise TimeoutError(
+                f"Reading from AI2-THOR backend timed out (using {timeout}s) timeout."
+            )
 
         return message
 
     def _recv_message(self, timeout: Optional[float]):
         if self.server_pipe is None:
-            self.server_pipe = open(self.server_pipe_path, "rb")
+            # print(f"Attempting to open server pipe {self.server_pipe_path}, path exists {os.path.exists(self.server_pipe_path)}")
+
+            if timeout is None or timeout < 0:
+                self.server_pipe = open(self.server_pipe_path, "rb")
+            else:
+                # Set the signal handler
+                signal.signal(signal.SIGALRM, handle_fifo_connect_timeout)
+
+                try:
+                    # Set an alarm for timeout seconds
+                    signal.alarm(math.ceil(timeout))
+                    # Perform the operation that could potentially hang
+                    self.server_pipe = open(self.server_pipe_path, "rb")
+                finally:
+                    # Cancel the alarm
+                    signal.alarm(0)
+                    # Reset the signal handler to the default
+                    signal.signal(signal.SIGALRM, signal.SIG_DFL)
+
+            # print("Server pipe opened by FIFO server.")
 
         metadata = None
         files = defaultdict(list)
@@ -145,7 +179,7 @@ class FifoServer(ai2thor.server.Server):
             header = self._read_with_timeout(
                 server_pipe=self.server_pipe,
                 message_size=self.header_size,
-                timeout=self.timeout if timeout is None else timeout
+                timeout=self.timeout if timeout is None else timeout,
             )  # message type + length
             if len(header) == 0:
                 self.unity_proc.wait(timeout=5)
@@ -176,7 +210,7 @@ class FifoServer(ai2thor.server.Server):
             body = self._read_with_timeout(
                 server_pipe=self.server_pipe,
                 message_size=message_length,
-                timeout=self.timeout if timeout is None else timeout
+                timeout=self.timeout if timeout is None else timeout,
             )
 
             # print("field type")
@@ -225,7 +259,6 @@ class FifoServer(ai2thor.server.Server):
         self.client_pipe.flush()
 
     def receive(self, timeout: Optional[float] = None):
-
         metadata, files = self._recv_message(
             timeout=self.timeout if timeout is None else timeout
         )
@@ -265,10 +298,22 @@ class FifoServer(ai2thor.server.Server):
 
     def stop(self):
         if self.client_pipe is not None:
-            self.client_pipe.close()
+            try:
+                self.client_pipe.close()
+            except:
+                pass
 
         if self.server_pipe is not None:
-            self.server_pipe.close()
+            try:
+                self.server_pipe.close()
+            except:
+                pass
 
         if self.unity_proc is not None and self.unity_proc.poll() is None:
-            self.unity_proc.kill()
+            try:
+                self.unity_proc.kill()
+            except:
+                pass
+
+    def __del__(self):
+        self.stop()

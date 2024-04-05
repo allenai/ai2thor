@@ -129,6 +129,7 @@ namespace Thor.Procedural.Data {
         public float minWallColliderThickness { get; set; }
         public float receptacleHeight { get; set; }
         public string skyboxId { get; set; }
+        public SerializableColor skyboxColor { get; set; } 
         public string datetime { get; set; }
         public List<LightParameters> lights { get; set; }
 
@@ -139,12 +140,14 @@ namespace Thor.Procedural.Data {
             tilingDivisorY = 1.0f
         };
 
+        // TODO: deprecate
         public float navmeshVoxelSize { get; set; }
         public bool ceilingBackFaces { get; set; }
 
         public bool unlitCeiling { get; set; }
 
         public bool squareTiling = false;
+        public string collisionDetectionMode { get; set; }
     }
 
     [Serializable]
@@ -360,6 +363,8 @@ namespace Thor.Procedural.Data {
         
         public bool unlit;
         public MaterialProperties material;
+
+        public string collisionDetectionMode { get; set; }
     }
 
     [Serializable]
@@ -383,11 +388,28 @@ namespace Thor.Procedural.Data {
         public HouseMetadata metadata { get; set; }
     }
 
+     [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class NavMeshConfig {
+
+        public int id;
+        public float agentRadius;
+        public int? tileSize;
+        public float? agentHeight;
+        public float? agentSlope;
+        public float? agentClimb;
+        public float? voxelSize;
+        public bool? overrideVoxelSize;
+
+    }
+
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class HouseMetadata {
         public Dictionary<string, AgentPose> agentPoses { get; set; }
         public string schema { get; set; } = null;
+
+        public List<NavMeshConfig> navMeshes { get; set; }
     }
 
     [Serializable]
@@ -447,6 +469,28 @@ namespace Thor.Procedural.Data {
         public SerializableColor color { get; set; } = null;
 
         public bool unlit;
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class ProceduralAsset {
+        public Vector3[] vertices;
+        public Vector3[] normals;
+        public string name;
+        public int[] triangles;
+        public Vector2[]? uvs = null;
+        public string albedoTexturePath = null;
+        public string metallicSmoothnessTexturePath = null;
+        public string normalTexturePath = null;
+        public string emissionTexturePath = null;
+        public SerializableCollider[]? colliders = null;
+        public PhysicalProperties physicalProperties = null;
+        public Vector3[]? visibilityPoints = null;
+        public ObjectAnnotations annotations = null;
+        public bool receptacleCandidate = false;
+        public float yRotOffset = 0f;
+        public bool serializable = false;
+        public string parentTexturesDir = null;
     }
 
     public static class ExtensionMethods {

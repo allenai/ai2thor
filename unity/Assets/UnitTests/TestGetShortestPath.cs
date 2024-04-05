@@ -23,7 +23,7 @@ namespace Tests {
             action["objectId"] = "Kettle|+01.04|+00.90|-02.60";
             yield return step(action);
 
-            UnityEngine.AI.NavMeshPath path = (UnityEngine.AI.NavMeshPath)actionReturn;
+            var path = actionReturn as UnityEngine.AI.NavMeshPath;
 
             bool result = false;
 

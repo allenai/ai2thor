@@ -28,7 +28,7 @@ namespace Tests {
             yield return step(new Dictionary<string, object>() {
                     { "action", "MoveAgent"},
                     { "right", -0.7f},
-                    { "disableRendering", true},
+                    { "physicsSimulationParams", new PhysicsSimulationParams() { autoSimulation = false}},
                     { "returnToStart", true}
                 });
 
@@ -36,7 +36,7 @@ namespace Tests {
             yield return step(new Dictionary<string, object>() {
                     { "action", "MoveArm"},
                     { "coordinateSpace", "world"},
-                    { "disableRendering", true},
+                    { "physicsSimulationParams", new PhysicsSimulationParams() { autoSimulation = false}},
                     { "position", new Vector3(-1.3149f, 0.6049995f, 0.04580003f)}
                 });
 
@@ -54,10 +54,12 @@ namespace Tests {
                     { "returnToStart", true},
                     { "stopAtNonStaticCol", false}
                 });
-            yield return new WaitForSeconds(2f);
+            // yield return new WaitUntil(() => getActiveAgent().agentState == AgentState.ActionComplete);
+            //yield return new WaitForSeconds(2f);
 
             Transform testCabinetDoor = GameObject.Find("Cabinet_67e9cbea").transform.Find("CabinetDoor");
             bool testCabinetDoorOpened = Mathf.Approximately((testCabinetDoor.localEulerAngles.y + 360) % 360, 270);
+            Debug.Log($"testCabinetDoorOpened-- {testCabinetDoorOpened} angles y {testCabinetDoor.localEulerAngles.y}");
             Assert.AreEqual(testCabinetDoorOpened, true);
 
             yield return true;

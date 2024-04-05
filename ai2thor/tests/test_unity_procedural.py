@@ -210,3 +210,73 @@ def test_depth(controller_args):
 
     controller.stop()
     assert depth_images_near(evt.depth_frame, raw_depth, epsilon=1e-1, debug_save=True)
+
+
+@pytest.mark.parametrize("controller_args", fifo)
+def test_determinism(controller_args):
+    from dictdiffer import diff
+    controller_args.update(
+        physicsSimulationParams = {
+            "autoSimulation": False,
+            # default fixedDeltaTime is 0.02 so 10 simulations
+            "minSimulateTimeSeconds": 0.2
+        }
+    )
+    # add apple '$' on top of chair and table '*' to the left
+    house_template["objectsLayouts"].append(
+        """
+          0 0 0 0 0 0
+          0 2 2 2 2 0
+          0 2 2 2 = 0
+          0 1 1 1 = 0
+          0 1 * 1 $ 0
+          0 0 0 0 0 0
+        """
+    )
+    house_template['objects']["$"] = {
+         "kinematic": False, 
+         "assetId": "Apple_4",
+         "position": {"x": 0, "y": 2, "z": 0}
+    }
+
+    house_template['objects']["*"] = {
+        "assetId": "Dining_Table_16_2",
+        "kinematic": False,
+        "rotation": { "axis": {"x": 0, "y": 1, "z": 0}, "degrees": 90}
+    }
+
+    object_ids = ["+", "$", "*"]
+
+    house_template['objects']['+']['kinematic'] = False
+    
+
+    controller = build_controller(**controller_args)
+
+    times = 50
+    object_positions = []
+    prev_pos = {}
+    pos = {}
+
+    for i in range(times):
+        prev_pos = pos
+        evt = controller.step(action="GetHouseFromTemplate", template=house_template)
+
+        assert evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]
+        house = evt.metadata["actionReturn"]
+
+        evt = controller.step(action="CreateHouse", house=house)
+
+        print(
+            "Action success {0}, message {1}".format(
+                evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]
+            )
+        )
+        assert evt.metadata["lastActionSuccess"]
+        pos = {x['name']: {'position': x['position'], 'rotation': x['rotation']} for x in evt.metadata['objects'] if x["name"] in object_ids}
+        print(f"{pos}")
+        object_positions.append(pos)
+        if prev_pos:
+           
+            diffs = list(diff(pos, prev_pos, tolerance=0.00001))
+            print(diffs)
+            assert [] == diffs

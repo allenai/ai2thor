@@ -109,14 +109,20 @@ public class Build {
 
         if (IncludePrivateScenes()) {
             files.AddRange(Directory.GetFiles("Assets/Private/Scenes/"));
+            files.AddRange(Directory.GetFiles("Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets/Scenes"));
         }
 
         files.AddRange(Directory.GetFiles("Assets/Scenes/Procedural"));
         files.AddRange(Directory.GetFiles("Assets/Scenes/Procedural/ArchitecTHOR"));
+        files.AddRange(Directory.GetFiles("Assets/Standard Assets/Characters/FirstPersonCharacter/StretchCalibration/Scenes"));
 
         foreach (string f in files) {
             // ignore entryway scenes in build since these are not yet complete
             if (f.Contains("FloorPlan5") && !f.EndsWith("FloorPlan5_physics.unity")) {
+                continue;
+            }
+
+            if (f.EndsWith("_Screenshot.unity")) {
                 continue;
             }
 
@@ -125,8 +131,10 @@ public class Build {
             }
         }
 
+        return scenes;
+        // return scenes.Where(x => x.Contains("FloorPlan1_") || x.Contains("Procedural") || x.Contains("ProceduralAB")).ToList();
         // uncomment for faster builds for testing
-        return scenes; //.Where(x => x.Contains("FloorPlan") || x.Contains("Procedural.unity")).ToList(); //.Where(x => x.Contains("FloorPlan1_") || x.Contains("Procedural")).ToList();
+        return scenes; //.Where(x => x.Contains("Procedural.unity") || x.Contains("Procedural.unity")).ToList(); //.Where(x => x.Contains("FloorPlan1_") || x.Contains("Procedural")).ToList();
     }
 
     private static List<string> GetScenesFromEnv() {

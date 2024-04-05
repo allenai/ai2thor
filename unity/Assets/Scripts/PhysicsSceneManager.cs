@@ -11,7 +11,39 @@ using UnityEngine.SceneManagement;
 
 [ExecuteInEditMode]
 
+public class PhysicsSimulationParams {
+    public bool autoSimulation = false;
+    public float fixedDeltaTime = 0.02f;
+    public float minSimulateTimeSeconds = 0;
+
+    public bool syncTransformsAfterAction = false;
+    // public int maxActionPhysicsSteps = int.MaxValue;
+
+    public override bool Equals(object p) {
+
+        if (p is null)
+        {
+            return false;
+        }
+        if (object.ReferenceEquals(this, p))
+        {
+            return true;
+        }
+        if (this.GetType() != p.GetType())
+        {
+            return false;
+        }
+        var otherPhysicsParams = p as PhysicsSimulationParams;
+
+        return autoSimulation.Equals(otherPhysicsParams.autoSimulation)
+            && fixedDeltaTime.Equals(otherPhysicsParams.fixedDeltaTime)
+            && minSimulateTimeSeconds.Equals(otherPhysicsParams.minSimulateTimeSeconds)
+            && syncTransformsAfterAction.Equals(otherPhysicsParams.syncTransformsAfterAction);
+    }
+}
+
 public class PhysicsSceneManager : MonoBehaviour {
+    // public static PhysicsSceneManager Instance { get; private set; }
     public bool ProceduralMode = false;
     public List<GameObject> RequiredObjects = new List<GameObject>();
 
@@ -44,6 +76,39 @@ public class PhysicsSceneManager : MonoBehaviour {
     public int AdvancePhysicsStepCount;
     public static uint PhysicsSimulateCallCount;
 
+    public static uint IteratorExpandCount;
+
+    public static uint LastPhysicsSimulateCallCount;
+
+    public static float PhysicsSimulateTimeSeconds;
+
+    public bool placeDecalSurfaceOnReceptacles = false;
+
+    public GameObject receptaclesDirtyDecalSurface;
+
+    public static PhysicsSimulationParams defaultPhysicsSimulationParams {
+        get;
+        private set;
+    }
+
+    protected PhysicsSimulationParams previousPhysicsSimulationParams;
+
+    public static PhysicsSimulationParams physicsSimulationParams {
+        get;
+        private set;
+    }
+
+    public static float fixedDeltaTime {
+        get { return physicsSimulationParams.fixedDeltaTime; }
+        private set {
+            return;
+        }
+    }
+
+     void Awake() {
+        SetDefaultSimulationParams(new PhysicsSimulationParams());
+     }
+
     private void OnEnable() {
         // must do this here instead of Start() since OnEnable gets triggered prior to Start
         // when the component is enabled.
@@ -75,9 +140,166 @@ public class PhysicsSceneManager : MonoBehaviour {
         GatherAllRBsInScene();
     }
 
+    public static void SetDefaultSimulationParams(PhysicsSimulationParams defaultPhysicsSimulationParams) {
+        PhysicsSceneManager.defaultPhysicsSimulationParams = defaultPhysicsSimulationParams;// ?? new PhysicsSimulationParams();
+        PhysicsSceneManager.physicsSimulationParams = PhysicsSceneManager.defaultPhysicsSimulationParams;
+    }
+
+    public static void SetPhysicsSimulationParams(PhysicsSimulationParams physicsSimulationParams) {
+        PhysicsSceneManager.physicsSimulationParams = physicsSimulationParams;
+    }
+
     public static void PhysicsSimulateTHOR(float deltaTime) {
         Physics.Simulate(deltaTime);
+        PhysicsSceneManager.PhysicsSimulateTimeSeconds += deltaTime;
         PhysicsSceneManager.PhysicsSimulateCallCount++;
+    }
+
+    public static ActionFinished ExpandIEnumerator(IEnumerator enumerator, PhysicsSimulationParams physicsSimulationParams) {
+        ActionFinished actionFinished = null;
+
+        while (enumerator.MoveNext()) {
+            if (enumerator.Current == null) {
+                continue;
+            }
+            
+            // ActionFinished was found but enumerator keeps moving forward, throw error
+            if (actionFinished != null) {
+                // Premature ActionFinished, same as yield break, stops iterator evaluation
+                break;
+            }
+
+            if (enumerator.Current.GetType() == typeof(WaitForFixedUpdate) && !physicsSimulationParams.autoSimulation) {
+                // TODO: is this still used?
+                if (physicsSimulationParams.fixedDeltaTime == 0f) {
+                    Physics.SyncTransforms();
+                } else {
+                    PhysicsSceneManager.PhysicsSimulateTHOR(physicsSimulationParams.fixedDeltaTime);
+                }
+            }
+            // else if (enumerator.Current.GetType() == typeof)
+            else if (enumerator.Current.GetType() == typeof(ActionFinished)) {
+                actionFinished = (ActionFinished)(enumerator.Current as ActionFinished);
+            }
+            // For recursive ienumerators, unity StartCoroutine must do something for cases when (yield return (yield return value))
+            // Though C# compiler should handle it and MoveNext should recursively call MoveNext and set Current, but does not seem to work
+            // so we manually expand iterators depth first
+            else if (typeof(IEnumerator).IsAssignableFrom(enumerator.Current.GetType())) {
+                actionFinished = PhysicsSceneManager.ExpandIEnumerator(enumerator.Current as IEnumerator, physicsSimulationParams);
+            }
+            PhysicsSceneManager.IteratorExpandCount++;
+        }
+        return actionFinished;
+    }
+
+    public static ActionFinished RunSimulatePhysicsForAction(IEnumerator enumerator, PhysicsSimulationParams physicsSimulationParams) {
+        var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime;
+        var previousAutoSimulate = Physics.autoSimulation;
+        Physics.autoSimulation = physicsSimulationParams.autoSimulation;
+        
+        PhysicsSceneManager.PhysicsSimulateTimeSeconds = 0.0f;
+        var startPhysicsSimulateCallTime = PhysicsSceneManager.PhysicsSimulateCallCount;
+        PhysicsSceneManager.IteratorExpandCount = 0;
+
+        // Recursive expansion of IEnumerator
+        ActionFinished actionFinished = ExpandIEnumerator(enumerator, physicsSimulationParams);
+        
+        if (actionFinished == null) {
+            throw new MissingActionFinishedException();
+        }
+
+        PhysicsSceneManager.LastPhysicsSimulateCallCount = PhysicsSceneManager.PhysicsSimulateCallCount - startPhysicsSimulateCallTime;
+        
+        if (!physicsSimulationParams.autoSimulation && physicsSimulationParams.minSimulateTimeSeconds > 0.0f) {
+            // Because of floating point precision
+            const float eps = 1e-5f;
+            while (
+                PhysicsSceneManager.PhysicsSimulateTimeSeconds <= (physicsSimulationParams.minSimulateTimeSeconds - eps)
+            ) {
+                PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+            }
+        }
+
+        if (physicsSimulationParams.syncTransformsAfterAction) {
+            Physics.SyncTransforms();
+        }
+
+        Physics.autoSimulation = previousAutoSimulate;
+        return actionFinished;
+    }
+
+    public static IEnumerator RunActionForCoroutine(ActionInvokable target, IEnumerator action, PhysicsSimulationParams physicsSimulationParams) {
+        var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime;
+        var previousFixedDeltaTime = Time.fixedDeltaTime;
+        Time.fixedDeltaTime = fixedDeltaTime;
+        var startFixedTimeSeconds = Time.fixedTime;
+        ActionFinished actionFinished = null;
+
+        while (true) {
+            // Adds Exception handling for Coroutines!
+            try {
+                if (!action.MoveNext()) {
+                    break;
+                }
+            }
+            catch (Exception e) {
+                 actionFinished = new ActionFinished() {
+                    success = false,
+                    errorMessage = $"{e.GetType()}: {e.StackTrace}",
+                    errorCode = ServerActionErrorCode.UnhandledException
+                 };
+
+                // Calling InnerException throws exception so avoid that if we want to continue
+                // actionFinished = new ActionFinished() {
+                //     success = false,
+                //     errorMessage = $"{e.InnerException.GetType().Name}: {e.InnerException.Message}. trace: {e.InnerException.StackTrace.ToString()}",
+                //     errorCode = ServerActionErrorCode.UnhandledException
+                // };
+                break;
+            }
+            
+            if (action.Current != null && typeof(ActionFinished) == action.Current.GetType()) {
+                actionFinished = (ActionFinished)(action.Current as ActionFinished);
+                break;
+            }
+            yield return action.Current;
+        }
+       
+        // For the coroutine path we can't throw an exception because there is no way to catch it
+        // as it's ran by unity's code 
+        // if (actionFinished == null) {
+        //     throw new MissingActionFinishedException();
+        // }
+
+        actionFinished ??= new ActionFinished() {
+            success = false,
+            errorMessage = "Action did not return an `ActionFinished`.",
+            errorCode = ServerActionErrorCode.MissingActionFinished
+        };
+
+        var actionFixedTime = Time.fixedTime - startFixedTimeSeconds;
+        const float eps = 1e-5f;
+    
+        while (actionFixedTime <= (physicsSimulationParams.minSimulateTimeSeconds- eps)) {
+            yield return new WaitForFixedUpdate();
+            actionFixedTime += fixedDeltaTime;
+        }
+        
+        if (physicsSimulationParams.syncTransformsAfterAction) {
+            Physics.SyncTransforms();
+        }
+
+        target.Complete(actionFinished);
+        
+        Time.fixedDeltaTime = previousFixedDeltaTime;
+    }
+
+    // Returns previous parameters
+    public static PhysicsSimulationParams applyPhysicsSimulationParams(PhysicsSimulationParams physicsSimulationParams) {
+        return new PhysicsSimulationParams() {
+            autoSimulation = Physics.autoSimulation,
+            fixedDeltaTime = Time.fixedDeltaTime
+        };
     }
 
     private void GatherAllRBsInScene() {
