@@ -1401,12 +1401,13 @@ def ci_build(
 
 @task
 def install_cloudrendering_engine(context, force=False):
-    if not sys.platform.startswith("darwin"):
-        raise Exception("CloudRendering Engine can only be installed on Mac")
+    # if not sys.platform.startswith("darwin"):
+    #     raise Exception("CloudRendering Engine can only be installed on Mac")
     s3 = boto3.resource("s3")
-    target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
-        _unity_version()
-    )
+    # target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
+    #     _unity_version()
+    # )
+    target_base_dir = _unity_playback_engines_path()
     full_dir = os.path.join(target_base_dir, "CloudRendering")
     if os.path.isdir(full_dir):
         if force:
