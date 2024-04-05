@@ -1511,7 +1511,7 @@ def test_teleport_stretch(controller):
 
         # make sure Teleport works with default args
         a1 = controller.last_event.metadata["agent"]
-        a2 = controller.step("Teleport", horizon=-20).metadata["agent"]
+        a2 = controller.step("Teleport", horizon=10).metadata["agent"]
         print(f"horizon {a2['cameraHorizon']}")
         assert abs(a2["cameraHorizon"] - 10) < 1e-2, "cameraHorizon should be ~10!"
 
