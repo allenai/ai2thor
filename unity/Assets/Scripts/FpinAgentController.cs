@@ -113,7 +113,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public override RaycastHit[] CastBodyTrayectory(Vector3 startPosition, Vector3 direction, float skinWidth, float moveMagnitude, int layerMask, CapsuleData cachedCapsule) { 
             
             Vector3 startPositionBoxCenter = startPosition + this.transform.TransformDirection(this.boxBounds.agentRelativeCenter);
-            Debug.Log($"----- CastBodyTrayectory {startPositionBoxCenter.ToString("F8")} {this.boxBounds.agentRelativeCenter.ToString("F8")}");
 
             return Physics.BoxCastAll(
                 center: startPositionBoxCenter,

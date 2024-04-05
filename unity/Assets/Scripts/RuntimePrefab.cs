@@ -50,7 +50,6 @@ public class RuntimePrefab : MonoBehaviour {
         // load the texture from disk
         if (!string.IsNullOrEmpty(albedoTexturePath)) {
             if (sharedMaterial.mainTexture == null) {
-                Debug.Log("adding texture!!!");
                 byte[] imageBytes = File.ReadAllBytes(albedoTexturePath);
                 Texture2D tex = new Texture2D(2, 2);
                 tex.LoadImage(imageBytes);
@@ -59,7 +58,6 @@ public class RuntimePrefab : MonoBehaviour {
         }
 
         if (!string.IsNullOrEmpty(metallicSmoothnessTexturePath)) {
-            Debug.Log("metalic "+ metallicSmoothnessTexturePath);
             sharedMaterial.EnableKeyword("_METALLICGLOSSMAP");
             byte[] imageBytes = File.ReadAllBytes(metallicSmoothnessTexturePath);
             Texture2D tex = new Texture2D(2, 2);

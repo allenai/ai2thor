@@ -453,9 +453,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Debug.Log($"actionReturn: '{actionReturn}'");
             if (!success) {
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
-            } else if (actionReturn != null) {
-                Debug.Log($"actionReturn: '{actionReturn}'");
-            }
+            } 
             
 #endif
         }
@@ -5467,7 +5465,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             for (int i = 0; i < path.corners.Length - 1; i++) {
                 Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
-                Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
+                #if UNITY_EDITOR
+                    Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
+                #endif
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
 
@@ -6032,7 +6032,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     bool isVisible = IsInteractable(targetSOP);
 
                     transform.rotation = rot;
-                    Debug.Log($"------ getReachablePositionToObjectVisible point {p.ToString("F8")}");
 
                     if (isVisible) {
                         pos = p;
@@ -6056,14 +6055,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             layerMask: layerMask
                         );
 
-                        Debug.Log($"------ getReachablePositionToObjectVisible capsule cast hit at pos {newPosition.ToString("F8")} count {hits.Count()}");
-
                         bool shouldEnqueue = true;
-                        var i = 0;
                         foreach (RaycastHit hit in hits) {
-
-                            Debug.Log($"------ getReachablePositionToObjectVisible capsule cast hit {i} {hit.transform.gameObject.name} {!ancestorHasName(hit.transform.gameObject, "FPSController")} {!objectsAlreadyColliding.Contains(hit.collider)} {hit.transform.parent?.parent?.name}");
-                            i++;
                             if (!ancestorHasName(hit.transform.gameObject, "Floor") &&
                                 // hit.transform.gameObject.name != "Floor" && // Dont know why this worked on procedural
                                 !ancestorHasName(hit.transform.gameObject, "FPSController") &&
@@ -6074,13 +6067,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             }
                         }
 
-                        Debug.Log($"------ getReachablePositionToObjectVisible shouldEnqueue {shouldEnqueue}");
                         if (!shouldEnqueue) {
                             continue;
                         }
 
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
-                        Debug.Log($"------ getReachablePositionToObjectVisible inBounds {inBounds} errorMessage {errorMessage}");
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
                                 UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
@@ -6094,27 +6085,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             handObjectCanFitInPosition(newPosition, 180.0f) ||
                             handObjectCanFitInPosition(newPosition, 270.0f)
                         );
-                        Debug.Log($"------ getReachablePositionToObjectVisible shouldEnqueue {shouldEnqueue} handObjectCanFitInPosition 0 {handObjectCanFitInPosition(newPosition, 0.0f)} 90 {handObjectCanFitInPosition(newPosition, 90.0f)} 180 {handObjectCanFitInPosition(newPosition, 180.0f)} 270 {handObjectCanFitInPosition(newPosition, 270.0f)}");
                         if (shouldEnqueue) {
                             pointsQueue.Enqueue(newPosition);
-                            // if (visualize) {
-                            //     var gridRenderer = Instantiate(GridRenderer, Vector3.zero, Quaternion.identity) as GameObject;
-                            //     var gridLineRenderer = gridRenderer.GetComponentInChildren<LineRenderer>();
-                            //     if (gridColor.HasValue) {
-                            //         gridLineRenderer.startColor = gridColor.Value;
-                            //         gridLineRenderer.endColor = gridColor.Value;
-                            //     }
-                            //     gridLineRenderer.SetWidth(start: gridWidth, end: gridWidth);
-                            //     // gridLineRenderer.startColor = ;
-                            //     // gridLineRenderer.endColor = ;
-                            //     gridLineRenderer.positionCount = 2;
-                            //     // gridLineRenderer.startWidth = 0.01f;
-                            //     // gridLineRenderer.endWidth = 0.01f;
-                            //     gridLineRenderer.SetPositions(new Vector3[] {
-                            //         new Vector3(p.x, gridVisualizeY, p.z),
-                            //         new Vector3(newPosition.x, gridVisualizeY, newPosition.z)
-                            //     });
-                            // }
 #if UNITY_EDITOR
                             Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
 #endif
@@ -6226,7 +6198,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float allowedError,
             int? navMeshId = null
         ) {
-             Debug.Log($"---Safely compute mesh.");
             float floorY = Math.Min(
                 getFloorY(start.x, start.y, start.z),
                 getFloorY(target.x, target.y, target.z)
@@ -6294,17 +6265,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
             var navmeshSurfaces = GameObject.FindObjectsOfType<NavMeshSurfaceExtended>();
 
+            #if UNITY_EDITOR
             Debug.Log($"-----Navmesh  Query {navMeshId} navmesh count: {navmeshSurfaces.Count()} extended active count: {NavMeshSurfaceExtended.activeSurfaces.Count} navmesh active count: {NavMeshSurface.activeSurfaces.Count}");
+            #endif
 
             var queryAgentId = getNavMeshAgentId(navMeshId);
             // var useNavmeshSurface = queryAgentId.HasValue;
 
             var navMesh = getNavMeshSurfaceForAgentId(queryAgentId);
 
+            #if UNITY_EDITOR
             Debug.Log("---- Reached agent navmeshid " + queryAgentId);
-
-            
-
+            #endif
 
             // bool pathSuccess = navMeshAgent.CalculatePath(
             //     targetHit.position, path
@@ -6315,7 +6287,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     nvms.enabled = false; 
                 }
             }
+
+            #if UNITY_EDITOR
             Debug.Log($"-----Navmesh  Query {queryAgentId} navmesh count: {navmeshSurfaces.Count()}");
+            #endif
             // Useless more of unity's broken APIS for runtime >:(
             // NavMeshQueryFilter queryFilter = new NavMeshQueryFilter() {
             //     agentTypeID = queryAgentId,
@@ -6325,7 +6300,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
             );
 
+            #if UNITY_EDITOR
             Debug.Log($"-----Navmesh  Pathsuccess {pathSuccess}");
+            #endif
 
             foreach(var nvms in navmeshSurfaces) {
                 nvms.enabled = true;
@@ -6419,7 +6396,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public int getNavMeshAgentId(int? navMeshId = null) {
             var idSet = new HashSet<int>(NavMeshSurfaceExtended.activeSurfaces.Select(n => n.agentTypeID));
-            Debug.Log($"------ id set  {string.Join(",", idSet.Select(i => $"i"))}");
             if (!navMeshId.HasValue) {
                 if (NavMeshSurfaceExtended.activeSurfaces.Count > 0) {
                     return NavMeshSurfaceExtended.activeSurfaces[0].agentTypeID;
@@ -6925,7 +6901,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var supportedExtensions = new HashSet<string>(){
                 ".gz", ".msgpack", ".msgpack.gz", ".json"
             };
-            Debug.Log($"------- CreateRuntimeAsset for  '{id}' extension: = {extension}");
             extension = !extension.StartsWith(".") ? $".{extension}" : extension;
             extension = extension.Trim();
             if (!supportedExtensions.Contains(extension)) {
@@ -6942,7 +6917,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             using FileStream rawFileStream = File.Open(filepath, FileMode.Open);
             using var resultStream = new MemoryStream();
-            Debug.Log($"------- raw file read at for  '{filepath}'");
             var stageIndex = 0;
             if ("gz" == presentStages[stageIndex]) {
                 using var decompressor = new GZipStream(rawFileStream, CompressionMode.Decompress);
@@ -6954,10 +6928,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             ProceduralAsset procAsset = null;
             var debug = stageIndex < presentStages.Length ? presentStages[stageIndex] : "null";
-            Debug.Log($"presentStages {presentStages}, at index {stageIndex}: {debug} , {debug == "msgpack"},  {presentStages.Length} ");
 
             if (stageIndex < presentStages.Length && presentStages[stageIndex] == "msgpack") {
-                Debug.Log("Deserialize raw json");
                 procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
                     resultStream.ToArray(),
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options
@@ -6973,22 +6945,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ObjectCreationHandling = ObjectCreationHandling.Replace
                 };
                 var json = reader.ReadToEnd();
-                Debug.Log($"Deserialize raw json at {filepath}: str {json}");
                 // procAsset = Newtonsoft.Json.JsonConvert.DeserializeObject<ProceduralAsset>(reader.ReadToEnd(), serializer);
                 procAsset = JsonConvert.DeserializeObject<ProceduralAsset>(json);
             } else {
                 return  new ActionFinished(
                     success: false, 
-                    errorMessage: $"Unexpected error with extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", 
+                    errorMessage: $"Unexpected error with extension `{extension}`, filepath: `{filepath}`, compression stages: {string.Join(".", presentStages)}. Only supported: {string.Join(", ", supportedExtensions)}", 
                     actionReturn: null
                  );
             }
 
-
-            Debug.Log($"procAsset is null? {procAsset == null} -  {procAsset}, albedo rooted? {!Path.IsPathRooted(procAsset.albedoTexturePath)} {procAsset.albedoTexturePath}");
-
             procAsset.parentTexturesDir =  Path.Combine(dir, id);
-            Debug.Log($" albedo after fix? {procAsset.albedoTexturePath}");
 
             var assetData = ProceduralTools.CreateAsset(
                     procAsset.vertices,

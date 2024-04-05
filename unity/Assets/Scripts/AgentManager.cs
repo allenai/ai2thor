@@ -1153,8 +1153,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         multiMeta.sequenceId = this.currentSequenceId;
 
         RenderTexture currentTexture = null;
-
-        // Debug.Log($"-- createPayload {shouldRender} {shouldRenderImageSynthesis}");
+        
         if (shouldRender) {
             currentTexture = RenderTexture.active;
             for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
@@ -1207,7 +1206,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 if (shouldRenderImageSynthesis) {
                     addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
                     addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
-                    Debug.Log($"--- createPayload for agent {agent} {agent == null}");
                     addObjectImage(renderPayload, agent, ref metadata);
                     addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderSemanticSegmentation, "_class", "image_classes");
                     addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
@@ -1299,7 +1297,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
             List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
             createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender, shouldRenderImageSynthesis);
-            Debug.Log("------ payload");
 #if UNITY_WEBGL
                 JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
                 if (jsInterface != null) {
