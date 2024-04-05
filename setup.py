@@ -12,6 +12,18 @@ with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
 
 VERSION = __version__
 
+def _read_reqs(relpath):
+        fullpath = os.path.join(os.path.dirname(__file__), relpath)
+        with open(fullpath) as f:
+            return [
+                s.strip()
+                for s in f.readlines()
+                if (s.strip() and not s.startswith("#"))
+            ]
+
+REQUIREMENTS = _read_reqs("requirements.txt")
+REQUIREMENTS_TEST = _read_reqs("requirements-test.txt")
+
 setup(
     name="ai2thor",
     version=VERSION,
@@ -41,23 +53,9 @@ setup(
     author="Allen Institute for AI",
     author_email="ai2thor@allenai.org",
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-    install_requires=[
-        "Flask==2.0.1",
-        "numpy",
-        "pyyaml",
-        "requests",
-        "progressbar2",
-        "botocore",
-        "aws-requests-auth",
-        "msgpack",
-        "Pillow",
-        "python-xlib",
-        "opencv-python",
-        "Werkzeug==2.0.1",  # needed for unix socket support
-        "compress_pickle"
-    ],
+    install_requires=REQUIREMENTS,
     setup_requires=["pytest-runner"],
-    tests_require=["pytest", "pytest-timeout", "pytest-cov", "jsonschema", "shapely", "pytest-mock", "dictdiffer"],
+    tests_require=REQUIREMENTS_TEST,
     scripts=["scripts/ai2thor-xorg"],
     include_package_data=False,
 )
