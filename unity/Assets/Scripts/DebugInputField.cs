@@ -598,6 +598,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     break;
                 }
+                case "ssc": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "SetUpSecondaryCamera";
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+                case "dsc": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "DisableSecondaryCamera";
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
                 case "obig": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
