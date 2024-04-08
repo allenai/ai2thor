@@ -81,7 +81,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     BoxBounds currentBounds = new BoxBounds();
 
                     currentBounds.worldCenter = spawnedBoxCollider.transform.TransformPoint(spawnedBoxCollider.center);
-                    currentBounds.size = spawnedBoxCollider.size;
+                    currentBounds.size = GetTrueSizeOfBoxCollider(spawnedBoxCollider);
                     currentBounds.agentRelativeCenter = this.transform.InverseTransformPoint(currentBounds.worldCenter);
 
                     boxBounds = currentBounds;
@@ -123,6 +123,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 layerMask: layerMask,
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
+        }
+
+        //since the size returned by the box collider only reflects its size in local space DISREGARDING ANY TRANSFORM SCALES
+        //IN ITS PARENTS OR ITSELF here we go
+        public Vector3 GetTrueSizeOfBoxCollider(BoxCollider collider) {
+            Vector3 trueSize = collider.size;
+
+            // get the transform of the collider itself
+            Transform currentTransform = collider.transform;
+
+            // Apply the scale from the collider's transform and all parent transforms
+            while (currentTransform != null)
+            {
+                trueSize.x *= currentTransform.localScale.x;
+                trueSize.y *= currentTransform.localScale.y;
+                trueSize.z *= currentTransform.localScale.z;
+
+                //grab the transform of any parents and GO AGAIN
+                currentTransform = currentTransform.parent;
+            }
+
+            return trueSize;
         }
 
 
