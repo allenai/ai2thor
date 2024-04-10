@@ -265,11 +265,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 scaleRatio, 
             Vector3 originalPosition,
             Quaternion originalRotation,
-            bool useVisibleColliderBase = false
+            bool useVisibleColliderBase = false,
+            bool spawnCollidersWithoutMesh = false
             ) {
+            
+            var bounds = new Bounds();
 
-            // Get the agent's bounds
-            var bounds = GetAgentBoundsFromMesh(agent, agentType);
+            //if we have a body mesh, generate bounds based on that
+            if(spawnCollidersWithoutMesh == false) {
+                // Get the agent's bounds based on the mesh copied onto the agent body
+                bounds = GetAgentBoundsFromMesh(agent, agentType);
+            } else {
+                //otherwise, generate bounds center based on where agent transform currently
+                bounds = new Bounds(gameObject.transform.position, Vector3.one);
+            }
 
             //create colliders based on the agent bounds NOW
             var col = new GameObject("fpinCollider", typeof(BoxCollider));
@@ -292,103 +301,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //calculate collider size based on what the extents of the bounds of the mesh are
             Vector3 colliderSize = new Vector3(bounds.extents.x, bounds.extents.y, bounds.extents.z) * 2;
             spawnedBoxCollider.size = spawnedTriggerBoxCollider.size = colliderSize;
-            
-
-            
-            
-            
-            // Vector3 newBoxCenter = bounds.center - agentSpawnOffset;
-            
-            // newBoxCenter = originalRotation * (newBoxCenter - originalPosition) + originalPosition;
-            // Vector3 newBoxExtents = new Vector3(bounds.extents.x, bounds.extents.y, bounds.extents.z);
-            
-            // #if UNITY_EDITOR
-            // /////////////////////////////////////////////////
-            // //for visualization lets spawna cube at the center of where the boxCenter supposedly is
-            // GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            // cube.name = "VisualizedBoxCollider";
-            // cube.transform.position = newBoxCenter;
-            // cube.transform.rotation = originalRotation;
-
-            // cube.transform.localScale = newBoxExtents * 2;
-            // cube.GetComponent<BoxCollider>().enabled = false;
-            // var material = cube.GetComponent<MeshRenderer>().material;
-            // material.SetColor("_Color", new Color(1.0f, 0.0f, 0.0f, 0.4f));
-            // // Set transparency XD ...
-            // material.SetFloat("_Mode", 3);
-            // material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            // material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            // material.SetInt("_ZWrite", 0);
-            // material.DisableKeyword("_ALPHATEST_ON");
-            // material.EnableKeyword("_ALPHABLEND_ON");
-            // material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            // material.renderQueue = 3000;
-            // ////////////////////////////////////////////////
-            // #endif
-
-            // if (Physics.CheckBox(newBoxCenter, newBoxExtents, originalRotation, layerMask)) {
-            //     // throw new InvalidOperationException(
-            //     //     "Spawned box collider is colliding with other objects. Cannot spawn box collider."
-            //     // );
-            // }
-            
-            // // Move the agent back to its original position and rotation because CheckBox passed
-            // this.transform.rotation = originalRotation;
-            // Physics.SyncTransforms();
-            // this.transform.position = originalPosition;
-            // Physics.SyncTransforms();
-
-            // // Spawn the box collider
-            // Vector3 colliderSize = newBoxExtents * 2;
-
-            // var nonTriggerBox = new GameObject("NonTriggeredEncapsulatingBox");
-            // nonTriggerBox.transform.position = newBoxCenter;
-
-            // spawnedBoxCollider = nonTriggerBox.AddComponent<BoxCollider>();
-            // spawnedBoxCollider.size = colliderSize; // Scale the box to the agent's size
-            // spawnedBoxCollider.enabled = true;
-            // spawnedBoxCollider.transform.parent = agent.transform;
-
-            // // Attatching it to the parent changes the rotation so set it back to none
-            // spawnedBoxCollider.transform.localRotation = Quaternion.identity;
-
-            // var triggerBox = new GameObject("triggeredEncapsulatingBox");
-            // triggerBox.transform.position = newBoxCenter;
-
-            // spawnedTriggerBoxCollider = triggerBox.AddComponent<BoxCollider>();
-            // spawnedTriggerBoxCollider.size = colliderSize; // Scale the box to the agent's size
-            // spawnedTriggerBoxCollider.enabled = true;
-            // spawnedTriggerBoxCollider.isTrigger = true;
-            // spawnedTriggerBoxCollider.transform.parent = agent.transform;
-
-            // // triggeredEncapsulatingBox.transform.localRotation = Quaternion.identity;
-            // // Attatching it to the parent changes the rotation so set it back to identity
-            // spawnedTriggerBoxCollider.transform.localRotation = Quaternion.identity;
-
-            // //make sure to set the collision layer correctly as part of the `agent` layer so the collision matrix is happy
-            // spawnedBoxCollider.transform.gameObject.layer = LayerMask.NameToLayer("Agent");
-            // spawnedTriggerBoxCollider.transform.gameObject.layer = LayerMask.NameToLayer("Agent");
-
-            // Spawn the visible box if useVisibleColliderBase is true
-            // if (useVisibleColliderBase){
-            //     colliderSize = new Vector3(colliderSize.x, 0.15f * colliderSize.y, colliderSize.z);
-            //     GameObject visibleBox = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            //     visibleBox.name = "VisibleBox";
-            //     visibleBox.transform.position = new Vector3(newBoxCenter.x, newBoxCenter.y - newBoxExtents.y, newBoxCenter.z);
-            //     visibleBox.transform.localScale = colliderSize;
-            //     visibleBox.transform.parent = agent.transform;
-
-            //     var bc = visibleBox.GetComponent<BoxCollider>();
-            //     //also offset it by the distance from this box's transform to the bottom of its extents
-            //     var distanceToBottomOfVisibleBoxCollider = bc.size.y * 0.5f * bc.transform.localScale.y;
-            //     bc.enabled = false;
-
-            //     visibleBox.transform.localPosition = new Vector3(visibleBox.transform.localPosition.x, visibleBox.transform.localPosition.y + distanceToBottomOfVisibleBoxCollider, visibleBox.transform.localPosition.z);
-            //     // Attatching it to the parent changes the rotation so set it back to none
-            //     visibleBox.transform.localRotation = Quaternion.identity;
-            // }
-            
-            //BoxBounds should now be able to retrieve current box information
+        
             return;
         }
 
@@ -420,14 +333,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
             return;
         }
-
-        //no need for this anymore as we can now do this via InitializeBody directly
-        // public void UpdateAgentBoxCollider(Vector3 colliderScaleRatio, bool useAbsoluteSize = false, bool useVisibleColliderBase = false) {
-        //     this.destroyAgentBoxCollider();
-        //     this.spawnAgentBoxCollider(this.gameObject, this.GetType(), colliderScaleRatio, useAbsoluteSize, useVisibleColliderBase);
-        //     actionFinished(true);
-        //     return;
-        // }
 
         public Transform CopyMeshChildren(GameObject source, GameObject target) {
             // Initialize the recursive copying process
@@ -680,7 +585,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public ActionFinished Initialize(
-            BodyAsset bodyAsset,
+            BodyAsset bodyAsset = null,
             // TODO: do we want to allow non relative to the box offsets?
             float originOffsetX = 0.0f,
             float originOffsetZ = 0.0f,
@@ -704,7 +609,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public ActionFinished InitializeBody(
-            BodyAsset bodyAsset,
+            BodyAsset bodyAsset = null,
             // TODO: do we want to allow non relative to the box offsets?
             float originOffsetX = 0.0f,
             float originOffsetZ = 0.0f,
@@ -712,6 +617,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool useAbsoluteSize = false,
             bool useVisibleColliderBase = false
         ) {
+
+            //if using no source body mesh, we default to using absolute size via the colliderScaleRatio
+            //since a non absolute size doesn't make sense if we have no default mesh size to base the scale 
+            //ratio on
+
+            bool noMesh = false;
+            if(bodyAsset == null) {
+                useAbsoluteSize = true;
+                noMesh = true;
+            }
 
             // Store the current rotation
             Vector3 originalPosition = this.transform.position;
@@ -729,23 +644,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 UnityEngine.Object.DestroyImmediate(fpinVisibilityCapsule);
             }
 
-            //spawn in a default mesh to base the created box collider on
-            //currently this spawns the asset to be copied at (200, 200, 200) btw
-            var spawnAssetActionFinished = spawnBodyAsset(bodyAsset, out GameObject spawnedMesh);
-            // Return early if spawn failed
-            if (!spawnAssetActionFinished.success) {
-                return spawnAssetActionFinished;
-            }
+            var spawnAssetActionFinished = new ActionFinished();
+            if(bodyAsset != null) {
+                //spawn in a default mesh to base the created box collider on
+                //currently this spawns the asset to be copied at (200, 200, 200) btw
+                spawnAssetActionFinished = spawnBodyAsset(bodyAsset, out GameObject spawnedMesh);
+                // Return early if spawn failed
+                if (!spawnAssetActionFinished.success) {
+                    return spawnAssetActionFinished;
+                }
 
-            //copy all mesh renderers found on the spawnedMesh onto this agent now
-            CopyMeshChildren(source: spawnedMesh.transform.gameObject, target: this.transform.gameObject);
+                //copy all mesh renderers found on the spawnedMesh onto this agent now
+                CopyMeshChildren(source: spawnedMesh.transform.gameObject, target: this.transform.gameObject);
 
-            //remove the spawned mesh cause we are done with it
-            foreach (var sop in spawnedMesh.GetComponentsInChildren<SimObjPhysics>()) {
-                agentManager.physicsSceneManager.RemoveFromObjectsInScene(sop);
-            }
-            if (spawnedMesh.activeInHierarchy) {
-                UnityEngine.Object.DestroyImmediate(spawnedMesh);
+                //remove the spawned mesh cause we are done with it
+                foreach (var sop in spawnedMesh.GetComponentsInChildren<SimObjPhysics>()) {
+                    agentManager.physicsSceneManager.RemoveFromObjectsInScene(sop);
+                }
+                if (spawnedMesh.activeInHierarchy) {
+                    UnityEngine.Object.DestroyImmediate(spawnedMesh);
+                }
+            } else {
+                //we still need a "viscap" so lets make a dummy one
+                GameObject viscap = new GameObject("fpinVisibilityCapsule");
+                viscap.transform.SetParent(this.transform);
+                viscap.transform.localPosition = Vector3.zero;
+                viscap.transform.localRotation = Quaternion.identity;
+                Physics.SyncTransforms();
+                VisibilityCapsule = fpinVisibilityCapsule = viscap;
             }
 
             //ok now generate colliders, we are still up at (100,100,100) and aligned with world axes
@@ -755,7 +681,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 scaleRatio: colliderScaleRatio.GetValueOrDefault(Vector3.one),
                 originalPosition: originalPosition,
                 originalRotation: originalRotation,
-                useVisibleColliderBase: useVisibleColliderBase);
+                useVisibleColliderBase: useVisibleColliderBase,
+                spawnCollidersWithoutMesh: noMesh //if noMesh is true, we have no mesh so we need to spawn colliders without a mesh
+                );
 
             //spawn the visible collider base if we need to
             if (useVisibleColliderBase) {
@@ -866,25 +794,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 #if UNITY_EDITOR
             // /////////////////////////////////////////////////
-            //for visualization lets spawna cube at the center of where the boxCenter supposedly is
-            // GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            // cube.name = "VisualizedBoxCollider";
-            // cube.transform.position = boxCenterAtInitialPosition;
-            // cube.transform.rotation = originalRotation;
+            // for visualization lets spawna cube at the center of where the boxCenter supposedly is
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = "VisualizedBoxCollider";
+            cube.transform.position = boxCenterAtInitialPosition;
+            cube.transform.rotation = originalRotation;
 
-            // cube.transform.localScale = newBoxExtents * 2;
-            // cube.GetComponent<BoxCollider>().enabled = false;
-            // var material = cube.GetComponent<MeshRenderer>().material;
-            // material.SetColor("_Color", new Color(1.0f, 0.0f, 0.0f, 0.4f));
-            // // Set transparency XD ...
-            // material.SetFloat("_Mode", 3);
-            // material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            // material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            // material.SetInt("_ZWrite", 0);
-            // material.DisableKeyword("_ALPHATEST_ON");
-            // material.EnableKeyword("_ALPHABLEND_ON");
-            // material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            // material.renderQueue = 3000;
+            cube.transform.localScale = newBoxExtents * 2;
+            cube.GetComponent<BoxCollider>().enabled = false;
+            var material = cube.GetComponent<MeshRenderer>().material;
+            material.SetColor("_Color", new Color(1.0f, 0.0f, 0.0f, 0.4f));
+            // Set transparency XD ...
+            material.SetFloat("_Mode", 3);
+            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetInt("_ZWrite", 0);
+            material.DisableKeyword("_ALPHATEST_ON");
+            material.EnableKeyword("_ALPHABLEND_ON");
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            material.renderQueue = 3000;
             // ////////////////////////////////////////////////
 #endif
 
@@ -915,15 +843,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //make sure we are hooked up to the collision listener
             fpinMovable = new FpinMovableContinuous(this.GetComponentInParent<CollisionListener>());
 
-            return new ActionFinished(spawnAssetActionFinished) {
-                // TODO: change to a proper class once metadata return is defined
-                actionReturn = new Dictionary<string, object>() {
-                    {"objectSphereBounds", spawnAssetActionFinished.actionReturn as ObjectSphereBounds},
-                    {"BoxBounds", this.BoxBounds},
-                    {"cameraNearPlane", m_Camera.nearClipPlane},
-                    {"cameraFarPlane", m_Camera.farClipPlane}
-                }
-            };
+            //we had a body asset used, so actionFinished returns info related to that
+            if(bodyAsset != null){
+                return new ActionFinished(spawnAssetActionFinished) {
+                    // TODO: change to a proper class once metadata return is defined
+                    actionReturn = new Dictionary<string, object>() {
+                        //objectSphereBounds... how is this being used??? currently if we scale the mesh asset this value may not be correct
+                        {"objectSphereBounds", spawnAssetActionFinished.actionReturn as ObjectSphereBounds},
+                        {"BoxBounds", this.BoxBounds},
+                        {"cameraNearPlane", m_Camera.nearClipPlane},
+                        {"cameraFarPlane", m_Camera.farClipPlane}
+                    }
+                };
+            } else {
+                return new ActionFinished() {
+                    // TODO: change to a proper class once metadata return is defined
+                    actionReturn = new Dictionary<string, object>() {
+                        {"BoxBounds", this.BoxBounds},
+                        {"cameraNearPlane", m_Camera.nearClipPlane},
+                        {"cameraFarPlane", m_Camera.farClipPlane}
+                    }
+                };
+            }
         }
 
         private ActionFinished spawnBodyAsset(BodyAsset bodyAsset, out GameObject spawnedMesh) {
