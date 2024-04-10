@@ -223,7 +223,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (Collider c in GetComponentsInChildren<Collider>()) {
                 b.Encapsulate(c.bounds);
             }
-            float yOffset = 0.01f + transform.position.y - b.min.y;
+            float yOffset = 0.01f + transform.position.y;
 
             bool success = false;
             foreach (Vector3 point in pointsOnMesh) {
