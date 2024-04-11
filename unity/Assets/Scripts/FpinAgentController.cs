@@ -223,7 +223,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (Collider c in GetComponentsInChildren<Collider>()) {
                 b.Encapsulate(c.bounds);
             }
-            float yOffset = 0.01f + transform.position.y;
+            
+            float yOffset = 0.01f + transform.position.y - b.min.y;
 
             bool success = false;
             foreach (Vector3 point in pointsOnMesh) {
@@ -923,6 +924,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 spawnedMesh = assetData["gameObject"] as GameObject;//.transform.Find("mesh").gameObject;
             }
             return actionFinished;
+        }
+
+        //override to ensure that the TeleportFull action calls fpin's version of teleportFull
+        public override void TeleportFull(
+            Vector3? position = null,
+            Vector3? rotation = null,
+            float? horizon = null,
+            bool? standing = null,
+            bool forceAction = false
+        ) {
+            teleportFull(
+                position: position,
+                rotation: rotation,
+                horizon: horizon,
+                forceAction: forceAction
+            );
         }
 
         protected override void teleportFull(

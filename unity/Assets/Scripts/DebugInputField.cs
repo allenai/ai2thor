@@ -578,6 +578,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 //fpin using stretch bot as source mesh
+                case "initpinnobody": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "Initialize";
+                    action["agentMode"] = "fpin";
+                    action["visibilityScheme"] = "Distance";
+                    action["renderInstanceSegmentation"] = true;
+                    action["renderDepth"] = true;
+
+                    action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<string, object>() {
+                        {"originOffsetX", 0.2f},
+                        {"originOffsetZ", 0.4f},
+                        {"colliderScaleRatio", new Vector3(0.8f, 1.2f, 0.5f)},
+                        {"useVisibleColliderBase", true},
+                        {"useAbsoluteSize", true}
+                    };
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
+                //fpin using stretch bot as source mesh
                 case "initpins": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
@@ -802,6 +826,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     break;
                 }
+
+                case "initbodynobody": {
+                    
+                      Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "InitializeBody";
+                    action["colliderScaleRatio"] = new Vector3(1.2f, 1.3f, 1.4f);
+                    action["originOffsetX"] = 0.0f;
+                    action["originOffsetZ"] = 0.0f;
+                    action["useAbsoluteSize"] = true;
+                    action["useVisibleColliderBase"] = true;
+
+                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
                 case "initbodyt": {
                     
                       Dictionary<string, object> action = new Dictionary<string, object>();
@@ -2470,10 +2512,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "umc": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "UpdateMainCamera",
-                            ["position"] = new Vector3(-1, 0.9f, 1),
+                            ["position"] = new Vector3(0.5f, 0.5f, 0.5f),
                             ["rotation"] = new Vector3(15, 25, 35),
                             ["fieldOfView"] = 120f,
-                            // ["agentPositionRelativeCoordinates"] = false
+                            //["agentPositionRelativeCoordinates"] = false
                         };
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);

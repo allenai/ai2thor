@@ -1458,7 +1458,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // }
 
         // has to consider both the arm and standing
-        public void TeleportFull(
+        public virtual void TeleportFull(
             Vector3? position,
             Vector3? rotation,
             float? horizon,
