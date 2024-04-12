@@ -5948,13 +5948,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected bool isAgentBoxColliding(
+            Transform transformWithBoxCollider,
             HashSet<Collider> collidersToIgnore = null,
             bool includeErrorMessage = false
         ) {
             int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
             foreach (
                 Collider c in PhysicsExtensions.OverlapBox(
-                    GetComponent<BoxCollider>(), layerMask, QueryTriggerInteraction.Ignore
+                    transformWithBoxCollider.GetComponent<BoxCollider>(), layerMask, QueryTriggerInteraction.Ignore
                 )
             ) {
                 if ((!hasAncestor(c.transform.gameObject, gameObject)) && (
@@ -6909,7 +6910,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return new ActionFinished(success: false, errorMessage: $"Unsupported extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
             }
             var filename = $"{id}{extension}";
-            var filepath = Path.Combine(dir, id, filename);
+            var filepath = Path.GetFullPath(Path.Combine(dir, id, filename));            
             if (!File.Exists(filepath)) {
                  return new ActionFinished(success: false, actionReturn: null, errorMessage: $"Asset fiile '{filepath}' does not exist.");
             }

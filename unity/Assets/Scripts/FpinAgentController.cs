@@ -997,7 +997,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     throw new InvalidOperationException(errorMessage);
                 }
 
-                if (isAgentBoxColliding(collidersToIgnore: collidersToIgnoreDuringMovement, includeErrorMessage: true)) {
+                if (isAgentBoxColliding(
+                    transformWithBoxCollider: spawnedBoxCollider.transform,
+                    collidersToIgnore: collidersToIgnoreDuringMovement, 
+                    includeErrorMessage: true)) {
                     transform.position = oldPosition;
                     transform.rotation = oldRotation;
                     m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngles;
