@@ -219,7 +219,6 @@ def fpin_tutorial(
     bodyParams = dict(
         bodyAsset=body,
         originOffsetX=0.0,
-        originOffsetY=-0.25,
         originOffsetZ=0.0,
         colliderScaleRatio={"x":1, "y":1, "z": 1},
         useAbsoluteSize=False,
