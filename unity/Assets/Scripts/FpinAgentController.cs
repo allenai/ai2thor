@@ -926,6 +926,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return actionFinished;
         }
 
+        protected override LayerMask GetVisibilityRaycastLayerMask(bool withSimObjInvisible = false) {
+            // No agent because camera can be in the path of colliders
+            string[] layers = new string[] {
+                "SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0" //, "Agent"
+            };
+            if (withSimObjInvisible) {
+                layers = layers.Append("SimObjInvisible").ToArray();
+            }
+            return LayerMask.GetMask(layers);
+        }
+
         //override to ensure that the TeleportFull action calls fpin's version of teleportFull
         public override void TeleportFull(
             Vector3? position = null,

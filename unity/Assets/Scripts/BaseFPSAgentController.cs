@@ -4438,6 +4438,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return currentlyVisibleItemsToList.ToArray();
         }
 
+        protected virtual LayerMask GetVisibilityRaycastLayerMask(bool withSimObjInvisible = false) {
+            string[] layers = new string[] {
+                "SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent"
+            };
+            if (withSimObjInvisible) {
+                layers = layers.Append("SimObjInvisible").ToArray();
+            }
+            return LayerMask.GetMask(layers);
+        }
+
 
 // check if the visibility point on a sim object, sop, is within the viewport
         // has a includeInvisible bool to check against triggerboxes as well, to check for visibility with things like Cabinets/Drawers
@@ -4456,12 +4466,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // adding slight buffer to this distance to ensure the ray goes all the way to the collider of the object being cast to
             float raycastDistance = distFromPointToCamera + 0.5f;
 
-            LayerMask mask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "SimObjInvisible", "Agent");
+            // LayerMask mask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "SimObjInvisible", "Agent");
+            // change mask if its a floor so it ignores the receptacle trigger boxes on the floor
+            LayerMask mask = GetVisibilityRaycastLayerMask(withSimObjInvisible: sop.Type != SimObjType.Floor);
 
             // change mask if its a floor so it ignores the receptacle trigger boxes on the floor
-            if (sop.Type == SimObjType.Floor) {
-                mask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent");
-            }
+            // if (sop.Type == SimObjType.Floor) {
+            //     mask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0", "Agent");
+            //     mask = GetVisibilityRaycastLayerMask(withSimObjInvisible: false);
+            // }
 
             bool isSopHeldByArm = ( Arm != null && Arm.gameObject.activeSelf && Arm.heldObjects.ContainsKey(sop) ) ||
                                   ( SArm != null && SArm.gameObject.activeSelf && SArm.heldObjects.ContainsKey(sop) );
