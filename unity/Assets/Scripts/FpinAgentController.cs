@@ -1007,6 +1007,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     throw new InvalidOperationException(errorMessage);
                 }
             }
+            
+            actionFinished(success: true);
         }
 
         //assumes the agent origin will only be repositioned via local x and z values relative to
