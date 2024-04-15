@@ -749,13 +749,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Now the capsule's center can be set to the transformed center of the box collider
             characterController.center = boxCenterCapsuleLocal;
 
+            // Set the radius to fit inside the box, considering the smallest length, width, or height
+            float minRadius = Mathf.Min(Mathf.Min(spawnedBoxCollider.bounds.size.x, spawnedBoxCollider.bounds.size.z), spawnedBoxCollider.bounds.size.y) / 2.0f;
+            characterController.radius = minRadius;
+
             // Adjust the capsule size based on the size of the bounds
+            Debug.Log("BOX HEIGHT IS " + spawnedBoxCollider.bounds.size.y);
             float boxHeight = spawnedBoxCollider.bounds.size.y;
             characterController.height = boxHeight;
-
-            // Set the radius to fit inside the box, considering the smallest width or depth
-            float minRadius = Mathf.Min(spawnedBoxCollider.bounds.size.x, spawnedBoxCollider.bounds.size.z) / 2.0f;
-            characterController.radius = minRadius;
 
             //ok now also adjust this for the trigger capsule collider of the agent, just copy all the values of the characterController
             var myTriggerCap = this.GetComponent<CapsuleCollider>();
