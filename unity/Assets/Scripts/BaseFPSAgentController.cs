@@ -3116,7 +3116,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////////////////////////////////////
 
         // this is not used with non-grounded agents (e.g., drones)
-        protected void assertTeleportedNearGround(Vector3? targetPosition) {
+        protected virtual void assertTeleportedNearGround(Vector3? targetPosition) {
             // position should not change if it's null.
             if (targetPosition == null) {
                 return;
