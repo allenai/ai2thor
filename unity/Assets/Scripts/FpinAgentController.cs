@@ -1051,11 +1051,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             autoSyncTransforms();
 
             // perhaps like y=2 was specified, with an agent's standing height of 0.9
-            if (Mathf.Abs(transform.position.y - pos.y) > 0.1f) {
+            if (Mathf.Abs(transform.position.y - pos.y) > 1.0f) {
                 throw new InvalidOperationException(
-                    "After teleporting and adjusting agent position to floor, there was too large a change" +
-                    $"({Mathf.Abs(transform.position.y - pos.y)} > 0.1f) in the y component." +
-                    " Consider using `forceAction=true` if you'd like to teleport anyway."
+                    "After teleporting and adjusting agent position to floor, there was too large a change." +
+                    " This may be due to the target teleport coordinates causing the agent to fall through the floor." +
+                    $"({Mathf.Abs(transform.position.y - pos.y)} > 1.0f) in the y position. " +
                 );
             }
         }
