@@ -224,11 +224,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 b.Encapsulate(c.bounds);
             }
             
-            float yOffset = 0.01f + transform.position.y - b.min.y;
+            //Debug.Log($"current transform.position.y: {transform.position.y}");
+            float yOffset = 0.001f + transform.position.y - b.min.y;
+            //Debug.Log($"yOffset is: {yOffset}");
 
             bool success = false;
             foreach (Vector3 point in pointsOnMesh) {
                 try {
+                    //Debug.Log($"what is the point we are trying from the pointsOnMesh? {point:F8}");
                     teleportFull(
                         position: point + new Vector3(0, yOffset, 0),
                         rotation: new Vector3(0f, UnityEngine.Random.Range(0, 360) * 1f, 0f),
@@ -749,13 +752,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Now the capsule's center can be set to the transformed center of the box collider
             characterController.center = boxCenterCapsuleLocal;
 
+            // Set the radius to fit inside the box, considering the smallest length, width, or height
+            float minRadius = Mathf.Min(Mathf.Min(spawnedBoxCollider.bounds.size.x, spawnedBoxCollider.bounds.size.z), spawnedBoxCollider.bounds.size.y) / 2.0f;
+            characterController.radius = minRadius;
+
             // Adjust the capsule size based on the size of the bounds
+            Debug.Log("BOX HEIGHT IS " + spawnedBoxCollider.bounds.size.y);
             float boxHeight = spawnedBoxCollider.bounds.size.y;
             characterController.height = boxHeight;
-
-            // Set the radius to fit inside the box, considering the smallest width or depth
-            float minRadius = Mathf.Min(spawnedBoxCollider.bounds.size.x, spawnedBoxCollider.bounds.size.z) / 2.0f;
-            characterController.radius = minRadius;
 
             //ok now also adjust this for the trigger capsule collider of the agent, just copy all the values of the characterController
             var myTriggerCap = this.GetComponent<CapsuleCollider>();
@@ -959,6 +963,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? horizon,
             bool forceAction
         ) {
+            //Debug.Log($"what even is the position passed in at the start? {position:F8}");
             if (rotation.HasValue && (!Mathf.Approximately(rotation.Value.x, 0f) || !Mathf.Approximately(rotation.Value.z, 0f))) {
                 throw new ArgumentOutOfRangeException(
                     "No agents currently can change in pitch or roll. So, you must set rotation(x=0, y=yaw, z=0)." +
@@ -990,7 +995,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Quaternion oldRotation = transform.rotation;
             Vector3 oldCameraLocalEulerAngles = m_Camera.transform.localEulerAngles;
 
+            //Debug.Log($"what are we trying to set the position to? {position.GetValueOrDefault(transform.position):F8}");
+
             // here we actually teleport
+            autoSyncTransforms();
+
             transform.position = position.GetValueOrDefault(transform.position);
             transform.localEulerAngles = rotation.GetValueOrDefault(transform.localEulerAngles);
             m_Camera.transform.localEulerAngles = new Vector3(
@@ -999,11 +1008,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 oldCameraLocalEulerAngles.z
             );
 
+            //we teleported the agent a little bit above the ground just so we are clear, now snap agent flush with the floor
+            this.assertTeleportedNearGround(targetPosition: position.GetValueOrDefault(transform.position));
+
             if (!forceAction) {
 
                 if (isAgentCapsuleColliding(collidersToIgnore: collidersToIgnoreDuringMovement, includeErrorMessage: true)) {
                     transform.position = oldPosition;
                     transform.rotation = oldRotation;
+                    autoSyncTransforms();
                     m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngles;
                     throw new InvalidOperationException(errorMessage);
                 }
@@ -1014,12 +1027,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     includeErrorMessage: true)) {
                     transform.position = oldPosition;
                     transform.rotation = oldRotation;
+                    autoSyncTransforms();
                     m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngles;
                     throw new InvalidOperationException(errorMessage);
                 }
             }
             
             actionFinished(success: true);
+        }
+
+        protected override void assertTeleportedNearGround(Vector3? targetPosition) {
+            // position should not change if it's null.
+            if (targetPosition == null) {
+                return;
+            }
+
+            Vector3 pos = (Vector3)targetPosition;
+            // we must sync the rigidbody prior to executing the
+            // move otherwise the agent will end up in a different
+            // location from the targetPosition
+            autoSyncTransforms();
+            m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
+            autoSyncTransforms();
+
+            // perhaps like y=2 was specified, with an agent's standing height of 0.9
+            if (Mathf.Abs(transform.position.y - pos.y) > 0.1f) {
+                throw new InvalidOperationException(
+                    "After teleporting and adjusting agent position to floor, there was too large a change" +
+                    $"({Mathf.Abs(transform.position.y - pos.y)} > 0.1f) in the y component." +
+                    " Consider using `forceAction=true` if you'd like to teleport anyway."
+                );
+            }
         }
 
         //assumes the agent origin will only be repositioned via local x and z values relative to
