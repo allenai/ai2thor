@@ -5784,6 +5784,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float allowedError = DefaultAllowedErrorInShortestPath,
             int? navMeshId = null
         ) {
+            // this.transform.position = new Vector3(this.transform.position.x, 0.01f, this.transform.position.z);
             getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero), allowedError, navMeshId);
         }
 
@@ -6167,7 +6168,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 target: fixedPosition,
                 path: path,
                 allowedError: allowedError,
-                navMeshId: navMeshId
+                navMeshId: navMeshId,
+                debugTargetObjectId: targetSOP.objectID
             );
 
             var pathDistance = 0.0f;
@@ -6212,19 +6214,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 target,
             UnityEngine.AI.NavMeshPath path,
             float allowedError,
-            int? navMeshId = null
+            int? navMeshId = null,
+            string debugTargetObjectId = ""
         ) {
             float floorY = Math.Min(
                 getFloorY(start.x, start.y, start.z),
                 getFloorY(target.x, target.y, target.z)
             );
             Vector3 startPosition = new Vector3(start.x, floorY, start.z);
+            Debug.Log($"----- Navmesh floorY {floorY.ToString("F6")}");
             Vector3 targetPosition = new Vector3(target.x, floorY, target.z);
 
             var navMeshAgent = this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>();
             navMeshAgent.enabled = true;
 
             NavMeshHit startHit;
+            // startPosition.y = 0.167557f;
             bool startWasHit = UnityEngine.AI.NavMesh.SamplePosition(
                 startPosition, out startHit, Math.Max(0.2f, allowedError), UnityEngine.AI.NavMesh.AllAreas
             );
@@ -6258,18 +6263,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
             if (startOffset > allowedError && targetOffset > allowedError) {
                 this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                var extraDebug = !string.IsNullOrEmpty(debugTargetObjectId) ? $" For objectId: '{debugTargetObjectId}'" : "";
                 throw new InvalidOperationException(
                     $"Closest point on NavMesh was too far from the agent: " +
                     $" (startPosition={startPosition.ToString("F3")}," +
                     $" closest navmesh position {startHit.position.ToString("F3")}) and" +
                     $" (targetPosition={targetPosition.ToString("F3")}," +
-                    $" closest navmesh position {targetHit.position.ToString("F3")})."
+                    $" closest navmesh position {targetHit.position.ToString("F3")})." +
+                    $"{extraDebug}"
                 );
             }
 
 #if UNITY_EDITOR
-            Debug.Log($"Attempting to find path from {startHit.position} to {targetHit.position}.");
-            Debug.Log($"NavmeshAgent start position {navMeshAgent.transform.position}");
+            Debug.Log($"Attempting to find path from {startHit.position.ToString("F6")} to {targetHit.position.ToString("F6")}.");
+            Debug.Log($"NavmeshAgent start position {navMeshAgent.transform.position.ToString("F6")}");
 #endif
 
             var prevPosition = this.transform.position;
@@ -6317,7 +6324,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             #if UNITY_EDITOR
-            Debug.Log($"-----Navmesh  Pathsuccess {pathSuccess}");
+            Debug.Log($"-----Navmesh  Pathsuccess {pathSuccess} path status: {path.status} corner lenght {path.corners.Count()} corners: {string.Join(", ", path.corners.Select(c => c.ToString("F6")))}");
             #endif
 
             foreach(var nvms in navmeshSurfaces) {
@@ -6329,10 +6336,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //     startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
             // );
             if (path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
+                var extraDebug = !string.IsNullOrEmpty(debugTargetObjectId) ? $" For objectId: '{debugTargetObjectId}'" : "";
                 this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 throw new InvalidOperationException(
-                    $"Could not find path between {startHit.position.ToString("F3")}" +
-                    $" and {targetHit.position.ToString("F3")} using the NavMesh."
+                    $"Could not find path between {startHit.position.ToString("F6")}" +
+                    $" and {targetHit.position.ToString("F6")} using the NavMesh." +
+                    $"{extraDebug}"
                 );
             }
 #if UNITY_EDITOR

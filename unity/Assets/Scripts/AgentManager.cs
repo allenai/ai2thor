@@ -132,6 +132,13 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             this.fifoClient = FifoServer.Client.GetInstance(serverPipePath, clientPipePath);
 
         }
+        #if UNITY_EDITOR 
+        if (serverType == serverTypes.WSGI) {
+            serverSideScreenshot = true;
+            print("---ServerSideScreenshot enabled");
+        }
+
+        #endif
 
         bool trainPhase = true;
         trainPhase = LoadBoolVariable(trainPhase, "TRAIN_PHASE");
