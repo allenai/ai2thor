@@ -4033,7 +4033,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public VisibilityCheck isSimObjVisible(Camera camera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
-            Debug.Log("running isSimObjVisible");
+            // Debug.Log("running isSimObjVisible");
             // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
             VisibilityCheck visCheck = new VisibilityCheck();
 
@@ -5477,9 +5477,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // this one is used for in-editor debug draw, currently calls to this are commented out
         private void VisualizePath(Vector3 startPosition, NavMeshPath path) {
             var pathDistance = 0.0;
-
+            #if UNITY_EDITOR
+                    Debug.Log($"Visualize Path, corner lenght: {path.corners.Length}");
+            #endif 
             for (int i = 0; i < path.corners.Length - 1; i++) {
-                Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 5.0f);
                 #if UNITY_EDITOR
                     Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
                 #endif
@@ -5573,7 +5575,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectId = null,
             string objectType = null,
             Vector3? position = null,
-            int? navMeshId = null
+            int? navMeshId = null,
+            bool sampleFromNavmesh = true
         ) {
             NavMeshPath path = new UnityEngine.AI.NavMeshPath();
             Func<bool> visibilityTest;
@@ -5585,7 +5588,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else {
                 var startPosition = this.transform.position;
                 var startRotation = this.transform.rotation;
-                SafelyComputeNavMeshPath(startPosition, position.Value, path, DefaultAllowedErrorInShortestPath, navMeshId);
+                SafelyComputeNavMeshPath(startPosition, position.Value, path, DefaultAllowedErrorInShortestPath, navMeshId, sampleFromNavmesh: sampleFromNavmesh);
                 visibilityTest = () => true;
             }
 
@@ -5719,7 +5722,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public UnityEngine.AI.NavMeshPath getShortestPath(SimObjPhysics sop, bool useAgentTransform, ServerAction action = null, int? navMeshId = null) {
+        public UnityEngine.AI.NavMeshPath getShortestPath(SimObjPhysics sop, bool useAgentTransform, ServerAction action = null, int? navMeshId = null, bool sampleFromNavmesh = true) {
             var startPosition = this.transform.position;
             var startRotation = this.transform.rotation;
             if (!useAgentTransform) {
@@ -5727,7 +5730,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 startRotation = Quaternion.Euler(action.rotation);
             }
 
-            return GetSimObjectNavMeshTarget(sop, startPosition, startRotation, DefaultAllowedErrorInShortestPath, navMeshId: navMeshId);
+            return GetSimObjectNavMeshTarget(sop, startPosition, startRotation, DefaultAllowedErrorInShortestPath, navMeshId: navMeshId, sampleFromNavmesh: sampleFromNavmesh);
         }
 
 
@@ -5737,10 +5740,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 startPosition,
             Quaternion startRotation,
             float allowedError,
-            int? navMeshId = null
+            int? navMeshId = null,
+            bool sampleFromNavmesh = true
         ) {
             SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
-            var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation, allowedError, navMeshId: navMeshId);
+            var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation, allowedError, navMeshId: navMeshId, sampleFromNavmesh: sampleFromNavmesh);
             // VisualizePath(startPosition, path);
             actionFinishedEmit(success: true, actionReturn: path);
         }
@@ -5751,9 +5755,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectType = null,
             string objectId = null,
             float allowedError = DefaultAllowedErrorInShortestPath,
-            int? navMeshId = null
+            int? navMeshId = null,
+            bool sampleFromNavmesh = true
         ) {
-            getShortestPath(objectType: objectType, objectId: objectId, startPosition: position, startRotation: Quaternion.Euler(rotation), allowedError: allowedError, navMeshId: navMeshId);
+            getShortestPath(objectType: objectType, objectId: objectId, startPosition: position, startRotation: Quaternion.Euler(rotation), allowedError: allowedError, navMeshId: navMeshId, sampleFromNavmesh: sampleFromNavmesh);
         }
 
         // public void GetShortestPathNew(
@@ -5782,19 +5787,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectType = null,
             string objectId = null,
             float allowedError = DefaultAllowedErrorInShortestPath,
-            int? navMeshId = null
+            int? navMeshId = null,
+            bool sampleFromNavmesh = true
         ) {
             // this.transform.position = new Vector3(this.transform.position.x, 0.01f, this.transform.position.z);
-            getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero), allowedError, navMeshId);
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero), allowedError, navMeshId, sampleFromNavmesh: sampleFromNavmesh);
         }
 
         public void GetShortestPath(
             string objectType = null,
             string objectId = null,
             float allowedError = DefaultAllowedErrorInShortestPath,
-            int? navMeshId = null
+            int? navMeshId = null,
+            bool sampleFromNavmesh = true
         ) {
-            getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation, allowedError, navMeshId);
+            getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation, allowedError, navMeshId, sampleFromNavmesh: sampleFromNavmesh);
         }
 
         private bool GetPathFromReachablePositions(
@@ -6134,7 +6141,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Quaternion initialRotation,
             float allowedError,
             bool visualize = false,
-            int? navMeshId = null
+            int? navMeshId = null,
+            bool sampleFromNavmesh = true
         ) {
             var targetTransform = targetSOP.transform;
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
@@ -6169,7 +6177,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 path: path,
                 allowedError: allowedError,
                 navMeshId: navMeshId,
-                debugTargetObjectId: targetSOP.objectID
+                debugTargetObjectId: targetSOP.objectID,
+                sampleFromNavmesh: sampleFromNavmesh
             );
 
             var pathDistance = 0.0f;
@@ -6215,121 +6224,112 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             UnityEngine.AI.NavMeshPath path,
             float allowedError,
             int? navMeshId = null,
-            string debugTargetObjectId = ""
+            string debugTargetObjectId = "",
+            bool sampleFromNavmesh = true
         ) {
             float floorY = Math.Min(
                 getFloorY(start.x, start.y, start.z),
                 getFloorY(target.x, target.y, target.z)
             );
-            Vector3 startPosition = new Vector3(start.x, floorY, start.z);
+            Vector3 startPositionWithFloorY = new Vector3(start.x, floorY, start.z);
             Debug.Log($"----- Navmesh floorY {floorY.ToString("F6")}");
-            Vector3 targetPosition = new Vector3(target.x, floorY, target.z);
+            Vector3 targetPositionWithFloorY = new Vector3(target.x, floorY, target.z);
 
             var navMeshAgent = this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>();
             navMeshAgent.enabled = true;
 
-            NavMeshHit startHit;
-            // startPosition.y = 0.167557f;
-            bool startWasHit = UnityEngine.AI.NavMesh.SamplePosition(
-                startPosition, out startHit, Math.Max(0.2f, allowedError), UnityEngine.AI.NavMesh.AllAreas
-            );
+            var navmeshSurfaces = GameObject.FindObjectsOfType<NavMeshSurfaceExtended>();
 
-            NavMeshHit targetHit;
-            bool targetWasHit = UnityEngine.AI.NavMesh.SamplePosition(
-                targetPosition, out targetHit, Math.Max(0.2f, allowedError), UnityEngine.AI.NavMesh.AllAreas
-            );
+            var activeNavMesh = ProceduralTools.activateOnlyNavmeshSurface(navmeshSurfaces, navMeshId);
+            // var yPos = activeNavMesh.buildSettings.agentHeight / 2.0f;
 
-            if (!startWasHit || !targetWasHit) {
-                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                if (!startWasHit) {
-                    throw new InvalidOperationException(
-                        $"No point on NavMesh near startPosition {startPosition}."
-                    );
+            var pathStartPosition = new Vector3(start.x, start.y, start.z);
+            var pathTargetPosition = new Vector3(target.x, start.y, target.z);
+
+            if (sampleFromNavmesh) {
+
+                NavMeshHit startHit;
+                // startPosition.y = 0.167557f;
+                bool startWasHit = UnityEngine.AI.NavMesh.SamplePosition(
+                    startPositionWithFloorY, out startHit, Math.Max(0.2f, allowedError), UnityEngine.AI.NavMesh.AllAreas
+                );
+
+                NavMeshHit targetHit;
+                bool targetWasHit = UnityEngine.AI.NavMesh.SamplePosition(
+                    targetPositionWithFloorY, out targetHit, Math.Max(0.2f, allowedError), UnityEngine.AI.NavMesh.AllAreas
+                );
+
+                pathStartPosition = startHit.position;
+                pathTargetPosition = targetHit.position;
+
+                if (!startWasHit || !targetWasHit) {
+                    this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                    if (!startWasHit) {
+                        throw new InvalidOperationException(
+                            $"No point on NavMesh near startPosition {startPositionWithFloorY}."
+                        );
+                    }
+                    if (!targetWasHit) {
+                        throw new InvalidOperationException(
+                            $"No point on NavMesh near targetPosition {targetPositionWithFloorY}."
+                        );
+                    }
                 }
-                if (!targetWasHit) {
-                    throw new InvalidOperationException(
-                        $"No point on NavMesh near targetPosition {targetPosition}."
-                    );
-                }
-            }
-            
-            float startOffset = Vector3.Distance(
-                startHit.position,
-                new Vector3(startPosition.x, startHit.position.y, startPosition.z)
+
+                float startOffset = Vector3.Distance(
+                pathStartPosition,
+                new Vector3(startPositionWithFloorY.x, startHit.position.y, startPositionWithFloorY.z)
             );
             float targetOffset = Vector3.Distance(
-                targetHit.position,
-                new Vector3(targetPosition.x, targetHit.position.y, targetPosition.z)
+                pathTargetPosition,
+                new Vector3(targetPositionWithFloorY.x, targetHit.position.y, targetPositionWithFloorY.z)
             );
             if (startOffset > allowedError && targetOffset > allowedError) {
                 this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 var extraDebug = !string.IsNullOrEmpty(debugTargetObjectId) ? $" For objectId: '{debugTargetObjectId}'" : "";
                 throw new InvalidOperationException(
                     $"Closest point on NavMesh was too far from the agent: " +
-                    $" (startPosition={startPosition.ToString("F3")}," +
-                    $" closest navmesh position {startHit.position.ToString("F3")}) and" +
-                    $" (targetPosition={targetPosition.ToString("F3")}," +
-                    $" closest navmesh position {targetHit.position.ToString("F3")})." +
+                    $" (startPosition={startPositionWithFloorY.ToString("F3")}," +
+                    $" closest navmesh position {pathStartPosition.ToString("F3")}) and" +
+                    $" (targetPosition={targetPositionWithFloorY.ToString("F3")}," +
+                    $" closest navmesh position {pathTargetPosition.ToString("F3")})." +
                     $"{extraDebug}"
                 );
             }
 
+                
+            
+            }
+            
+
 #if UNITY_EDITOR
-            Debug.Log($"Attempting to find path from {startHit.position.ToString("F6")} to {targetHit.position.ToString("F6")}.");
+            Debug.Log($"Attempting to find path from {pathStartPosition.ToString("F6")} to {pathTargetPosition.ToString("F6")}.");
             Debug.Log($"NavmeshAgent start position {navMeshAgent.transform.position.ToString("F6")}");
 #endif
 
             var prevPosition = this.transform.position;
             var prevId = navMeshAgent.agentTypeID;
-            this.transform.position = startHit.position;
-            navMeshAgent.radius = 2.0f;
+            this.transform.position = pathStartPosition;
+            // navMeshAgent.radius = 2.0f;
+            Physics.SyncTransforms();
             // navMeshAgent.agentTypeID = 
 
             
-            var navmeshSurfaces = GameObject.FindObjectsOfType<NavMeshSurfaceExtended>();
-
-            #if UNITY_EDITOR
-            Debug.Log($"-----Navmesh  Query {navMeshId} navmesh count: {navmeshSurfaces.Count()} extended active count: {NavMeshSurfaceExtended.activeSurfaces.Count} navmesh active count: {NavMeshSurface.activeSurfaces.Count}");
-            #endif
-
-            var queryAgentId = getNavMeshAgentId(navMeshId);
-            // var useNavmeshSurface = queryAgentId.HasValue;
-
-            var navMesh = getNavMeshSurfaceForAgentId(queryAgentId);
-
-            #if UNITY_EDITOR
-            Debug.Log("---- Reached agent navmeshid " + queryAgentId);
-            #endif
-
-            // bool pathSuccess = navMeshAgent.CalculatePath(
-            //     targetHit.position, path
-            // );
             
-            foreach (var nvms in navmeshSurfaces) {
-                if (nvms != navMesh) {
-                    nvms.enabled = false; 
-                }
-            }
-
-            #if UNITY_EDITOR
-            Debug.Log($"-----Navmesh  Query {queryAgentId} navmesh count: {navmeshSurfaces.Count()}");
-            #endif
             // Useless more of unity's broken APIS for runtime >:(
             // NavMeshQueryFilter queryFilter = new NavMeshQueryFilter() {
             //     agentTypeID = queryAgentId,
             //     areaMask = navMesh.layerMask
             // };
             bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
-                startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
+                pathStartPosition, pathTargetPosition, UnityEngine.AI.NavMesh.AllAreas, path
             );
 
             #if UNITY_EDITOR
             Debug.Log($"-----Navmesh  Pathsuccess {pathSuccess} path status: {path.status} corner lenght {path.corners.Count()} corners: {string.Join(", ", path.corners.Select(c => c.ToString("F6")))}");
             #endif
 
-            foreach(var nvms in navmeshSurfaces) {
-                nvms.enabled = true;
-            }
+            ProceduralTools.activateAllNavmeshSurfaces(navmeshSurfaces);
 
             this.transform.position = prevPosition;
             // bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
@@ -6339,13 +6339,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 var extraDebug = !string.IsNullOrEmpty(debugTargetObjectId) ? $" For objectId: '{debugTargetObjectId}'" : "";
                 this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 throw new InvalidOperationException(
-                    $"Could not find path between {startHit.position.ToString("F6")}" +
-                    $" and {targetHit.position.ToString("F6")} using the NavMesh." +
+                    $"Could not find path between {pathStartPosition.ToString("F6")}" +
+                    $" and {pathTargetPosition.ToString("F6")} using the NavMesh." +
                     $"{extraDebug}"
                 );
             }
 #if UNITY_EDITOR
-            VisualizePath(startHit.position, path);
+            VisualizePath(pathStartPosition, path);
 #endif
             this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
             
@@ -6403,48 +6403,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetShortestPathToPoint(
-            Vector3 position, Vector3 target, float allowedError = DefaultAllowedErrorInShortestPath, int? navMeshId = null
+            Vector3 position, Vector3 target, float allowedError = DefaultAllowedErrorInShortestPath, int? navMeshId = null, bool sampleFromNavmesh = true
         ) {
             var path = new UnityEngine.AI.NavMeshPath();
-            SafelyComputeNavMeshPath(position, target, path, allowedError, navMeshId);
+            SafelyComputeNavMeshPath(position, target, path, allowedError, navMeshId, sampleFromNavmesh: sampleFromNavmesh);
             actionFinished(success: true, actionReturn: path);
         }
 
         public void GetShortestPathToPoint(
             Vector3 target,
             float allowedError = DefaultAllowedErrorInShortestPath,
-             int? navMeshId = null
+             int? navMeshId = null,
+             bool sampleFromNavmesh = true
         ) {
             var startPosition = this.transform.position;
-            GetShortestPathToPoint(startPosition, target, allowedError, navMeshId);
-        }
-
-        public int getNavMeshAgentId(int? navMeshId = null) {
-            var idSet = new HashSet<int>(NavMeshSurfaceExtended.activeSurfaces.Select(n => n.agentTypeID));
-            if (!navMeshId.HasValue) {
-                if (NavMeshSurfaceExtended.activeSurfaces.Count > 0) {
-                    return NavMeshSurfaceExtended.activeSurfaces[0].agentTypeID;
-                }
-                // TODO consider IthorScenes, not sure we use NavMeshSurface
-                // else {
-                //     return null;
-                // }
-            }
-            else if (!idSet.Contains(navMeshId.GetValueOrDefault()))  {
-                // actionFinished(success: false, errorMessage: $"Invalid agent id: '{navMeshId.GetValueOrDefault()}' provide a valid agent id for using with the NavMeshes available or bake a new NavMesh. Available: '{string.Join(", ",idSet.Select(i => i.ToString()) )}'");
-                // errorMessage = $"Invalid agent id: '{navMeshId.GetValueOrDefault()}' provide a valid agent id for using with the NavMeshes available or bake a new NavMesh. Available: '{string.Join(", ",idSet.Select(i => i.ToString()) )}'";
-                throw new InvalidOperationException(
-                        $"Invalid agent id: '{navMeshId.GetValueOrDefault()}' provide a valid agent id for using with the NavMeshes available or bake a new NavMesh. Available: '{string.Join(", ",idSet.Select(i => i.ToString()) )}'"
-                
-                );
-                
-                // return null;
-            }
-            return navMeshId.GetValueOrDefault();
-        } 
-
-        public NavMeshSurfaceExtended getNavMeshSurfaceForAgentId(int agentId) {
-            return NavMeshSurface.activeSurfaces.Find(s => s.agentTypeID == agentId) as NavMeshSurfaceExtended;
+            GetShortestPathToPoint(startPosition, target, allowedError, navMeshId, sampleFromNavmesh);
         }
 
         public void VisualizeShortestPaths(ServerAction action) {
@@ -6465,7 +6438,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 var textMesh = go.GetComponentInChildren<TextMesh>();
                 textMesh.text = i.ToString();
 
-                var path = GetSimObjectNavMeshTarget(sop, pos, Quaternion.identity, 0.1f);
+                var path = GetSimObjectNavMeshTarget(sop, pos, Quaternion.identity, 0.1f, sampleFromNavmesh: action.sampleFromNavmesh);
 
                 var lineRenderer = go.GetComponentInChildren<LineRenderer>();
 

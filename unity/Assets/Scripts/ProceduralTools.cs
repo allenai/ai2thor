@@ -13,6 +13,8 @@ using Newtonsoft.Json.Serialization;
 using Thor.Procedural.Data;
 using UnityEngine.AI;
 using Thor.Utils;
+using UnityEngine.XR;
+
 
 
 #if UNITY_EDITOR
@@ -1654,6 +1656,69 @@ namespace Thor.Procedural {
             navMeshSurface.BuildNavMesh(buildSettings);
             Debug.Log($"Created navmesh with agentType id: `{navMeshSurface.agentTypeID}`");
             return go;
+        }
+
+        public static void activateAllNavmeshSurfaces(IEnumerable<NavMeshSurfaceExtended> navmeshSurfaces) { 
+            foreach(var nvms in navmeshSurfaces) {
+                nvms.enabled = true;
+            }
+        }
+
+        public static NavMeshSurfaceExtended activateOnlyNavmeshSurface(IEnumerable<NavMeshSurfaceExtended> navmeshSurfaces, int? navMeshId = null) {
+            #if UNITY_EDITOR
+            Debug.Log($"-----Navmesh  Query {navMeshId} navmesh count: {navmeshSurfaces.Count()} extended active count: {NavMeshSurfaceExtended.activeSurfaces.Count} navmesh active count: {NavMeshSurface.activeSurfaces.Count}");
+            #endif
+
+            var queryAgentId = getNavMeshAgentId(navMeshId);
+            // var useNavmeshSurface = queryAgentId.HasValue;
+
+            var navMesh = getNavMeshSurfaceForAgentId(queryAgentId);
+
+            #if UNITY_EDITOR
+            Debug.Log("---- Reached agent navmeshid " + queryAgentId);
+            #endif
+
+            // bool pathSuccess = navMeshAgent.CalculatePath(
+            //     targetHit.position, path
+            // );
+            
+            foreach (var nvms in navmeshSurfaces) {
+                if (nvms != navMesh) {
+                    nvms.enabled = false; 
+                }
+            }
+
+            #if UNITY_EDITOR
+            Debug.Log($"-----Navmesh  Query {queryAgentId} navmesh count: {navmeshSurfaces.Count()}");
+            #endif
+            return navMesh;
+        }
+
+
+        public static int getNavMeshAgentId(int? navMeshId = null) {
+            var idSet = new HashSet<int>(NavMeshSurfaceExtended.activeSurfaces.Select(n => n.agentTypeID));
+            if (!navMeshId.HasValue) {
+                if (NavMeshSurfaceExtended.activeSurfaces.Count > 0) {
+                    return NavMeshSurfaceExtended.activeSurfaces[0].agentTypeID;
+                }
+                // TODO consider IthorScenes, not sure we use NavMeshSurface
+                // else {
+                //     return null;
+                // }
+            }
+            else if (!idSet.Contains(navMeshId.GetValueOrDefault()))  {
+                // actionFinished(success: false, errorMessage: $"Invalid agent id: '{navMeshId.GetValueOrDefault()}' provide a valid agent id for using with the NavMeshes available or bake a new NavMesh. Available: '{string.Join(", ",idSet.Select(i => i.ToString()) )}'");
+                // errorMessage = $"Invalid agent id: '{navMeshId.GetValueOrDefault()}' provide a valid agent id for using with the NavMeshes available or bake a new NavMesh. Available: '{string.Join(", ",idSet.Select(i => i.ToString()) )}'";
+                throw new InvalidOperationException(
+                        $"Invalid agent id: '{navMeshId.GetValueOrDefault()}' provide a valid agent id for using with the NavMeshes available or bake a new NavMesh. Available: '{string.Join(", ",idSet.Select(i => i.ToString()) )}'"
+                
+                );
+            }
+            return navMeshId.GetValueOrDefault();
+        } 
+
+        public static NavMeshSurfaceExtended getNavMeshSurfaceForAgentId(int agentId) {
+            return NavMeshSurface.activeSurfaces.Find(s => s.agentTypeID == agentId) as NavMeshSurfaceExtended;
         }
 
         public static NavMeshBuildSettings navMeshConfigToBuildSettings(NavMeshConfig config, NavMeshBuildSettings defaultBuildSettings) {

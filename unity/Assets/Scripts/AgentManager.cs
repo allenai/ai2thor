@@ -2360,6 +2360,7 @@ public class ServerAction {
     public Color? gridColor;
 
     public Gradient pathGradient;
+    public bool sampleFromNavmesh = true;
 
     // should actions like pickup and moveHand have more manual, less abstracted behavior?
     public bool manualInteract = false;
