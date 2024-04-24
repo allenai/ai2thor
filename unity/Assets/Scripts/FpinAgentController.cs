@@ -1055,7 +1055,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 throw new InvalidOperationException(
                     "After teleporting and adjusting agent position to floor, there was too large a change." +
                     " This may be due to the target teleport coordinates causing the agent to fall through the floor." +
-                    $"({Mathf.Abs(transform.position.y - pos.y)} > 1.0f) in the y position. " +
+                    $"({Mathf.Abs(transform.position.y - pos.y)} > 1.0f) in the y position."
                 );
             }
         }
