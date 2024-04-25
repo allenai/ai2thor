@@ -6227,14 +6227,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string debugTargetObjectId = "",
             bool sampleFromNavmesh = true
         ) {
-            float floorY = Math.Min(
-                getFloorY(start.x, start.y, start.z),
-                getFloorY(target.x, target.y, target.z)
-            );
-            Vector3 startPositionWithFloorY = new Vector3(start.x, floorY, start.z);
-            Debug.Log($"----- Navmesh floorY {floorY.ToString("F6")}");
-            Vector3 targetPositionWithFloorY = new Vector3(target.x, floorY, target.z);
-
+            
             var navMeshAgent = this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>();
             navMeshAgent.enabled = true;
 
@@ -6247,6 +6240,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var pathTargetPosition = new Vector3(target.x, start.y, target.z);
 
             if (sampleFromNavmesh) {
+
+                float floorY = Math.Min(
+                    getFloorY(start.x, start.y, start.z),
+                    getFloorY(target.x, target.y, target.z)
+                );
+                Vector3 startPositionWithFloorY = new Vector3(start.x, floorY, start.z);
+                Debug.Log($"----- Navmesh floorY {floorY.ToString("F6")}");
+                Vector3 targetPositionWithFloorY = new Vector3(target.x, floorY, target.z);
+
 
                 NavMeshHit startHit;
                 // startPosition.y = 0.167557f;
@@ -6277,31 +6279,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 float startOffset = Vector3.Distance(
-                pathStartPosition,
-                new Vector3(startPositionWithFloorY.x, startHit.position.y, startPositionWithFloorY.z)
-            );
-            float targetOffset = Vector3.Distance(
-                pathTargetPosition,
-                new Vector3(targetPositionWithFloorY.x, targetHit.position.y, targetPositionWithFloorY.z)
-            );
-            if (startOffset > allowedError && targetOffset > allowedError) {
-                this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                var extraDebug = !string.IsNullOrEmpty(debugTargetObjectId) ? $" For objectId: '{debugTargetObjectId}'" : "";
-                throw new InvalidOperationException(
-                    $"Closest point on NavMesh was too far from the agent: " +
-                    $" (startPosition={startPositionWithFloorY.ToString("F3")}," +
-                    $" closest navmesh position {pathStartPosition.ToString("F3")}) and" +
-                    $" (targetPosition={targetPositionWithFloorY.ToString("F3")}," +
-                    $" closest navmesh position {pathTargetPosition.ToString("F3")})." +
-                    $"{extraDebug}"
+                    pathStartPosition,
+                    new Vector3(startPositionWithFloorY.x, startHit.position.y, startPositionWithFloorY.z)
                 );
+                float targetOffset = Vector3.Distance(
+                    pathTargetPosition,
+                    new Vector3(targetPositionWithFloorY.x, targetHit.position.y, targetPositionWithFloorY.z)
+                );
+                if (startOffset > allowedError && targetOffset > allowedError) {
+                    this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                    var extraDebug = !string.IsNullOrEmpty(debugTargetObjectId) ? $" For objectId: '{debugTargetObjectId}'" : "";
+                    throw new InvalidOperationException(
+                        $"Closest point on NavMesh was too far from the agent: " +
+                        $" (startPosition={startPositionWithFloorY.ToString("F3")}," +
+                        $" closest navmesh position {pathStartPosition.ToString("F3")}) and" +
+                        $" (targetPosition={targetPositionWithFloorY.ToString("F3")}," +
+                        $" closest navmesh position {pathTargetPosition.ToString("F3")})." +
+                        $"{extraDebug}"
+                    );
+                }
             }
-
-                
             
-            }
-            
-
 #if UNITY_EDITOR
             Debug.Log($"Attempting to find path from {pathStartPosition.ToString("F6")} to {pathTargetPosition.ToString("F6")}.");
             Debug.Log($"NavmeshAgent start position {navMeshAgent.transform.position.ToString("F6")}");
@@ -6313,8 +6311,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // navMeshAgent.radius = 2.0f;
             Physics.SyncTransforms();
             // navMeshAgent.agentTypeID = 
-
-            
             
             // Useless more of unity's broken APIS for runtime >:(
             // NavMeshQueryFilter queryFilter = new NavMeshQueryFilter() {
