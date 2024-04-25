@@ -13,8 +13,6 @@ using Newtonsoft.Json.Serialization;
 using Thor.Procedural.Data;
 using UnityEngine.AI;
 using Thor.Utils;
-using UnityEngine.XR;
-
 
 
 #if UNITY_EDITOR
