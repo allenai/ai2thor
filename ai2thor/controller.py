@@ -520,11 +520,11 @@ class Controller(object):
             and platform_system() == "Windows"
         ):
             raise ValueError("server_class=FifoServer cannot be used on Windows.")
-        elif server_class is None:
-            self.server_class = ai2thor.fifo_server.FifoServer
-        else:
+        elif server_class is not None:
             self.server_class = server_class
-
+        elif self.server_class is None:
+            self.server_class = ai2thor.fifo_server.FifoServer
+        
         self._build = None
 
         self.interactive_controller = InteractiveControllerPrompt(
