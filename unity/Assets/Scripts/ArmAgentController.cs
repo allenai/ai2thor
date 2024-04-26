@@ -165,30 +165,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public IEnumerator MoveAhead(
-            float? moveMagnitude = null,
-            float speed = 1,
-            bool returnToStart = true
-        ) {
-            return MoveAgent(
-                ahead: moveMagnitude.GetValueOrDefault(gridSize),
-                speed: speed,
-                returnToStart: returnToStart
-            );
-        }
+        // public IEnumerator MoveAhead(
+        //     float? moveMagnitude = null,
+        //     float speed = 1,
+        //     bool returnToStart = true
+        // ) {
+        //     Debug.Log("MoveAhead");
+        //     return MoveAgent(
+        //         ahead: moveMagnitude.GetValueOrDefault(gridSize),
+        //         speed: speed,
+        //         returnToStart: returnToStart
+        //     );
+        // }
 
 
-        public IEnumerator MoveBack(
-            float? moveMagnitude = null,
-            float speed = 1,
-            bool returnToStart = true
-        ) {
-            return MoveAgent(
-                ahead: -moveMagnitude.GetValueOrDefault(gridSize),
-                speed: speed,
-                returnToStart: returnToStart
-            );
-        }
+        // public IEnumerator MoveBack(
+        //     float? moveMagnitude = null,
+        //     float speed = 1,
+        //     bool returnToStart = true
+        // ) {
+        //     return MoveAgent(
+        //         ahead: -moveMagnitude.GetValueOrDefault(gridSize),
+        //         speed: speed,
+        //         returnToStart: returnToStart
+        //     );
+        // }
 
         public IEnumerator MoveRight(
             float? moveMagnitude = null,
@@ -214,29 +215,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public IEnumerator RotateRight(
-            float? degrees = null,
-            float speed = 1.0f,
-            bool returnToStart = true
-        ) {
-            return RotateAgent(
-                degrees: degrees.GetValueOrDefault(rotateStepDegrees),
-                speed: speed,
-                returnToStart: returnToStart
-            );
-        }
+        // public IEnumerator RotateRight(
+        //     float? degrees = null,
+        //     float speed = 1.0f,
+        //     bool returnToStart = true
+        // ) {
+        //     return RotateAgent(
+        //         degrees: degrees.GetValueOrDefault(rotateStepDegrees),
+        //         speed: speed,
+        //         returnToStart: returnToStart
+        //     );
+        // }
 
-        public IEnumerator RotateLeft(
-            float? degrees = null,
-            float speed = 1.0f,
-            bool returnToStart = true
-        ) {
-            return RotateAgent(
-                degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
-                speed: speed,
-                returnToStart: returnToStart
-            );
-        }
+        // public IEnumerator RotateLeft(
+        //     float? degrees = null,
+        //     float speed = 1.0f,
+        //     bool returnToStart = true
+        // ) {
+        //     return RotateAgent(
+        //         degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
+        //         speed: speed,
+        //         returnToStart: returnToStart
+        //     );
+        // }
 
         public virtual IEnumerator RotateAgent(
             float degrees,
