@@ -23,6 +23,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private Vector3 defaultSecondaryCameraLocalRotation =new Vector3(50f, 90f, 0);
         private float defaultSecondaryCameraFieldOfView = 59f;
 
+        protected bool applyActionNoise = true;
+        protected float movementGaussianMu = 0.001f;
+        protected float movementGaussianSigma = 0.005f;
+        protected float rotateGaussianMu = 0.0f;
+        protected float rotateGaussianSigma = 0.5f;
+        protected bool allowHorizontalMovement = false;
+
         public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
@@ -387,6 +394,253 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = $"Invalid value for `degrees`: '{degrees}'. Value should be between '{minDegree}' and '{maxDegree}'.";
                 actionFinished(false);
             }
+        }
+
+        public IEnumerator MoveAhead(
+            float? moveMagnitude = null,
+            float noise = 0f,
+            bool forceAction = false,
+            float speed = 1,
+            bool returnToStart = true
+        ) {
+            bool quickMoveSuccess = MoveRelative(
+                    z: 1.0f,
+                    moveMagnitude: moveMagnitude,
+                    noise: noise,
+                    forceAction: forceAction
+            );
+            
+            if (quickMoveSuccess){
+                Debug.Log("Use quick MoveAhead");
+                yield return new ActionFinished() {success = true};
+            } else {
+                Debug.Log("Use slow MoveAhead");
+                yield return base.MoveAgent(
+                    ahead: moveMagnitude.GetValueOrDefault(gridSize),
+                    speed: speed,
+                    returnToStart: returnToStart
+                );
+            }
+        }
+
+        public IEnumerator MoveBack(
+            float? moveMagnitude = null,
+            float noise = 0f,
+            bool forceAction = false,
+            float speed = 1,
+            bool returnToStart = true
+        ) {
+            bool quickMoveSuccess = MoveRelative(
+                    z: -1.0f,
+                    moveMagnitude: moveMagnitude,
+                    noise: noise,
+                    forceAction: forceAction
+            );
+            
+            if (quickMoveSuccess){
+                Debug.Log("Use quick MoveBack");
+                yield return new ActionFinished() {success = true};
+            } else {
+                Debug.Log("Use slow MoveBack");
+                yield return base.MoveAgent(
+                    ahead: -moveMagnitude.GetValueOrDefault(gridSize),
+                    speed: speed,
+                    returnToStart: returnToStart
+                );
+            }
+        }
+
+        public IEnumerator RotateRight(
+            float? degrees = null,
+            float speed = 1.0f,
+            bool returnToStart = true
+        ) {
+            bool quickRotateSuccess = Rotate(rotation: new Vector3(0, degrees.GetValueOrDefault(rotateStepDegrees), 0));
+            if (quickRotateSuccess){
+                Debug.Log("Use quick RotateRight");
+                yield return new ActionFinished() {success = true};
+            } else {
+                Debug.Log("Use slow RotateRight");
+                yield return base.RotateAgent(
+                    degrees: degrees.GetValueOrDefault(rotateStepDegrees),
+                    speed: speed,
+                    returnToStart: returnToStart
+                );
+            }
+        }
+
+        public IEnumerator RotateLeft(
+            float? degrees = null,
+            float speed = 1.0f,
+            bool returnToStart = true
+        ) {
+            bool quickRotateSuccess = Rotate(rotation: new Vector3(0, -degrees.GetValueOrDefault(rotateStepDegrees), 0));
+            if (quickRotateSuccess){
+                Debug.Log("Use quick RotateLeft");
+                yield return new ActionFinished() {success = true};
+            } else {
+                Debug.Log("Use small RotateLeft");
+                yield return base.RotateAgent(
+                    degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
+                    speed: speed,
+                    returnToStart: returnToStart
+                );
+            }
+        }
+
+        public bool MoveRelative(
+            float? moveMagnitude = null,
+            float x = 0f,
+            float z = 0f,
+            float noise = 0f,
+            bool forceAction = false
+        ) {
+
+            if (!moveMagnitude.HasValue) {
+                moveMagnitude = gridSize;
+            } else if (moveMagnitude.Value <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be null or >= 0.");
+            }
+
+            if (!allowHorizontalMovement && Math.Abs(x) > 0) {
+                throw new InvalidOperationException("Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller.");
+            }
+
+            var moveLocal = new Vector3(x, 0, z);
+            float xzMag = moveLocal.magnitude;
+            if (xzMag > 1e-5f) {
+                // rotate a small amount with every movement since robot doesn't always move perfectly straight
+                if (this.applyActionNoise) {
+                    var rotateNoise = (float)systemRandom.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
+                    transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateNoise, 0.0f));
+                }
+
+                var moveLocalNorm = moveLocal / xzMag;
+                var magnitudeWithNoise = GetMoveMagnitudeWithNoise(
+                    moveMagnitude: xzMag * moveMagnitude.Value,
+                    noise: noise
+                );
+
+                return base.moveInDirection(
+                    direction: this.transform.rotation * (moveLocalNorm * magnitudeWithNoise),
+                    forceAction: forceAction
+                );
+            } else {
+                errorMessage = "either x or z must be != 0 for the MoveRelative action";
+                return false;
+            }
+        }
+
+        protected float GetMoveMagnitudeWithNoise(float moveMagnitude, float noise) {
+            float internalNoise = applyActionNoise ? (float)systemRandom.NextGaussian(movementGaussianMu, movementGaussianSigma) : 0;
+            return moveMagnitude + noise + (float)internalNoise;
+        }
+
+        protected bool moveInDirection(
+            Vector3 direction,
+            string objectId = "",
+            float maxDistanceToObject = -1.0f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            HashSet<Collider> ignoreColliders = null
+        ) {
+            Vector3 targetPosition = transform.position + direction;
+            if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
+                CheckIfItemBlocksAgentMovement(direction, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
+                CheckIfAgentCanMove(direction, ignoreColliders)) {
+
+                // only default hand if not manually interacting with things
+                if (!manualInteract) {
+                    DefaultAgentHand();
+                }
+
+                Vector3 oldPosition = transform.position;
+                transform.position = targetPosition;
+                this.snapAgentToGrid();
+
+                if (objectId != "" && maxDistanceToObject > 0.0f) {
+                    if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                        errorMessage = "No object with ID " + objectId;
+                        transform.position = oldPosition;
+                        return false;
+                    }
+                    SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                    if (distanceToObject(sop) > maxDistanceToObject) {
+                        errorMessage = "Agent movement would bring it beyond the max distance of " + objectId;
+                        transform.position = oldPosition;
+                        return false;
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public bool Rotate(Vector3 rotation) {
+            return Rotate(rotation: rotation, noise: 0);
+        }
+
+        public bool Rotate(Vector3 rotation, float noise, bool manualInteract = false) {
+            // only default hand if not manually Interacting with things
+            if (!manualInteract) {
+                DefaultAgentHand();
+            }
+
+            float rotateAmountDegrees = GetRotateMagnitudeWithNoise(rotation: rotation, noise: noise);
+
+            // multiply quaternions to apply rotation based on rotateAmountDegrees
+            transform.rotation = (
+                transform.rotation
+                * Quaternion.Euler(new Vector3(0.0f, rotateAmountDegrees, 0.0f))
+            );
+            if (isAgentCapsuleColliding()) {
+                transform.rotation = (
+                    transform.rotation
+                    * Quaternion.Euler(new Vector3(0.0f, -rotateAmountDegrees, 0.0f))
+                );
+                return false;
+            }
+            return true;
+        }
+
+        protected float GetRotateMagnitudeWithNoise(Vector3 rotation, float noise) {
+            float internalNoise = applyActionNoise ? (float)systemRandom.NextGaussian(rotateGaussianMu, rotateGaussianSigma) : 0;
+            return rotation.y + noise + (float)internalNoise;
+        }
+
+        protected bool isAgentCapsuleColliding(
+            HashSet<Collider> collidersToIgnore = null,
+            bool includeErrorMessage = false
+        ) {
+            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
+            foreach (
+                Collider c in PhysicsExtensions.OverlapCapsule(
+                    GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore
+                )
+            ) {
+                if ((!hasAncestor(c.transform.gameObject, gameObject)) && (
+                    collidersToIgnore == null || !collidersToIgnoreDuringMovement.Contains(c))
+                ) {
+                    if (includeErrorMessage) {
+                        SimObjPhysics sop = ancestorSimObjPhysics(c.gameObject);
+                        String collidedWithName;
+                        if (sop != null) {
+                            collidedWithName = sop.ObjectID;
+                        } else {
+                            collidedWithName = c.gameObject.name;
+                        }
+                        errorMessage = $"Collided with: {collidedWithName}.";
+                    }
+#if UNITY_EDITOR
+                    Debug.Log("Collided with: ");
+                    Debug.Log(c);
+                    Debug.Log(c.enabled);
+#endif
+                    return true;
+                }
+            }
+            return false;
         }
 
     }
