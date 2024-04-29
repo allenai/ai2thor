@@ -409,6 +409,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     noise: noise,
                     forceAction: forceAction
             );
+            Physics.SyncTransforms();
             
             if (quickMoveSuccess){
                 Debug.Log("Use quick MoveAhead");
@@ -436,6 +437,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     noise: noise,
                     forceAction: forceAction
             );
+            Physics.SyncTransforms();
             
             if (quickMoveSuccess){
                 Debug.Log("Use quick MoveBack");
@@ -457,6 +459,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStart = true
         ) {
             bool quickRotateSuccess = Rotate(rotation: new Vector3(0, degrees.GetValueOrDefault(rotateStepDegrees), 0), noise: noise);
+            Physics.SyncTransforms();
             if (quickRotateSuccess){
                 Debug.Log("Use quick RotateRight");
                 yield return new ActionFinished() {success = true, actionReturn = "Use quick RotateRight"};
@@ -477,6 +480,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStart = true
         ) {
             bool quickRotateSuccess = Rotate(rotation: new Vector3(0, -degrees.GetValueOrDefault(rotateStepDegrees), 0), noise: noise);
+            Physics.SyncTransforms();
             if (quickRotateSuccess){
                 Debug.Log("Use quick RotateLeft");
                 yield return new ActionFinished() {success = true, actionReturn = "Use quick RotateLeft"};
@@ -515,6 +519,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (this.applyActionNoise) {
                     var rotateNoise = (float)systemRandom.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
                     transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateNoise, 0.0f));
+                    Physics.SyncTransforms();
                 }
 
                 var moveLocalNorm = moveLocal / xzMag;
@@ -593,11 +598,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 transform.rotation
                 * Quaternion.Euler(new Vector3(0.0f, rotateAmountDegrees, 0.0f))
             );
+            Physics.SyncTransforms();
             if (base.isAgentCapsuleColliding()) {
                 transform.rotation = (
                     transform.rotation
                     * Quaternion.Euler(new Vector3(0.0f, -rotateAmountDegrees, 0.0f))
                 );
+                Physics.SyncTransforms();
                 return false;
             }
             return true;
