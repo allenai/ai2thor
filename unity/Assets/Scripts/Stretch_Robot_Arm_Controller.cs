@@ -46,7 +46,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
 
     private bool DeadZoneCheck() {
         if (deadZoneCheck) {
-        float currentYaw = armTarget.rotation.eulerAngles.y;
+        float currentYaw = armTarget.localRotation.eulerAngles.y;
             float cLimit = wristClockwiseLocalRotationLimit;
             float ccLimit = wristCounterClockwiseLocalRotationLimit;
             
