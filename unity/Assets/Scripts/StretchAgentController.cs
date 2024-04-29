@@ -396,7 +396,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public IEnumerator MoveAhead(
+        public IEnumerator MoveAheadQuick(
             float? moveMagnitude = null,
             float noise = 0f,
             bool forceAction = false,
@@ -412,7 +412,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
             if (quickMoveSuccess){
                 Debug.Log("Use quick MoveAhead");
-                yield return new ActionFinished() {success = true};
+                yield return new ActionFinished() {success = true, actionReturn = "Use quick MoveAhead"};
             } else {
                 Debug.Log("Use slow MoveAhead");
                 yield return base.MoveAgent(
@@ -423,7 +423,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public IEnumerator MoveBack(
+        public IEnumerator MoveBackQuick(
             float? moveMagnitude = null,
             float noise = 0f,
             bool forceAction = false,
@@ -439,7 +439,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
             if (quickMoveSuccess){
                 Debug.Log("Use quick MoveBack");
-                yield return new ActionFinished() {success = true};
+                yield return new ActionFinished() {success = true, actionReturn = "Use quick MoveBack"};
             } else {
                 Debug.Log("Use slow MoveBack");
                 yield return base.MoveAgent(
@@ -450,15 +450,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public IEnumerator RotateRight(
+        public IEnumerator RotateRightQuick(
             float? degrees = null,
+            float noise = 0f,
             float speed = 1.0f,
             bool returnToStart = true
         ) {
-            bool quickRotateSuccess = Rotate(rotation: new Vector3(0, degrees.GetValueOrDefault(rotateStepDegrees), 0));
+            bool quickRotateSuccess = Rotate(rotation: new Vector3(0, degrees.GetValueOrDefault(rotateStepDegrees), 0), noise: noise);
             if (quickRotateSuccess){
                 Debug.Log("Use quick RotateRight");
-                yield return new ActionFinished() {success = true};
+                yield return new ActionFinished() {success = true, actionReturn = "Use quick RotateRight"};
             } else {
                 Debug.Log("Use slow RotateRight");
                 yield return base.RotateAgent(
@@ -469,17 +470,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public IEnumerator RotateLeft(
+        public IEnumerator RotateLeftQuick(
             float? degrees = null,
+            float noise = 0f,
             float speed = 1.0f,
             bool returnToStart = true
         ) {
-            bool quickRotateSuccess = Rotate(rotation: new Vector3(0, -degrees.GetValueOrDefault(rotateStepDegrees), 0));
+            bool quickRotateSuccess = Rotate(rotation: new Vector3(0, -degrees.GetValueOrDefault(rotateStepDegrees), 0), noise: noise);
             if (quickRotateSuccess){
                 Debug.Log("Use quick RotateLeft");
-                yield return new ActionFinished() {success = true};
+                yield return new ActionFinished() {success = true, actionReturn = "Use quick RotateLeft"};
             } else {
-                Debug.Log("Use small RotateLeft");
+                Debug.Log("Use slow RotateLeft");
                 yield return base.RotateAgent(
                     degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
                     speed: speed,
@@ -521,6 +523,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     noise: noise
                 );
 
+                Debug.Log("Move Direction:" + this.transform.rotation * (moveLocalNorm * magnitudeWithNoise));
                 return base.moveInDirection(
                     direction: this.transform.rotation * (moveLocalNorm * magnitudeWithNoise),
                     forceAction: forceAction
@@ -577,10 +580,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public bool Rotate(Vector3 rotation) {
-            return Rotate(rotation: rotation, noise: 0);
-        }
-
         public bool Rotate(Vector3 rotation, float noise, bool manualInteract = false) {
             // only default hand if not manually Interacting with things
             if (!manualInteract) {
@@ -594,7 +593,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 transform.rotation
                 * Quaternion.Euler(new Vector3(0.0f, rotateAmountDegrees, 0.0f))
             );
-            if (isAgentCapsuleColliding()) {
+            if (base.isAgentCapsuleColliding()) {
                 transform.rotation = (
                     transform.rotation
                     * Quaternion.Euler(new Vector3(0.0f, -rotateAmountDegrees, 0.0f))
@@ -609,39 +608,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return rotation.y + noise + (float)internalNoise;
         }
 
-        protected bool isAgentCapsuleColliding(
-            HashSet<Collider> collidersToIgnore = null,
-            bool includeErrorMessage = false
-        ) {
-            int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
-            foreach (
-                Collider c in PhysicsExtensions.OverlapCapsule(
-                    GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore
-                )
-            ) {
-                if ((!hasAncestor(c.transform.gameObject, gameObject)) && (
-                    collidersToIgnore == null || !collidersToIgnoreDuringMovement.Contains(c))
-                ) {
-                    if (includeErrorMessage) {
-                        SimObjPhysics sop = ancestorSimObjPhysics(c.gameObject);
-                        String collidedWithName;
-                        if (sop != null) {
-                            collidedWithName = sop.ObjectID;
-                        } else {
-                            collidedWithName = c.gameObject.name;
-                        }
-                        errorMessage = $"Collided with: {collidedWithName}.";
-                    }
-#if UNITY_EDITOR
-                    Debug.Log("Collided with: ");
-                    Debug.Log(c);
-                    Debug.Log(c.enabled);
-#endif
-                    return true;
-                }
-            }
-            return false;
-        }
+//         protected bool isAgentCapsuleColliding(
+//             HashSet<Collider> collidersToIgnore = null,
+//             bool includeErrorMessage = false
+//         ) {
+//             int layerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
+//             foreach (
+//                 Collider c in PhysicsExtensions.OverlapCapsule(
+//                     GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore
+//                 )
+//             ) {
+//                 if ((!hasAncestor(c.transform.gameObject, gameObject)) && (
+//                     collidersToIgnore == null || !collidersToIgnoreDuringMovement.Contains(c))
+//                 ) {
+//                     if (includeErrorMessage) {
+//                         SimObjPhysics sop = ancestorSimObjPhysics(c.gameObject);
+//                         String collidedWithName;
+//                         if (sop != null) {
+//                             collidedWithName = sop.ObjectID;
+//                         } else {
+//                             collidedWithName = c.gameObject.name;
+//                         }
+//                         errorMessage = $"Collided with: {collidedWithName}.";
+//                     }
+// #if UNITY_EDITOR
+//                     Debug.Log("Collided with: ");
+//                     Debug.Log(c);
+//                     Debug.Log(c.enabled);
+// #endif
+//                     return true;
+//                 }
+//             }
+//             return false;
+//         }
 
     }
 
