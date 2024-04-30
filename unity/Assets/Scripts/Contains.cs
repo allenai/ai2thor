@@ -116,7 +116,7 @@ public class Contains : MonoBehaviour {
         // ok now create an overlap box using these values and return all contained objects
         foreach (Collider col in Physics.OverlapBox(worldCenter, worldHalfExtents, b.transform.rotation)) {
             // ignore triggers
-            if (col.GetComponentInParent<SimObjPhysics>() && !col.isTrigger) {
+            if (col.GetComponentInParent<SimObjPhysics>()) {
                 // grab reference to game object this collider is part of
                 SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
 
