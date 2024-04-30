@@ -252,7 +252,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
 
         // Rotate wrist
         collisionListener.Reset();
-        setDeadZoneCheck(true);
+        // setDeadZoneCheck(true);
 
         // Activate check for dead-zone encroachment inside of CollisionListener
         // collisionListener.enableDeadZoneCheck();
