@@ -67,7 +67,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
     public class FpinAgentController : PhysicsRemoteFPSAgentController{
 
-        private static readonly Vector3 agentSpawnOffset = new Vector3(10.0f, 10.0f, 10.0f);
+        private static readonly Vector3 agentSpawnOffset = new Vector3(100.0f, 100.0f, 100.0f);
         private FpinMovableContinuous fpinMovable;
         public BoxCollider spawnedBoxCollider = null;
         public BoxCollider spawnedTriggerBoxCollider = null;
@@ -399,6 +399,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 success = true,
                 actionReturn = this.BoxBounds
             };
+        }
+
+        public Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles)
+        {
+            // Move the point to the pivot's origin
+            Vector3 dir = point - pivot; 
+            // Rotate it
+            dir = Quaternion.Euler(angles) * dir; 
+            // Move it back
+            point = dir + pivot; 
+            return point;
         }
         
         public ActionFinished BackwardsCompatibleInitialize(BackwardsCompatibleInitializeParams args) {
@@ -735,14 +746,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // ok now check if we were to teleport back to our original position and rotation....
             // will our current box colliders clip with anything? If so, send a failure message
-            Vector3 boxCenterAtInitialPosition = meshBoundsWorld.center - agentSpawnOffset;
+            Vector3 boxCenterAtInitialTransform = RotatePointAroundPivot(meshBoundsWorld.center - agentSpawnOffset, originalPosition, originalRotation.eulerAngles);
 
 #if UNITY_EDITOR
             // /////////////////////////////////////////////////
             // for visualization lets spawn a cube at the center of where the boxCenter supposedly is
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.name = "VisualizedBoxCollider";
-            cube.transform.position = boxCenterAtInitialPosition;
+            cube.transform.position = boxCenterAtInitialTransform;
             cube.transform.rotation = originalRotation;
             cube.transform.localScale = meshBoundsWorld.size;
             cube.GetComponent<BoxCollider>().enabled = false;
@@ -768,8 +779,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // if we do clip with something, leave the agent where it is, and send a message saying there is clipping actively happening
             // the reccomended thing to do here is either reset the scene entirely and load in with a new agent, or try and use `InitializeBody` with 
             // a smaller mesh size that would potentially fit here
-            Debug.Log($"{boxCenterAtInitialPosition:F5} and {meshBoundsWorld.extents:F5}");
-            if (Physics.CheckBox(boxCenterAtInitialPosition, meshBoundsWorld.extents, originalRotation, checkBoxLayerMask)) {
+            Debug.Log($"{boxCenterAtInitialTransform:F5} and {meshBoundsWorld.extents:F5}");
+            if (Physics.CheckBox(boxCenterAtInitialTransform, meshBoundsWorld.extents, originalRotation, checkBoxLayerMask)) {
                 this.transform.position = originalPosition;
                 this.transform.rotation = originalRotation;
                 string error = "Spawned box collider is colliding with other objects. Cannot spawn box collider.";
