@@ -88,10 +88,10 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
         return armTarget.gameObject;
     }
 
-     public override ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
-        // TODO: does not do anything need to change Continuous Move to call this instead of continuousMoveFinish
-        return ActionFinished.Success;
-     }
+    //  public override ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
+    //     // TODO: does not do anything need to change Continuous Move to call this instead of continuousMoveFinish
+    //     return ActionFinished.Success;
+    //  }
 
     void Start() {
         this.collisionListener = this.GetComponentInParent<CollisionListener>();
@@ -259,6 +259,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
 
         return withLastStepCallback(
             ContinuousMovement.rotate(
+                movable: this,
                 controller: controller,
                 moveTransform: armTarget.transform,
                 targetRotation: targetRotation,

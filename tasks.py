@@ -129,6 +129,42 @@ def _unity_version():
     return project_version["m_EditorVersion"]
 
 
+def _unity_playback_engines_path():
+    unity_version = _unity_version()
+    standalone_path = None
+
+    if sys.platform.startswith("darwin"):
+        unity_hub_path = (
+            "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
+                unity_version
+            )
+        )
+        # /Applications/Unity/2019.4.20f1/Unity.app/Contents/MacOS
+
+        standalone_path = (
+            "/Applications/Unity/{}/PlaybackEngines".format(
+                unity_version
+            )
+        )
+    elif "win" in sys.platform:
+        raise ValueError("Windows not supported yet, verify PlaybackEnginesPath")
+        unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Data/PlaybackEngines".format(
+            unity_version
+        )
+        # TODO: Verify windows unity standalone path
+        standalone_path = "C:/PROGRA~1/{}/Editor/Unity.exe".format(unity_version)
+    elif sys.platform.startswith("linux"):
+        unity_hub_path = "{}/Unity/Hub/Editor/{}/Editor/Data/PlaybackEngines".format(
+            os.environ["HOME"], unity_version
+        )
+
+    if standalone_path and os.path.exists(standalone_path):
+        unity_path = standalone_path
+    else:
+        unity_path = unity_hub_path
+
+    return unity_path
+
 def _unity_path():
     unity_version = _unity_version()
     standalone_path = None
@@ -1087,6 +1123,7 @@ def ci_build(
     skip_pip = False, # bool
     novelty_thor_scenes = False,
     skip_delete_tmp_dir = False, # bool
+    cloudrendering_first = False
 ):
     assert (commit_id is None) == (
         branch is None
@@ -1184,7 +1221,8 @@ def ci_build(
                 if _unity_version() == "2020.3.25f1":
                     build_archs.append("CloudRendering")
 
-                # build_archs.reverse()  # Let's do CloudRendering first as it's more likely to fail
+                if cloudrendering_first:
+                    build_archs.reverse()  # Let's do CloudRendering first as it's more likely to fail
 
                 has_any_build_failed = False
                 for include_private_scenes in private_scene_options:
@@ -1205,7 +1243,10 @@ def ci_build(
                         os.makedirs(temp_dir)
                         logger.info(f"copying unity data to {temp_dir}")
                         # -c uses MacOS clonefile
-                        subprocess.check_call(f"cp -a -c unity {temp_dir}", shell=True)
+                        if sys.platform.startswith("darwin"):
+                            subprocess.check_call(f"cp -a -c unity {temp_dir}", shell=True)
+                        else:
+                            subprocess.check_call(f"cp -a unity {temp_dir}", shell=True)
                         logger.info(f"completed unity data copy to {temp_dir}")
                         rdir = os.path.join(temp_dir, "unity/builds")
                         commit_build = ai2thor.build.Build(
@@ -1219,8 +1260,12 @@ def ci_build(
                                 f"found build for commit {build['commit_id']} {arch}"
                             )
                             # download the build so that we can run the tests
-                            if arch == "OSXIntel64":
-                                commit_build.download()
+                            if sys.platform.startswith("darwin"):
+                                if arch == "OSXIntel64":
+                                    commit_build.download()
+                            else:
+                                if arch == "CloudRendering":
+                                    commit_build.download()
                         else:
                             # this is done here so that when a tag build request arrives and the commit_id has already
                             # been built, we avoid bootstrapping the cache since we short circuited on the line above
@@ -1356,12 +1401,13 @@ def ci_build(
 
 @task
 def install_cloudrendering_engine(context, force=False):
-    if not sys.platform.startswith("darwin"):
-        raise Exception("CloudRendering Engine can only be installed on Mac")
+    # if not sys.platform.startswith("darwin"):
+    #     raise Exception("CloudRendering Engine can only be installed on Mac")
     s3 = boto3.resource("s3")
-    target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
-        _unity_version()
-    )
+    # target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
+    #     _unity_version()
+    # )
+    target_base_dir = _unity_playback_engines_path()
     full_dir = os.path.join(target_base_dir, "CloudRendering")
     if os.path.isdir(full_dir):
         if force:
@@ -4816,7 +4862,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
-    import ai2thor.util.runtime_assets as ra
+    from objathor.asset_conversion.util import view_asset_in_thor
 
     hook_runner = ProceduralAssetHookRunner(
         asset_directory=asset_dir, asset_symlink=True, verbose=True, load_file_in_unity=True
@@ -4849,7 +4895,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     angles = [n * angle_increment for n in range(0, round(360 / angle_increment))]
     axes = [(0, 1, 0), (1, 0, 0)]
     rotations = [(x, y, z, degrees) for degrees in angles for (x, y, z) in axes]
-    ra.view_asset_in_thor(
+    view_asset_in_thor(
         asset_id=asset_id,
         controller=controller,
         output_dir="./output-test",
@@ -4906,7 +4952,6 @@ def procedural_asset_cache_test(
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
-    import ai2thor.util.runtime_assets as ra
 
     hook_runner = ProceduralAssetHookRunner(
         asset_directory=asset_dir, asset_symlink=True, verbose=True, asset_limit=1

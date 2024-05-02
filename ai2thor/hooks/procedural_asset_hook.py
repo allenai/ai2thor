@@ -11,7 +11,7 @@ import os
 import warnings
 from typing import Dict, Any, List
 
-from ai2thor.util.runtime_assets import create_asset, get_existing_thor_asset_file_path
+from objathor.asset_conversion.util import create_asset, get_existing_thor_asset_file_path
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def create_assets_if_not_exist(
     asset_ids,
     asset_directory,
     copy_to_dir,
-    asset_symlink,
+    asset_symlink, # TODO remove
     stop_if_fail,
     load_file_in_unity,
     extension=None,
@@ -60,11 +60,10 @@ def create_assets_if_not_exist(
             asset_id=asset_id,
             asset_directory=asset_dir,
             copy_to_dir=copy_to_dir,
-            asset_symlink=asset_symlink,
             verbose=verbose,
             load_file_in_unity=load_file_in_unity,
             extension=None,
-            raise_for_failure=raise_for_failure,
+            # raise_for_failure=raise_for_failure,
         )
         if not evt.metadata["lastActionSuccess"]:
             warnings.warn(

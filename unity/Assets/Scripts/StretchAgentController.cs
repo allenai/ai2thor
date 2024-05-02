@@ -37,7 +37,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             agentManager.updateThirdPartyCameraImageSynthesis(status);
         }
 
-        public override void InitializeBody(ServerAction initializeAction) {
+        public override ActionFinished InitializeBody(ServerAction initializeAction) {
             VisibilityCapsule = StretchVisCap;
             m_CharacterController.center = new Vector3(0, -0.1821353f, -0.1092373f);
             m_CharacterController.radius = 0.1854628f;
@@ -113,6 +113,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var StretchSolver = this.GetComponentInChildren<Stretch_Arm_Solver>();
             Debug.Log("running manipulate stretch arm");
             StretchSolver.ManipulateStretchArm();
+            return ActionFinished.Success;
         }
 
         private ArmController getArmImplementation() {

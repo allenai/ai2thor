@@ -154,6 +154,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             collisionListener.Reset();
 
             return ContinuousMovement.move(
+                movable: this.getArm(),
                 controller: this,
                 moveTransform: this.transform,
                 targetPosition: targetPosition,
@@ -247,6 +248,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // this.transform.Rotate()
             return ContinuousMovement.rotate(
+                movable: this.getArm(),
                 controller: this,
                 moveTransform: this.transform,
                 targetRotation: this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),

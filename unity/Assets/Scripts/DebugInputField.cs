@@ -1975,7 +1975,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ["action"] = "AddThirdPartyCamera",
                             ["position"] = new Vector3(1, 1, 1),
                             ["rotation"] = new Vector3(10, 20, 30),
-                            ["attachToAgent"] = true
+                            // ["attachToAgent"] = true
                         };
 
                         CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);

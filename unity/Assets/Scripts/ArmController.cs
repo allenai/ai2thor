@@ -59,7 +59,26 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
     public abstract void ContinuousUpdate(float fixedDeltaTime);
 
-    public abstract ActionFinished FinishContinuousMove(BaseFPSAgentController controller);
+    public virtual ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
+        bool actionSuccess = !this.ShouldHalt();
+        string errorMessage = this.GetHaltMessage();
+
+        return new ActionFinished() {
+            success = actionSuccess,
+            errorMessage = errorMessage
+        };
+    }
+
+    // bool actionSuccess = !movable.ShouldHalt();
+            // string errorMessage = movable.GetHaltMessage();
+            // if (!actionSuccess) {
+            //      setProp(moveTransform, resetProp);
+            // }
+
+            // return new ActionFinished() {
+            //     success = actionSuccess,
+            //     errorMessage = errorMessage
+            // };
     public abstract GameObject GetArmTarget();
     public abstract ArmMetadata GenerateMetadata();
 
@@ -284,6 +303,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
         return withLastStepCallback(
             ContinuousMovement.move(
+                movable: this,
                 controller,
                 armTarget,
                 targetWorldPos,
@@ -324,6 +344,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         Vector3 target = new Vector3(this.transform.position.x, height, this.transform.position.z);
         return withLastStepCallback(
                 ContinuousMovement.move(
+                movable: this,
                 controller: controller,
                 moveTransform: this.transform,
                 targetPosition: target,
@@ -380,6 +401,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         collisionListener.Reset();
         return withLastStepCallback(
             ContinuousMovement.rotate(
+                movable: this,
                 controller,
                 armTarget.transform,
                 armTarget.transform.rotation * rotation,

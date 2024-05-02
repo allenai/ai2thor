@@ -19,6 +19,16 @@ using Newtonsoft.Json.Linq;
     // TODO: Remove when backcompat actions are gone
     public bool isDummy;
 
+    public ActionFinished() {}
+    public ActionFinished(ActionFinished toCopy) {
+        this.success = toCopy.success;
+        this.actionReturn = toCopy.actionReturn;
+        this.errorMessage = toCopy.errorMessage;
+        this.toEmitState = toCopy.toEmitState;
+        this.errorCode = toCopy.errorCode;
+        this.isDummy = toCopy.isDummy;
+    }
+
     public static ActionFinished Success = new ActionFinished() { success = true} ;
 
     public static ActionFinished SuccessToEmitState = new ActionFinished() { success = true, toEmitState = true} ;
@@ -27,6 +37,13 @@ using Newtonsoft.Json.Linq;
         yield return this;
     }
 }
+
+// TODO: add and change dispatcher IEnumerator checks to use typeof(ActionFinished).IsAssignableFrom(typeof(x))
+// public class ActionFinishedEmit :  ActionFinished {
+//     public ActionFinishedEmit() {
+//         toEmitState = true;
+//     }
+// }
 
  public interface ActionInvokable {
         void Complete(ActionFinished actionFinished);

@@ -36,7 +36,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
         }
 
-        public override void InitializeBody(ServerAction initializeAction) {
+        public override ActionFinished InitializeBody(ServerAction initializeAction) {
             VisibilityCapsule = TallVisCap;
             m_CharacterController.center = new Vector3(0, 0, 0);
             m_CharacterController.radius = 0.2f;
@@ -59,6 +59,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // set camera stand/crouch local positions for Tall mode
             standingLocalCameraPosition = m_Camera.transform.localPosition;
             crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0); // bigger y offset if tall
+            return ActionFinished.Success;
         }
 
         // change visibility check to use this distance when looking down

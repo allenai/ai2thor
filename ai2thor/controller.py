@@ -42,7 +42,6 @@ from ai2thor.platform import STR_PLATFORM_MAP
 from ai2thor.server import DepthFormat, MetadataWrapper
 from ai2thor.util import atomic_write, makedirs
 from ai2thor.util.lock import LockEx
-from ai2thor.util.runtime_assets import create_assets
 
 logger = logging.getLogger(__name__)
 
@@ -399,8 +398,6 @@ class Controller(object):
         platform=None,
         server_timeout: Optional[float] = 100.0,
         server_start_timeout: float = 300.0,
-        runtime_assets_dir="",
-        runtime_asset_ids: Optional[List] = None,
         # objaverse_asset_ids=[], TODO add and implement when objaverse.load_thor_objects is available
         action_hook_runner=None,
         metadata_hook: Optional[MetadataHook] = None,
@@ -445,9 +442,6 @@ class Controller(object):
                 ),
             )
         )
-
-        if runtime_asset_ids is None:
-            runtime_asset_ids = []
 
         self.action_hook_runner = action_hook_runner
         self.action_hooks = (
@@ -623,12 +617,6 @@ class Controller(object):
                 self.server.set_init_params(init_return)
                 logging.info(f"Initialize return: {init_return}")
 
-            if len(runtime_asset_ids):
-                create_assets(
-                    self,
-                    asset_ids=runtime_asset_ids,
-                    asset_directory=runtime_assets_dir,
-                )
 
     def _build_server(self, host, port, width, height):
         if self.server is not None:

@@ -58,7 +58,7 @@
             A mid-level interaction framework that facilitates visual manipulation of objects using a robotic arm.
         </td>
         <td width="33%">
-            A framework that facilitates Sim2Real research with a collection of simlated scene counterparts in the physical world.
+            A framework that facilitates Sim2Real research with a collection of simulated scene counterparts in the physical world.
         </td>
     </tr>
 </table>
