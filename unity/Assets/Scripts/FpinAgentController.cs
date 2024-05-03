@@ -539,6 +539,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Physics.autoSimulation = true;
             // Debug.Log("True if physics is auto-simulating: " + Physics.autoSimulation);
 
+            this.AgentHand.gameObject.SetActive(false);
+
             return new ActionFinished(success: true, actionReturn: new InitializeReturn {
                         cameraNearPlane = m_Camera.nearClipPlane,
                         cameraFarPlane = m_Camera.farClipPlane
