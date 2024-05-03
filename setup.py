@@ -22,7 +22,7 @@ def _read_reqs(relpath):
             ]
 
 REQUIREMENTS = _read_reqs("requirements.txt")
-REQUIREMENTS_TEST = _read_reqs("requirements-test.txt")
+REQUIREMENTS_TEST = _read_reqs("requirements-dev.txt")
 
 setup(
     name="ai2thor",
