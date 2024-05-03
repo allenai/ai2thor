@@ -310,7 +310,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
             return;
         }
-        
+
         private Transform CopyMeshChildrenRecursive(Transform sourceTransform, Transform targetTransform, bool isTopMost = true) {
             Transform thisTransform = null;
             foreach (Transform child in sourceTransform) {
@@ -332,7 +332,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (isTopMost) {
-                return thisTransform;
+                // Set up intermediate object for scaling the mesh in agent-space (since the top-level mesh could be rotated, potentially introducing a complex matrix of scales)
+                GameObject agentScaleObject = new GameObject("AgentScaleObject");
+                agentScaleObject.transform.position = thisTransform.position;
+                agentScaleObject.transform.SetParent(targetTransform);
+                thisTransform.SetParent(agentScaleObject.transform);
+                return agentScaleObject.transform;
             }
 
             return null;
@@ -573,7 +578,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public ActionFinished InitializeBody(
             BodyAsset bodyAsset = null,
-            // TODO: do we want to allow non relative to the box offsets?
             float originOffsetX = 0.0f,
             float originOffsetZ = 0.0f,
             Vector3? colliderScaleRatio = null,
@@ -591,20 +595,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 noMesh = true;
             }
 
-            // AAA: STORE CURRENT ROTATION
             // Store the current rotation
             Vector3 originalPosition = this.transform.position;
             Quaternion originalRotation = this.transform.rotation;
-            Debug.Log($"AAA: stored position is {originalPosition:F5} and stored rotation is {originalRotation.eulerAngles:F5}");
             
-            // BBB: MOVE AGENT TO SAFE PLACE, AND DE-ROTATE IT TEMPORARILY
-            // Move the agent to a safe place and align the agent's rotation with the world coordinate system
+            // Move the agent to a safe place and temporarily align the agent's rotation with the world coordinate system (i.e. zero it out)
             this.transform.position = originalPosition + agentSpawnOffset;
             this.transform.rotation = Quaternion.identity;
-            Debug.Log($"BBB: \"safe\" position is {this.transform.position:F5} and de-rotation is {this.transform.eulerAngles:F3} (should always be zero)");
 
-            // CCC: REMOVE WHITE BOX COLLIDER AND FPINVISIBILITYCAPSULE AGENT IF IT EXISTS (FROM LAST FPIN AGENT)
-            //remove any old copied meshes or generated colliders now
+            //remove any old copied meshes or generated colliders from previous fpin agent now
             destroyAgentBoxCollider();
             if (fpinVisibilityCapsule != null) {
                 UnityEngine.Object.DestroyImmediate(fpinVisibilityCapsule);
@@ -614,31 +613,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Bounds meshBoundsWorld = new Bounds(this.transform.position, Vector3.zero);
             if(bodyAsset != null) {
-                //spawn in a default mesh to base the created box collider on
-                //currently this spawns the asset to be copied at (200, 200, 200) btw
-                
-                // DDD: SPAWN BODY ASSET WITH "agentMesh" TAKING THE PLACE OF THE PREFAB'S PARENT-NODE, AT (x,y,z), AND ALL OTHER CHILDREN SPAWNING UNDERNEATH AS THEY WERE ORGANIZED IN THEIR PREFAB
+                //spawn in a default mesh in an out-of-the-way location (currently 200,200,200) to base the new bounds on
                 spawnAssetActionFinished = spawnBodyAsset(bodyAsset, out GameObject spawnedMesh);
                 // Return early if spawn failed
                 if (!spawnAssetActionFinished.success) {
                     return spawnAssetActionFinished;
                 }
 
-                // EEE: DUPLICATE ENTIRE MESH HIERARCHY FROM "agentMesh" TO "FPSController", WITH ALL OF THE LOCAL-TRANSFORMS INTACT, AND RETURN TOP-TRANSFORM...
-                // create new object to hold all the meshes and to use as the new pivot point for all meshes, and set it up as a child of the FPS agent
+                // duplicate the entire mesh hierarchy from "agentMesh" to "FPSController" (with all of the local-transforms intact), and return top-level transform
                 topMeshTransform = CopyMeshChildrenRecursive(sourceTransform: spawnedMesh.transform, targetTransform: this.transform);
-                
-                ///FFF: SCALE MESH ACCORDING TO COLLIDERSCALERATIO
-                topMeshTransform.localScale = new Vector3 (topMeshTransform.localScale.x * meshScaleRatio.x,
-                                                        topMeshTransform.localScale.y * meshScaleRatio.y,
-                                                        topMeshTransform.localScale.z * meshScaleRatio.z
-                                                        );
 
-                // GGG: GET (CURRENT) BOUNDS OF MESH
-                // We need a bounds-center that is guaranteed to fall inside of the mesh's geometry,
-                // so we'll take the center-bounds of the first meshRenderer
+                // get unscaled bounds of mesh
+
+                // we need a bounds-center to start from that is guaranteed to fall inside of the mesh's geometry,
+                // so we'll take the bounds-center of the first meshRenderer
                 MeshRenderer[] meshRenderers = topMeshTransform.gameObject.GetComponentsInChildren<MeshRenderer>();
-                meshBoundsWorld = new Bounds(meshRenderers[0].bounds.center, Vector3.zero);
                 foreach(MeshRenderer mr in meshRenderers) {
                     // No need to run TransformedMeshRendererVertices if the meshRenderer's GameObject isn't rotated
                     if (mr.transform.eulerAngles.magnitude < 1e-4f) {
@@ -651,11 +640,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
 
-                // HHH: MOVE topMeshTransform SO THAT ITS CENTER-OF-BOUNDS' FOOTPRINT IS CENTERED DIRECTLY AT THE FPSCONTROLLER-ORIGIN
-                // Now move the topMeshTransform by a Vector3 that closes the distance between the current bounds-center's
+                // scale mesh (and mesh-bounds) either absolutely or proportionately, ensuring the topMeshTransform is centered at the meshBoundsWorld center first
+                Vector3 currentTopMeshTransformChildPos = topMeshTransform.GetChild(0).position;
+                topMeshTransform.position = meshBoundsWorld.center;
+                topMeshTransform.GetChild(0).position = currentTopMeshTransformChildPos;
+
+                if (useAbsoluteSize) {
+                    topMeshTransform.localScale = new Vector3(meshScaleRatio.x / meshBoundsWorld.size.x,
+                                                                meshScaleRatio.y / meshBoundsWorld.size.y,
+                                                                meshScaleRatio.z / meshBoundsWorld.size.z);
+                    meshBoundsWorld.size = meshScaleRatio;
+                } else {
+                    topMeshTransform.localScale = meshScaleRatio;
+                    meshBoundsWorld.size = new Vector3(meshScaleRatio.x * meshBoundsWorld.size.x,
+                                                        meshScaleRatio.y * meshBoundsWorld.size.y,
+                                                        meshScaleRatio.z * meshBoundsWorld.size.z);
+                }
+
+                // Move the topMeshTransform by a Vector3 that closes the distance between the current bounds-center's
                 // and the agent-origin, where it should be
                 topMeshTransform.position += this.transform.position - meshBoundsWorld.center;
-                // Move topMeshTransform so its footprint is on FPSAgentController
+                // Move topMeshTransform so its bounds-footprint is centered on the  FPSAgentController-origin
                 topMeshTransform.position += Vector3.up * meshBoundsWorld.extents.y;
                 // Now that meshBoundsWorld's position is no longer accurate, update it
                 meshBoundsWorld.center = this.transform.position + Vector3.up * meshBoundsWorld.extents.y;
@@ -672,7 +677,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 meshBoundsWorld = new Bounds(this.transform.position + (Vector3.up * meshScaleRatio.y / 2), meshScaleRatio);
             }
 
-            // HHH: CREATE NEW "VISCAP" OBJECT TO HOLD ALL THE MESHES AND USE IT AS THE NEW PIVOT POINT FOR THEM
+            // Create new "viscap" object to hold all the meshes and use it as the new pivot poitn for them
             GameObject viscap = new GameObject("fpinVisibilityCapsule");
             viscap.transform.SetParent(this.transform);
             viscap.transform.localPosition = Vector3.zero;
@@ -684,7 +689,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 topMeshTransform.SetParent(viscap.transform);
             }
 
-            // III: GENERATE COLLIDERS STEP
             // ok now generate colliders, we are still up at agentSpawnOffset and aligned with world axes
             spawnAgentBoxCollider(
                 agent: this.gameObject,
@@ -696,9 +700,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 spawnCollidersWithoutMesh: noMesh //if noMesh is true, we have no mesh so we need to spawn colliders without a mesh
                 );
 
-            // JJJ: SPAWN VISIBILITY COLLIDER
             // spawn the visible collider base if we need to
-
             if (useVisibleColliderBase) {
                 GameObject visibleBase = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 visibleBase.name = "visibleBase";
@@ -712,13 +714,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
                 // get the y-offset for how low we need to move the visible collider base so it is flush with the bottomost extents of the spawnedBoxCollider
                 float yOffset = visibleBase.GetComponent<MeshRenderer>().bounds.min.y - meshBoundsWorld.min.y;
-                //we have the offset now so lets set the local position for the visible base as needed
+                // we have the offset now so lets set the local position for the visible base as needed
                 visibleBase.transform.localPosition -= yOffset * Vector3.up;
             }
 
             // now lets reposition the agent origin with originOffsetX and originOffsetZ
             fpinVisibilityCapsule.transform.position += new Vector3(-originOffsetX, 0, -originOffsetZ);
-            // Now that meshBoundsWorld's position is no longer accurate, update it
+            // now that meshBoundsWorld's position is no longer accurate, update it
             meshBoundsWorld.center += new Vector3(-originOffsetX, 0, -originOffsetZ);
 
             // adjust agent's CharacterController and CapsuleCollider according to the mesh-bounds, because it needs to fit inside
