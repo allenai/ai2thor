@@ -20,6 +20,16 @@ using Newtonsoft.Json.Linq;
     public bool isDummy;
 
     public ActionFinished() {}
+
+    public ActionFinished(bool success = true, object actionReturn = null, string errorMessage = "", bool toEmitState = false, ServerActionErrorCode errorCode = 0, bool isDummy = false) { 
+        this.success = success;
+        this.actionReturn = actionReturn;
+        this.errorMessage = errorMessage;
+        this.toEmitState = toEmitState;
+        this.errorCode = errorCode;
+        this.isDummy = isDummy;
+    } 
+    
     public ActionFinished(ActionFinished toCopy) {
         this.success = toCopy.success;
         this.actionReturn = toCopy.actionReturn;
