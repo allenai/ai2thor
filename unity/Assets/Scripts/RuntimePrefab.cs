@@ -48,7 +48,7 @@ public class RuntimePrefab : MonoBehaviour {
     private void reloadtextures() {
          GameObject mesh = transform.Find("mesh").gameObject;
         // load the texture from disk
-        if (albedoTexturePath != null) {
+        if (!string.IsNullOrEmpty(albedoTexturePath)) {
             if (sharedMaterial.mainTexture == null) {
                 Debug.Log("adding texture!!!");
                 byte[] imageBytes = File.ReadAllBytes(albedoTexturePath);
@@ -58,7 +58,7 @@ public class RuntimePrefab : MonoBehaviour {
             }
         }
 
-        if (metallicSmoothnessTexturePath != null) {
+        if (!string.IsNullOrEmpty(metallicSmoothnessTexturePath)) {
             sharedMaterial.EnableKeyword("_METALLICGLOSSMAP");
             byte[] imageBytes = File.ReadAllBytes(metallicSmoothnessTexturePath);
             Texture2D tex = new Texture2D(2, 2);
@@ -69,7 +69,7 @@ public class RuntimePrefab : MonoBehaviour {
             sharedMaterial.SetTexture("_MetallicGlossMap", tex);
         }
 
-        if (normalTexturePath != null) {
+        if (!string.IsNullOrEmpty(normalTexturePath)) {
             sharedMaterial.EnableKeyword("_NORMALMAP");
             byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
             Texture2D tex = new Texture2D(2, 2);
@@ -77,7 +77,7 @@ public class RuntimePrefab : MonoBehaviour {
             sharedMaterial.SetTexture("_BumpMap", tex);
         }
 
-        if (emissionTexturePath != null) {
+        if (!string.IsNullOrEmpty(emissionTexturePath)) {
             sharedMaterial.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
             sharedMaterial.EnableKeyword("_EMISSION");
             byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);

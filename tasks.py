@@ -4862,7 +4862,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
-    import ai2thor.util.runtime_assets as ra
+    from objathor.asset_conversion.util import view_asset_in_thor
 
     hook_runner = ProceduralAssetHookRunner(
         asset_directory=asset_dir, asset_symlink=True, verbose=True, load_file_in_unity=True
@@ -4895,7 +4895,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     angles = [n * angle_increment for n in range(0, round(360 / angle_increment))]
     axes = [(0, 1, 0), (1, 0, 0)]
     rotations = [(x, y, z, degrees) for degrees in angles for (x, y, z) in axes]
-    ra.view_asset_in_thor(
+    view_asset_in_thor(
         asset_id=asset_id,
         controller=controller,
         output_dir="./output-test",
@@ -4952,7 +4952,6 @@ def procedural_asset_cache_test(
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
-    import ai2thor.util.runtime_assets as ra
 
     hook_runner = ProceduralAssetHookRunner(
         asset_directory=asset_dir, asset_symlink=True, verbose=True, asset_limit=1

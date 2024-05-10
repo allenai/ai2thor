@@ -46,7 +46,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
 
     private bool DeadZoneCheck() {
         if (deadZoneCheck) {
-        float currentYaw = armTarget.rotation.eulerAngles.y;
+        float currentYaw = armTarget.localRotation.eulerAngles.y;
             float cLimit = wristClockwiseLocalRotationLimit;
             float ccLimit = wristCounterClockwiseLocalRotationLimit;
             
@@ -137,11 +137,13 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
         solver = this.gameObject.GetComponentInChildren<Stretch_Arm_Solver>();
     }
 
+    public void resetPosRotManipulator() {
+        Physics.SyncTransforms();
+        armTarget.position = handCameraTransform.transform.position + WristToManipulator;;
+    }
+
     protected override void lastStepCallback() {
-        // Vector3 pos = handCameraTransform.transform.position + WristToManipulator;
-        // Quaternion rot = handCameraTransform.transform.rotation;
-        // armTarget.position = pos;
-        // armTarget.rotation = rot;
+        resetPosRotManipulator();
         setDeadZoneCheck(false);
     }
     
@@ -155,6 +157,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
         PhysicsRemoteFPSAgentController controller,
         float rotation,
         float degreesPerSecond,
+        float fixedDeltaTime,
         bool returnToStartPositionIfFailed = false,
         bool isRelativeRotation = true
     ) {
@@ -175,12 +178,12 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
         // targetRelativeRotation is simply the final relative-rotation
         if (isRelativeRotation) {
             if (Mathf.Abs(rotation) <= 180) {
-                targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,rotation,0);
+                targetRotation = armTarget.transform.rotation * Quaternion.Euler(0, rotation, 0);
             } else {
                 // Calculate target and secTargetRotation
                 targetRelativeRotation = rotation / 2;
-                targetRotation = armTarget.transform.rotation * Quaternion.Euler(0,targetRelativeRotation,0);
-                secTargetRotation = targetRotation * Quaternion.Euler(0,targetRelativeRotation,0);
+                targetRotation = armTarget.transform.rotation * Quaternion.Euler(0, targetRelativeRotation, 0);
+                secTargetRotation = targetRotation * Quaternion.Euler(0, targetRelativeRotation, 0);
             }
         } else {
             // Consolidate reachable euler-rotations (which are normally bounded by [0, 360)) into a continuous number line,
@@ -254,41 +257,18 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
         // Activate check for dead-zone encroachment inside of CollisionListener
         // collisionListener.enableDeadZoneCheck();
 
-        yield return withLastStepCallback(
+        return withLastStepCallback(
             ContinuousMovement.rotate(
                 movable: this,
                 controller: controller,
                 moveTransform: armTarget.transform,
                 targetRotation: targetRotation,
-                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
+                fixedDeltaTime: fixedDeltaTime,
                 radiansPerSecond: degreesPerSecond,
                 returnToStartPropIfFailed: returnToStartPositionIfFailed,
                 secTargetRotation: secTargetRotation
             )
         );
-        // IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
-        //     ContinuousMovement.rotate(
-        //         controller,
-        //         collisionListener,
-        //         armTarget.transform,
-        //         targetRotation,
-        //         disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
-        //         degreesPerSecond,
-        //         returnToStartPositionIfFailed,
-        //         secTargetRotation
-        //     )
-        // );
-
-        // if (disableRendering) {
-        //     controller.unrollSimulatePhysics(
-        //         rotate,
-        //         fixedDeltaTime
-        //     );
-
-        // } else {
-        //     StartCoroutine(rotate);
-        // }
-        
     }
 
     public override ArmMetadata GenerateMetadata() {
