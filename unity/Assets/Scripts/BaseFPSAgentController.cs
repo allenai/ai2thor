@@ -2365,7 +2365,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual MetadataWrapper generateMetadataWrapper() {
-            Debug.Log("calling generateMetadataWrapper");
             // AGENT METADATA
             AgentMetadata agentMeta = new AgentMetadata();
             agentMeta.name = "agent";
@@ -6796,7 +6795,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success: true, actionReturn: assetData);
         }
 
-        public void CreateRuntimeAsset(
+        public class UnityLoadableAsset {
+            public string id;
+            public string dir;
+            public string extension = ".msgpack.gz";
+
+            public ObjectAnnotations annotations = null;
+        }
+
+         public ActionFinished CreateRuntimeAssets(
+            List<UnityLoadableAsset> assets,
+            string dir = null
+        ) {
+             foreach (var asset in assets) {
+                var actionFinished = CreateRuntimeAsset(
+                    id: asset.id,
+                    dir: dir ?? asset.dir,
+                    extension: asset.extension,
+                    annotations: asset.annotations
+                );
+                if (!actionFinished.success) {
+                    return actionFinished;
+                }
+            }
+            return ActionFinished.Success;
+        }
+
+        public ActionFinished CreateRuntimeAsset(
             string id,
             string dir,
             string extension = ".msgpack.gz",
@@ -6809,18 +6834,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var supportedExtensions = new HashSet<string>(){
                 ".gz", ".msgpack", ".msgpack.gz", ".json"
             };
-            Debug.Log($"------- CreateRuntimeAsset for  '{id}' extension: = {extension}");
+
             extension = !extension.StartsWith(".") ? $".{extension}" : extension;
             extension = extension.Trim();
             if (!supportedExtensions.Contains(extension)) {
-                actionFinished(success: false, errorMessage: $"Unsupported extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
-                return;
+                return new ActionFinished(success: false, errorMessage: $"Unsupported extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
             }
             var filename = $"{id}{extension}";
             var filepath = Path.Combine(dir, id, filename);
             if (!File.Exists(filepath)) {
-                 actionFinished(success: false, actionReturn: null, errorMessage: $"Asset fiile '{filepath}' does not exist.");
-                 return;
+                return new ActionFinished(success: false, actionReturn: null, errorMessage: $"Asset fiile '{filepath}' does not exist.");
             }
 
             // to support different
@@ -6828,7 +6851,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             using FileStream rawFileStream = File.Open(filepath, FileMode.Open);
             using var resultStream = new MemoryStream();
-            Debug.Log($"------- raw file read at for  '{filepath}'");
             var stageIndex = 0;
             if ("gz" == presentStages[stageIndex]) {
                 using var decompressor = new GZipStream(rawFileStream, CompressionMode.Decompress);
@@ -6840,10 +6862,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             ProceduralAsset procAsset = null;
             var debug = stageIndex < presentStages.Length ? presentStages[stageIndex] : "null";
-            Debug.Log($"presentStages {presentStages}, at index {stageIndex}: {debug} , {debug == "msgpack"},  {presentStages.Length} ");
 
             if (stageIndex < presentStages.Length && presentStages[stageIndex] == "msgpack") {
-                Debug.Log("Deserialize raw json");
                 procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
                     resultStream.ToArray(),
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options
@@ -6859,19 +6879,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ObjectCreationHandling = ObjectCreationHandling.Replace
                 };
                 var json = reader.ReadToEnd();
-                Debug.Log($"Deserialize raw json at {filepath}: str {json}");
                 // procAsset = Newtonsoft.Json.JsonConvert.DeserializeObject<ProceduralAsset>(reader.ReadToEnd(), serializer);
                 procAsset = JsonConvert.DeserializeObject<ProceduralAsset>(json);
             } else {
-                 actionFinished(success: false, errorMessage: $"Unexpected error with extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
-                 return;
+                return new ActionFinished(success: false, errorMessage: $"Unexpected error with extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}", actionReturn: null);
             }
-
-
-            Debug.Log($"procAsset is null? {procAsset == null} -  {procAsset}, albedo rooted? {!Path.IsPathRooted(procAsset.albedoTexturePath)} {procAsset.albedoTexturePath}");
-
             procAsset.parentTexturesDir =  Path.Combine(dir, id);
-            Debug.Log($" albedo after fix? {procAsset.albedoTexturePath}");
 
             var assetData = ProceduralTools.CreateAsset(
                     procAsset.vertices,
@@ -6894,9 +6907,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     addAnotationComponent: false,
                     parentTexturesDir: procAsset.parentTexturesDir
                 );
-
-           // Debug.Log($"root is null? {parent == null} -  {parent}");
-           actionFinished(success: true, actionReturn: assetData);
+           return new ActionFinished(success: true, actionReturn: assetData);
         }
 
         public void GetStreamingAssetsPath() {
