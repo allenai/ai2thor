@@ -119,17 +119,19 @@ def create_assets(
         if verbose:
             logger.info(f"Copying asset to THOR build dir: {copy_to_dir}.")
 
-        asset_target_dir = create_runtime_asset_file(
+        asset = create_runtime_asset_file(
             asset_directory=asset_dir,
             save_dir=copy_to_dir,
             asset_id=asset_id,
+            load_file_in_unity=load_asset_in_unity,
             verbose=verbose
         )
 
         if not load_asset_in_unity:
-            asset = load_existing_thor_asset_file(
-                out_dir=asset_target_dir, object_name=asset_id, force_extension=file_extension
-            )
+            # TODO refactor to this when objathor changes
+            # asset = load_existing_thor_asset_file(
+            #     out_dir=asset_target_dir, object_name=asset_id, force_extension=file_extension
+            # )
             asset = change_asset_paths(asset=asset, save_dir=copy_to_dir)
             asset = add_default_annotations(
                 asset=asset, asset_directory=asset_dir, verbose=verbose
