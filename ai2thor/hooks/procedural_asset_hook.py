@@ -216,10 +216,13 @@ def create_assets_if_not_exist(
         extension=extension,
         fail_if_not_unity_loadable=fail_if_not_unity_loadable
     )
-    for evt in events:
+    for (evt, i) in zip(events, range(len(events))) :
         if not evt.metadata["lastActionSuccess"]:
+            # TODO do a better matching of asset_ids and event
+            asset_id =  assets_not_created[i] if i < len(events) else None
+            asset_path = get_existing_thor_asset_file_path(out_dir=asset_directory, asset_id=asset_id) if asset_id is not None else ""
             warnings.warn(
-                f"Could not create asset `{get_existing_thor_asset_file_path(out_dir=asset_dir, asset_id=asset_id)}`."
+                f"Could not create asset `{asset_path}`."
                 f"\nError: {evt.metadata['errorMessage']}"
             )
     return events[-1]
