@@ -1450,21 +1450,25 @@ def ci_build_webgl(context, commit_id):
 
 def set_gi_cache_folder(arch):
     gi_cache_folder = os.path.join(os.environ["HOME"], "GICache/%s" % arch)
-    plist_path = os.path.join(
-        os.environ["HOME"], "Library/Preferences/com.unity3d.UnityEditor5.x.plist"
-    )
-    # done to avoid race conditions when modifying GICache from more than one build
-    subprocess.check_call(
-        "plutil -replace GICacheEnableCustomPath -bool TRUE %s" % plist_path, shell=True
-    )
-    subprocess.check_call(
-        "plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path),
-        shell=True,
-    )
-    subprocess.check_call(
-        "plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,),
-        shell=True,
-    )
+
+    if sys.platform.startswith("darwin"):
+        plist_path = os.path.join(
+            os.environ["HOME"], "Library/Preferences/com.unity3d.UnityEditor5.x.plist"
+        )
+        # done to avoid race conditions when modifying GICache from more than one build
+        subprocess.check_call(
+            "plutil -replace GICacheEnableCustomPath -bool TRUE %s" % plist_path, shell=True
+        )
+        subprocess.check_call(
+            "plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path),
+            shell=True,
+        )
+        subprocess.check_call(
+            "plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,),
+            shell=True,
+        )
+    else:
+        logger.warn("Unchanged GI Cache directory. Only supported in OSX.")
 
 
 def ci_build_arch(
