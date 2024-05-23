@@ -1314,14 +1314,17 @@ def ci_build(
                 if build["tag"] is None:
                     # its possible that the cache doesn't get linked if the builds
                     # succeeded during an earlier run
+                    
+                    test_platform = "OSXIntel64" if sys.platform.startswith("darwin") else "CloudRendering"
+
                     link_build_cache(
-                        arch_temp_dirs["OSXIntel64"], "OSXIntel64", build["branch"]
+                        arch_temp_dirs[test_platform], test_platform, build["branch"]
                     )
 
                     # link builds directory so pytest can run
                     logger.info("current directory pre-symlink %s" % os.getcwd())
                     os.symlink(
-                        os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"),
+                        os.path.join(arch_temp_dirs[test_platform], "unity/builds"),
                         "unity/builds",
                     )
                     os.makedirs("tmp", exist_ok=True)
@@ -1332,7 +1335,7 @@ def ci_build(
                         args=(
                             build["branch"],
                             build["commit_id"],
-                            arch_temp_dirs["OSXIntel64"],
+                            arch_temp_dirs[test_platform],
                         ),
                     )
                     utf_proc.start()
