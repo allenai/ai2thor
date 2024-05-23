@@ -3,11 +3,11 @@ import os
 from ai2thor.controller import Controller
 
 class TestController(Controller):
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.force_opengl = os.environ.get("FORCE_OPENGL", False)
         if type(self.force_opengl) != bool or self.force_opengl != False:
             self.force_opengl = self.force_opengl.lower() in ("true", "1", "t")
-
+        super().__init__(**kwargs)
 
     def unity_command(self, width, height, headless):
         command = super().unity_command(width, height, headless)
