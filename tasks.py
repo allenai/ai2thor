@@ -1327,6 +1327,7 @@ def ci_build(
                         os.path.join(arch_temp_dirs[test_platform], "unity/builds"),
                         "unity/builds",
                     )
+                    print("Symlink from `unity/builds` to `os.path.join(arch_temp_dirs[test_platform], 'unity/builds')`")
                     os.makedirs("tmp", exist_ok=True)
                     # using threading here instead of multiprocessing since we must use the start_method of spawn, which
                     # causes the tasks.py to get reloaded, which may be different on a branch from main
