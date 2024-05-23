@@ -1572,6 +1572,7 @@ def poll_ci_build(context):
                     # if a build is restarted, a log from a previous build will exist
                     # but its last-modified date will precede the start datetime
                     if last_modified > start_datetime or commit_build.exists():
+                        print(f"Found build for '{plat}'.")
                         log_exist_count += 1
 
             # we observe errors when polling AWS periodically - we don't want these to stop
