@@ -1315,20 +1315,21 @@ def ci_build(
                     # its possible that the cache doesn't get linked if the builds
                     # succeeded during an earlier run
                     
-                    # test_platform = "OSXIntel64" if sys.platform.startswith("darwin") else "CloudRendering"
-                    test_platform = "OSXIntel64"
+                    pytest_platform = "OSXIntel64" if sys.platform.startswith("darwin") else "CloudRendering"
+                    # Weirdly even in Linux you can run utf tests using OSX build cache, but not CloudRendering
+                    utf_test_platform = "OSXIntel64"
 
                     link_build_cache(
-                        arch_temp_dirs[test_platform], test_platform, build["branch"]
+                        arch_temp_dirs[utf_test_platform], utf_test_platform, build["branch"]
                     )
 
                     # link builds directory so pytest can run
                     logger.info("current directory pre-symlink %s" % os.getcwd())
                     os.symlink(
-                        os.path.join(arch_temp_dirs[test_platform], "unity/builds"),
+                        os.path.join(arch_temp_dirs[pytest_platform], "unity/builds"),
                         "unity/builds",
                     )
-                    print(f"Symlink from `unity/builds` to `{os.path.join(arch_temp_dirs[test_platform], 'unity/builds')}`")
+                    print(f"Symlink from `unity/builds` to `{os.path.join(arch_temp_dirs[pytest_platform], 'unity/builds')}`")
                     os.makedirs("tmp", exist_ok=True)
                     # using threading here instead of multiprocessing since we must use the start_method of spawn, which
                     # causes the tasks.py to get reloaded, which may be different on a branch from main
@@ -1337,7 +1338,7 @@ def ci_build(
                         args=(
                             build["branch"],
                             build["commit_id"],
-                            arch_temp_dirs[test_platform],
+                            arch_temp_dirs[utf_test_platform],
                         ),
                     )
                     utf_proc.start()
@@ -1577,7 +1578,6 @@ def poll_ci_build(context):
                     # if a build is restarted, a log from a previous build will exist
                     # but its last-modified date will precede the start datetime
                     if last_modified > start_datetime or commit_build.exists():
-                        print(f"Found build for '{plat}'.")
                         log_exist_count += 1
 
             # we observe errors when polling AWS periodically - we don't want these to stop
