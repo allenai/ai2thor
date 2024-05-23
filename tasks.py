@@ -1315,7 +1315,8 @@ def ci_build(
                     # its possible that the cache doesn't get linked if the builds
                     # succeeded during an earlier run
                     
-                    test_platform = "OSXIntel64" if sys.platform.startswith("darwin") else "CloudRendering"
+                    # test_platform = "OSXIntel64" if sys.platform.startswith("darwin") else "CloudRendering"
+                    test_platform = "OSXIntel64"
 
                     link_build_cache(
                         arch_temp_dirs[test_platform], test_platform, build["branch"]
