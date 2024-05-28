@@ -1189,6 +1189,7 @@ def ci_build(
                     "tag": None,
                     "id": None,
                 }
+            
             novelty_thor_add_branches = ["new_cam_adjust"]
             if is_travis_build and build and build["branch"] in novelty_thor_add_branches:
                 novelty_thor_scenes = True
