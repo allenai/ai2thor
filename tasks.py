@@ -962,14 +962,16 @@ def link_build_cache(root_dir, arch, branch):
 
         os.makedirs(os.path.dirname(branch_cache_dir), exist_ok=True)
         # -c uses MacOS clonefile
-        if sys.platform.startswith("darwin"):
-            subprocess.check_call(
-                "cp -a -c %s %s" % (main_cache_dir, branch_cache_dir), shell=True
-            )
-        else:
-            subprocess.check_call(
-                "cp -a %s %s" % (main_cache_dir, branch_cache_dir), shell=True
-            )
+        
+        
+        # if sys.platform.startswith("darwin"):
+        #     subprocess.check_call(
+        #         "cp -a -c %s %s" % (main_cache_dir, branch_cache_dir), shell=True
+        #     )
+        # else:
+        subprocess.check_call(
+            "cp -a %s %s" % (main_cache_dir, branch_cache_dir), shell=True
+        )
         logger.info("copying main cache complete for %s" % encoded_branch)
 
     branch_library_cache_dir = os.path.join(branch_cache_dir, "Library")
