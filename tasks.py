@@ -961,7 +961,6 @@ def link_build_cache(root_dir, arch, branch):
         logger.info("copying main cache for %s" % encoded_branch)
 
         os.makedirs(os.path.dirname(branch_cache_dir), exist_ok=True)
-
         # -c uses MacOS clonefile
         if sys.platform.startswith("darwin"):
             subprocess.check_call(
