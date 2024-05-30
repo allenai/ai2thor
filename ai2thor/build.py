@@ -22,7 +22,7 @@ PYPI_S3_BUCKET = "ai2-thor-pypi"
 TEST_OUTPUT_DIRECTORY = "../../images-debug"
 
 LOCAL_BUILD_COMMIT_ID = "local"
-AUTO_BUILD_PLATFORMS = [CloudRendering, Linux64, OSXIntel64]
+AUTO_BUILD_PLATFORMS = [CloudRendering, OSXIntel64]
 
 COMMIT_ID = None
 try:

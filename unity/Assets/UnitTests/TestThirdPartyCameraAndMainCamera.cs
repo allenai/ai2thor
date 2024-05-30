@@ -153,6 +153,7 @@ namespace Tests {
             action["orthographic"] = true;
             action["orthographicSize"] = 5;
             action["agentPositionRelativeCoordinates"]=false;
+            action["parent"] = "agent";
             yield return step(action);
 
             //ok now also make sure the position and rotation updated now that we are attached to the primary agent

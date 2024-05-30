@@ -20,7 +20,8 @@ public class ActionFinished {
     // TODO: Remove when backcompat actions are gone
     public bool isDummy;
 
-    // public ActionFinished() {}
+    public ActionFinished() {}
+
     public ActionFinished(bool success = true, object actionReturn = null, string errorMessage = "", bool toEmitState = false, ServerActionErrorCode errorCode = 0, bool isDummy = false) { 
         this.success = success;
         this.actionReturn = actionReturn;
@@ -29,6 +30,7 @@ public class ActionFinished {
         this.errorCode = errorCode;
         this.isDummy = isDummy;
     } 
+    
     public ActionFinished(ActionFinished toCopy) {
         this.success = toCopy.success;
         this.actionReturn = toCopy.actionReturn;

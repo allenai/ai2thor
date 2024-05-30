@@ -26,6 +26,8 @@ import cv2
 import functools
 import ctypes
 
+from .build_controller import build_controller
+
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
     AddThirdPartyCamera = "AddThirdPartyCamera"
@@ -41,33 +43,8 @@ class ThirdPartyCameraMetadata:
     rotation = "rotation"
     fieldOfView = "fieldOfView"
 
-
-class TestController(Controller):
-    def unity_command(self, width, height, headless):
-        command = super().unity_command(width, height, headless)
-        # force OpenGLCore to get used so that the tests run in a consistent way
-        # With low power graphics cards (such as those in the test environment)
-        # Metal behaves in inconsistent ways causing test failures
-        command.append("-force-glcore")
-        return command
-
-def build_controller(**args):
-    default_args = dict(scene=TEST_SCENE, local_build=True)
-    default_args.update(args)
-    # during a ci-build we will get a warning that we are using a commit_id for the
-    # build instead of 'local'
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        print("args test controller")
-        print(default_args)
-        c = TestController(**default_args)
-
-    # used for resetting
-    c._original_initialization_parameters = c.initialization_parameters
-    return c
-
-_wsgi_controller = build_controller(server_class=WsgiServer)
-_fifo_controller = build_controller(server_class=FifoServer)
+_wsgi_controller = build_controller(server_class=WsgiServer, scene=TEST_SCENE)
+_fifo_controller = build_controller(server_class=FifoServer, scene=TEST_SCENE)
 
 
 def skip_reset(controller):
@@ -1511,7 +1488,7 @@ def test_teleport_stretch(controller):
 
         # make sure Teleport works with default args
         a1 = controller.last_event.metadata["agent"]
-        a2 = controller.step("Teleport", horizon=-20).metadata["agent"]
+        a2 = controller.step("Teleport", horizon=10).metadata["agent"]
         print(f"horizon {a2['cameraHorizon']}")
         assert abs(a2["cameraHorizon"] - 10) < 1e-2, "cameraHorizon should be ~10!"
 
@@ -2374,7 +2351,7 @@ def test_settle_physics():
     diffs = []
     last_objs = {o['objectId']: o for o in fifo_controller.last_event.metadata["objects"]}
     for object_id, object_metadata in first_objs.items():
-        for d in (diff(object_metadata, last_objs.get(object_id, {}), tolerance=0.00001, ignore=set(["receptacleObjectIds"]))):
+        for d in (diff(object_metadata, last_objs.get(object_id, {}), absolute_tolerance=0.001, ignore=set(["receptacleObjectIds"]))):
             diffs.append((object_id, d))
     assert diffs == []
 

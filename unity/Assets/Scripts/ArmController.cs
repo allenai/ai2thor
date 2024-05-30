@@ -19,7 +19,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
     protected WhatIsInsideMagnetSphere magnetSphereComp;
 
     [SerializeField] 
-    protected SphereCollider magnetSphere = null;
+    public SphereCollider magnetSphere = null;
 
     [SerializeField]
     protected GameObject MagnetRenderer = null;
@@ -68,12 +68,26 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
             errorMessage = errorMessage
         };
     }
-    
+
+    // bool actionSuccess = !movable.ShouldHalt();
+            // string errorMessage = movable.GetHaltMessage();
+            // if (!actionSuccess) {
+            //      setProp(moveTransform, resetProp);
+            // }
+
+            // return new ActionFinished() {
+            //     success = actionSuccess,
+            //     errorMessage = errorMessage
+            // };
     public abstract GameObject GetArmTarget();
     public abstract ArmMetadata GenerateMetadata();
 
     public virtual bool ShouldHalt() {
         return collisionListener.ShouldHalt();
+    }
+
+    public Vector3 MagnetSphereWorldCenter() {
+        return magnetSphere.transform.TransformPoint(magnetSphere.center);
     }
 
     public virtual string GetHaltMessage() {
@@ -121,6 +135,10 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
         // create overlap box/capsule for each collider and check the result I guess
         foreach (CapsuleCollider c in capsules) {
+            if (c.isTrigger || !c.gameObject.active) {
+                continue;
+            }
+
             Vector3 center = c.transform.TransformPoint(c.center);
             float radius = c.radius;
 
@@ -185,6 +203,9 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
         // also check if the couple of box colliders are colliding
         foreach (BoxCollider b in ArmBoxColliders) {
+            if (b.isTrigger || !b.gameObject.active) {
+                continue;
+            }
             Collider[] cols = Physics.OverlapBox(
                 center: b.transform.TransformPoint(b.center),
                 halfExtents: b.size / 2.0f,

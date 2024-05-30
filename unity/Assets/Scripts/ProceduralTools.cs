@@ -1633,11 +1633,9 @@ namespace Thor.Procedural {
             var go = new GameObject(NavMeshSurfaceName(index));
             var navMeshSurface = go.AddComponent<NavMeshSurfaceExtended>();
             navMeshSurface.agentTypeID = buildSettings.agentTypeID;
-            // navMeshSurface.buildHeightMesh = true;
             navMeshSurface.voxelSize = buildSettings.voxelSize;
             navMeshSurface.overrideVoxelSize = buildSettings.overrideVoxelSize;
             navMeshSurface.BuildNavMesh(buildSettings);
-            Debug.Log($"Created navmesh with agentType id: `{navMeshSurface.agentTypeID}`");
             return go;
         }
 
@@ -1649,10 +1647,8 @@ namespace Thor.Procedural {
             var buildSettings = navMeshConfigToBuildSettings(navMeshConfig, NavMesh.GetSettingsByIndex(0));
             navMeshSurface.agentTypeID = buildSettings.agentTypeID;
             navMeshSurface.voxelSize = buildSettings.voxelSize;
-            // navMeshSurface.buildHeightMesh = true;
             navMeshSurface.overrideVoxelSize = buildSettings.overrideVoxelSize;
             navMeshSurface.BuildNavMesh(buildSettings);
-            Debug.Log($"Created navmesh with agentType id: `{navMeshSurface.agentTypeID}`");
             return go;
         }
 

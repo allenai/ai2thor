@@ -394,7 +394,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // defaults all agent renderers, from all modes (tall, bot, drone), to hidden for initialization default
         protected void HideAllAgentRenderers() {
-            Debug.Log("running HideAllAgentRenderers");
             if (TallVisCap != null && BotVisCap != null && DroneVisCap != null && StretchVisCap != null) {
                 foreach (Renderer r in TallVisCap.GetComponentsInChildren<Renderer>()) {
                     if (r.enabled) {
@@ -453,7 +452,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Debug.Log($"actionReturn: '{actionReturn}'");
             if (!success) {
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
-            } 
+            } else if (actionReturn != null) {
+                Debug.Log($"actionReturn: '{actionReturn}'");
+            }
             
 #endif
         }
@@ -684,7 +685,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void Initialize(ServerAction action) {
 
-            Debug.Log("RUNNING Initialize from BaseFPSAgentController.cs");
+            // Debug.Log("RUNNING B");
             // limit camera from looking too far down/up
             //default max are 30 up and 60 down, different agent types may overwrite this
             if (Mathf.Approximately(action.maxUpwardLookAngle, 0.0f)) {
@@ -2385,7 +2386,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual MetadataWrapper generateMetadataWrapper() {
-            // Debug.Log("calling generateMetadataWrapper");
             // AGENT METADATA
             AgentMetadata agentMeta = new AgentMetadata();
             agentMeta.name = "agent";
@@ -4121,7 +4121,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             IEnumerable<SimObjPhysics> filterSimObjs = null
         ) {
             SimObjPhysics[] interactable;
-            Debug.Log($" this.visibilityScheme {this.visibilityScheme.ToString()}");
+
             if (this.visibilityScheme == VisibilityScheme.Collider) {
                 return GetAllVisibleSimObjPhysicsCollider(camera, maxDistance, filterSimObjs, out interactable);
             } else {

@@ -1265,7 +1265,9 @@ def ci_build(
                                 if arch == "OSXIntel64":
                                     commit_build.download()
                             else:
-                                if arch == "CloudRendering":
+                                
+                                if arch in ["CloudRendering", "OSXIntel64"]:
+                                    # In Linux the OSX build cache is used for Unity Tests as cloud rendering fails
                                     commit_build.download()
                         else:
                             # this is done here so that when a tag build request arrives and the commit_id has already
@@ -1315,16 +1317,22 @@ def ci_build(
                 if build["tag"] is None:
                     # its possible that the cache doesn't get linked if the builds
                     # succeeded during an earlier run
+                    
+                    pytest_platform = "OSXIntel64" if sys.platform.startswith("darwin") else "CloudRendering"
+                    # Weirdly even in Linux you can run utf tests using OSX build cache, but not CloudRendering
+                    utf_test_platform = "OSXIntel64"
+
                     link_build_cache(
-                        arch_temp_dirs["OSXIntel64"], "OSXIntel64", build["branch"]
+                        arch_temp_dirs[utf_test_platform], utf_test_platform, build["branch"]
                     )
 
                     # link builds directory so pytest can run
                     logger.info("current directory pre-symlink %s" % os.getcwd())
                     os.symlink(
-                        os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"),
+                        os.path.join(arch_temp_dirs[pytest_platform], "unity/builds"),
                         "unity/builds",
                     )
+                    print(f"Symlink from `unity/builds` to `{os.path.join(arch_temp_dirs[pytest_platform], 'unity/builds')}`")
                     os.makedirs("tmp", exist_ok=True)
                     # using threading here instead of multiprocessing since we must use the start_method of spawn, which
                     # causes the tasks.py to get reloaded, which may be different on a branch from main
@@ -1333,7 +1341,7 @@ def ci_build(
                         args=(
                             build["branch"],
                             build["commit_id"],
-                            arch_temp_dirs["OSXIntel64"],
+                            arch_temp_dirs[utf_test_platform],
                         ),
                     )
                     utf_proc.start()
@@ -1402,12 +1410,13 @@ def ci_build(
 
 @task
 def install_cloudrendering_engine(context, force=False):
-    if not sys.platform.startswith("darwin"):
-        raise Exception("CloudRendering Engine can only be installed on Mac")
+    # if not sys.platform.startswith("darwin"):
+    #     raise Exception("CloudRendering Engine can only be installed on Mac")
     s3 = boto3.resource("s3")
-    target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
-        _unity_version()
-    )
+    # target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
+    #     _unity_version()
+    # )
+    target_base_dir = _unity_playback_engines_path()
     full_dir = os.path.join(target_base_dir, "CloudRendering")
     if os.path.isdir(full_dir):
         if force:
@@ -1450,21 +1459,25 @@ def ci_build_webgl(context, commit_id):
 
 def set_gi_cache_folder(arch):
     gi_cache_folder = os.path.join(os.environ["HOME"], "GICache/%s" % arch)
-    plist_path = os.path.join(
-        os.environ["HOME"], "Library/Preferences/com.unity3d.UnityEditor5.x.plist"
-    )
-    # done to avoid race conditions when modifying GICache from more than one build
-    subprocess.check_call(
-        "plutil -replace GICacheEnableCustomPath -bool TRUE %s" % plist_path, shell=True
-    )
-    subprocess.check_call(
-        "plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path),
-        shell=True,
-    )
-    subprocess.check_call(
-        "plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,),
-        shell=True,
-    )
+
+    if sys.platform.startswith("darwin"):
+        plist_path = os.path.join(
+            os.environ["HOME"], "Library/Preferences/com.unity3d.UnityEditor5.x.plist"
+        )
+        # done to avoid race conditions when modifying GICache from more than one build
+        subprocess.check_call(
+            "plutil -replace GICacheEnableCustomPath -bool TRUE %s" % plist_path, shell=True
+        )
+        subprocess.check_call(
+            "plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path),
+            shell=True,
+        )
+        subprocess.check_call(
+            "plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,),
+            shell=True,
+        )
+    else:
+        logger.warn("Unchanged GI Cache directory. Only supported in OSX.")
 
 
 def ci_build_arch(
@@ -4862,7 +4875,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
-    import ai2thor.util.runtime_assets as ra
+    from objathor.asset_conversion.util import view_asset_in_thor
 
     hook_runner = ProceduralAssetHookRunner(
         asset_directory=asset_dir, asset_symlink=True, verbose=True, load_file_in_unity=True
@@ -4895,7 +4908,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     angles = [n * angle_increment for n in range(0, round(360 / angle_increment))]
     axes = [(0, 1, 0), (1, 0, 0)]
     rotations = [(x, y, z, degrees) for degrees in angles for (x, y, z) in axes]
-    ra.view_asset_in_thor(
+    view_asset_in_thor(
         asset_id=asset_id,
         controller=controller,
         output_dir="./output-test",
@@ -4952,7 +4965,6 @@ def procedural_asset_cache_test(
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
-    import ai2thor.util.runtime_assets as ra
 
     hook_runner = ProceduralAssetHookRunner(
         asset_directory=asset_dir, asset_symlink=True, verbose=True, asset_limit=1

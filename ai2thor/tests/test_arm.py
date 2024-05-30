@@ -130,16 +130,26 @@ def test_arm_body_object_intersect(controller_args):
 
     prev_event = run(controller, "pickup_plate_before_intersect.json")
 
+    assert evt.metadata["lastActionSuccess"]
+
     evt = controller.step(**
         {"action": "RotateWristRelative", 
-         "yaw": 10, 
+         "yaw": -10, 
          "physicsSimulationParams": {"autoSimulation": False},
          "returnToStart": True, 
          "speed": 1
          }               
     )
 
+    print(
+        "Action success {0}, message {1}".format(
+            evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]
+        )
+    )
+
     assert not evt.metadata["lastActionSuccess"]
+
+    assert "Collided with static structure" in evt.metadata["errorMessage"]
 
     controller.stop()
 
