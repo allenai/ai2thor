@@ -4033,7 +4033,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public VisibilityCheck isSimObjVisible(Camera camera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
-            // Debug.Log("running isSimObjVisible");
             // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
             VisibilityCheck visCheck = new VisibilityCheck();
 

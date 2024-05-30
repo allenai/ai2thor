@@ -296,7 +296,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             Application.targetFrameRate = action.targetFrameRate;
         }
 
-        Debug.Log("about to update primaryAgent.IsVisible");
         primaryAgent.IsVisible = action.makeAgentsVisible;
         this.renderSemanticSegmentation = action.renderSemanticSegmentation;
         this.renderDepthImage = action.renderDepthImage;
