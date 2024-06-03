@@ -969,7 +969,7 @@ def link_build_cache(root_dir, arch, branch):
             )
         else:
             subprocess.check_call(
-                "cp -a -c %s %s" % (main_cache_dir, branch_cache_dir), shell=True
+                "cp -a %s %s" % (main_cache_dir, branch_cache_dir), shell=True
             )
         logger.info("copying main cache complete for %s" % encoded_branch)
 
