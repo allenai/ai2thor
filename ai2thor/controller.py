@@ -504,20 +504,24 @@ class Controller(object):
                 )
             )
 
+        self.server_class = None
         if server_type is not None and server_class is None:
             self.server_class = Controller.server_type_to_class(server_type)
 
-        if server_class is None and platform_system() == "Windows":
-            self.server_class = ai2thor.wsgi_server.WsgiServer
-        elif (
-            isinstance(server_class, ai2thor.fifo_server.FifoServer)
-            and platform_system() == "Windows"
-        ):
-            raise ValueError("server_class=FifoServer cannot be used on Windows.")
-        elif server_class is not None:
-            self.server_class = server_class
-        elif self.server_class is None:
-            self.server_class = ai2thor.fifo_server.FifoServer
+        if self.server_class is None:
+            if server_type is not None and server_class is None:
+                self.server_class = Controller.server_type_to_class(server_type)
+            if server_class is None and platform_system() == "Windows":
+                self.server_class = ai2thor.wsgi_server.WsgiServer
+            elif (
+                isinstance(server_class, ai2thor.fifo_server.FifoServer)
+                and platform_system() == "Windows"
+            ):
+                raise ValueError("server_class=FifoServer cannot be used on Windows.")
+            elif server_class is None:
+                self.server_class = ai2thor.fifo_server.FifoServer
+            else:
+                self.server_class = server_class
         
         self._build = None
 

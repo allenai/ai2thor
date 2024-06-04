@@ -6235,9 +6235,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var navMeshAgent = this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>();
             var navmeshSurfaces = GameObject.FindObjectsOfType<NavMeshSurfaceExtended>();
-            navMeshIds = navMeshIds ?? new List<int>() { NavMeshSurfaceExtended.activeSurfaces[0].agentTypeID };
-            foreach (var navmeshId in navMeshIds) {
+            // Debug.Log($"---NavMeshSurfaceExtended size {navmeshSurfaces.Count()}");
+            //  Debug.Log($"---NavMeshSurface size {GameObject.FindObjectsOfType<NavMeshSurface>().Count()}");
+            var defaultNavmeshIds = new List<int?>() { null };
+            if (navmeshSurfaces.Count() > 0) {
+                defaultNavmeshIds = new List<int?>() { NavMeshSurfaceExtended.activeSurfaces[0].agentTypeID };
+            }
 
+            IEnumerable<int?> navMeshIdsWIthDefault = navMeshIds != null ? navMeshIds.Select(x => (int?)x) : defaultNavmeshIds;
+
+            foreach (var navmeshId in navMeshIdsWIthDefault) {
                 SafelyComputeNavMeshPath(
                     start: start,
                     target: target,
