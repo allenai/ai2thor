@@ -5561,6 +5561,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Debug.Log($"Navmeshagent typeID: {navMeshAgent.agentTypeID}");
                     break;
                 }
+                case "tadfa": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "TestActionDispatchFindAmbiguous";
+                        action["typeName"] = "UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController";
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+                        var obj = (List<string>)(CurrentActiveController().actionReturn);
+                        Debug.Log($"{string.Join(",", obj)}");
+                        break;
+                }
+
                 case "proc_arr": {
                     var arr = new int[][] {
                         new int[]{2, 2, 2, 2},

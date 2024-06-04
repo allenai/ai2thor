@@ -327,21 +327,20 @@ public static class ActionDispatcher {
 
 
             var childmostType = actionMethods.Aggregate(method.DeclaringType, (acc, m) => m.DeclaringType.IsSubclassOf(acc) ? m.DeclaringType : acc);
-            var childMostTypeMethods = actionMethods.Where(m => m.DeclaringType.Equals(childmostType));
+            var childMostTypeMethods = actionMethods.Where(m => m.DeclaringType.Equals(childmostType)).Select(m => (method: m, parameters: m.GetParameters()));
             // mixing a ServerAction action with non-server action creates an ambiguous situation
             // if one parameter is missing from the overloaded method its not clear whether the caller
             // intended to call the ServerAction action or was simply missing on of the parameters for the overloaded
             // variant
-            var ambiguousMethods = childMostTypeMethods
-                .Select(m => (method: m, parameters: m.GetParameters()))
+            var serverActionMethods = childMostTypeMethods
                 .Where(m => m.parameters.Length == 1 && m.parameters[0].ParameterType == typeof(ServerAction));
+
             // Throw the exception only if there are more than one methods at the same childmost class level, 
             // if not, the child most method will be chosen so there is no ambiguity
-            if (ambiguousMethods.Count() > 1) {
-                throw new AmbiguousActionException($"Mixing a ServerAction method with overloaded methods is not permitted. Ambiguous methods: {string.Join(" | ", ambiguousMethods.Select(m => $"method: {m.method.Name} in class '{m.method.DeclaringType}' with params {$"{string.Join(", ", m.parameters.Select(p => $"{p.ParameterType} {p.Name}"))}"}"))}");
+            if (serverActionMethods.Count() > 0 && childMostTypeMethods.Count() > 1) {
+                throw new AmbiguousActionException($"Mixing a ServerAction method with overloaded methods is not permitted. Ambiguous methods: {string.Join(" | ", serverActionMethods.Select(m => $"method: {m.method.Name} in class '{m.method.DeclaringType}' with params {$"{string.Join(", ", m.parameters.Select(p => $"{p.ParameterType} {p.Name}"))}"}"))}");
             }
 
-            
             // if (actionMethods.Count > 1 && mParams.Length == 1 && mParams[0].ParameterType == typeof(ServerAction)) {
                 
             //     throw new AmbiguousActionException("Mixing a ServerAction method with overloaded methods is not permitted");

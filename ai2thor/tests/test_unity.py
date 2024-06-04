@@ -877,6 +877,7 @@ def test_action_dispatch(fifo_controller):
             "ProcessControlCommand",
         ]
     )
+    print(f'metadata sorted {sorted(event.metadata["actionReturn"])} known ambig {known_ambig}')
     assert sorted(event.metadata["actionReturn"]) == known_ambig
     skip_reset(fifo_controller)
 
@@ -925,9 +926,9 @@ def test_action_dispatch_server_action_ambiguous(fifo_controller):
         exception_message = str(e)
 
     assert exception_thrown
+    print(exception_message)
     assert (
-        exception_message
-        == "Ambiguous action: TestActionDispatchSAAmbig Mixing a ServerAction method with overloaded methods is not permitted"
+        "Ambiguous action: TestActionDispatchSAAmbig Mixing a ServerAction method with overloaded methods is not permitted" in exception_message
     )
     skip_reset(fifo_controller)
 
