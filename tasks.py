@@ -4517,7 +4517,6 @@ def run_benchmark_from_s3_config(ctx):
             benchmark_run_config["procedural_houses"] = procedural_houses_transformed
             benchmark_run_config["config_name"] = os.path.basename(key)
             # benchmark_run_config['verbose'] = True
-
             action_groups = copy.deepcopy(benchmark_run_config["action_groups"])
             del benchmark_run_config["action_groups"]
             benchmark_runs.append(
