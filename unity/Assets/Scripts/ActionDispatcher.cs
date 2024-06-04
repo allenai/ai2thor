@@ -1,11 +1,67 @@
 
 using System.Reflection;
+using System.Collections;
 using System.Collections.Generic;
 using System;
 using System.Linq;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
+
+public class ActionFinished {
+    public bool success;
+    public object actionReturn;
+    public string errorMessage;
+    public bool toEmitState;
+    public ServerActionErrorCode errorCode;
+
+    // Special value for legacy void actions running on new mode to avoid overwriting action Finished values
+    // TODO: Remove when backcompat actions are gone
+    public bool isDummy;
+
+    public ActionFinished() {}
+
+    public ActionFinished(bool success = true, object actionReturn = null, string errorMessage = "", bool toEmitState = false, ServerActionErrorCode errorCode = 0, bool isDummy = false) { 
+        this.success = success;
+        this.actionReturn = actionReturn;
+        this.errorMessage = errorMessage;
+        this.toEmitState = toEmitState;
+        this.errorCode = errorCode;
+        this.isDummy = isDummy;
+    } 
+    
+    public ActionFinished(ActionFinished toCopy) {
+        this.success = toCopy.success;
+        this.actionReturn = toCopy.actionReturn;
+        this.errorMessage = toCopy.errorMessage;
+        this.toEmitState = toCopy.toEmitState;
+        this.errorCode = toCopy.errorCode;
+        this.isDummy = toCopy.isDummy;
+    }
+
+    public static ActionFinished Success = new ActionFinished() { success = true} ;
+    public static ActionFinished Fail = new ActionFinished() { success = false} ;
+
+
+    public static ActionFinished SuccessToEmitState = new ActionFinished() { success = true, toEmitState = true} ;
+
+    public IEnumerator GetEnumerator() {
+        yield return this;
+    }
+}
+
+// TODO: add and change dispatcher IEnumerator checks to use typeof(ActionFinished).IsAssignableFrom(typeof(x))
+// public class ActionFinishedEmit :  ActionFinished {
+//     public ActionFinishedEmit() {
+//         toEmitState = true;
+//     }
+// }
+
+ public interface ActionInvokable {
+        void Complete(ActionFinished actionFinished);
+        Coroutine StartCoroutine(System.Collections.IEnumerator routine);
+    }
 
 /*
     The ActionDispatcher takes a dynamic object with an 'action' property and 
@@ -114,7 +170,7 @@ public static class ActionDispatcher {
         if (!methodCache.ContainsKey(targetType)) {
             var methods = new List<MethodInfo>();
             foreach (MethodInfo mi in targetType.GetMethods(BindingFlags.Public | BindingFlags.Instance)) {
-                if (mi.ReturnType == typeof(void)) {
+                if (mi.ReturnType == typeof(void) || mi.ReturnType == typeof(ActionFinished) ||  mi.ReturnType == typeof(IEnumerator)) {
                     methods.Add(mi);
                 }
             }
@@ -218,9 +274,13 @@ public static class ActionDispatcher {
                     // if the method is more specific and the parameters match
                     // we will dispatch to this method instead of the base type
                     if (signatureMatch) {
+
                         // this happens if one method has a trailing optional value and all 
                         // other parameter types match
                         if (targetParams.Length != sourceParams.Length) {
+                            // TODO: This designation is based on ordered argument call assumption, which is not true for DynamicServerActions
+                            // which are always passed as named arguments, order does not matter, Ambiguity should be determined on actual call
+                            // not on method signatures
                             throw new AmbiguousActionException("Signature match found in the same class");
                         }
 
@@ -246,7 +306,6 @@ public static class ActionDispatcher {
             // its possible that it would be only partially populated
             methodDispatchTable[action] = methods;
         }
-
         return methodDispatchTable[action];
     }
 
@@ -256,6 +315,8 @@ public static class ActionDispatcher {
         MethodInfo matchedMethod = null;
         int bestMatchCount = -1; // we do this so that 
 
+        // Debug.Log($"getDispatch method -- targettype {targetType}, methods {string.Join("/n", actionMethods.Select(m => $"method: {m.Name} in class '{m.DeclaringType}' with params {$"{string.Join(", ", m.GetParameters().Select(p => $"{p.ParameterType} {p.Name}"))}"}"))}");
+
         // This is where the the actual matching occurs.  The matching is done strictly based on
         // variable names.  In the future, this could be modified to include type information from
         // the inbound JSON object by mapping JSON types to csharp primitive types 
@@ -264,13 +325,26 @@ public static class ActionDispatcher {
             int matchCount = 0;
             ParameterInfo[] mParams = method.GetParameters();
 
+
+            var childmostType = actionMethods.Aggregate(method.DeclaringType, (acc, m) => m.DeclaringType.IsSubclassOf(acc) ? m.DeclaringType : acc);
+            var childMostTypeMethods = actionMethods.Where(m => m.DeclaringType.Equals(childmostType)).Select(m => (method: m, parameters: m.GetParameters()));
             // mixing a ServerAction action with non-server action creates an ambiguous situation
             // if one parameter is missing from the overloaded method its not clear whether the caller
             // intended to call the ServerAction action or was simply missing on of the parameters for the overloaded
             // variant
-            if (actionMethods.Count > 1 && mParams.Length == 1 && mParams[0].ParameterType == typeof(ServerAction)) {
-                throw new AmbiguousActionException("Mixing a ServerAction method with overloaded methods is not permitted");
+            var serverActionMethods = childMostTypeMethods
+                .Where(m => m.parameters.Length == 1 && m.parameters[0].ParameterType == typeof(ServerAction));
+
+            // Throw the exception only if there are more than one methods at the same childmost class level, 
+            // if not, the child most method will be chosen so there is no ambiguity
+            if (serverActionMethods.Count() > 0 && childMostTypeMethods.Count() > 1) {
+                throw new AmbiguousActionException($"Mixing a ServerAction method with overloaded methods is not permitted. Ambiguous methods: {string.Join(" | ", serverActionMethods.Select(m => $"method: {m.method.Name} in class '{m.method.DeclaringType}' with params {$"{string.Join(", ", m.parameters.Select(p => $"{p.ParameterType} {p.Name}"))}"}"))}");
             }
+
+            // if (actionMethods.Count > 1 && mParams.Length == 1 && mParams[0].ParameterType == typeof(ServerAction)) {
+                
+            //     throw new AmbiguousActionException("Mixing a ServerAction method with overloaded methods is not permitted");
+            // }
 
             // default to ServerAction method
             // this is also necessary, to allow Initialize to be
@@ -286,9 +360,19 @@ public static class ActionDispatcher {
                 }
             }
 
+            var isSubclassOfBestMatchDeclaringType = matchedMethod != null && matchedMethod.DeclaringType.IsAssignableFrom(method.DeclaringType);
+        
             // preference is given to the method that matches all parameters for a method
             // even if another method has the same matchCount (but has more parameters)
-            if (matchCount > bestMatchCount) {
+            // unless is declared in a subclass in which it's given preference
+            if (matchCount > bestMatchCount || (matchCount == bestMatchCount && isSubclassOfBestMatchDeclaringType && matchedMethod.DeclaringType != method.DeclaringType)) {
+
+                // TODO: decide if this check should be added, or we want whatever method ranked top by 'MethodParamComparer' to be chosen (based on param number and default params)
+                // if (matchedMethod.DeclaringType == method.DeclaringType) {
+                //     // if matchcount is the same between any two methods and same level of inheritance hierarchy throw ambiguous exeption, since no method 
+                //     // is clearly prefered
+                //     throw new AmbiguousActionException($"Ambiguous call. Cannot distinguish between actions '{method.Name}' at class level '{method.DeclaringType}'");
+                // }
                 bestMatchCount = matchCount;
                 matchedMethod = method;
             }
@@ -310,7 +394,7 @@ public static class ActionDispatcher {
             .Select((tuple) => tuple.method);
     }
 
-    public static void Dispatch(System.Object target, DynamicServerAction dynamicServerAction) {
+    public static void Dispatch<T>(T target, DynamicServerAction dynamicServerAction) where T : ActionInvokable {
         MethodInfo method = getDispatchMethod(target.GetType(), dynamicServerAction);
 
         if (method == null) {
@@ -319,15 +403,35 @@ public static class ActionDispatcher {
 
         List<string> missingArguments = null;
         System.Reflection.ParameterInfo[] methodParams = method.GetParameters();
+        var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
         object[] arguments = new object[methodParams.Length];
+        var physicsSimulationParams = dynamicServerAction.physicsSimulationParams;
+
+        var addPhysicsSimulationParams = physicsSimulationParams == null;
+        // If it's passed in the action or was set globally
+        var usePhysicsSimulationParams = physicsSimulationParams != null || PhysicsSceneManager.defaultPhysicsSimulationParams != null;
+        // Default simulation params if physicsSimulationParams is null and if default is null create the default (backcompat when it's not passed to init)
+        physicsSimulationParams ??= PhysicsSceneManager.defaultPhysicsSimulationParams ?? new PhysicsSimulationParams();
+        // Set static variable so actions can access it
+        PhysicsSceneManager.SetPhysicsSimulationParams(physicsSimulationParams);
+
+        if (
+            usePhysicsSimulationParams && addPhysicsSimulationParams &&
+            (typeof(IEnumerator) == method.ReturnType || method.ReturnType == typeof(ActionFinished))
+        ) {
+            // New action types always pass down physicsSim params if interface has them
+            if (paramDict.ContainsKey(DynamicServerAction.physicsSimulationParamsVariable)) {
+                dynamicServerAction.AddPhysicsSimulationParams(physicsSimulationParams);
+            }
+        }
+        // TODO: deprecate, eventually when no void actions are left
         if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(ServerAction)) {
             ServerAction serverAction = dynamicServerAction.ToObject<ServerAction>();
             serverAction.dynamicServerAction = dynamicServerAction;
             arguments[0] = serverAction;
         } else {
-            var paramDict = methodParams.ToDictionary(param => param.Name, param => param);
-            var invalidArgs = dynamicServerAction
-                .ArgumentKeys()
+            var argumentKeys = dynamicServerAction.ArgumentKeys().ToList();
+            var invalidArgs = argumentKeys
                 .Where(argName => !paramDict.ContainsKey(argName))
                 .ToList();
             if (invalidArgs.Count > 0) {
@@ -378,9 +482,66 @@ public static class ActionDispatcher {
         if (missingArguments != null) {
             throw new MissingArgumentsActionException(missingArguments);
         }
-        method.Invoke(target, arguments);
+
+        IEnumerator action = null;
+        object methodReturn;
+
+        // TODO: deprecated actions called in the old way that return void 
+        if (!usePhysicsSimulationParams && method.ReturnType == typeof(void)) {
+            method.Invoke(target, arguments);
+        }
+        else {
+            // Only IEnumerators return functions can be run in a coroutine
+            var runAsCoroutine = false;
+
+            if (method.ReturnType == typeof(System.Collections.IEnumerator)) {
+                methodReturn = method.Invoke(target, arguments);
+                action = methodReturn as IEnumerator;
+                runAsCoroutine = physicsSimulationParams.autoSimulation;
+            }
+            else if (method.ReturnType == typeof(ActionFinished)) {
+                action =  ActionFinishedDelayActionWrapper(
+                    () => method.Invoke(target, arguments) as ActionFinished
+                );
+            }
+            // TODO: when legacy actions are gone remove branch
+            else {
+                action = ActionFinishedDelayActionWrapper(
+                     () => {
+                        method.Invoke(target, arguments);
+                        // TODO: deprecated void action returns dummy ActionFinished
+                        return new ActionFinished() { isDummy = true };
+                     }
+                );
+            }
+            if (!runAsCoroutine) { 
+                // Blocking
+                var actionFinished = PhysicsSceneManager.RunSimulatePhysicsForAction(
+                    action, 
+                    physicsSimulationParams
+                );
+                // Complete callback at action end, implementation should do any state changes
+                target.Complete(actionFinished);
+                
+            }
+            else {
+                // "Async" will run after unity's frame update
+                target.StartCoroutine(PhysicsSceneManager.RunActionForCoroutine(target, action, physicsSimulationParams));
+            }
+            
+        }
+    }
+
+    public static IEnumerator ActionFinishedWrapper(ActionFinished actionFinished) {
+        yield return actionFinished;
+    }
+
+    public static IEnumerator ActionFinishedDelayActionWrapper(Func<ActionFinished> action) {
+        yield return action();
     }
 }
+
+
 
 public class MethodParamComparer : IComparer<MethodInfo> {
 
@@ -414,6 +575,10 @@ public class MethodParamComparer : IComparer<MethodInfo> {
 
 [Serializable]
 public class InvalidActionException : Exception { }
+
+public class InvalidActionCallWithPhysicsSimulationParams : Exception {
+    public InvalidActionCallWithPhysicsSimulationParams(string message): base(message) { }
+ }
 
 [Serializable]
 public class AmbiguousActionException : Exception {
@@ -465,4 +630,9 @@ public class InvalidArgumentsException : Exception {
         this.ParameterNames = parameterNames ?? new List<string>();
         this.PossibleOverwrites = possibleOverwrites ?? new List<string>();
     }
+}
+
+[Serializable]
+public class MissingActionFinishedException : Exception {
+    public MissingActionFinishedException(string message = ""): base(message) { }
 }

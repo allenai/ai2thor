@@ -7,6 +7,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
         protected List<Bounds> gizmobounds = new List<Bounds>();
 #endif
+        public GameObject AgentCamera = null;
         public GameObject AgentHand = null;
         public GameObject DefaultHandPosition = null;
         public Transform rotPoint;
@@ -15,18 +16,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject DebugTargetPointPrefab;
         public GameObject VisibilityCapsule = null;// used to keep track of currently active VisCap: see different vis caps for modes below
         public GameObject TallVisCap;// meshes used for Tall mode
-        public GameObject IKArm; // reference to the IK_Robot_Arm_Controller arm
-        public GameObject BotVisCap;// meshes used for Bot mode
         public GameObject DroneVisCap;// meshes used for Drone mode
-        public GameObject DroneBasket;// reference to the drone's basket object
         public GameObject StretchVisCap; // meshes used for Stretch mode
+        public GameObject IKArm; // reference to the IK_Robot_Arm_Controller arm
         public GameObject StretchArm; // reference to the Stretch_Arm_Controller arm
+        public GameObject StretchBodyColliders; //reference to the
+        public GameObject BotVisCap;// meshes used for Bot mode
+        public GameObject DroneBasket;// reference to the drone's basket object
         public GameObject CrackedCameraCanvas = null;
-
         public GameObject[] ToSetActive = null;
         public Material[] ScreenFaces; // 0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
         public GameObject[] TargetCircles = null;
+        public GameObject[] GripperOpennessStates = new GameObject[7];
 
         [HideInInspector]
         public BaseFPSAgentController agent;
@@ -97,6 +99,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // body.AddForce(m_CharacterController.velocity * 15f, ForceMode.Force);
             // body.AddForceAtPosition (m_CharacterController.velocity * 15f, hit.point, ForceMode.Acceleration);// might have to adjust the force vector scalar later
         }
+
+        #if UNITY_EDITOR
+        public void OnDrawGizmos() {
+
+        }
+        #endif
 
     }
 }

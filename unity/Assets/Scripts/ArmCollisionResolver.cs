@@ -15,7 +15,6 @@ public class ArmCollisionResolver : CollisionEventResolver {
         base.Start();
         arm = this.GetComponent<Stretch_Robot_Arm_Controller>();
         var collisionListener = this.GetComponentInParent<CollisionListener>();
-        Debug.Log("-------- ArmCollisionResolver Start");
     }
 
     public override StaticCollision resolveToStaticCollision(Collider externalCollider, HashSet<Collider> internalColliders) {

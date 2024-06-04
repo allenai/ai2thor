@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityStandardAssets.Characters.FirstPerson;
+using System.Linq;
 
 public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
@@ -18,7 +19,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
     protected WhatIsInsideMagnetSphere magnetSphereComp;
 
     [SerializeField] 
-    protected SphereCollider magnetSphere = null;
+    public SphereCollider magnetSphere = null;
 
     [SerializeField]
     protected GameObject MagnetRenderer = null;
@@ -30,7 +31,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
     public BoxCollider[] ArmBoxColliders {get; protected set; }
 
     [SerializeField]
-    public CapsuleCollider[] agentCapsuleCollider {get; protected set; } = null;
+    public CapsuleCollider agentCapsuleCollider {get; protected set; } = null;
 
     [HideInInspector]
     public CollisionListener collisionListener;
@@ -46,7 +47,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         return true;
     }
 
-    protected abstract void resetArmTarget();
+    protected abstract void lastStepCallback();
 
     public abstract Transform pickupParent();
 
@@ -57,6 +58,27 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
     public abstract Vector3 pointToArmBaseSpace(Vector3 point);
 
     public abstract void ContinuousUpdate(float fixedDeltaTime);
+
+    public virtual ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
+        bool actionSuccess = !this.ShouldHalt();
+        string errorMessage = this.GetHaltMessage();
+
+        return new ActionFinished() {
+            success = actionSuccess,
+            errorMessage = errorMessage
+        };
+    }
+
+    // bool actionSuccess = !movable.ShouldHalt();
+            // string errorMessage = movable.GetHaltMessage();
+            // if (!actionSuccess) {
+            //      setProp(moveTransform, resetProp);
+            // }
+
+            // return new ActionFinished() {
+            //     success = actionSuccess,
+            //     errorMessage = errorMessage
+            // };
     public abstract GameObject GetArmTarget();
     public abstract ArmMetadata GenerateMetadata();
 
@@ -64,21 +86,42 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         return collisionListener.ShouldHalt();
     }
 
+    public Vector3 MagnetSphereWorldCenter() {
+        return magnetSphere.transform.TransformPoint(magnetSphere.center);
+    }
 
-   public virtual void FinishContinuousMove(BaseFPSAgentController controller) {
-        
-   }
+    public virtual string GetHaltMessage() {
+        var staticCollisions = collisionListener?.StaticCollisions().ToList();
+
+            // decide if we want to return to original property or last known property before collision
+            if (staticCollisions.Count > 0) {
+                var sc = staticCollisions[0];
+
+                // if we hit a sim object
+                if (sc.isSimObj) {
+                    return "Collided with static/kinematic sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + armTarget + "'.";
+                }
+
+                // if we hit a structural object that isn't a sim object but still has static collision
+                if (!sc.isSimObj) {
+                    return "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + armTarget + "'.";
+                }
+            }
+            return "";
+    }
+
+    // public virtual ActionFinished FinishContinuousMove(
 
     public bool IsArmColliding() {
         HashSet<Collider> colliders = this.currentArmCollisions();
         return colliders.Count > 0;
     }
 
-    public IEnumerator resetArmTargetPositionRotationAsLastStep(IEnumerator steps) {
+    public IEnumerator withLastStepCallback(IEnumerator steps) {
         while (steps.MoveNext()) {
             yield return steps.Current;
         }
-        resetArmTarget();
+        lastStepCallback();
     }
 
      public HashSet<Collider> currentArmCollisions() {
@@ -86,11 +129,16 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
          // add the AgentCapsule to the ArmCapsuleColliders for the capsule collider check
          List<CapsuleCollider> capsules = new List<CapsuleCollider>();
+
         capsules.AddRange(ArmCapsuleColliders);
-        capsules.AddRange(agentCapsuleCollider);
+        capsules.Add(agentCapsuleCollider);
 
         // create overlap box/capsule for each collider and check the result I guess
         foreach (CapsuleCollider c in capsules) {
+            if (c.isTrigger || !c.gameObject.active) {
+                continue;
+            }
+
             Vector3 center = c.transform.TransformPoint(c.center);
             float radius = c.radius;
 
@@ -155,6 +203,9 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
         // also check if the couple of box colliders are colliding
         foreach (BoxCollider b in ArmBoxColliders) {
+            if (b.isTrigger || !b.gameObject.active) {
+                continue;
+            }
             Collider[] cols = Physics.OverlapBox(
                 center: b.transform.TransformPoint(b.center),
                 halfExtents: b.size / 2.0f,
@@ -170,15 +221,14 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
     }
 
 
-    public virtual void moveArmRelative(
+    public virtual IEnumerator moveArmRelative(
         PhysicsRemoteFPSAgentController controller,
         Vector3 offset,
         float unitsPerSecond,
         float fixedDeltaTime,
         bool returnToStart,
         string coordinateSpace,
-        bool restrictTargetPosition,
-        bool disableRendering
+        bool restrictTargetPosition
     ) {
         Vector3 offsetWorldPos;
         switch (coordinateSpace) {
@@ -198,29 +248,27 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
             default:
                 throw new ArgumentException("Invalid coordinateSpace: " + coordinateSpace);
         }
-        moveArmTarget(
+        return moveArmTarget(
             controller: controller,
             target: armTarget.position + offsetWorldPos,
             unitsPerSecond: unitsPerSecond,
             fixedDeltaTime: fixedDeltaTime,
             returnToStart: returnToStart,
             coordinateSpace: "world",
-            restrictTargetPosition: restrictTargetPosition,
-            disableRendering: disableRendering
+            restrictTargetPosition: restrictTargetPosition
         );
     }
 
     
 
-    public virtual void moveArmTarget(
+    public virtual IEnumerator moveArmTarget(
         PhysicsRemoteFPSAgentController controller,
         Vector3 target,
         float unitsPerSecond,
         float fixedDeltaTime,
         bool returnToStart,
         string coordinateSpace,
-        bool restrictTargetPosition,
-        bool disableRendering
+        bool restrictTargetPosition
     ) {
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
@@ -253,39 +301,27 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
             );
         }
 
-        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
+        return withLastStepCallback(
             ContinuousMovement.move(
+                movable: this,
                 controller,
-                collisionListener,
                 armTarget,
                 targetWorldPos,
-                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                fixedDeltaTime,
                 unitsPerSecond,
                 returnToStart,
                 false
             )
         );
-
-        if (disableRendering) {
-            ContinuousMovement.unrollSimulatePhysics(
-                moveCall,
-                fixedDeltaTime
-            );
-        } else {
-            StartCoroutine(
-                moveCall
-            );
-        }
     }
 
 
-    public virtual void moveArmBase(
+    public virtual IEnumerator moveArmBase(
         PhysicsRemoteFPSAgentController controller,
         float height,
         float unitsPerSecond,
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed,
-        bool disableRendering,
         bool normalizedY
     ) {
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
@@ -306,27 +342,18 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         }
 
         Vector3 target = new Vector3(this.transform.position.x, height, this.transform.position.z);
-        IEnumerator moveCall = resetArmTargetPositionRotationAsLastStep(
+        return withLastStepCallback(
                 ContinuousMovement.move(
+                movable: this,
                 controller: controller,
-                collisionListener: collisionListener,
                 moveTransform: this.transform,
                 targetPosition: target,
-                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                fixedDeltaTime: fixedDeltaTime,
                 unitsPerSecond: unitsPerSecond,
                 returnToStartPropIfFailed: returnToStartPositionIfFailed,
                 localPosition: false
             )
         );
-
-        if (disableRendering) {
-            ContinuousMovement.unrollSimulatePhysics(
-                enumerator: moveCall,
-                fixedDeltaTime: fixedDeltaTime
-            );
-        } else {
-            StartCoroutine(moveCall);
-        }
     }
 
      private void getCapsuleMinMaxY(PhysicsRemoteFPSAgentController controller, out float minY, out float maxY) {
@@ -337,13 +364,12 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         minY = capsuleWorldCenter.y + (-cc.height / 2f) / 2f;
     }
 
-    public virtual void moveArmBaseUp(
+    public virtual IEnumerator moveArmBaseUp(
         PhysicsRemoteFPSAgentController controller,
         float distance,
         float unitsPerSecond,
         float fixedDeltaTime,
-        bool returnToStartPositionIfFailed,
-        bool disableRendering
+        bool returnToStartPositionIfFailed
     ) {
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
@@ -355,46 +381,35 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         float targetY = this.transform.position.y + distance;
         targetY = Mathf.Max(Mathf.Min(targetY, maxY), minY);
 
-        moveArmBase(
+        return moveArmBase(
             controller: controller,
             height: targetY,
             unitsPerSecond: unitsPerSecond,
             fixedDeltaTime: fixedDeltaTime,
             returnToStartPositionIfFailed: returnToStartPositionIfFailed,
-            disableRendering: disableRendering,
             normalizedY: false
         );
     }
 
-    public virtual void rotateWrist(
+    public virtual IEnumerator rotateWrist(
         PhysicsRemoteFPSAgentController controller,
         Quaternion rotation,
         float degreesPerSecond,
-        bool disableRendering,
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed
     ) {
         collisionListener.Reset();
-        IEnumerator rotate = resetArmTargetPositionRotationAsLastStep(
+        return withLastStepCallback(
             ContinuousMovement.rotate(
+                movable: this,
                 controller,
-                collisionListener,
                 armTarget.transform,
                 armTarget.transform.rotation * rotation,
-                disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                fixedDeltaTime,
                 degreesPerSecond,
                 returnToStartPositionIfFailed
             )
         );
-
-        if (disableRendering) {
-            ContinuousMovement.unrollSimulatePhysics(
-                rotate,
-                fixedDeltaTime
-            );
-        } else {
-            StartCoroutine(rotate);
-        }
     }
 
     public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphereAsSOP(bool onlyPickupable) {
@@ -435,7 +450,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         return gameObjectToScale;
     }
 
-   public virtual bool PickupObject(List<string> objectIds, ref string errorMessage) {
+   public virtual IEnumerator PickupObject(List<string> objectIds) {
         // var at = this.transform.InverseTransformPoint(armTarget.position) - new Vector3(0, 0, originToShoulderLength);
         // Debug.Log("Pickup " + at.magnitude);
         bool pickedUp = false;
@@ -523,6 +538,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
             heldObjects.Add(sop, cols);
         }
 
+        var errorMessage = "";
         if (!pickedUp) {
             errorMessage = (
                 objectIds != null
@@ -533,10 +549,13 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
         // note: how to handle cases where object breaks if it is shoved into another object?
         // make them all unbreakable?
-        return pickedUp;
+        yield return new ActionFinished() {
+            success = pickedUp,
+            errorMessage= errorMessage
+        };
     }
 
-    public virtual void DropObject() {
+    public virtual IEnumerator DropObject() {
         // grab all sim objects that are currently colliding with magnet sphere
         foreach (KeyValuePair<SimObjPhysics, HashSet<Collider>> sop in heldObjects) {
             Rigidbody rb = sop.Key.GetComponent<Rigidbody>();
@@ -574,6 +593,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
         // clear all now dropped objects
         heldObjects.Clear();
+        yield return ActionFinished.Success;
     }
 
     public void SetHandSphereRadius(float radius) {

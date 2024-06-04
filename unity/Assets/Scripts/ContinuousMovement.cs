@@ -3,20 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System;
-using System.Linq;
 
     public interface MovableContinuous {
         public bool ShouldHalt();
         public void ContinuousUpdate(float fixedDeltaTime);
-        public void FinishContinuousMove(BaseFPSAgentController controller);
+        public ActionFinished FinishContinuousMove(BaseFPSAgentController controller);
+        // TODO remove from API integrate in FinishContinuousMove
+        // public string GetHaltMessage();
     }
 
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
     public class ContinuousMovement {
+
         public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
-            Debug.Log("ContinuousMovement.unrollSimulatePhysics()");
             int count = 0;
             PhysicsSceneManager.PhysicsSimulateCallCount = 0;
             var previousAutoSimulate = Physics.autoSimulation;
@@ -31,13 +32,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public static IEnumerator rotate(
+            MovableContinuous movable,
             PhysicsRemoteFPSAgentController controller,
-            CollisionListener collisionListener,
             Transform moveTransform,
             Quaternion targetRotation,
             float fixedDeltaTime,
             float radiansPerSecond,
-            bool returnToStartPropIfFailed = false
+            bool returnToStartPropIfFailed = false,
+            Quaternion? secTargetRotation = null
         ) {
             bool teleport = (radiansPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
 
@@ -52,6 +54,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             return updateTransformPropertyFixedUpdate(
+                movable: movable,
                 controller: controller,
                 moveTransform: moveTransform,
                 target: targetRotation,
@@ -64,13 +67,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 distanceMetric: (target, current) => Quaternion.Angle(current, target),
                 fixedDeltaTime: fixedDeltaTime,
                 returnToStartPropIfFailed: returnToStartPropIfFailed,
-                epsilon: 1e-3
+                epsilon: 1e-3,
+                secTarget: secTargetRotation
             );
         }
-        
+
         public static IEnumerator move(
+            MovableContinuous movable,
             PhysicsRemoteFPSAgentController controller,
-            CollisionListener collisionListener,
             Transform moveTransform,
             Vector3 targetPosition,
             float fixedDeltaTime,
@@ -82,6 +86,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>, IEnumerator> moveClosure =
                 (get, set, next) => updateTransformPropertyFixedUpdate(
+                    movable: movable,
                     controller: controller,
                     moveTransform: moveTransform,
                     target: targetPosition,
@@ -122,11 +127,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public static IEnumerator moveAB(
             MovableContinuous movable,
             ArticulatedAgentController controller,
-            float fixedDeltaTime,
-            float unitsPerSecond = 0,
-            float acceleration = 0
+            float fixedDeltaTime
         ) {
-            return updateFixedUpdateForAB(
+            return continuousUpdateAB(
                 movable: movable,
                 controller: controller,
                 fixedDeltaTime: fixedDeltaTime
@@ -147,8 +150,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public static IEnumerator rotateAroundPoint(
+            MovableContinuous movable,
             PhysicsRemoteFPSAgentController controller,
-            CollisionListener collisionListener,
             Transform updateTransform,
             Vector3 rotatePoint,
             Quaternion targetRotation,
@@ -201,6 +204,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return finallyDestroyGameObjects(
                 gameObjectsToDestroy: tmpObjects,
                 steps: updateTransformPropertyFixedUpdate(
+                    movable: movable,
                     controller: controller,
                     moveTransform: fulcrum.transform,
                     target: targetRotation,
@@ -214,10 +218,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     epsilon: 1e-3
                 )
             );
-
         }
 
-        public static IEnumerator updateFixedUpdateForAB(            
+        public static IEnumerator continuousUpdateAB(            
             MovableContinuous movable,
             BaseFPSAgentController controller,
             float fixedDeltaTime
@@ -227,7 +230,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             while(!movable.ShouldHalt())
             {
                 movable.ContinuousUpdate(fixedDeltaTime);
-                //Debug.Log($"what is autosim state: {Physics.autoSimulation}");
+                // TODO: Remove below?
                 if (!Physics.autoSimulation) {
                     //Debug.Log("manual simulate from PhysicsManager");
                     PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
@@ -237,11 +240,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //Debug.Log("about to start continuousMoveFinish for AB");
-            movable.FinishContinuousMove(controller);
-            yield return null;
+
+            // yield return null;
+            yield return movable.FinishContinuousMove(controller);
         }
 
         public static IEnumerator updateTransformPropertyFixedUpdate<T>(
+            MovableContinuous movable,
             PhysicsRemoteFPSAgentController controller,
             Transform moveTransform,
             T target,
@@ -255,160 +260,163 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Func<T, T, float> distanceMetric,
             float fixedDeltaTime,
             bool returnToStartPropIfFailed,
-            double epsilon
-            
-        ) {
-            Debug.Log("starting updateTransformPropertyFixedUpdate");
+            double epsilon,
+            T? secTarget = null
+        ) where T : struct {
             T originalProperty = getProp(moveTransform);
             var previousProperty = originalProperty;
 
             // TODO: do not pass controller, and pass a lambda for the update function or an
             // interface 
-            var arm = controller.GetComponentInChildren<ArmController>();
+            // var arm = controller.GetComponentInChildren<ArmController>();
 
             // commenting out the WaitForEndOfFrame here since we shoudn't need 
             // this as we already wait for a frame to pass when we execute each action
             // yield return yieldInstruction;
-
-            var currentProperty = getProp(moveTransform);
-            float currentDistance = distanceMetric(target, currentProperty);
-
-            T directionToTarget = getDirection(target, currentProperty);
-
-            bool haveGottenWithinEpsilon = currentDistance <= epsilon;
-            while (!arm.ShouldHalt()) {
-                previousProperty = getProp(moveTransform);
-
-                T next = nextProp(moveTransform, directionToTarget);
-                float nextDistance = distanceMetric(target, next);
-
-                // allows for snapping behaviour to target when the target is close
-                // if nextDistance is too large then it will overshoot, in this case we snap to the target
-                // this can happen if the speed it set high
-                if (
-                    nextDistance <= epsilon
-                    || nextDistance > distanceMetric(target, getProp(moveTransform))
-                ) {
-                    setProp(moveTransform, target);
-                } else {
-                    setProp(moveTransform, next);
-                }
-                Debug.Log("1");
-                // update?.Invoke();
-
-                // this will be a NOOP for Rotate/Move/Height actions
-                arm.ContinuousUpdate(fixedDeltaTime);
-                Debug.Log("2");
-
-                if (!Physics.autoSimulation) {
-                Debug.Log("3.1");
-                    if (fixedDeltaTime == 0f) {
-                        Physics.SyncTransforms();
-                    } else {
-                        PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
-                    }
-                }
-                Debug.Log("3.2");
-
-                yield return new WaitForFixedUpdate();
-
-                currentDistance = distanceMetric(target, getProp(moveTransform));
-                Debug.Log("3.3");
-
-                if (currentDistance <= epsilon) {
-                    // This logic is a bit unintuitive but it ensures we run the
-                    // `setProp(moveTransform, target);` line above once we get within epsilon
-                    if (haveGottenWithinEpsilon) {
-                        break;
-                    } else {
-                        haveGottenWithinEpsilon = true;
-                    }
-                }
-                Debug.Log("3.4");
-
+            
+            int transformIterations = 1;
+            if (secTarget != null) {
+                transformIterations = 2;
             }
 
-            Debug.Log("4");
+            T? currentTarget = null;
+            T directionToTarget;
+            var currentProperty = getProp(moveTransform);
+            Debug.Log("currentProperty is " + currentProperty);
+            float currentDistance = 0;
+            bool haveGottenWithinEpsilon = currentDistance <= epsilon;
+
+            for (int i = 0; i < transformIterations; i++) {
+                // This syntax is a new method of pattern-matching that was introduced in C# 7.0, where the type check and
+                // variable assignment are performed in a single step
+                if (i == 0) {
+                    currentTarget = target;
+                } else {
+                    currentTarget = (T)secTarget;
+                }
+
+                currentDistance = distanceMetric((T)currentTarget, currentProperty);
+                directionToTarget = getDirection((T)currentTarget, currentProperty);
+
+                // // view target rotation
+                // if (currentTarget is Quaternion printTarget) {
+                //     Debug.Log("Oh, currentTarget is " + printTarget.eulerAngles.y);
+                // }
+
+                while (!movable.ShouldHalt()) {
+                // TODO: put in movable && !collisionListener.TransformChecks(controller, moveTransform)) {
+                    previousProperty = getProp(moveTransform);
+
+                    T next = nextProp(moveTransform, directionToTarget);
+
+                    float nextDistance = distanceMetric((T)currentTarget, next);
+                    
+                    // allows for snapping behaviour to target when the target is close
+                    // if nextDistance is too large then it will overshoot, in this case we snap to the target
+                    // this can happen if the speed it set high
+                    if (
+                        nextDistance <= epsilon
+                        || nextDistance > distanceMetric((T)currentTarget, getProp(moveTransform))
+                    ) {
+                        setProp(moveTransform, (T)currentTarget);
+                    } else {
+                        setProp(moveTransform, next);
+                    }
+
+                // this will be a NOOP for Rotate/Move/Height actions
+                movable.ContinuousUpdate(fixedDeltaTime);
+                //Debug.Log("2");
+
+                // if (!Physics.autoSimulation) {
+                // //Debug.Log("3.1");
+                //     if (fixedDeltaTime == 0f) {
+                //         Physics.SyncTransforms();
+                //     } else {
+                //         PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+                //     }
+                // }
+                yield return new WaitForFixedUpdate();
+                //Debug.Log("3.2");
+
+                    yield return new WaitForFixedUpdate();
+
+                    currentDistance = distanceMetric((T)currentTarget, getProp(moveTransform));
+
+                    if (currentDistance <= epsilon) {
+                        // This logic is a bit unintuitive but it ensures we run the
+                        // `setProp(moveTransform, currentTarget);` line above once we get within epsilon
+                        if (haveGottenWithinEpsilon) {
+                            break;
+                        } else {
+                            haveGottenWithinEpsilon = true;
+                        }
+                    }
+                }
+            }
+
+            //Debug.Log("4");
             T resetProp = previousProperty;
             if (returnToStartPropIfFailed) {
                 resetProp = originalProperty;
             }
-            Debug.Log("about to continuousMoveFinish");
-            continuousMoveFinish(
-                controller,
-                arm,
-                moveTransform,
-                setProp,
-                target,
-                resetProp
-            );
+            //Debug.Log("about to continuousMoveFinish");
+
+            //  TODO changed to
+            // var actionFinished = continuousMoveFinish(
+            //     movable,
+            //     moveTransform,
+            //     setProp,
+            //     resetProp
+            // );
+            var actionFinished = movable.FinishContinuousMove(controller);
+            if (!actionFinished.success) {
+                setProp(moveTransform, resetProp);
+            }
 
             // we call this one more time in the event that the arm collided and was reset
-            arm.ContinuousUpdate(fixedDeltaTime);
+            movable.ContinuousUpdate(fixedDeltaTime);
 
-            if (!Physics.autoSimulation) {
-                if (fixedDeltaTime == 0f) {
-                    Physics.SyncTransforms();
-                } else {
-                    PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
-                }
-            }
+            yield return new WaitForFixedUpdate();
+
+            yield return actionFinished;
         }
 
-        private static void continuousMoveFinishAB(            
-            ArticulatedAgentController controller
-        ) {
+        // Old Action finish
+        // private static ActionFinished continuousMoveFinish<T>(
+        //     MovableContinuous movable,
+        //     Transform moveTransform,
+        //     System.Action<Transform, T> setProp,
+        //     T resetProp
+        // ) {
+        //     bool actionSuccess = !movable.ShouldHalt();
+        //     string errorMessage = movable.GetHaltMessage();
+        //     if (!actionSuccess) {
+        //          setProp(moveTransform, resetProp);
+        //     }
 
-            Debug.Log("starting continuousMoveFinishAB");
-            controller.transform.GetComponent<ArticulationBody>().velocity = Vector3.zero;
-            controller.transform.GetComponent<ArticulationBody>().angularVelocity = Vector3.zero;
-            controller.transform.GetComponent<ArticulatedAgentSolver>().currentAgentMoveParams.agentState = ABAgentState.Idle;
-            bool actionSuccess = true;
-            string debugMessage = "I guess everything is fine?";
+        //     return new ActionFinished() {
+        //         success = actionSuccess,
+        //         errorMessage = errorMessage
+        //     };
+        // }
 
-            //maybe needs to switch back to slippery here to prep for movement???
-            //or maybe we default to high friction, and only change to no friction when moving body
-            //controller.SetFloorColliderToSlippery();
 
-            controller.errorMessage = debugMessage;
-            controller.actionFinished(actionSuccess, debugMessage);
-        }
+        // TODO: move to new way
+        // private static ActionFinished continuousMoveFinish<T>(
+        //     MovableContinuous movable,
+        //     BaseFPSAgentController controller,
+        //     Transform moveTransform,
+        //     System.Action<Transform, T> setProp,
+        //     T resetProp
+        // ) {
 
-        private static void continuousMoveFinish<T>(
-            PhysicsRemoteFPSAgentController controller,
-            ArmController arm,
-            Transform moveTransform,
-            System.Action<Transform, T> setProp,
-            T target,
-            T resetProp
-        ) {
-            Debug.Log("starting continuousMoveFinish");
-            bool actionSuccess = true;
-            string debugMessage = "";
+        //     ActionFinished actionFinished = movable.FinishContinuousMove(controller);
+            
+        //     if (!actionFinished.success) {
+        //          setProp(moveTransform, resetProp);
+        //     }
 
-            var staticCollisions = arm.collisionListener?.StaticCollisions().ToList();
-
-            if (staticCollisions.Count > 0) {
-                var sc = staticCollisions[0];
-
-                // decide if we want to return to original property or last known property before collision
-                setProp(moveTransform, resetProp);
-
-                // if we hit a sim object
-                if (sc.isSimObj) {
-                    debugMessage = "Collided with static/kinematic sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + target + "'.";
-                }
-
-                // if we hit a structural object that isn't a sim object but still has static collision
-                if (!sc.isSimObj) {
-                    debugMessage = "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + target + "'.";
-                }
-
-                actionSuccess = false;
-            }
-
-            controller.errorMessage = debugMessage;
-            controller.actionFinished(actionSuccess, debugMessage);
-        }
+        //     return actionFinished;
+        // }
     }
 }

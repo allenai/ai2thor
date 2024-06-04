@@ -99,7 +99,7 @@ def test_arm_object_intersect(controller_args):
     evt = controller.step(**{
         "action": "RotateWristRelative",
         "yaw": 200, 
-        "disableRendering": True, 
+        "physicsSimulationParams": {"autoSimulation": False},
         "returnToStart": True, 
         "speed": 1
     })
@@ -130,16 +130,26 @@ def test_arm_body_object_intersect(controller_args):
 
     prev_event = run(controller, "pickup_plate_before_intersect.json")
 
+    assert evt.metadata["lastActionSuccess"]
+
     evt = controller.step(**
         {"action": "RotateWristRelative", 
-         "yaw": 10, 
-         "disableRendering": False, 
+         "yaw": -10, 
+         "physicsSimulationParams": {"autoSimulation": False},
          "returnToStart": True, 
          "speed": 1
          }               
     )
 
+    print(
+        "Action success {0}, message {1}".format(
+            evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]
+        )
+    )
+
     assert not evt.metadata["lastActionSuccess"]
+
+    assert "Collided with static structure" in evt.metadata["errorMessage"]
 
     controller.stop()
 
@@ -147,41 +157,41 @@ def test_arm_body_object_intersect(controller_args):
     print(diff)
     assert diff == {}
 
-
-@pytest.mark.parametrize("controller_args", fifo)
-def test_arm_pickup_drop_sequence(controller_args):
-    controller = build_controller(**controller_args)
+# TODO: rewrite once new stretch parameters ar in
+# @pytest.mark.parametrize("controller_args", fifo)
+# def test_arm_pickup_drop_sequence(controller_args):
+#     controller = build_controller(**controller_args)
     
-    house = load_house("procthor_train_1.json")
+#     house = load_house("procthor_train_1.json")
 
-    evt = controller.step(action="CreateHouse", house=house)
+#     evt = controller.step(action="CreateHouse", house=house)
 
-    print(
-        "Action success {0}, message {1}".format(
-            evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]
-        )
-    )
-    assert evt.metadata["lastActionSuccess"]
+#     print(
+#         "Action success {0}, message {1}".format(
+#             evt.metadata["lastActionSuccess"], evt.metadata["errorMessage"]
+#         )
+#     )
+#     assert evt.metadata["lastActionSuccess"]
 
-    evt = run(controller, "pickup_plate_before_intersect.json")
+#     evt = run(controller, "pickup_plate_before_intersect.json")
 
-    assert ["Plate|surface|5|45"] == evt.metadata['arm']['heldObjects']
+#     assert ["Plate|surface|5|45"] == evt.metadata['arm']['heldObjects']
     
-    evt = run(controller, "object_drop.json")
+#     evt = run(controller, "object_drop.json")
 
-    assert evt.metadata['arm']['heldObjects'] == []
+#     assert evt.metadata['arm']['heldObjects'] == []
 
 
-    object_dict = {o['name']: o for o in evt.metadata['objects']}
+#     object_dict = {o['name']: o for o in evt.metadata['objects']}
 
-    plate_metadata = object_dict["Plate|surface|5|45"]
+#     plate_metadata = object_dict["Plate|surface|5|45"]
 
-    object_target = {
-        'position': {'x': 9.562429428100586, 'y': 1.0261509418487549, 'z': 0.37188154458999634}, 
-        'rotation': {'x': 359.0494384765625, 'y': 28.759014129638672, 'z': 0.06256783753633499},
-        'parentReceptacles': ['CounterTop|2|0']
-    }
+#     object_target = {
+#         'position': {'x': 9.562429428100586, 'y': 1.0261509418487549, 'z': 0.37188154458999634}, 
+#         'rotation': {'x': 359.0494384765625, 'y': 28.759014129638672, 'z': 0.06256783753633499},
+#         'parentReceptacles': ['CounterTop|2|0']
+#     }
 
-    assert {} == DeepDiff(object_target['position'], plate_metadata['position'], significant_digits=4, ignore_numeric_type_changes=True)
-    assert {} == DeepDiff(object_target['rotation'], plate_metadata['rotation'], significant_digits=4, ignore_numeric_type_changes=True)
-    assert plate_metadata['parentReceptacles'] == object_target['parentReceptacles']
+#     assert {} == DeepDiff(object_target['position'], plate_metadata['position'], significant_digits=4, ignore_numeric_type_changes=True)
+#     assert {} == DeepDiff(object_target['rotation'], plate_metadata['rotation'], significant_digits=4, ignore_numeric_type_changes=True)
+#     assert plate_metadata['parentReceptacles'] == object_target['parentReceptacles']

@@ -169,19 +169,21 @@ public class Contains : MonoBehaviour {
         return ids;
     }
 
-    // returns a grid of points above the target receptacle
-    public List<Vector3> GetValidSpawnPointsFromTopOfTriggerBox() {
+    //returns the gridpoints in local space relative to the trigger box collider of this Contains.cs object
+    public List<Vector3> GetValidSpawnPointsFromTriggerBoxLocalSpace(bool top = true) {
         Vector3 p1, p2, p4; // in case we need all the corners later for something...
 
         BoxCollider b = GetComponent<BoxCollider>();
 
+        var boxY = top ? b.size.y : -b.size.y;
+
         // get all the corners of the box and convert to world coordinates
         // top forward right
-        p1 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f);
+        p1 = transform.TransformPoint(b.center + new Vector3(b.size.x, boxY, b.size.z) * 0.5f);
         // top forward left
-        p2 = transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f);
+        p2 = transform.TransformPoint(b.center + new Vector3(-b.size.x, boxY, b.size.z) * 0.5f);
         // top back right
-        p4 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f);
+        p4 = transform.TransformPoint(b.center + new Vector3(b.size.x, boxY, -b.size.z) * 0.5f);
 
         // so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
         int gridsize = 20; // number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
@@ -207,13 +209,66 @@ public class Contains : MonoBehaviour {
                 gridpoints.Add(PointsOnLineXdir[i] + zdir * (zdist * (j * lineincrement)));
             }
         }
-        // //****** */debug draw the spawn points as well
-        // #if UNITY_EDITOR
-        // validpointlist = gridpoints;
-        // #endif
+
+        //ok at this point all the grid points I believe are in world space??? sooo
+        List<Vector3> localGridPoints = new List<Vector3>();
+        foreach(Vector3 point in gridpoints) {
+            localGridPoints.Add(this.transform.InverseTransformPoint(point));
+        } 
+
+        return localGridPoints;
+    }
+
+    // returns a grid of points above the target receptacle
+    public List<Vector3> GetValidSpawnPointsFromTriggerBox(bool top = true) {
+        Vector3 p1, p2, p4; // in case we need all the corners later for something...
+
+        BoxCollider b = GetComponent<BoxCollider>();
+
+        var boxY = top ? b.size.y : -b.size.y;
+
+        // get all the corners of the box and convert to world coordinates
+        // top forward right
+        p1 = transform.TransformPoint(b.center + new Vector3(b.size.x, boxY, b.size.z) * 0.5f);
+        // top forward left
+        p2 = transform.TransformPoint(b.center + new Vector3(-b.size.x, boxY, b.size.z) * 0.5f);
+        // top back right
+        p4 = transform.TransformPoint(b.center + new Vector3(b.size.x, boxY, -b.size.z) * 0.5f);
+
+        // so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
+        int gridsize = 20; // number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
+        int linepoints = gridsize + 1; // number of points on the line we need to make the number of grid boxes
+        float lineincrement = 1.0f / gridsize; // increment on the line to distribute the gridpoints
+
+        Vector3[] PointsOnLineXdir = new Vector3[linepoints];
+
+        // these are all the points on the grid on the top of the receptacle box in local space
+        List<Vector3> gridpoints = new List<Vector3>();
+
+        Vector3 zdir = (p4 - p1).normalized; // direction in the -z direction to finish drawing grid
+        float zdist = Vector3.Distance(p4, p1);
+
+        for (int i = 0; i < linepoints; i++) {
+            float x = p1.x + (p2.x - p1.x) * (lineincrement * i);
+            float y = p1.y + (p2.y - p1.y) * (lineincrement * i);
+            float z = p1.z + (p2.z - p1.z) * (lineincrement * i);
+
+            PointsOnLineXdir[i] = new Vector3(x, y, z);
+
+            for (int j = 0; j < linepoints; j++) {
+                gridpoints.Add(PointsOnLineXdir[i] + zdir * (zdist * (j * lineincrement)));
+            }
+        }
+        #if UNITY_EDITOR
+        foreach (Vector3 point in gridpoints) {
+            //debug draw the gridpoints if you wanna see em
+            Debug.DrawLine(point, point + new Vector3(0, 0.2f, 0), Color.red, 100f);
+        }
+        #endif    
 
         return gridpoints;
     }
+    
 
     // generate a grid of potential spawn points, set ReturnPointsClosestToAgent to true if
     // the list of points should be filtered closest to agent, if false

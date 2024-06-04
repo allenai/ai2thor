@@ -11,7 +11,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 
-public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
+public class SimObjPhysics : MonoBehaviour, SimpleSimObj {    
     [Header("Unique String ID of this Object In Scene")]
     [SerializeField]
     public string objectID = string.Empty;
@@ -522,7 +522,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     // return mass of object
     public float Mass {
         get {
-            return this.GetComponent<Rigidbody>().mass;
+            var rb = this.GetComponent<Rigidbody>();
+            return rb != null? rb.mass : 0.0f;
         }
     }
 
@@ -691,10 +692,20 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     }
 
     // return spawn points for this receptacle objects based on the top part of all trigger boxes
-    public List<Vector3> FindMySpawnPointsFromTopOfTriggerBox(bool forceVisible = false) {
+    public List<Vector3> FindMySpawnPointsFromTriggerBox(bool forceVisible = false, bool top = false) {
         List<Vector3> points = new List<Vector3>();
         foreach (GameObject rtb in ReceptacleTriggerBoxes) {
-            points.AddRange(rtb.GetComponent<Contains>().GetValidSpawnPointsFromTopOfTriggerBox());
+            points.AddRange(rtb.GetComponent<Contains>().GetValidSpawnPointsFromTriggerBox(top: top));
+        }
+
+        return points;
+    }
+
+    // return spawn points for this receptacle objects based on the top part of all trigger boxes
+    public List<Vector3> FindMySpawnPointsFromTriggerBoxInLocalSpace(bool forceVisible = false, bool top = false) {
+        List<Vector3> points = new List<Vector3>();
+        foreach (GameObject rtb in ReceptacleTriggerBoxes) {
+            points.AddRange(rtb.GetComponent<Contains>().GetValidSpawnPointsFromTriggerBoxLocalSpace(top: top));
         }
 
         return points;
@@ -972,6 +983,42 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         sceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
         initializeProperties();
+
+        // Spawn Dirt Decal Surface if this object is setup for cleaning
+        bool onlyForThisObject = this.gameObject.GetComponent<DirtAndWrite>();
+
+        if (onlyForThisObject) {
+            if (sceneManager.placeDecalSurfaceOnReceptacles && this.IsReceptacle) {
+                foreach (GameObject go in ReceptacleTriggerBoxes) {
+                
+                    var dgo = GameObject.Instantiate(sceneManager.receptaclesDirtyDecalSurface);
+                    // unity provided quad's mesh is XY plane, repplace with custom XZ one and remove line below
+                    dgo.GetComponent<BoxCollider>().isTrigger = true;
+                    dgo.transform.parent = go.transform;
+                    dgo.transform.localEulerAngles = new Vector3(-90.0f, 0.0f, 0.0f);
+
+                    // This is where the decal plane goes in y, if receptacle box is too high it could lead to 
+                    // decals bleeding to other objects that are below it in y, so tune appropiately, should be
+                    // an annotation of prefab
+                    var yOffset = 0.001f;
+                    dgo.transform.localPosition = new Vector3(0.0f, yOffset, 0.0f);
+                    var bc = go.GetComponent<BoxCollider>();
+                    /// Same as above remove when using XZ plane mesh
+                    dgo.transform.localScale = new Vector3(bc.size.x, bc.size.z, 1.0f);
+                }
+            }
+        }
+    }
+
+    //spawn dirt on receptacle 
+    public void SpawnDirtOnReceptacle(int howManyDirt, int randomSeed, DirtSpawnPosition[] spawnPoints = null) {
+        DecalSpawner decalSpawner = this.gameObject.GetComponentInChildren<DecalSpawner>();
+        decalSpawner.SpawnDirt(howManyDirt, randomSeed, spawnPoints);
+    }
+
+    public DirtCoordinateBounds GetDirtCoordinateBounds() {
+        DecalSpawner decalSpawner = this.gameObject.GetComponentInChildren<DecalSpawner>();
+        return decalSpawner.GetDirtCoordinateBounds();
     }
 
     public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop) {
@@ -2265,6 +2312,119 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
             this.syncBoundingBoxes(forceCacheReset: true);
         }
     }
+
+    // generates object metatada based on sim object's properties
+        public static ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible, bool isInteractable) {
+            ObjectMetadata objMeta = new ObjectMetadata();
+            GameObject o = simObj.gameObject;
+            objMeta.name = o.name;
+            objMeta.position = o.transform.position;
+            objMeta.rotation = o.transform.eulerAngles;
+            objMeta.objectType = Enum.GetName(typeof(SimObjType), simObj.Type);
+            objMeta.receptacle = simObj.IsReceptacle;
+
+            objMeta.openable = simObj.IsOpenable;
+            if (objMeta.openable) {
+                objMeta.isOpen = simObj.IsOpen;
+                objMeta.openness = simObj.openness;
+            }
+
+            objMeta.toggleable = simObj.IsToggleable;
+            //note: not all objects that report back `isToggled` are themselves `toggleable`, however they all do have the `CanToggleOnOff` secondary sim object property
+            //this is to account for cases like a [stove burner], which can report `isToggled` but cannot have the "ToggleObjectOn" action performed on them directly, and instead
+            //a [stove knob] linked to the [stove burner] must have a "ToggleObjectOn" action performed on it to have both the knob and burner set to a state of `isToggled = true` 
+            if (simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)) {
+                objMeta.isToggled = simObj.IsToggled;
+            }
+
+            objMeta.breakable = simObj.IsBreakable;
+            if (objMeta.breakable) {
+                objMeta.isBroken = simObj.IsBroken;
+            }
+
+            objMeta.canFillWithLiquid = simObj.IsFillable;
+            if (objMeta.canFillWithLiquid) {
+                objMeta.isFilledWithLiquid = simObj.IsFilled;
+                objMeta.fillLiquid = simObj.FillLiquid;
+            }
+
+            objMeta.dirtyable = simObj.IsDirtyable;
+            if (objMeta.dirtyable) {
+                objMeta.isDirty = simObj.IsDirty;
+            }
+
+            objMeta.cookable = simObj.IsCookable;
+            if (objMeta.cookable) {
+                objMeta.isCooked = simObj.IsCooked;
+            }
+
+            // if the sim object is moveable or pickupable
+            if (simObj.IsPickupable || simObj.IsMoveable || (simObj.salientMaterials != null && simObj.salientMaterials.Length > 0)) {
+                // this object should report back mass and salient materials
+
+                string[] salientMaterialsToString = new string[simObj.salientMaterials.Length];
+
+                for (int i = 0; i < simObj.salientMaterials.Length; i++) {
+                    salientMaterialsToString[i] = simObj.salientMaterials[i].ToString();
+                }
+
+                objMeta.salientMaterials = salientMaterialsToString;
+
+                // this object should also report back mass since it is moveable/pickupable
+                objMeta.mass = simObj.Mass;
+
+            }
+
+            // can this object change others to hot?
+            objMeta.isHeatSource = simObj.isHeatSource;
+
+            // can this object change others to cold?
+            objMeta.isColdSource = simObj.isColdSource;
+
+            // placeholder for heatable objects -kettle, pot, pan
+            // objMeta.abletocook = simObj.abletocook;
+            // if(objMeta.abletocook) {
+            //     objMeta.isReadyToCook = simObj.IsHeated;
+            // }
+
+            objMeta.sliceable = simObj.IsSliceable;
+            if (objMeta.sliceable) {
+                objMeta.isSliced = simObj.IsSliced;
+            }
+
+            objMeta.canBeUsedUp = simObj.CanBeUsedUp;
+            if (objMeta.canBeUsedUp) {
+                objMeta.isUsedUp = simObj.IsUsedUp;
+            }
+
+            // object temperature to string
+            objMeta.temperature = simObj.CurrentObjTemp.ToString();
+
+            objMeta.pickupable = simObj.IsPickupable;
+            objMeta.isPickedUp = simObj.isPickedUp;// returns true for if this object is currently being held by the agent
+
+            objMeta.moveable = simObj.IsMoveable;
+
+            objMeta.objectId = simObj.ObjectID;
+
+            objMeta.assetId = simObj.assetID;
+
+            // TODO: using the isVisible flag on the object causes weird problems
+            // in the multiagent setting, explicitly giving this information for now.
+            objMeta.visible = isVisible; // simObj.isVisible;
+
+            //determines if the objects is unobstructed and interactable. Objects visible behind see-through geometry like glass will be isInteractable=False even if visible
+            //note using forceAction=True will ignore the isInteractable requirement
+            objMeta.isInteractable = isInteractable;
+
+            objMeta.isMoving = simObj.inMotion;// keep track of if this object is actively moving
+
+            objMeta.objectOrientedBoundingBox = simObj.ObjectOrientedBoundingBox;
+
+            objMeta.axisAlignedBoundingBox = simObj.AxisAlignedBoundingBox;
+
+            return objMeta;
+        }
 
 
     class BoundingBoxCacheKey {

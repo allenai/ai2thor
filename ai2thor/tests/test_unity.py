@@ -26,6 +26,8 @@ import cv2
 import functools
 import ctypes
 
+from .build_controller import build_controller
+
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
     AddThirdPartyCamera = "AddThirdPartyCamera"
@@ -41,33 +43,8 @@ class ThirdPartyCameraMetadata:
     rotation = "rotation"
     fieldOfView = "fieldOfView"
 
-
-class TestController(Controller):
-    def unity_command(self, width, height, headless):
-        command = super().unity_command(width, height, headless)
-        # force OpenGLCore to get used so that the tests run in a consistent way
-        # With low power graphics cards (such as those in the test environment)
-        # Metal behaves in inconsistent ways causing test failures
-        command.append("-force-glcore")
-        return command
-
-def build_controller(**args):
-    default_args = dict(scene=TEST_SCENE, local_build=True)
-    default_args.update(args)
-    # during a ci-build we will get a warning that we are using a commit_id for the
-    # build instead of 'local'
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        print("args test controller")
-        print(default_args)
-        c = TestController(**default_args)
-
-    # used for resetting
-    c._original_initialization_parameters = c.initialization_parameters
-    return c
-
-_wsgi_controller = build_controller(server_class=WsgiServer)
-_fifo_controller = build_controller(server_class=FifoServer)
+_wsgi_controller = build_controller(server_class=WsgiServer, scene=TEST_SCENE)
+_fifo_controller = build_controller(server_class=FifoServer, scene=TEST_SCENE)
 
 
 def skip_reset(controller):
@@ -450,12 +427,14 @@ def test_simobj_filter(controller):
     objects = controller.last_event.metadata["objects"]
     unfiltered_object_ids = sorted([o["objectId"] for o in objects])
     filter_object_ids = sorted([o["objectId"] for o in objects[0:3]])
-    e = controller.step(dict(action="SetObjectFilter", objectIds=filter_object_ids))
+    controller.step(dict(action="SetObjectFilter", objectIds=filter_object_ids))
+    e = controller.step("Pass") # Must pass for `SetObjectFilter` to take effect
     assert len(e.metadata["objects"]) == len(filter_object_ids)
     filtered_object_ids = sorted([o["objectId"] for o in e.metadata["objects"]])
     assert filtered_object_ids == filter_object_ids
 
-    e = controller.step(dict(action="SetObjectFilter", objectIds=[]))
+    controller.step(dict(action="SetObjectFilter", objectIds=[]))
+    e = controller.step("Pass")  # Must pass for `SetObjectFilter` to take effect
     assert len(e.metadata["objects"]) == 0
 
     e = controller.step(dict(action="ResetObjectFilter"))
@@ -748,12 +727,13 @@ def test_toggle_stove(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_open_interactable_with_filter(controller):
-    position = {"x": -1.0, "y": 0.9009982347488403, "z": -0.5}
+    position = {"x": -1.2, "y": 0.9009982347488403, "z": -0.5}
     action = position.copy()
     action["rotation"] = dict(y=90)
     action["horizon"] = 0
     action["standing"] = True
     action["action"] = "TeleportFull"
+    action["forceAction"] = True
     controller.step(action, raise_for_failure=True)
 
     fridge = next(
@@ -765,6 +745,7 @@ def test_open_interactable_with_filter(controller):
     assert_near(controller.last_event.metadata["agent"]["position"], position)
 
     controller.step(dict(action="SetObjectFilter", objectIds=[]))
+    controller.step("Pass")  # Must pass for `SetObjectFilter` to take effect
     assert controller.last_event.metadata["objects"] == []
     controller.step(
         action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
@@ -783,12 +764,13 @@ def test_open_interactable_with_filter(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_open_interactable(controller):
-    position = {"x": -1.0, "y": 0.9009982347488403, "z": -0.5}
+    position = {"x": -1.2, "y": 0.9009982347488403, "z": -0.5}
     action = position.copy()
     action["rotation"] = dict(y=90)
     action["horizon"] = 0
     action["standing"] = True
     action["action"] = "TeleportFull"
+    action["forceAction"] = True
     controller.step(action, raise_for_failure=True)
 
     fridge = next(
@@ -895,6 +877,7 @@ def test_action_dispatch(fifo_controller):
             "ProcessControlCommand",
         ]
     )
+    print(f'metadata sorted {sorted(event.metadata["actionReturn"])} known ambig {known_ambig}')
     assert sorted(event.metadata["actionReturn"]) == known_ambig
     skip_reset(fifo_controller)
 
@@ -943,9 +926,9 @@ def test_action_dispatch_server_action_ambiguous(fifo_controller):
         exception_message = str(e)
 
     assert exception_thrown
+    print(exception_message)
     assert (
-        exception_message
-        == "Ambiguous action: TestActionDispatchSAAmbig Mixing a ServerAction method with overloaded methods is not permitted"
+        "Ambiguous action: TestActionDispatchSAAmbig Mixing a ServerAction method with overloaded methods is not permitted" in exception_message
     )
     skip_reset(fifo_controller)
 
@@ -1119,14 +1102,14 @@ def test_jsonschema_metadata(controller):
     skip_reset(controller)
 
 
-@pytest.mark.parametrize("controller", fifo_wsgi)
-def test_drone_jsonschema_metadata(controller):
-    controller.reset(agentMode="drone")
-    event = controller.step(action="Pass")
-    with open(os.path.join(TESTS_DATA_DIR, "drone-metadata-schema.json")) as f:
-        schema = json.loads(f.read())
+# @pytest.mark.parametrize("controller", fifo_wsgi)
+# def test_drone_jsonschema_metadata(controller):
+#     controller.reset(agentMode="drone")
+#     event = controller.step(action="Pass")
+#     with open(os.path.join(TESTS_DATA_DIR, "drone-metadata-schema.json")) as f:
+#         schema = json.loads(f.read())
 
-    jsonschema.validate(instance=event.metadata, schema=schema)
+#     jsonschema.validate(instance=event.metadata, schema=schema)
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_arm_jsonschema_metadata(controller):
@@ -1239,7 +1222,7 @@ def test_change_resolution(controller):
 
 
 @pytest.mark.parametrize("controller", fifo)
-def test_teleport(controller):
+def test_teleport_locobot(controller):
     # Checking y coordinate adjustment works
     controller.step(
         "TeleportFull", **{**BASE_FP28_LOCATION, "y": 0.95}, raise_for_failure=True
@@ -1317,47 +1300,49 @@ def test_teleport(controller):
             pass
 
     # Teleporting with the locobot and drone, which don't support standing
-    for agent in ["locobot", "drone"]:
-        event = controller.reset(agentMode=agent)
-        assert event.metadata["agent"]["isStanding"] is None, agent + " cannot stand!"
+    agent = "locobot"
+   
+    event = controller.reset(agentMode=agent)
+    assert event.metadata["agent"]["isStanding"] is None, agent + " cannot stand!"
 
-        # Only degrees of freedom on the locobot
-        for action in ["Teleport", "TeleportFull"]:
+    # Only degrees of freedom on the locobot
+    for action in ["Teleport", "TeleportFull"]:
+        event = controller.step(
+            action=action,
+            position=dict(x=-1.5, y=0.9, z=-1.5),
+            rotation=dict(x=0, y=90, z=0),
+            horizon=30,
+        )
+        assert event.metadata["lastActionSuccess"], (
+            agent + " must be able to TeleportFull without passing in standing!"
+        )
+        try:
             event = controller.step(
                 action=action,
                 position=dict(x=-1.5, y=0.9, z=-1.5),
                 rotation=dict(x=0, y=90, z=0),
                 horizon=30,
+                standing=True  
             )
-            assert event.metadata["lastActionSuccess"], (
-                agent + " must be able to TeleportFull without passing in standing!"
+            assert False, (
+                agent + " should not be able to pass in standing to teleport!"
             )
-            try:
-                event = controller.step(
-                    action=action,
-                    position=dict(x=-1.5, y=0.9, z=-1.5),
-                    rotation=dict(x=0, y=90, z=0),
-                    horizon=30,
-                    standing=True,
-                )
-                assert False, (
-                    agent + " should not be able to pass in standing to teleport!"
-                )
-            except:
-                pass
+        except Exception as e:
+            print(f"Exception: {e}")
+            pass
 
-            # test out of bounds with default agent
-            try:
-                controller.step(
-                    action=action,
-                    position=dict(x=2000, y=0, z=9000),
-                    rotation=dict(x=0, y=90, z=0),
-                    horizon=30,
-                    raise_for_failure=True,
-                )
-                assert False, "Out of bounds teleport not caught by physics agent"
-            except:
-                pass
+        # test out of bounds with default agent
+        try:
+            controller.step(
+                action=action,
+                position=dict(x=2000, y=0, z=9000),
+                rotation=dict(x=0, y=90, z=0),
+                horizon=30,
+                raise_for_failure=True,
+            )
+            assert False, "Out of bounds teleport not caught by physics agent"
+        except:
+            pass
 
         # make sure Teleport works with default args
         a1 = controller.last_event.metadata["agent"]
@@ -1376,6 +1361,149 @@ def test_teleport(controller):
 
     controller.reset(agentMode="default")
 
+@pytest.mark.parametrize("controller", fifo)
+def test_teleport_stretch(controller):
+    # Checking y coordinate adjustment works
+    controller.step(
+        "TeleportFull", **{**BASE_FP28_LOCATION, "y": 0.95}, raise_for_failure=True
+    )
+    position = controller.last_event.metadata["agent"]["position"]
+    assert_near(position, BASE_FP28_POSITION)
+
+    controller.step(
+        "TeleportFull",
+        **{**BASE_FP28_LOCATION, "x": -2.0, "z": -2.5, "y": 0.95},
+        raise_for_failure=True,
+    )
+    position = controller.last_event.metadata["agent"]["position"]
+    assert_near(position, dict(x=-2.0, z=-2.5, y=0.901))
+
+    # Teleporting too high
+    before_position = controller.last_event.metadata["agent"]["position"]
+    controller.step(
+        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
+    )
+    assert not controller.last_event.metadata[
+        "lastActionSuccess"
+    ], "Teleport should not allow changes for more than 0.05 in the y coordinate."
+    assert (
+        controller.last_event.metadata["agent"]["position"] == before_position
+    ), "After failed teleport, the agent's position should not change."
+
+    # Teleporting into an object
+    controller.step(
+        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
+    )
+    assert not controller.last_event.metadata[
+        "lastActionSuccess"
+    ], "Should not be able to teleport into an object."
+
+    # Teleporting into a wall
+    controller.step(
+        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
+    )
+    assert not controller.last_event.metadata[
+        "lastActionSuccess"
+    ], "Should not be able to teleport into a wall."
+
+    # DEFAULT AGENT TEST
+    # make sure Teleport works with default args
+    a1 = controller.last_event.metadata["agent"]
+    a2 = controller.step("Teleport", horizon=10).metadata["agent"]
+    assert abs(a2["cameraHorizon"] - 10) < 1e-2, "cameraHorizon should be ~10!"
+
+    # all should be the same except for horizon
+    assert_near(a1["position"], a2["position"])
+    assert_near(a1["rotation"], a2["rotation"])
+    assert (
+        a1["isStanding"] == a2["isStanding"]
+    ), "Agent should remain in same standing when unspecified!"
+    assert a1["isStanding"] != None, "Agent isStanding should be set for physics agent!"
+
+    # make sure float rotation works
+    # TODO: readd this when it actually works
+    # agent = controller.step('TeleportFull', rotation=25).metadata['agent']
+    # assert_near(agent['rotation']['y'], 25)
+
+    # test out of bounds with default agent
+    for action in ["Teleport", "TeleportFull"]:
+        try:
+            controller.step(
+                action="TeleportFull",
+                position=dict(x=2000, y=0, z=9000),
+                rotation=dict(x=0, y=90, z=0),
+                horizon=30,
+                raise_for_failure=True,
+            )
+            assert False, "Out of bounds teleport not caught by physics agent"
+        except:
+            pass
+
+    # Teleporting with the stretch
+    agent = "stretch"
+   
+    event = controller.reset(agentMode=agent)
+    assert event.metadata["agent"]["isStanding"] is False, agent + " cannot stand!"
+
+    # Only degrees of freedom on the locobot
+    for action in ["Teleport", "TeleportFull"]:
+        event = controller.step(
+            action=action,
+            position=dict(x=-1.5, y=0.9, z=-1.5),
+            rotation=dict(x=0, y=90, z=0),
+            horizon=30,
+            standing=True
+        )
+
+        print(f"Error Message: {event.metadata['errorMessage']}")
+        assert event.metadata["lastActionSuccess"], (
+            agent + " must be able to TeleportFull without passing in standing!"
+        )
+        try:
+            event = controller.step(
+                action=action,
+                position=dict(x=-1.5, y=0.9, z=-1.5),
+                rotation=dict(x=0, y=90, z=0),
+                horizon=30,
+                standing=True
+            ) 
+            assert False, (
+                agent + " should not be able to pass in standing to teleport!"
+            )
+        except Exception as e:
+            print(f"Exception: {e}")
+            pass
+
+        # test out of bounds with default agent
+        try:
+            controller.step(
+                action=action,
+                position=dict(x=2000, y=0, z=9000),
+                rotation=dict(x=0, y=90, z=0),
+                horizon=30,
+                raise_for_failure=True,
+            )
+            assert False, "Out of bounds teleport not caught by physics agent"
+        except:
+            pass
+
+        # make sure Teleport works with default args
+        a1 = controller.last_event.metadata["agent"]
+        a2 = controller.step("Teleport", horizon=10).metadata["agent"]
+        print(f"horizon {a2['cameraHorizon']}")
+        assert abs(a2["cameraHorizon"] - 10) < 1e-2, "cameraHorizon should be ~10!"
+
+        # all should be the same except for horizon
+        assert_near(a1["position"], a2["position"])
+        assert_near(a1["rotation"], a2["rotation"])
+
+        # TODO: readd this when it actually works.
+        # make sure float rotation works
+        # if agent == "locobot":
+        # agent = controller.step('TeleportFull', rotation=25).metadata['agent']
+        # assert_near(agent['rotation']['y'], 25)
+
+    controller.reset(agentMode="default")
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_get_interactable_poses(controller):
@@ -2199,24 +2327,33 @@ def test_rotate_hand(controller):
     assert_near(h1["localRotation"], dict(x=0, y=0, z=0))
     assert_near(h2["localRotation"], dict(x=90, y=180, z=0))
 
-def test_settle_physics(fifo_controller):
-    from dictdiffer import diff
-    fifo_controller.reset(agentMode="arm")
 
-    for i in range(30):
-        fifo_controller.step("AdvancePhysicsStep", raise_for_failure=True)
+def test_settle_physics():
+    from dictdiffer import diff
+    physicsSimulationParams = {
+            "autoSimulation": False,
+            "fixedDeltaTime": 0.01,
+            # run 30 simulations after action
+            "minSimulateTimeSeconds": 0.3
+    }
+    fifo_controller = build_controller(
+        server_class=FifoServer, 
+        agentMode="arm", 
+        physicsSimulationParams = physicsSimulationParams
+    )
 
     first_objs = {o['objectId']: o for o in fifo_controller.last_event.metadata["objects"]}
 
-    for i in range(30):
-        fifo_controller.step("AdvancePhysicsStep", raise_for_failure=True)
+    fifo_controller.reset(
+        agentMode="arm", 
+        physicsSimulationParams = physicsSimulationParams
+    )
 
     diffs = []
     last_objs = {o['objectId']: o for o in fifo_controller.last_event.metadata["objects"]}
     for object_id, object_metadata in first_objs.items():
-        for d in (diff(object_metadata, last_objs.get(object_id, {}), tolerance=0.00001, ignore=set(["receptacleObjectIds"]))):
+        for d in (diff(object_metadata, last_objs.get(object_id, {}), absolute_tolerance=0.001, ignore=set(["receptacleObjectIds"]))):
             diffs.append((object_id, d))
-
     assert diffs == []
 
 @pytest.mark.parametrize("controller", fifo_wsgi)

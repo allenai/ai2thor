@@ -22,7 +22,7 @@ PYPI_S3_BUCKET = "ai2-thor-pypi"
 TEST_OUTPUT_DIRECTORY = "../../images-debug"
 
 LOCAL_BUILD_COMMIT_ID = "local"
-AUTO_BUILD_PLATFORMS = [OSXIntel64, Linux64, CloudRendering]
+AUTO_BUILD_PLATFORMS = [CloudRendering, OSXIntel64]
 
 COMMIT_ID = None
 try:
@@ -69,6 +69,17 @@ class EditorBuild(object):
     def lock_sh(self):
         pass
 
+    @property
+    def base_dir(self):
+       return os.path.join(
+        os.path.dirname(
+            os.path.dirname(
+                os.path.realpath(__file__)
+            )
+        ),
+        "unity"
+       )
+
 
 class ExternalBuild(object):
     def __init__(self, executable_path):
@@ -87,6 +98,16 @@ class ExternalBuild(object):
 
     def lock_sh(self):
         pass
+
+    @property
+    def base_dir(self):
+       return os.path.dirname(
+           os.path.dirname(
+            os.path.dirname(
+                os.path.dirname(self.executable_path)
+           )
+        )
+    )
 
 
 class Build(object):

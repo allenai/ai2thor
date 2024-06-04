@@ -32,7 +32,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void InitializeBody(ServerAction initializeAction) {
+        public override ActionFinished InitializeBody(ServerAction initializeAction) {
             VisibilityCapsule = DroneVisCap;
             m_CharacterController.center = new Vector3(0, 0, 0);
             m_CharacterController.radius = 0.2f;
@@ -59,6 +59,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // drone also needs to toggle on the drone basket and vis cap
             DroneBasket.SetActive(true);
             DroneVisCap.SetActive(true);
+            return ActionFinished.Success;
         }
 
 
@@ -351,7 +352,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void TeleportFull(
-            Vector3 position, Vector3 rotation, float horizon, bool forceAction = false
+            Vector3? position, Vector3? rotation, float? horizon, bool forceAction = false
         ) {
             base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
             actionFinished(success: true);

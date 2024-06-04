@@ -28,6 +28,8 @@ namespace Tests {
             var agentManager = GameObject.FindObjectOfType<AgentManager>();
             action["sequenceId"] = sequenceId;
             agentManager.ProcessControlCommand(new DynamicServerAction(action));
+            // Emit state or Action Complete are valid states
+            yield return new WaitUntil(() => getActiveAgent().ReadyForCommand);
             yield return new WaitForEndOfFrame();
             this.generateMetadata();
             // yield return agentManager.EmitFrame();
@@ -54,6 +56,11 @@ namespace Tests {
             };
             yield return step(action);
         }
+
+        public BaseFPSAgentController getActiveAgent() {
+            var agentManager = GameObject.FindObjectOfType<AgentManager>();
+            return agentManager.GetActiveAgent();
+        }
         
 
         protected AgentManager agentManager {
@@ -75,7 +82,7 @@ namespace Tests {
             MultiAgentMetadata multiMeta = new MultiAgentMetadata();
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[agentManager.GetThirdPartyCameraCount()];
             List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
-            agentManager.createPayload(multiMeta, cameraMetadata, renderPayload, true);
+            agentManager.createPayload(multiMeta, cameraMetadata, renderPayload, true, true);
             this.renderPayload = renderPayload;
             this.cameraMetadata = cameraMetadata;
             this.metadata = multiMeta;

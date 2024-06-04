@@ -20,6 +20,8 @@ using System.Collections.Generic;
 [RequireComponent(typeof(Camera))]
 public class ImageSynthesis : MonoBehaviour {
 
+    private bool initialized = false;
+
     // pass configuration
     private CapturePass[] capturePasses = new CapturePass[] {
         new CapturePass() { name = "_img" },
@@ -54,6 +56,14 @@ public class ImageSynthesis : MonoBehaviour {
         return false;
     }
 
+    public void updateCameraStatuses(bool enabled) {
+        for (int i = 0; i < capturePasses.Length; i++) {
+            if (capturePasses[i].camera != null && capturePasses[i].name != "_img") {
+                capturePasses[i].camera.enabled = enabled;
+            }
+        }
+    }
+
     private Shader uberReplacementShader;
     private Shader opticalFlowShader;
     private Shader depthShader;
@@ -74,47 +84,52 @@ public class ImageSynthesis : MonoBehaviour {
 
     public Texture2D tex;
 
-    void Start() {
-        // XXXXXXXXXXX************
-        // Remember, adding any new Shaders requires them to be included in Project Settings->Graphics->Always Included Shaders
-        // otherwise the standlone will build without the shaders and you will be sad
+    public void OnEnable() {
+    // This initialization code MUST live in OnEnable and not Start as we instantiate ThirdPartyCameras
+    // programatically in other functions and need them to be initialized immediately.
+        if (!initialized) {
+            // XXXXXXXXXXX************
+            // Remember, adding any new Shaders requires them to be included in Project Settings->Graphics->Always Included Shaders
+            // otherwise the standlone will build without the shaders and you will be sad
 
 
-        // default fallbacks, if shaders are unspecified
-        if (!uberReplacementShader) {
-            uberReplacementShader = Shader.Find("Hidden/UberReplacement");
-        }
+            // default fallbacks, if shaders are unspecified
 
-        if (!opticalFlowShader) {
-            opticalFlowShader = Shader.Find("Hidden/OpticalFlow");
-        }
+            if (!uberReplacementShader) {
+                uberReplacementShader = Shader.Find("Hidden/UberReplacement");
+            }
+
+            if (!opticalFlowShader) {
+                opticalFlowShader = Shader.Find("Hidden/OpticalFlow");
+            }
 
 #if UNITY_EDITOR
 
-        if (!depthShader) {
-            depthShader = Shader.Find("Hidden/DepthBW");
-        }
+            if (!depthShader) {
+                depthShader = Shader.Find("Hidden/DepthBW");
+            }
 #else
-            if (!depthShader)
-                depthShader = Shader.Find("Hidden/Depth");
+                if (!depthShader)
+                    depthShader = Shader.Find("Hidden/Depth");
 
 #endif
 
-        // if (!positionShader)
-        //	positionShader = Shader.Find("Hidden/World");
+            // if (!positionShader)
+            //	positionShader = Shader.Find("Hidden/World");
 
-        opticalFlowSensitivity = 50.0f;
+            opticalFlowSensitivity = 50.0f;
 
-        // use real camera to capture final image
-        capturePasses[0].camera = GetComponent<Camera>();
-        for (int q = 1; q < capturePasses.Length; q++) {
-            capturePasses[q].camera = CreateHiddenCamera(capturePasses[q].name);
+            // use real camera to capture final image
+            capturePasses[0].camera = GetComponent<Camera>();
+            for (int q = 1; q < capturePasses.Length; q++) {
+                capturePasses[q].camera = CreateHiddenCamera(capturePasses[q].name);
+            }
+            md5 = System.Security.Cryptography.MD5.Create();
+
+            OnCameraChange();
+            OnSceneChange();
         }
-        md5 = System.Security.Cryptography.MD5.Create();
-
-        OnCameraChange();
-        OnSceneChange();
-
+        initialized = true;
     }
 
     void LateUpdate() {

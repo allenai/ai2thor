@@ -2,12 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+using UnityStandardAssets.Characters.FirstPerson;
 using System.Linq;
 
 public class CollisionListener : MonoBehaviour {
     public Dictionary<Collider, HashSet<Collider>> externalColliderToInternalCollisions = new Dictionary<Collider, HashSet<Collider>>();
     public List<GameObject> doNotRegisterChildrenWithin = new List<GameObject>();
-
+    public bool deadZoneCheck;
     public static bool useMassThreshold = false;
     public static float massThreshold;
 
@@ -79,7 +81,6 @@ public class CollisionListener : MonoBehaviour {
         }
     }
 
-
     public void RegisterCollision(Collider internalCollider, Collider externalCollider) {
         if (!externalColliderToInternalCollisions.ContainsKey(externalCollider)) {
             externalColliderToInternalCollisions[externalCollider] = new HashSet<Collider>();
@@ -99,6 +100,7 @@ public class CollisionListener : MonoBehaviour {
 
     public void Reset() {
         externalColliderToInternalCollisions.Clear();
+        deadZoneCheck = false;
     }
 
     private static bool debugCheckIfCollisionIsNonTrivial(
@@ -170,6 +172,36 @@ public class CollisionListener : MonoBehaviour {
 
     public IEnumerable<StaticCollision> StaticCollisions() {
         return StaticCollisions(this.externalColliderToInternalCollisions.Keys);
+    }
+
+    public void enableDeadZoneCheck() {
+        deadZoneCheck = true;
+    }
+
+    public bool TransformChecks(PhysicsRemoteFPSAgentController controller, Transform objectTarget) {
+        // this action is specifically for a stretch wrist-rotation with limits
+        if (deadZoneCheck) {
+            float currentYaw = objectTarget.rotation.eulerAngles.y;
+            float cLimit = controller.gameObject.GetComponentInChildren<Stretch_Robot_Arm_Controller>().wristClockwiseLocalRotationLimit;
+            float ccLimit = controller.gameObject.GetComponentInChildren<Stretch_Robot_Arm_Controller>().wristCounterClockwiseLocalRotationLimit;
+            
+            // Consolidate reachable euler-rotations (which are normally bounded by [0, 360)) into a continuous number line,
+            // bounded instead by [continuousCounterClockwiseLocalRotationLimit, continuousClockwiseLocalRotationLimit + 360)
+            if (cLimit < ccLimit) {
+                cLimit += 360;
+                if (currentYaw < ccLimit) {
+                    currentYaw += 360;
+                }
+            }
+
+            if (currentYaw < ccLimit || currentYaw > cLimit) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     public virtual bool ShouldHalt() {

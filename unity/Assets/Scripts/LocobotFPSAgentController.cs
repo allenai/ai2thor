@@ -26,7 +26,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public LocobotFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
         }
 
-        public override void InitializeBody(ServerAction initializeAction) {
+        public override ActionFinished InitializeBody(ServerAction initializeAction) {
             // toggle FirstPersonCharacterCull
 
             VisibilityCapsule = BotVisCap;
@@ -64,6 +64,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
             }
+            return ActionFinished.Success;
         }
 
         public new void Initialize(ServerAction action) {
@@ -275,17 +276,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////////////////////////////////////
 
         [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)]
-        public void TeleportFull(float x, float y, float z, Vector3 rotation, float horizon, bool forceAction = false) {
+        public void TeleportFull(float x, float y, float z, Vector3? rotation, float? horizon, bool forceAction = false) {
             TeleportFull(
                 position: new Vector3(x, y, z), rotation: rotation, horizon: horizon, forceAction: forceAction
             );
         }
 
         public void TeleportFull(
-            Vector3 position, Vector3 rotation, float horizon, bool forceAction = false
+            Vector3? position, Vector3? rotation, float? horizon, bool forceAction = false
         ) {
             base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
-            base.assertTeleportedNearGround(targetPosition: position);
+            base.assertTeleportedNearGround(targetPosition: transform.position);
             actionFinished(success: true);
         }
 

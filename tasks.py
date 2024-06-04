@@ -1,6 +1,7 @@
 import os
 import signal
 import sys
+import traceback
 
 if os.name != "nt":
     import fcntl
@@ -107,8 +108,8 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
         s3.Object(bucket, sha256_key).put(
             Body=sha.hexdigest(), ACL=acl, ContentType="text/plain"
         )
-    except botocore.exceptions.ClientError as e:
-        logger.error("caught error uploading archive %s: %s" % (build_archive_name, e))
+    except botocore.exceptions.ClientError:
+        logger.error("caught error uploading archive %s: %s" % (build_archive_name, traceback.format_exc()))
 
     logger.info("pushed build %s to %s" % (bucket, build_archive_name))
 
@@ -127,6 +128,42 @@ def _unity_version():
 
     return project_version["m_EditorVersion"]
 
+
+def _unity_playback_engines_path():
+    unity_version = _unity_version()
+    standalone_path = None
+
+    if sys.platform.startswith("darwin"):
+        unity_hub_path = (
+            "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
+                unity_version
+            )
+        )
+        # /Applications/Unity/2019.4.20f1/Unity.app/Contents/MacOS
+
+        standalone_path = (
+            "/Applications/Unity/{}/PlaybackEngines".format(
+                unity_version
+            )
+        )
+    elif "win" in sys.platform:
+        raise ValueError("Windows not supported yet, verify PlaybackEnginesPath")
+        unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Data/PlaybackEngines".format(
+            unity_version
+        )
+        # TODO: Verify windows unity standalone path
+        standalone_path = "C:/PROGRA~1/{}/Editor/Unity.exe".format(unity_version)
+    elif sys.platform.startswith("linux"):
+        unity_hub_path = "{}/Unity/Hub/Editor/{}/Editor/Data/PlaybackEngines".format(
+            os.environ["HOME"], unity_version
+        )
+
+    if standalone_path and os.path.exists(standalone_path):
+        unity_path = standalone_path
+    else:
+        unity_path = unity_hub_path
+
+    return unity_path
 
 def _unity_path():
     unity_version = _unity_version()
@@ -197,11 +234,13 @@ def _build(
     full_env.update(env)
     full_env["UNITY_BUILD_NAME"] = target_path
 
+    print(f"Running build command:\n{command}\nwith env\n{full_env}")
     process = subprocess.Popen(command, shell=True, env=full_env)
 
     start = time.time()
+    sleep_time = 10
     while True:
-        time.sleep(10)  # Check for build completion every 10 seconds
+        time.sleep(sleep_time)  # Check for build completion every `sleep_time` seconds
 
         if process.poll() is not None:  # Process has finished.
             break
@@ -215,10 +254,8 @@ def _build(
             os.waitpid(-1, os.WNOHANG)
             return False
 
-        if elapsed // print_interval > (elapsed - print_interval) // print_interval:
-            print(
-                f"{print_interval}-second interval reached. Process is still running."
-            )
+        if elapsed // print_interval > (elapsed - sleep_time) // print_interval:
+            logger.info(f"Build has been running for {elapsed:.2f} seconds.")
 
     logger.info(f"Exited with code {process.returncode}")
 
@@ -482,7 +519,7 @@ def local_build(
 
     build = ai2thor.build.Build(arch, prefix, False)
     env = dict()
-    if os.path.isdir("unity/Assets/Private/Scenes"):
+    if os.path.isdir("unity/Assets/Private/Scenes") or os.path.isdir("Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets/Scenes"):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
 
     build_dir = os.path.join("builds", build.name)
@@ -871,20 +908,18 @@ def pre_test(context):
         "unity/builds/%s" % c.build_name(),
     )
 
+import scripts.update_private
 
-def clean():
-    import scripts.update_private
 
-    # a deploy key is used on the build server and an .ssh/config entry has been added
-    # to point to the deploy key caclled ai2thor-private-github
-    scripts.update_private.private_repo_url = (
-        "git@ai2thor-private-github:allenai/ai2thor-private.git"
-    )
+def clean(private_repos=tuple()):
     subprocess.check_call("git reset --hard", shell=True)
     subprocess.check_call("git clean -f -d -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
-    shutil.rmtree(scripts.update_private.private_dir, ignore_errors=True)
-    scripts.update_private.checkout_branch()
+
+    for repo in private_repos:
+        if repo.delete_before_checkout:
+            shutil.rmtree(repo.target_dir, ignore_errors=True)
+        repo.checkout_branch()
 
 
 def ci_prune_cache(cache_dir):
@@ -926,10 +961,16 @@ def link_build_cache(root_dir, arch, branch):
         logger.info("copying main cache for %s" % encoded_branch)
 
         os.makedirs(os.path.dirname(branch_cache_dir), exist_ok=True)
-
         # -c uses MacOS clonefile
+        
+        
+        # if sys.platform.startswith("darwin"):
+        #     subprocess.check_call(
+        #         "cp -a -c %s %s" % (main_cache_dir, branch_cache_dir), shell=True
+        #     )
+        # else:
         subprocess.check_call(
-            "cp -a -c %s %s" % (main_cache_dir, branch_cache_dir), shell=True
+            "cp -a %s %s" % (main_cache_dir, branch_cache_dir), shell=True
         )
         logger.info("copying main cache complete for %s" % encoded_branch)
 
@@ -1079,31 +1120,107 @@ def ci_pytest(branch, commit_id):
         f"finished pytest for {branch} {commit_id} in {time.time() - start_time:.2f} seconds"
     )
 
-
+# Type hints break build server's invoke version 
 @task
-def ci_build(context):
+def ci_build(
+    context,
+    commit_id = None, # Optional[str] 
+    branch = None, # Optional[str] 
+    skip_pip = False, # bool
+    novelty_thor_scenes = False,
+    skip_delete_tmp_dir = False, # bool
+    cloudrendering_first = False
+):
+    assert (commit_id is None) == (
+        branch is None
+    ), "must specify both commit_id and branch or neither"
+
+    is_travis_build = commit_id is None
+
+    if not is_travis_build:
+        logger.info("Initiating a NON-TRAVIS build")
+
+    base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
+
+    if is_travis_build:
+        # a deploy key is used on the build server and an .ssh/config entry has been added
+        # to point to the deploy key caclled ai2thor-private-github
+        private_url =  "git@ai2thor-private-github:allenai/ai2thor-private.git"
+        novelty_thor_url = "git@ai2thor-objaverse-github:allenai/ai2thor-objaverse.git"
+    else:
+        private_url = "https://github.com/allenai/ai2thor-private"
+        novelty_thor_url ="https://github.com/allenai/ai2thor-objaverse"
+        
+
+    private_repos = [
+        scripts.update_private.Repo(
+            url=private_url,
+            target_dir=os.path.join(base_dir, "unity", "Assets", "Private"),
+            delete_before_checkout=True,
+        )
+    ]
+
+    novelty_thor_repo = scripts.update_private.Repo(
+        url=novelty_thor_url,
+        target_dir=os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
+        delete_before_checkout=is_travis_build,
+    )
+
+    if novelty_thor_scenes:
+        logger.info("Including a NoveltyThor scenes and making it a private build")
+        private_repos.append(
+            novelty_thor_repo
+        )
+    else:
+        # Needs to be here so we overwrite any existing NoveltyTHOR repo
+        private_repos.append(
+            scripts.update_private.Repo(
+                url=novelty_thor_url,
+                target_dir=os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
+                delete_before_checkout=is_travis_build,
+                commit_id="066485f29d7021ac732bed57758dea4b9d481c40", # Initial commit, empty repo.
+            )
+        )
+
     with open(os.path.join(os.environ["HOME"], ".ci-build.lock"), "w") as lock_f:
         arch_temp_dirs = dict()
         try:
             fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            build = pending_travis_build()
+            if is_travis_build:
+                build = pending_travis_build()
+            else:
+                build = {
+                    "commit_id": commit_id,
+                    "branch": branch,
+                    "tag": None,
+                    "id": None,
+                }
+            
+            novelty_thor_add_branches = ["new_cam_adjust"]
+            if is_travis_build and build and build["branch"] in novelty_thor_add_branches:
+                novelty_thor_scenes = True
+                private_repos.append(
+                    novelty_thor_repo
+                )
+
             skip_branches = ["vids", "video", "erick/cloudrendering", "it_vr"]
             if build and build["branch"] not in skip_branches:
                 # disabling delete temporarily since it interferes with pip releases
                 # pytest_s3_object(build["commit_id"]).delete()
                 logger.info(f"pending build for {build['branch']} {build['commit_id']}")
-                clean()
+                clean(private_repos=private_repos)
                 subprocess.check_call("git fetch", shell=True)
                 subprocess.check_call(
                     "git checkout %s --" % build["branch"], shell=True
                 )
+                logger.info(f" After checkout")
                 subprocess.check_call(
                     "git checkout -qf %s" % build["commit_id"], shell=True
                 )
 
-                private_scene_options = [False]
+                private_scene_options = [novelty_thor_scenes]
 
-                build_archs = ["OSXIntel64", "Linux64"]
+                build_archs = ["OSXIntel64"] #, "Linux64"]
 
                 # CloudRendering only supported with 2020.3.25
                 # should change this in the future to automatically install
@@ -1111,7 +1228,8 @@ def ci_build(context):
                 if _unity_version() == "2020.3.25f1":
                     build_archs.append("CloudRendering")
 
-                build_archs.reverse()  # Let's do CloudRendering first as it's more likely to fail
+                if cloudrendering_first:
+                    build_archs.reverse()  # Let's do CloudRendering first as it's more likely to fail
 
                 has_any_build_failed = False
                 for include_private_scenes in private_scene_options:
@@ -1132,7 +1250,10 @@ def ci_build(context):
                         os.makedirs(temp_dir)
                         logger.info(f"copying unity data to {temp_dir}")
                         # -c uses MacOS clonefile
-                        subprocess.check_call(f"cp -a -c unity {temp_dir}", shell=True)
+                        if sys.platform.startswith("darwin"):
+                            subprocess.check_call(f"cp -a -c unity {temp_dir}", shell=True)
+                        else:
+                            subprocess.check_call(f"cp -a unity {temp_dir}", shell=True)
                         logger.info(f"completed unity data copy to {temp_dir}")
                         rdir = os.path.join(temp_dir, "unity/builds")
                         commit_build = ai2thor.build.Build(
@@ -1146,8 +1267,14 @@ def ci_build(context):
                                 f"found build for commit {build['commit_id']} {arch}"
                             )
                             # download the build so that we can run the tests
-                            if arch == "OSXIntel64":
-                                commit_build.download()
+                            if sys.platform.startswith("darwin"):
+                                if arch == "OSXIntel64":
+                                    commit_build.download()
+                            else:
+                                
+                                if arch in ["CloudRendering", "OSXIntel64"]:
+                                    # In Linux the OSX build cache is used for Unity Tests as cloud rendering fails
+                                    commit_build.download()
                         else:
                             # this is done here so that when a tag build request arrives and the commit_id has already
                             # been built, we avoid bootstrapping the cache since we short circuited on the line above
@@ -1196,16 +1323,22 @@ def ci_build(context):
                 if build["tag"] is None:
                     # its possible that the cache doesn't get linked if the builds
                     # succeeded during an earlier run
+                    
+                    pytest_platform = "OSXIntel64" if sys.platform.startswith("darwin") else "CloudRendering"
+                    # Weirdly even in Linux you can run utf tests using OSX build cache, but not CloudRendering
+                    utf_test_platform = "OSXIntel64"
+
                     link_build_cache(
-                        arch_temp_dirs["OSXIntel64"], "OSXIntel64", build["branch"]
+                        arch_temp_dirs[utf_test_platform], utf_test_platform, build["branch"]
                     )
 
                     # link builds directory so pytest can run
                     logger.info("current directory pre-symlink %s" % os.getcwd())
                     os.symlink(
-                        os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"),
+                        os.path.join(arch_temp_dirs[pytest_platform], "unity/builds"),
                         "unity/builds",
                     )
+                    print(f"Symlink from `unity/builds` to `{os.path.join(arch_temp_dirs[pytest_platform], 'unity/builds')}`")
                     os.makedirs("tmp", exist_ok=True)
                     # using threading here instead of multiprocessing since we must use the start_method of spawn, which
                     # causes the tasks.py to get reloaded, which may be different on a branch from main
@@ -1214,7 +1347,7 @@ def ci_build(context):
                         args=(
                             build["branch"],
                             build["commit_id"],
-                            arch_temp_dirs["OSXIntel64"],
+                            arch_temp_dirs[utf_test_platform],
                         ),
                     )
                     utf_proc.start()
@@ -1246,18 +1379,24 @@ def ci_build(context):
 
                 # must have this after all the procs are joined
                 # to avoid generating a _builds.py file that would affect pytest execution
-                build_pip_commit(context)
-                push_pip_commit(context)
-                generate_pypi_index(context)
+                if skip_pip:
+                    logger.info("Skipping pip build")
+                else:
+                    build_pip_commit(context)
+                    push_pip_commit(context)
+                    generate_pypi_index(context)
 
                 # give the travis poller time to see the result
-                for i in range(12):
-                    b = travis_build(build["id"])
-                    logger.info("build state for %s: %s" % (build["id"], b["state"]))
+                if is_travis_build:
+                    for i in range(12):
+                        b = travis_build(build["id"])
+                        logger.info(
+                            "build state for %s: %s" % (build["id"], b["state"])
+                        )
 
-                    if b["state"] != "started":
-                        break
-                    time.sleep(10)
+                        if b["state"] != "started":
+                            break
+                        time.sleep(10)
 
                 logger.info(
                     "build complete %s %s" % (build["branch"], build["commit_id"])
@@ -1265,23 +1404,25 @@ def ci_build(context):
 
             fcntl.flock(lock_f, fcntl.LOCK_UN)
 
-        except io.BlockingIOError as e:
+        except io.BlockingIOError:
             pass
 
         finally:
-            for arch, temp_dir in arch_temp_dirs.items():
-                logger.info("deleting temp dir %s" % temp_dir)
-                shutil.rmtree(temp_dir)
+            if not skip_delete_tmp_dir:
+                for arch, temp_dir in arch_temp_dirs.items():
+                    logger.info("deleting temp dir %s" % temp_dir)
+                    shutil.rmtree(temp_dir)
 
 
 @task
 def install_cloudrendering_engine(context, force=False):
-    if not sys.platform.startswith("darwin"):
-        raise Exception("CloudRendering Engine can only be installed on Mac")
+    # if not sys.platform.startswith("darwin"):
+    #     raise Exception("CloudRendering Engine can only be installed on Mac")
     s3 = boto3.resource("s3")
-    target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
-        _unity_version()
-    )
+    # target_base_dir = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
+    #     _unity_version()
+    # )
+    target_base_dir = _unity_playback_engines_path()
     full_dir = os.path.join(target_base_dir, "CloudRendering")
     if os.path.isdir(full_dir):
         if force:
@@ -1324,21 +1465,25 @@ def ci_build_webgl(context, commit_id):
 
 def set_gi_cache_folder(arch):
     gi_cache_folder = os.path.join(os.environ["HOME"], "GICache/%s" % arch)
-    plist_path = os.path.join(
-        os.environ["HOME"], "Library/Preferences/com.unity3d.UnityEditor5.x.plist"
-    )
-    # done to avoid race conditions when modifying GICache from more than one build
-    subprocess.check_call(
-        "plutil -replace GICacheEnableCustomPath -bool TRUE %s" % plist_path, shell=True
-    )
-    subprocess.check_call(
-        "plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path),
-        shell=True,
-    )
-    subprocess.check_call(
-        "plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,),
-        shell=True,
-    )
+
+    if sys.platform.startswith("darwin"):
+        plist_path = os.path.join(
+            os.environ["HOME"], "Library/Preferences/com.unity3d.UnityEditor5.x.plist"
+        )
+        # done to avoid race conditions when modifying GICache from more than one build
+        subprocess.check_call(
+            "plutil -replace GICacheEnableCustomPath -bool TRUE %s" % plist_path, shell=True
+        )
+        subprocess.check_call(
+            "plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path),
+            shell=True,
+        )
+        subprocess.check_call(
+            "plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,),
+            shell=True,
+        )
+    else:
+        logger.warn("Unchanged GI Cache directory. Only supported in OSX.")
 
 
 def ci_build_arch(
@@ -4735,9 +4880,10 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
+    from objathor.asset_conversion.util import view_asset_in_thor
 
     hook_runner = ProceduralAssetHookRunner(
-        asset_directory=asset_dir, asset_symlink=True, verbose=True
+        asset_directory=asset_dir, asset_symlink=True, verbose=True, load_file_in_unity=True
     )
     controller = ai2thor.controller.Controller(
         # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",
@@ -4752,36 +4898,70 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
         visibilityScheme="Distance",
         action_hook_runner=hook_runner,
     )
-
-    with open(house_path, "r") as f:
-        house = json.load(f)
-    instance_id = "asset_0"
-    if asset_id != "":
-        house["objects"] = [
-            {
-                "assetId": asset_id,
-                "id": instance_id,
-                "kinematic": True,
-                "position": {"x": 0, "y": 0, "z": 0},
-                "rotation": {"x": 0, "y": 0, "z": 0},
-                "layer": "Procedural2",
-                "material": None,
-            }
-        ]
-    evt = controller.step(action="CreateHouse", house=house)
-
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    
+    #TODO bug why skybox is not changing? from just procedural pipeline
+    evt = controller.step(
+        action="SetSkybox", 
+        color={
+            "r": 0,
+            "g": 0,
+            "b": 0,
+        }
     )
-    print(f'Error: {evt.metadata["errorMessage"]}')
 
-    evt = controller.step(dict(action="LookAtObjectCenter", objectId=instance_id))
-
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    angle_increment = 45
+    angles = [n * angle_increment for n in range(0, round(360 / angle_increment))]
+    axes = [(0, 1, 0), (1, 0, 0)]
+    rotations = [(x, y, z, degrees) for degrees in angles for (x, y, z) in axes]
+    view_asset_in_thor(
+        asset_id=asset_id,
+        controller=controller,
+        output_dir="./output-test",
+        rotations=rotations,
+        house_path=house_path,
+        skybox_color=(0, 0, 0)
     )
-    print(f'Error: {evt.metadata["errorMessage"]}')
 
+    # with open(house_path, "r") as f:
+    #     house = json.load(f)
+    # instance_id = "asset_0"
+    # if asset_id != "":
+    #     house["objects"] = [
+    #         {
+    #             "assetId": asset_id,
+    #             "id": instance_id,
+    #             "kinematic": True,
+    #             "position": {"x": 0, "y": 0, "z": 0},
+    #             "rotation": {"x": 0, "y": 0, "z": 0},
+    #             "layer": "Procedural2",
+    #             "material": None,
+    #         }
+    #     ]
+    # evt = controller.step(action="CreateHouse", house=house)
+
+   
+    # print(
+    #     f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    # )
+    # print(f'Error: {evt.metadata["errorMessage"]}')
+
+    # evt = controller.step(
+    #     action="SetSkybox", 
+    #     color={
+    #         "r": 0,
+    #         "g": 0,
+    #         "b": 0,
+    #     }
+    # )
+
+
+    # evt = controller.step(dict(action="LookAtObjectCenter", objectId=instance_id))
+
+    # print(
+    #     f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
+    # )
+    # print(f'Error: {evt.metadata["errorMessage"]}')
+    # input()
 
 @task
 def procedural_asset_cache_test(
@@ -4895,3 +5075,4 @@ def procedural_asset_cache_test(
     )
     print(f'Error: {evt.metadata["errorMessage"]}')
     print(f'return {evt.metadata["actionReturn"]}')
+    

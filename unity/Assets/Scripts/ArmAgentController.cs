@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using RandomExtensions;
 using UnityEngine.AI;
+using System.Runtime.CompilerServices;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
 
@@ -17,14 +18,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         /*
         Toggles the visibility of the magnet sphere at the end of the arm.
         */
-        public void ToggleMagnetVisibility(bool? visible = null) {
+        public ActionFinished ToggleMagnetVisibility(bool? visible = null) {
             MeshRenderer mr = GameObject.Find("MagnetRenderer").GetComponentInChildren<MeshRenderer>();
             if (visible.HasValue) {
                 mr.enabled = visible.Value;
             } else {
                 mr.enabled = !mr.enabled;
             }
-            actionFinished(true);
+            return ActionFinished.Success; 
         }
 
         public override void updateImageSynthesis(bool status) {
@@ -57,57 +58,50 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Finally note that when `coordinateSpace="wrist"` then both `MoveArm` and
         `MoveArmRelative` are identical.
         */
-        public void MoveArmRelative(
+        public IEnumerator MoveArmRelative(
             Vector3 offset,
             float speed = 1,
-            float? fixedDeltaTime = null,
             bool returnToStart = true,
             string coordinateSpace = "armBase",
-            bool restrictMovement = false,
-            bool disableRendering = true
+            bool restrictMovement = false
         ) {
             var arm = getArm();
-            arm.moveArmRelative(
+            return arm.moveArmRelative(
                 controller: this,
                 offset: offset,
                 unitsPerSecond: speed,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStart: returnToStart,
                 coordinateSpace: coordinateSpace,
-                restrictTargetPosition: restrictMovement,
-                disableRendering: disableRendering
+                restrictTargetPosition: restrictMovement
             );
         }
 
-        public virtual void MoveArm(
+        public virtual IEnumerator MoveArm(
             Vector3 position,
             float speed = 1,
-            float? fixedDeltaTime = null,
             bool returnToStart = true,
             string coordinateSpace = "armBase",
-            bool restrictMovement = false,
-            bool disableRendering = true
+            bool restrictMovement = false
         ) {
             var arm = getArm();
-            arm.moveArmTarget(
+            return arm.moveArmTarget(
                 controller: this,
                 target: position,
                 unitsPerSecond: speed,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStart: returnToStart,
                 coordinateSpace: coordinateSpace,
-                restrictTargetPosition: restrictMovement,
-                disableRendering: disableRendering
+                restrictTargetPosition: restrictMovement
             );
         }
-
 
         // perhaps this should fail if no object is picked up?
         // currently action success happens as long as the arm is
         // enabled because it is a successful "attempt" to pickup something
-        public void PickupObject(List<string> objectIdCandidates = null) {
+        public IEnumerator PickupObject(List<string> objectIdCandidates = null) {
             var arm = getArm();
-            actionFinished(arm.PickupObject(objectIdCandidates, ref errorMessage), errorMessage);
+            return arm.PickupObject(objectIdCandidates);
         }
 
         public override void PickupObject(float x, float y, bool forceAction = false, bool manualInteract = false) {
@@ -122,18 +116,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void ReleaseObject() {
+        public IEnumerator ReleaseObject() {
             var arm = getArm();
-            arm.DropObject();
-
-            // TODO: only return after object(s) dropped have finished moving
-            // currently this will return the frame the object is released
-            actionFinished(true);
+            return arm.DropObject();
         }
 
         // note this does not reposition the center point of the magnet orb
         // so expanding the radius too much will cause it to clip backward into the wrist joint
-        public void SetHandSphereRadius(float radius) {
+        public ActionFinished SetHandSphereRadius(float radius) {
             if (radius < 0.04f || radius > 0.5f) {
                 throw new ArgumentOutOfRangeException(
                     $"radius={radius} of hand cannot be less than 0.04m nor greater than 0.5m"
@@ -142,23 +132,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var arm = getArm();
             arm.SetHandSphereRadius(radius);
-            actionFinished(true);
+            return ActionFinished.Success;
         }
 
-        public virtual void MoveAgent(
+        public IEnumerator MoveAgent(
+            bool returnToStart = true,
             float ahead = 0,
             float right = 0,
-            float speed = 1,
-            float acceleration = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            float speed = 1
         ) {
             if (ahead == 0 && right == 0) {
                 throw new ArgumentException("Must specify ahead or right!");
             }
             Vector3 direction = new Vector3(x: right, y: 0, z: ahead);
-            float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
 
             CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
 
@@ -167,181 +153,109 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             collisionListener.Reset();
 
-            IEnumerator move = ContinuousMovement.move(
+            return ContinuousMovement.move(
+                movable: this.getArm(),
                 controller: this,
-                collisionListener: collisionListener,
                 moveTransform: this.transform,
                 targetPosition: targetPosition,
-                fixedDeltaTime: fixedDeltaTimeFloat,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 unitsPerSecond: speed,
                 returnToStartPropIfFailed: returnToStart,
                 localPosition: false
             );
-
-            if (disableRendering) {
-                ContinuousMovement.unrollSimulatePhysics(
-                    enumerator: move,
-                    fixedDeltaTime: fixedDeltaTimeFloat
-                );
-            } else {
-                StartCoroutine(move);
-            }
         }
 
-        public override void MoveAhead(
+        public IEnumerator MoveAhead(
             float? moveMagnitude = null,
-            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
-            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
-            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
-            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
-            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
             float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
-            MoveAgent(
+            return MoveAgent(
                 ahead: moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
-                fixedDeltaTime: fixedDeltaTime,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering
+                returnToStart: returnToStart
             );
         }
 
-        public override void MoveBack(
+
+        public IEnumerator MoveBack(
             float? moveMagnitude = null,
-            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
-            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
-            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
-            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
-            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
             float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
-            MoveAgent(
+            return MoveAgent(
                 ahead: -moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
-                fixedDeltaTime: fixedDeltaTime,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering
+                returnToStart: returnToStart
             );
         }
 
-        public override void MoveRight(
+        public IEnumerator MoveRight(
             float? moveMagnitude = null,
-            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
-            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
-            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
-            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
-            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
             float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
-            MoveAgent(
+            return MoveAgent(
                 right: moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
-                fixedDeltaTime: fixedDeltaTime,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering
+                returnToStart: returnToStart
             );
         }
 
-        public override void MoveLeft(
+        public IEnumerator MoveLeft(
             float? moveMagnitude = null,
-            string objectId = "",                // TODO: Unused, remove when refactoring the controllers
-            float maxAgentsDistance = -1f,       // TODO: Unused, remove when refactoring the controllers
-            bool forceAction = false,            // TODO: Unused, remove when refactoring the controllers
-            bool manualInteract = false,         // TODO: Unused, remove when refactoring the controllers
-            bool allowAgentsToIntersect = false, // TODO: Unused, remove when refactoring the controllers
             float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
-            MoveAgent(
+            return MoveAgent(
                 right: -moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
-                fixedDeltaTime: fixedDeltaTime,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering
+                returnToStart: returnToStart
             );
         }
 
-        public override void RotateRight(
+        public IEnumerator RotateRight(
             float? degrees = null,
-            bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
-            bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
             float speed = 1.0f,
-            bool waitForFixedUpdate = false,
-            bool returnToStart = true,
-            bool disableRendering = true,
-            float fixedDeltaTime = 0.02f
+            bool returnToStart = true
         ) {
-            RotateAgent(
+            return RotateAgent(
                 degrees: degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
-                waitForFixedUpdate: waitForFixedUpdate,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering,
-                fixedDeltaTime: fixedDeltaTime
+                returnToStart: returnToStart
             );
         }
 
-        public override void RotateLeft(
+        public IEnumerator RotateLeft(
             float? degrees = null,
-            bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
-            bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
             float speed = 1.0f,
-            bool waitForFixedUpdate = false,
-            bool returnToStart = true,
-            bool disableRendering = true,
-            float fixedDeltaTime = 0.02f
+            bool returnToStart = true
         ) {
-            RotateAgent(
+            return RotateAgent(
                 degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
-                waitForFixedUpdate: waitForFixedUpdate,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering,
-                fixedDeltaTime: fixedDeltaTime
+                returnToStart: returnToStart
             );
         }
 
-        public virtual void RotateAgent(
+        public virtual IEnumerator RotateAgent(
             float degrees,
             float speed = 1.0f,
-            bool waitForFixedUpdate = false,
-            bool returnToStart = true,
-            bool disableRendering = true,
-            float fixedDeltaTime = 0.02f
+            bool returnToStart = true
         ) {
             CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
             collisionListener.Reset();
 
             // this.transform.Rotate()
-            IEnumerator rotate = ContinuousMovement.rotate(
+            return ContinuousMovement.rotate(
+                movable: this.getArm(),
                 controller: this,
-                collisionListener: this.GetComponentInParent<CollisionListener>(),
                 moveTransform: this.transform,
                 targetRotation: this.transform.rotation * Quaternion.Euler(0.0f, degrees, 0.0f),
-                fixedDeltaTime: disableRendering ? fixedDeltaTime : Time.fixedDeltaTime,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 radiansPerSecond: speed,
                 returnToStartPropIfFailed: returnToStart
             );
-
-            if (disableRendering) {
-                ContinuousMovement.unrollSimulatePhysics(
-                    enumerator: rotate,
-                    fixedDeltaTime: fixedDeltaTime
-                );
-            } else {
-                StartCoroutine(rotate);
-            }
         }
 
         /*
@@ -354,22 +268,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         account for the hierarchy of rigidbodies of each arm joint and
         determine how to detect collision between a given arm joint and other arm joints.
         */
-        public virtual void RotateWristRelative(
+        public virtual IEnumerator RotateWristRelative(
             float pitch = 0f,
             float yaw = 0f,
             float roll = 0f,
             float speed = 10f,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             var arm = getArm();
-            arm.rotateWrist(
+            return arm.rotateWrist(
                 controller: this,
                 rotation: Quaternion.Euler(pitch, yaw, -roll),
                 degreesPerSecond: speed,
-                disableRendering: disableRendering,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart
             );
         }
@@ -377,12 +288,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // constrain arm's y position based on the agent's current capsule collider center and extents
         // valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
         // arm constrained by the agent's capsule
-        public virtual void MoveArmBase(
+        public virtual IEnumerator MoveArmBase(
             float y,
             float speed = 1,
-            float? fixedDeltaTime = null,
             bool returnToStart = true,
-            bool disableRendering = true,
             bool normalizedY = true
         ) {
             if (normalizedY && (y < 0f || y > 1f)) {
@@ -391,48 +300,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             var arm = getArm();
-            arm.moveArmBase(
+            return arm.moveArmBase(
                 controller: this,
                 height: y,
                 unitsPerSecond: speed,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart,
-                disableRendering: disableRendering,
                 normalizedY: normalizedY
             );
         }
 
-        public virtual void MoveArmBaseUp(
+        public virtual IEnumerator MoveArmBaseUp(
             float distance,
             float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             var arm = getArm();
-            arm.moveArmBaseUp(
+            return arm.moveArmBaseUp(
                 controller: this,
                 distance: distance,
                 unitsPerSecond: speed,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
-                returnToStartPositionIfFailed: returnToStart,
-                disableRendering: disableRendering
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
+                returnToStartPositionIfFailed: returnToStart
             );
         }
 
-        public virtual void MoveArmBaseDown(
+        public virtual IEnumerator MoveArmBaseDown(
             float distance,
             float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
-            MoveArmBaseUp(
+            return MoveArmBaseUp(
                 distance: -distance,
                 speed: speed,
-                fixedDeltaTime: fixedDeltaTime,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering
+                returnToStart: returnToStart
             );
         }
 

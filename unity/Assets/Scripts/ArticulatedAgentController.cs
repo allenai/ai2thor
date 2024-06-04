@@ -38,7 +38,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // TODO: Reimplement for Articulation body
-        public override void InitializeBody(ServerAction initializeAction) {
+        public override ActionFinished InitializeBody(ServerAction initializeAction) {
             // TODO; Articulation Body init
             VisibilityCapsule = StretchVisCap;
             m_CharacterController.center = new Vector3(0, 1.5f, 0);
@@ -121,6 +121,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             FloorColliderPhysicsMaterial = FloorCollider.material;
 
             getArmImplementation().ContinuousUpdate(Time.fixedDeltaTime);
+            return ActionFinished.Success;
         }
 
         private ArticulatedArmController getArmImplementation() {
@@ -145,133 +146,104 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SetFloorColliderToHighFriction();
         }
 
-        public override void MoveArmBaseUp(
+        public override IEnumerator MoveArmBaseUp(
              float distance,
              float speed = 1,
-             float? fixedDeltaTime = null,
-             bool returnToStart = true,
-             bool disableRendering = true
+             bool returnToStart = true
          ) {
             Debug.Log("MoveArmBaseUp from ArticulatedAgentController");
             SetFloorColliderToHighFriction();
             var arm = getArmImplementation();
-            arm.moveArmBaseUp(
+            return arm.moveArmBaseUp(
                 controller: this,
                 distance: distance,
                 unitsPerSecond: speed,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart,
-                disableRendering: disableRendering,
                 useLimits: false
             );
         }
 
         //with limits
-        public void MoveArmBaseUp(
+        public IEnumerator MoveArmBaseUp(
              float distance,
              bool useLimits,
              float speed = 1,
-             float? fixedDeltaTime = null,
-             bool returnToStart = true,
-             bool disableRendering = true
+             bool returnToStart = true
          ) {
             Debug.Log("MoveArmBaseUp from ArticulatedAgentController");
             SetFloorColliderToHighFriction();
             var arm = getArmImplementation();
-            arm.moveArmBaseUp(
+            return arm.moveArmBaseUp(
                 controller: this,
                 distance: distance,
                 unitsPerSecond: speed,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart,
-                disableRendering: disableRendering,
                 useLimits: useLimits
             );
         }
 
-        public override void MoveArmBaseDown(
+        public override IEnumerator MoveArmBaseDown(
             float distance,
             float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             Debug.Log("MoveArmBaseDown from ArticulatedAgentController (pass negative distance to MoveArmBaseUp)");
-            MoveArmBaseUp(
+            return MoveArmBaseUp(
                 distance: -distance,
                 speed: speed,
-                fixedDeltaTime: fixedDeltaTime,
                 returnToStart: returnToStart,
-                disableRendering: disableRendering,
                 useLimits: false
             );
         }
 
         //with limits
-        public void MoveArmBaseDown(
+        public IEnumerator MoveArmBaseDown(
             float distance,
             bool useLimits,
             float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             Debug.Log("MoveArmBaseDown from ArticulatedAgentController (pass negative distance to MoveArmBaseUp)");
-            MoveArmBaseUp(
+            return MoveArmBaseUp(
                 distance: -distance,
                 speed: speed,
-                fixedDeltaTime: fixedDeltaTime,
                 returnToStart: returnToStart,
-                disableRendering: disableRendering,
                 useLimits: useLimits
             );
         }
 
-        public override void MoveArm(
+        public override IEnumerator MoveArm(
             Vector3 position,
             float speed = 1,
-            float? fixedDeltaTime = null,
             bool returnToStart = true,
             string coordinateSpace = "armBase",
-            bool restrictMovement = false,
-            bool disableRendering = true
+            bool restrictMovement = false
         ) {
             var arm = getArmImplementation();
             SetFloorColliderToHighFriction();
-            arm.moveArmTarget(
+            return arm.moveArmTarget(
                 controller: this,
                 target: position,
                 unitsPerSecond: speed,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
-                returnToStart: returnToStart,
-                coordinateSpace: coordinateSpace,
-                restrictTargetPosition: restrictMovement,
-                disableRendering: disableRendering
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime
             );
         }
 
         //move arm overload with limits
-        public void MoveArm(
+        public IEnumerator MoveArm(
             Vector3 position,
             bool useLimits,
-            float speed = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            string coordinateSpace = "armBase",
-            bool restrictMovement = false,
-            bool disableRendering = true
+            float speed = 1
         ) {
             var arm = getArmImplementation();
             SetFloorColliderToHighFriction();
-            arm.moveArmTarget(
+            return arm.moveArmTarget(
                 controller: this,
                 target: position,
                 unitsPerSecond: speed,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
-                returnToStart: returnToStart,
-                coordinateSpace: coordinateSpace,
-                restrictTargetPosition: restrictMovement,
-                disableRendering: disableRendering,
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 useLimits: useLimits
             );
         }
@@ -522,15 +494,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
 
             actionFinishedEmit(success: true, actionReturn: validAgentPoses);
+            // TODO: change to new action and test
+            // return new ActionFinished() {
+            //     success = true,
+            //     actionReturn: validAgentPoses,
+            //     toEmitState: true
+            // }
         }
 
-        public void MoveAgent(
+        public IEnumerator MoveAgent(            
             float moveMagnitude = 1,
             float speed = 1,
-            float acceleration = 1,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            float acceleration = 1
         ) {
             // Debug.Log("(3) ArticulatedAgentController: PREPPING MOVEAGENT COMMAND");
             int direction = 0;
@@ -545,10 +520,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Debug.Log($"preparing agent {this.transform.name} to move");
             if (Mathf.Approximately(moveMagnitude, 0.0f)) {
                 Debug.Log("Error! distance to move must be nonzero");
-                return;
+                // yield return nests the iterator structure because C# compiler forces 
+                // to use yield return below and creates a nested Monad, (yield return (yield return val))
+                // better to return with .GetEnumerator();
+                return new ActionFinished() {
+                    success = false,
+                    errorMessage = "Error! distance to move must be nonzero"
+                }.GetEnumerator();
             }
-
-            float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
 
             AgentMoveParams amp = new AgentMoveParams {
                 agentState = ABAgentState.Moving,
@@ -567,113 +546,69 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // now that move call happens
             SetFloorColliderToSlippery();
-            IEnumerator move = setFloorToHighFrictionAsLastStep(
+            return setFloorToHighFrictionAsLastStep(
                 ContinuousMovement.moveAB(
                     movable: this.getBodyMovable(),
                     controller: this,
-                    fixedDeltaTime: fixedDeltaTimeFloat
+                    fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime
                 )
             );
-
-            if (disableRendering) {
-                ContinuousMovement.unrollSimulatePhysics(
-                    enumerator: move,
-                    fixedDeltaTime: fixedDeltaTimeFloat
-                );
-            } else {
-                StartCoroutine(move);
-            }
         }
 
 
-        public void MoveAhead(
+        public IEnumerator MoveAhead(
             float? moveMagnitude = null,
             float speed = 0.14f,
-            float acceleration = 0.14f,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = false
+            float acceleration = 0.14f
         ) {
-            MoveAgent(
+            return MoveAgent(
                 moveMagnitude: moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
-                acceleration: acceleration,
-                fixedDeltaTime: fixedDeltaTime,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering
+                acceleration: acceleration
             );
         }
 
-        public void MoveBack(
+        public IEnumerator MoveBack(
             float? moveMagnitude = null,
             float speed = 0.14f,
-            float acceleration = 0.14f,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = false
+            float acceleration = 0.14f
         ) {
-            MoveAgent(
+            return MoveAgent(
                 moveMagnitude: -moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
-                acceleration: acceleration,
-                fixedDeltaTime: fixedDeltaTime,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering
+                acceleration: acceleration
             );
         }
 
-        public void RotateRight(
+        public IEnumerator RotateRight(
             float? degrees = null,
-            bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
-            bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
             float speed = 22.5f,
-            float acceleration = 22.5f,
-            bool waitForFixedUpdate = false,
-            bool returnToStart = true,
-            bool disableRendering = false,
-            float fixedDeltaTime = 0.02f
+            float acceleration = 22.5f
         ) {
-            RotateAgent(
+            return RotateAgent(
+
                 degrees: degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
-                acceleration: acceleration,
-                waitForFixedUpdate: waitForFixedUpdate,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering,
-                fixedDeltaTime: fixedDeltaTime
+                acceleration: acceleration
             );
         }
 
-        public void RotateLeft(
+        public IEnumerator RotateLeft(
             float? degrees = null,
-            bool manualInteract = false, // TODO: Unused, remove when refactoring the controllers
-            bool forceAction = false,    // TODO: Unused, remove when refactoring the controllers
             float speed = 22.5f,
-            float acceleration = 22.5f,
-            bool waitForFixedUpdate = false,
-            bool returnToStart = true,
-            bool disableRendering = false,
-            float fixedDeltaTime = 0.02f
+            float acceleration = 22.5f
         ) {
-            RotateAgent(
+            return RotateAgent(
                 degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
-                acceleration: acceleration,
-                waitForFixedUpdate: waitForFixedUpdate,
-                returnToStart: returnToStart,
-                disableRendering: disableRendering,
-                fixedDeltaTime: fixedDeltaTime
+                acceleration: acceleration
             );
         }
 
-        public void RotateAgent(
+        public IEnumerator RotateAgent(
             float degrees,
             float speed = 22.5f,
-            float acceleration = 22.5f,
-            float? fixedDeltaTime = null,
-            bool waitForFixedUpdate = false,
-            bool returnToStart = true,
-            bool disableRendering = true
+            float acceleration = 22.5f
         ) {
             int direction = 0;
             if (degrees < 0) {
@@ -686,10 +621,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Debug.Log($"preparing agent {this.transform.name} to rotate");
             if (Mathf.Approximately(degrees, 0.0f)) {
                 Debug.Log("Error! distance to rotate must be nonzero");
-                return;
+                return new ActionFinished() {
+                    success = false,
+                    errorMessage = "Error! distance to rotate must be nonzero"
+                }.GetEnumerator();
             }
-
-            float fixedDeltaTimeFloat = fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
 
             AgentMoveParams amp = new AgentMoveParams {
                 agentState = ABAgentState.Rotating,
@@ -708,28 +644,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // now that rotate call happens
             SetFloorColliderToSlippery();
-            IEnumerator rotate = setFloorToHighFrictionAsLastStep(
+            return setFloorToHighFrictionAsLastStep(
                 ContinuousMovement.moveAB(
                     movable: this.getBodyMovable(),
                     controller: this,
-                    fixedDeltaTime: fixedDeltaTimeFloat,
-                    unitsPerSecond: speed,
-                    acceleration: acceleration
+                    fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime
                 )
             );
-
-            if (disableRendering) {
-                ContinuousMovement.unrollSimulatePhysics(
-                    enumerator: rotate,
-                    fixedDeltaTime: fixedDeltaTimeFloat
-                );
-            } else {
-                StartCoroutine(rotate);
-            }
         }
 
         // not doing these for benchmark yet cause no
-        public void TeleportArm(
+        public ActionFinished TeleportArm(
             Vector3? position = null,
             float? rotation = null,
             bool worldRelative = false,
@@ -760,23 +685,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (SArm.IsArmColliding() && !forceAction) {
-                errorMessage = "collision detected at desired transform, cannot teleport";
                 posRotManip.transform.localPosition = oldLocalPosition;
                 posRotManip.transform.localEulerAngles = new Vector3(0, oldLocalRotationAngle, 0);
-                actionFinished(false);
+                return new ActionFinished() {
+                    success = false,
+                    errorMessage = "collision detected at desired transform, cannot teleport"
+                };
             } else {
-                actionFinished(true);
+                return ActionFinished.Success;
             }
         }
 
-        public override void RotateWristRelative(
+        public override IEnumerator RotateWristRelative(
             float pitch = 0f,
             float yaw = 0f,
             float roll = 0f,
             float speed = 400f,
-            float? fixedDeltaTime = null,
-            bool returnToStart = true,
-            bool disableRendering = true
+            bool returnToStart = true
         ) {
             // pitch and roll are not supported for the stretch and so we throw an error
             if (pitch != 0f || roll != 0f) {
@@ -785,13 +710,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Debug.Log($"executing RotateWristRelative from ArticulatedAgentController with speed {speed}");
             var arm = getArmImplementation();
             SetFloorColliderToHighFriction();
-            arm.rotateWrist(
+            return arm.rotateWrist(
                 controller: this,
                 distance: yaw,
-                //rotation: Quaternion.Euler(pitch, yaw, -roll),
                 degreesPerSecond: speed,
-                disableRendering: disableRendering,
-                fixedDeltaTime: fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime),
+                fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime,
                 returnToStartPositionIfFailed: returnToStart
             );
         }
