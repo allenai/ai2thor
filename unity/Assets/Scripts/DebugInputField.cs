@@ -3416,21 +3416,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                // rotate wrist relative
-                case "rwr": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "RotateWristRelative";
-                        action["disableRendering"] = false;
-
-                        if (splitcommand.Length > 1) {
-                            action["yaw"] = float.Parse(splitcommand[1]);
-                        }
-
-                        // action.manualInteract = true;
-                        CurrentActiveController().ProcessControlCommand(action);
-                        break;
-                }
-
                 // rotate wrist absolute
                 case "rw": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -3694,6 +3679,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "RotateWristRelative";
                         action["yaw"] = 90f;
+                        if (splitcommand.Length > 1) {
+                            action["yaw"] = float.Parse(splitcommand[1]);
+                        }
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -4641,18 +4629,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "MoveArmBaseUp";
                         action["distance"] = 0.5f;
                         action["speed"] = 1.0f;
-                        CurrentActiveController().ProcessControlCommand(action);
-                        break;
-                    }
-                
-                case "stretchmovebaseup": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "MoveArmBaseUp";
-                        action["distance"] = 0.05f;
-                        action["speed"] = 5.0f;
-                        action["disableRendering"] = false;
-
-                        //action["fixedDeltaTime"] = 5.0f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
