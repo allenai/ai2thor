@@ -1,3 +1,4 @@
+import glob
 import os
 import signal
 import sys
@@ -908,6 +909,7 @@ def pre_test(context):
         "unity/builds/%s" % c.build_name(),
     )
 
+
 import scripts.update_private
 
 
@@ -961,17 +963,16 @@ def link_build_cache(root_dir, arch, branch):
         logger.info("copying main cache for %s" % encoded_branch)
 
         os.makedirs(os.path.dirname(branch_cache_dir), exist_ok=True)
+
         # -c uses MacOS clonefile
-        
-        
-        # if sys.platform.startswith("darwin"):
-        #     subprocess.check_call(
-        #         "cp -a -c %s %s" % (main_cache_dir, branch_cache_dir), shell=True
-        #     )
-        # else:
-        subprocess.check_call(
-            "cp -a %s %s" % (main_cache_dir, branch_cache_dir), shell=True
-        )
+        if sys.platform.startswith("darwin"):
+            subprocess.check_call(
+                "cp -a -c %s %s" % (main_cache_dir, branch_cache_dir), shell=True
+            )
+        else:
+            subprocess.check_call(
+                "cp -a %s %s" % (main_cache_dir, branch_cache_dir), shell=True
+            )
         logger.info("copying main cache complete for %s" % encoded_branch)
 
     branch_library_cache_dir = os.path.join(branch_cache_dir, "Library")
@@ -1551,6 +1552,7 @@ def ci_build_arch(
             return False
     finally:
         os.chdir(start_wd)
+
 
 @task
 def poll_ci_build(context):
@@ -3688,18 +3690,44 @@ def format(context):
 
 @task
 def format_cs(context):
-    install_dotnet_format(context)
+    # assert tool in ["format", "csharpier"]
+    install_dotnet_tool(context, tool="dotnet-format")
+    install_dotnet_tool(context, tool="csharpier")
 
-    # the following message will get emitted, this can safely be ignored
-    # "Warnings were encountered while loading the workspace. Set the verbosity option to the 'diagnostic' level to log warnings"
+    # First run csharpier as it handles long lines correctly
+    print("Running csharpier on whole project")
     subprocess.check_call(
-        ".dotnet/dotnet tool run dotnet-format unity/AI2-THOR-Base.csproj -w -s",
+        ".dotnet/dotnet tool run dotnet-csharpier unity",
         shell=True,
     )
 
+    # Now run dotnet-format as it allows more configuration options (e.g. curly brace with no new line).
+    # The following message will get emitted, this can safely be ignored
+    # "Warnings were encountered while loading the workspace. Set the verbosity option to the 'diagnostic' level to log warnings"
+    for proj in glob.glob("unity/*.csproj"):
+        if any(
+            k in proj
+            for k in [
+                "UnityStandardAssets",
+                "MagicMirror",
+                "I360Render",
+                "MessagePack",
+                "MIConvexHull",
+                "Priority",
+                "Plugins",
+            ]
+        ):
+            continue
+
+        print(f"\nRunning dotnet-format on {proj}")
+        subprocess.check_call(
+            f".dotnet/dotnet tool run dotnet-format {proj} -w -s",
+            shell=True,
+        )
+
 
 @task
-def install_dotnet_format(context, force=False):
+def install_dotnet_tool(context, tool: str, force=False):
     install_dotnet(context)
 
     base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
@@ -3711,12 +3739,17 @@ def install_dotnet_format(context, force=False):
         tools = json.loads(f.read())
 
     # we may want to specify a version here in the future
-    if not force and "dotnet-format" in tools.get("tools", {}):
+    if not force and tool in tools.get("tools", {}):
         # dotnet-format already installed
         return
 
-    command = os.path.join(base_dir, ".dotnet/dotnet") + " tool install dotnet-format"
+    command = os.path.join(base_dir, ".dotnet/dotnet") + f" tool install {tool}"
     subprocess.check_call(command, shell=True)
+
+
+@task
+def install_dotnet_format(context, force=False):
+    install_dotnet_tool(context, tool="dotnet-format", force=force)
 
 
 @task
@@ -3749,9 +3782,7 @@ def format_py(context):
     except ImportError:
         raise Exception("black not installed - run pip install black")
 
-    subprocess.check_call(
-        "black -v -t py38 --exclude unity/ --exclude .git/ .", shell=True
-    )
+    subprocess.check_call("black -v -t py38 --exclude unity/ --exclude .git/ .", shell=True)
 
 
 @task
@@ -3870,9 +3901,11 @@ def test_utf(base_dir=None):
     test_results_path = os.path.join(project_path, "utf_testResults-%s.xml" % commit_id)
     logfile_path = os.path.join(base_dir, "thor-testResults-%s.log" % commit_id)
 
-    command = (
-        "%s -runTests -testResults %s -logFile %s -testPlatform PlayMode -projectpath %s "
-        % (_unity_path(), test_results_path, logfile_path, project_path)
+    command = "%s -runTests -testResults %s -logFile %s -testPlatform PlayMode -projectpath %s " % (
+        _unity_path(),
+        test_results_path,
+        logfile_path,
+        project_path,
     )
 
     subprocess.call(command, shell=True, cwd=base_dir)
@@ -4699,12 +4732,13 @@ def run_benchmark_from_s3_config(ctx):
 
 @task
 def run_benchmark_from_local_config(
-    ctx, config_path, 
-    house_from_s3=False, 
+    ctx,
+    config_path,
+    house_from_s3=False,
     houses_path="./unity/Assets/Resources/rooms",
     output="out.json",
     local_build=False,
-    arch=None
+    arch=None,
 ):
     import copy
     from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET, UnityActionBenchmarkRunner
@@ -4883,7 +4917,10 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     from objathor.asset_conversion.util import view_asset_in_thor
 
     hook_runner = ProceduralAssetHookRunner(
-        asset_directory=asset_dir, asset_symlink=True, verbose=True, load_file_in_unity=True
+        asset_directory=asset_dir,
+        asset_symlink=True,
+        verbose=True,
+        load_file_in_unity=True,
     )
     controller = ai2thor.controller.Controller(
         # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",
@@ -4898,15 +4935,15 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
         visibilityScheme="Distance",
         action_hook_runner=hook_runner,
     )
-    
-    #TODO bug why skybox is not changing? from just procedural pipeline
+
+    # TODO bug why skybox is not changing? from just procedural pipeline
     evt = controller.step(
-        action="SetSkybox", 
+        action="SetSkybox",
         color={
             "r": 0,
             "g": 0,
             "b": 0,
-        }
+        },
     )
 
     angle_increment = 45
@@ -4919,7 +4956,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
         output_dir="./output-test",
         rotations=rotations,
         house_path=house_path,
-        skybox_color=(0, 0, 0)
+        skybox_color=(0, 0, 0),
     )
 
     # with open(house_path, "r") as f:
@@ -4939,21 +4976,19 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     #     ]
     # evt = controller.step(action="CreateHouse", house=house)
 
-   
     # print(
     #     f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
     # )
     # print(f'Error: {evt.metadata["errorMessage"]}')
 
     # evt = controller.step(
-    #     action="SetSkybox", 
+    #     action="SetSkybox",
     #     color={
     #         "r": 0,
     #         "g": 0,
     #         "b": 0,
     #     }
     # )
-
 
     # evt = controller.step(dict(action="LookAtObjectCenter", objectId=instance_id))
 
@@ -4963,10 +4998,9 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     # print(f'Error: {evt.metadata["errorMessage"]}')
     # input()
 
+
 @task
-def procedural_asset_cache_test(
-    ctx, asset_dir, house_path, asset_ids="", cache_limit=1
-):
+def procedural_asset_cache_test(ctx, asset_dir, house_path, asset_ids="", cache_limit=1):
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
@@ -5013,28 +5047,20 @@ def procedural_asset_cache_test(
 
     evt = controller.step(action="CreateHouse", house=house)
 
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
-    )
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
 
-    evt = controller.step(
-        dict(action="LookAtObjectCenter", objectId=f"{instance_id}_0")
-    )
+    evt = controller.step(dict(action="LookAtObjectCenter", objectId=f"{instance_id}_0"))
 
     # while True:
     #     pass
 
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
-    )
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
 
     evt = controller.step(action="GetLRUCacheKeys")
 
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
-    )
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
     print(f'return {evt.metadata["actionReturn"]}')
 
@@ -5062,17 +5088,12 @@ def procedural_asset_cache_test(
 
     evt = controller.step(action="CreateHouse", house=house)
 
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
-    )
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
 
     controller.reset()
     evt = controller.step(action="GetLRUCacheKeys")
 
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
-    )
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
     print(f'return {evt.metadata["actionReturn"]}')
-    
