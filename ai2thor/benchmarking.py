@@ -476,7 +476,8 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         except Exception as e:
             logger.exception(f"Could not run 'hostname -f' {str(e)}")
             pass
-
+        
+        run_in_editor = controller_params["start_unity"] == False and controller_params["port"]
         benchmark_map = {
             "title": self.name,
             "config": self.config_name,
@@ -484,7 +485,8 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             "benchmark_params": {
                 "platform": platform.system(),
                 "arch": env._build.platform.__name__,
-                "commit_id": env._build.commit_id,
+                "ran_in_editor": run_in_editor,
+                "commit_id": env._build.commit_id if hasattr(env._build, 'commit_id') else None,
                 "filter_object_types": self.filter_object_types,
                 "experiment_sample_count": self.experiment_sample_count,
             },
