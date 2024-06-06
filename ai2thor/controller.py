@@ -1460,7 +1460,7 @@ class Controller(object):
                 commit_build = ai2thor.build.Build(
                     plat, commit_id, self.include_private_scenes, releases_dir
                 )
-
+                print(f"commit_build base_dir: {commit_build.base_dir}")
                 try:
                     if os.path.isdir(commit_build.base_dir) or (
                         not local_build and commit_build.exists()

@@ -1229,7 +1229,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
             List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
             createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender, shouldRenderImageSynthesis);
-            Debug.Log("------ payload");
 #if UNITY_WEBGL
                 JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
                 if (jsInterface != null) {

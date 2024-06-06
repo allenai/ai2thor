@@ -1158,7 +1158,6 @@ namespace Thor.Procedural {
             }
             else {
                 var versionSplit = version.Split('.');
-                Debug.Log(string.Join(", ", versionSplit));
                 var versionResult = new int[] {0, 0, 0 }.Select((x, i) => {
                     if (versionSplit.Length > i) {
                         int outVersion;
@@ -1504,13 +1503,11 @@ namespace Thor.Procedural {
 
             // buildNavMesh(floorGameObject, house.proceduralParameters.navmeshVoxelSize);
             // Debug.Log($"Navmeshes {string.Join(", ", house.metadata.navMeshes.Select(n => $"{n.agentTypeID} radius {n.agentRadius}"))}");
-            Debug.Log($"schema {house.metadata.schema}");
             buildNavMeshes(floorGameObject, house.metadata.navMeshes);
 
            
             if (string.IsNullOrEmpty(house.proceduralParameters.skyboxId) || !materialDb.ContainsKey(house.proceduralParameters.skyboxId)) {
                 var mat = new Material(Shader.Find("Standard"));
-                Debug.Log("--------- Working");
                 mat.color = house.proceduralParameters.skyboxColor.toUnityColor();
                 RenderSettings.skybox = mat;
                 
@@ -1640,7 +1637,6 @@ namespace Thor.Procedural {
             navMeshSurface.voxelSize = buildSettings.voxelSize;
             navMeshSurface.overrideVoxelSize = buildSettings.overrideVoxelSize;
             navMeshSurface.BuildNavMesh(buildSettings);
-            Debug.Log($"Created navmesh w agentType id {navMeshSurface.agentTypeID}");
             return go;
         }
 
@@ -1654,7 +1650,6 @@ namespace Thor.Procedural {
             navMeshSurface.voxelSize = buildSettings.voxelSize;
             navMeshSurface.overrideVoxelSize = buildSettings.overrideVoxelSize;
             navMeshSurface.BuildNavMesh(buildSettings);
-            Debug.Log($"Created navmesh w agentType id {navMeshSurface.agentTypeID}");
             return go;
         }
 
@@ -2410,7 +2405,6 @@ namespace Thor.Procedural {
 
             foreach (Transform t in go.GetComponentsInChildren<Transform>()) {
                 if (t.parent == go.transform) {
-                    Debug.Log($"Moving transform of {t.gameObject.name}");
                     t.parent = newGo.transform;
                 }
             }

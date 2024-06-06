@@ -226,7 +226,7 @@ class StandaloneWindows64(BasePlatform):
 
 def select_platforms(request):
     candidates = []
-    system_platform_map = dict(Linux=(Linux64,), Darwin=(OSXIntel64,), Windows=(StandaloneWindows64,))
+    system_platform_map = dict(Linux=(Linux64,CloudRendering), Darwin=(OSXIntel64,), Windows=(StandaloneWindows64,))
     for p in system_platform_map.get(request.system, ()):
         if not p.enabled:
             continue
