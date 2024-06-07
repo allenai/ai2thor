@@ -65,5 +65,3 @@ public enum SimObjProperty : int // Properties of a SimObjPhysics that determine
     CanBeLitOnFire,
     CanLightOnFire
 }
-
-

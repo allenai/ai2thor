@@ -38,16 +38,15 @@ public class GenerateRoboTHOR : MonoBehaviour {
     protected WallCell[,] wallCells;
     protected int cellsVisited;
 
-    protected int xWalls, zWalls;
+    protected int xWalls,
+        zWalls;
     protected int boundaryPadding;
     protected Transform wallParent;
     protected Transform floorParent;
     protected Transform structure;
 
     protected float[] validStartingAgentRotations = new float[] { 0, 90, 180, 270 };
-    protected string[] validOrientations = new string[] {
-        "left", "right", "top", "bottom"
-    };
+    protected string[] validOrientations = new string[] { "left", "right", "top", "bottom" };
 
     protected class WallCell {
         public bool visited;
@@ -57,13 +56,7 @@ public class GenerateRoboTHOR : MonoBehaviour {
          * Walls are null if they are boundary walls. That is,
          * they are unable to be toggled on or off.
          */
-        public WallCell(
-            bool visited,
-            bool? left,
-            bool? right,
-            bool? top,
-            bool? bottom
-        ) {
+        public WallCell(bool visited, bool? left, bool? right, bool? top, bool? bottom) {
             this.visited = visited;
             this.walls = new Dictionary<string, bool?> {
                 ["left"] = left,
@@ -78,9 +71,13 @@ public class GenerateRoboTHOR : MonoBehaviour {
     // null if all neighbors have been visited.
     protected (int, int)? VisitCell(int xGridCell, int zGridCell) {
         if (xGridCell < 0 || xGridCell >= xWalls) {
-            throw new ArgumentOutOfRangeException($"xGridCell must be in [0:xWalls), not {xGridCell}");
+            throw new ArgumentOutOfRangeException(
+                $"xGridCell must be in [0:xWalls), not {xGridCell}"
+            );
         } else if (zGridCell < 0 || zGridCell >= zWalls) {
-            throw new ArgumentOutOfRangeException($"zGridCell must be in [0:zWalls), not {zGridCell}");
+            throw new ArgumentOutOfRangeException(
+                $"zGridCell must be in [0:zWalls), not {zGridCell}"
+            );
         }
 
         if (!wallCells[xGridCell, zGridCell].visited) {
@@ -128,9 +125,13 @@ public class GenerateRoboTHOR : MonoBehaviour {
      */
     protected (int, int)? GetNeighbor(int xGridCell, int zGridCell, string orientation) {
         if (xGridCell < 0 || xGridCell >= xWalls) {
-            throw new ArgumentOutOfRangeException($"xGridCell must be in [0:xWalls), not {xGridCell}");
+            throw new ArgumentOutOfRangeException(
+                $"xGridCell must be in [0:xWalls), not {xGridCell}"
+            );
         } else if (zGridCell < 0 || zGridCell >= zWalls) {
-            throw new ArgumentOutOfRangeException($"zGridCell must be in [0:zWalls), not {zGridCell}");
+            throw new ArgumentOutOfRangeException(
+                $"zGridCell must be in [0:zWalls), not {zGridCell}"
+            );
         }
 
         if (!wallCells[xGridCell, zGridCell].walls[orientation].HasValue) {
@@ -168,7 +169,11 @@ public class GenerateRoboTHOR : MonoBehaviour {
     /**
      * Returns the position of the neighbor. If the neighbor is out of bounds, null is returned.
      */
-    protected (int, int)? RemoveNeighborWallBoundary(int xGridCell, int zGridCell, string orientation) {
+    protected (int, int)? RemoveNeighborWallBoundary(
+        int xGridCell,
+        int zGridCell,
+        string orientation
+    ) {
         (int, int)? neighbor = GetNeighbor(
             xGridCell: xGridCell,
             zGridCell: zGridCell,
@@ -202,27 +207,27 @@ public class GenerateRoboTHOR : MonoBehaviour {
      */
     protected Vector3 GetWallGridPointCenter(int xGridCell, int zGridCell) {
         if (xGridCell < 0 || xGridCell >= xWalls) {
-            throw new ArgumentOutOfRangeException($"xGridCell must be in [0:xWalls), not {xGridCell}");
+            throw new ArgumentOutOfRangeException(
+                $"xGridCell must be in [0:xWalls), not {xGridCell}"
+            );
         } else if (zGridCell < 0 || zGridCell >= zWalls) {
-            throw new ArgumentOutOfRangeException($"zGridCell must be in [0:zWalls), not {zGridCell}");
+            throw new ArgumentOutOfRangeException(
+                $"zGridCell must be in [0:zWalls), not {zGridCell}"
+            );
         }
 
         float xPos = (
             xWalls % 2 == 1
-            ? wallCenterX + wallPanelWidth * (xGridCell - xWalls / 2) - wallPanelWidth / 2
-            : wallCenterX + wallPanelWidth * (xGridCell - (xWalls - 1) / 2 - 1)
+                ? wallCenterX + wallPanelWidth * (xGridCell - xWalls / 2) - wallPanelWidth / 2
+                : wallCenterX + wallPanelWidth * (xGridCell - (xWalls - 1) / 2 - 1)
         );
         float zPos = (
             zWalls % 2 == 1
-            ? wallCenterZ - wallPanelWidth * (zGridCell - zWalls / 2) + wallPanelWidth / 2
-            : wallCenterZ - wallPanelWidth * (zGridCell - (zWalls - 1) / 2 - 1)
+                ? wallCenterZ - wallPanelWidth * (zGridCell - zWalls / 2) + wallPanelWidth / 2
+                : wallCenterZ - wallPanelWidth * (zGridCell - (zWalls - 1) / 2 - 1)
         );
 
-        return new Vector3(
-            x: xPos,
-            y: wallCenterY,
-            z: zPos
-        );
+        return new Vector3(x: xPos, y: wallCenterY, z: zPos);
     }
 
     /**
@@ -231,9 +236,13 @@ public class GenerateRoboTHOR : MonoBehaviour {
      */
     protected Vector3 GetAgentGridPointCenter(int xGridCell, int zGridCell) {
         if (xGridCell < 0 || xGridCell >= xWalls) {
-            throw new ArgumentOutOfRangeException($"xGridCell must be in [0:xWalls), not {xGridCell}");
+            throw new ArgumentOutOfRangeException(
+                $"xGridCell must be in [0:xWalls), not {xGridCell}"
+            );
         } else if (zGridCell < 0 || zGridCell >= zWalls) {
-            throw new ArgumentOutOfRangeException($"zGridCell must be in [0:zWalls), not {zGridCell}");
+            throw new ArgumentOutOfRangeException(
+                $"zGridCell must be in [0:zWalls), not {zGridCell}"
+            );
         }
 
         float agentCenterX = 5.387f;
@@ -241,22 +250,22 @@ public class GenerateRoboTHOR : MonoBehaviour {
 
         float xPos = (
             xWalls % 2 == 1
-            ? agentCenterX + wallPanelWidth * (xGridCell - xWalls / 2)
-            : agentCenterX + wallPanelWidth * (xGridCell - (xWalls - 1) / 2 - 1) + wallPanelWidth / 2
+                ? agentCenterX + wallPanelWidth * (xGridCell - xWalls / 2)
+                : agentCenterX
+                    + wallPanelWidth * (xGridCell - (xWalls - 1) / 2 - 1)
+                    + wallPanelWidth / 2
         );
         float zPos = (
             zWalls % 2 == 1
-            ? agentCenterZ - wallPanelWidth * (zGridCell - zWalls / 2)
-            : agentCenterZ - wallPanelWidth * (zGridCell - (zWalls - 1) / 2 - 1) - wallPanelWidth / 2
+                ? agentCenterZ - wallPanelWidth * (zGridCell - zWalls / 2)
+                : agentCenterZ
+                    - wallPanelWidth * (zGridCell - (zWalls - 1) / 2 - 1)
+                    - wallPanelWidth / 2
         );
 
         // These are the empirical center position of the agent.
         // They don't need to be super precise because the position is rounded.
-        return new Vector3(
-            x: xPos,
-            y: 0.9009997f,
-            z: zPos
-        );
+        return new Vector3(x: xPos, y: 0.9009997f, z: zPos);
     }
 
     /**
@@ -298,7 +307,10 @@ public class GenerateRoboTHOR : MonoBehaviour {
      * Place a single wall at a position and orientation.
      */
     protected void PlaceWall(int xGridCell, int zGridCell, string orientation) {
-        Vector3 gridPointCenter = GetWallGridPointCenter(xGridCell: xGridCell, zGridCell: zGridCell);
+        Vector3 gridPointCenter = GetWallGridPointCenter(
+            xGridCell: xGridCell,
+            zGridCell: zGridCell
+        );
         PlaceWall(gridPointCenter: gridPointCenter, orientation: orientation);
     }
 
@@ -329,16 +341,17 @@ public class GenerateRoboTHOR : MonoBehaviour {
         GameObject wall;
 
         // side 1
-        wall = Instantiate(
-            original: outerWallPrefab,
-            parent: floorParent,
-            position: new Vector3(
-                x: wallCenterX,
-                y: 1.298f,
-                z: wallCenterZ + (float)(zWalls + boundaryPadding * 2) / 2
-            ),
-            rotation: Quaternion.identity
-        ) as GameObject;
+        wall =
+            Instantiate(
+                original: outerWallPrefab,
+                parent: floorParent,
+                position: new Vector3(
+                    x: wallCenterX,
+                    y: 1.298f,
+                    z: wallCenterZ + (float)(zWalls + boundaryPadding * 2) / 2
+                ),
+                rotation: Quaternion.identity
+            ) as GameObject;
         wall.transform.localScale = new Vector3(
             x: xWalls + boundaryPadding * 2,
             y: wall.transform.localScale.y,
@@ -346,16 +359,17 @@ public class GenerateRoboTHOR : MonoBehaviour {
         );
 
         // side 2
-        wall = Instantiate(
-            original: outerWallPrefab,
-            parent: floorParent,
-            position: new Vector3(
-                x: wallCenterX,
-                y: 1.298f,
-                z: wallCenterZ - (float)(zWalls + boundaryPadding * 2) / 2
-            ),
-            rotation: Quaternion.Euler(0, 180, 0)
-        ) as GameObject;
+        wall =
+            Instantiate(
+                original: outerWallPrefab,
+                parent: floorParent,
+                position: new Vector3(
+                    x: wallCenterX,
+                    y: 1.298f,
+                    z: wallCenterZ - (float)(zWalls + boundaryPadding * 2) / 2
+                ),
+                rotation: Quaternion.Euler(0, 180, 0)
+            ) as GameObject;
         wall.transform.localScale = new Vector3(
             x: xWalls + boundaryPadding * 2,
             y: wall.transform.localScale.y,
@@ -363,16 +377,17 @@ public class GenerateRoboTHOR : MonoBehaviour {
         );
 
         // side 3
-        wall = Instantiate(
-            original: outerWallPrefab,
-            parent: floorParent,
-            position: new Vector3(
-                x: wallCenterX - (float)(xWalls + boundaryPadding * 2) / 2,
-                y: 1.298f,
-                z: wallCenterZ
-            ),
-            rotation: Quaternion.Euler(0, -90, 0)
-        ) as GameObject;
+        wall =
+            Instantiate(
+                original: outerWallPrefab,
+                parent: floorParent,
+                position: new Vector3(
+                    x: wallCenterX - (float)(xWalls + boundaryPadding * 2) / 2,
+                    y: 1.298f,
+                    z: wallCenterZ
+                ),
+                rotation: Quaternion.Euler(0, -90, 0)
+            ) as GameObject;
         wall.transform.localScale = new Vector3(
             x: zWalls + boundaryPadding * 2,
             y: wall.transform.localScale.y,
@@ -380,16 +395,17 @@ public class GenerateRoboTHOR : MonoBehaviour {
         );
 
         // side 4
-        wall = Instantiate(
-            original: outerWallPrefab,
-            parent: floorParent,
-            position: new Vector3(
-                x: wallCenterX + (float)(xWalls + boundaryPadding * 2) / 2,
-                y: 1.298f,
-                z: wallCenterZ
-            ),
-            rotation: Quaternion.Euler(0, 90, 0)
-        ) as GameObject;
+        wall =
+            Instantiate(
+                original: outerWallPrefab,
+                parent: floorParent,
+                position: new Vector3(
+                    x: wallCenterX + (float)(xWalls + boundaryPadding * 2) / 2,
+                    y: 1.298f,
+                    z: wallCenterZ
+                ),
+                rotation: Quaternion.Euler(0, 90, 0)
+            ) as GameObject;
         wall.transform.localScale = new Vector3(
             x: zWalls + boundaryPadding * 2,
             y: wall.transform.localScale.y,
@@ -408,9 +424,13 @@ public class GenerateRoboTHOR : MonoBehaviour {
                     original: ceilingPrefab,
                     parent: structure,
                     position: new Vector3(
-                        x: ceilingCenterX + ceilingSizeX * (x - (float)xCeilings / 2) + ceilingSizeX / 2,
+                        x: ceilingCenterX
+                            + ceilingSizeX * (x - (float)xCeilings / 2)
+                            + ceilingSizeX / 2,
                         y: ceilingCenterY,
-                        z: ceilingCenterZ + ceilingSizeZ * (z - (float)zCeilings / 2) + ceilingSizeZ / 2
+                        z: ceilingCenterZ
+                            + ceilingSizeZ * (z - (float)zCeilings / 2)
+                            + ceilingSizeZ / 2
                     ),
                     rotation: Quaternion.identity
                 );
@@ -520,13 +540,18 @@ public class GenerateRoboTHOR : MonoBehaviour {
         int agentXCell = Random.Range(0, xWalls);
         int agentZCell = Random.Range(0, zWalls);
         Vector3 agentPosition = GetAgentGridPointCenter(
-            xGridCell: agentXCell, zGridCell: agentZCell
+            xGridCell: agentXCell,
+            zGridCell: agentZCell
         );
         agentPosition.y = agentTransform.position.y;
         agentTransform.position = agentPosition;
 
         // change agent rotation
         int startRotationI = Random.Range(0, validStartingAgentRotations.Length);
-        agentTransform.localEulerAngles = new Vector3(0, validStartingAgentRotations[startRotationI], 0);
+        agentTransform.localEulerAngles = new Vector3(
+            0,
+            validStartingAgentRotations[startRotationI],
+            0
+        );
     }
 }

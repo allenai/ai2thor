@@ -1,15 +1,15 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 [ExecuteInEditMode]
 public class Toilet : MonoBehaviour {
-
     public SimObj ParentSimObj;
     public Transform Lid;
     public Vector3 OpenRotation;
     public Vector3 ClosedRotation;
     public GameObject DirtObject;
+
     [Range(0, 2)]
     public int EditorState = 0;
 
@@ -24,10 +24,12 @@ public class Toilet : MonoBehaviour {
             Animator a = ParentSimObj.gameObject.GetComponent<Animator>();
             if (a == null) {
                 a = ParentSimObj.gameObject.AddComponent<Animator>();
-                a.runtimeAnimatorController = Resources.Load("StateAnimController") as RuntimeAnimatorController;
+                a.runtimeAnimatorController =
+                    Resources.Load("StateAnimController") as RuntimeAnimatorController;
             }
         }
     }
+
     // Update is called once per frame
     void Update() {
         int state = EditorState;

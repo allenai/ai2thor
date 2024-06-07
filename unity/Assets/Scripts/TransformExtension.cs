@@ -14,6 +14,5 @@ public static class TransformExtension {
             }
             return result;
         }
-
     }
 }

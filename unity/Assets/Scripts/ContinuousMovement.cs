@@ -1,22 +1,19 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
-using System;
 
-    public interface MovableContinuous {
-        public bool ShouldHalt();
-        public void ContinuousUpdate(float fixedDeltaTime);
-        public ActionFinished FinishContinuousMove(BaseFPSAgentController controller);
-        // TODO remove from API integrate in FinishContinuousMove
-        // public string GetHaltMessage();
-    }
-
+public interface MovableContinuous {
+    public bool ShouldHalt();
+    public void ContinuousUpdate(float fixedDeltaTime);
+    public ActionFinished FinishContinuousMove(BaseFPSAgentController controller);
+    // TODO remove from API integrate in FinishContinuousMove
+    // public string GetHaltMessage();
+}
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-
     public class ContinuousMovement {
-
         public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
             int count = 0;
             PhysicsSceneManager.PhysicsSimulateCallCount = 0;
@@ -47,7 +44,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Func<Transform, Quaternion> getRotFunc = (t) => t.rotation;
             Action<Transform, Quaternion> setRotFunc = (t, target) => t.rotation = target;
-            Func<Transform, Quaternion, Quaternion> nextRotFunc = (t, target) => Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond);
+            Func<Transform, Quaternion, Quaternion> nextRotFunc = (t, target) =>
+                Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond);
 
             if (teleport) {
                 nextRotFunc = (t, target) => target;
@@ -84,8 +82,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             bool teleport = (unitsPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
 
-            Func<Func<Transform, Vector3>, Action<Transform, Vector3>, Func<Transform, Vector3, Vector3>, IEnumerator> moveClosure =
-                (get, set, next) => updateTransformPropertyFixedUpdate(
+            Func<
+                Func<Transform, Vector3>,
+                Action<Transform, Vector3>,
+                Func<Transform, Vector3, Vector3>,
+                IEnumerator
+            > moveClosure = (get, set, next) =>
+                updateTransformPropertyFixedUpdate(
                     movable: movable,
                     controller: controller,
                     moveTransform: moveTransform,
@@ -98,7 +101,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     fixedDeltaTime: fixedDeltaTime,
                     returnToStartPropIfFailed: returnToStartPropIfFailed,
                     epsilon: 1e-6 // Since the distance metric uses SqrMagnitude this amounts to a distance of 1 millimeter
-            );
+                );
 
             Func<Transform, Vector3> getPosFunc;
             Action<Transform, Vector3> setPosFunc;
@@ -106,22 +109,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (localPosition) {
                 getPosFunc = (t) => t.localPosition;
                 setPosFunc = (t, pos) => t.localPosition = pos;
-                nextPosFunc = (t, direction) => t.localPosition + direction * unitsPerSecond * fixedDeltaTime;
+                nextPosFunc = (t, direction) =>
+                    t.localPosition + direction * unitsPerSecond * fixedDeltaTime;
             } else {
                 getPosFunc = (t) => t.position;
                 setPosFunc = (t, pos) => t.position = pos;
-                nextPosFunc = (t, direction) => t.position + direction * unitsPerSecond * fixedDeltaTime;
+                nextPosFunc = (t, direction) =>
+                    t.position + direction * unitsPerSecond * fixedDeltaTime;
             }
 
             if (teleport) {
                 nextPosFunc = (t, direction) => targetPosition;
             }
 
-            return moveClosure(
-                getPosFunc,
-                setPosFunc,
-                nextPosFunc
-            );
+            return moveClosure(getPosFunc, setPosFunc, nextPosFunc);
         }
 
         public static IEnumerator moveAB(
@@ -135,7 +136,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 fixedDeltaTime: fixedDeltaTime
             );
         }
-    
+
         protected static IEnumerator finallyDestroyGameObjects(
             List<GameObject> gameObjectsToDestroy,
             IEnumerator steps
@@ -185,7 +186,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             tmpObjects.Add(wristProxy);
 
             Func<Quaternion, Quaternion, Quaternion> directionFunc = (target, current) => target;
-            Func<Quaternion, Quaternion, float> distanceFunc = (target, current) => Quaternion.Angle(current, target);
+            Func<Quaternion, Quaternion, float> distanceFunc = (target, current) =>
+                Quaternion.Angle(current, target);
 
             Func<Transform, Quaternion> getRotFunc = (t) => t.rotation;
             Action<Transform, Quaternion> setRotFunc = (t, newRotation) => {
@@ -194,7 +196,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 updateTransform.rotation = newRotation;
             };
             Func<Transform, Quaternion, Quaternion> nextRotFunc = (t, target) => {
-                return Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond);
+                return Quaternion.RotateTowards(
+                    t.rotation,
+                    target,
+                    fixedDeltaTime * degreesPerSecond
+                );
             };
 
             if (teleport) {
@@ -220,15 +226,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public static IEnumerator continuousUpdateAB(            
+        public static IEnumerator continuousUpdateAB(
             MovableContinuous movable,
             BaseFPSAgentController controller,
             float fixedDeltaTime
-        )
-        {
-
-            while(!movable.ShouldHalt())
-            {
+        ) {
+            while (!movable.ShouldHalt()) {
                 movable.ContinuousUpdate(fixedDeltaTime);
                 // TODO: Remove below?
                 if (!Physics.autoSimulation) {
@@ -262,18 +265,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStartPropIfFailed,
             double epsilon,
             T? secTarget = null
-        ) where T : struct {
+        )
+            where T : struct {
             T originalProperty = getProp(moveTransform);
             var previousProperty = originalProperty;
 
             // TODO: do not pass controller, and pass a lambda for the update function or an
-            // interface 
+            // interface
             // var arm = controller.GetComponentInChildren<ArmController>();
 
-            // commenting out the WaitForEndOfFrame here since we shoudn't need 
+            // commenting out the WaitForEndOfFrame here since we shoudn't need
             // this as we already wait for a frame to pass when we execute each action
             // yield return yieldInstruction;
-            
+
             int transformIterations = 1;
             if (secTarget != null) {
                 transformIterations = 2;
@@ -304,13 +308,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // }
 
                 while (!movable.ShouldHalt()) {
-                // TODO: put in movable && !collisionListener.TransformChecks(controller, moveTransform)) {
+                    // TODO: put in movable && !collisionListener.TransformChecks(controller, moveTransform)) {
                     previousProperty = getProp(moveTransform);
 
                     T next = nextProp(moveTransform, directionToTarget);
 
                     float nextDistance = distanceMetric((T)currentTarget, next);
-                    
+
                     // allows for snapping behaviour to target when the target is close
                     // if nextDistance is too large then it will overshoot, in this case we snap to the target
                     // this can happen if the speed it set high
@@ -323,20 +327,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         setProp(moveTransform, next);
                     }
 
-                // this will be a NOOP for Rotate/Move/Height actions
-                movable.ContinuousUpdate(fixedDeltaTime);
-                //Debug.Log("2");
+                    // this will be a NOOP for Rotate/Move/Height actions
+                    movable.ContinuousUpdate(fixedDeltaTime);
+                    //Debug.Log("2");
 
-                // if (!Physics.autoSimulation) {
-                // //Debug.Log("3.1");
-                //     if (fixedDeltaTime == 0f) {
-                //         Physics.SyncTransforms();
-                //     } else {
-                //         PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
-                //     }
-                // }
-                yield return new WaitForFixedUpdate();
-                //Debug.Log("3.2");
+                    // if (!Physics.autoSimulation) {
+                    // //Debug.Log("3.1");
+                    //     if (fixedDeltaTime == 0f) {
+                    //         Physics.SyncTransforms();
+                    //     } else {
+                    //         PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
+                    //     }
+                    // }
+                    yield return new WaitForFixedUpdate();
+                    //Debug.Log("3.2");
 
                     yield return new WaitForFixedUpdate();
 
@@ -411,7 +415,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // ) {
 
         //     ActionFinished actionFinished = movable.FinishContinuousMove(controller);
-            
+
         //     if (!actionFinished.success) {
         //          setProp(moveTransform, resetProp);
         //     }

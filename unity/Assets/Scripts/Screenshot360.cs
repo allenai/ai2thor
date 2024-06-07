@@ -2,7 +2,6 @@
 using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -22,10 +21,25 @@ public class Screenshot360 : MonoBehaviour {
 
         if (bytes != null) {
             while (!newFileName) {
-                if (File.Exists("Assets/360Photos/360Render_" + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name + "_" + currentCount + (saveAsJPEG ? ".jpeg" : ".png"))) {
+                if (
+                    File.Exists(
+                        "Assets/360Photos/360Render_"
+                            + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
+                            + "_"
+                            + currentCount
+                            + (saveAsJPEG ? ".jpeg" : ".png")
+                    )
+                ) {
                     currentCount++;
                 } else {
-                    path = Path.Combine("Assets/360Photos", "360Render_" + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name + "_" + currentCount + (saveAsJPEG ? ".jpeg" : ".png"));
+                    path = Path.Combine(
+                        "Assets/360Photos",
+                        "360Render_"
+                            + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
+                            + "_"
+                            + currentCount
+                            + (saveAsJPEG ? ".jpeg" : ".png")
+                    );
                     File.WriteAllBytes(path, bytes);
                     Debug.Log("360 render saved to " + path);
                     newFileName = true;

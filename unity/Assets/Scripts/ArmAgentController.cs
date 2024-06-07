@@ -1,17 +1,16 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using System;
 using System.Linq;
-using RandomExtensions;
-using UnityEngine.AI;
 using System.Runtime.CompilerServices;
+using RandomExtensions;
+using UnityEngine;
+using UnityEngine.AI;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-
     public abstract class ArmAgentController : PhysicsRemoteFPSAgentController {
-        public ArmAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
-        }
+        public ArmAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager)
+            : base(baseAgentComponent, agentManager) { }
 
         protected abstract ArmController getArm();
 
@@ -19,13 +18,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Toggles the visibility of the magnet sphere at the end of the arm.
         */
         public ActionFinished ToggleMagnetVisibility(bool? visible = null) {
-            MeshRenderer mr = GameObject.Find("MagnetRenderer").GetComponentInChildren<MeshRenderer>();
+            MeshRenderer mr = GameObject
+                .Find("MagnetRenderer")
+                .GetComponentInChildren<MeshRenderer>();
             if (visible.HasValue) {
                 mr.enabled = visible.Value;
             } else {
                 mr.enabled = !mr.enabled;
             }
-            return ActionFinished.Success; 
+            return ActionFinished.Success;
         }
 
         public override void updateImageSynthesis(bool status) {
@@ -39,7 +40,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             agentManager.updateThirdPartyCameraImageSynthesis(status);
         }
 
-       
         /*
         This function is identical to `MoveArm` except that rather than
         giving a target position you instead give an "offset" w.r.t.
@@ -104,13 +104,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arm.PickupObject(objectIdCandidates);
         }
 
-        public override void PickupObject(float x, float y, bool forceAction = false, bool manualInteract = false) {
+        public override void PickupObject(
+            float x,
+            float y,
+            bool forceAction = false,
+            bool manualInteract = false
+        ) {
             throw new InvalidOperationException(
                 "You are passing in iTHOR PickupObject parameters (x, y) to the arm agent!"
             );
         }
 
-        public override void PickupObject(string objectId, bool forceAction = false, bool manualInteract = false) {
+        public override void PickupObject(
+            string objectId,
+            bool forceAction = false,
+            bool manualInteract = false
+        ) {
             throw new InvalidOperationException(
                 "You are passing in iTHOR PickupObject parameters (objectId) to the arm agent!"
             );
@@ -176,7 +185,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 returnToStart: returnToStart
             );
         }
-
 
         public IEnumerator MoveBack(
             float? moveMagnitude = null,
@@ -296,7 +304,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (normalizedY && (y < 0f || y > 1f)) {
                 // Checking for bounds when normalizedY == false is handled by arm.moveArmBase
-                throw new ArgumentOutOfRangeException($"y={y} value must be in [0, 1] when normalizedY=true.");
+                throw new ArgumentOutOfRangeException(
+                    $"y={y} value must be in [0, 1] when normalizedY=true."
+                );
             }
 
             var arm = getArm();
@@ -330,11 +340,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 1,
             bool returnToStart = true
         ) {
-            return MoveArmBaseUp(
-                distance: -distance,
-                speed: speed,
-                returnToStart: returnToStart
-            );
+            return MoveArmBaseUp(distance: -distance, speed: speed, returnToStart: returnToStart);
         }
 
 #if UNITY_EDITOR
@@ -343,7 +349,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = getArm();
             CollisionListener collisionListener = arm.GetComponentInChildren<CollisionListener>();
             if (collisionListener != null) {
-                List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
+                List<Dictionary<string, string>> collisions =
+                    new List<Dictionary<string, string>>();
                 foreach (var sc in collisionListener.StaticCollisions()) {
                     Dictionary<string, string> element = new Dictionary<string, string>();
                     if (sc.simObjPhysics != null) {

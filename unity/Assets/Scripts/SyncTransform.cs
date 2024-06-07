@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class SyncTransform : MonoBehaviour {
-    protected enum WhatToTrack { Rotation, Position };
+    protected enum WhatToTrack {
+        Rotation,
+        Position
+    };
 
     [SerializeField]
     protected WhatToTrack WhichTransformPropertyAmITracking;
@@ -14,11 +17,8 @@ public class SyncTransform : MonoBehaviour {
     // used to stop syncing the upper body when the ToggleMapView function is called
     public bool StopSyncingForASecond = false;
 
-
     // Start is called before the first frame update
-    void Start() {
-
-    }
+    void Start() { }
 
     // Update is called once per frame
     void Update() {

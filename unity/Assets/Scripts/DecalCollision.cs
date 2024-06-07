@@ -12,27 +12,30 @@ public class DecalCollision : Break {
     // If true Guarantees that other spawn planes under the same parent will have the same stencil value
     [SerializeField]
     private bool sameStencilAsSiblings = false;
+
     [SerializeField]
     private int stencilWriteValue = 1;
+
     [SerializeField]
     private GameObject[] decals = null;
+
     [SerializeField]
     private float nextDecalWaitTimeSeconds = 1;
+
     [SerializeField]
     private Vector3 decalScale = new Vector3(0.3f, 0.3f, 0.2f);
+
     [SerializeField]
     private bool transparent = false;
 
     [SerializeField]
-
     protected bool stencilSet = false;
+
     // In local space
     private Vector3 transparentDecalSpawnOffset = new Vector3(0, 0, 0);
     private float prevTime;
 
     private static int currentStencilId = 0;
-
-
 
     void OnEnable() {
         breakType = BreakType.Decal;
@@ -44,12 +47,16 @@ public class DecalCollision : Break {
                 if (!sameStencilAsSiblings) {
                     setStencilWriteValue(mr);
                 } else {
-                    var otherPlanes = this.transform.parent.gameObject.GetComponentsInChildren<DecalCollision>();
+                    var otherPlanes =
+                        this.transform.parent.gameObject.GetComponentsInChildren<DecalCollision>();
                     // var otherPlanes = this.gameObject.GetComponentsInParent<DecalCollision>();
                     // Debug.Log("other planes id " + this.stencilWriteValue + " len " + otherPlanes.Length);
                     foreach (var spawnPlane in otherPlanes) {
-
-                        if (spawnPlane.isActiveAndEnabled && spawnPlane.stencilSet && spawnPlane.sameStencilAsSiblings) {
+                        if (
+                            spawnPlane.isActiveAndEnabled
+                            && spawnPlane.stencilSet
+                            && spawnPlane.sameStencilAsSiblings
+                        ) {
                             this.stencilWriteValue = spawnPlane.stencilWriteValue;
                             this.stencilSet = true;
                             mr.material.SetInt("_StencilRef", this.stencilWriteValue);
@@ -66,7 +73,6 @@ public class DecalCollision : Break {
                 mr.material.SetInt("_StencilRef", this.stencilWriteValue);
             }
         }
-
     }
 
     private void setStencilWriteValue(MeshRenderer mr) {
@@ -96,7 +102,12 @@ public class DecalCollision : Break {
                         // Maybe factor the other object size somehow but not directly, also first collider that hits somtimes has size 0 :(
                         // decalCopy.transform.localScale = scale + new Vector3(0.0f, 0.0f, 0.02f);
 
-                        spawnDecal(contact.point, this.transform.rotation, decalScale, DecalRotationAxis.FORWARD);
+                        spawnDecal(
+                            contact.point,
+                            this.transform.rotation,
+                            decalScale,
+                            DecalRotationAxis.FORWARD
+                        );
                         break;
                     }
                 }
@@ -104,7 +115,6 @@ public class DecalCollision : Break {
                 spawnDecal(transform.position, this.transform.rotation, decalScale * 2);
             }
         } else {
-
             if (collision != null) {
                 foreach (ContactPoint contact in collision.contacts) {
                     Debug.Log("Decal pre for " + this.stencilWriteValue);
@@ -124,29 +134,53 @@ public class DecalCollision : Break {
                         var forwardNormalized = this.transform.forward.normalized;
                         var proyOnForward = Vector3.Dot(forwardNormalized, planeToCollision);
                         var proyectedPoint = contact.point - forwardNormalized * proyOnForward;
-                        spawnDecal(proyectedPoint, this.transform.rotation, decalScale, DecalRotationAxis.FORWARD);
+                        spawnDecal(
+                            proyectedPoint,
+                            this.transform.rotation,
+                            decalScale,
+                            DecalRotationAxis.FORWARD
+                        );
                         break;
                     }
                 }
             } else {
                 // Debug.Log("Spawn decal break " + this.transform.rotation + " final " + this.transform.rotation * Quaternion.Euler(-90, 0, 0));
                 // spawnDecal(this.transform.position,  this.transform.rotation * Quaternion.Euler(-90, 0, 0), decalScale * 2);
-                spawnDecal(this.transform.position + this.transform.rotation * transparentDecalSpawnOffset, this.transform.rotation, this.transform.localScale);
+                spawnDecal(
+                    this.transform.position + this.transform.rotation * transparentDecalSpawnOffset,
+                    this.transform.rotation,
+                    this.transform.localScale
+                );
             }
         }
     }
 
-    public void SpawnDecal(Vector3 position, bool worldSpace = false, Vector3? scale = null,  DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE) {
-
+    public void SpawnDecal(
+        Vector3 position,
+        bool worldSpace = false,
+        Vector3? scale = null,
+        DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE
+    ) {
         // var pos = this.transform.InverseTransformPoint(worldPos);
         var pos = position;
         if (worldSpace) {
-            pos =  this.transform.InverseTransformPoint(position);
+            pos = this.transform.InverseTransformPoint(position);
         }
-        spawnDecal(pos, this.transform.rotation, scale.GetValueOrDefault(this.decalScale), randomRotationAxis);
+        spawnDecal(
+            pos,
+            this.transform.rotation,
+            scale.GetValueOrDefault(this.decalScale),
+            randomRotationAxis
+        );
     }
 
-    private void spawnDecal(Vector3 position, Quaternion rotation, Vector3 scale, DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE, int index = -1) {
+    private void spawnDecal(
+        Vector3 position,
+        Quaternion rotation,
+        Vector3 scale,
+        DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE,
+        int index = -1
+    ) {
         var minimumScale = this.transform.localScale;
         var decalScale = scale;
         if (minimumScale.x < scale.x || minimumScale.y < scale.y) {
@@ -166,7 +200,12 @@ public class DecalCollision : Break {
             randomRotation = Quaternion.AngleAxis(randomAngle, Vector3.right);
         }
 
-        var decalCopy = Object.Instantiate(decals[selectIndex], position, rotation * randomRotation, this.transform.parent);
+        var decalCopy = Object.Instantiate(
+            decals[selectIndex],
+            position,
+            rotation * randomRotation,
+            this.transform.parent
+        );
         decalCopy.transform.localScale = decalScale;
 
         var mr = decalCopy.GetComponent<MeshRenderer>();

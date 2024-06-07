@@ -101,7 +101,7 @@ class VideoController(Controller):
 
     def _cdf(self, x, std_dev=0.5, mean=0.0):
         """Cumulative distribution function"""
-        return (1.0 + erf((x - mean) / sqrt(2.0 * std_dev ** 2))) / 2.0
+        return (1.0 + erf((x - mean) / sqrt(2.0 * std_dev**2))) / 2.0
 
     def _linear_to_smooth(self, curr_frame, total_frames, std_dev=0.5, min_val=3):
         # start at -3 STD on a normal gaussian, go to 3 STD on gaussian
@@ -112,9 +112,7 @@ class VideoController(Controller):
             # removes drifting
             return 1
 
-        return self._cdf(
-            -min_val + 2 * min_val * (curr_frame / total_frames), std_dev=std_dev
-        )
+        return self._cdf(-min_val + 2 * min_val * (curr_frame / total_frames), std_dev=std_dev)
 
     def _move(self, actionName, moveMagnitude, frames, smoothAnimation, agentId=None):
         """Yields a generator full of move commands to move the agent incrementally.
@@ -123,13 +121,9 @@ class VideoController(Controller):
         for i in range(frames):
             # smoothAnimation = False => linear animation
             if smoothAnimation:
-                next_moveMag = (
-                    self._linear_to_smooth(i + 1, frames, std_dev=1) * moveMagnitude
-                )
+                next_moveMag = self._linear_to_smooth(i + 1, frames, std_dev=1) * moveMagnitude
                 if agentId is None:
-                    yield self.step(
-                        action=actionName, moveMagnitude=next_moveMag - last_moveMag
-                    )
+                    yield self.step(action=actionName, moveMagnitude=next_moveMag - last_moveMag)
                 else:
                     yield self.step(
                         action=actionName,
@@ -139,9 +133,7 @@ class VideoController(Controller):
                 last_moveMag = next_moveMag
             else:
                 if agentId is None:
-                    yield self.step(
-                        action=actionName, moveMagnitude=moveMagnitude / frames
-                    )
+                    yield self.step(action=actionName, moveMagnitude=moveMagnitude / frames)
                 else:
                     yield self.step(
                         action=actionName,
@@ -168,8 +160,7 @@ class VideoController(Controller):
             if smoothAnimation:
                 yield self.step(
                     action="TeleportFull",
-                    rotation=y0
-                    + rotateDegrees * self._linear_to_smooth(i + 1, frames, std_dev=1),
+                    rotation=y0 + rotateDegrees * self._linear_to_smooth(i + 1, frames, std_dev=1),
                     **p,
                 )
             else:
@@ -180,40 +171,24 @@ class VideoController(Controller):
                 )
 
     def MoveAhead(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
-        return self._move(
-            "MoveAhead", moveMagnitude, frames, smoothAnimation, agentId=agentId
-        )
+        return self._move("MoveAhead", moveMagnitude, frames, smoothAnimation, agentId=agentId)
 
     def MoveBack(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
-        return self._move(
-            "MoveBack", moveMagnitude, frames, smoothAnimation, agentId=agentId
-        )
+        return self._move("MoveBack", moveMagnitude, frames, smoothAnimation, agentId=agentId)
 
     def MoveLeft(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
-        return self._move(
-            "MoveLeft", moveMagnitude, frames, smoothAnimation, agentId=agentId
-        )
+        return self._move("MoveLeft", moveMagnitude, frames, smoothAnimation, agentId=agentId)
 
     def MoveRight(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
-        return self._move(
-            "MoveRight", moveMagnitude, frames, smoothAnimation, agentId=agentId
-        )
+        return self._move("MoveRight", moveMagnitude, frames, smoothAnimation, agentId=agentId)
 
-    def RotateRight(
-        self, rotateDegrees=90, frames=60, smoothAnimation=True, agentId=None
-    ):
+    def RotateRight(self, rotateDegrees=90, frames=60, smoothAnimation=True, agentId=None):
         # do incremental teleporting
-        return self._rotate(
-            "right", rotateDegrees, frames, smoothAnimation, agentId=agentId
-        )
+        return self._rotate("right", rotateDegrees, frames, smoothAnimation, agentId=agentId)
 
-    def RotateLeft(
-        self, rotateDegrees=90, frames=60, smoothAnimation=True, agentId=None
-    ):
+    def RotateLeft(self, rotateDegrees=90, frames=60, smoothAnimation=True, agentId=None):
         # do incremental teleporting
-        return self._rotate(
-            "left", rotateDegrees, frames, smoothAnimation, agentId=agentId
-        )
+        return self._rotate("left", rotateDegrees, frames, smoothAnimation, agentId=agentId)
 
     def OrbitCameraAnimation(
         self,
@@ -230,9 +205,7 @@ class VideoController(Controller):
 
         Example: https://www.youtube.com/watch?v=KcELPpdN770&feature=youtu.be&t=14"""
         degrees = frames * orbit_degrees_per_frame
-        rot0 = self.last_event.metadata["thirdPartyCameras"][0]["rotation"][
-            "y"
-        ]  # starting angle
+        rot0 = self.last_event.metadata["thirdPartyCameras"][0]["rotation"]["y"]  # starting angle
         for frame in range(frames):
             yAngle = rot0 + degrees * (frame + 1) / frames
             yield self.step(

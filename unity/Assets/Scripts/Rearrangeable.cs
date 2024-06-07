@@ -1,6 +1,6 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 public enum FurniturePosition {
     Undesirable,
@@ -15,7 +15,9 @@ public class Rearrangeable : MonoBehaviour {
     public SimObj ParentSimObj;
     public FurniturePosition Position {
         get {
-            return ParentSimObj.Animator.GetBool("AnimState1") ? FurniturePosition.Undesirable : FurniturePosition.Desireable;
+            return ParentSimObj.Animator.GetBool("AnimState1")
+                ? FurniturePosition.Undesirable
+                : FurniturePosition.Desireable;
         }
     }
 
@@ -45,7 +47,8 @@ public class Rearrangeable : MonoBehaviour {
             if (ParentSimObj != null) {
                 if (!ParentSimObj.IsAnimated) {
                     Animator a = ParentSimObj.gameObject.AddComponent<Animator>();
-                    a.runtimeAnimatorController = Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
+                    a.runtimeAnimatorController =
+                        Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
                     gameObject.SetActive(false);
                     gameObject.SetActive(true);
                 }
@@ -101,8 +104,12 @@ public class Rearrangeable : MonoBehaviour {
 
         MeshFilter mf = ParentSimObj.GetComponentInChildren<MeshFilter>();
         if (mf != null) {
-            Gizmos.color = EditorPos ? Color.Lerp(Color.red, Color.clear, 0.5f) : Color.Lerp(Color.green, Color.clear, 0.5f);
-            Gizmos.matrix = EditorPos ? StartPosition.localToWorldMatrix : EndPosition.localToWorldMatrix;
+            Gizmos.color = EditorPos
+                ? Color.Lerp(Color.red, Color.clear, 0.5f)
+                : Color.Lerp(Color.green, Color.clear, 0.5f);
+            Gizmos.matrix = EditorPos
+                ? StartPosition.localToWorldMatrix
+                : EndPosition.localToWorldMatrix;
             Gizmos.DrawWireMesh(mf.sharedMesh);
         }
     }

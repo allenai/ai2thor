@@ -9,15 +9,15 @@ static class CopyLightingSettings {
     // Written by Peter Schraut
     //     http://www.console-dev.de
     //
-    // This Unity editor extension allows yoyu to copy&paste lighting settings 
+    // This Unity editor extension allows yoyu to copy&paste lighting settings
     // from one scene to another. Check the following video to see it in action
-    // https://youtu.be/-TQzrVn1kWM 
+    // https://youtu.be/-TQzrVn1kWM
     //
     // Save this file as "Assets/Editor/CopyLightingSettings.cs"
     //
     // Download most recent version from:
     //     https://bitbucket.org/snippets/pschraut/LeykeL
-    //	
+    //
 
     static SerializedObject s_SourceLightmapSettings;
     static SerializedObject s_SourceRenderSettings;
@@ -33,7 +33,13 @@ static class CopyLightingSettings {
     [MenuItem(k_CopySettingsMenuPath, priority = 200)]
     static void CopySettings() {
         UnityEngine.Object lightmapSettings;
-        if (!TryGetSettings(typeof(LightmapEditorSettings), "GetLightmapSettings", out lightmapSettings)) {
+        if (
+            !TryGetSettings(
+                typeof(LightmapEditorSettings),
+                "GetLightmapSettings",
+                out lightmapSettings
+            )
+        ) {
             return;
         }
 
@@ -49,7 +55,13 @@ static class CopyLightingSettings {
     [MenuItem(k_PasteSettingsMenuPath, priority = 201)]
     static void PasteSettings() {
         UnityEngine.Object lightmapSettings;
-        if (!TryGetSettings(typeof(LightmapEditorSettings), "GetLightmapSettings", out lightmapSettings)) {
+        if (
+            !TryGetSettings(
+                typeof(LightmapEditorSettings),
+                "GetLightmapSettings",
+                out lightmapSettings
+            )
+        ) {
             return;
         }
 
@@ -73,7 +85,9 @@ static class CopyLightingSettings {
         var prop = source.GetIterator();
         while (prop.Next(true)) {
             var copyProperty = true;
-            foreach (var propertyName in new[] { "m_Sun", "m_FileID", "m_PathID", "m_ObjectHideFlags" }) {
+            foreach (
+                var propertyName in new[] { "m_Sun", "m_FileID", "m_PathID", "m_ObjectHideFlags" }
+            ) {
                 if (string.Equals(prop.name, propertyName, System.StringComparison.Ordinal)) {
                     copyProperty = false;
                     break;
@@ -93,13 +107,21 @@ static class CopyLightingSettings {
 
         var method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.NonPublic);
         if (method == null) {
-            Debug.LogErrorFormat("CopyLightingSettings: Could not find {0}.{1}", type.Name, methodName);
+            Debug.LogErrorFormat(
+                "CopyLightingSettings: Could not find {0}.{1}",
+                type.Name,
+                methodName
+            );
             return false;
         }
 
         var value = method.Invoke(null, null) as UnityEngine.Object;
         if (value == null) {
-            Debug.LogErrorFormat("CopyLightingSettings: Could get data from {0}.{1}", type.Name, methodName);
+            Debug.LogErrorFormat(
+                "CopyLightingSettings: Could get data from {0}.{1}",
+                type.Name,
+                methodName
+            );
             return false;
         }
 

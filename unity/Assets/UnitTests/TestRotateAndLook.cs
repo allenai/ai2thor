@@ -1,15 +1,18 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
-using System;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityStandardAssets.Characters.FirstPerson;
 
-namespace Tests {
-    public class TestRotateAndLook : TestBase {
+namespace Tests
+{
+    public class TestRotateAndLook : TestBase
+    {
         [UnityTest]
-        public IEnumerator TestRotateRight() {
+        public IEnumerator TestRotateRight()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -31,7 +34,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestLookUpDownDefault () {
+        public IEnumerator TestLookUpDownDefault()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -69,7 +73,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestLookUpDownDefaultLocobot () {
+        public IEnumerator TestLookUpDownDefaultLocobot()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -108,7 +113,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestLookUpDownDefaultStretch () {
+        public IEnumerator TestLookUpDownDefaultStretch()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -153,7 +159,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestSetLookUpDownLimits () {
+        public IEnumerator TestSetLookUpDownLimits()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -200,7 +207,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestSetLookUpDownLimitsLocoBot () {
+        public IEnumerator TestSetLookUpDownLimitsLocoBot()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -248,7 +256,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestSetLookUpDownLimitsArm () {
+        public IEnumerator TestSetLookUpDownLimitsArm()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -296,7 +305,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestSetLookUpDownLimitsStretch () {
+        public IEnumerator TestSetLookUpDownLimitsStretch()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -334,7 +344,7 @@ namespace Tests {
             yield return step(action);
             yield return step(action);
             yield return step(action);
-            
+
             // Debug.Log("LookDown 6. RAW: " + agentCamera.transform.eulerAngles.x
             // + " vs. INT: " + (int)agentCamera.transform.eulerAngles.x
             // + " vs ROUNDED INT: " + (int)Mathf.Round(agentCamera.transform.eulerAngles.x));

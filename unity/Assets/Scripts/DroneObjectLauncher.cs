@@ -1,24 +1,21 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
 using UnityStandardAssets.Characters.FirstPerson;
 
 public class DroneObjectLauncher : MonoBehaviour {
-    [SerializeField] public GameObject[] prefabsToLaunch;
+    [SerializeField]
+    public GameObject[] prefabsToLaunch;
 
     // keep track of what objects were launched already
     private HashSet<SimObjPhysics> launch_object = new HashSet<SimObjPhysics>();
 
     // Use this for initialization
-    void Start() {
-
-    }
+    void Start() { }
 
     // Update is called once per frame
-    void Update() {
-
-    }
+    void Update() { }
 
     public bool HasLaunch(SimObjPhysics obj) {
         return launch_object.Contains(obj);
@@ -48,10 +45,19 @@ public class DroneObjectLauncher : MonoBehaviour {
         return candidates[variation];
     }
 
-    public void Launch(DroneFPSAgentController agent, float magnitude, Vector3 direction, string objectName, bool randomize) {
-
+    public void Launch(
+        DroneFPSAgentController agent,
+        float magnitude,
+        Vector3 direction,
+        string objectName,
+        bool randomize
+    ) {
         GameObject toLaunch = GetGameObject(objectName, randomize, 0);
-        GameObject fireaway = Instantiate(toLaunch, this.transform.position, this.transform.rotation);
+        GameObject fireaway = Instantiate(
+            toLaunch,
+            this.transform.position,
+            this.transform.rotation
+        );
 
         GameObject topObject = GameObject.Find("Objects");
         fireaway.transform.SetParent(topObject.transform);

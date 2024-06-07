@@ -9,7 +9,8 @@ public class Align_to_Joint_Normal : MonoBehaviour {
     public bool isMidJointAngler;
     Vector3 joint1;
     Vector3 joint2;
-    Vector3 jointNormal, jointTangent;
+    Vector3 jointNormal,
+        jointTangent;
     Transform positionAlignedJoint;
 
     void Update() {

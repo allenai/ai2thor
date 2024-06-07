@@ -14,9 +14,7 @@ class FifoClient:
         if self.server_pipe is None:
             self.server_pipe = open(self.server_pipe_path, "wb")
 
-        header = struct.pack(
-            ai2thor.fifo_server.FifoServer.header_format, field_type, len(body)
-        )
+        header = struct.pack(ai2thor.fifo_server.FifoServer.header_format, field_type, len(body))
 
         self.server_pipe.write(header + body)
 

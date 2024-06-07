@@ -1,15 +1,18 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
-using System;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityStandardAssets.Characters.FirstPerson;
 
-namespace Tests {
-    public class TestGetShortestPath : TestBase {
+namespace Tests
+{
+    public class TestGetShortestPath : TestBase
+    {
         [UnityTest]
-        public IEnumerator TestShortestPath() {
+        public IEnumerator TestShortestPath()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -56,7 +59,6 @@ namespace Tests {
 
             result = Mathf.Approximately(-1.26f, path.corners[2].z);
             Assert.AreEqual(result, true);
-
         }
     }
 }

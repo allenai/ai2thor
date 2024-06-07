@@ -1,9 +1,8 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 public class Toaster : MonoBehaviour {
-
     // private ObjectSpecificReceptacle osr;
     // private CanToggleOnOff onOff;
 
@@ -11,6 +10,7 @@ public class Toaster : MonoBehaviour {
         // osr = gameObject.GetComponent<ObjectSpecificReceptacle>();
         // onOff = gameObject.GetComponent<CanToggleOnOff>();
     }
+
     void Update() {
         // Note: Moved This call to the HeatZone that is turned on when the toaster is turned on
 
@@ -20,7 +20,6 @@ public class Toaster : MonoBehaviour {
         // {
         // 	Toast();
         // }
-
     }
 
     // public void Toast()
@@ -37,5 +36,4 @@ public class Toaster : MonoBehaviour {
     // 		toast.Cook();
     // 	}
     // }
-
 }

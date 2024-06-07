@@ -16,7 +16,9 @@ public class VisualizationHeatmapCSV : MonoBehaviour {
     // Use this for initialization
     void Start() {
         string[] data = CSVFile.text.Split(new char[] { '\n' });
-        float x, z, r;
+        float x,
+            z,
+            r;
 
         for (int i = 1; i < data.Length - 1; i++) {
             string[] row = data[i].Split(new char[] { ',' });
@@ -41,7 +43,5 @@ public class VisualizationHeatmapCSV : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update() {
-
-    }
+    void Update() { }
 }

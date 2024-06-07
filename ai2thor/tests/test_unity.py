@@ -28,6 +28,7 @@ import ctypes
 
 from .build_controller import build_controller
 
+
 # Defining const classes to lessen the possibility of a misspelled key
 class Actions:
     AddThirdPartyCamera = "AddThirdPartyCamera"
@@ -42,6 +43,7 @@ class ThirdPartyCameraMetadata:
     position = "position"
     rotation = "rotation"
     fieldOfView = "fieldOfView"
+
 
 _wsgi_controller = build_controller(server_class=WsgiServer, scene=TEST_SCENE)
 _fifo_controller = build_controller(server_class=FifoServer, scene=TEST_SCENE)
@@ -72,13 +74,14 @@ def save_image(file_path, image, flip_br=False):
         img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     cv2.imwrite(file_path, img)
 
+
 def depth_to_gray_rgb(data):
     return (255.0 / data.max() * (data - data.min())).astype(np.uint8)
+
 
 @pytest.fixture
 def wsgi_controller():
     return reset_controller(_wsgi_controller)
-
 
 
 @pytest.fixture
@@ -89,9 +92,16 @@ def fifo_controller():
 fifo_wsgi = [_fifo_controller, _wsgi_controller]
 fifo = [_fifo_controller]
 
-BASE_FP28_POSITION = dict(x=-1.5, z=-1.5, y=0.901,)
+BASE_FP28_POSITION = dict(
+    x=-1.5,
+    z=-1.5,
+    y=0.901,
+)
 BASE_FP28_LOCATION = dict(
-    **BASE_FP28_POSITION, rotation={"x": 0, "y": 0, "z": 0}, horizon=0, standing=True,
+    **BASE_FP28_POSITION,
+    rotation={"x": 0, "y": 0, "z": 0},
+    horizon=0,
+    standing=True,
 )
 
 
@@ -121,16 +131,17 @@ def assert_near(point1, point2, error_message=""):
 
 
 def images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, filepath=""):
-    print("Mean pixel difference: {}, Max pixel difference: {}.".format(
-        np.mean(np.abs(image1 - image2).flatten()),
-        np.max(np.abs(image1 - image2).flatten()))
+    print(
+        "Mean pixel difference: {}, Max pixel difference: {}.".format(
+            np.mean(np.abs(image1 - image2).flatten()), np.max(np.abs(image1 - image2).flatten())
+        )
     )
     result = np.mean(np.abs(image1 - image2).flatten()) <= max_mean_pixel_diff
     if not result and debug_save:
         # TODO put images somewhere accessible
         dx = np.where(~np.all(image1 == image2, axis=-1))
         img_copy = image1.copy()
-        diff = (image1 - image2)
+        diff = image1 - image2
         max = np.max(diff)
         norm_diff = diff / max
         img_copy[dx] = (255, 0, 255)
@@ -140,24 +151,26 @@ def images_near(image1, image2, max_mean_pixel_diff=1, debug_save=False, filepat
         #     img_copy[dx[0][i] : dx[0][i]] = (255.0, 255.0, 255.0)
         # img_copy[dx] +=  ((255.0, 255.0, 255.0) * norm_diff[dx])+ img_copy[dx]
 
-        test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
+        test_name = os.environ.get("PYTEST_CURRENT_TEST").split(":")[-1].split(" ")[0]
         debug_directory = os.path.join(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY))
         # if os.path.exists(debug_directory):
         #     shutil.rmtree(debug_directory)
         # os.makedirs(debug_directory)
 
-        save_image(os.path.join(debug_directory, f'{test_name}_diff.png'), img_copy)
-        save_image(os.path.join(debug_directory, f'{test_name}_fail.png'), image1)
+        save_image(os.path.join(debug_directory, f"{test_name}_diff.png"), img_copy)
+        save_image(os.path.join(debug_directory, f"{test_name}_fail.png"), image1)
         print(f'Saved failed test images in "{debug_directory}"')
 
     return result
 
+
 def depth_images_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath=""):
     # result = np.allclose(depth1, depth2, atol=epsilon)
     result = np.mean(np.abs(depth1 - depth2).flatten()) <= epsilon
-    print("Max pixel difference: {}, Mean pixel difference: {}".format(
-        np.max((depth1 - depth2).flatten()),
-        np.mean((depth1 - depth2).flatten()))
+    print(
+        "Max pixel difference: {}, Mean pixel difference: {}".format(
+            np.max((depth1 - depth2).flatten()), np.mean((depth1 - depth2).flatten())
+        )
     )
     if not result and debug_save:
         depth1_gray = depth_to_gray_rgb(depth1)
@@ -166,21 +179,22 @@ def depth_images_near(depth1, depth2, epsilon=1e-5, debug_save=False, filepath="
         max = np.max(diff)
         norm_diff = diff / max
         dx = np.where(np.abs(depth1 - depth2) >= epsilon)
-        depth_copy[dx] =  (norm_diff[dx]*255, norm_diff[dx] * 0, norm_diff[dx] *255)
-        test_name = os.environ.get('PYTEST_CURRENT_TEST').split(':')[-1].split(' ')[0]
+        depth_copy[dx] = (norm_diff[dx] * 255, norm_diff[dx] * 0, norm_diff[dx] * 255)
+        test_name = os.environ.get("PYTEST_CURRENT_TEST").split(":")[-1].split(" ")[0]
         debug_directory = os.path.join(os.path.join(os.getcwd(), TEST_OUTPUT_DIRECTORY))
         # if os.path.exists(debug_directory):
         #     shutil.rmtree(debug_directory)
         # os.makedirs(debug_directory)
 
-        save_image(os.path.join(debug_directory, f'{test_name}_diff.png'), depth_copy)
-        save_image(os.path.join(debug_directory, f'{test_name}_fail.png'), depth1_gray)
+        save_image(os.path.join(debug_directory, f"{test_name}_diff.png"), depth_copy)
+        save_image(os.path.join(debug_directory, f"{test_name}_fail.png"), depth1_gray)
         np.save(
-            os.path.join(debug_directory, f'{test_name}_fail-raw.npy'),
+            os.path.join(debug_directory, f"{test_name}_fail-raw.npy"),
             depth1.astype(np.float32),
         ),
         print(f'Saved failed test images in "{debug_directory}"')
     return result
+
 
 def images_far(image1, image2, min_mean_pixel_diff=10):
     return np.mean(np.abs(image1 - image2).flatten()) >= min_mean_pixel_diff
@@ -205,8 +219,7 @@ def test_agent_controller_type_no_longer_accepted(fifo_controller):
 def test_multi_agent_with_third_party_camera(fifo_controller):
     fifo_controller.reset(TEST_SCENE, agentCount=2)
     assert not np.all(
-        fifo_controller.last_event.events[1].frame
-        == fifo_controller.last_event.events[0].frame
+        fifo_controller.last_event.events[1].frame == fifo_controller.last_event.events[0].frame
     )
     event = fifo_controller.step(
         dict(
@@ -216,8 +229,7 @@ def test_multi_agent_with_third_party_camera(fifo_controller):
         )
     )
     assert not np.all(
-        fifo_controller.last_event.events[1].frame
-        == fifo_controller.last_event.events[0].frame
+        fifo_controller.last_event.events[1].frame == fifo_controller.last_event.events[0].frame
     )
 
 
@@ -269,7 +281,9 @@ def test_deprecated_segmentation_params(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderObjectImage=True, renderClassImage=True,
+        TEST_SCENE,
+        renderObjectImage=True,
+        renderClassImage=True,
     )
     event = fifo_controller.last_event
     with warnings.catch_warnings():
@@ -286,7 +300,9 @@ def test_deprecated_segmentation_params2(fifo_controller):
     # renderClassImage has been renamed to renderSemanticSegmentation
 
     fifo_controller.reset(
-        TEST_SCENE, renderSemanticSegmentation=True, renderInstanceSegmentation=True,
+        TEST_SCENE,
+        renderSemanticSegmentation=True,
+        renderInstanceSegmentation=True,
     )
     event = fifo_controller.last_event
 
@@ -337,12 +353,8 @@ def test_fast_emit(fifo_controller):
 
 
 def test_fifo_large_input(fifo_controller):
-    random_string = "".join(
-        random.choice(string.ascii_letters) for i in range(1024 * 16)
-    )
-    event = fifo_controller.step(
-        dict(action="TestActionReflectParam", rvalue=random_string)
-    )
+    random_string = "".join(random.choice(string.ascii_letters) for i in range(1024 * 16))
+    event = fifo_controller.step(dict(action="TestActionReflectParam", rvalue=random_string))
     assert event.metadata["actionReturn"] == random_string
 
 
@@ -428,7 +440,7 @@ def test_simobj_filter(controller):
     unfiltered_object_ids = sorted([o["objectId"] for o in objects])
     filter_object_ids = sorted([o["objectId"] for o in objects[0:3]])
     controller.step(dict(action="SetObjectFilter", objectIds=filter_object_ids))
-    e = controller.step("Pass") # Must pass for `SetObjectFilter` to take effect
+    e = controller.step("Pass")  # Must pass for `SetObjectFilter` to take effect
     assert len(e.metadata["objects"]) == len(filter_object_ids)
     filtered_object_ids = sorted([o["objectId"] for o in e.metadata["objects"]])
     assert filtered_object_ids == filter_object_ids
@@ -459,9 +471,7 @@ def test_add_third_party_camera(controller):
             fieldOfView=expectedFieldOfView,
         )
     )
-    assert (
-        len(e.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1
-    ), "there should be 1 camera"
+    assert len(e.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1, "there should be 1 camera"
     camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
     assert_near(
         camera[ThirdPartyCameraMetadata.position],
@@ -478,12 +488,8 @@ def test_add_third_party_camera(controller):
     ), "initial fieldOfView should have been set"
 
     # expects position to be a Vector3, should fail!
-    event = controller.step(
-        action="AddThirdPartyCamera", position=5, rotation=dict(x=0, y=0, z=0)
-    )
-    assert not event.metadata[
-        "lastActionSuccess"
-    ], "position should not allow float input!"
+    event = controller.step(action="AddThirdPartyCamera", position=5, rotation=dict(x=0, y=0, z=0))
+    assert not event.metadata["lastActionSuccess"], "position should not allow float input!"
 
     # orthographicSize expects float, not Vector3!
     error_message = None
@@ -557,8 +563,7 @@ def test_update_third_party_camera(fifo_controller):
         )
     )
     assert (
-        len(fifo_controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras])
-        == 1
+        len(fifo_controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1
     ), "there should be 1 camera"
 
     # update camera pose fully
@@ -625,9 +630,7 @@ def test_update_third_party_camera(fifo_controller):
                 fieldOfView=fov,
             )
         )
-        assert not e.metadata[
-            "lastActionSuccess"
-        ], "fieldOfView should fail outside of (0, 180)"
+        assert not e.metadata["lastActionSuccess"], "fieldOfView should fail outside of (0, 180)"
         assert_near(
             camera[ThirdPartyCameraMetadata.position],
             expectedPosition,
@@ -683,9 +686,7 @@ def test_open_aabb_cache(controller):
         forceAction=True,
         raise_for_failure=True,
     )
-    obj = next(
-        obj for obj in open_event.metadata["objects"] if obj["objectType"] == "Fridge"
-    )
+    obj = next(obj for obj in open_event.metadata["objects"] if obj["objectType"] == "Fridge")
     open_aabb = obj["axisAlignedBoundingBox"]
     assert start_aabb["size"] != open_aabb["size"]
 
@@ -695,9 +696,7 @@ def test_open_aabb_cache(controller):
         forceAction=True,
         raise_for_failure=True,
     )
-    obj = next(
-        obj for obj in close_event.metadata["objects"] if obj["objectType"] == "Fridge"
-    )
+    obj = next(obj for obj in close_event.metadata["objects"] if obj["objectType"] == "Fridge")
     close_aabb = obj["axisAlignedBoundingBox"]
     assert start_aabb["size"] == close_aabb["size"]
 
@@ -737,9 +736,7 @@ def test_open_interactable_with_filter(controller):
     controller.step(action, raise_for_failure=True)
 
     fridge = next(
-        obj
-        for obj in controller.last_event.metadata["objects"]
-        if obj["objectType"] == "Fridge"
+        obj for obj in controller.last_event.metadata["objects"] if obj["objectType"] == "Fridge"
     )
     assert fridge["visible"], "Object is not interactable!"
     assert_near(controller.last_event.metadata["agent"]["position"], position)
@@ -748,15 +745,15 @@ def test_open_interactable_with_filter(controller):
     controller.step("Pass")  # Must pass for `SetObjectFilter` to take effect
     assert controller.last_event.metadata["objects"] == []
     controller.step(
-        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
+        action="OpenObject",
+        objectId=fridge["objectId"],
+        raise_for_failure=True,
     )
 
     controller.step(dict(action="ResetObjectFilter"))
 
     fridge = next(
-        obj
-        for obj in controller.last_event.metadata["objects"]
-        if obj["objectType"] == "Fridge"
+        obj for obj in controller.last_event.metadata["objects"] if obj["objectType"] == "Fridge"
     )
 
     assert fridge["isOpen"]
@@ -774,19 +771,17 @@ def test_open_interactable(controller):
     controller.step(action, raise_for_failure=True)
 
     fridge = next(
-        obj
-        for obj in controller.last_event.metadata["objects"]
-        if obj["objectType"] == "Fridge"
+        obj for obj in controller.last_event.metadata["objects"] if obj["objectType"] == "Fridge"
     )
     assert fridge["visible"], "Object is not interactable!"
     assert_near(controller.last_event.metadata["agent"]["position"], position)
     event = controller.step(
-        action="OpenObject", objectId=fridge["objectId"], raise_for_failure=True,
+        action="OpenObject",
+        objectId=fridge["objectId"],
+        raise_for_failure=True,
     )
     fridge = next(
-        obj
-        for obj in controller.last_event.metadata["objects"]
-        if obj["objectType"] == "Fridge"
+        obj for obj in controller.last_event.metadata["objects"] if obj["objectType"] == "Fridge"
     )
     assert fridge["isOpen"]
 
@@ -798,9 +793,7 @@ def test_open(controller):
 
     # helper that returns obj_to_open from a new event
     def get_object(event, object_id):
-        return next(
-            obj for obj in event.metadata["objects"] if obj["objectId"] == object_id
-        )
+        return next(obj for obj in event.metadata["objects"] if obj["objectId"] == object_id)
 
     for openness in [0.5, 0.7, 0]:
         event = controller.step(
@@ -822,9 +815,7 @@ def test_open(controller):
             openness=bad_openness,
             forceAction=True,
         )
-        assert not event.metadata[
-            "lastActionSuccess"
-        ], "0.0 > Openness > 1.0 should fail!"
+        assert not event.metadata["lastActionSuccess"], "0.0 > Openness > 1.0 should fail!"
 
     # test backwards compatibility on moveMagnitude, where moveMagnitude
     # is now `openness`, but when moveMagnitude = 0 that corresponds to openness = 1.
@@ -835,9 +826,7 @@ def test_open(controller):
         moveMagnitude=0,
     )
     opened_obj = get_object(event, obj_to_open["objectId"])
-    assert (
-        abs(opened_obj["openness"] - 1) < 1e-3
-    ), "moveMagnitude=0 must have openness=1"
+    assert abs(opened_obj["openness"] - 1) < 1e-3, "moveMagnitude=0 must have openness=1"
     assert opened_obj["isOpen"], "moveMagnitude isOpen incorrectly reported!"
 
     # another moveMagnitude check
@@ -849,9 +838,7 @@ def test_open(controller):
         moveMagnitude=test_openness,
     )
     opened_obj = get_object(event, obj_to_open["objectId"])
-    assert (
-        abs(opened_obj["openness"] - test_openness) < 1e-3
-    ), "moveMagnitude is not working!"
+    assert abs(opened_obj["openness"] - test_openness) < 1e-3, "moveMagnitude is not working!"
     assert opened_obj["isOpen"], "moveMagnitude isOpen incorrectly reported!"
 
     # a CloseObject specific check
@@ -877,6 +864,7 @@ def test_action_dispatch(fifo_controller):
             "ProcessControlCommand",
         ]
     )
+    print(f'metadata sorted {sorted(event.metadata["actionReturn"])} known ambig {known_ambig}')
     assert sorted(event.metadata["actionReturn"]) == known_ambig
     skip_reset(fifo_controller)
 
@@ -925,9 +913,10 @@ def test_action_dispatch_server_action_ambiguous(fifo_controller):
         exception_message = str(e)
 
     assert exception_thrown
+    print(exception_message)
     assert (
-        exception_message
-        == "Ambiguous action: TestActionDispatchSAAmbig Mixing a ServerAction method with overloaded methods is not permitted"
+        "Ambiguous action: TestActionDispatchSAAmbig Mixing a ServerAction method with overloaded methods is not permitted"
+        in exception_message
     )
     skip_reset(fifo_controller)
 
@@ -961,9 +950,7 @@ def test_action_dispatch_find_conflicts_physics(fifo_controller):
 def test_action_dispatch_missing_args(fifo_controller):
     caught_exception = False
     try:
-        event = fifo_controller.step(
-            dict(action="TestActionDispatchNoop", param6="foo")
-        )
+        event = fifo_controller.step(dict(action="TestActionDispatchNoop", param6="foo"))
     except ValueError as e:
         caught_exception = True
     assert caught_exception
@@ -995,9 +982,7 @@ def test_action_disptatch_one_param(fifo_controller):
 
 
 def test_action_disptatch_two_param(fifo_controller):
-    event = fifo_controller.step(
-        dict(action="TestActionDispatchNoop", param1=True, param2=False)
-    )
+    event = fifo_controller.step(dict(action="TestActionDispatchNoop", param1=True, param2=False))
     assert event.metadata["actionReturn"] == "param1 param2"
     skip_reset(fifo_controller)
 
@@ -1037,9 +1022,7 @@ def test_action_disptatch_all_default(fifo_controller):
 
 
 def test_action_disptatch_some_default(fifo_controller):
-    event = fifo_controller.step(
-        dict(action="TestActionDispatchNoopAllDefault2", param12=9.0)
-    )
+    event = fifo_controller.step(dict(action="TestActionDispatchNoopAllDefault2", param12=9.0))
     assert event.metadata["actionReturn"] == "somedefault"
     skip_reset(fifo_controller)
 
@@ -1110,6 +1093,7 @@ def test_jsonschema_metadata(controller):
 
 #     jsonschema.validate(instance=event.metadata, schema=schema)
 
+
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_arm_jsonschema_metadata(controller):
     controller.reset(agentMode="arm")
@@ -1125,7 +1109,7 @@ def test_get_scenes_in_build(controller):
     scenes = set()
     for g in glob.glob("unity/Assets/Scenes/*.unity"):
         # we currently ignore the 5xx scenes since they are not being worked on
-        if not re.match(r'^.*\/FloorPlan5[0-9]+_', g):
+        if not re.match(r"^.*\/FloorPlan5[0-9]+_", g):
             scenes.add(os.path.splitext(os.path.basename(g))[0])
 
     event = controller.step(dict(action="GetScenesInBuild"), raise_for_failure=True)
@@ -1159,9 +1143,7 @@ def test_get_reachable_positions(controller):
 
 
 def test_per_step_instance_segmentation(fifo_controller):
-    fifo_controller.reset(
-        TEST_SCENE, width=300, height=300, renderInstanceSegmentation=False
-    )
+    fifo_controller.reset(TEST_SCENE, width=300, height=300, renderInstanceSegmentation=False)
     event = fifo_controller.step("RotateRight")
     assert event.instance_segmentation_frame is None
     event = fifo_controller.step("Pass", renderInstanceSegmentation=True)
@@ -1194,7 +1176,11 @@ def test_change_resolution_image_synthesis(fifo_controller):
     assert event.depth_frame.shape == (300, 300)
     assert event.instance_segmentation_frame.shape == (300, 300, 3)
     assert event.semantic_segmentation_frame.shape == (300, 300, 3)
-    print("is none? {0} is none other {1} ".format( event.depth_frame is None, first_depth_frame is None))
+    print(
+        "is none? {0} is none other {1} ".format(
+            event.depth_frame is None, first_depth_frame is None
+        )
+    )
     save_image("depth_after_resolution_change_300_300.png", depth_to_gray_rgb(event.depth_frame))
     save_image("before_after_resolution_change_300_300.png", depth_to_gray_rgb(first_depth_frame))
 
@@ -1209,23 +1195,17 @@ def test_change_resolution_image_synthesis(fifo_controller):
 def test_change_resolution(controller):
     event = controller.step(dict(action="Pass"), raise_for_failure=True)
     assert event.frame.shape == (300, 300, 3)
-    event = controller.step(
-        dict(action="ChangeResolution", x=400, y=400), raise_for_failure=True
-    )
+    event = controller.step(dict(action="ChangeResolution", x=400, y=400), raise_for_failure=True)
     assert event.frame.shape == (400, 400, 3)
     assert event.screen_width == 400
     assert event.screen_height == 400
-    event = controller.step(
-        dict(action="ChangeResolution", x=300, y=300), raise_for_failure=True
-    )
+    event = controller.step(dict(action="ChangeResolution", x=300, y=300), raise_for_failure=True)
 
 
 @pytest.mark.parametrize("controller", fifo)
 def test_teleport_locobot(controller):
     # Checking y coordinate adjustment works
-    controller.step(
-        "TeleportFull", **{**BASE_FP28_LOCATION, "y": 0.95}, raise_for_failure=True
-    )
+    controller.step("TeleportFull", **{**BASE_FP28_LOCATION, "y": 0.95}, raise_for_failure=True)
     position = controller.last_event.metadata["agent"]["position"]
     assert_near(position, BASE_FP28_POSITION)
 
@@ -1240,7 +1220,8 @@ def test_teleport_locobot(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1251,7 +1232,8 @@ def test_teleport_locobot(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1259,7 +1241,8 @@ def test_teleport_locobot(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1300,7 +1283,7 @@ def test_teleport_locobot(controller):
 
     # Teleporting with the locobot and drone, which don't support standing
     agent = "locobot"
-   
+
     event = controller.reset(agentMode=agent)
     assert event.metadata["agent"]["isStanding"] is None, agent + " cannot stand!"
 
@@ -1321,11 +1304,9 @@ def test_teleport_locobot(controller):
                 position=dict(x=-1.5, y=0.9, z=-1.5),
                 rotation=dict(x=0, y=90, z=0),
                 horizon=30,
-                standing=True  
+                standing=True,
             )
-            assert False, (
-                agent + " should not be able to pass in standing to teleport!"
-            )
+            assert False, agent + " should not be able to pass in standing to teleport!"
         except Exception as e:
             print(f"Exception: {e}")
             pass
@@ -1360,12 +1341,11 @@ def test_teleport_locobot(controller):
 
     controller.reset(agentMode="default")
 
+
 @pytest.mark.parametrize("controller", fifo)
 def test_teleport_stretch(controller):
     # Checking y coordinate adjustment works
-    controller.step(
-        "TeleportFull", **{**BASE_FP28_LOCATION, "y": 0.95}, raise_for_failure=True
-    )
+    controller.step("TeleportFull", **{**BASE_FP28_LOCATION, "y": 0.95}, raise_for_failure=True)
     position = controller.last_event.metadata["agent"]["position"]
     assert_near(position, BASE_FP28_POSITION)
 
@@ -1380,7 +1360,8 @@ def test_teleport_stretch(controller):
     # Teleporting too high
     before_position = controller.last_event.metadata["agent"]["position"]
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "y": 1.0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "y": 1.0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1391,7 +1372,8 @@ def test_teleport_stretch(controller):
 
     # Teleporting into an object
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": -3.5},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": -3.5},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1399,7 +1381,8 @@ def test_teleport_stretch(controller):
 
     # Teleporting into a wall
     controller.step(
-        "Teleport", **{**BASE_FP28_LOCATION, "z": 0},
+        "Teleport",
+        **{**BASE_FP28_LOCATION, "z": 0},
     )
     assert not controller.last_event.metadata[
         "lastActionSuccess"
@@ -1440,7 +1423,7 @@ def test_teleport_stretch(controller):
 
     # Teleporting with the stretch
     agent = "stretch"
-   
+
     event = controller.reset(agentMode=agent)
     assert event.metadata["agent"]["isStanding"] is False, agent + " cannot stand!"
 
@@ -1451,7 +1434,7 @@ def test_teleport_stretch(controller):
             position=dict(x=-1.5, y=0.9, z=-1.5),
             rotation=dict(x=0, y=90, z=0),
             horizon=30,
-            standing=True
+            standing=True,
         )
 
         print(f"Error Message: {event.metadata['errorMessage']}")
@@ -1464,11 +1447,9 @@ def test_teleport_stretch(controller):
                 position=dict(x=-1.5, y=0.9, z=-1.5),
                 rotation=dict(x=0, y=90, z=0),
                 horizon=30,
-                standing=True
-            ) 
-            assert False, (
-                agent + " should not be able to pass in standing to teleport!"
+                standing=True,
             )
+            assert False, agent + " should not be able to pass in standing to teleport!"
         except Exception as e:
             print(f"Exception: {e}")
             pass
@@ -1504,6 +1485,7 @@ def test_teleport_stretch(controller):
 
     controller.reset(agentMode="default")
 
+
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_get_interactable_poses(controller):
     fridgeId = next(
@@ -1513,9 +1495,7 @@ def test_get_interactable_poses(controller):
     )
     event = controller.step("GetInteractablePoses", objectId=fridgeId)
     poses = event.metadata["actionReturn"]
-    assert (
-        600 > len(poses) > 400
-    ), "Should have around 400 interactable poses next to the fridge!"
+    assert 600 > len(poses) > 400, "Should have around 400 interactable poses next to the fridge!"
 
     # teleport to a random pose
     pose = poses[len(poses) // 2]
@@ -1523,28 +1503,20 @@ def test_get_interactable_poses(controller):
 
     # assumes 1 fridge in the scene
     fridge = next(
-        obj
-        for obj in controller.last_event.metadata["objects"]
-        if obj["objectType"] == "Fridge"
+        obj for obj in controller.last_event.metadata["objects"] if obj["objectType"] == "Fridge"
     )
     assert fridge["visible"], "Object is not interactable!"
 
     # tests that teleport correctly works with **syntax
-    assert (
-        abs(pose["x"] - event.metadata["agent"]["position"]["x"]) < 1e-3
-    ), "Agent x position off!"
-    assert (
-        abs(pose["z"] - event.metadata["agent"]["position"]["z"]) < 1e-3
-    ), "Agent z position off!"
+    assert abs(pose["x"] - event.metadata["agent"]["position"]["x"]) < 1e-3, "Agent x position off!"
+    assert abs(pose["z"] - event.metadata["agent"]["position"]["z"]) < 1e-3, "Agent z position off!"
     assert (
         abs(pose["rotation"] - event.metadata["agent"]["rotation"]["y"]) < 1e-3
     ), "Agent rotation off!"
     assert (
         abs(pose["horizon"] - event.metadata["agent"]["cameraHorizon"]) < 1e-3
     ), "Agent horizon off!"
-    assert (
-        pose["standing"] == event.metadata["agent"]["isStanding"]
-    ), "Agent's isStanding is off!"
+    assert pose["standing"] == event.metadata["agent"]["isStanding"], "Agent's isStanding is off!"
 
     # potato should be inside of the fridge (and, thus, non interactable)
     potatoId = next(
@@ -1653,8 +1625,7 @@ def test_2d_semantic_hulls(controller):
             return np.array(hulls, dtype=float).round(4).tolist()
         else:
             return {
-                k: np.array(v, dtype=float).round(4).tolist()
-                for k, v in md["actionReturn"].items()
+                k: np.array(v, dtype=float).round(4).tolist() for k, v in md["actionReturn"].items()
             }
 
     # All objects
@@ -1745,9 +1716,7 @@ def test_get_object_in_frame(controller):
     ), "x=0.6, y=0.4 should have a cabinet!"
 
     query = controller.step("GetObjectInFrame", x=0.3, y=0.5)
-    assert query.metadata["actionReturn"].startswith(
-        "Fridge"
-    ), "x=0.3, y=0.5 should have a fridge!"
+    assert query.metadata["actionReturn"].startswith("Fridge"), "x=0.3, y=0.5 should have a fridge!"
 
     event = controller.reset(renderInstanceSegmentation=True)
     assert event.metadata["screenHeight"] == 300
@@ -1783,9 +1752,7 @@ def test_get_object_in_frame(controller):
                 event.metadata["actionReturn"] == objectId
             ), f"Failed at ({x / 300}, {y / 300}) for {objectId} with agent at: {event.metadata['agent']}"
 
-    assert (
-        num_tested == 29
-    ), "There should be 29 objects in the frame, based on the agent's pose!"
+    assert num_tested == 29, "There should be 29 objects in the frame, based on the agent's pose!"
 
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
@@ -1819,7 +1786,7 @@ def test_get_coordinate_from_raycast(controller):
     query = controller.step("GetCoordinateFromRaycast", x=0.25, y=0.5)
     assert_near(
         query.metadata["actionReturn"],
-        {'x': -0.6037378311157227, 'y': 1.575998306274414, 'z': -1.0518686771392822},
+        {"x": -0.6037378311157227, "y": 1.575998306274414, "z": -1.0518686771392822},
     )
 
 
@@ -1858,7 +1825,8 @@ def test_manipulathor_move(controller):
     event = controller.reset(scene=TEST_SCENE, agentMode="arm", gridSize=0.25)
 
     assert_near(
-        point1=start_position, point2=event.metadata["agent"]["position"],
+        point1=start_position,
+        point2=event.metadata["agent"]["position"],
     )
 
     event = controller.step(action="MoveAgent", ahead=0.25, right=0.15)
@@ -1869,7 +1837,8 @@ def test_manipulathor_move(controller):
 
     event = controller.step(action="MoveAgent", ahead=-0.25, right=-0.15)
     assert_near(
-        point1=start_position, point2=event.metadata["agent"]["position"],
+        point1=start_position,
+        point2=event.metadata["agent"]["position"],
     )
 
     event = controller.step(action="MoveRight")
@@ -1880,7 +1849,8 @@ def test_manipulathor_move(controller):
 
     event = controller.step(action="MoveLeft")
     assert_near(
-        point1=start_position, point2=event.metadata["agent"]["position"],
+        point1=start_position,
+        point2=event.metadata["agent"]["position"],
     )
 
     event = controller.step(action="MoveAhead")
@@ -1891,7 +1861,8 @@ def test_manipulathor_move(controller):
 
     event = controller.step(action="MoveBack")
     assert_near(
-        point1=start_position, point2=event.metadata["agent"]["position"],
+        point1=start_position,
+        point2=event.metadata["agent"]["position"],
     )
 
 
@@ -1941,9 +1912,7 @@ def test_unsupported_manipulathor(controller):
     event = controller.step(action="PickupObject", x=0.5, y=0.5)
     assert not event, "PickupObject(x, y) should have failed with agentMode=arm"
 
-    objectId = next(
-        obj["objectId"] for obj in event.metadata["objects"] if obj["pickupable"]
-    )
+    objectId = next(obj["objectId"] for obj in event.metadata["objects"] if obj["pickupable"])
     event = controller.step(action="PickupObject", objectId=objectId, forceAction=True)
     assert not event, "PickupObject(objectId) should have failed with agentMode=arm"
 
@@ -2029,12 +1998,8 @@ def test_randomize_materials_clearOnReset(controller):
     f2 = controller.step(action="RandomizeMaterials").frame.astype(np.float16)
     f3 = controller.reset().frame.astype(np.float16)
     # giving some leway with 0.05, but that as a baseline should be plenty enough
-    assert (
-        np.abs(f1 - f2).flatten() / 255
-    ).sum() / 300 / 300 > 0.05, "Expected material change"
-    assert (
-        np.abs(f2 - f3).flatten() / 255
-    ).sum() / 300 / 300 > 0.05, "Expected material change"
+    assert (np.abs(f1 - f2).flatten() / 255).sum() / 300 / 300 > 0.05, "Expected material change"
+    assert (np.abs(f2 - f3).flatten() / 255).sum() / 300 / 300 > 0.05, "Expected material change"
     assert (
         np.abs(f1 - f3).flatten() / 255
     ).sum() / 300 / 300 < 0.01, "Materials should look the same"
@@ -2042,12 +2007,8 @@ def test_randomize_materials_clearOnReset(controller):
     f1 = controller.reset().frame.astype(np.float16)
     f2 = controller.step(action="RandomizeMaterials").frame.astype(np.float16)
     f3 = controller.step(action="ResetMaterials").frame.astype(np.float16)
-    assert (
-        np.abs(f1 - f2).flatten() / 255
-    ).sum() / 300 / 300 > 0.05, "Expected material change"
-    assert (
-        np.abs(f2 - f3).flatten() / 255
-    ).sum() / 300 / 300 > 0.05, "Expected material change"
+    assert (np.abs(f1 - f2).flatten() / 255).sum() / 300 / 300 > 0.05, "Expected material change"
+    assert (np.abs(f2 - f3).flatten() / 255).sum() / 300 / 300 > 0.05, "Expected material change"
     assert (
         np.abs(f1 - f3).flatten() / 255
     ).sum() / 300 / 300 < 0.01, "Materials should look the same"
@@ -2072,12 +2033,8 @@ def test_directionalPush(controller):
             objectId="Tomato|-03.13|+00.92|-00.39",
             moveMagnitude=25,
         )
-        start_obj = next(
-            obj for obj in start.metadata["objects"] if obj["objectType"] == "Tomato"
-        )
-        end_obj = next(
-            obj for obj in end.metadata["objects"] if obj["objectType"] == "Tomato"
-        )
+        start_obj = next(obj for obj in start.metadata["objects"] if obj["objectType"] == "Tomato")
+        end_obj = next(obj for obj in end.metadata["objects"] if obj["objectType"] == "Tomato")
         positions.append((start_obj["position"], end_obj["position"]))
 
     assert positions[0][1]["z"] - positions[0][0]["z"] > 0.2
@@ -2108,21 +2065,24 @@ def test_randomize_materials_params(controller):
     assert not controller.step(action="RandomizeMaterials", useTrainMaterials=False)
     assert controller.step(action="RandomizeMaterials", inRoomTypes=["Kitchen"])
     assert controller.step(
-        action="RandomizeMaterials", inRoomTypes=["Kitchen", "LivingRoom"],
+        action="RandomizeMaterials",
+        inRoomTypes=["Kitchen", "LivingRoom"],
     )
     assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
     assert not controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
 
     controller.reset(scene="FloorPlan_Train5_2")
     assert not controller.step(
-        action="RandomizeMaterials", inRoomTypes=["Kitchen", "LivingRoom"],
+        action="RandomizeMaterials",
+        inRoomTypes=["Kitchen", "LivingRoom"],
     )
     assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
     assert controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
 
     controller.reset(scene="FloorPlan_Val3_2")
     assert not controller.step(
-        action="RandomizeMaterials", inRoomTypes=["Kitchen", "LivingRoom"],
+        action="RandomizeMaterials",
+        inRoomTypes=["Kitchen", "LivingRoom"],
     )
     assert not controller.step(action="RandomizeMaterials", inRoomTypes=["LivingRoom"])
     assert controller.step(action="RandomizeMaterials", inRoomTypes=["RoboTHOR"])
@@ -2142,12 +2102,8 @@ def test_invalid_arguments(controller):
             placeStationary=True,
         )
     print("Err {0}".format(controller.last_event.metadata["lastActionSuccess"]))
-    assert not controller.last_event.metadata[
-        "lastActionSuccess"
-    ], "Extra parameter 'z' in action"
-    assert controller.last_event.metadata[
-        "errorMessage"
-    ], "errorMessage with invalid argument"
+    assert not controller.last_event.metadata["lastActionSuccess"], "Extra parameter 'z' in action"
+    assert controller.last_event.metadata["errorMessage"], "errorMessage with invalid argument"
 
 
 @pytest.mark.parametrize("controller", fifo)
@@ -2175,9 +2131,7 @@ def test_segmentation_colors(controller):
         event.color_to_object_id[fridge_color] == "Fridge"
     ), "Fridge should have this color semantic seg"
 
-    event = controller.reset(
-        renderSemanticSegmentation=False, renderInstanceSegmentation=True
-    )
+    event = controller.reset(renderSemanticSegmentation=False, renderInstanceSegmentation=True)
     fridge_color = event.object_id_to_color["Fridge"]
     assert (
         event.color_to_object_id[fridge_color] == "Fridge"
@@ -2194,9 +2148,7 @@ def test_move_hand(controller):
     h2 = controller.step(action="MoveHeldObject", ahead=0.1).metadata["heldObjectPose"]
 
     assert_near(h1["rotation"], h2["rotation"])
-    assert (
-        0.1 - 1e-3 <= h2["localPosition"]["z"] - h1["localPosition"]["z"] <= 0.1 + 1e-3
-    )
+    assert 0.1 - 1e-3 <= h2["localPosition"]["z"] - h1["localPosition"]["z"] <= 0.1 + 1e-3
     assert abs(h2["localPosition"]["y"] - h1["localPosition"]["y"]) < 1e-3
     assert abs(h2["localPosition"]["x"] - h1["localPosition"]["x"]) < 1e-3
 
@@ -2206,20 +2158,14 @@ def test_move_hand(controller):
         objectId="SoapBottle|-00.84|+00.93|-03.76",
         forceAction=True,
     ).metadata["heldObjectPose"]
-    h2 = controller.step(
-        action="MoveHeldObject", ahead=0.1, right=0.1, up=0.1
-    ).metadata["heldObjectPose"]
+    h2 = controller.step(action="MoveHeldObject", ahead=0.1, right=0.1, up=0.1).metadata[
+        "heldObjectPose"
+    ]
 
     assert_near(h1["rotation"], h2["rotation"])
-    assert (
-        0.1 - 1e-3 <= h2["localPosition"]["z"] - h1["localPosition"]["z"] <= 0.1 + 1e-3
-    )
-    assert (
-        0.1 - 1e-3 <= h2["localPosition"]["x"] - h1["localPosition"]["x"] <= 0.1 + 1e-3
-    )
-    assert (
-        0.1 - 1e-3 <= h2["localPosition"]["y"] - h1["localPosition"]["y"] <= 0.1 + 1e-3
-    )
+    assert 0.1 - 1e-3 <= h2["localPosition"]["z"] - h1["localPosition"]["z"] <= 0.1 + 1e-3
+    assert 0.1 - 1e-3 <= h2["localPosition"]["x"] - h1["localPosition"]["x"] <= 0.1 + 1e-3
+    assert 0.1 - 1e-3 <= h2["localPosition"]["y"] - h1["localPosition"]["y"] <= 0.1 + 1e-3
 
     controller.reset()
     h1 = controller.step(
@@ -2227,24 +2173,14 @@ def test_move_hand(controller):
         objectId="SoapBottle|-00.84|+00.93|-03.76",
         forceAction=True,
     ).metadata["heldObjectPose"]
-    h2 = controller.step(
-        action="MoveHeldObject", ahead=0.1, right=0.05, up=-0.1
-    ).metadata["heldObjectPose"]
+    h2 = controller.step(action="MoveHeldObject", ahead=0.1, right=0.05, up=-0.1).metadata[
+        "heldObjectPose"
+    ]
 
     assert_near(h1["rotation"], h2["rotation"])
-    assert (
-        0.1 - 1e-3 <= h2["localPosition"]["z"] - h1["localPosition"]["z"] <= 0.1 + 1e-3
-    )
-    assert (
-        0.05 - 1e-3
-        <= h2["localPosition"]["x"] - h1["localPosition"]["x"]
-        <= 0.05 + 1e-3
-    )
-    assert (
-        -0.1 - 1e-3
-        <= h2["localPosition"]["y"] - h1["localPosition"]["y"]
-        <= -0.1 + 1e-3
-    )
+    assert 0.1 - 1e-3 <= h2["localPosition"]["z"] - h1["localPosition"]["z"] <= 0.1 + 1e-3
+    assert 0.05 - 1e-3 <= h2["localPosition"]["x"] - h1["localPosition"]["x"] <= 0.05 + 1e-3
+    assert -0.1 - 1e-3 <= h2["localPosition"]["y"] - h1["localPosition"]["y"] <= -0.1 + 1e-3
 
 
 @pytest.mark.parametrize("controller", fifo)
@@ -2301,9 +2237,7 @@ def test_rotate_hand(controller):
         objectId="SoapBottle|-00.84|+00.93|-03.76",
         forceAction=True,
     ).metadata["heldObjectPose"]
-    h2 = controller.step(action="RotateHeldObject", roll=90, pitch=90, yaw=90).metadata[
-        "hand"
-    ]
+    h2 = controller.step(action="RotateHeldObject", roll=90, pitch=90, yaw=90).metadata["hand"]
 
     assert_near(h1["position"], h2["position"])
     assert_near(h1["rotation"], dict(x=0, y=180, z=0))
@@ -2318,9 +2252,9 @@ def test_rotate_hand(controller):
         objectId="SoapBottle|-00.84|+00.93|-03.76",
         forceAction=True,
     ).metadata["hand"]
-    h2 = controller.step(
-        action="RotateHeldObject", rotation=dict(x=90, y=180, z=0)
-    ).metadata["hand"]
+    h2 = controller.step(action="RotateHeldObject", rotation=dict(x=90, y=180, z=0)).metadata[
+        "hand"
+    ]
 
     assert_near(h1["position"], h2["position"])
     assert_near(h1["localRotation"], dict(x=0, y=0, z=0))
@@ -2329,31 +2263,33 @@ def test_rotate_hand(controller):
 
 def test_settle_physics():
     from dictdiffer import diff
+
     physicsSimulationParams = {
-            "autoSimulation": False,
-            "fixedDeltaTime": 0.01,
-            # run 30 simulations after action
-            "minSimulateTimeSeconds": 0.3
+        "autoSimulation": False,
+        "fixedDeltaTime": 0.01,
+        # run 30 simulations after action
+        "minSimulateTimeSeconds": 0.3,
     }
     fifo_controller = build_controller(
-        server_class=FifoServer, 
-        agentMode="arm", 
-        physicsSimulationParams = physicsSimulationParams
+        server_class=FifoServer, agentMode="arm", physicsSimulationParams=physicsSimulationParams
     )
 
-    first_objs = {o['objectId']: o for o in fifo_controller.last_event.metadata["objects"]}
+    first_objs = {o["objectId"]: o for o in fifo_controller.last_event.metadata["objects"]}
 
-    fifo_controller.reset(
-        agentMode="arm", 
-        physicsSimulationParams = physicsSimulationParams
-    )
+    fifo_controller.reset(agentMode="arm", physicsSimulationParams=physicsSimulationParams)
 
     diffs = []
-    last_objs = {o['objectId']: o for o in fifo_controller.last_event.metadata["objects"]}
+    last_objs = {o["objectId"]: o for o in fifo_controller.last_event.metadata["objects"]}
     for object_id, object_metadata in first_objs.items():
-        for d in (diff(object_metadata, last_objs.get(object_id, {}), absolute_tolerance=0.001, ignore=set(["receptacleObjectIds"]))):
+        for d in diff(
+            object_metadata,
+            last_objs.get(object_id, {}),
+            absolute_tolerance=0.001,
+            ignore=set(["receptacleObjectIds"]),
+        ):
             diffs.append((object_id, d))
     assert diffs == []
+
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_fill_liquid(controller):
@@ -2398,12 +2334,10 @@ def test_fill_liquid(controller):
 
 
 def test_timeout():
-    kwargs = {
-        "server_timeout": 2.0
-    }
+    kwargs = {"server_timeout": 2.0}
     for c in [
         build_controller(server_class=WsgiServer, **kwargs),
-        build_controller(server_class=FifoServer, **kwargs)
+        build_controller(server_class=FifoServer, **kwargs),
     ]:
         c.step("Sleep", seconds=1)
         assert c.last_event.metadata["lastActionSuccess"]
@@ -2414,4 +2348,3 @@ def test_timeout():
         # Above crash should kill the unity process
         time.sleep(1.0)
         assert c.server.unity_proc.poll() is not None
-

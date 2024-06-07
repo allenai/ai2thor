@@ -1,6 +1,5 @@
-using UnityEngine;
 using System.Collections;
-
+using UnityEngine;
 
 [ExecuteInEditMode]
 public class FreezeObject : MonoBehaviour {
@@ -8,17 +7,18 @@ public class FreezeObject : MonoBehaviour {
     public bool FreezePosition = false;
     public bool FreezeRotation = false;
 
-
     private Space m_OldSpace = Space.World;
     private bool m_OldFreezePosition = false;
     private bool m_OldFreezeRotation = false;
     private Vector3 m_Position = Vector3.zero;
     private Quaternion m_Rotation = Quaternion.identity;
+
     void Awake() {
         if (Application.isPlaying) {
             Destroy(this);
         }
     }
+
     void Update() {
         if (!Application.isEditor) {
             Destroy(this);
@@ -54,5 +54,4 @@ public class FreezeObject : MonoBehaviour {
         m_OldFreezePosition = FreezePosition;
         m_OldFreezeRotation = FreezeRotation;
     }
-
 }

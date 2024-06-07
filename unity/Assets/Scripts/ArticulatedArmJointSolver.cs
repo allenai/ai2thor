@@ -1,13 +1,33 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using System.Linq;
+using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public enum ArmLiftState { Idle = 0, MovingDown = -1, MovingUp = 1 };
-public enum ArmExtendState { Idle = 0, MovingBackward = -1, MovingForward = 1 };
-public enum ArmRotateState { Idle = 0, Negative = -1, Positive = 1 };
-public enum JointAxisType { Unassigned, Extend, Lift, Rotate };
+public enum ArmLiftState {
+    Idle = 0,
+    MovingDown = -1,
+    MovingUp = 1
+};
+
+public enum ArmExtendState {
+    Idle = 0,
+    MovingBackward = -1,
+    MovingForward = 1
+};
+
+public enum ArmRotateState {
+    Idle = 0,
+    Negative = -1,
+    Positive = 1
+};
+
+public enum JointAxisType {
+    Unassigned,
+    Extend,
+    Lift,
+    Rotate
+};
 
 public class ArmMoveParams : ABAgentPhysicsParams {
     public ArticulatedAgentController controller;
@@ -19,11 +39,14 @@ public class ArmMoveParams : ABAgentPhysicsParams {
 public class ArticulatedArmJointSolver : MonoBehaviour {
     [Header("What kind of joint is this?")]
     public JointAxisType jointAxisType = JointAxisType.Unassigned;
+
     [Header("State of this joint's movements")]
     [SerializeField]
     public ArmRotateState rotateState = ArmRotateState.Idle;
+
     [SerializeField]
     public ArmLiftState liftState = ArmLiftState.Idle;
+
     [SerializeField]
     public ArmExtendState extendState = ArmExtendState.Idle;
 
@@ -33,14 +56,14 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
     //reference for this joint's articulation body
     public ArticulationBody myAB;
 
-    public float distanceTransformedSoFar, prevStepTransformation;
+    public float distanceTransformedSoFar,
+        prevStepTransformation;
 
     //these limits are from the Articulation Body drive's lower and uppper limit
     public float lowerArmBaseLimit = -0.1832155f;
     public float upperArmBaseLimit = 0.9177839f;
     public float lowerArmExtendLimit = 0.0f;
     public float upperArmExtendLimit = 0.516f;
-
 
     void Start() {
         myAB = this.GetComponent<ArticulationBody>();
@@ -70,7 +93,6 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         //we are a lift type joint, moving along the local y axis
         if (jointAxisType == JointAxisType.Lift) {
             if (liftState == ArmLiftState.Idle) {
-
                 //set if we are moving up or down based on sign of distance from input
                 if (armMoveParams.direction < 0) {
                     Debug.Log("setting lift state to move down");
@@ -81,11 +103,9 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 }
             }
         }
-
         //we are an extending joint, moving along the local z axis
         else if (jointAxisType == JointAxisType.Extend) {
             if (extendState == ArmExtendState.Idle) {
-
                 currentArmMoveParams.armExtender = this.GetComponent<ArticulatedArmExtender>();
                 //currentArmMoveParams.armExtender.Init();
 
@@ -96,11 +116,10 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                     extendState = ArmExtendState.MovingForward;
                 }
             }
-        
-        //we are a rotating joint, rotating around the local y axis
+
+            //we are a rotating joint, rotating around the local y axis
         } else if (jointAxisType == JointAxisType.Rotate) {
             if (rotateState == ArmRotateState.Idle) {
-
                 //set if we are rotating left or right
                 if (armMoveParams.direction < 0) {
                     rotateState = ArmRotateState.Negative;
@@ -112,7 +131,6 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
     }
 
     public void ControlJointFromAction(float fixedDeltaTime) {
-        
         if (currentArmMoveParams == null) {
             return;
         }
@@ -127,22 +145,29 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 //Debug.Log("start ControlJointFromAction for axis type LIFT");
                 var drive = myAB.yDrive;
                 float currentPosition = myAB.jointPosition[0];
-                float targetPosition = currentPosition + (float)liftState * fixedDeltaTime * currentArmMoveParams.speed;
+                float targetPosition =
+                    currentPosition
+                    + (float)liftState * fixedDeltaTime * currentArmMoveParams.speed;
                 drive.target = targetPosition;
                 myAB.yDrive = drive;
 
                 // Begin checks to see if we have stopped moving or if we need to stop moving
 
                 // Determine (positive) distance covered
-                distanceTransformedSoFar = Mathf.Abs(currentPosition - currentArmMoveParams.initialJointPosition);
-                distanceTransformedThisFixedUpdate = Mathf.Abs(currentPosition - prevStepTransformation);
+                distanceTransformedSoFar = Mathf.Abs(
+                    currentPosition - currentArmMoveParams.initialJointPosition
+                );
+                distanceTransformedThisFixedUpdate = Mathf.Abs(
+                    currentPosition - prevStepTransformation
+                );
 
                 // Store current values for comparing with next FixedUpdate
                 prevStepTransformation = currentPosition;
 
                 if (currentArmMoveParams.useLimits) {
                     Debug.Log("extending/retracting arm with limits");
-                    float distanceRemaining = currentArmMoveParams.distance - distanceTransformedSoFar;
+                    float distanceRemaining =
+                        currentArmMoveParams.distance - distanceTransformedSoFar;
 
                     // New version of up-down drive
                     float forceAppliedFromRest = currentArmMoveParams.maxForce;
@@ -155,13 +180,22 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                     float offset = 1e-2f;
                     if (liftState == ArmLiftState.MovingUp) {
                         drive.upperLimit = Mathf.Min(upperArmBaseLimit, targetPosition + offset);
-                        drive.lowerLimit = Mathf.Min(Mathf.Max(lowerArmBaseLimit, currentPosition), targetPosition);
+                        drive.lowerLimit = Mathf.Min(
+                            Mathf.Max(lowerArmBaseLimit, currentPosition),
+                            targetPosition
+                        );
                     } else if (liftState == ArmLiftState.MovingDown) {
                         drive.lowerLimit = Mathf.Max(lowerArmBaseLimit, targetPosition);
-                        drive.upperLimit = Mathf.Max(Mathf.Min(upperArmBaseLimit, currentPosition + offset), targetPosition + offset);
+                        drive.upperLimit = Mathf.Max(
+                            Mathf.Min(upperArmBaseLimit, currentPosition + offset),
+                            targetPosition + offset
+                        );
                     }
 
-                    drive.damping = Mathf.Min(forceAppliedFromRest / currentArmMoveParams.speed, 10000f);
+                    drive.damping = Mathf.Min(
+                        forceAppliedFromRest / currentArmMoveParams.speed,
+                        10000f
+                    );
 
                     float signedDistanceRemaining = direction * distanceRemaining;
 
@@ -173,7 +207,8 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
 
                     float switchWhenThisClose = 0.01f;
                     bool willReachTargetSoon = (
-                        distanceRemaining < switchWhenThisClose || (
+                        distanceRemaining < switchWhenThisClose
+                        || (
                             direction * curVelocity > 0f
                             && distanceRemaining / Mathf.Max(curSpeed, 1e-7f) <= slowDownTime
                         )
@@ -189,11 +224,17 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                         drive.targetVelocity = -direction * currentArmMoveParams.speed;
                     }
 
-                    float curForceApplied = drive.stiffness * (targetPosition - currentPosition) + drive.damping * (drive.targetVelocity - curVelocity);
+                    float curForceApplied =
+                        drive.stiffness * (targetPosition - currentPosition)
+                        + drive.damping * (drive.targetVelocity - curVelocity);
 
-                    Debug.Log($"position: {currentPosition} ({targetPosition} target) ({willReachTargetSoon} near target)");
+                    Debug.Log(
+                        $"position: {currentPosition} ({targetPosition} target) ({willReachTargetSoon} near target)"
+                    );
                     Debug.Log($"drive limits: {drive.lowerLimit}, {drive.upperLimit}");
-                    Debug.Log($"distance moved: {distanceTransformedSoFar} ({currentArmMoveParams.distance} target)");
+                    Debug.Log(
+                        $"distance moved: {distanceTransformedSoFar} ({currentArmMoveParams.distance} target)"
+                    );
                     Debug.Log($"velocity: {myAB.velocity.y} ({drive.targetVelocity} target)");
                     Debug.Log($"current force applied: {curForceApplied}");
 
@@ -202,7 +243,6 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 }
             }
         }
-
         //for extending arm joints, assume all extending joints will be in some state of movement based on input distance
         //the shouldHalt function in ArticulatedAgentController will wait for all individual extending joints to go back to
         //idle before actionFinished is called
@@ -214,22 +254,28 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 // Begin checks to see if we have stopped moving or if we need to stop moving
 
                 // Determine (positive) distance covered
-                distanceTransformedSoFar = Mathf.Abs(currentPosition - currentArmMoveParams.initialJointPosition);
-                distanceTransformedThisFixedUpdate = Mathf.Abs(currentPosition - prevStepTransformation);
+                distanceTransformedSoFar = Mathf.Abs(
+                    currentPosition - currentArmMoveParams.initialJointPosition
+                );
+                distanceTransformedThisFixedUpdate = Mathf.Abs(
+                    currentPosition - prevStepTransformation
+                );
 
                 // Store current values for comparing with next FixedUpdate
                 prevStepTransformation = currentPosition;
 
-
                 if (!currentArmMoveParams.useLimits) {
-                    float targetPosition = currentPosition + (float)extendState * fixedDeltaTime * currentArmMoveParams.speed;
+                    float targetPosition =
+                        currentPosition
+                        + (float)extendState * fixedDeltaTime * currentArmMoveParams.speed;
                     drive.target = targetPosition;
                     myAB.zDrive = drive;
 
                     Debug.Log($"currentPosition: {currentPosition}");
                     Debug.Log($"targetPosition: {targetPosition}");
                 } else {
-                    float distanceRemaining = currentArmMoveParams.distance - distanceTransformedSoFar;
+                    float distanceRemaining =
+                        currentArmMoveParams.distance - distanceTransformedSoFar;
                     Debug.Log("DISTANCE REMAINING: " + distanceRemaining);
 
                     float forceAppliedFromRest = currentArmMoveParams.maxForce;
@@ -242,13 +288,22 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                     float offset = 1e-2f;
                     if (extendState == ArmExtendState.MovingForward) {
                         drive.upperLimit = Mathf.Min(upperArmExtendLimit, targetPosition + offset);
-                        drive.lowerLimit = Mathf.Min(Mathf.Max(lowerArmExtendLimit, currentPosition), targetPosition);
+                        drive.lowerLimit = Mathf.Min(
+                            Mathf.Max(lowerArmExtendLimit, currentPosition),
+                            targetPosition
+                        );
                     } else if (extendState == ArmExtendState.MovingBackward) {
                         drive.lowerLimit = Mathf.Max(lowerArmExtendLimit, targetPosition);
-                        drive.upperLimit = Mathf.Max(Mathf.Min(upperArmExtendLimit, currentPosition + offset), targetPosition + offset);
+                        drive.upperLimit = Mathf.Max(
+                            Mathf.Min(upperArmExtendLimit, currentPosition + offset),
+                            targetPosition + offset
+                        );
                     }
 
-                    drive.damping = Mathf.Min(forceAppliedFromRest / currentArmMoveParams.speed, 10000f);
+                    drive.damping = Mathf.Min(
+                        forceAppliedFromRest / currentArmMoveParams.speed,
+                        10000f
+                    );
 
                     float signedDistanceRemaining = direction * distanceRemaining;
 
@@ -260,7 +315,8 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
 
                     float switchWhenThisClose = 0.01f;
                     bool willReachTargetSoon = (
-                        distanceRemaining < switchWhenThisClose || (
+                        distanceRemaining < switchWhenThisClose
+                        || (
                             direction * curVelocity > 0f
                             && distanceRemaining / Mathf.Max(curSpeed, 1e-7f) <= slowDownTime
                         )
@@ -277,11 +333,17 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                         drive.targetVelocity = -direction * currentArmMoveParams.speed;
                     }
 
-                    float curForceApplied = drive.stiffness * (targetPosition - currentPosition) + drive.damping * (drive.targetVelocity - curVelocity);
+                    float curForceApplied =
+                        drive.stiffness * (targetPosition - currentPosition)
+                        + drive.damping * (drive.targetVelocity - curVelocity);
 
-                    Debug.Log($"position: {currentPosition} ({targetPosition} target) ({willReachTargetSoon} near target)");
+                    Debug.Log(
+                        $"position: {currentPosition} ({targetPosition} target) ({willReachTargetSoon} near target)"
+                    );
                     Debug.Log($"drive limits: {drive.lowerLimit}, {drive.upperLimit}");
-                    Debug.Log($"distance moved: {distanceTransformedSoFar} ({currentArmMoveParams.distance} target)");
+                    Debug.Log(
+                        $"distance moved: {distanceTransformedSoFar} ({currentArmMoveParams.distance} target)"
+                    );
                     Debug.Log($"velocity: {myAB.velocity.y} ({drive.targetVelocity} target)");
                     Debug.Log($"current force applied: {curForceApplied}");
 
@@ -293,7 +355,6 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 currentArmMoveParams.armExtender.Extend();
             }
         }
-
         //if we are a revolute joint
         else if (jointAxisType == JointAxisType.Rotate) {
             if (rotateState != ArmRotateState.Idle) {
@@ -303,17 +364,25 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                 //somehow this is already in radians, so we are converting to degrees here
                 float currentRotation = Mathf.Rad2Deg * myAB.jointPosition[0];
                 // i think this speed is in rads per second?????
-                float targetRotation = currentRotation + (float)rotateState * currentArmMoveParams.speed * fixedDeltaTime;
+                float targetRotation =
+                    currentRotation
+                    + (float)rotateState * currentArmMoveParams.speed * fixedDeltaTime;
                 drive.target = targetRotation;
                 myAB.xDrive = drive;
 
                 // Begin checks to see if we have stopped moving or if we need to stop moving
-                
-                // Determine (positive) angular distance covered
-                distanceTransformedSoFar = Mathf.Abs(currentRotation - currentArmMoveParams.initialJointPosition);
-                distanceTransformedThisFixedUpdate = Mathf.Abs(currentRotation - prevStepTransformation);
 
-                distanceTransformedSoFar = Mathf.Abs(currentRotation - Mathf.Rad2Deg * currentArmMoveParams.initialJointPosition);
+                // Determine (positive) angular distance covered
+                distanceTransformedSoFar = Mathf.Abs(
+                    currentRotation - currentArmMoveParams.initialJointPosition
+                );
+                distanceTransformedThisFixedUpdate = Mathf.Abs(
+                    currentRotation - prevStepTransformation
+                );
+
+                distanceTransformedSoFar = Mathf.Abs(
+                    currentRotation - Mathf.Rad2Deg * currentArmMoveParams.initialJointPosition
+                );
             }
         }
 
@@ -336,7 +405,6 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
         double minMovementPerSecond,
         double haltCheckTimeWindow
     ) {
-
         //if we are already in an idle, state, immeidately return true
         if (jointAxisType == JointAxisType.Lift && liftState == ArmLiftState.Idle) {
             return true;
@@ -373,8 +441,6 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
             Debug.Log("halt due to distance reached/exceeded");
             return shouldHalt;
         }
-
-
         //hard check for time limit
         else if (currentArmMoveParams.timePassed >= currentArmMoveParams.maxTimePassed) {
             shouldHalt = true;
@@ -389,14 +455,15 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
     private void IdleAllStates() {
         if (jointAxisType == JointAxisType.Lift) {
             liftState = ArmLiftState.Idle;
-        } if (jointAxisType == JointAxisType.Extend) {
+        }
+        if (jointAxisType == JointAxisType.Extend) {
             extendState = ArmExtendState.Idle;
-        } if (jointAxisType == JointAxisType.Rotate) {
+        }
+        if (jointAxisType == JointAxisType.Rotate) {
             rotateState = ArmRotateState.Idle;
         }
 
         //reset current movement params
         this.currentArmMoveParams = null;
     }
-
 }

@@ -4,9 +4,9 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
 public class Break : MonoBehaviour {
-
     [SerializeField]
     private GameObject PrefabToSwapTo = null;
+
     [SerializeField]
     private GameObject DirtyPrefabToSwapTo = null;
 
@@ -14,9 +14,10 @@ public class Break : MonoBehaviour {
     protected float ImpulseThreshold = 3.6f; // set this to lower if this object should be easier to break. Higher if the object requires more force to break
 
     [SerializeField]
-    protected float HighFrictionImpulseOffset = 2.0f;// if the object is colliding with a "soft" high friction zone, offset the ImpulseThreshold to be harder to break
+    protected float HighFrictionImpulseOffset = 2.0f; // if the object is colliding with a "soft" high friction zone, offset the ImpulseThreshold to be harder to break
 
-    protected float CurrentImpulseThreshold;// modify this with ImpulseThreshold and HighFrictionImpulseOffset based on trigger callback functions
+    protected float CurrentImpulseThreshold; // modify this with ImpulseThreshold and HighFrictionImpulseOffset based on trigger callback functions
+
     [SerializeField]
     protected bool readytobreak = true;
 
@@ -26,32 +27,67 @@ public class Break : MonoBehaviour {
     // if set to true, all breakable objects cannot be broken automatically. Instaed, only the Break() action targeting specific objects will allow them to be broken.
     public bool Unbreakable = false;
 
-    // what does this object need to do when it is in the broken state? 
+    // what does this object need to do when it is in the broken state?
     // Some need a decal to show a cracked screen on the surface, others need a prefab swap to shattered pieces
-    protected enum BreakType { PrefabSwap, MaterialSwap, Decal };
+    protected enum BreakType {
+        PrefabSwap,
+        MaterialSwap,
+        Decal
+    };
 
     [SerializeField]
     protected BreakType breakType; // please select how this object should be broken here
 
     [SerializeField]
-    protected SwapObjList[] MaterialSwapObjects;// swap screen/surface with cracked version
+    protected SwapObjList[] MaterialSwapObjects; // swap screen/surface with cracked version
 
     // if these soft objects hit this breakable object, ignore the breakobject check because it's soft so yeah why would it break this object?
     private List<SimObjType> TooSmalOrSoftToBreakOtherObjects = new List<SimObjType>()
-    {SimObjType.TeddyBear, SimObjType.Pillow, SimObjType.Cloth, SimObjType.Bread, SimObjType.BreadSliced, SimObjType.Egg, SimObjType.EggShell, SimObjType.Omelette,
-    SimObjType.EggCracked, SimObjType.LettuceSliced, SimObjType.TissueBox, SimObjType.Newspaper, SimObjType.TissueBoxEmpty, SimObjType.TissueBoxEmpty,
-    SimObjType.CreditCard, SimObjType.ToiletPaper, SimObjType.ToiletPaperRoll, SimObjType.SoapBar, SimObjType.Pen, SimObjType.Pencil, SimObjType.Towel,
-    SimObjType.Watch, SimObjType.DishSponge, SimObjType.Tissue, SimObjType.CD, SimObjType.HandTowel};
+    {
+        SimObjType.TeddyBear,
+        SimObjType.Pillow,
+        SimObjType.Cloth,
+        SimObjType.Bread,
+        SimObjType.BreadSliced,
+        SimObjType.Egg,
+        SimObjType.EggShell,
+        SimObjType.Omelette,
+        SimObjType.EggCracked,
+        SimObjType.LettuceSliced,
+        SimObjType.TissueBox,
+        SimObjType.Newspaper,
+        SimObjType.TissueBoxEmpty,
+        SimObjType.TissueBoxEmpty,
+        SimObjType.CreditCard,
+        SimObjType.ToiletPaper,
+        SimObjType.ToiletPaperRoll,
+        SimObjType.SoapBar,
+        SimObjType.Pen,
+        SimObjType.Pencil,
+        SimObjType.Towel,
+        SimObjType.Watch,
+        SimObjType.DishSponge,
+        SimObjType.Tissue,
+        SimObjType.CD,
+        SimObjType.HandTowel
+    };
 
     public bool isBroken() {
         return broken;
     }
+
     // Start is called before the first frame update
     void Start() {
 #if UNITY_EDITOR
-    // TODO refactor Break logic as separate from DecalCollision.cs to avoid error, and remove last part of AND 
-        if ((gameObject.GetComponentInParent<SimObjPhysics>() != null && !gameObject.GetComponentInParent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) && !gameObject.GetComponentInParent<SimObjPhysics>().IsReceptacle) {
-           
+        // TODO refactor Break logic as separate from DecalCollision.cs to avoid error, and remove last part of AND
+        if (
+            (
+                gameObject.GetComponentInParent<SimObjPhysics>() != null
+                && !gameObject
+                    .GetComponentInParent<SimObjPhysics>()
+                    .DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)
+            ) && !gameObject.GetComponentInParent<SimObjPhysics>().IsReceptacle
+        ) {
             Debug.LogError(gameObject.name + " is missing the CanBreak secondary property!");
         }
 
@@ -76,8 +112,9 @@ public class Break : MonoBehaviour {
 
             //before disabling things, if this object is a receptacle, unparent all objects contained
             if (gameObject.GetComponent<SimObjPhysics>().IsReceptacle) {
-                foreach (GameObject go in gameObject.GetComponent<SimObjPhysics>().ContainedGameObjects()) {
-
+                foreach (
+                    GameObject go in gameObject.GetComponent<SimObjPhysics>().ContainedGameObjects()
+                ) {
                     //only reset rigidbody properties if contained object was pickupable/moveable
                     if (go.GetComponentInParent<SimObjPhysics>()) {
                         SimObjPhysics containedSOP = go.GetComponentInParent<SimObjPhysics>();
@@ -87,7 +124,8 @@ public class Break : MonoBehaviour {
                             childrb.isKinematic = false;
                             childrb.useGravity = true;
                             childrb.constraints = RigidbodyConstraints.None;
-                            childrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                            childrb.collisionDetectionMode =
+                                CollisionDetectionMode.ContinuousSpeculative;
                         }
                     }
                 }
@@ -133,8 +171,14 @@ public class Break : MonoBehaviour {
             if (resultObject.GetComponent<SimObjPhysics>()) {
                 if (resultObject.GetComponent<SimObjPhysics>().Type == SimObjType.EggCracked) {
                     resultObject.transform.rotation = Quaternion.Euler(Vector3.zero);
-                    PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-                    psm.Generate_InheritedObjectID(gameObject.GetComponent<SimObjPhysics>(), resultObject.GetComponent<SimObjPhysics>(), 0);
+                    PhysicsSceneManager psm = GameObject
+                        .Find("PhysicsSceneManager")
+                        .GetComponent<PhysicsSceneManager>();
+                    psm.Generate_InheritedObjectID(
+                        gameObject.GetComponent<SimObjPhysics>(),
+                        resultObject.GetComponent<SimObjPhysics>(),
+                        0
+                    );
 
                     Rigidbody resultrb = resultObject.GetComponent<Rigidbody>();
                     resultrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
@@ -151,7 +195,8 @@ public class Break : MonoBehaviour {
             // decal logic here
             if (MaterialSwapObjects.Length > 0) {
                 for (int i = 0; i < MaterialSwapObjects.Length; i++) {
-                    MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials = MaterialSwapObjects[i].OnMaterials;
+                    MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
+                        MaterialSwapObjects[i].OnMaterials;
                 }
             }
 
@@ -171,7 +216,10 @@ public class Break : MonoBehaviour {
             BreakForDecalType(collision);
         }
 
-        BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().PrimaryAgent;
+        BaseFPSAgentController primaryAgent = GameObject
+            .Find("PhysicsSceneManager")
+            .GetComponent<AgentManager>()
+            .PrimaryAgent;
         if (primaryAgent.imageSynthesis) {
             if (primaryAgent.imageSynthesis.enabled) {
                 primaryAgent.imageSynthesis.OnSceneChange();
@@ -180,12 +228,9 @@ public class Break : MonoBehaviour {
     }
 
     // Override for Decal behavior
-    protected virtual void BreakForDecalType(Collision collision) {
-
-    }
+    protected virtual void BreakForDecalType(Collision collision) { }
 
     void OnCollisionEnter(Collision col) {
-
         // do nothing if this specific breakable sim objects has been set to unbreakable
         if (Unbreakable) {
             return;
@@ -199,13 +244,20 @@ public class Break : MonoBehaviour {
 
         // if the other collider hit is on the list of things that shouldn't cause this object to break, return and do nothing
         if (col.transform.GetComponentInParent<SimObjPhysics>()) {
-            if (TooSmalOrSoftToBreakOtherObjects.Contains(col.transform.GetComponentInParent<SimObjPhysics>().Type)) {
+            if (
+                TooSmalOrSoftToBreakOtherObjects.Contains(
+                    col.transform.GetComponentInParent<SimObjPhysics>().Type
+                )
+            ) {
                 return;
             }
         }
 
         // ImpulseForce.Add(col.impulse.magnitude);
-        if (col.impulse.magnitude > CurrentImpulseThreshold && !col.transform.GetComponentInParent<BaseAgentComponent>()) {
+        if (
+            col.impulse.magnitude > CurrentImpulseThreshold
+            && !col.transform.GetComponentInParent<BaseAgentComponent>()
+        ) {
             if (readytobreak) {
                 readytobreak = false;
                 BreakObject(col);

@@ -2,6 +2,7 @@ import warnings
 import os
 from ai2thor.controller import Controller
 
+
 class TestController(Controller):
     def __init__(self, **kwargs):
         self.force_opengl = os.environ.get("FORCE_OPENGL", False)
@@ -14,11 +15,12 @@ class TestController(Controller):
         # force OpenGLCore to get used so that the tests run in a consistent way
         # With low power graphics cards (such as those in the test environment)
         # Metal behaves in inconsistent ways causing test failures
-        
+
         # This is not needed for cloudrendering
-        if self.force_opengl:             
+        if self.force_opengl:
             command.append("-force-glcore")
         return command
+
 
 def build_controller(**args):
     platform = os.environ.get("TEST_PLATFORM")

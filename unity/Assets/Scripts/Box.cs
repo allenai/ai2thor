@@ -1,10 +1,9 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 [ExecuteInEditMode]
 public class Box : MonoBehaviour {
-
     public SimObj ParentSimObj;
     public GameObject[] Lids;
     public bool EditorClosed = true;
@@ -17,7 +16,11 @@ public class Box : MonoBehaviour {
                 if (r != null) {
                     bool lighten = SceneManager.Current.SceneNumber % 2 == 0;
                     Material darkerMat = r.material;
-                    darkerMat.color = Color.Lerp(darkerMat.color, (lighten ? Color.white : Color.black), 0.15f);
+                    darkerMat.color = Color.Lerp(
+                        darkerMat.color,
+                        (lighten ? Color.white : Color.black),
+                        0.15f
+                    );
                 }
             }
         }

@@ -4,9 +4,7 @@ using UnityEngine;
 
 public class PlaneGizmo : MonoBehaviour {
     // Start is called before the first frame update
-    void Start() {
-
-    }
+    void Start() { }
 
     void OnDrawGizmos() {
         //  Gizmos.color = Color.yellow;
@@ -20,7 +18,6 @@ public class PlaneGizmo : MonoBehaviour {
         var p2 = rot * new Vector3(size, 0.0f, size);
         var p3 = rot * new Vector3(size, 0.0f, -size);
 
-
         Gizmos.DrawLine(transform.TransformPoint(p0), transform.TransformPoint(p1));
         Gizmos.DrawLine(transform.TransformPoint(p1), transform.TransformPoint(p2));
         Gizmos.DrawLine(transform.TransformPoint(p2), transform.TransformPoint(p3));
@@ -28,7 +25,5 @@ public class PlaneGizmo : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update() {
-
-    }
+    void Update() { }
 }

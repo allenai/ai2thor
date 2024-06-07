@@ -42,22 +42,16 @@ ADITIONAL_ARM_ARGS = {
     "restrictMovement": False,
     # "waitForFixedUpdate": False,  // deprecated
     "returnToStart": True,
-    "speed": 1
+    "speed": 1,
 }
 
-ADDITONAL_MOVEMENT_ARGS = {
-        "disableRendering": True,
-        "returnToStart": True,
-        "speed": 1
-    }
+ADDITONAL_MOVEMENT_ARGS = {"disableRendering": True, "returnToStart": True, "speed": 1}
 
-ADITIONAL_NEW_MOVEMENT_ARGS= {
-        "returnToStart": True,
-        "speed": 1,
-        "physicsSimulationParams": {
-            "autoSimulation": False
-        }
-    }
+ADITIONAL_NEW_MOVEMENT_ARGS = {
+    "returnToStart": True,
+    "speed": 1,
+    "physicsSimulationParams": {"autoSimulation": False},
+}
 
 MoveArm = "MoveArm"
 
@@ -68,26 +62,18 @@ MoveAgent = "MoveAgent"
 
 
 ADITIONAL_ARM_ARGS_BY_ACTION = {
-
-    "MoveArmNew": {
-        "restrictMovement": False,
-        **ADITIONAL_NEW_MOVEMENT_ARGS
-    },
+    "MoveArmNew": {"restrictMovement": False, **ADITIONAL_NEW_MOVEMENT_ARGS},
     "MoveArmBaseNew": ADITIONAL_NEW_MOVEMENT_ARGS,
     "RotateAgentNew": ADITIONAL_NEW_MOVEMENT_ARGS,
     "MoveAheadNew": ADITIONAL_NEW_MOVEMENT_ARGS,
     "MoveAgentNew": ADITIONAL_NEW_MOVEMENT_ARGS,
-
-    "MoveArm": {
-        "restrictMovement": False,
-        **ADDITONAL_MOVEMENT_ARGS
-    },
+    "MoveArm": {"restrictMovement": False, **ADDITONAL_MOVEMENT_ARGS},
     "MoveArmBase": ADDITONAL_MOVEMENT_ARGS,
     "RotateAgent": ADDITONAL_MOVEMENT_ARGS,
     "MoveAhead": ADDITONAL_MOVEMENT_ARGS,
-    "MoveAgent": ADDITONAL_MOVEMENT_ARGS
-
+    "MoveAgent": ADDITONAL_MOVEMENT_ARGS,
 }
+
 
 def actionName(action):
     # return action
@@ -95,6 +81,7 @@ def actionName(action):
         return action
     else:
         return f"{action}{new_action_suffix}"
+
 
 MOVE_CONSTANT = 0.05
 
@@ -135,21 +122,13 @@ def execute_command(controller, command, action_dict_addition_by_action):
     elif command == "d":
         action_details = dict(action="DropMidLevelHand", add_extra_args=True)
     elif command == "mm":
-        action_details = dict(
-            action=actionName(MoveAgent),
-            ahead=0.2,
-            add_extra_args=True
-        )
+        action_details = dict(action=actionName(MoveAgent), ahead=0.2, add_extra_args=True)
 
     elif command == "rr":
-        action_details = dict(
-            action= actionName(RotateAgent), degrees=45, add_extra_args=True
-        )
+        action_details = dict(action=actionName(RotateAgent), degrees=45, add_extra_args=True)
 
     elif command == "ll":
-        action_details = dict(
-            action=actionName(RotateAgent), degrees=-45, add_extra_args=True
-        )
+        action_details = dict(action=actionName(RotateAgent), degrees=-45, add_extra_args=True)
 
     elif command == "m":
         action_details = dict(action=actionName(MoveAhead), add_extra_args=True)
@@ -171,10 +150,8 @@ def execute_command(controller, command, action_dict_addition_by_action):
     if command in ["w", "z", "s", "a", "3", "4"]:
         action_details = dict(
             action=actionName(MoveArm),
-            position=dict(
-                x=base_position["x"], y=base_position["y"], z=base_position["z"]
-            ),
-            add_extra_args=True
+            position=dict(x=base_position["x"], y=base_position["y"], z=base_position["z"]),
+            add_extra_args=True,
         )
 
     elif command in ["u", "j"]:
@@ -184,20 +161,16 @@ def execute_command(controller, command, action_dict_addition_by_action):
             base_position["h"] = 0
 
         action_details = dict(
-            action=actionName(MoveArmBase),
-            y=base_position["h"],
-            add_extra_args=True
+            action=actionName(MoveArmBase), y=base_position["h"], add_extra_args=True
         )
 
-    if 'add_extra_args' in action_details and action_details['add_extra_args']:
-        del action_details['add_extra_args']
-        action_dict_addition = action_dict_addition_by_action[action_details['action']]
+    if "add_extra_args" in action_details and action_details["add_extra_args"]:
+        del action_details["add_extra_args"]
+        action_dict_addition = action_dict_addition_by_action[action_details["action"]]
         action_details = dict(**action_details, **action_dict_addition)
-    if 'action' in action_details:
+    if "action" in action_details:
         # print(f"Calling action: {action_details['action']} with {action_details}")
-        controller.step(
-            **action_details
-        )
+        controller.step(**action_details)
 
     return action_details
 
@@ -293,7 +266,7 @@ def random_tests():
             z=initial_location["z"],
             rotation=dict(x=0, y=initial_rotation, z=0),
             horizon=10,
-            standing=True
+            standing=True,
         )
         initial_pose = dict(
             action="TeleportFull",
@@ -302,7 +275,7 @@ def random_tests():
             z=initial_location["z"],
             rotation=dict(x=0, y=initial_rotation, z=0),
             horizon=10,
-            standing=True
+            standing=True,
         )
         controller.step("PausePhysicsAutoSim")
         all_commands = []
@@ -355,7 +328,7 @@ def determinism_test(all_tests, test_index=None):
     # only do this if an object is picked up
     passed_count = 0
     tests = all_tests.items()
-    if test_index is not  None:
+    if test_index is not None:
         tests = [list(tests)[test_index]]
     for k, test_point in tests:
         start = time.time()
@@ -375,7 +348,7 @@ def determinism_test(all_tests, test_index=None):
             z=initial_location["z"],
             rotation=dict(x=0, y=initial_rotation, z=0),
             horizon=10,
-            standing=True
+            standing=True,
         )
         controller.step("PausePhysicsAutoSim")
         for cmd in all_commands:
@@ -406,9 +379,9 @@ if __name__ == "__main__":
         all_dict = json.load(f)
 
     parser = argparse.ArgumentParser(
-        prog='Arm Determinism Tests',
-        description='Testing arm determinism')
-    parser.add_argument('-i', '--index', type=int)
+        prog="Arm Determinism Tests", description="Testing arm determinism"
+    )
+    parser.add_argument("-i", "--index", type=int)
 
     args = parser.parse_args()
 

@@ -1,9 +1,8 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 public class Fridge : MonoBehaviour {
-
     public SimObj ParentObj;
 
     public Transform[] Doors;
@@ -47,13 +46,27 @@ public class Fridge : MonoBehaviour {
                     Quaternion doorStartRotation = Doors[i].rotation;
                     Doors[i].localEulerAngles = doorTargetRotation;
                     doorTargetRotation = Doors[i].localEulerAngles;
-                    Doors[i].rotation = Quaternion.RotateTowards(doorStartRotation, Doors[i].rotation, Time.deltaTime * SimUtil.SmoothAnimationSpeed * 25);
-                    distanceToTarget = Mathf.Max(distanceToTarget, Vector3.Distance(Doors[i].localEulerAngles, doorTargetRotation));
+                    Doors[i].rotation = Quaternion.RotateTowards(
+                        doorStartRotation,
+                        Doors[i].rotation,
+                        Time.deltaTime * SimUtil.SmoothAnimationSpeed * 25
+                    );
+                    distanceToTarget = Mathf.Max(
+                        distanceToTarget,
+                        Vector3.Distance(Doors[i].localEulerAngles, doorTargetRotation)
+                    );
                 }
                 for (int i = 0; i < Drawers.Length; i++) {
                     drawerTargetPosition = open ? OpenPositions[i] : ClosedPositions[i];
-                    Drawers[i].localPosition = Vector3.Lerp(Drawers[i].localPosition, drawerTargetPosition, Time.deltaTime * SimUtil.SmoothAnimationSpeed);
-                    distanceToTarget = Mathf.Max(distanceToTarget, Vector3.Distance(Doors[i].localPosition, drawerTargetPosition));
+                    Drawers[i].localPosition = Vector3.Lerp(
+                        Drawers[i].localPosition,
+                        drawerTargetPosition,
+                        Time.deltaTime * SimUtil.SmoothAnimationSpeed
+                    );
+                    distanceToTarget = Mathf.Max(
+                        distanceToTarget,
+                        Vector3.Distance(Doors[i].localPosition, drawerTargetPosition)
+                    );
                 }
 
                 if (distanceToTarget >= 360f) {

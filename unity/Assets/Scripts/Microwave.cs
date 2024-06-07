@@ -1,6 +1,6 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 //[ExecuteInEditMode]
 public class Microwave : MonoBehaviour {
@@ -69,9 +69,16 @@ public class Microwave : MonoBehaviour {
                     Door.localEulerAngles = targetDoorRotation;
                     targetDoorRotation = Door.localEulerAngles;
 
-                    Door.rotation = Quaternion.RotateTowards(doorStartRotation, Door.rotation, Time.deltaTime * SimUtil.SmoothAnimationSpeed * 25);
+                    Door.rotation = Quaternion.RotateTowards(
+                        doorStartRotation,
+                        Door.rotation,
+                        Time.deltaTime * SimUtil.SmoothAnimationSpeed * 25
+                    );
 
-                    float distanceToTarget = Vector3.Distance(Door.localEulerAngles, targetDoorRotation);
+                    float distanceToTarget = Vector3.Distance(
+                        Door.localEulerAngles,
+                        targetDoorRotation
+                    );
                     if (distanceToTarget >= 360f) {
                         distanceToTarget -= 360f;
                     }

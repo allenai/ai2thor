@@ -15,7 +15,6 @@ namespace UnityStandardAssets.Utility
 
         private SpringJoint m_SpringJoint;
 
-
         private void Update()
         {
             // Make sure the user pressed the mouse down
@@ -29,9 +28,14 @@ namespace UnityStandardAssets.Utility
             // We need to actually hit an object
             RaycastHit hit = new RaycastHit();
             if (
-                !Physics.Raycast(mainCamera.ScreenPointToRay(Input.mousePosition).origin,
-                                 mainCamera.ScreenPointToRay(Input.mousePosition).direction, out hit, 100,
-                                 Physics.DefaultRaycastLayers))
+                !Physics.Raycast(
+                    mainCamera.ScreenPointToRay(Input.mousePosition).origin,
+                    mainCamera.ScreenPointToRay(Input.mousePosition).direction,
+                    out hit,
+                    100,
+                    Physics.DefaultRaycastLayers
+                )
+            )
             {
                 return;
             }
@@ -60,7 +64,6 @@ namespace UnityStandardAssets.Utility
             StartCoroutine("DragObject", hit.distance);
         }
 
-
         private IEnumerator DragObject(float distance)
         {
             var oldDrag = m_SpringJoint.connectedBody.drag;
@@ -81,7 +84,6 @@ namespace UnityStandardAssets.Utility
                 m_SpringJoint.connectedBody = null;
             }
         }
-
 
         private Camera FindCamera()
         {

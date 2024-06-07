@@ -22,9 +22,7 @@ class Controller(object):
         self.grid_size = grid_size
         self.base_dir = base_dir
         if grid_size < 0.25:
-            raise Exception(
-                "must adjust granularity of key_for_point for smaller grid sizes"
-            )
+            raise Exception("must adjust granularity of key_for_point for smaller grid sizes")
 
     def reset(self, scene_name):
         self.scene_name = scene_name
@@ -100,9 +98,7 @@ class Controller(object):
         if new_horizon < -30 or new_horizon > 30:
             return None
         else:
-            return self.find_position(
-                self.position_x, self.position_z, self.rotation, new_horizon
-            )
+            return self.find_position(self.position_x, self.position_z, self.rotation, new_horizon)
 
     def look_up(self):
         return self.look(self.camera_horizon - 30)
@@ -190,9 +186,7 @@ def index_metadata(base_dir, scene_name):
             pos = agent["position"]
             key = ai2thor.controller.key_for_point(pos["x"], pos["z"])
             pos_id = os.path.splitext(os.path.basename(g))[0]
-            event_path = os.path.join(
-                "%s/%s/events/%s.pickle" % (base_dir, scene_name, pos_id)
-            )
+            event_path = os.path.join("%s/%s/events/%s.pickle" % (base_dir, scene_name, pos_id))
             positions_index[key].append(
                 {
                     "event": event_path,

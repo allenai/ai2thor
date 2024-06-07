@@ -3,11 +3,9 @@ import math
 
 
 class TrialMetric(object):
-    def init_trials(self, num_trials, metadata):
-        ...
+    def init_trials(self, num_trials, metadata): ...
 
-    def update_with_trial(self, trial_index, metadata):
-        ...
+    def update_with_trial(self, trial_index, metadata): ...
 
 
 class ObjectPositionVarianceAverage(TrialMetric):
@@ -27,9 +25,7 @@ class ObjectPositionVarianceAverage(TrialMetric):
 
     def update_with_trial(self, trial_index, metadata):
         objects = metadata["objects"]
-        object_pos_map = {
-            o["objectId"]: vec_to_np_array(o["position"]) for o in objects
-        }
+        object_pos_map = {o["objectId"]: vec_to_np_array(o["position"]) for o in objects}
         for object_index in range(len(self.object_ids)):
             object_id = self.object_ids[object_index]
             self.trials[trial_index][object_index] = object_pos_map[object_id]
@@ -56,17 +52,13 @@ def trial_runner(controller, number, metric, compute_running_metric=False):
 
     for trial_index in range(number):
         try:
-            yield controller, metric.compute(
-                n=trial_index
-            ) if compute_running_metric else math.nan
+            yield controller, metric.compute(n=trial_index) if compute_running_metric else math.nan
             metric.update_with_trial(trial_index, controller.last_event.metadata)
             controller.reset()
         except RuntimeError as e:
             print(
                 e,
-                "Last action status: {}".format(
-                    controller.last_event.meatadata["actionSuccess"]
-                ),
+                "Last action status: {}".format(controller.last_event.meatadata["actionSuccess"]),
                 controller.last_event.meatadata["errorMessage"],
             )
     yield controller, metric.compute()

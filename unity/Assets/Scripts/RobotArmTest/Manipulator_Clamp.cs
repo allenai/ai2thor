@@ -28,7 +28,6 @@ public class Manipulator_Clamp : MonoBehaviour {
                 shoulderJoint = transform;
             }
         }
-
     }
 
     void Update() {
@@ -42,7 +41,9 @@ public class Manipulator_Clamp : MonoBehaviour {
             // Debug.Log("Z from " + rootJoint.gameObject.name + " to shoulder: " + shoulderJoint.gameObject.name + ": " + rootToShoulder);
             if (rootToWrist.z - 0.01f <= rootToShoulder.z) {
                 Debug.Log("Wrist is behind shoulder!");
-                transform.position += rootJoint.TransformDirection(Vector3.forward * (rootToShoulder.z - rootToWrist.z + 0.01f));
+                transform.position += rootJoint.TransformDirection(
+                    Vector3.forward * (rootToShoulder.z - rootToWrist.z + 0.01f)
+                );
             }
 
             rootToWrist = rootJoint.InverseTransformPoint(transform.position);
@@ -52,7 +53,9 @@ public class Manipulator_Clamp : MonoBehaviour {
             // Debug.Log(shoulderToWrist.magnitude + " vs " + shoulderJoint.InverseTransformPoint(transform.position).magnitude);
             if (shoulderToWrist.sqrMagnitude >= Mathf.Pow(0.6335f, 2) && shoulderToWrist.z > 0) {
                 // Debug.Log("Arm is overreaching!");
-                transform.position += rootJoint.TransformDirection((shoulderToWrist.normalized * 0.6325f) - shoulderToWrist);
+                transform.position += rootJoint.TransformDirection(
+                    (shoulderToWrist.normalized * 0.6325f) - shoulderToWrist
+                );
             }
         }
 

@@ -18,12 +18,10 @@ namespace UnityStandardAssets.Utility
         private float m_ChangeSpeed;
         private float m_OriginalStrength = 1;
 
-
         private void Start()
         {
             m_OriginalStrength = sunLight.shadowStrength;
         }
-
 
         // Update is called once per frame
         private void Update()
@@ -38,13 +36,18 @@ namespace UnityStandardAssets.Utility
 
             if (Mathf.Abs(height - m_SmoothHeight) > 1)
             {
-                m_SmoothHeight = Mathf.SmoothDamp(m_SmoothHeight, height, ref m_ChangeSpeed, adaptTime);
+                m_SmoothHeight = Mathf.SmoothDamp(
+                    m_SmoothHeight,
+                    height,
+                    ref m_ChangeSpeed,
+                    adaptTime
+                );
             }
 
             float i = Mathf.InverseLerp(minHeight, maxHeight, m_SmoothHeight);
 
             QualitySettings.shadowDistance = Mathf.Lerp(minShadowDistance, maxShadowDistance, i);
-            sunLight.shadowBias = Mathf.Lerp(minShadowBias, maxShadowBias, 1 - ((1 - i)*(1 - i)));
+            sunLight.shadowBias = Mathf.Lerp(minShadowBias, maxShadowBias, 1 - ((1 - i) * (1 - i)));
             sunLight.shadowStrength = Mathf.Lerp(m_OriginalStrength, 0, i);
         }
     }

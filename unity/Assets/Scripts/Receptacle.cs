@@ -1,6 +1,6 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 [RequireComponent(typeof(SimObj))]
 [ExecuteInEditMode]
@@ -27,7 +27,9 @@ public class Receptacle : MonoBehaviour {
 
     protected virtual void OnEnable() {
         if (VisibilityCollider == null) {
-            Debug.LogError("Visibility collider is not set on receptacle " + name + " - this should not happen");
+            Debug.LogError(
+                "Visibility collider is not set on receptacle " + name + " - this should not happen"
+            );
             return;
         }
         // this is guaranteed to run before sim objs
@@ -43,7 +45,11 @@ public class Receptacle : MonoBehaviour {
                 if (Pivots[i].childCount > 0) {
                     startupItems[i] = Pivots[i].GetChild(0).GetComponent<SimObj>();
                     if (startupItems[i] == null) {
-                        Debug.LogError("Found a non-SimObj child in a receptacle " + name + " pivot - this should not happen");
+                        Debug.LogError(
+                            "Found a non-SimObj child in a receptacle "
+                                + name
+                                + " pivot - this should not happen"
+                        );
                     } else {
                         startupItems[i].transform.parent = null;
                     }

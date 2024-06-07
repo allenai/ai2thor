@@ -42,7 +42,7 @@ class LazyMask(Mapping):
         return m
 
     @abstractmethod
-    def mask(self, key: str, default: Optional[np.ndarray]=None) -> Optional[np.ndarray]:
+    def mask(self, key: str, default: Optional[np.ndarray] = None) -> Optional[np.ndarray]:
         pass
 
     @abstractmethod
@@ -58,7 +58,6 @@ class LazyMask(Mapping):
         return len(self._masks)
 
 
-
 class LazyInstanceSegmentationMasks(LazyMask):
 
     def __init__(self, image_ids_data: bytes, metadata: dict):
@@ -66,7 +65,7 @@ class LazyInstanceSegmentationMasks(LazyMask):
         self._loaded = False
         screen_width = metadata["screenWidth"]
         screen_height = metadata["screenHeight"]
-        item_size = int(len(image_ids_data)/(screen_width * screen_height))
+        item_size = int(len(image_ids_data) / (screen_width * screen_height))
         self._unique_integer_keys: Optional[Set[np.uint32]] = None
         self._empty_mask: Optional[np.ndarray] = None
 
@@ -78,7 +77,7 @@ class LazyInstanceSegmentationMasks(LazyMask):
             # is always equal to 255
             self._alpha_channel_value = 255
 
-        elif item_size == 3: # 3 byte per pixel for backwards compatibility, RGB24 texture
+        elif item_size == 3:  # 3 byte per pixel for backwards compatibility, RGB24 texture
             # this is more expensive than the 4 byte variant since copying is required
             frame = read_buffer_image(image_ids_data, screen_width, screen_height)
             self.instance_segmentation_frame_uint32 = np.concatenate(
@@ -89,13 +88,15 @@ class LazyInstanceSegmentationMasks(LazyMask):
                 axis=2,
             )
             self.instance_segmentation_frame_uint32.dtype = np.uint32
-            self.instance_segmentation_frame_uint32 = self.instance_segmentation_frame_uint32.squeeze()
+            self.instance_segmentation_frame_uint32 = (
+                self.instance_segmentation_frame_uint32.squeeze()
+            )
             self._alpha_channel_value = 0
 
         # At this point we should have a 2d matrix of shape (height, width)
         # with a 32bit uint as the value
 
-        self.instance_colors: Dict[str, List[int]]= {}
+        self.instance_colors: Dict[str, List[int]] = {}
         self.class_colors: Dict[str, List[List[int]]] = {}
         for c in metadata["colors"]:
             cls = c["name"]
@@ -108,7 +109,6 @@ class LazyInstanceSegmentationMasks(LazyMask):
                 self.class_colors[cls] = []
 
             self.class_colors[cls].append(c["color"])
-
 
     @property
     def empty_mask(self) -> np.ndarray:
@@ -128,7 +128,7 @@ class LazyInstanceSegmentationMasks(LazyMask):
     def _integer_color_key(self, color: List[int]) -> np.uint32:
         a = np.array(color + [self._alpha_channel_value], dtype=np.uint8)
         # mypy complains, but it is safe to modify the dtype on an ndarray
-        a.dtype = np.uint32 # type: ignore
+        a.dtype = np.uint32  # type: ignore
         return a[0]
 
     def _load_all(self):
@@ -140,8 +140,7 @@ class LazyInstanceSegmentationMasks(LazyMask):
 
         self._loaded = True
 
-
-    def mask(self, key: str, default: Optional[np.ndarray]=None) -> Optional[np.ndarray]:
+    def mask(self, key: str, default: Optional[np.ndarray] = None) -> Optional[np.ndarray]:
         if key not in self.instance_colors:
             return default
         elif key in self._masks:
@@ -174,11 +173,13 @@ class LazyClassSegmentationMasks(LazyMask):
                         break
         self._loaded = True
 
-    def mask(self, key: str, default: Optional[np.ndarray]=None) -> Optional[np.ndarray]:
+    def mask(self, key: str, default: Optional[np.ndarray] = None) -> Optional[np.ndarray]:
         if key in self._masks:
             return self._masks[key]
 
-        class_mask = np.zeros(self.instance_masks.instance_segmentation_frame_uint32.shape, dtype=bool)
+        class_mask = np.zeros(
+            self.instance_masks.instance_segmentation_frame_uint32.shape, dtype=bool
+        )
 
         if key == "background":
             # "background" is a special name for any color that wasn't included in the metadata
@@ -197,7 +198,10 @@ class LazyClassSegmentationMasks(LazyMask):
 
         elif "|" not in key:
             for color in self.instance_masks.class_colors.get(key, []):
-                mask = self.instance_masks.instance_segmentation_frame_uint32 == self.instance_masks._integer_color_key(color)
+                mask = (
+                    self.instance_masks.instance_segmentation_frame_uint32
+                    == self.instance_masks._integer_color_key(color)
+                )
                 class_mask = np.logical_or(class_mask, mask)
 
         if class_mask.any():
@@ -205,6 +209,7 @@ class LazyClassSegmentationMasks(LazyMask):
             return class_mask
         else:
             return default
+
 
 class LazyDetections2D(Mapping):
     def __init__(self, instance_masks: LazyInstanceSegmentationMasks):
@@ -232,11 +237,12 @@ class LazyDetections2D(Mapping):
         else:
             return False
 
+
 class LazyInstanceDetections2D(LazyDetections2D):
 
     def __init__(self, instance_masks: LazyInstanceSegmentationMasks):
         super().__init__(instance_masks)
-        self._detections2d : Dict[str, Optional[Tuple[int, int, int, int]]] = {}
+        self._detections2d: Dict[str, Optional[Tuple[int, int, int, int]]] = {}
 
     def __eq__(self, other: object):
         if isinstance(other, self.__class__):
@@ -281,7 +287,7 @@ class LazyClassDetections2D(LazyDetections2D):
 
         super().__init__(instance_masks)
         self._loaded = False
-        self._detections2d : Dict[str, Optional[Tuple[Tuple[int, int, int, int], ...]]] = {}
+        self._detections2d: Dict[str, Optional[Tuple[Tuple[int, int, int, int], ...]]] = {}
 
     def __eq__(self, other: object):
         if isinstance(other, self.__class__):
@@ -316,7 +322,10 @@ class LazyClassDetections2D(LazyDetections2D):
         detections = []
 
         for color in self.instance_masks.class_colors.get(cls, []):
-            mask = self.instance_masks.instance_segmentation_frame_uint32 == self.instance_masks._integer_color_key(color)
+            mask = (
+                self.instance_masks.instance_segmentation_frame_uint32
+                == self.instance_masks._integer_color_key(color)
+            )
             bb = self.mask_bounding_box(mask)
             if bb:
                 detections.append(bb)
@@ -347,9 +356,7 @@ class MultiAgentEvent(object):
 
     def add_third_party_camera_image(self, third_party_image_data):
         self.third_party_camera_frames.append(
-            read_buffer_image(
-                third_party_image_data, self.screen_width, self.screen_height
-            )
+            read_buffer_image(third_party_image_data, self.screen_width, self.screen_height)
         )
 
 
@@ -523,9 +530,7 @@ class Event:
                 self.object_id_to_color[name] = c_key
 
     def objects_by_type(self, object_type):
-        return [
-            obj for obj in self.metadata["objects"] if obj["objectType"] == object_type
-        ]
+        return [obj for obj in self.metadata["objects"] if obj["objectType"] == object_type]
 
     def process_colors_ids(self, image_ids_data):
 
@@ -534,34 +539,32 @@ class Event:
         self.class_detections2D = LazyClassDetections2D(self.instance_masks)
         self.instance_detections2D = LazyInstanceDetections2D(self.instance_masks)
 
-
     def _image_depth(self, image_depth_data, **kwargs):
-        item_size = int(len(image_depth_data)/(self.screen_width * self.screen_height))
+        item_size = int(len(image_depth_data) / (self.screen_width * self.screen_height))
 
         multipliers = {
             DepthFormat.Normalized: 1.0,
             DepthFormat.Meters: (kwargs["camera_far_plane"] - kwargs["camera_near_plane"]),
-            DepthFormat.Millimeters: (kwargs["camera_far_plane"] - kwargs["camera_near_plane"]) * 1000.0
+            DepthFormat.Millimeters: (kwargs["camera_far_plane"] - kwargs["camera_near_plane"])
+            * 1000.0,
         }
 
         target_depth_format = kwargs["depth_format"]
         # assume Normalized for backwards compatibility
         source_depth_format = DepthFormat[self.metadata.get("depthFormat", "Normalized")]
-        multiplier = multipliers[target_depth_format]/multipliers[source_depth_format]
+        multiplier = multipliers[target_depth_format] / multipliers[source_depth_format]
 
-        if item_size == 4: # float32
+        if item_size == 4:  # float32
             image_depth_out = read_buffer_image(
                 image_depth_data, self.screen_width, self.screen_height, dtype=np.float32
             ).squeeze()
 
-        elif item_size  == 3: # 3 byte 1/256.0 precision, legacy depth binary format
-            image_depth = read_buffer_image(
-                image_depth_data, self.screen_width, self.screen_height
-            )
+        elif item_size == 3:  # 3 byte 1/256.0 precision, legacy depth binary format
+            image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height)
             image_depth_out = (
                 image_depth[:, :, 0]
                 + image_depth[:, :, 1] / np.float32(256)
-                + image_depth[:, :, 2] / np.float32(256 ** 2)
+                + image_depth[:, :, 2] / np.float32(256**2)
             )
 
             multiplier /= 256.0
@@ -586,9 +589,7 @@ class Event:
             read_buffer_image(third_party_image_data, width, height)
         )
 
-    def add_third_party_image_depth_robot(
-        self, image_depth_data, depth_format, **kwargs
-    ):
+    def add_third_party_image_depth_robot(self, image_depth_data, depth_format, **kwargs):
         multiplier = 1.0
         camera_far_plane = kwargs.pop("camera_far_plane", 1)
         camera_near_plane = kwargs.pop("camera_near_plane", 0)
@@ -600,9 +601,9 @@ class Event:
             multiplier = 1000.0
 
         image_depth = (
-            read_buffer_image(
-                image_depth_data, depth_width, depth_height, **kwargs
-            ).reshape(depth_height, depth_width)
+            read_buffer_image(image_depth_data, depth_width, depth_height, **kwargs).reshape(
+                depth_height, depth_width
+            )
             * multiplier
         )
         self.third_party_depth_frames.append(image_depth.astype(np.float32))
@@ -620,9 +621,9 @@ class Event:
             multiplier = 1000.0
 
         image_depth = (
-            read_buffer_image(
-                image_depth_data, depth_width, depth_height, **kwargs
-            ).reshape(depth_height, depth_width)
+            read_buffer_image(image_depth_data, depth_width, depth_height, **kwargs).reshape(
+                depth_height, depth_width
+            )
             * multiplier
         )
         self.depth_frame = image_depth.astype(np.float32)
@@ -631,9 +632,7 @@ class Event:
         self.depth_frame = self._image_depth(image_depth_data, **kwargs)
 
     def add_third_party_image_depth(self, image_depth_data, **kwargs):
-        self.third_party_depth_frames.append(
-            self._image_depth(image_depth_data, **kwargs)
-        )
+        self.third_party_depth_frames.append(self._image_depth(image_depth_data, **kwargs))
 
     def add_third_party_image_normals(self, normals_data):
         self.third_party_normals_frames.append(
@@ -657,22 +656,18 @@ class Event:
 
     def add_third_party_camera_image(self, third_party_image_data):
         self.third_party_camera_frames.append(
-            read_buffer_image(
-                third_party_image_data, self.screen_width, self.screen_height
-            )
+            read_buffer_image(third_party_image_data, self.screen_width, self.screen_height)
         )
 
     def add_image(self, image_data, **kwargs):
-        self.frame = read_buffer_image(
-            image_data, self.screen_width, self.screen_height, **kwargs
-        )[
+        self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height, **kwargs)[
             :, :, :3
         ]  # CloudRendering returns 4 channels instead of 3
 
     def add_image_ids(self, image_ids_data):
         self.instance_segmentation_frame = read_buffer_image(
             image_ids_data, self.screen_width, self.screen_height
-            )[:, :, :3]
+        )[:, :, :3]
 
         self.process_colors_ids(image_ids_data)
 
@@ -681,9 +676,7 @@ class Event:
             image_ids_data, self.screen_width, self.screen_height
         )[:, :, :3]
 
-        self.third_party_instance_segmentation_frames.append(
-            instance_segmentation_frame
-        )
+        self.third_party_instance_segmentation_frames.append(instance_segmentation_frame)
         instance_masks = LazyInstanceSegmentationMasks(image_ids_data, self.metadata)
         self.third_party_instance_masks.append(instance_masks)
         self.third_party_class_masks.append(LazyClassSegmentationMasks(instance_masks))
@@ -691,12 +684,12 @@ class Event:
     def add_image_classes(self, image_classes_data):
         self.semantic_segmentation_frame = read_buffer_image(
             image_classes_data, self.screen_width, self.screen_height
-            )[:, :, :3]
+        )[:, :, :3]
 
     def add_third_party_image_classes(self, image_classes_data):
         self.third_party_semantic_segmentation_frames.append(
             read_buffer_image(image_classes_data, self.screen_width, self.screen_height)[:, :, :3]
-            )
+        )
 
     def cv2image(self):
         warnings.warn("Deprecated - please use event.cv2img")
@@ -769,8 +762,7 @@ class Server(ABC):
     def create_event(self, metadata, files):
         if metadata["sequenceId"] != self.sequence_id:
             raise ValueError(
-                "Sequence id mismatch: %s vs %s"
-                % (metadata["sequenceId"], self.sequence_id)
+                "Sequence id mismatch: %s vs %s" % (metadata["sequenceId"], self.sequence_id)
             )
 
         events = []

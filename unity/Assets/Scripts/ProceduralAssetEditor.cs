@@ -1,29 +1,27 @@
+using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor;
-using UnityEngine.SceneManagement;
+using System.Data.Common;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using EasyButtons;
 using Newtonsoft.Json.Linq;
+using Thor.Procedural;
+using Thor.Procedural.Data;
+using Thor.Utils;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using diagnostics = System.Diagnostics;
 #if UNITY_EDITOR
 using EasyButtons.Editor;
 using UnityEditor.SceneManagement;
 #endif
-using EasyButtons;
-using System;
-using Thor.Procedural;
-using Thor.Procedural.Data;
-using System.Linq;
-using System.IO;
-using Thor.Utils;
-
-using diagnostics = System.Diagnostics;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Concurrent;
-using System.Data.Common;
 
 namespace Thor.Procedural {
-
     [System.Serializable]
     public class AssetEditorPaths {
         public string serializeBasePath;
@@ -31,20 +29,18 @@ namespace Thor.Procedural {
         public string texturesRelativePath;
         public string prefabsRelativePath;
         public string modelsRelativePath;
-         public string collidersInModelsPath;
+        public string collidersInModelsPath;
         public string repoRootObjaverseDir;
     }
 
     [System.Serializable]
     public class ObjaversePipelinseSettings {
         public string pythonExecutablePath;
-        public string vidaRepo; 
+        public string vidaRepo;
         public int timeoutSeconds;
-        
     }
 
     public class ProceduralAssetEditor : MonoBehaviour {
-        
         public AssetEditorPaths paths = new AssetEditorPaths() {
             serializeBasePath = "Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets",
             materialsRelativePath = "Materials/objaverse",
@@ -52,11 +48,10 @@ namespace Thor.Procedural {
             prefabsRelativePath = "Prefabs",
             repoRootObjaverseDir = "objaverse",
             modelsRelativePath = "Models/objaverse",
-            collidersInModelsPath =  "Colliders",
-
+            collidersInModelsPath = "Colliders",
         };
 
-        public ObjaversePipelinseSettings objaversePipelineConfig = new ObjaversePipelinseSettings{
+        public ObjaversePipelinseSettings objaversePipelineConfig = new ObjaversePipelinseSettings {
             pythonExecutablePath = "/Users/alvaroh/anaconda3/envs/vida/bin/python",
             vidaRepo = "/Users/alvaroh/ai2/vida",
             timeoutSeconds = 800
@@ -69,26 +64,30 @@ namespace Thor.Procedural {
 
         public string objectId;
 
-
 #if UNITY_EDITOR
         private string copyTexture(string original, string destinationDir) {
             var outName = $"{destinationDir}/{Path.GetFileName(original)}";
             if (!File.Exists(outName)) {
                 File.Copy(original, outName);
-            }
-            else {
-                Debug.LogWarning($"Failed to save texture {outName}, as it already extists. To overwite delete them first and load object again.");
+            } else {
+                Debug.LogWarning(
+                    $"Failed to save texture {outName}, as it already extists. To overwite delete them first and load object again."
+                );
             }
             return outName;
-        } 
+        }
 
         private string getAssetRelativePath(string absPath) {
-            return string.Join("/", absPath.Split('/').SkipWhile(x=> x != "Assets"));
+            return string.Join("/", absPath.Split('/').SkipWhile(x => x != "Assets"));
         }
 
         private Texture2D loadTexture(string textureAbsPath) {
-            return (Texture2D)AssetDatabase.LoadAssetAtPath(getAssetRelativePath(textureAbsPath),typeof(Texture2D));//Resources.Load<Texture2D>(newAlbedo);
-        } 
+            return (Texture2D)
+                AssetDatabase.LoadAssetAtPath(
+                    getAssetRelativePath(textureAbsPath),
+                    typeof(Texture2D)
+                ); //Resources.Load<Texture2D>(newAlbedo);
+        }
 
         // private Texture2D copyAndLoadTexture(string original, string destinationDir) {
         //     var outName = $"{destinationDir}/{Path.GetFileName(original)}";
@@ -96,31 +95,38 @@ namespace Thor.Procedural {
         //     var relativeName =  string.Join("/", outName.Split('/').SkipWhile(x=> x != "Assets"));
 
         //     return (Texture2D)AssetDatabase.LoadAssetAtPath(relativeName,typeof(Texture2D));//Resources.Load<Texture2D>(newAlbedo);
-            
-        // } 
+
+        // }
 
         private void SaveTextures(GameObject go, bool savePrefab) {
             var assetId = go.GetComponentInChildren<SimObjPhysics>().assetID;
 
-            var matOutPath = $"{paths.serializeBasePath}/{paths.materialsRelativePath}/{assetId}.mat";
+            var matOutPath =
+                $"{paths.serializeBasePath}/{paths.materialsRelativePath}/{assetId}.mat";
 
             if (File.Exists(matOutPath)) {
-                Debug.LogWarning($"Failed to save material {matOutPath}, as it already extists. To overwite delete it first and load object again.");
+                Debug.LogWarning(
+                    $"Failed to save material {matOutPath}, as it already extists. To overwite delete it first and load object again."
+                );
 
-                var savedMat = (Material)AssetDatabase.LoadAssetAtPath(getAssetRelativePath(matOutPath),typeof(Material));
+                var savedMat = (Material)
+                    AssetDatabase.LoadAssetAtPath(
+                        getAssetRelativePath(matOutPath),
+                        typeof(Material)
+                    );
                 go.GetComponentInChildren<MeshRenderer>().sharedMaterial = savedMat;
-            }
-            else {
+            } else {
                 UnityEditor.AssetDatabase.CreateAsset(
-                    go.GetComponentInChildren<MeshRenderer>().sharedMaterial, matOutPath
+                    go.GetComponentInChildren<MeshRenderer>().sharedMaterial,
+                    matOutPath
                 );
             }
 
-            
             var runtimeP = go.GetComponent<RuntimePrefab>();
             var dir = string.Join("/", paths.serializeBasePath.Split('/').Skip(1));
 
-            var outTextureBasePath = $"{Application.dataPath}/{dir}/{paths.texturesRelativePath}/{assetId}";
+            var outTextureBasePath =
+                $"{Application.dataPath}/{dir}/{paths.texturesRelativePath}/{assetId}";
 
             if (!Directory.Exists(outTextureBasePath)) {
                 Directory.CreateDirectory(outTextureBasePath);
@@ -129,10 +135,13 @@ namespace Thor.Procedural {
             Debug.Log($"---- SaveTextures {outTextureBasePath}");
 
             var newAlbedo = copyTexture(runtimeP.albedoTexturePath, outTextureBasePath);
-            var newMetallicSmoothness = copyTexture(runtimeP.metallicSmoothnessTexturePath, outTextureBasePath);
+            var newMetallicSmoothness = copyTexture(
+                runtimeP.metallicSmoothnessTexturePath,
+                outTextureBasePath
+            );
             var newNormal = copyTexture(runtimeP.normalTexturePath, outTextureBasePath);
             var newEmission = copyTexture(runtimeP.emissionTexturePath, outTextureBasePath);
-            
+
             var mr = go.GetComponentInChildren<MeshRenderer>();
             var sharedMaterial = mr.sharedMaterial;
 
@@ -141,14 +150,15 @@ namespace Thor.Procedural {
             // newAlbedo = newAlbedo.Substring(0,newAlbedo.LastIndexOf('.'));
             AssetDatabase.Refresh();
 
-            var normalImporter = AssetImporter.GetAtPath(getAssetRelativePath(newNormal)) as TextureImporter;
+            var normalImporter =
+                AssetImporter.GetAtPath(getAssetRelativePath(newNormal)) as TextureImporter;
 
             normalImporter.textureType = TextureImporterType.NormalMap;
-            
-            sharedMaterial.SetTexture("_MainTex", loadTexture(newAlbedo));//Resources.Load<Texture2D>(newAlbedo));
+
+            sharedMaterial.SetTexture("_MainTex", loadTexture(newAlbedo)); //Resources.Load<Texture2D>(newAlbedo));
             sharedMaterial.SetTexture("_MetallicGlossMap", loadTexture(newMetallicSmoothness));
-            sharedMaterial.SetTexture("_BumpMap",  loadTexture(newNormal));
-            sharedMaterial.SetTexture("_EmissionMap",  loadTexture(newEmission));
+            sharedMaterial.SetTexture("_BumpMap", loadTexture(newNormal));
+            sharedMaterial.SetTexture("_EmissionMap", loadTexture(newEmission));
 
             sharedMaterial.SetColor("_EmissionColor", Color.white);
 
@@ -156,7 +166,7 @@ namespace Thor.Procedural {
 
             SerializeMesh.SaveMeshesAsObjAndReplaceReferences(
                 go,
-                assetId, 
+                assetId,
                 $"{Application.dataPath}/{dir}/{paths.modelsRelativePath}/{assetId}",
                 $"{Application.dataPath}/{dir}/{paths.modelsRelativePath}/{assetId}/{paths.collidersInModelsPath}"
             );
@@ -185,25 +195,31 @@ namespace Thor.Procedural {
 
             // mf.sharedMesh = mesh;
 
-            
+
             if (savePrefab) {
-                PrefabUtility.SaveAsPrefabAssetAndConnect(go, $"{paths.serializeBasePath}/{paths.prefabsRelativePath}/{assetId}.prefab", InteractionMode.UserAction);
+                PrefabUtility.SaveAsPrefabAssetAndConnect(
+                    go,
+                    $"{paths.serializeBasePath}/{paths.prefabsRelativePath}/{assetId}.prefab",
+                    InteractionMode.UserAction
+                );
             }
         }
 
-        
-
         // NOT WORKIGN drag prefab manually
         private void SavePrefab(GameObject go) {
-
             // var dir = string.Join("/", SerializeMesh.serializeBasePath.Split('/').Skip(1));
             var path = $"{paths.serializeBasePath}/{paths.prefabsRelativePath}/{go.name}.prefab";
             Debug.Log($"---- Savingprefabs {path}");
             //  PrefabUtility.SaveAsPrefabAsset(go, path);
             bool prefabSuccess;
-                PrefabUtility.SaveAsPrefabAssetAndConnect(go, path, InteractionMode.UserAction, out prefabSuccess);
-                Debug.Log($"---- prefab save {prefabSuccess}");
-        }   
+            PrefabUtility.SaveAsPrefabAssetAndConnect(
+                go,
+                path,
+                InteractionMode.UserAction,
+                out prefabSuccess
+            );
+            Debug.Log($"---- prefab save {prefabSuccess}");
+        }
 
         private GameObject importAsset(string objectPath, bool addAnotationComponent = false) {
             var jsonStr = System.IO.File.ReadAllText(objectPath);
@@ -213,7 +229,7 @@ namespace Thor.Procedural {
             var procAsset = obj.ToObject<ProceduralAsset>();
 
             // var prefabParentTransform = transform.Find("ProceduralAssets");
-            
+
             // if (prefabParentTransform == null) {
             //     Debug.Log($"ProceduralAssets container does not exist {prefabParentTransform == null}");
             //     var prefabParent = new GameObject("ProceduralAssets");
@@ -222,26 +238,26 @@ namespace Thor.Procedural {
             // }
 
             var result = ProceduralTools.CreateAsset(
-                    procAsset.vertices,
-                    procAsset.normals,
-                    procAsset.name,
-                    procAsset.triangles,
-                    procAsset.uvs,
-                    procAsset.albedoTexturePath ,
-                    procAsset.metallicSmoothnessTexturePath ,
-                    procAsset.normalTexturePath ,
-                    procAsset.emissionTexturePath,
-                    procAsset.colliders ,
-                    procAsset.physicalProperties,
-                    procAsset.visibilityPoints ,
-                    procAsset.annotations ,
-                    procAsset.receptacleCandidate ,
-                    procAsset.yRotOffset ,
-                    serializable: true,
-                    returnObject: true,
-                    parent: transform,
-                    addAnotationComponent: addAnotationComponent
-                );
+                procAsset.vertices,
+                procAsset.normals,
+                procAsset.name,
+                procAsset.triangles,
+                procAsset.uvs,
+                procAsset.albedoTexturePath,
+                procAsset.metallicSmoothnessTexturePath,
+                procAsset.normalTexturePath,
+                procAsset.emissionTexturePath,
+                procAsset.colliders,
+                procAsset.physicalProperties,
+                procAsset.visibilityPoints,
+                procAsset.annotations,
+                procAsset.receptacleCandidate,
+                procAsset.yRotOffset,
+                serializable: true,
+                returnObject: true,
+                parent: transform,
+                addAnotationComponent: addAnotationComponent
+            );
             var go = result["gameObject"] as GameObject;
 
             // var intermediate = result["intermediateGameObject"] as GameObject;
@@ -250,22 +266,20 @@ namespace Thor.Procedural {
             if (go.transform.parent != null && !go.transform.parent.gameObject.activeSelf) {
                 go.transform.parent.gameObject.SetActive(true);
             }
-            
 
             if (savePrefabsOnLoad) {
                 SaveTextures(go, savePrefab);
-            }
-            else {
+            } else {
                 var runtimeP = go.GetComponent<RuntimePrefab>();
                 if (runtimeP != null) {
                     runtimeP.RealoadTextures();
                 }
-               
             }
             return go;
         }
 
         private List<Coroutine> coroutines = new List<Coroutine>();
+
         // TODO: put in ifdef  block
         [Button(Expanded = true)]
         public void LoadObject() {
@@ -273,7 +287,7 @@ namespace Thor.Procedural {
             if (!file.EndsWith(".json")) {
                 file += ".json";
             }
-            
+
             var pathSplit = Application.dataPath.Split('/');
 
             var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
@@ -290,61 +304,61 @@ namespace Thor.Procedural {
                 cancellAll = false;
                 Debug.Log("Starting objaverse pipeline background process...");
                 coroutines.Add(
-                    StartCoroutine(runAssetPipelineAsync(objectId, objaverseRoot, () => {                        
-                        if (!cancellAll) { importAsset(objectPath, addAnotationComponent: true); }
-                    }))
+                    StartCoroutine(
+                        runAssetPipelineAsync(
+                            objectId,
+                            objaverseRoot,
+                            () => {
+                                if (!cancellAll) {
+                                    importAsset(objectPath, addAnotationComponent: true);
+                                }
+                            }
+                        )
+                    )
                 );
-            }
-            else {
+            } else {
                 importAsset(objectPath, forceCreateAnnotationComponent);
             }
 
-            
-
-            
-
             // if (savePrefab) {
             //     if (!saveTextures) {
-            //         SaveTextures(go); 
+            //         SaveTextures(go);
             //     }
             //      SavePrefab(go);
-            
+
             // }
         }
 
         [Button(Expanded = true)]
-        public void CancelAll() { 
+        public void CancelAll() {
             EditorUtility.ClearProgressBar();
             cancellAll = true;
-           
+
             foreach (var ap in this.processingIds.Values) {
-                 Debug.Log($"Cancelled conversion process for '{ap.id}'");
-                 ap.process.Kill();
-                 ap.process.CancelOutputRead();
-                 ap.process.CancelErrorRead();
-                
+                Debug.Log($"Cancelled conversion process for '{ap.id}'");
+                ap.process.Kill();
+                ap.process.CancelOutputRead();
+                ap.process.CancelErrorRead();
             }
-            
+
             foreach (var coroutine in coroutines) {
                 StopCoroutine(coroutine);
             }
-            
+
             processingIds.Clear();
             coroutines.Clear();
         }
 
-
         // [UnityEditor.MenuItem("Procedural/Fix Prefabs")]
-         [Button(Expanded = false)]
+        [Button(Expanded = false)]
         public void FixPrefabs() {
-            var procAssets = GameObject.FindObjectsOfType(typeof(SimObjPhysics))  as SimObjPhysics[];
+            var procAssets = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
 
             //var gos = procAssets.GroupBy(so => so.assetID).Select(k => (IdentifierCase: k.Key, go: k.First().gameObject)).Where(p => p.go.GetComponentInChildren<SerializeMesh>() != null);
-            //var dict = new Dictionary<string, 
-            var gos = procAssets.Select(k => (id: k.assetID, go: k.gameObject));//.Where(p => p.id == "1807cfeea89c4a57997cbe5fce569b53");//.Where(p => p.go.GetComponentInChildren<SerializeMesh>() != null);
+            //var dict = new Dictionary<string,
+            var gos = procAssets.Select(k => (id: k.assetID, go: k.gameObject)); //.Where(p => p.id == "1807cfeea89c4a57997cbe5fce569b53");//.Where(p => p.go.GetComponentInChildren<SerializeMesh>() != null);
             Debug.Log($"running for {gos.Count()}");
 
-            
             Debug.Log($"running for {string.Join(",", gos.Select(g => g.id).Distinct())}");
 
             // var loadedObjs = gos.Select(m => m.id).Distinct().ToDictionary(id => id, assetId => {
@@ -387,19 +401,18 @@ namespace Thor.Procedural {
 
 
             foreach (var (assetId, go) in gos) {
-                var dir =string.Join("/", paths.serializeBasePath.Split('/').Skip(1));
-                  if (PrefabUtility.IsPartOfPrefabInstance(go)) {
-                    
+                var dir = string.Join("/", paths.serializeBasePath.Split('/').Skip(1));
+                if (PrefabUtility.IsPartOfPrefabInstance(go)) {
                     SerializeMesh.SaveMeshesAsObjAndReplaceReferences(
                         go,
                         assetId,
                         $"{Application.dataPath}/{dir}/{paths.modelsRelativePath}/{assetId}",
                         $"{Application.dataPath}/{dir}/{paths.modelsRelativePath}/{assetId}/{paths.collidersInModelsPath}",
                         overwrite: true
-                        //,sourceGo: loadedObjs[assetId]
+                    //,sourceGo: loadedObjs[assetId]
                     );
                     var meshGo = go.transform.Find("mesh");
-                    // if (meshGo != null) 
+                    // if (meshGo != null)
                     // {
                     //     var negRot = -meshGo.transform.localEulerAngles;
                     //     meshGo.transform.localEulerAngles = negRot;
@@ -408,21 +421,21 @@ namespace Thor.Procedural {
                     if (go.GetComponentInChildren<SerializeMesh>() != null) {
                         DestroyImmediate(go.GetComponentInChildren<SerializeMesh>());
                     }
-                    
+
                     PrefabUtility.ApplyPrefabInstance(go, InteractionMode.UserAction);
-                    Selection.activeGameObject=go;
-                  }
+                    Selection.activeGameObject = go;
+                }
             }
 
             // foreach (var go in loadedObjs.Values) {
             //     DestroyImmediate(go);
             // }
-        } 
+        }
 
-         [MenuItem("Procedural/Revert Prefabs")]
-          public void RevertPrefabs() {
-            var simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics))  as SimObjPhysics[];
-            
+        [MenuItem("Procedural/Revert Prefabs")]
+        public void RevertPrefabs() {
+            var simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
+
             foreach (var so in simObjs) {
                 if (PrefabUtility.IsPartOfPrefabInstance(so.gameObject)) {
                     Debug.Log($"Reverting {so.gameObject}");
@@ -430,11 +443,10 @@ namespace Thor.Procedural {
                     PrefabUtility.RevertPrefabInstance(so.gameObject, InteractionMode.UserAction);
                 }
             }
-          }
-
+        }
 
         [Button(Expanded = true)]
-        public void SaveObjectPrefabAndTextures() { 
+        public void SaveObjectPrefabAndTextures() {
             var transformRoot = GameObject.Find(objectId);
             var transform = gameObject.transform.root.FirstChildOrDefault(g => g.name == objectId);
 
@@ -444,32 +456,30 @@ namespace Thor.Procedural {
             // Debug.Log($"Root: {gameObject.transform.root.name}");
             if (transform != null) {
                 SaveTextures(transform.gameObject, savePrefab);
-            }
-            else {
+            } else {
                 Debug.LogError($"Invalid object {objectId} not present in scene.");
             }
         }
 
         [Button(Expanded = true)]
-        public void SaveAllPrefabsAndTextures() { 
-            var procAssets = GameObject.FindObjectsOfType(typeof(RuntimePrefab))  as RuntimePrefab[];
+        public void SaveAllPrefabsAndTextures() {
+            var procAssets = GameObject.FindObjectsOfType(typeof(RuntimePrefab)) as RuntimePrefab[];
             // var procAssets = gameObject.transform.root.GetComponentsInChildren<RuntimePrefab>();
             foreach (var asset in procAssets) {
                 if (asset != null) {
                     SaveTextures(asset.gameObject, savePrefab);
-                }
-                else {
+                } else {
                     Debug.LogError($"Invalid object in scene.");
                 }
             }
         }
 
-         [UnityEditor.MenuItem("Procedural/Reload Procedural Asset Textures _s")]
+        [UnityEditor.MenuItem("Procedural/Reload Procedural Asset Textures _s")]
         public static void ReloadTextures() {
-             var procAssets = GameObject.FindObjectsOfType(typeof(RuntimePrefab))  as RuntimePrefab[];
-             foreach (var asset in procAssets) { 
+            var procAssets = GameObject.FindObjectsOfType(typeof(RuntimePrefab)) as RuntimePrefab[];
+            foreach (var asset in procAssets) {
                 asset.RealoadTextures();
-             }
+            }
         }
 
         class AsyncProcess {
@@ -480,41 +490,47 @@ namespace Thor.Procedural {
             public GameObject goResultß;
         }
 
-        private ConcurrentDictionary<string, AsyncProcess> processingIds = new ConcurrentDictionary<string, AsyncProcess>();
+        private ConcurrentDictionary<string, AsyncProcess> processingIds =
+            new ConcurrentDictionary<string, AsyncProcess>();
 
         private bool cancellAll = false;
 
-        private IEnumerator waitForProcess(diagnostics.Process p, string id, int sleepSeconds, int debugIntervalSeconds, int timeoutSeconds) {
-
+        private IEnumerator waitForProcess(
+            diagnostics.Process p,
+            string id,
+            int sleepSeconds,
+            int debugIntervalSeconds,
+            int timeoutSeconds
+        ) {
             var secs = 0;
             var start = Time.realtimeSinceStartup;
             var prevCount = processingIds.Count;
             var updateProgressBar = false;
             Debug.Log("Running objaverse conversion pipeline...");
             while (!p.HasExited) {
-                
-               
                 // var currentCount = processingIds.Count;
                 // p.StandardOutput.ReadAsync()
                 yield return new WaitForSeconds(sleepSeconds);
-               
 
                 // yield return true;
                 var currentCount = processingIds.Count;
-                
+
                 var deltaSeconds = Time.realtimeSinceStartup - start;
                 int roundedSeconds = (int)Mathf.Round(deltaSeconds);
                 if (roundedSeconds % debugIntervalSeconds == 0) {
                     Debug.Log($"Ran pipeline for ({roundedSeconds}) for '{id}'.");
-                    
+
                     // Debug.Log($"Output: {p.StandardOutput.ReadToEnd()}");
                     // Debug.Log($"Error Out: {p.StandardError.ReadToEnd()}");
                 }
 
-                 
                 if (currentCount < prevCount) {
                     //  prevCount = currentCount;
-                    EditorUtility.DisplayProgressBar("Objaverse import", $"Still running glb conversion pipeline for {id}...", 0.1f);
+                    EditorUtility.DisplayProgressBar(
+                        "Objaverse import",
+                        $"Still running glb conversion pipeline for {id}...",
+                        0.1f
+                    );
                     // prevCount = currentCount;
                 }
                 // if (updateProgressBar && currentCount < prevCount) {
@@ -524,7 +540,9 @@ namespace Thor.Procedural {
 
 
                 if (deltaSeconds >= timeoutSeconds) {
-                    Debug.Log($"Timeout reached, possible issue with object '{id}', or increase components 'objaversePipelineConfig.timeoutSeconds'.");
+                    Debug.Log(
+                        $"Timeout reached, possible issue with object '{id}', or increase components 'objaversePipelineConfig.timeoutSeconds'."
+                    );
                     p.Kill();
                     break;
                 }
@@ -532,37 +550,43 @@ namespace Thor.Procedural {
         }
 
         private diagnostics.Process runPythonCommand(string id, string saveDir) {
-            diagnostics.Process p = new diagnostics.Process ();
-            var pythonFilename = $"{objaversePipelineConfig.vidaRepo}/data_generation/objaverse/object_consolidater_blender_direct.py";
-            Debug.Log($"Running conversion script: `{objaversePipelineConfig.pythonExecutablePath} {pythonFilename} {objectId} {saveDir}`");
-            p.StartInfo = new diagnostics.ProcessStartInfo(objaversePipelineConfig.pythonExecutablePath, $"{pythonFilename} {objectId} {saveDir}")
-            {
+            diagnostics.Process p = new diagnostics.Process();
+            var pythonFilename =
+                $"{objaversePipelineConfig.vidaRepo}/data_generation/objaverse/object_consolidater_blender_direct.py";
+            Debug.Log(
+                $"Running conversion script: `{objaversePipelineConfig.pythonExecutablePath} {pythonFilename} {objectId} {saveDir}`"
+            );
+            p.StartInfo = new diagnostics.ProcessStartInfo(
+                objaversePipelineConfig.pythonExecutablePath,
+                $"{pythonFilename} {objectId} {saveDir}"
+            ) {
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardError = true
             };
             Console.InputEncoding = Encoding.UTF8;
-            
+
             p.OutputDataReceived += (sender, args) => Debug.Log(args.Data);
             p.ErrorDataReceived += (sender, args) => Debug.LogError(args.Data);
             // processes.Enqueue(p);
 
-            processingIds.GetOrAdd(id, new AsyncProcess() {
-                id = id,
-                process = p,
-                progress = 0.0f
-
-            });
+            processingIds.GetOrAdd(
+                id,
+                new AsyncProcess() {
+                    id = id,
+                    process = p,
+                    progress = 0.0f
+                }
+            );
 
             p.Start();
-            
+
             // cant mix async and non async output read
-             p.BeginOutputReadLine();
-             p.BeginErrorReadLine();
+            p.BeginOutputReadLine();
+            p.BeginErrorReadLine();
 
             return p;
-
         }
 
         // private float getPipelineAverageProgress() {
@@ -570,16 +594,26 @@ namespace Thor.Procedural {
         // }
 
         private IEnumerator runAssetPipelineAsync(string id, string saveDir, Action callback = null) {
-            
             // processingIds.TryUpdate(id)
-            EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Running import pipeline...", 0.0f);
+            EditorUtility.DisplayProgressBar(
+                "Objaverse import",
+                $"'{id}' Running import pipeline...",
+                0.0f
+            );
             var p = runPythonCommand(id, saveDir);
 
-             EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Running glb conversion...", 0.1f);
+            EditorUtility.DisplayProgressBar(
+                "Objaverse import",
+                $"'{id}' Running glb conversion...",
+                0.1f
+            );
             yield return waitForProcess(p, id, 1, 5, objaversePipelineConfig.timeoutSeconds);
 
-             EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Finished glb conversion.", 0.8f);
-
+            EditorUtility.DisplayProgressBar(
+                "Objaverse import",
+                $"'{id}' Finished glb conversion.",
+                0.8f
+            );
 
             // var outputStr = p.StandardOutput.ReadToEnd();
             // var errorStr = p.StandardError.ReadToEnd();
@@ -591,12 +625,16 @@ namespace Thor.Procedural {
             // foreach (var line in split) {
             //     Debug.Log (line);
             // }
-            
+
             p.WaitForExit();
-            
+
             Debug.Log($"Exit: {p.ExitCode}");
             Debug.Log("Running callback...");
-            EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Importing to Unity", 0.9f);
+            EditorUtility.DisplayProgressBar(
+                "Objaverse import",
+                $"'{id}' Importing to Unity",
+                0.9f
+            );
             callback?.Invoke();
             EditorUtility.DisplayProgressBar("Objaverse import", $"'{id}' Finished!", 1f);
 
@@ -604,7 +642,6 @@ namespace Thor.Procedural {
             if (processingIds.IsEmpty) {
                 EditorUtility.ClearProgressBar();
             }
-
         }
 
         // [Button(Expanded = true)]
@@ -615,16 +652,15 @@ namespace Thor.Procedural {
         //     var errorStr = p.StandardError.ReadToEnd();
         //     Debug.Log(outputStr);
         //     Debug.Log(errorStr);
-            
-            
+
+
         //     p.WaitForExit();
-            
+
         //     Debug.Log($"Exit: {p.ExitCode}");
-            
+
         // }
 
-    
-#endif
 
+#endif
     }
 }

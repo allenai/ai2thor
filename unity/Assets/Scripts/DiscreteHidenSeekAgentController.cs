@@ -10,8 +10,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public string objectType;
         public int objectVariation;
     }
+
     public class DiscreteHidenSeekgentController : MonoBehaviour {
-        [SerializeField] private float HandMoveMagnitude = 0.1f;
+        [SerializeField]
+        private float HandMoveMagnitude = 0.1f;
         public PhysicsRemoteFPSAgentController PhysicsController = null;
         private GameObject InputMode_Text = null;
         private ObjectHighlightController highlightController = null;
@@ -21,9 +23,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private bool hidingPhase = false;
         public string onlyPickableObjectId = null;
         public bool disableCollistionWithPickupObject = false;
+
         void Start() {
             var Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
-            AgentManager agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            AgentManager agentManager = GameObject
+                .Find("PhysicsSceneManager")
+                .GetComponentInChildren<AgentManager>();
             agentManager.SetUpPhysicsController();
             PhysicsController = (PhysicsRemoteFPSAgentController)agentManager.PrimaryAgent;
 
@@ -31,7 +36,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Cursor.lockState = CursorLockMode.None;
             Debug_Canvas.GetComponent<Canvas>().enabled = true;
 
-            highlightController = new ObjectHighlightController(PhysicsController, PhysicsController.maxVisibleDistance, true, false, 0, 0, true);
+            highlightController = new ObjectHighlightController(
+                PhysicsController,
+                PhysicsController.maxVisibleDistance,
+                true,
+                false,
+                0,
+                0,
+                true
+            );
             highlightController.SetDisplayTargetText(false);
 
             // SpawnObjectToHide("{\"objectType\": \"Plunger\", \"objectVariation\": 1}");
@@ -62,7 +75,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void SpawnObjectToHide(string objectMeta) {
-
             var objectData = new ObjectSpanwMetadata();
             Debug.Log(objectMeta);
             JsonUtility.FromJsonOverwrite(objectMeta, objectData);
@@ -154,7 +166,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "MoveAhead";
                         action.moveMagnitude = WalkMagnitude;
                         PhysicsController.ProcessControlCommand(action);
-
                     }
 
                     if (Input.GetKeyDown(KeyCode.S)) {
@@ -162,7 +173,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "MoveBack";
                         action.moveMagnitude = WalkMagnitude;
                         PhysicsController.ProcessControlCommand(action);
-
                     }
 
                     if (Input.GetKeyDown(KeyCode.A)) {
@@ -170,7 +180,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "MoveLeft";
                         action.moveMagnitude = WalkMagnitude;
                         PhysicsController.ProcessControlCommand(action);
-
                     }
 
                     if (Input.GetKeyDown(KeyCode.D)) {
@@ -178,10 +187,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "MoveRight";
                         action.moveMagnitude = WalkMagnitude;
                         PhysicsController.ProcessControlCommand(action);
-
                     }
 
-                    if (Input.GetKeyDown(KeyCode.LeftArrow))//|| Input.GetKeyDown(KeyCode.J))
+                    if (Input.GetKeyDown(KeyCode.LeftArrow)) //|| Input.GetKeyDown(KeyCode.J))
                     {
                         ServerAction action = new ServerAction();
                         // action.action = "RotateLeft";
@@ -190,7 +198,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         PhysicsController.ProcessControlCommand(action);
                     }
 
-                    if (Input.GetKeyDown(KeyCode.RightArrow))//|| Input.GetKeyDown(KeyCode.L))
+                    if (Input.GetKeyDown(KeyCode.RightArrow)) //|| Input.GetKeyDown(KeyCode.L))
                     {
                         ServerAction action = new ServerAction();
                         // action.action = "RotateRight";
@@ -199,8 +207,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         PhysicsController.ProcessControlCommand(action);
                     }
                 }
-
-
 
                 if (this.PhysicsController.WhatAmIHolding() != null && handMode) {
                     var actionName = "MoveHandForce";
@@ -239,7 +245,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 } else if (handMode) {
                     if (Input.GetKeyDown(KeyCode.Space)) {
-                        var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(onlyPickableObjectId) != null;
+                        var withinReach =
+                            PhysicsController.FindObjectInVisibleSimObjPhysics(onlyPickableObjectId)
+                            != null;
                         if (withinReach) {
                             ServerAction action = new ServerAction();
                             action.objectId = onlyPickableObjectId;
@@ -248,7 +256,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
                 }
-                if ((Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.RightControl)) && PhysicsController.ReadyForCommand) {
+                if (
+                    (
+                        Input.GetKeyDown(KeyCode.LeftControl)
+                        || Input.GetKeyDown(KeyCode.C)
+                        || Input.GetKeyDown(KeyCode.RightControl)
+                    ) && PhysicsController.ReadyForCommand
+                ) {
                     ServerAction action = new ServerAction();
                     if (this.PhysicsController.isStanding()) {
                         action.action = "Crouch";
@@ -257,13 +271,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "Stand";
                         PhysicsController.ProcessControlCommand(action);
                     }
-
-
                 }
 
                 if (PhysicsController.WhatAmIHolding() != null) {
                     if (Input.GetKeyDown(KeyCode.Space) && !hidingPhase && !handMode) {
-
                         SetObjectVisible(!visibleObject);
                     }
                 }
@@ -285,5 +296,4 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
     }
-
 }

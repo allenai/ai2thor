@@ -1,16 +1,16 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
 // Check Assets/Prefabs/DebugController for ReadMe on how to use this Debug Controller
-using UnityEngine;
-using Random = UnityEngine.Random;
 using System;
-using System.IO;
 using System.Collections;
 using System.Collections.Generic;
-using UnityStandardAssets.CrossPlatformInput;
-using UnityStandardAssets.Utility;
+using System.IO;
+using System.Linq;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using System.Linq;
+using UnityStandardAssets.CrossPlatformInput;
+using UnityStandardAssets.Utility;
+using Random = UnityEngine.Random;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
@@ -19,6 +19,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private GameObject Crosshair;
         private GameObject TargetText;
         private GameObject ThrowForceBar;
+
         MinimalFPSController() {
             this.m_MouseLook = new MouseLook {
                 XSensitivity = 2,
@@ -69,7 +70,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 BackgroundUI.SetActive(true);
             }
 
-
             InputFieldObj.GetComponent<Image>().enabled = true;
             InputFieldObj.GetComponent<InputField>().enabled = true;
             InputFieldObj.GetComponentsInChildren<Text>().ToList().ForEach(x => x.enabled = true);
@@ -89,12 +89,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 InputMode_Text.GetComponent<Text>().text = "FPS Mode";
             }
 
-
             Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
 
             Debug_Canvas.GetComponent<Canvas>().enabled = true;
             HideHUD();
-
         }
 
         public new void OnDisable() {
@@ -116,4 +114,3 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
     }
 }
-

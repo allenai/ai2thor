@@ -1,123 +1,149 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NUnit.Framework;
-using System;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityStandardAssets.Characters.FirstPerson;
-using System.Threading.Tasks;
 
-namespace Tests {
-    public class TestDispatcher : TestBase {
-
-        public class TestController : ActionInvokable {
+namespace Tests
+{
+    public class TestDispatcher : TestBase
+    {
+        public class TestController : ActionInvokable
+        {
             protected AgentManager agentManager;
             public bool ranAsCoroutine;
             public bool ranAsBackCompat;
             public bool ranCompleteCallback = false;
 
             public ActionFinished actionFinished;
-            public TestController(AgentManager agentManager) {
-                this.agentManager =agentManager;
+
+            public TestController(AgentManager agentManager)
+            {
+                this.agentManager = agentManager;
             }
-            public void BackCompatAction(int x) {
+
+            public void BackCompatAction(int x)
+            {
                 ranAsBackCompat = true;
                 // Calls action finished/changes internal state, who knows? ...
             }
-            public ActionFinished NewAction(int x) {
-                return new ActionFinished() {
-                    success = true,
-                    actionReturn = x,
-                };
+
+            public ActionFinished NewAction(int x)
+            {
+                return new ActionFinished() { success = true, actionReturn = x, };
             }
 
-             public IEnumerator AsyncAction(int x) {
-                for (var i = 0; i < x; i++) {
+            public IEnumerator AsyncAction(int x)
+            {
+                for (var i = 0; i < x; i++)
+                {
                     yield return new WaitForFixedUpdate();
                 }
 
-                yield return new ActionFinished() {
-                    success = true,
-                    actionReturn = x,
-                };
+                yield return new ActionFinished() { success = true, actionReturn = x, };
             }
 
-            public IEnumerator AsyncActionMeasureUnityTime(int x) {
-                for (var i = 0; i < x; i++) {
+            public IEnumerator AsyncActionMeasureUnityTime(int x)
+            {
+                for (var i = 0; i < x; i++)
+                {
                     yield return new WaitForFixedUpdate();
                 }
 
-                yield return new ActionFinished() {
+                yield return new ActionFinished()
+                {
                     success = true,
                     actionReturn = Time.fixedTime,
                 };
             }
 
             // For ActionFinished return type it's a compile error
-             public IEnumerator AsyncActionMissingActionFinished() {
+            public IEnumerator AsyncActionMissingActionFinished()
+            {
                 yield return new WaitForFixedUpdate();
             }
 
-
-             public IEnumerator AsyncActionThrows() {
+            public IEnumerator AsyncActionThrows()
+            {
                 yield return new WaitForFixedUpdate();
                 object k = null;
                 // Null Ref exception
                 k.ToString();
             }
 
-             public IEnumerator AsyncActionPhysicsParams(PhysicsSimulationParams physicsSimulationParams) {
-                var count = (int)Math.Round(physicsSimulationParams.minSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime);
-                for (var i = 0; i < count; i++) {
+            public IEnumerator AsyncActionPhysicsParams(
+                PhysicsSimulationParams physicsSimulationParams
+            )
+            {
+                var count = (int)
+                    Math.Round(
+                        physicsSimulationParams.minSimulateTimeSeconds
+                            / physicsSimulationParams.fixedDeltaTime
+                    );
+                for (var i = 0; i < count; i++)
+                {
                     yield return new WaitForFixedUpdate();
                 }
 
-                yield return new ActionFinished() {
+                yield return new ActionFinished()
+                {
                     success = true,
                     actionReturn = physicsSimulationParams
                 };
             }
 
-            public void Complete(ActionFinished actionFinished) {
+            public void Complete(ActionFinished actionFinished)
+            {
                 // Simulating what BaseFPSDoes for old actions where isDummy will be true
-                if (!actionFinished.isDummy) {
+                if (!actionFinished.isDummy)
+                {
                     ranCompleteCallback = true;
                 }
                 this.actionFinished = actionFinished;
             }
-            public Coroutine StartCoroutine(IEnumerator routine) {
+
+            public Coroutine StartCoroutine(IEnumerator routine)
+            {
                 ranAsCoroutine = true;
                 return agentManager.StartCoroutine(routine);
             }
         }
 
         [UnityTest]
-        public IEnumerator TestDispatchInvalidArguments() {
+        public IEnumerator TestDispatchInvalidArguments()
+        {
             yield return Initialize();
-            var args = new Dictionary<string, object>() {
-                {"action", "PutObject"},
-                {"x", 0.3f},
-                {"y", 0.3f},
-                {"z", 0.3f},
-                {"forceAction", false},
-                {"placeStationary", true}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "PutObject" },
+                { "x", 0.3f },
+                { "y", 0.3f },
+                { "z", 0.3f },
+                { "forceAction", false },
+                { "placeStationary", true }
             };
-            Assert.Throws<InvalidArgumentsException>(() => {
+            Assert.Throws<InvalidArgumentsException>(() =>
+            {
                 ActionDispatcher.Dispatch(agentManager.PrimaryAgent, new DynamicServerAction(args));
             });
         }
 
         [UnityTest]
-        public IEnumerator TestStepInvalidArguments() {
+        public IEnumerator TestStepInvalidArguments()
+        {
             yield return Initialize();
 
-            var args = new Dictionary<string, object>() {
-                {"action", "PutObject"},
-                {"x", 0.3f},
-                {"y", 0.3f},
-                {"z", 0.3f},
-                {"forceAction", false},
-                {"placeStationary", true}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "PutObject" },
+                { "x", 0.3f },
+                { "y", 0.3f },
+                { "z", 0.3f },
+                { "forceAction", false },
+                { "placeStationary", true }
             };
 
             yield return step(args);
@@ -126,15 +152,16 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestBackCompatAction() {
-
+        public IEnumerator TestBackCompatAction()
+        {
             var controller = new TestController(this.agentManager);
 
-            var args = new Dictionary<string, object>() {
-                {"action", "BackCompatAction"},
-                {"x", 0}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "BackCompatAction" },
+                { "x", 0 }
             };
-            
+
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
             Assert.IsTrue(controller.ranAsBackCompat);
             // Complete interface is not called so this simulates not calling action finished to change inner state
@@ -145,23 +172,24 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestNewAction() {
-
+        public IEnumerator TestNewAction()
+        {
             var controller = new TestController(this.agentManager);
 
             var result = 5;
-            var args = new Dictionary<string, object>() {
-                {"action", "NewAction"},
-                {"x", result}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "NewAction" },
+                { "x", result }
             };
 
             // This happens at init
-            PhysicsSceneManager.SetDefaultSimulationParams(new PhysicsSimulationParams() {
-                autoSimulation = false
-            });
-            
+            PhysicsSceneManager.SetDefaultSimulationParams(
+                new PhysicsSimulationParams() { autoSimulation = false }
+            );
+
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
-            
+
             // Complete (new actionFinished) was called automatically
             Assert.IsTrue(controller.ranCompleteCallback);
 
@@ -176,33 +204,43 @@ namespace Tests {
         }
 
         [UnityTest]
-         public IEnumerator TestBackCompatActionPhysicsPadding() {
-
+        public IEnumerator TestBackCompatActionPhysicsPadding()
+        {
             var controller = new TestController(this.agentManager);
 
             var result = 5;
 
-            var physicsSimulationParams = new PhysicsSimulationParams() {
+            var physicsSimulationParams = new PhysicsSimulationParams()
+            {
                 fixedDeltaTime = 0.02f,
                 minSimulateTimeSeconds = 0.1f,
                 autoSimulation = false
             };
 
-            var args = new Dictionary<string, object>() {
-                {"action", "BackCompatAction"},
-                {"x", result},
-                {"physicsSimulationParams", physicsSimulationParams}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "BackCompatAction" },
+                { "x", result },
+                { "physicsSimulationParams", physicsSimulationParams }
             };
-            
+
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
-            
+
             // For legacy actions we don't want to call Complete as they handle their own state. Avoid call to actionFinished twice
             Assert.IsFalse(controller.ranCompleteCallback);
 
             // 5 physics steps of pure padding
-            Assert.AreEqual(PhysicsSceneManager.PhysicsSimulateCallCount, physicsSimulationParams.minSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime);
+            Assert.AreEqual(
+                PhysicsSceneManager.PhysicsSimulateCallCount,
+                physicsSimulationParams.minSimulateTimeSeconds
+                    / physicsSimulationParams.fixedDeltaTime
+            );
 
-            var simulateTimeMatched = Math.Abs(PhysicsSceneManager.PhysicsSimulateTimeSeconds - physicsSimulationParams.minSimulateTimeSeconds) < 1e-5;
+            var simulateTimeMatched =
+                Math.Abs(
+                    PhysicsSceneManager.PhysicsSimulateTimeSeconds
+                        - physicsSimulationParams.minSimulateTimeSeconds
+                ) < 1e-5;
             // Mathf.Approximately(PhysicsSceneManager.PhysicsSimulateTimeSeconds, physicsSimulationParams.maxActionTimeMilliseconds / 1000.0f);
             Assert.IsTrue(simulateTimeMatched);
 
@@ -212,72 +250,91 @@ namespace Tests {
         }
 
         [UnityTest]
-         public IEnumerator TestNewActionPhysicsPadding() {
-
+        public IEnumerator TestNewActionPhysicsPadding()
+        {
             var controller = new TestController(this.agentManager);
 
             var result = 5;
             const float eps = 1e-5f;
 
-            var physicsSimulationParams = new PhysicsSimulationParams() {
+            var physicsSimulationParams = new PhysicsSimulationParams()
+            {
                 fixedDeltaTime = 0.02f,
                 minSimulateTimeSeconds = 0.1f,
                 autoSimulation = false
             };
 
-            var args = new Dictionary<string, object>() {
-                {"action", "NewAction"},
-                {"x", result},
-                {"physicsSimulationParams", physicsSimulationParams}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "NewAction" },
+                { "x", result },
+                { "physicsSimulationParams", physicsSimulationParams }
             };
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
-            
 
             // New Action types call Complete
             Assert.IsTrue(controller.ranCompleteCallback);
 
             // 5 physics steps of pure padding
-            Assert.AreEqual(PhysicsSceneManager.PhysicsSimulateCallCount, physicsSimulationParams.minSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime);
+            Assert.AreEqual(
+                PhysicsSceneManager.PhysicsSimulateCallCount,
+                physicsSimulationParams.minSimulateTimeSeconds
+                    / physicsSimulationParams.fixedDeltaTime
+            );
 
-            var simulateTimeMatched = Math.Abs(PhysicsSceneManager.PhysicsSimulateTimeSeconds - physicsSimulationParams.minSimulateTimeSeconds) < eps;
+            var simulateTimeMatched =
+                Math.Abs(
+                    PhysicsSceneManager.PhysicsSimulateTimeSeconds
+                        - physicsSimulationParams.minSimulateTimeSeconds
+                ) < eps;
             // Mathf.Approximately(PhysicsSceneManager.PhysicsSimulateTimeSeconds, physicsSimulationParams.maxActionTimeMilliseconds / 1000.0f);
             Assert.IsTrue(simulateTimeMatched);
-            
-            // 1 Iterator expansion from the return Action Finished 
+
+            // 1 Iterator expansion from the return Action Finished
             Assert.AreEqual(PhysicsSceneManager.IteratorExpandCount, 1);
             yield return true;
         }
 
         [UnityTest]
-        public IEnumerator TestAsyncAction() {
-
+        public IEnumerator TestAsyncAction()
+        {
             var controller = new TestController(this.agentManager);
 
             var simulateTimes = 5;
             const float eps = 1e-5f;
 
-            var physicsSimulationParams = new PhysicsSimulationParams() {
+            var physicsSimulationParams = new PhysicsSimulationParams()
+            {
                 fixedDeltaTime = 0.01f,
                 autoSimulation = false
             };
 
-            var args = new Dictionary<string, object>() {
-                {"action", "AsyncAction"},
-                {"x", simulateTimes}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "AsyncAction" },
+                { "x", simulateTimes }
             };
 
             // This happens at init
             PhysicsSceneManager.SetDefaultSimulationParams(physicsSimulationParams);
 
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
-            
+
             // New Action types call Complete
             Assert.IsTrue(controller.ranCompleteCallback);
 
             // 5 simulations steps, simulatetime / fixedDeltaTime
-            Assert.AreEqual(PhysicsSceneManager.PhysicsSimulateCallCount, PhysicsSceneManager.PhysicsSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime);
+            Assert.AreEqual(
+                PhysicsSceneManager.PhysicsSimulateCallCount,
+                PhysicsSceneManager.PhysicsSimulateTimeSeconds
+                    / physicsSimulationParams.fixedDeltaTime
+            );
 
-            var simulateTimeMatched = Math.Abs(PhysicsSceneManager.PhysicsSimulateTimeSeconds - (physicsSimulationParams.fixedDeltaTime * simulateTimes)) < eps;
+            var simulateTimeMatched =
+                Math.Abs(
+                    PhysicsSceneManager.PhysicsSimulateTimeSeconds
+                        - (physicsSimulationParams.fixedDeltaTime * simulateTimes)
+                ) < eps;
             // Mathf.Approximately(PhysicsSceneManager.PhysicsSimulateTimeSeconds, physicsSimulationParams.maxActionTimeMilliseconds / 1000.0f);
             Assert.IsTrue(simulateTimeMatched);
             // Times of simulation + yield return ActionFinished
@@ -285,36 +342,47 @@ namespace Tests {
 
             Assert.AreEqual(controller.actionFinished.actionReturn, simulateTimes);
             yield return true;
-
         }
 
         [UnityTest]
-        public IEnumerator TestAsyncActionPassPhysicsSimulationParams() {
-
+        public IEnumerator TestAsyncActionPassPhysicsSimulationParams()
+        {
             var controller = new TestController(this.agentManager);
 
             var simulateTimes = 10;
             const float eps = 1e-5f;
 
-            var physicsSimulationParams = new PhysicsSimulationParams() {
+            var physicsSimulationParams = new PhysicsSimulationParams()
+            {
                 fixedDeltaTime = 0.01f,
                 autoSimulation = false
             };
 
-            var args = new Dictionary<string, object>() {
-                {"action", "AsyncAction"},
-                {"x", simulateTimes},
-                {"physicsSimulationParams", physicsSimulationParams}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "AsyncAction" },
+                { "x", simulateTimes },
+                { "physicsSimulationParams", physicsSimulationParams }
             };
 
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
-            
+
             // New Action types call Complete
             Assert.IsTrue(controller.ranCompleteCallback);
 
-            Assert.IsTrue(Math.Abs(PhysicsSceneManager.PhysicsSimulateCallCount - PhysicsSceneManager.PhysicsSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime) < eps);
+            Assert.IsTrue(
+                Math.Abs(
+                    PhysicsSceneManager.PhysicsSimulateCallCount
+                        - PhysicsSceneManager.PhysicsSimulateTimeSeconds
+                            / physicsSimulationParams.fixedDeltaTime
+                ) < eps
+            );
 
-            var simulateTimeMatched = Math.Abs(PhysicsSceneManager.PhysicsSimulateTimeSeconds - (physicsSimulationParams.fixedDeltaTime * simulateTimes)) < eps;
+            var simulateTimeMatched =
+                Math.Abs(
+                    PhysicsSceneManager.PhysicsSimulateTimeSeconds
+                        - (physicsSimulationParams.fixedDeltaTime * simulateTimes)
+                ) < eps;
             // Mathf.Approximately(PhysicsSceneManager.PhysicsSimulateTimeSeconds, physicsSimulationParams.maxActionTimeMilliseconds / 1000.0f);
             Assert.IsTrue(simulateTimeMatched);
             // Times of simulation + yield return ActionFinished
@@ -322,38 +390,51 @@ namespace Tests {
             // Returns value in action return
             Assert.AreEqual(controller.actionFinished.actionReturn, simulateTimes);
             yield return true;
-
         }
 
         [UnityTest]
-        public IEnumerator TestAsyncActionPassPhysicsSimulationParamsAndPadding() {
-
+        public IEnumerator TestAsyncActionPassPhysicsSimulationParamsAndPadding()
+        {
             var controller = new TestController(this.agentManager);
 
             var simulateTimes = 10;
             const float eps = 1e-5f;
 
-            var physicsSimulationParams = new PhysicsSimulationParams() {
+            var physicsSimulationParams = new PhysicsSimulationParams()
+            {
                 fixedDeltaTime = 0.01f,
                 autoSimulation = false,
                 // has to run 1 second so 0.1 seconds of action time and  0.9 of padding
                 minSimulateTimeSeconds = 1
             };
 
-            var args = new Dictionary<string, object>() {
-                {"action", "AsyncAction"},
-                {"x", simulateTimes},
-                {"physicsSimulationParams", physicsSimulationParams}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "AsyncAction" },
+                { "x", simulateTimes },
+                { "physicsSimulationParams", physicsSimulationParams }
             };
 
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
-            
+
             // New Action types call Complete
             Assert.IsTrue(controller.ranCompleteCallback);
 
-            Assert.IsTrue(Math.Abs(PhysicsSceneManager.PhysicsSimulateCallCount - (physicsSimulationParams.minSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime)) < eps);
-           
-            var simulateTimeMatched = Math.Abs(PhysicsSceneManager.PhysicsSimulateTimeSeconds - physicsSimulationParams.minSimulateTimeSeconds) < eps;
+            Assert.IsTrue(
+                Math.Abs(
+                    PhysicsSceneManager.PhysicsSimulateCallCount
+                        - (
+                            physicsSimulationParams.minSimulateTimeSeconds
+                            / physicsSimulationParams.fixedDeltaTime
+                        )
+                ) < eps
+            );
+
+            var simulateTimeMatched =
+                Math.Abs(
+                    PhysicsSceneManager.PhysicsSimulateTimeSeconds
+                        - physicsSimulationParams.minSimulateTimeSeconds
+                ) < eps;
             // Mathf.Approximately(PhysicsSceneManager.PhysicsSimulateTimeSeconds, physicsSimulationParams.maxActionTimeMilliseconds / 1000.0f);
             Assert.IsTrue(simulateTimeMatched);
             // Times of simulation + yield return ActionFinished
@@ -361,83 +442,113 @@ namespace Tests {
             // Returns value in action return
             Assert.AreEqual(controller.actionFinished.actionReturn, simulateTimes);
             yield return true;
-
         }
 
         [UnityTest]
-        public IEnumerator TestAsyncActionPhysicsParams() {
-
+        public IEnumerator TestAsyncActionPhysicsParams()
+        {
             var controller = new TestController(this.agentManager);
 
             // Target value
             var simulateTimes = 20;
             const float eps = 1e-5f;
 
-            var physicsSimulationParams = new PhysicsSimulationParams() {
+            var physicsSimulationParams = new PhysicsSimulationParams()
+            {
                 fixedDeltaTime = 0.01f,
                 autoSimulation = false,
                 minSimulateTimeSeconds = 0.2f
             };
 
-            var args = new Dictionary<string, object>() {
-                {"action", "AsyncActionPhysicsParams"},
-                {"physicsSimulationParams", physicsSimulationParams}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "AsyncActionPhysicsParams" },
+                { "physicsSimulationParams", physicsSimulationParams }
             };
 
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
-            
+
             // New Action types call Complete
             Assert.IsTrue(controller.ranCompleteCallback);
 
-            Assert.IsTrue(Math.Abs(PhysicsSceneManager.PhysicsSimulateCallCount - PhysicsSceneManager.PhysicsSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime) < eps);
+            Assert.IsTrue(
+                Math.Abs(
+                    PhysicsSceneManager.PhysicsSimulateCallCount
+                        - PhysicsSceneManager.PhysicsSimulateTimeSeconds
+                            / physicsSimulationParams.fixedDeltaTime
+                ) < eps
+            );
 
-            var simulateTimeMatched = Math.Abs(PhysicsSceneManager.PhysicsSimulateTimeSeconds - (physicsSimulationParams.fixedDeltaTime * simulateTimes)) < eps;
+            var simulateTimeMatched =
+                Math.Abs(
+                    PhysicsSceneManager.PhysicsSimulateTimeSeconds
+                        - (physicsSimulationParams.fixedDeltaTime * simulateTimes)
+                ) < eps;
             // Mathf.Approximately(PhysicsSceneManager.PhysicsSimulateTimeSeconds, physicsSimulationParams.maxActionTimeMilliseconds / 1000.0f);
             Assert.IsTrue(simulateTimeMatched);
             // Times of simulation + yield return ActionFinished
             Assert.AreEqual(PhysicsSceneManager.IteratorExpandCount, simulateTimes + 1);
 
-            var returnPhysicsParams = controller.actionFinished.actionReturn as PhysicsSimulationParams;
-            Debug.Log($"{returnPhysicsParams.autoSimulation} {returnPhysicsParams.fixedDeltaTime} {returnPhysicsParams.minSimulateTimeSeconds}");
-            Debug.Log($"{physicsSimulationParams.autoSimulation} {physicsSimulationParams.fixedDeltaTime} {physicsSimulationParams.minSimulateTimeSeconds}");
+            var returnPhysicsParams =
+                controller.actionFinished.actionReturn as PhysicsSimulationParams;
+            Debug.Log(
+                $"{returnPhysicsParams.autoSimulation} {returnPhysicsParams.fixedDeltaTime} {returnPhysicsParams.minSimulateTimeSeconds}"
+            );
+            Debug.Log(
+                $"{physicsSimulationParams.autoSimulation} {physicsSimulationParams.fixedDeltaTime} {physicsSimulationParams.minSimulateTimeSeconds}"
+            );
             // Returns back the physics params
             Assert.AreEqual(controller.actionFinished.actionReturn, physicsSimulationParams);
             yield return true;
-
         }
 
         [UnityTest]
-        public IEnumerator TestAsyncActionDefaultPhysicsParams() {
-
+        public IEnumerator TestAsyncActionDefaultPhysicsParams()
+        {
             var controller = new TestController(this.agentManager);
 
-            
             const float eps = 1e-5f;
 
-            var physicsSimulationParams = new PhysicsSimulationParams() {
+            var physicsSimulationParams = new PhysicsSimulationParams()
+            {
                 fixedDeltaTime = 0.01f,
                 autoSimulation = false,
                 minSimulateTimeSeconds = 0.1f
             };
 
-            var simulateTimes = (int)((physicsSimulationParams.minSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime) + eps);
+            var simulateTimes = (int)(
+                (
+                    physicsSimulationParams.minSimulateTimeSeconds
+                    / physicsSimulationParams.fixedDeltaTime
+                ) + eps
+            );
 
-            var args = new Dictionary<string, object>() {
-                {"action", "AsyncActionPhysicsParams"},
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "AsyncActionPhysicsParams" },
             };
 
             // This happens at init
             PhysicsSceneManager.SetDefaultSimulationParams(physicsSimulationParams);
 
-
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
-            
+
             // New Action types call Complete
             Assert.IsTrue(controller.ranCompleteCallback);
 
-            Assert.IsTrue(Math.Abs(PhysicsSceneManager.PhysicsSimulateCallCount - PhysicsSceneManager.PhysicsSimulateTimeSeconds / physicsSimulationParams.fixedDeltaTime) < eps);
+            Assert.IsTrue(
+                Math.Abs(
+                    PhysicsSceneManager.PhysicsSimulateCallCount
+                        - PhysicsSceneManager.PhysicsSimulateTimeSeconds
+                            / physicsSimulationParams.fixedDeltaTime
+                ) < eps
+            );
 
-            var simulateTimeMatched = Math.Abs(PhysicsSceneManager.PhysicsSimulateTimeSeconds - (physicsSimulationParams.fixedDeltaTime * simulateTimes)) < eps;
+            var simulateTimeMatched =
+                Math.Abs(
+                    PhysicsSceneManager.PhysicsSimulateTimeSeconds
+                        - (physicsSimulationParams.fixedDeltaTime * simulateTimes)
+                ) < eps;
             // Mathf.Approximately(PhysicsSceneManager.PhysicsSimulateTimeSeconds, physicsSimulationParams.maxActionTimeMilliseconds / 1000.0f);
             Assert.IsTrue(simulateTimeMatched);
             // Times of simulation + yield return ActionFinished
@@ -445,28 +556,29 @@ namespace Tests {
             // Returns back the physics params
             Assert.AreEqual(controller.actionFinished.actionReturn, physicsSimulationParams);
             yield return true;
-
         }
 
         [UnityTest]
-        public IEnumerator TestAsyncActionAutosimulation() {
-
+        public IEnumerator TestAsyncActionAutosimulation()
+        {
             var controller = new TestController(this.agentManager);
 
             // Target value
-            var simulateTimes =8;
+            var simulateTimes = 8;
             // For unity time epsilon is much larger, therfore non-deterministic behavior
             const float eps = 1e-2f;
 
-            var physicsSimulationParams = new PhysicsSimulationParams() {
+            var physicsSimulationParams = new PhysicsSimulationParams()
+            {
                 fixedDeltaTime = 0.01f,
                 autoSimulation = true
             };
 
-            var args = new Dictionary<string, object>() {
-                {"action", "AsyncAction"},
-                {"x", simulateTimes},
-                {"physicsSimulationParams", physicsSimulationParams}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "AsyncAction" },
+                { "x", simulateTimes },
+                { "physicsSimulationParams", physicsSimulationParams }
             };
 
             var startTime = Time.time;
@@ -478,7 +590,7 @@ namespace Tests {
             yield return new WaitUntil(() => controller.ranCompleteCallback == true);
             var endTime = Time.time;
             var endFixedTime = Time.fixedTime;
-            
+
             // New Action types call Complete
             Assert.IsTrue(controller.ranCompleteCallback);
             // Because of autosimulation it was launched as an async coroutine
@@ -491,10 +603,10 @@ namespace Tests {
             Debug.Log($"------ Fixed time {startFixedTime} {endFixedTime} _ {runTimeFixed}");
             // Flaky because WaitUntil can run longer
             // var simulateTimeMatched = Math.Abs(runFixedTime - (physicsSimulationParams.fixedDeltaTime * (simulateTimes + 1))) < smallEps;
-            var simulateTimeMatched = physicsSimulationParams.fixedDeltaTime * simulateTimes - smallEps < runTimeFixed;
+            var simulateTimeMatched =
+                physicsSimulationParams.fixedDeltaTime * simulateTimes - smallEps < runTimeFixed;
             Assert.IsTrue(simulateTimeMatched);
-            
-            
+
             // Assert.IsTrue(simulateTimeMatched);
             // Below is flaky assert as Time.time is virtual and finding good epsilon is tricky
             // Assert.IsTrue( (runTime + eps) >= physicsSimulationParams.fixedDeltaTime * simulateTimes);
@@ -502,26 +614,28 @@ namespace Tests {
             // Returns back the physics params
             Assert.AreEqual(controller.actionFinished.actionReturn, simulateTimes);
             yield return true;
-
         }
 
         [UnityTest]
-        public IEnumerator TestAsyncActionAutosimulationExactTime() {
+        public IEnumerator TestAsyncActionAutosimulationExactTime()
+        {
             // Same as above but action itself measures Time.fixedTime to get accurate simulation time
             var controller = new TestController(this.agentManager);
 
             // Target value
-            var simulateTimes =8;
+            var simulateTimes = 8;
 
-            var physicsSimulationParams = new PhysicsSimulationParams() {
+            var physicsSimulationParams = new PhysicsSimulationParams()
+            {
                 fixedDeltaTime = 0.01f,
                 autoSimulation = true
             };
 
-            var args = new Dictionary<string, object>() {
-                {"action", "AsyncActionMeasureUnityTime"},
-                {"x", simulateTimes},
-                {"physicsSimulationParams", physicsSimulationParams}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "AsyncActionMeasureUnityTime" },
+                { "x", simulateTimes },
+                { "physicsSimulationParams", physicsSimulationParams }
             };
 
             var startFixedTime = Time.fixedTime;
@@ -530,7 +644,7 @@ namespace Tests {
 
             yield return new WaitUntil(() => controller.actionFinished != null);
             var endFixedTime = (float)controller.actionFinished.actionReturn;
-            
+
             // New Action types call Complete
             Assert.IsTrue(controller.ranCompleteCallback);
             // Because of autosimulation it was launched as an async coroutine
@@ -541,33 +655,35 @@ namespace Tests {
 
             Debug.Log($"------ Fixed time {startFixedTime} {endFixedTime} _ {runTimeFixed}");
 
-            var simulateTimeMatched = Math.Abs(runTimeFixed - (physicsSimulationParams.fixedDeltaTime * simulateTimes)) < smallEps;
+            var simulateTimeMatched =
+                Math.Abs(runTimeFixed - (physicsSimulationParams.fixedDeltaTime * simulateTimes))
+                < smallEps;
             Assert.IsTrue(simulateTimeMatched);
-            
-            yield return true;
 
+            yield return true;
         }
 
-         [UnityTest]
-        public IEnumerator TestNewActionAutosimulation() {
-
+        [UnityTest]
+        public IEnumerator TestNewActionAutosimulation()
+        {
             var controller = new TestController(this.agentManager);
 
             var result = 5;
-            var args = new Dictionary<string, object>() {
-                {"action", "NewAction"},
-                {"x", result}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "NewAction" },
+                { "x", result }
             };
 
             // This happens at init
-            PhysicsSceneManager.SetDefaultSimulationParams(new PhysicsSimulationParams() {
-                autoSimulation = true
-            });
-            
+            PhysicsSceneManager.SetDefaultSimulationParams(
+                new PhysicsSimulationParams() { autoSimulation = true }
+            );
+
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
 
             yield return new WaitUntil(() => controller.ranCompleteCallback);
-            
+
             // Complete (new actionFinished) was called automatically
             Assert.IsTrue(controller.ranCompleteCallback);
 
@@ -579,26 +695,28 @@ namespace Tests {
             yield return true;
         }
 
-         [UnityTest]
-        public IEnumerator TestBackCompatActionAutosimulation() {
-
+        [UnityTest]
+        public IEnumerator TestBackCompatActionAutosimulation()
+        {
             var controller = new TestController(this.agentManager);
 
             var x = 10;
 
-            var physicsSimulationParams = new PhysicsSimulationParams() {
+            var physicsSimulationParams = new PhysicsSimulationParams()
+            {
                 fixedDeltaTime = 0.01f,
                 autoSimulation = true
             };
 
-            var args = new Dictionary<string, object>() {
-                {"action", "BackCompatAction"},
-                {"x", x},
-                {"physicsSimulationParams", physicsSimulationParams}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "BackCompatAction" },
+                { "x", x },
+                { "physicsSimulationParams", physicsSimulationParams }
             };
 
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
-            
+
             // Old Action types don't call true Complete, they have their own actionFinished
             Assert.IsFalse(controller.ranCompleteCallback);
             Assert.IsTrue(controller.ranAsBackCompat);
@@ -606,31 +724,33 @@ namespace Tests {
             yield return true;
         }
 
-         [UnityTest]
-        public IEnumerator TestBackCompatActionAutosimulationWithPadding() {
+        [UnityTest]
+        public IEnumerator TestBackCompatActionAutosimulationWithPadding()
+        {
             // Can't add padding to legacy actions run in coroutines, as actionFinished
             // returns controll and can't add padding if not blocked because can create "deathloop"
             var controller = new TestController(this.agentManager);
 
             var x = 10;
 
-            var physicsSimulationParams = new PhysicsSimulationParams() {
+            var physicsSimulationParams = new PhysicsSimulationParams()
+            {
                 fixedDeltaTime = 0.01f,
                 autoSimulation = true,
                 minSimulateTimeSeconds = 0.1f
             };
 
-            var args = new Dictionary<string, object>() {
-                {"action", "BackCompatAction"},
-                {"x", x},
-                {"physicsSimulationParams", physicsSimulationParams}
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "BackCompatAction" },
+                { "x", x },
+                { "physicsSimulationParams", physicsSimulationParams }
             };
-
 
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
 
             // No time simulating physics because of autosim
-            Assert.IsTrue(PhysicsSceneManager.PhysicsSimulateTimeSeconds <  1e-5);
+            Assert.IsTrue(PhysicsSceneManager.PhysicsSimulateTimeSeconds < 1e-5);
 
             // Old actions don't call real complete
             Assert.IsFalse(controller.ranCompleteCallback);
@@ -640,21 +760,21 @@ namespace Tests {
         }
 
         [UnityTest]
-         public IEnumerator TestAsyncActionMissingActionFinished() {
-
+        public IEnumerator TestAsyncActionMissingActionFinished()
+        {
             var controller = new TestController(this.agentManager);
 
-            var args = new Dictionary<string, object>() {
-                {"action", "AsyncActionMissingActionFinished"},
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "AsyncActionMissingActionFinished" },
             };
 
             PhysicsSceneManager.SetDefaultSimulationParams(
-                new PhysicsSimulationParams() {
-                    autoSimulation = false
-                }
+                new PhysicsSimulationParams() { autoSimulation = false }
             );
-        
-             Assert.Throws<MissingActionFinishedException>(() => {
+
+            Assert.Throws<MissingActionFinishedException>(() =>
+            {
                 ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
             });
 
@@ -662,46 +782,44 @@ namespace Tests {
         }
 
         [UnityTest]
-         public IEnumerator TestAsyncActionCoroutineMissingActionFinished() {
-
+        public IEnumerator TestAsyncActionCoroutineMissingActionFinished()
+        {
             var controller = new TestController(this.agentManager);
 
-            var args = new Dictionary<string, object>() {
-                {"action", "AsyncActionMissingActionFinished"},
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "AsyncActionMissingActionFinished" },
             };
 
             PhysicsSceneManager.SetDefaultSimulationParams(
-                new PhysicsSimulationParams() {
-                    autoSimulation = true
-                }
+                new PhysicsSimulationParams() { autoSimulation = true }
             );
-            
-            ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
 
+            ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
 
             yield return new WaitUntil(() => controller.actionFinished != null);
 
             Assert.IsTrue(controller.ranCompleteCallback);
             Assert.IsFalse(controller.actionFinished.success);
-            Assert.AreEqual(controller.actionFinished.errorCode, ServerActionErrorCode.MissingActionFinished);
+            Assert.AreEqual(
+                controller.actionFinished.errorCode,
+                ServerActionErrorCode.MissingActionFinished
+            );
         }
 
         [UnityTest]
-         public IEnumerator TestAsyncActionThrows() {
-
+        public IEnumerator TestAsyncActionThrows()
+        {
             var controller = new TestController(this.agentManager);
 
-            var args = new Dictionary<string, object>() {
-                {"action", "AsyncActionThrows"},
-            };
+            var args = new Dictionary<string, object>() { { "action", "AsyncActionThrows" }, };
 
             PhysicsSceneManager.SetDefaultSimulationParams(
-                new PhysicsSimulationParams() {
-                    autoSimulation = false
-                }
+                new PhysicsSimulationParams() { autoSimulation = false }
             );
             // Exceptions are handlede in ProcessControll command of FPS Controller
-            Assert.Throws<NullReferenceException>(() => {
+            Assert.Throws<NullReferenceException>(() =>
+            {
                 ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
             });
 
@@ -709,22 +827,17 @@ namespace Tests {
         }
 
         [UnityTest]
-         public IEnumerator TestAsyncActionThrowsCoroutine() {
-
+        public IEnumerator TestAsyncActionThrowsCoroutine()
+        {
             var controller = new TestController(this.agentManager);
 
-            var args = new Dictionary<string, object>() {
-                {"action", "AsyncActionThrows"},
-            };
+            var args = new Dictionary<string, object>() { { "action", "AsyncActionThrows" }, };
 
             PhysicsSceneManager.SetDefaultSimulationParams(
-                new PhysicsSimulationParams() {
-                    autoSimulation = true
-                }
+                new PhysicsSimulationParams() { autoSimulation = true }
             );
-            
-            ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
 
+            ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
 
             yield return new WaitUntil(() => controller.actionFinished != null);
 
@@ -732,39 +845,47 @@ namespace Tests {
             // Bacause it's run in an "async" coroutine exception is handled inside and propagates to ActionFinished
             Assert.IsFalse(controller.actionFinished.success);
             Debug.Log(controller.actionFinished.errorMessage);
-            Assert.AreEqual(controller.actionFinished.errorCode, ServerActionErrorCode.UnhandledException);
+            Assert.AreEqual(
+                controller.actionFinished.errorCode,
+                ServerActionErrorCode.UnhandledException
+            );
         }
 
-         public class TestControllerChild : TestController {
-            public TestControllerChild(AgentManager agentManager) : base(agentManager) {}
+        public class TestControllerChild : TestController
+        {
+            public TestControllerChild(AgentManager agentManager)
+                : base(agentManager) { }
+
             public bool calledChild = false;
+
             // Ambiguous actions
-            public void BackCompatAction(int x, string defaultParam = "") {
+            public void BackCompatAction(int x, string defaultParam = "")
+            {
                 ranAsBackCompat = true;
                 calledChild = true;
             }
 
-            public ActionFinished NewAction(int x) {
+            public ActionFinished NewAction(int x)
+            {
                 calledChild = true;
-                return new ActionFinished() {
-                    success = true,
-                    actionReturn = x,
-                };
+                return new ActionFinished() { success = true, actionReturn = x, };
             }
         }
 
         [UnityTest]
-         public IEnumerator TestChildAmbiguousAction() {
-            
+        public IEnumerator TestChildAmbiguousAction()
+        {
             var controller = new TestControllerChild(this.agentManager);
 
-            var args = new Dictionary<string, object>() {
-                {"action", "BackCompatAction"},
-                {"x", 1},
+            var args = new Dictionary<string, object>()
+            {
+                { "action", "BackCompatAction" },
+                { "x", 1 },
             };
-            
+
             // TODO: we may want to remove this happening
-            Assert.Throws<AmbiguousActionException>(() => {
+            Assert.Throws<AmbiguousActionException>(() =>
+            {
                 ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
             });
 
@@ -772,15 +893,12 @@ namespace Tests {
         }
 
         [UnityTest]
-         public IEnumerator TestChildAmbiguousNewAction() {
-
+        public IEnumerator TestChildAmbiguousNewAction()
+        {
             var controller = new TestControllerChild(this.agentManager);
 
-            var args = new Dictionary<string, object>() {
-                {"action", "NewAction"},
-                {"x", 1},
-            };
-           
+            var args = new Dictionary<string, object>() { { "action", "NewAction" }, { "x", 1 }, };
+
             ActionDispatcher.Dispatch(controller, new DynamicServerAction(args));
 
             Assert.IsTrue(controller.calledChild);
@@ -789,7 +907,5 @@ namespace Tests {
 
             yield return true;
         }
-
-
     }
 }

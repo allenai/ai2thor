@@ -37,9 +37,7 @@ c.step(
     returnToStart=False,
     handCameraSpace=False,
 )
-c.step(
-    action="MoveArmBase", disableRendering=False, y=0.9, speed=2, returnToStart=False
-)
+c.step(action="MoveArmBase", disableRendering=False, y=0.9, speed=2, returnToStart=False)
 
 pose = {"x": -1.0, "y": 0.9009995460510254, "z": 1, "rotation": 135, "horizon": 0}
 c.step(

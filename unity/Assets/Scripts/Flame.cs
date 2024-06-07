@@ -13,14 +13,10 @@ public class Flame : MonoBehaviour {
     public GameObject MyObject;
 
     // Start is called before the first frame update
-    void Start() {
-
-    }
+    void Start() { }
 
     // Update is called once per frame
-    void Update() {
-
-    }
+    void Update() { }
 
     // if this touches water and it's on, it is put out. Fire safety is important!
     public void OnTriggerStay(Collider MagiciansRed) {

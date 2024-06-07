@@ -79,9 +79,7 @@ class InteractiveControllerPrompt(object):
         action_set = {a.name for a in default_actions}
 
         self.default_interact_commands = {
-            k: v
-            for (k, v) in default_interact_commands.items()
-            if v["action"] in action_set
+            k: v for (k, v) in default_interact_commands.items() if v["action"] in action_set
         }
 
     def interact(
@@ -101,7 +99,7 @@ class InteractiveControllerPrompt(object):
 
         self._interact_commands = default_interact_commands.copy()
 
-        command_message = u"Enter a Command: Move \u2190\u2191\u2192\u2193, Rotate/Look Shift + \u2190\u2191\u2192\u2193, Quit 'q' or Ctrl-C"
+        command_message = "Enter a Command: Move \u2190\u2191\u2192\u2193, Rotate/Look Shift + \u2190\u2191\u2192\u2193, Quit 'q' or Ctrl-C"
         print(command_message)
         for a in self.next_interact_command():
             new_commands = {}
@@ -155,9 +153,7 @@ class InteractiveControllerPrompt(object):
                             )
 
                         if len(event.metadata["inventoryObjects"]) > 0:
-                            inventoryObjectId = event.metadata["inventoryObjects"][0][
-                                "objectId"
-                            ]
+                            inventoryObjectId = event.metadata["inventoryObjects"][0]["objectId"]
                             if (
                                 o["receptacle"]
                                 and (not o["openable"] or o["isOpen"])
@@ -169,30 +165,16 @@ class InteractiveControllerPrompt(object):
                                     objectId=inventoryObjectId,
                                     receptacleObjectId=o["objectId"],
                                 )
-                                add_command(
-                                    command_counter, "MoveHandAhead", moveMagnitude=0.1
-                                )
-                                add_command(
-                                    command_counter, "MoveHandBack", moveMagnitude=0.1
-                                )
-                                add_command(
-                                    command_counter, "MoveHandRight", moveMagnitude=0.1
-                                )
-                                add_command(
-                                    command_counter, "MoveHandLeft", moveMagnitude=0.1
-                                )
-                                add_command(
-                                    command_counter, "MoveHandUp", moveMagnitude=0.1
-                                )
-                                add_command(
-                                    command_counter, "MoveHandDown", moveMagnitude=0.1
-                                )
+                                add_command(command_counter, "MoveHandAhead", moveMagnitude=0.1)
+                                add_command(command_counter, "MoveHandBack", moveMagnitude=0.1)
+                                add_command(command_counter, "MoveHandRight", moveMagnitude=0.1)
+                                add_command(command_counter, "MoveHandLeft", moveMagnitude=0.1)
+                                add_command(command_counter, "MoveHandUp", moveMagnitude=0.1)
+                                add_command(command_counter, "MoveHandDown", moveMagnitude=0.1)
                                 add_command(command_counter, "DropHandObject")
 
                         elif o["pickupable"]:
-                            add_command(
-                                command_counter, "PickupObject", objectId=o["objectId"]
-                            )
+                            add_command(command_counter, "PickupObject", objectId=o["objectId"])
 
             self._interact_commands = default_interact_commands.copy()
             self._interact_commands.update(new_commands)
@@ -306,9 +288,7 @@ class InteractiveControllerPrompt(object):
                 lambda event: event.depth_frame,
                 lambda x: x,
                 lambda name, x: np.save(
-                    name.strip(".png").strip("./")
-                    if image_dir == "."
-                    else name.strip(".png"),
+                    name.strip(".png").strip("./") if image_dir == "." else name.strip(".png"),
                     x.astype(np.float32),
                 ),
             ),
@@ -327,12 +307,14 @@ class InteractiveControllerPrompt(object):
                 frame = transform(frame)
                 image_name = os.path.join(
                     image_dir,
-                    "{}{}".format(
-                        frame_filename, "{}".format(suffix) if image_per_frame else ""
-                    ),
+                    "{}{}".format(frame_filename, "{}".format(suffix) if image_per_frame else ""),
                 )
                 print("Image {}, {}".format(image_name, image_dir))
                 save(image_name, frame)
 
             elif condition:
-                print("No frame '{}' present, call initialize with the right parameters".format(frame_filename))
+                print(
+                    "No frame '{}' present, call initialize with the right parameters".format(
+                        frame_filename
+                    )
+                )

@@ -13,7 +13,11 @@ public class CookObject : MonoBehaviour {
 
     void Start() {
 #if UNITY_EDITOR
-        if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeCooked)) {
+        if (
+            !gameObject
+                .GetComponent<SimObjPhysics>()
+                .DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeCooked)
+        ) {
             Debug.LogError(gameObject.name + " is missing the CanBeCooked secondary property!");
         }
 #endif
@@ -39,7 +43,7 @@ public class CookObject : MonoBehaviour {
         if (MaterialSwapObjects.Length > 0) {
             for (int i = 0; i < MaterialSwapObjects.Length; i++) {
                 MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
-                MaterialSwapObjects[i].OnMaterials;
+                    MaterialSwapObjects[i].OnMaterials;
             }
 
             isCooked = true;

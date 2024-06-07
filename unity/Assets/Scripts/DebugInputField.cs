@@ -1,16 +1,17 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using System;
-using System.Linq;
-using UnityEditor;
-using Newtonsoft.Json.Linq;
-using Thor.Procedural.Data;
-using Thor.Procedural;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
+using MessagePack.Resolvers;
+using Newtonsoft.Json.Linq;
+using Thor.Procedural;
+using Thor.Procedural.Data;
+using UnityEditor;
+using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class DebugInputField : MonoBehaviour {
@@ -20,18 +21,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private ControlMode controlMode;
 
 #if UNITY_EDITOR
-        private Dictionary<KeyCode, ControlMode> debugKeyToController = new Dictionary<KeyCode, ControlMode>{
-            {KeyCode.F1, ControlMode.DEBUG_TEXT_INPUT},
-            {KeyCode.BackQuote, ControlMode.FPS},
-            {KeyCode.F2, ControlMode.DISCRETE_POINT_CLICK},
-            {KeyCode.F3, ControlMode.DISCRETE_HIDE_N_SEEK},
-            {KeyCode.F4, ControlMode.MINIMAL_FPS}
+        private Dictionary<KeyCode, ControlMode> debugKeyToController = new Dictionary<
+            KeyCode,
+            ControlMode
+        >
+        {
+            { KeyCode.F1, ControlMode.DEBUG_TEXT_INPUT },
+            { KeyCode.BackQuote, ControlMode.FPS },
+            { KeyCode.F2, ControlMode.DISCRETE_POINT_CLICK },
+            { KeyCode.F3, ControlMode.DISCRETE_HIDE_N_SEEK },
+            { KeyCode.F4, ControlMode.MINIMAL_FPS }
         };
 #endif
 
         private bool setEnabledControlComponent(ControlMode mode, bool enabled) {
             Type componentType;
-            var success = PlayerControllers.controlModeToComponent.TryGetValue(mode, out componentType);
+            var success = PlayerControllers.controlModeToComponent.TryGetValue(
+                mode,
+                out componentType
+            );
             if (success) {
                 var previousComponent = Agent.GetComponent(componentType) as MonoBehaviour;
                 if (previousComponent == null) {
@@ -66,27 +74,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 currentDistance = Vector3.SqrMagnitude(target - arm.transform.localPosition);
             }
-
         }
+
         public void dumpPosition(Transform to) {
             Debug.Log("GameObject: " + to.gameObject.name);
             Debug.Log(
-                to.position.x.ToString("0.####") + " " +
-                to.position.y.ToString("0.####") + " " +
-                to.position.z.ToString("0.####") + " "
+                to.position.x.ToString("0.####")
+                    + " "
+                    + to.position.y.ToString("0.####")
+                    + " "
+                    + to.position.z.ToString("0.####")
+                    + " "
             );
-
         }
 
         public IEnumerator moveArmDebug(Vector3 targetArmBase) {
-
             var arm = CurrentActiveController().GetComponentInChildren<IK_Robot_Arm_Controller>();
             // var rig = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.Rig>();
             // var rigBuilder = arm.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").GetComponent<UnityEngine.Animations.Rigging.RigBuilder>();
             // var animator = arm.gameObject.GetComponent<Animator>();
             // animator.enabled = false;
             Debug.Log("My name is " + arm.name);
-            var armTarget = arm.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
+            var armTarget = arm
+                .transform.Find("robot_arm_FK_IK_rig")
+                .Find("IK_rig")
+                .Find("IK_pos_rot_manipulator");
             var wristCol = GameObject.Find("robot_wrist_1_tcol (11)").transform;
             Vector3 target = arm.transform.TransformPoint(targetArmBase);
             float currentDistance = Vector3.SqrMagnitude(target - armTarget.transform.position);
@@ -111,7 +123,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             yield return new WaitForEndOfFrame();
             Debug.Log("Ending arm movement");
-
         }
 
         public void setControlMode(ControlMode mode) {
@@ -134,23 +145,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             setControlMode(ControlMode.DEBUG_TEXT_INPUT);
 #endif
 #if UNITY_WEBGL
-                Debug.Log("Player Control Set To:Webgl");
-                setControlMode(ControlMode.FPS);
+            Debug.Log("Player Control Set To:Webgl");
+            setControlMode(ControlMode.FPS);
 #endif
 #if CROWDSOURCE_TASK
-                Debug.Log("CROWDSOURCE_TASK");
-                setControlMode(ControlMode.DISCRETE_HIDE_N_SEEK);
+            Debug.Log("CROWDSOURCE_TASK");
+            setControlMode(ControlMode.DISCRETE_HIDE_N_SEEK);
 #endif
 #if TURK_TASK
-                Debug.Log("Player Control Set To: TURK");
-                setControlMode(ControlMode.DISCRETE_POINT_CLICK);
+            Debug.Log("Player Control Set To: TURK");
+            setControlMode(ControlMode.DISCRETE_POINT_CLICK);
 #endif
         }
 
         void InitializeUserControl() {
             GameObject fpsController = GameObject.FindObjectOfType<BaseAgentComponent>().gameObject;
             Agent = fpsController.gameObject;
-            AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            AManager = GameObject
+                .Find("PhysicsSceneManager")
+                .GetComponentInChildren<AgentManager>();
 
             // StochasticController = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
 
@@ -167,7 +180,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private PhysicsRemoteFPSAgentController PhysicsController {
             get => (PhysicsRemoteFPSAgentController)this.CurrentActiveController();
-
         }
 
         // Update is called once per frame
@@ -176,7 +188,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (KeyValuePair<KeyCode, ControlMode> entry in debugKeyToController) {
                 if (Input.GetKeyDown(entry.Key)) {
                     if (controlMode != entry.Value) {
-
                         // GameObject.Find("DebugCanvasPhysics").GetComponentInChildren<DebugInputField>().setControlMode(entry.Value);
                         setControlMode(entry.Value);
                         break;
@@ -201,11 +212,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
 
         public string closestVisibleObjectId() {
-            return ((PhysicsRemoteFPSAgentController)AManager.PrimaryAgent).ObjectIdOfClosestVisibleObject();
+            return (
+                (PhysicsRemoteFPSAgentController)AManager.PrimaryAgent
+            ).ObjectIdOfClosestVisibleObject();
         }
 
         public IEnumerator ExecuteBatch(List<string> commands) {
-
             foreach (var command in commands) {
                 while (CurrentActiveController().IsProcessing) {
                     yield return new WaitForEndOfFrame();
@@ -215,7 +227,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-
         // shortcut to execute no-parameter actions
         private void ExecuteAction(string actionName) {
             Dictionary<string, object> action = new Dictionary<string, object>();
@@ -224,13 +235,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void Execute(string command) {
-
             if (CurrentActiveController().IsProcessing) {
                 Debug.Log("Cannot execute command while last action has not completed.");
             }
 
             // pass in multiple parameters separated by spaces
-            string[] splitcommand = command.Split(new string[] { " " }, System.StringSplitOptions.None);
+            string[] splitcommand = command.Split(
+                new string[] { " " },
+                System.StringSplitOptions.None
+            );
 
             switch (splitcommand[0]) {
                 case "init": {
@@ -261,14 +274,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.agentMode = "locobot";
                         action["fieldOfView"] = 90f;
                         // action.cameraY = 2.0f;
-                        
+
                         action["snapToGrid"] = true;
 
                         //action["width"] = 100;
                         //action["height"] = 100;
                         // action.rotateStepDegrees = 45;
                         action["action"] = "Initialize";
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
                         // Debug.Log("Physics scene manager = ...");
                         // Debug.Log(physicsSceneManager);
@@ -313,14 +327,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["fieldOfView"] = 79;
                         action["gridSize"] = 0.25f;
 
-
                         action["applyActionNoise"] = true;
                         action["continuousMode"] = true;
                         //action["snapToGrid"] = false;
                         //action["action"] = "Initialize";
                         //action["fieldOfView"] = 90;
                         //action["gridSize"] = 0.25f;
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
                     }
                 case "initb1": {
@@ -359,14 +373,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["fieldOfView"] = 90;
                         action["gridSize"] = 0.25f;
 
-
                         action["applyActionNoise"] = true;
                         action["continuousMode"] = true;
                         //action["snapToGrid"] = false;
                         //action["action"] = "Initialize";
                         //action["fieldOfView"] = 90;
                         //action["gridSize"] = 0.25f;
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
                     }
                 case "inita": {
@@ -410,7 +424,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.massThreshold = 10f;
 
 
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
                         // Debug.Log("Physics scene manager = ...");
                         // Debug.Log(physicsSceneManager);
@@ -460,7 +475,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.massThreshold = 10f;
 
 
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
                         // Debug.Log("Physics scene manager = ...");
                         // Debug.Log(physicsSceneManager);
@@ -522,19 +538,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["procedural"] = true;
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
 
-
                         break;
-
                     }
                 case "inite": {
-                        Dictionary<string, object> action = new Dictionary<string, object>{
-                            {"action", "Initialize"},
-                            {"agentMode", "arm"},
-                            {"agentControllerType", "mid-level"}
-                        };
+                        Dictionary<string, object> action = new Dictionary<string, object>
+                        {
+                        { "action", "Initialize" },
+                        { "agentMode", "arm" },
+                        { "agentControllerType", "mid-level" }
+                    };
                         ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
 
-                        var arm = CurrentActiveController().GetComponentInChildren<IK_Robot_Arm_Controller>();
+                        var arm = CurrentActiveController()
+                            .GetComponentInChildren<IK_Robot_Arm_Controller>();
                         var armTarget = GameObject.Find("IK_pos_rot_manipulator");
                         armTarget.transform.Rotate(90f, 0f, 0f);
 
@@ -543,178 +559,688 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         var armBase = GameObject.Find("robot_arm_rig_gripper");
                         armBase.transform.Translate(0f, 0.27f, 0f);
 
-                        CurrentActiveController().ProcessControlCommand(
-                            new Dictionary<string, object>{
-                                {"action", "LookDown"}
-                        });
+                        CurrentActiveController()
+                            .ProcessControlCommand(
+                                new Dictionary<string, object> { { "action", "LookDown" } }
+                            );
 
                         break;
                     }
 
                 case "sim": {
-                    var collisionListener = this.CurrentActiveController().GetComponent<CollisionListener>();
-                    Physics.Simulate(0.02f);
-                    var l = collisionListener.StaticCollisions();
-                    Debug.Log("total collisions: " + l.ToArray().Length);
-                    break;
-                }
+                        var collisionListener = this.CurrentActiveController()
+                            .GetComponent<CollisionListener>();
+                        Physics.Simulate(0.02f);
+                        var l = collisionListener.StaticCollisions();
+                        Debug.Log("total collisions: " + l.ToArray().Length);
+                        break;
+                    }
 
                 case "inits": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "Initialize";
-                    action["agentMode"] = "stretch";
-                    action["agentControllerType"] = "stretch";
-                    action["visibilityScheme"] = "Distance";
-                    action["renderInstanceSegmentation"] = true;
-                    action["renderDepth"] = true;
-//                  action["antiAliasing"] = "smaa";
-                    action["massThreshold"] = 10.0f;
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "stretch";
+                        action["agentControllerType"] = "stretch";
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
+                        //                  action["antiAliasing"] = "smaa";
+                        action["massThreshold"] = 10.0f;
 
-                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
-                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
 
-                    break;
-                }
+                        break;
+                    }
+
+                //fpin using stretch bot as source mesh
+                case "initpinnobody": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "fpin";
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
+
+                        action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<
+                            string,
+                            object
+                        >()
+                        {
+                        { "originOffsetX", 0.2f },
+                        { "originOffsetZ", 0.4f },
+                        { "colliderScaleRatio", new Vector3(0.8f, 1.2f, 0.5f) },
+                        { "useVisibleColliderBase", true },
+                        { "useAbsoluteSize", true }
+                    };
+
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                //fpin using stretch bot as source mesh
+                case "initpins": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "fpin";
+                        //action["useAbsoluteSize"] = true;
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
+
+                        action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<
+                            string,
+                            object
+                        >()
+                        {
+                        {
+                            "bodyAsset",
+                            new BodyAsset() { assetId = "StretchBotSimObj" }
+                        },
+                        { "originOffsetX", -0.1f },
+                        { "originOffsetZ", 0.1157837f },
+                        { "colliderScaleRatio", new Vector3(1, 1, 1) },
+                        { "useVisibleColliderBase", true }
+                    };
+
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                case "initpinsabsolute": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "fpin";
+                        //action["useAbsoluteSize"] = true;
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
+
+                        action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<
+                            string,
+                            object
+                        >()
+                        {
+                        {
+                            "bodyAsset",
+                            new BodyAsset() { assetId = "StretchBotSimObj" }
+                        },
+                        { "originOffsetX", -0.09938055f },
+                        { "originOffsetZ", 0.1157837f },
+                        { "colliderScaleRatio", new Vector3(1, 1, 1) },
+                        { "useAbsoluteSize", true },
+                        { "useVisibleColliderBase", true }
+                    };
+
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                case "initpinsratio": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "fpin";
+                        //action["useAbsoluteSize"] = true;
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
+
+                        action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<
+                            string,
+                            object
+                        >()
+                        {
+                        {
+                            "bodyAsset",
+                            new BodyAsset() { assetId = "StretchBotSimObj" }
+                        },
+                        { "originOffsetX", -0.09938055f },
+                        { "originOffsetZ", 0.1157837f },
+                        { "colliderScaleRatio", new Vector3(4, 3, 2) },
+                    };
+
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                //fpin using locobot as source mesh
+                case "initpinl": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "fpin";
+                        //action["useAbsoluteSize"] = true;
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
+
+                        action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<
+                            string,
+                            object
+                        >()
+                        {
+                        {
+                            "bodyAsset",
+                            new BodyAsset() { assetId = "LocoBotSimObj" }
+                        },
+                        { "originOffsetX", 0.0f },
+                        { "originOffsetZ", -0.025f },
+                        { "colliderScaleRatio", new Vector3(1, 1, 1) }
+                    };
+
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                //fpin using TOASTER!!! as source mesh
+                case "initpint": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        // AgentManager Initialize Args
+                        action["agentMode"] = "fpin";
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
+
+                        // Fpin agent Initialize args
+                        action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<
+                            string,
+                            object
+                        >()
+                        {
+                        {
+                            "bodyAsset",
+                            new BodyAsset() { assetId = "Toaster_5" }
+                        },
+                        { "originOffsetX", 0.0f },
+                        { "originOffsetZ", 0.0f },
+                        { "colliderScaleRatio", new Vector3(1, 1, 1) },
+                        { "useAbsoluteSize", false },
+                    };
+                        //action["useAbsoluteSize"] = true;
+
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                //fpin using TOASTER!!! as source mesh
+                case "initpint321": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        // AgentManager Initialize Args
+                        action["agentMode"] = "fpin";
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
+
+                        // Fpin agent Initialize args
+                        action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<
+                            string,
+                            object
+                        >()
+                        {
+                        {
+                            "bodyAsset",
+                            new BodyAsset() { assetId = "Toaster_5" }
+                        },
+                        { "originOffsetX", 0.0f },
+                        { "originOffsetZ", 0.0f },
+                        { "colliderScaleRatio", new Vector3(3, 2, 1f) },
+                        { "useAbsoluteSize", false },
+                        { "useVisibleColliderBase", false }
+                    };
+                        //action["useAbsoluteSize"] = true;
+
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                //fpin using TOASTER!!! as source mesh
+                case "initpint321vcb": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        // AgentManager Initialize Args
+                        action["agentMode"] = "fpin";
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
+
+                        // Fpin agent Initialize args
+                        action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<
+                            string,
+                            object
+                        >()
+                        {
+                        {
+                            "bodyAsset",
+                            new BodyAsset() { assetId = "Toaster_5" }
+                        },
+                        { "originOffsetX", 0.0f },
+                        { "originOffsetZ", 0.0f },
+                        { "colliderScaleRatio", new Vector3(3, 2, 1f) },
+                        { "useAbsoluteSize", false },
+                        { "useVisibleColliderBase", true }
+                    };
+                        //action["useAbsoluteSize"] = true;
+
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+                case "initpinobja": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        BodyAsset ba = null;
+
+                        if (splitcommand.Length == 2) {
+                            var objectId = splitcommand[1];
+
+                            objectId = objectId.Trim();
+                            var pathSplit = Application.dataPath.Split('/');
+
+                            var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
+                            Debug.Log(string.Join("/", repoRoot));
+
+                            var objaverseRoot = $"{string.Join("/", repoRoot)}/objaverse";
+                            ba = new BodyAsset() {
+                                dynamicAsset = new LoadInUnityProceduralAsset() {
+                                    id = objectId,
+                                    dir = objaverseRoot
+                                }
+                            };
+                        }
+
+                        action["action"] = "Initialize";
+                        // AgentManager Initialize Args
+                        action["agentMode"] = "fpin";
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
+
+                        Debug.Log(
+                            $"--initpinobja id: {ba.dynamicAsset.id}, objadir: {ba.dynamicAsset.dir}"
+                        );
+
+                        // Fpin agent Initialize args
+                        action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<
+                            string,
+                            object
+                        >()
+                        {
+                        { "bodyAsset", ba },
+                        { "originOffsetX", 0.0f },
+                        { "originOffsetZ", 0.0f },
+                        { "colliderScaleRatio", new Vector3(1, 1, 1) }
+                    };
+                        //action["useAbsoluteSize"] = true;
+
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                case "initbodynobody": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "InitializeBody";
+                        action["colliderScaleRatio"] = new Vector3(1.2f, 1.3f, 1.4f);
+                        action["originOffsetX"] = 0.0f;
+                        action["originOffsetZ"] = 0.0f;
+                        action["useAbsoluteSize"] = true;
+                        action["useVisibleColliderBase"] = true;
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                case "initbodyt": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "InitializeBody";
+                        action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5" };
+                        action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                        action["originOffsetX"] = 0.0f;
+                        action["originOffsetZ"] = 0.0f;
+                        //action["useAbsoluteSize"] = true;
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                case "initbodyorigint": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "InitializeBody";
+                        action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5" };
+                        action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                        action["originOffsetX"] = 0.05f;
+                        action["originOffsetZ"] = 0.05f;
+                        //action["useAbsoluteSize"] = true;
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                case "initbodyratiot": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "InitializeBody";
+                        action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5" };
+                        action["colliderScaleRatio"] = new Vector3(2f, 4f, 2f);
+                        action["originOffsetX"] = 0.0f;
+                        action["originOffsetZ"] = 0.0f;
+                        //action["useAbsoluteSize"] = true;
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                case "initbodyabsolutet": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "InitializeBody";
+                        action["bodyAsset"] = new BodyAsset() { assetId = "Toaster_5" };
+                        action["colliderScaleRatio"] = new Vector3(1f, 1f, 1f);
+                        action["originOffsetX"] = 0.0f;
+                        action["originOffsetZ"] = 0.0f;
+                        action["useAbsoluteSize"] = true;
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                case "initbodyl": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "InitializeBody";
+                        action["bodyAsset"] = new BodyAsset() { assetId = "LocoBotSimObj" };
+                        action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                        action["originOffsetX"] = 0.0f;
+                        action["originOffsetZ"] = 0.0f;
+                        //action["useAbsoluteSize"] = true;
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                case "initbodys": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "InitializeBody";
+                        action["bodyAsset"] = new BodyAsset() { assetId = "StretchBotSimObj" };
+                        action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                        action["originOffsetX"] = -0.1f;
+                        action["originOffsetZ"] = 0.1157837f;
+                        //action["useAbsoluteSize"] = true;
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                case "initbodya": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "InitializeBody";
+                        action["bodyAsset"] = new BodyAsset() { assetId = "Apple_1" };
+                        action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                        action["originOffsetX"] = 0.0f;
+                        action["originOffsetZ"] = 0.0f;
+                        //action["useAbsoluteSize"] = true;
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                case "initbodyc": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "InitializeBody";
+                        action["bodyAsset"] = new BodyAsset() { assetId = "Chair_227_1" };
+                        action["colliderScaleRatio"] = new Vector3(1, 1, 1);
+                        action["originOffsetX"] = 0.0f;
+                        action["originOffsetZ"] = 0.0f;
+                        //action["useAbsoluteSize"] = true;
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
+                //fpin using apple
+                case "initpina": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "fpin";
+                        action["visibilityScheme"] = "Distance";
+
+                        action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<
+                            string,
+                            object
+                        >()
+                        {
+                        {
+                            "bodyAsset",
+                            new BodyAsset() { assetId = "Apple_1" }
+                        },
+                        { "originOffsetX", 0.0f },
+                        { "originOffsetZ", 0.0f },
+                        { "colliderScaleRatio", new Vector3(1, 1, 1) }
+                    };
+
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
                 case "inits-cp": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "Initialize";
-                    action["agentMode"] = "stretch";
-                    action["agentControllerType"] = "stretch";
-                    action["renderInstanceSegmentation"] = true;
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "stretch";
+                        action["agentControllerType"] = "stretch";
+                        action["renderInstanceSegmentation"] = true;
 
-                    action["thirdPartyCameraParameters"] = new Dictionary<string, object>() {
-                        {"SecondaryCamera", new CameraParameters() 
+                        action["thirdPartyCameraParameters"] = new Dictionary<string, object>()
+                        {
+                        {
+                            "SecondaryCamera",
+                            new CameraParameters()
                             {
                                 fieldOfView = 130f,
                                 localEulerAngles = new Vector3(-20f, 0f, 0.0f)
-                            } 
+                            }
                         }
-                    }; 
+                    };
 
-                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
-                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
 
-                    break;
-                }
-                case "obig": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
-
-                    action["action"] = "PlaceObjectIntoGripper";
-                    action["objectId"] = "Apple|-00.47|+01.15|+00.48";
-                    if (splitcommand.Length > 1) {
-                        action["objectId"] = splitcommand[1];
+                        break;
                     }
+                case "rpanm": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
-//                 case "telearm": {
-//                        Dictionary<string, object> action = new Dictionary<string, object>();
-//                        action["action"] = "TeleportArm";
-//
-//                        CurrentActiveController().ProcessControlCommand(action);
-//                        break;
-//                }
+                        action["action"] = "RandomlyPlaceAgentOnNavMesh";
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                case "ftele": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "TeleportFull";
+                        action["position"] = new Vector3(10.0f, 0.009f, 2.75f);
+                        action["rotation"] = new Vector3(0f, 0f, 0f);
+                        action["horizon"] = -20f;
+                        action["standing"] = true;
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                case "obig": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "PlaceObjectIntoGripper";
+                        action["objectId"] = "Apple|-00.47|+01.15|+00.48";
+                        if (splitcommand.Length > 1) {
+                            action["objectId"] = splitcommand[1];
+                        }
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+                //                 case "telearm": {
+                //                        Dictionary<string, object> action = new Dictionary<string, object>();
+                //                        action["action"] = "TeleportArm";
+                //
+                //                        CurrentActiveController().ProcessControlCommand(action);
+                //                        break;
+                //                }
 
                 case "mcb": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "MoveCameraBase";
-                    action["xPositionOffset"] = 0;
-                    action["zPositionOffset"] = 0;
-                    if (splitcommand.Length > 1) {
-                        action["xPositionOffset"] = float.Parse(splitcommand[1]);
+                        action["action"] = "MoveCameraBase";
+                        action["xPositionOffset"] = 0;
+                        action["zPositionOffset"] = 0;
+                        if (splitcommand.Length > 1) {
+                            action["xPositionOffset"] = float.Parse(splitcommand[1]);
+                        }
+                        if (splitcommand.Length == 3) {
+                            action["zPositionOffset"] = float.Parse(splitcommand[2]);
+                        }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
                     }
-                    if (splitcommand.Length == 3) {
-                        action["zPositionOffset"] = float.Parse(splitcommand[2]);
-                    }
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
 
                 case "rcb": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "RotateCameraBase";
-                    action["yawDegrees"] = 0;
-                    action["rollDegrees"] = 0;
-                    if (splitcommand.Length > 1) {
-                        action["yawDegrees"] = float.Parse(splitcommand[1]);
+                        action["action"] = "RotateCameraBase";
+                        action["yawDegrees"] = 0;
+                        action["rollDegrees"] = 0;
+                        if (splitcommand.Length > 1) {
+                            action["yawDegrees"] = float.Parse(splitcommand[1]);
+                        }
+                        if (splitcommand.Length == 3) {
+                            action["rollDegrees"] = float.Parse(splitcommand[2]);
+                        }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
                     }
-                    if (splitcommand.Length == 3) {
-                        action["rollDegrees"] = float.Parse(splitcommand[2]);
-                    }
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
 
                 case "rcm": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "RotateCameraMount";
-                    action["degrees"] = 20.0f;
-                    if (splitcommand.Length > 1) {
-                        action["degrees"] = float.Parse(splitcommand[1]);
+                        action["action"] = "RotateCameraMount";
+                        action["degrees"] = 20.0f;
+                        if (splitcommand.Length > 1) {
+                            action["degrees"] = float.Parse(splitcommand[1]);
+                        }
+                        if (splitcommand.Length == 3) {
+                            action["secondary"] = bool.Parse(splitcommand[2]);
+                        }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
                     }
-                    if (splitcommand.Length == 3) {
-                        action["secondary"] = bool.Parse(splitcommand[2]);
-                    }
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
                 case "render": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "RenderObjectFromAngles";
-                    action["objectId"] = splitcommand[1];
-                    action["renderResolution"] = new Vector2(512, 512);
-                    action["angles"] = new List<float> { 0, 90, 180, 270 };
+                        action["action"] = "RenderObjectFromAngles";
+                        action["objectId"] = splitcommand[1];
+                        action["renderResolution"] = new Vector2(512, 512);
+                        action["angles"] = new List<float> { 0, 90, 180, 270 };
 
-                    action["cameraHeightMultiplier"] = 0.0f;
-                    if (splitcommand.Length > 2) {
-                        action["cameraHeightMultiplier"] = float.Parse(splitcommand[2]);
+                        action["cameraHeightMultiplier"] = 0.0f;
+                        if (splitcommand.Length > 2) {
+                            action["cameraHeightMultiplier"] = float.Parse(splitcommand[2]);
+                        }
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
                     }
-
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
 
                 case "sgo": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
-                    
-                    action["action"] = "SetGripperOpenness";
-                    action["openness"] = 0;
-                    if (splitcommand.Length > 1) {
-                        action["openness"] = float.Parse(splitcommand[1]);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "SetGripperOpenness";
+                        action["openness"] = 0;
+                        if (splitcommand.Length > 1) {
+                            action["openness"] = float.Parse(splitcommand[1]);
+                        }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
                     }
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
 
                 case "adbdol": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "SetAssetDatabaseCaching";
+                        action["action"] = "SetAssetDatabaseCaching";
 
-                    if (splitcommand.Length > 1) {
-                        action["enable"] = bool.Parse(splitcommand[1]);
+                        if (splitcommand.Length > 1) {
+                            action["enable"] = bool.Parse(splitcommand[1]);
+                        }
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
                     }
-                    
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-
-                }
                 case "mabd": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "MoveArmBaseDown";
-                    action["distance"] = 0.4f;
-                    
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
+                        action["action"] = "MoveArmBaseDown";
+                        action["distance"] = 0.4f;
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
 
                 case "gaom": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -727,276 +1253,278 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
-                
+
                 case "inits-camera": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "Initialize";
-                    action["agentMode"] = "stretch";
-                    action["agentControllerType"] = "stretch";
-                    action["renderInstanceSegmentation"] = true;
-                    action["cameraNearPlane"] = 0.05f;  
-                    if (splitcommand.Length >= 2) {
-                        action["cameraNearPlane"] = float.Parse(splitcommand[1]);
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "stretch";
+                        action["agentControllerType"] = "stretch";
+                        action["renderInstanceSegmentation"] = true;
+                        action["cameraNearPlane"] = 0.05f;
+                        if (splitcommand.Length >= 2) {
+                            action["cameraNearPlane"] = float.Parse(splitcommand[1]);
+                        }
+
+                        action["cameraFarPlane"] = 20.0f;
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
                     }
-                    
-                    action["cameraFarPlane"] = 20.0f;
-                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
-                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
 
-                    break;
-                }
-                
                 case "getlights": {
-                    Dictionary<string, object> action = new Dictionary<string, object>();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    action["action"] = "GetLights";
+                        action["action"] = "GetLights";
 
-                    CurrentActiveController().ProcessControlCommand(action);
+                        CurrentActiveController().ProcessControlCommand(action);
 
-                    //ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
-                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        //ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
 
-                    break;
-                }
+                        break;
+                    }
 
                 case "stretchtest1": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_1");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_1");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest2": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_2");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
-                
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_2");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
+
                 case "stretchtest3": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_3");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_3");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest4": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_4");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_4");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest5": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_5");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_5");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest6": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_6");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_6");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest7": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_7");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_7");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest8": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_8");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
-                
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_8");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
+
                 case "stretchtest9": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_9");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_9");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest10": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_10");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_10");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest11": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_11");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_11");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest12": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_12");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_12");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest13": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_13");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_13");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest14": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_14");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_14");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest15": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_15");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_15");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest16": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_16");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_16");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest17": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_17");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_17");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtest18": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_18");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
-
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_18");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtestu": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_u");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_u");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "stretchtestd": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_stretch_arm_d");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_stretch_arm_d");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "iktest1": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_ik_arm_1");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_ik_arm_1");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "iktest2": {
-                    List<string> commands = new List<string>();
-                    commands.Add("run move_ik_arm_2");
-                    //commands.Add("debugarmjoints");
-                    StartCoroutine(ExecuteBatch(commands));
-                    break;
-                }
+                        List<string> commands = new List<string>();
+                        commands.Add("run move_ik_arm_2");
+                        //commands.Add("debugarmjoints");
+                        StartCoroutine(ExecuteBatch(commands));
+                        break;
+                    }
 
                 case "parent": {
-                    Dictionary<string, object> action = new Dictionary<string, object>{
-                        {"action", "ParentObject"},
+                        Dictionary<string, object> action = new Dictionary<string, object>
+                        {
+                        { "action", "ParentObject" },
                     };
-                    action["parentId"] = splitcommand[1];
-                    action["childId"] = splitcommand[2];
+                        action["parentId"] = splitcommand[1];
+                        action["childId"] = splitcommand[2];
 
-                    CurrentActiveController().ProcessControlCommand(
-                        action
-                    );
-                    break;
-                }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
 
                 case "gohfr": {
-                    Dictionary<string, object> action = new Dictionary<string, object> {
-                        {"action", "GetObjectHitFromRaycast"},
-                        {"from", new Vector3(1.048016f, 1f, 9.798f) },
-                        {"to", new Vector3(1.048016f, 0f, 9.798f) }
+                        Dictionary<string, object> action = new Dictionary<string, object>
+                        {
+                        { "action", "GetObjectHitFromRaycast" },
+                        { "from", new Vector3(1.048016f, 1f, 9.798f) },
+                        { "to", new Vector3(1.048016f, 0f, 9.798f) }
                     };
 
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
 
                 case "bboxdist": {
-                    Dictionary<string, object> action = new Dictionary<string, object> {
-                        {"action", "BBoxDistance"},
-                        {"objectId0", splitcommand[1]},
-                        {"objectId1", splitcommand[2]}
+                        Dictionary<string, object> action = new Dictionary<string, object>
+                        {
+                        { "action", "BBoxDistance" },
+                        { "objectId0", splitcommand[1] },
+                        { "objectId1", splitcommand[2] }
                     };
 
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
 
                 case "adjacent": {
-                    Dictionary<string, object> action = new Dictionary<string, object> {
-                        {"action", "CheckUnobstructedPathBetweenObjectCenters"},
-                        {"objectId0", splitcommand[1]},
-                        {"objectId1", splitcommand[2]}
+                        Dictionary<string, object> action = new Dictionary<string, object>
+                        {
+                        { "action", "CheckUnobstructedPathBetweenObjectCenters" },
+                        { "objectId0", splitcommand[1] },
+                        { "objectId1", splitcommand[2] }
                     };
 
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
 
                 case "whaton": {
-                    List<string> objectIds = new List<string>();
+                        List<string> objectIds = new List<string>();
 
-                    for (int i = 1; i < splitcommand.Length; i++) {
-                        objectIds.Add(splitcommand[i]);
-                    }
-                    Dictionary<string, object> action = new Dictionary<string, object> {
-                        {"action", "CheckWhatObjectsOn"},
-                        {"objectIds", objectIds},
+                        for (int i = 1; i < splitcommand.Length; i++) {
+                            objectIds.Add(splitcommand[i]);
+                        }
+                        Dictionary<string, object> action = new Dictionary<string, object>
+                        {
+                        { "action", "CheckWhatObjectsOn" },
+                        { "objectIds", objectIds },
                     };
 
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
 
                 case "expspawn": {
                         ServerAction action = new ServerAction();
@@ -1015,7 +1543,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.action = "ReturnValidSpawnsExpRoom";
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 0;
-                        action.y = 120f;// UnityEngine.Random.Range(0, 360);
+                        action.y = 120f; // UnityEngine.Random.Range(0, 360);
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -1025,13 +1553,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // Example: 'run simple', where simple.json exists in unity/debug/.
                 // This works best with Unity's Debugger for vscode (or other supported Unity IDEs).
                 case "run":
-                    // parse the file path 
+                    // parse the file path
                     const string BASE_PATH = "./debug/";
                     string file = "";
                     string path;
                     if (splitcommand.Length == 1) {
                         // opens up a file explorer in the background
-                        path = EditorUtility.OpenFilePanel(title: "Open JSON actions file.", directory: "debug", extension: "json");
+                        path = EditorUtility.OpenFilePanel(
+                            title: "Open JSON actions file.",
+                            directory: "debug",
+                            extension: "json"
+                        );
                     } else if (splitcommand.Length == 2) {
                         // uses ./debug/{splitcommand[1]}[.json]
                         file = splitcommand[1].Trim();
@@ -1040,7 +1572,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                         path = BASE_PATH + file;
                     } else {
-                        Debug.LogError("Pass in a file name, like 'run simple' or open a file with 'run'.");
+                        Debug.LogError(
+                            "Pass in a file name, like 'run simple' or open a file with 'run'."
+                        );
                         break;
                     }
 
@@ -1066,36 +1600,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     new DynamicServerAction(action)
                                 );
                             } else {
-                                CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                                CurrentActiveController()
+                                    .ProcessControlCommand(new DynamicServerAction(action));
                             }
                         }
                     }
                     StartCoroutine(executeBatch(jActions: actions));
                     break;
                 case "cwr": {
-                    CurrentActiveController().SimObjPhysicsTypeIsReceptacle();
-                    var obj = CurrentActiveController().actionReturn;
-                    var jsonResolver = new ShouldSerializeContractResolver();
-                    var str = Newtonsoft.Json.JsonConvert.SerializeObject(
-                    obj,
-                    Newtonsoft.Json.Formatting.None,
-                    new Newtonsoft.Json.JsonSerializerSettings() {
-                        ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                        ContractResolver = jsonResolver
-                    });
-                    Debug.Log(str);
+                        CurrentActiveController().SimObjPhysicsTypeIsReceptacle();
+                        var obj = CurrentActiveController().actionReturn;
+                        var jsonResolver = new ShouldSerializeContractResolver();
+                        var str = Newtonsoft.Json.JsonConvert.SerializeObject(
+                            obj,
+                            Newtonsoft.Json.Formatting.None,
+                            new Newtonsoft.Json.JsonSerializerSettings() {
+                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                ContractResolver = jsonResolver
+                            }
+                        );
+                        Debug.Log(str);
 
-                    break;
-                }
+                        break;
+                    }
                 case "exp": {
                         ServerAction action = new ServerAction();
 
                         action.action = "SpawnExperimentObjAtRandom";
                         action.objectType = "receptacle";
-                        action.randomSeed = 50;// UnityEngine.Random.Range(0, 1000);
+                        action.randomSeed = 50; // UnityEngine.Random.Range(0, 1000);
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 12;
-                        action.y = 120f;// UnityEngine.Random.Range(0, 360);
+                        action.y = 120f; // UnityEngine.Random.Range(0, 360);
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -1113,7 +1649,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         } else {
                             action.objectVariation = 0;
                         }
-                        action.y = 0f;// UnityEngine.Random.Range(0, 360);
+                        action.y = 0f; // UnityEngine.Random.Range(0, 360);
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -1122,11 +1658,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ServerAction action = new ServerAction();
 
                         action.action = "SpawnExperimentObjAtPoint";
-                        action.objectType = "replacement";//"receptacle";
+                        action.objectType = "replacement"; //"receptacle";
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 12;
                         action.position = new Vector3(-1.4f, 0.9f, 0.1f);
-                        action.y = 120f;// UnityEngine.Random.Range(0, 360);
+                        action.y = 120f; // UnityEngine.Random.Range(0, 360);
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -1264,13 +1800,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         GameObject table = GameObject.FindObjectOfType<DirtAndWrite>().gameObject;
 
-                        if(table == null) {
+                        if (table == null) {
                             break;
                         }
 
                         action["objectId"] = table.GetComponent<SimObjPhysics>().objectID;
                         CurrentActiveController().ProcessControlCommand(action);
-                        break;                
+                        break;
                     }
 
                 case "spawndirt": {
@@ -1279,7 +1815,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         GameObject table = GameObject.FindObjectOfType<DirtAndWrite>().gameObject;
 
-                        if(table == null) {
+                        if (table == null) {
                             break;
                         }
 
@@ -1287,7 +1823,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["howManyDirt"] = 100;
                         action["randomSeed"] = 0;
                         CurrentActiveController().ProcessControlCommand(action);
-                        break;                
+                        break;
                     }
 
                 case "spawndirtarray": {
@@ -1296,37 +1832,41 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         GameObject table = GameObject.FindObjectOfType<DirtAndWrite>().gameObject;
 
-                        if(table == null) {
+                        if (table == null) {
                             break;
                         }
 
                         action["objectId"] = table.GetComponent<SimObjPhysics>().objectID;
-                        action["spawnPositions"] = new DirtSpawnPosition[] {new DirtSpawnPosition(){x = -1.728f, z = -0.918f}, new DirtSpawnPosition(){x = 1.728f, z = 0.918f}};
+                        action["spawnPositions"] = new DirtSpawnPosition[]
+                        {
+                        new DirtSpawnPosition() { x = -1.728f, z = -0.918f },
+                        new DirtSpawnPosition() { x = 1.728f, z = 0.918f }
+                        };
                         action["randomSeed"] = 0;
                         CurrentActiveController().ProcessControlCommand(action);
-                        break;                
+                        break;
                     }
 
                 case "cleardirt": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "ClearAllDirt";
                         CurrentActiveController().ProcessControlCommand(action);
-                        break;                
+                        break;
                     }
 
                 case "sponge": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "ActivateSponge";
                         CurrentActiveController().ProcessControlCommand(action);
-                        break; 
-                }
+                        break;
+                    }
 
                 case "getsponge": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetSpongeScale";
                         CurrentActiveController().ProcessControlCommand(action);
-                        break; 
-                }
+                        break;
+                    }
                 case "setsponge": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "SetSpongeScale";
@@ -1334,36 +1874,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["y"] = 3.0f;
                         action["z"] = 3.0f;
                         CurrentActiveController().ProcessControlCommand(action);
-                        break; 
-                }
+                        break;
+                    }
 
                 case "pen": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "ActivatePen";
                         CurrentActiveController().ProcessControlCommand(action);
-                        break; 
-                }
+                        break;
+                    }
 
                 case "getspongemeta": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetSpongeMeta";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
-                }
+                    }
 
                 case "getpenmeta": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetPenMeta";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
-                }
+                    }
 
                 case "getdirtmeta": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetDirtMeta";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
-                }
+                    }
 
                 case "getdoorhinge": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -1371,7 +1911,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["objectId"] = "door|1|3";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
-                }
+                    }
 
                 case "getdoorhandle": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -1379,14 +1919,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["objectId"] = "door|1|3";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
-                }
+                    }
 
                 case "getpenmarkmeta": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetPenMarkMeta";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
-                }
+                    }
 
                 // initialize drone mode
                 case "initd": {
@@ -1421,7 +1961,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
-                
+
                 case "geo": {
                         var action = new Dictionary<string, object>() {
                             ["action"] = "GetInSceneAssetGeometry",
@@ -1433,9 +1973,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "des": {
-                        var action = new Dictionary<string, object>() {
-                            ["action"] = "DestroyHouse"
-                        };
+                        var action = new Dictionary<string, object>() { ["action"] = "DestroyHouse" };
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -1459,24 +1997,95 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "sbc": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(1.0f, 1.0f, 1.0f),
+                            ["useVisibleColliderBase"] = false
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "sbc2": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(1.1f, 1.0f, 1.3f),
+                            ["useVisibleColliderBase"] = false
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "sbcv": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(1.3f, 1.0f, 1.0f),
+                            ["useVisibleColliderBase"] = true
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "sbcv2": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(1.0f, 1.0f, 1.3f),
+                            ["useVisibleColliderBase"] = true
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "sbca": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(0.5f, 1.0f, 0.3f),
+                            ["useAbsoluteSize"] = true
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "sbca2": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateAgentBoxCollider",
+                            ["colliderScaleRatio"] = new Vector3(0.3f, 1.0f, 0.5f),
+                            ["useAbsoluteSize"] = true
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "dbc": {
+                        var action = new Dictionary<string, object>() {
+                            ["action"] = "DestroyAgentBoxCollider",
+                        };
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
                 // This is dangerous because it will modify the underlying
                 // materials, and you'll have to call "git restore *.mat *maT"
                 // to revert the materials.
                 case "dangerouslyChangeColor":
-                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                        ["action"] = "RandomizeColors"
-                    });
+                    CurrentActiveController()
+                        .ProcessControlCommand(
+                            new Dictionary<string, object>() { ["action"] = "RandomizeColors" }
+                        );
                     break;
                 case "resetColor":
-                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                        ["action"] = "ResetColors"
-                    });
+                    CurrentActiveController()
+                        .ProcessControlCommand(
+                            new Dictionary<string, object>() { ["action"] = "ResetColors" }
+                        );
                     break;
 
                 case "getMaterials":
-                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                        ["action"] = "GetMaterials"
-                    });
+                    CurrentActiveController()
+                        .ProcessControlCommand(
+                            new Dictionary<string, object>() { ["action"] = "GetMaterials" }
+                        );
                     break;
                 // This is dangerous because it will modify the underlying
                 // materials, and you'll have to call "git restore *.mat *maT"
@@ -1488,15 +2097,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         excludedObjectIds.Add(splitcommand[1]);
                     }
 
-                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                        ["action"] = "RandomizeMaterials",
-                        ["excludedObjectIds"] = excludedObjectIds
-                    });
+                    CurrentActiveController()
+                        .ProcessControlCommand(
+                            new Dictionary<string, object>() {
+                                ["action"] = "RandomizeMaterials",
+                                ["excludedObjectIds"] = excludedObjectIds
+                            }
+                        );
                     break;
                 case "resetMaterial":
-                    CurrentActiveController().ProcessControlCommand(new Dictionary<string, object>() {
-                        ["action"] = "ResetMaterials"
-                    });
+                    CurrentActiveController()
+                        .ProcessControlCommand(
+                            new Dictionary<string, object>() { ["action"] = "ResetMaterials" }
+                        );
                     break;
 
                 case "light": {
@@ -1553,10 +2166,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             }
                         }
 
-                        action.anywhere = false;// false, only recepatcle objects in viewport used
-                        // action.minDistance = 1.8f;
-                        // action.maxDistance = 2.5f;
-                        // action.objectId = "Floor|+00.00|+00.00|+00.00";
+                        action.anywhere = false; // false, only recepatcle objects in viewport used
+                                                 // action.minDistance = 1.8f;
+                                                 // action.maxDistance = 2.5f;
+                                                 // action.objectId = "Floor|+00.00|+00.00|+00.00";
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -1631,20 +2244,47 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "debugarm": {
-                        var arm = CurrentActiveController().GetComponentInChildren<IK_Robot_Arm_Controller>();
+                        var arm = CurrentActiveController()
+                            .GetComponentInChildren<IK_Robot_Arm_Controller>();
                         ArmMetadata armmeta = arm.GenerateMetadata();
                         Debug.Log("last joint position");
                         Vector3 rrpos = armmeta.joints[armmeta.joints.Length - 1].rootRelativePosition;
-                        Debug.Log("Root Relative Arm Position - x:" + rrpos.x.ToString("0.###") + " y:" + rrpos.y.ToString("0.###") + " z:" + rrpos.z.ToString("0.###"));
+                        Debug.Log(
+                            "Root Relative Arm Position - x:"
+                                + rrpos.x.ToString("0.###")
+                                + " y:"
+                                + rrpos.y.ToString("0.###")
+                                + " z:"
+                                + rrpos.z.ToString("0.###")
+                        );
                         break;
                     }
 
                 case "debugstretcharmjoints": {
-                        var arm = CurrentActiveController().GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+                        var arm = CurrentActiveController()
+                            .GetComponentInChildren<Stretch_Robot_Arm_Controller>();
                         ArmMetadata armmeta = arm.GenerateMetadata();
                         foreach (JointMetadata jm in armmeta.joints) {
-                            Debug.Log(jm.name + " position: (" + jm.position.x + ", " + jm.position.y + ", " + jm.position.z + ")");
-                            Debug.Log(jm.name + " root-relative position: (" + jm.rootRelativePosition.x + ", " + jm.rootRelativePosition.y + ", " + jm.rootRelativePosition.z + ")");
+                            Debug.Log(
+                                jm.name
+                                    + " position: ("
+                                    + jm.position.x
+                                    + ", "
+                                    + jm.position.y
+                                    + ", "
+                                    + jm.position.z
+                                    + ")"
+                            );
+                            Debug.Log(
+                                jm.name
+                                    + " root-relative position: ("
+                                    + jm.rootRelativePosition.x
+                                    + ", "
+                                    + jm.rootRelativePosition.y
+                                    + ", "
+                                    + jm.rootRelativePosition.z
+                                    + ")"
+                            );
                             Debug.Log(jm.name + " rotation: " + jm.rotation);
                             Debug.Log(jm.name + " root-relative rotation: " + jm.rootRelativeRotation);
                             Debug.Log(jm.name + " local rotation: " + jm.localRotation);
@@ -1653,11 +2293,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "debugarmjoints": {
-                        var arm = CurrentActiveController().GetComponentInChildren<IK_Robot_Arm_Controller>();
+                        var arm = CurrentActiveController()
+                            .GetComponentInChildren<IK_Robot_Arm_Controller>();
                         ArmMetadata armmeta = arm.GenerateMetadata();
                         foreach (JointMetadata jm in armmeta.joints) {
-                            Debug.Log(jm.name + " position: (" + jm.position.x + ", " + jm.position.y + ", " + jm.position.z + ")");
-                            Debug.Log(jm.name + " root-relative position: (" + jm.rootRelativePosition.x + ", " + jm.rootRelativePosition.y + ", " + jm.rootRelativePosition.z + ")");
+                            Debug.Log(
+                                jm.name
+                                    + " position: ("
+                                    + jm.position.x
+                                    + ", "
+                                    + jm.position.y
+                                    + ", "
+                                    + jm.position.z
+                                    + ")"
+                            );
+                            Debug.Log(
+                                jm.name
+                                    + " root-relative position: ("
+                                    + jm.rootRelativePosition.x
+                                    + ", "
+                                    + jm.rootRelativePosition.y
+                                    + ", "
+                                    + jm.rootRelativePosition.z
+                                    + ")"
+                            );
                             Debug.Log(jm.name + " rotation: " + jm.rotation);
                             Debug.Log(jm.name + " root-relative rotation: " + jm.rootRelativeRotation);
                             Debug.Log(jm.name + " local rotation: " + jm.localRotation);
@@ -1666,8 +2325,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "posarm1": {
-                        var arm = CurrentActiveController().GetComponentInChildren<IK_Robot_Arm_Controller>();
-                        var armTarget = arm.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
+                        var arm = CurrentActiveController()
+                            .GetComponentInChildren<IK_Robot_Arm_Controller>();
+                        var armTarget = arm
+                            .transform.Find("robot_arm_FK_IK_rig")
+                            .Find("IK_rig")
+                            .Find("IK_pos_rot_manipulator");
                         armTarget.transform.position = new Vector3(-0.72564f, 0.901f, 0.72564f);
                         break;
                     }
@@ -1689,7 +2352,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         StartCoroutine(ExecuteBatch(commands));
                         break;
                     }
-
 
                 case "slide3": {
                         List<string> commands = new List<string>();
@@ -1832,7 +2494,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         commands.Add("mmlah 1 1 True True");
                         commands.Add("telefull");
                         commands.Add("mmlah 0.5203709825292535 2 True True");
-                        commands.Add("mmla 0.01000303 -1.63912773e-06 0.558107364 2 armBase True False True");
+                        commands.Add(
+                            "mmla 0.01000303 -1.63912773e-06 0.558107364 2 armBase True False True"
+                        );
                         StartCoroutine(ExecuteBatch(commands));
                         break;
                     }
@@ -1975,10 +2639,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ["action"] = "AddThirdPartyCamera",
                             ["position"] = new Vector3(1, 1, 1),
                             ["rotation"] = new Vector3(10, 20, 30),
-                            // ["attachToAgent"] = true
+                            ["parent"] = "agent",
+                            ["agentPositionRelativeCoordinates"] = true
                         };
 
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
                     }
 
@@ -1988,22 +2654,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ["position"] = new Vector3(2, 2, 2),
                             ["rotation"] = new Vector3(15, 25, 35),
                             ["thirdPartyCameraId"] = 1,
+                            ["parent"] = "agent",
                             ["agentPositionRelativeCoordinates"] = true
                         };
 
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
                     }
 
                 case "umc": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "UpdateMainCamera",
-                            ["position"] = new Vector3(2, 2, 2),
+                            ["position"] = new Vector3(0.5f, 0.5f, 0.5f),
                             ["rotation"] = new Vector3(15, 25, 35),
-                            ["agentPositionRelativeCoordinates"] = false
+                            ["fieldOfView"] = 120f,
+                            //["agentPositionRelativeCoordinates"] = false
                         };
 
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
                     }
 
@@ -2066,7 +2736,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "putr": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "PutObject";
-                        action["objectId"] = ((PhysicsRemoteFPSAgentController)CurrentActiveController()).ObjectIdOfClosestReceptacleObject();
+                        action["objectId"] = (
+                            (PhysicsRemoteFPSAgentController)CurrentActiveController()
+                        ).ObjectIdOfClosestReceptacleObject();
                         action["randomSeed"] = int.Parse(splitcommand[1]);
 
                         // set this to false if we want to place it and let physics resolve by having it fall a short distance into position
@@ -2161,7 +2833,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "gip": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetInteractablePoses";
-                        if(splitcommand.Length == 2) {
+                        if (splitcommand.Length == 2) {
                             action["objectId"] = splitcommand[1].ToString();
                         } else {
                             action["objectId"] = "Fridge|-02.10|+00.00|+01.07";
@@ -2237,7 +2909,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action["forceVisible"] = false;
                             action["numPlacementAttempts"] = 5;
                         }
-
                         // should objects be spawned only in immediately visible areas?
                         else if (splitcommand.Length == 3) {
                             action["randomSeed"] = int.Parse(splitcommand[1]);
@@ -2263,7 +2934,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action["numPlacementAttempts"] = int.Parse(splitcommand[3]);
                         } else {
                             action["randomSeed"] = 0;
-                            action["forceVisible"] = false;// true;
+                            action["forceVisible"] = false; // true;
                             action["numPlacementAttempts"] = 20;
                         }
 
@@ -2278,7 +2949,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         excludeThese[0] = "CounterTop";
                         action["excludedReceptacles"] = excludeThese;
 
-                        action["placeStationary"] = false;// set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
+                        action["placeStationary"] = false; // set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
                         CurrentActiveController().ProcessControlCommand(action);
 
                         break;
@@ -2293,12 +2964,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action.objectType = splitcommand[1];
                             objectVariation = int.Parse(splitcommand[2]);
                         } else {
-                            action.objectType = "Tomato";// default to spawn debug tomato
-
+                            action.objectType = "Tomato"; // default to spawn debug tomato
                         }
                         action.action = "CreateObject";
-                        action.randomizeObjectAppearance = false;// pick randomly from available or not?
-                        action.objectVariation = objectVariation;// if random false, which version of the object to spawn? (there are only 3 of each type atm)
+                        action.randomizeObjectAppearance = false; // pick randomly from available or not?
+                        action.objectVariation = objectVariation; // if random false, which version of the object to spawn? (there are only 3 of each type atm)
 
                         CurrentActiveController().ProcessControlCommand(action);
 
@@ -2328,9 +2998,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ServerAction action = new ServerAction();
                         action.action = "RotateUniverseAroundAgent";
 
-                        action.rotation = new Vector3(
-                            0f, float.Parse(splitcommand[1]), 0f
-                        );
+                        action.rotation = new Vector3(0f, float.Parse(splitcommand[1]), 0f);
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -2359,20 +3027,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action.objectType = splitcommand[1];
-                            action.position = new Vector3(float.Parse(splitcommand[2]), float.Parse(splitcommand[3]), float.Parse(splitcommand[4]));
-                            action.rotation = new Vector3(float.Parse(splitcommand[5]), float.Parse(splitcommand[6]), float.Parse(splitcommand[7]));
+                            action.position = new Vector3(
+                                float.Parse(splitcommand[2]),
+                                float.Parse(splitcommand[3]),
+                                float.Parse(splitcommand[4])
+                            );
+                            action.rotation = new Vector3(
+                                float.Parse(splitcommand[5]),
+                                float.Parse(splitcommand[6]),
+                                float.Parse(splitcommand[7])
+                            );
                             // action.rotation?
                         }
-
                         // default to zeroed out rotation tomato
                         else {
-                            action.objectType = "Tomato";// default to spawn debug tomato
+                            action.objectType = "Tomato"; // default to spawn debug tomato
                             action.position = Vector3.zero;
                             action.rotation = Vector3.zero;
                         }
                         action.action = "CreateObjectAtLocation";
 
-                        action.randomizeObjectAppearance = false;// pick randomly from available or not?
+                        action.randomizeObjectAppearance = false; // pick randomly from available or not?
                         action.objectVariation = 1; // if random false, which version of the object to spawn? (there are only 3 of each type atm)
 
                         CurrentActiveController().ProcessControlCommand(action);
@@ -2484,7 +3159,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action.objectVariation = int.Parse(splitcommand[2]);
                         } else {
                             action.objectType = "Tomato"; // default to spawn debug tomato
-
                         }
                         action.x = 0.3f;
                         action.z = 0.3f;
@@ -2497,7 +3171,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         comm["action"] = "ChangeFOV";
                         comm["fieldOfView"] = float.Parse(splitcommand[1]);
                         if (splitcommand.Length > 2) {
-                            comm["camera"]  = splitcommand[2];
+                            comm["camera"] = splitcommand[2];
                         }
 
                         CurrentActiveController().ProcessControlCommand(comm);
@@ -2582,7 +3256,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
-                
+
                 case "stretchmovebaseup": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveArmBaseUp";
@@ -2593,7 +3267,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         //action["fixedDeltaTime"] = 5.0f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
-                }
+                    }
 
                 case "stretchmovebasedown": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -2605,7 +3279,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         //action["fixedDeltaTime"] = 5.0f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
-                }
+                    }
 
                 // move ahead
                 case "ma": {
@@ -2616,7 +3290,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action["moveMagnitude"] = float.Parse(splitcommand[1]);
-                        } else { action["moveMagnitude"] = 0.25f; }
+                        } else {
+                            action["moveMagnitude"] = 0.25f;
+                        }
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -2630,7 +3306,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action["moveMagnitude"] = float.Parse(splitcommand[1]);
-                        } else { action["moveMagnitude"] = 0.25f; }
+                        } else {
+                            action["moveMagnitude"] = 0.25f;
+                        }
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -2642,7 +3320,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action["moveMagnitude"] = float.Parse(splitcommand[1]);
-                        } else { action["moveMagnitude"] = 0.25f; }
+                        } else {
+                            action["moveMagnitude"] = 0.25f;
+                        }
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -2654,7 +3334,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1) {
                             action["moveMagnitude"] = float.Parse(splitcommand[1]);
-                        } else { action["moveMagnitude"] = 0.25f; }
+                        } else {
+                            action["moveMagnitude"] = 0.25f;
+                        }
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -2901,21 +3583,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
-                // rotate wrist relative
-                case "rwr": {
-                        Dictionary<string, object> action = new Dictionary<string, object>();
-                        action["action"] = "RotateWristRelative";
-                        action["disableRendering"] = false;
-
-                        if (splitcommand.Length > 1) {
-                            action["yaw"] = float.Parse(splitcommand[1]);
-                        }
-
-                        // action.manualInteract = true;
-                        CurrentActiveController().ProcessControlCommand(action);
-                        break;
-                }
-
                 // rotate wrist absolute
                 case "rw": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -2929,7 +3596,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.manualInteract = true;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
-                }
+                    }
 
                 // pickup object
                 case "pu": {
@@ -3000,9 +3667,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
-                case "dirtyrec" : {
-
-                    Dictionary<string, object> action = new Dictionary<string, object>();
+                case "dirtyrec": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MakeReceptacleDirty";
                         action["density"] = 0.1f;
                         action["scale"] = new Vector3(0.3f, 0.3f, 0.2f);
@@ -3010,13 +3676,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action["objectId"] = splitcommand[1];
                         }
                         if (splitcommand.Length > 2) {
-                            action["density"] =  float.Parse(splitcommand[1]);
+                            action["density"] = float.Parse(splitcommand[1]);
                         }
 
-                     CurrentActiveController().ProcessControlCommand(action);
-                     break;
-
-                }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
                 case "cleanobject": {
                         ServerAction action = new ServerAction();
                         action.action = "CleanObject";
@@ -3174,6 +3839,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                // rotate wrist right
+                case "rwr": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RotateWristRelative";
+                        action["yaw"] = 90f;
+                        if (splitcommand.Length > 1) {
+                            action["yaw"] = float.Parse(splitcommand[1]);
+                        }
+
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
+
                 // move hand ahead, forward relative to agent's facing
                 // pass in move magnitude or default is 0.25 units
                 case "mha": {
@@ -3199,7 +3877,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "mhb": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveHandBack";
-
 
                         if (splitcommand.Length > 1) {
                             action["moveMagnitude"] = float.Parse(splitcommand[1]);
@@ -3366,7 +4043,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1 && splitcommand.Length < 3) {
                             action.objectId = splitcommand[1];
-                            action.moveMagnitude = 200f;// 4000f;
+                            action.moveMagnitude = 200f; // 4000f;
                         } else if (splitcommand.Length > 2) {
                             action.objectId = splitcommand[1];
                             action.moveMagnitude = float.Parse(splitcommand[2]);
@@ -3388,12 +4065,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1 && splitcommand.Length < 3) {
                             action.objectId = splitcommand[1];
-                            action.moveMagnitude = 200f;// 4000f;
+                            action.moveMagnitude = 200f; // 4000f;
                         } else if (splitcommand.Length > 2) {
                             action.objectId = splitcommand[1];
                             action.moveMagnitude = float.Parse(splitcommand[2]);
                         } else {
-                            action.objectId = ((PhysicsRemoteFPSAgentController)AManager.PrimaryAgent).ObjectIdOfClosestPickupableOrMoveableObject();
+                            action.objectId = (
+                                (PhysicsRemoteFPSAgentController)AManager.PrimaryAgent
+                            ).ObjectIdOfClosestPickupableOrMoveableObject();
                         }
 
                         // action.moveMagnitude = 200f;// 4000f;
@@ -3410,7 +4089,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 1 && splitcommand.Length < 3) {
                             action.objectId = splitcommand[1];
-                            action.moveMagnitude = 10f;// 4000f;
+                            action.moveMagnitude = 10f; // 4000f;
                         } else if (splitcommand.Length > 2) {
                             action.objectId = splitcommand[1];
                             action.moveMagnitude = float.Parse(splitcommand[2]);
@@ -3496,7 +4175,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.objectPoses[0].position = new Vector3(0, 0, 0);
                         action.objectPoses[0].rotation = new Vector3(0, 0, 0);
 
-
                         CurrentActiveController().ProcessControlCommand(action);
 
                         break;
@@ -3580,7 +4258,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
-
 
                 //*****************************************************************************
                 // MASS SCALE ACTIONS HERE
@@ -3673,10 +4350,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length == 2) {
                             // ID of spawner
                             action["objectId"] = splitcommand[1];
-                        }
-                        else if (splitcommand.Length >= 4) {
+                        } else if (splitcommand.Length >= 4) {
                             // Target position
-                            action["position"] = new Vector3(float.Parse(splitcommand[1]), float.Parse(splitcommand[2]), float.Parse(splitcommand[3]));
+                            action["position"] = new Vector3(
+                                float.Parse(splitcommand[1]),
+                                float.Parse(splitcommand[2]),
+                                float.Parse(splitcommand[3])
+                            );
                         }
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -3692,7 +4372,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         //action["position"] = new Vector3(7.149451732635498f, 0.9009996652603146f, -2.4680588245391846f);
 
                         //for bowl on FloorPlan_Train1_3
-                        action["position"] = new Vector3(5.039496421813965f, 0.9009997248649597f, -3.127098560333252f);
+                        action["position"] = new Vector3(
+                            5.039496421813965f,
+                            0.9009997248649597f,
+                            -3.127098560333252f
+                        );
 
                         // pass in a min range, max range, delay
                         if (splitcommand.Length > 1) {
@@ -3721,8 +4405,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["action"] = "GetShortestPath";
 
                         action["objectId"] = "Apple|surface|2|0";
-                        action["position"] = new Vector3(x: 3.0f, y: 0.9009921550750732f,z: 1.75f);
-                        action["rotation"] = new Vector3(-0.0f,  0.0f, 0.0f);
+                        action["position"] = new Vector3(x: 3.0f, y: 0.9009921550750732f, z: 1.75f);
+                        action["rotation"] = new Vector3(-0.0f, 0.0f, 0.0f);
                         action["agentId"] = agentId;
 
                         CurrentActiveController().ProcessControlCommand(action);
@@ -3778,17 +4462,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 action["allowedError"] = float.Parse(splitcommand[7]);
                             }
 
-
                             if (splitcommand.Length < 4) {
-                                throw new ArgumentException("need to provide 6 floats, first 3 source position second 3 target position");
+                                throw new ArgumentException(
+                                    "need to provide 6 floats, first 3 source position second 3 target position"
+                                );
                             }
                         } else {
-                            throw new ArgumentException("need to provide at least 3 floats for target position");
+                            throw new ArgumentException(
+                                "need to provide at least 3 floats for target position"
+                            );
                         }
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
-                    case "shortest_path_p": {
+                case "shortest_path_p": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetShortestPathToPointN";
 
@@ -3798,11 +4485,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             // action.objectId = splitcommand[1];
 
                             if (splitcommand.Length >= 4) {
-                                
-                                var target = new Vector3(float.Parse(splitcommand[1]), float.Parse(splitcommand[2]),  float.Parse(splitcommand[3]));
+                                var target = new Vector3(
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]),
+                                    float.Parse(splitcommand[3])
+                                );
                                 action["target"] = target;
                             }
-                            
+
                             if (splitcommand.Length > 4) {
                                 action["allowedError"] = float.Parse(splitcommand[4]);
                             }
@@ -3811,12 +4501,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 action["agentId"] = int.Parse(splitcommand[5]);
                             }
 
-
                             if (splitcommand.Length < 4) {
-                                throw new ArgumentException("need to provide 6 floats, first 3 source position second 3 target position");
+                                throw new ArgumentException(
+                                    "need to provide 6 floats, first 3 source position second 3 target position"
+                                );
                             }
                         } else {
-                            throw new ArgumentException("need to provide at least 3 floats for target position");
+                            throw new ArgumentException(
+                                "need to provide at least 3 floats for target position"
+                            );
                         }
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -3824,10 +4517,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "visualize_path": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "VisualizePath",
-                            ["positions"] = new List<Vector3>() {
-                                new Vector3(4.258f, 1.0f, -1.69f),
-                                new Vector3(6.3f, 1.0f, -3.452f)
-                            }
+                            ["positions"] = new List<Vector3>()
+                            {
+                            new Vector3(4.258f, 1.0f, -1.69f),
+                            new Vector3(6.3f, 1.0f, -3.452f)
+                        }
                         };
 
                         CurrentActiveController().ProcessControlCommand(action);
@@ -3836,10 +4530,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "visualize_path2": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "VisualizePath",
-                            ["positions"] = new List<Vector3>() {
-                                new Vector3(4.258f, 1.0f, -1.69f),
-                                new Vector3(8.3f, 1.0f, 3.452f)
-                            }
+                            ["positions"] = new List<Vector3>()
+                            {
+                            new Vector3(4.258f, 1.0f, -1.69f),
+                            new Vector3(8.3f, 1.0f, 3.452f)
+                        }
                         };
 
                         CurrentActiveController().ProcessControlCommand(action);
@@ -3895,6 +4590,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+                case "vpf": {
+                        ServerAction action = new ServerAction();
+                        action.action = "VisualizeShortestPaths";
+
+                        action.objectType = "Dog Bed";
+
+                        if (splitcommand.Length > 1) {
+                            // ID of spawner
+                            action.objectType = splitcommand[1];
+                        }
+
+                        Debug.Log($"vpf --- call {splitcommand.Length}");
+
+                        var fpin = CurrentActiveController() as FpinAgentController;
+                        var pos = fpin.SamplePointsOnNavMesh(200, 0.1f);
+                        action.positions = pos.Take(20).ToList();
+
+                        Debug.Log(
+                            $"Debug input field {action.positions} null? {action.positions == null}"
+                        );
+                        action.grid = true;
+                        CurrentActiveController().ProcessControlCommand(action);
+
+                        break;
+                    }
                 case "vw": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "VisualizeWaypoints";
@@ -3907,7 +4627,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             var pos = PhysicsController.getReachablePositions().Shuffle();
                             var positions = pos.Take(num).ToList();
 
-                            action["waypoints"] = positions.Select(p => new Waypoint() {position = p, color = SerializableColor.fromUnityColor(UnityEngine.Random.ColorHSV()), radius = 0.5f});
+                            action["waypoints"] = positions.Select(p => new Waypoint() {
+                                position = p,
+                                color = SerializableColor.fromUnityColor(UnityEngine.Random.ColorHSV()),
+                                radius = 0.5f
+                            });
                             // action.pathGradient = new Gradient() {
                             //     colorKeys = new GradientColorKey[]{
                             //          new GradientColorKey(Color.white, 0.0f),
@@ -3928,7 +4652,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
-                }
+                    }
                 case "visualize_shortest_path": {
                         ServerAction action = new ServerAction();
                         action.action = "VisualizeShortestPaths";
@@ -3946,7 +4670,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 );
                             } else {
                                 // var pos = PhysicsController.getReachablePositions().Shuffle();
-                                action.positions = new List<Vector3>() { PhysicsController.transform.position };
+                                action.positions = new List<Vector3>()
+                                {
+                                PhysicsController.transform.position
+                            };
                                 action.grid = true;
                             }
                         }
@@ -3976,10 +4703,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.returnToStart = true;
                         if (splitcommand.Length > 4) {
                             action.position = new Vector3(
-                                    float.Parse(splitcommand[1]),
-                                    float.Parse(splitcommand[2]),
-                                    float.Parse(splitcommand[3])
-                                );
+                                float.Parse(splitcommand[1]),
+                                float.Parse(splitcommand[2]),
+                                float.Parse(splitcommand[3])
+                            );
 
                             if (splitcommand.Length >= 5) {
                                 action.speed = float.Parse(splitcommand[4]);
@@ -4000,7 +4727,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             if (splitcommand.Length >= 9) {
                                 action.disableRendering = bool.Parse(splitcommand[8]);
                             }
-
                         } else {
                             Debug.LogError("Target x y z args needed for command");
                         }
@@ -4017,10 +4743,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // action.returnToStart = true;
                         if (splitcommand.Length > 4) {
                             action.position = new Vector3(
-                                    float.Parse(splitcommand[1]),
-                                    float.Parse(splitcommand[2]),
-                                    float.Parse(splitcommand[3])
-                                );
+                                float.Parse(splitcommand[1]),
+                                float.Parse(splitcommand[2]),
+                                float.Parse(splitcommand[3])
+                            );
 
                             if (splitcommand.Length >= 5) {
                                 action.speed = float.Parse(splitcommand[4]);
@@ -4041,6 +4767,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+
                 // move mid level arm stop motion
                 case "mar": {
                         // ServerAction action = new ServerAction();
@@ -4053,10 +4780,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length >= 4) {
                             Debug.Log("4 >");
                             action["offset"] = new Vector3(
-                                    float.Parse(splitcommand[1]),
-                                    float.Parse(splitcommand[2]),
-                                    float.Parse(splitcommand[3])
-                                );
+                                float.Parse(splitcommand[1]),
+                                float.Parse(splitcommand[2]),
+                                float.Parse(splitcommand[3])
+                            );
 
                             if (splitcommand.Length >= 5) {
                                 action["speed"] = float.Parse(splitcommand[4]);
@@ -4083,6 +4810,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
+
                 case "mau": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveArmBaseUp";
@@ -4119,7 +4847,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "abextendarm": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveArm";
-                        action["position"] = new Vector3(0,0, 0.5f);
+                        action["position"] = new Vector3(0, 0, 0.5f);
                         action["speed"] = 5.0f;
                         action["disableRendering"] = false;
                         action["useLimits"] = true;
@@ -4136,7 +4864,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "abretractarm": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveArm";
-                        action["position"] = new Vector3(0,0, -0.5f);
+                        action["position"] = new Vector3(0, 0, -0.5f);
                         action["speed"] = 5.0f;
                         action["disableRendering"] = false;
                         action["useLimits"] = true;
@@ -4144,7 +4872,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length > 1) {
                             action["position"] = new Vector3(0, 0, float.Parse(splitcommand[1]));
                         }
-                        
+
                         //action["fixedDeltaTime"] = 5.0f;
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -4166,7 +4894,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "PickupObject";
                         if (splitcommand.Length > 1) {
-                            List <string> objectIds = new List<string>();
+                            List<string> objectIds = new List<string>();
                             objectIds.Add(splitcommand[1]);
                             action["objectIdCandidates"] = objectIds;
                         }
@@ -4209,7 +4937,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["y"] = 0.9009995460510254f;
                         action["z"] = 1.5f;
                         Vector3 rotation = new Vector3(0, 135.0f, 0);
-                        float horizon = Agent.GetComponent<BaseAgentComponent>().AgentCamera.transform.eulerAngles.x;
+                        float horizon = Agent
+                            .GetComponent<BaseAgentComponent>()
+                            .AgentCamera.transform.eulerAngles.x;
                         bool standing = true;
 
                         if (splitcommand.Length > 1 && splitcommand.Length < 6) {
@@ -4239,7 +4969,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
-                }
+                    }
 
                 case "expfit": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -4278,12 +5008,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 case "mc": {
-                       Dictionary<string, object> action = new Dictionary<string, object>();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "MoveAgent";
-                         action["speed"] = 1;
+                        action["speed"] = 1;
                         if (splitcommand.Length > 2) {
-                           
-                            action["ahead"] = float.Parse(splitcommand[1]);                        
+                            action["ahead"] = float.Parse(splitcommand[1]);
                             action["right"] = float.Parse(splitcommand[2]);
 
                             if (splitcommand.Length > 3) {
@@ -4291,9 +5020,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             }
                         }
 
-                        action["physicsSimulationParams"] = new PhysicsSimulationParams() { autoSimulation = false};
+                        action["physicsSimulationParams"] = new PhysicsSimulationParams() {
+                            autoSimulation = false
+                        };
                         action["returnToStart"] = true;
-                       
+
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -4301,19 +5032,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "RotateAgent";
                         // if (splitcommand.Length > 2) {
-                            action["degrees"] = float.Parse(splitcommand[1]);
+                        action["degrees"] = float.Parse(splitcommand[1]);
 
-                            // if (splitcommand.Length >= 3) {
-                            //     action.speed = float.Parse(splitcommand[2]);
-                            // }
+                        // if (splitcommand.Length >= 3) {
+                        //     action.speed = float.Parse(splitcommand[2]);
+                        // }
 
-                            // if (splitcommand.Length >= 4) {
-                            //     action.disableRendering = bool.Parse(splitcommand[3]);
-                            // }
+                        // if (splitcommand.Length >= 4) {
+                        //     action.disableRendering = bool.Parse(splitcommand[3]);
+                        // }
 
-                            // if (splitcommand.Length >= 5) {
-                            //     action.returnToStart = bool.Parse(splitcommand[4]);
-                            // }
+                        // if (splitcommand.Length >= 5) {
+                        //     action.returnToStart = bool.Parse(splitcommand[4]);
+                        // }
                         // }
 
                         CurrentActiveController().ProcessControlCommand(action);
@@ -4347,10 +5078,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         if (splitcommand.Length > 4) {
                             action.rotation = new Vector3(
-                                    float.Parse(splitcommand[1]),
-                                    float.Parse(splitcommand[2]),
-                                    float.Parse(splitcommand[3])
-                                );
+                                float.Parse(splitcommand[1]),
+                                float.Parse(splitcommand[2]),
+                                float.Parse(splitcommand[3])
+                            );
 
                             if (splitcommand.Length >= 5) {
                                 action.speed = float.Parse(splitcommand[4]);
@@ -4365,7 +5096,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "pumlh": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "PickUpMidLevelHand";
-                        action["objectIds"] = new List<string> { "Bread|-00.52|+01.17|-00.03", "Apple|-00.54|+01.15|+00.18" };
+                        action["objectIds"] = new List<string>
+                        {
+                        "Bread|-00.52|+01.17|-00.03",
+                        "Apple|-00.54|+01.15|+00.18"
+                    };
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -4373,10 +5108,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 case "smooth": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "RandomizeSmoothness";
-                        action["objectIds"] = new string[] {
-                            "small|room|14",
-                            "Sofa1"
-                        };
+                        action["objectIds"] = new string[] { "small|room|14", "Sofa1" };
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
                     }
@@ -4399,7 +5131,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 case "cr": {
-
                         // dynamic action = new JObject();
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
@@ -4410,7 +5141,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         path = "";
                         if (splitcommand.Length == 1) {
                             // opens up a file explorer in the background
-                            path = EditorUtility.OpenFilePanel(title: "Open JSON actions file.", directory: "Resources", extension: "json");
+                            path = EditorUtility.OpenFilePanel(
+                                title: "Open JSON actions file.",
+                                directory: "Resources",
+                                extension: "json"
+                            );
                         } else if (splitcommand.Length == 2) {
                             // uses ./debug/{splitcommand[1]}[.json]
                             file = splitcommand[1].Trim();
@@ -4431,7 +5166,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Debug.Log($"jjson: {jsonStr}");
 
                         JObject obj = JObject.Parse(jsonStr);
-
 
                         // var k = JObject.Parse(jsonStr);
                         // JArray wallsJson = k["walls"];
@@ -4456,8 +5190,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["wallMaterialId"] = "DrywallOrange";
                         action["floorMaterialId"] = "DarkWoodFloors";
                         action["ceilingMaterialId"] = "";
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
-
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
 
                         // CurrentActiveController().CreateRoom(
                         // 	new Wall[] {
@@ -4493,30 +5227,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
 
                         // public void CreateRoom(Wall[] walls, float wallHeight, string wallMaterialId, string floorMaterialId, string ceilingMaterialId, float wallThickness = 0.0f, string namePostFix = "") {
-
                     }
                 case "newScene": {
-                    UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan402_physics");
-                    break;
-                }
+                        UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan402_physics");
+                        break;
+                    }
                 case "newScene2": {
-                    UnityEngine.SceneManagement.SceneManager.LoadScene("Procedural");
-                    break;
-                }
+                        UnityEngine.SceneManagement.SceneManager.LoadScene("Procedural");
+                        break;
+                    }
                 case "ch": {
-
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
                         // AssetDatabase.Refresh();
                         action["action"] = "CreateHouse";
 
-                        var jsonStr = System.IO.File.ReadAllText(Application.dataPath + "/Resources/rooms/house.json");
+                        var jsonStr = System.IO.File.ReadAllText(
+                            Application.dataPath + "/Resources/rooms/house.json"
+                        );
                         Debug.Log($"jjson: {jsonStr}");
 
                         JObject obj = JObject.Parse(jsonStr);
 
                         action["house"] = obj;
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
 
                         // CurrentActiveController().CreateHouse(
                         // 	new House() {
@@ -4621,7 +5356,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "chp": {
-
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
                         // AssetDatabase.Refresh();
@@ -4645,12 +5379,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         JObject obj = JObject.Parse(jsonStr);
 
                         action["house"] = obj;
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
 
                         break;
                     }
-                 case "chp_direct": {
-
+                case "chp_direct": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
                         // AssetDatabase.Refresh();
@@ -4675,11 +5409,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         action["house"] = obj;
                         // CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
-                        ProceduralTools.CreateHouse(obj.ToObject<ProceduralHouse>(), ProceduralTools.GetMaterials());
+                        ProceduralTools.CreateHouse(
+                            obj.ToObject<ProceduralHouse>(),
+                            ProceduralTools.GetMaterials()
+                        );
                         break;
                     }
                 case "chpt_direct": {
-
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
                         // AssetDatabase.Refresh();
@@ -4701,10 +5437,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         JObject obj = JObject.Parse(jsonStr);
 
-                        var house = Thor.Procedural.Templates.createHouseFromTemplate(obj.ToObject<HouseTemplate>());
+                        var house = Thor.Procedural.Templates.createHouseFromTemplate(
+                            obj.ToObject<HouseTemplate>()
+                        );
                         // var house = CurrentActiveController().actionReturn;
 
-                    
+
                         action.Clear();
 
                         action["action"] = "CreateHouse";
@@ -4712,27 +5450,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         var jsonResolver = new ShouldSerializeContractResolver();
                         var houseString = Newtonsoft.Json.JsonConvert.SerializeObject(
-                        house,
-                        Newtonsoft.Json.Formatting.None,
-                        new Newtonsoft.Json.JsonSerializerSettings() {
-                            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                            ContractResolver = jsonResolver
-                        }
-                    );
+                            house,
+                            Newtonsoft.Json.Formatting.None,
+                            new Newtonsoft.Json.JsonSerializerSettings() {
+                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                ContractResolver = jsonResolver
+                            }
+                        );
 
-                    Debug.Log("House: " + houseString);
-                        string destination = path = Application.dataPath + ROOM_BASE_PATH + "template-out-house.json";
-                        
+                        Debug.Log("House: " + houseString);
+                        string destination = path =
+                            Application.dataPath + ROOM_BASE_PATH + "template-out-house.json";
 
                         System.IO.File.WriteAllText(destination, houseString);
-                
-                        ProceduralTools.CreateHouse(JObject.FromObject(house).ToObject<ProceduralHouse>(), ProceduralTools.GetMaterials());
 
+                        ProceduralTools.CreateHouse(
+                            JObject.FromObject(house).ToObject<ProceduralHouse>(),
+                            ProceduralTools.GetMaterials()
+                        );
 
                         break;
                     }
                 case "chpt": {
-
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
                         // AssetDatabase.Refresh();
@@ -4755,10 +5494,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         JObject obj = JObject.Parse(jsonStr);
 
-
                         action["template"] = obj;
 
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
 
                         var house = CurrentActiveController().actionReturn;
 
@@ -4771,20 +5510,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         var jsonResolver = new ShouldSerializeContractResolver();
                         var houseString = Newtonsoft.Json.JsonConvert.SerializeObject(
-                        house,
-                        Newtonsoft.Json.Formatting.None,
-                        new Newtonsoft.Json.JsonSerializerSettings() {
-                            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                            ContractResolver = jsonResolver
-                        }
-                    );
-                        string destination = path = Application.dataPath + ROOM_BASE_PATH + "template-out-house.json";
-                        
+                            house,
+                            Newtonsoft.Json.Formatting.None,
+                            new Newtonsoft.Json.JsonSerializerSettings() {
+                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                ContractResolver = jsonResolver
+                            }
+                        );
+                        string destination = path =
+                            Application.dataPath + ROOM_BASE_PATH + "template-out-house.json";
 
                         System.IO.File.WriteAllText(destination, houseString);
-                
-                    
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
 
                         break;
                     }
@@ -4794,26 +5533,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // AssetDatabase.Refresh();
                         action["action"] = "GetAssetDatabase";
 
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
                         // var assetMetadata = (List<AssetMetadata>)CurrentActiveController().actionReturn as List<AssetMetadata>;
                         // Debug.Log($"assetDb: {string.Join("\n", assetMetadata.Select(m => $"{m.id}|{m.type}|box: {m.boundingBox.min}, {m.boundingBox.max}, {m.primaryProperty}"))}");
                         break;
                     }
 
                 case "gadt": {
-                    CurrentActiveController().GetAssetDatabase();
-                    var assetMetadata = (List<AssetMetadata>)CurrentActiveController().actionReturn as List<AssetMetadata>;
+                        CurrentActiveController().GetAssetDatabase();
+                        var assetMetadata =
+                            (List<AssetMetadata>)CurrentActiveController().actionReturn
+                            as List<AssetMetadata>;
 
-                    break;
-                }
+                        break;
+                    }
                 case "soirr": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "SpawnObjectInReceptacleRandomly";
                         action["prefabName"] = "Coffee_Table_211_1";
                         action["objectId"] = "THISISATABLE";
                         action["targetReceptacle"] = "Floor|+00.00|+00.00|+00.00";
-                        action["rotation"] = new FlexibleRotation() { axis = new Vector3(0, 1, 0), degrees = 45 };
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        action["rotation"] = new FlexibleRotation() {
+                            axis = new Vector3(0, 1, 0),
+                            degrees = 45
+                        };
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
                 case "soir": {
@@ -4823,19 +5569,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["objectId"] = "THISISATABLE";
                         action["targetReceptacle"] = "Floor|+00.00|+00.00|+00.00";
                         action["position"] = new Vector3(5f, 0.0006076097f, 8.15f);
-                        action["rotation"] = new FlexibleRotation() { axis = new Vector3(0, 1, 0), degrees = 45 };
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        action["rotation"] = new FlexibleRotation() {
+                            axis = new Vector3(0, 1, 0),
+                            degrees = 45
+                        };
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
                 case "bnm": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "BakeNavMesh";
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
                         break;
-
                     }
                 case "va": {
-
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "SpawnAsset";
                         action["assetId"] = "Dining_Table_16_1";
@@ -4846,30 +5595,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action["assetId"] = splitcommand[1];
                         }
 
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
 
                 case "ra": {
-
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "RotateObject";
                         action["objectId"] = "asset_0";
 
                         if (splitcommand.Length > 4) {
                             action["angleAxisRotation"] = new FlexibleRotation() {
-                                axis = new Vector3(float.Parse(splitcommand[1]), float.Parse(splitcommand[2]), float.Parse(splitcommand[3])),
+                                axis = new Vector3(
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]),
+                                    float.Parse(splitcommand[3])
+                                ),
                                 degrees = float.Parse(splitcommand[4])
                             };
                         }
                         if (splitcommand.Length == 6) {
-
                             action["absolute"] = bool.Parse(splitcommand[5]);
-
                         }
 
-
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
                 case "laoc": {
@@ -4881,7 +5632,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action["objectId"] = splitcommand[1];
                         }
 
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
                 case "sky": {
@@ -4895,98 +5647,89 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 float.Parse(splitcommand[3]),
                                 float.Parse(splitcommand[4])
                             );
-
                         }
 
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
                         break;
                     }
                 case "g3d": {
-
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetAsset3DGeometry";
                         if (splitcommand.Length == 2) {
                             action["assetId"] = splitcommand[1];
-
                         }
 
-                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
-                        var geos = (List<Geometry3D>)CurrentActiveController().actionReturn as List<Geometry3D>;
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+                        var geos =
+                            (List<Geometry3D>)CurrentActiveController().actionReturn
+                            as List<Geometry3D>;
                         Debug.Log($"Geo count: {geos.Count}");
                         var geo = geos.First();
-                        Debug.Log($"Geometry. vertexCount: {geo.vertices.Length}, triangleCount: {geo.triangleIndices.Length / 3}, some: {string.Join(", ", geo.triangleIndices.Take(12))}");
+                        Debug.Log(
+                            $"Geometry. vertexCount: {geo.vertices.Length}, triangleCount: {geo.triangleIndices.Length / 3}, some: {string.Join(", ", geo.triangleIndices.Take(12))}"
+                        );
                         break;
                     }
 
                 case "ca_msg": {
+                        if (splitcommand.Length == 2) {
+                            var objectId = splitcommand[1];
 
-                    if (splitcommand.Length == 2) {
+                            var fname = objectId.Trim();
+                            // if (!fname.EndsWith(".json")) {
+                            //     fname += ".msgpack.gz";
+                            // }
 
-                        var objectId = splitcommand[1];
+                            var pathSplit = Application.dataPath.Split('/');
 
-                        var fname = objectId.Trim();
-                        if (!fname.EndsWith(".json")) {
-                            fname += ".msgpack.gz";
+                            var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
+                            Debug.Log(string.Join("/", repoRoot));
+
+                            var objaverseRoot = $"{string.Join("/", repoRoot)}/objaverse";
+                            var objectDir = $"{objaverseRoot}/{objectId}";
+                            var objectPath = $"{objectDir}/{fname}";
+
+                            // var filename = Path.GetFileName(objectPath);
+
+                            //var pathOut = Application.dataPath + $"/Resources/msgpack_test/{objectId}.json";
+
+                            var af = CurrentActiveController().CreateRuntimeAsset(fname, objaverseRoot);
+                            Debug.Log($"ActionFinished {af.success} {af.errorMessage}");
                         }
-                        
-                        var pathSplit = Application.dataPath.Split('/');
 
-                        var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
-                        Debug.Log(string.Join("/", repoRoot));
-
-                        var objaverseRoot = $"{string.Join("/", repoRoot)}/objaverse";
-                        var objectDir = $"{objaverseRoot}/{objectId}";
-                        var objectPath = $"{objectDir}/{fname}";
-
-                         
-                        
-                        var filename = Path.GetFileName(objectPath);
-
-                        var pathOut = Application.dataPath + $"/Resources/msgpack_test/{objectId}.json";
-
-                        CurrentActiveController().CreateRuntimeAsset(
-                            objectPath,
-                            pathOut
-                        );
+                        break;
                     }
-                    
-                    break;
-                }
                 case "caid_msg": {
-                   
-                    
+                        if (splitcommand.Length == 2) {
+                            var objectId = splitcommand[1];
 
-                    if (splitcommand.Length == 2) {
+                            var fname = objectId.Trim();
+                            if (!fname.EndsWith(".json")) {
+                                fname += ".msgpack.gz";
+                            }
 
-                        var objectId = splitcommand[1];
+                            var pathSplit = Application.dataPath.Split('/');
 
-                        var fname = objectId.Trim();
-                        if (!fname.EndsWith(".json")) {
-                            fname += ".msgpack.gz";
+                            var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
+                            Debug.Log(string.Join("/", repoRoot));
+
+                            var objaverseRoot = $"{string.Join("/", repoRoot)}/objaverse";
+                            var objectDir = $"{objaverseRoot}/{objectId}";
+                            var objectPath = $"{objectDir}/{fname}";
+                            var dir = Application.persistentDataPath;
+
+                            var filename = Path.GetFileName(objectPath);
+
+                            var pathOut =
+                                Application.dataPath + $"/Resources/msgpack_test/{objectId}.json";
+
+                            CurrentActiveController().CreateRuntimeAsset(objectId, dir);
                         }
-                        
-                        var pathSplit = Application.dataPath.Split('/');
 
-                        var repoRoot = pathSplit.Reverse().Skip(2).Reverse().ToList();
-                        Debug.Log(string.Join("/", repoRoot));
-
-                        var objaverseRoot = $"{string.Join("/", repoRoot)}/objaverse";
-                        var objectDir = $"{objaverseRoot}/{objectId}";
-                        var objectPath = $"{objectDir}/{fname}";
-                        var dir = Application.persistentDataPath;
-                        
-                        var filename = Path.GetFileName(objectPath);
-
-                        var pathOut = Application.dataPath + $"/Resources/msgpack_test/{objectId}.json";
-
-                        CurrentActiveController().CreateRuntimeAsset(
-                            objectId,
-                            dir
-                        );
+                        break;
                     }
-                    
-                    break;
-                }
 
                 case "proc_mats": {
                         var mats = ProceduralTools.GetMaterials();
@@ -5015,56 +5758,71 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
                 case "nma": {
-                    var navMeshAgent = GameObject.FindObjectOfType<NavMeshAgent>();
-                    Debug.Log($"Navmeshagent typeID: {navMeshAgent.agentTypeID}");
-                    break;
-                }
+                        var navMeshAgent = GameObject.FindObjectOfType<NavMeshAgent>();
+                        Debug.Log($"Navmeshagent typeID: {navMeshAgent.agentTypeID}");
+                        break;
+                    }
+                case "tadfa": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "TestActionDispatchFindAmbiguous";
+                        action["typeName"] =
+                            "UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController";
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+
+                        var obj = (List<string>)(CurrentActiveController().actionReturn);
+                        Debug.Log($"{string.Join(",", obj)}");
+                        break;
+                    }
+
                 case "proc_arr": {
-                    var arr = new int[][] {
-                        new int[]{2, 2, 2, 2},
-                        new int[]{2, 1, 1, 2},
-                        new int[]{2, 1, 1, 2},
-                        new int[]{2, 1, 1, 2},
-                        new int[]{2, 2, 2, 2},
-                    };
+                        var arr = new int[][]
+                        {
+                        new int[] { 2, 2, 2, 2 },
+                        new int[] { 2, 1, 1, 2 },
+                        new int[] { 2, 1, 1, 2 },
+                        new int[] { 2, 1, 1, 2 },
+                        new int[] { 2, 2, 2, 2 },
+                        };
 
-                                                
-
-                   
-                    var layout = $@"
+                        var layout =
+                            $@"
                         2 2 2 2
                         2 1 1 2
                         2 1 1 2
                         2 2 2 2
                     ";
 
-
-                    var doors = @"
+                        var doors =
+                            @"
                         2 = 2 2
                         2 = 1 2
                         2 1 1 2
                         2 2 2 2";
 
-                    var objects = @"
+                        var objects =
+                            @"
                         2 2 2 2
                         2 1 1 2
                         2 * 1 2
                         2 2 2 +";
-                    // var arr = new int[][] {
-                    //     new int[]{0, 0, 0},
-                    //     new int[]{0, 1, 0},
-                    //     new int[]{0, 0, 0}
-                    // };
+                        // var arr = new int[][] {
+                        //     new int[]{0, 0, 0},
+                        //     new int[]{0, 1, 0},
+                        //     new int[]{0, 0, 0}
+                        // };
 
-                    // 2: [ (0, 0),(0, 1),(0, 2),(0, 3),(1, 3),(2, 3),(3, 3) ]
-                    // 1: [ (1, 1),(1, 2),(2, 2),(3, 2),(3, 1),(2, 1) ]
+                        // 2: [ (0, 0),(0, 1),(0, 2),(0, 3),(1, 3),(2, 3),(3, 3) ]
+                        // 1: [ (1, 1),(1, 2),(2, 2),(3, 2),(3, 1),(2, 1) ]
 
-                    // 1: [ ((0, 0), (1, 1)),((1, 1), (1, 2)),((0, 0), (1, 2)),((1, 2), (2, 2)),((0, 0), (2, 2)),((2, 2), (2, 1)),((0, 0), (2, 1)),((2, 1), (1, 1)) ]
+                        // 1: [ ((0, 0), (1, 1)),((1, 1), (1, 2)),((0, 0), (1, 2)),((1, 2), (2, 2)),((0, 0), (2, 2)),((2, 2), (2, 1)),((0, 0), (2, 1)),((2, 1), (1, 1)) ]
 
-                    var house = Templates.createHouseFromTemplate(
-                        new HouseTemplate() {
-                            id = "house_0",
-                            layout = $@"
+                        var house = Templates.createHouseFromTemplate(
+                            new HouseTemplate() {
+                                id = "house_0",
+                                layout =
+                                    $@"
                                 0 0 0 0 0 0
                                 0 2 2 2 2 0
                                 0 2 2 2 2 0
@@ -5072,7 +5830,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 0 1 1 1 1 0
                                 0 0 0 0 0 0
                             ",
-                            objectsLayouts = new List<string>() {
+                                objectsLayouts = new List<string>()
+                                {
                                 $@"
                                     0 0 0 0 0 0
                                     0 2 2 2 2 0
@@ -5080,8 +5839,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     0 1 * 1 = 0
                                     0 1 1 1 + 0
                                     0 0 0 0 0 0
-                                "
-                                ,
+                                ",
                                 $@"
                                     0 0 0 0 0 0
                                     0 2 2 2 2 0
@@ -5090,91 +5848,135 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     0 1 1 1 $ 0
                                     0 0 0 0 0 0
                                 "
-                            },
-                            // layout = $@"
-                            //    2 2 2 2 2
-                            //    2 2 2 2 2
-                            //    2 2 1 1 2
-                            //    2 2 1 1 2
-                            //    2 2 2 2 2
-                            // ",
-                            // objectsLayouts = new List<string>() {
-                            //     $@"
-                            //       2 2 2 2 2
-                            //       2 2 = 2 2
-                            //       2 2 = 1 2
-                            //       2 2 * 1 2
-                            //       2 2 2 2 +
-                            //     "
-                            //     ,
-                            //     $@"
-                            //       2 2 2 2 2
-                            //       2 2 2 2 2
-                            //       2 2 1 1 2
-                            //       2 2 1 1 2
-                            //       2 2 2 2 $
-                            //     "
-                            // },
-                            rooms =  new Dictionary<string, RoomTemplate>() {
-                                {"1", new RoomTemplate(){ 
-                                    wallTemplate = new Thor.Procedural.Data.PolygonWall() {
-                                        material = new MaterialProperties() {
-                                            color = SerializableColor.fromUnityColor(Color.red),
-                                            unlit = true
+                                },
+                                // layout = $@"
+                                //    2 2 2 2 2
+                                //    2 2 2 2 2
+                                //    2 2 1 1 2
+                                //    2 2 1 1 2
+                                //    2 2 2 2 2
+                                // ",
+                                // objectsLayouts = new List<string>() {
+                                //     $@"
+                                //       2 2 2 2 2
+                                //       2 2 = 2 2
+                                //       2 2 = 1 2
+                                //       2 2 * 1 2
+                                //       2 2 2 2 +
+                                //     "
+                                //     ,
+                                //     $@"
+                                //       2 2 2 2 2
+                                //       2 2 2 2 2
+                                //       2 2 1 1 2
+                                //       2 2 1 1 2
+                                //       2 2 2 2 $
+                                //     "
+                                // },
+                                rooms = new Dictionary<string, RoomTemplate>()
+                                {
+                                {
+                                    "1",
+                                    new RoomTemplate()
+                                    {
+                                        wallTemplate = new Thor.Procedural.Data.PolygonWall()
+                                        {
+                                            material = new MaterialProperties()
+                                            {
+                                                color = SerializableColor.fromUnityColor(Color.red),
+                                                unlit = true
+                                            }
+                                        },
+                                        floorTemplate = new Thor.Procedural.Data.RoomHierarchy()
+                                        {
+                                            floorMaterial = new MaterialProperties()
+                                            {
+                                                name = "DarkWoodFloors"
+                                            },
+                                            roomType = "Bedroom"
+                                        },
+                                        wallHeight = 3.0f
+                                    }
+                                },
+                                {
+                                    "2",
+                                    new RoomTemplate()
+                                    {
+                                        wallTemplate = new Thor.Procedural.Data.PolygonWall()
+                                        {
+                                            material = new MaterialProperties()
+                                            {
+                                                color = SerializableColor.fromUnityColor(
+                                                    Color.blue
+                                                ),
+                                                unlit = true
+                                            }
+                                        },
+                                        floorTemplate = new Thor.Procedural.Data.RoomHierarchy()
+                                        {
+                                            floorMaterial = new MaterialProperties()
+                                            {
+                                                name = "RedBrick"
+                                            },
+                                            roomType = "LivingRoom"
+                                        },
+                                        wallHeight = 3.0f
+                                    }
+                                }
+                                },
+                                doors = new Dictionary<string, Thor.Procedural.Data.Door>()
+                                {
+                                {
+                                    "=",
+                                    new Thor.Procedural.Data.Door()
+                                    {
+                                        openness = 1.0f,
+                                        assetId = "Doorway_1",
+                                        room0 = "1"
+                                    }
+                                }
+                                },
+                                objects = new Dictionary<string, Thor.Procedural.Data.HouseObject>()
+                                {
+                                {
+                                    "*",
+                                    new Thor.Procedural.Data.HouseObject()
+                                    {
+                                        assetId = "RoboTHOR_side_table_strind",
+                                        rotation = new FlexibleRotation()
+                                        {
+                                            axis = new Vector3(0, 1, 0),
+                                            degrees = 90
                                         }
-                                    },
-                                    floorTemplate = new Thor.Procedural.Data.RoomHierarchy() {
-                                        floorMaterial = new MaterialProperties() { name = "DarkWoodFloors"},
-                                        roomType = "Bedroom"
-                                    },
-                                    wallHeight = 3.0f
-                                }},
-                                {"2", new RoomTemplate(){ 
-                                    wallTemplate = new Thor.Procedural.Data.PolygonWall() {
-                                        material = new MaterialProperties() {
-                                            color = SerializableColor.fromUnityColor(Color.blue),
-                                            unlit = true
-                                        }
-                                    },
-                                    floorTemplate = new Thor.Procedural.Data.RoomHierarchy() {
-                                        floorMaterial = new MaterialProperties() { name ="RedBrick" },
-                                        roomType = "LivingRoom"
-                                    },
-                                    wallHeight = 3.0f
-                                }}
-                            },
-                            doors = new Dictionary<string, Thor.Procedural.Data.Door>() {
-                                {"=", new Thor.Procedural.Data.Door(){ 
-                                    openness = 1.0f,
-                                    assetId = "Doorway_1",
-                                    room0 = "1"
-
-                                }}
-                            },
-                            objects = new Dictionary<string, Thor.Procedural.Data.HouseObject>() {
-                                {"*", new Thor.Procedural.Data.HouseObject(){ 
-                                    assetId = "RoboTHOR_side_table_strind",
-                                    rotation = new FlexibleRotation() { axis = new Vector3(0, 1, 0), degrees = 90}
-                                }},
-                                {"+", new Thor.Procedural.Data.HouseObject(){ 
-                                    assetId = "Chair_007_1"
-                                }},
-                                {"$", new Thor.Procedural.Data.HouseObject(){ 
-                                    assetId = "Apple_4",
-                                    position = new Vector3(0.1f, 1.5f, 0)
-                                }}
-                            },
-                            proceduralParameters = new ProceduralParameters() {
-                                ceilingMaterial = new MaterialProperties() { name = "ps_mat" },
-                                floorColliderThickness = 1.0f,
-                                receptacleHeight = 0.7f,
-                                skyboxId = "Sky1",
+                                    }
+                                },
+                                {
+                                    "+",
+                                    new Thor.Procedural.Data.HouseObject()
+                                    {
+                                        assetId = "Chair_007_1"
+                                    }
+                                },
+                                {
+                                    "$",
+                                    new Thor.Procedural.Data.HouseObject()
+                                    {
+                                        assetId = "Apple_4",
+                                        position = new Vector3(0.1f, 1.5f, 0)
+                                    }
+                                }
+                                },
+                                proceduralParameters = new ProceduralParameters() {
+                                    ceilingMaterial = new MaterialProperties() { name = "ps_mat" },
+                                    floorColliderThickness = 1.0f,
+                                    receptacleHeight = 0.7f,
+                                    skyboxId = "Sky1",
+                                }
                             }
-                        }
-                        
-                    );
+                        );
 
-                    var temp = @"
+                        var temp =
+                            @"
                         {
                             'rooms': {
                                 '1': {
@@ -5196,40 +5998,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     ";
 
+                        var jsonResolver = new ShouldSerializeContractResolver();
+                        var houseString = Newtonsoft.Json.JsonConvert.SerializeObject(
+                            house,
+                            Newtonsoft.Json.Formatting.None,
+                            new Newtonsoft.Json.JsonSerializerSettings() {
+                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                ContractResolver = jsonResolver
+                            }
+                        );
+                        Debug.Log("#######   HOUSE\n" + houseString);
 
+                        ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
 
-                    var jsonResolver = new ShouldSerializeContractResolver();
-                    var houseString = Newtonsoft.Json.JsonConvert.SerializeObject(
-                        house,
-                        Newtonsoft.Json.Formatting.None,
-                        new Newtonsoft.Json.JsonSerializerSettings() {
-                            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                            ContractResolver = jsonResolver
-                        }
-                    );
-                    Debug.Log("#######   HOUSE\n" + houseString);
+                        Debug.Log("#######   HOUSE Created \n");
 
-                    ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
+                        Dictionary<string, object> action = new Dictionary<string, object>();
 
-                    Debug.Log("#######   HOUSE Created \n");
+                        action["action"] = "TeleportFull";
+                        action["position"] = new Vector3(3.0f, 1.0f, 2.0f);
+                        action["rotation"] = new Vector3(0, 0, 0);
+                        action["horizon"] = 0.0f;
+                        action["standing"] = true;
+                        action["forceAction"] = true;
 
-
-                    Dictionary<string, object> action = new Dictionary<string, object>();
-
-                    action["action"] = "TeleportFull";
-                    action["position"] = new Vector3(3.0f, 1.0f, 2.0f);
-                    action["rotation"] = new Vector3(0, 0, 0);
-                    action["horizon"] = 0.0f;
-                    action["standing"] = true;
-                    action["forceAction"] = true;
-
-                    CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
-                    break;
-                }
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+                        break;
+                    }
             }
 
             // StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));
-
         }
 #endif
 
@@ -5245,7 +6044,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // used to show what's currently visible on the top left of the screen
         void OnGUI() {
-            if (CurrentActiveController().VisibleSimObjPhysics != null && this.controlMode != ControlMode.MINIMAL_FPS) {
+            if (
+                CurrentActiveController().VisibleSimObjPhysics != null
+                && this.controlMode != ControlMode.MINIMAL_FPS
+            ) {
                 if (CurrentActiveController().VisibleSimObjPhysics.Length > 10) {
                     int horzIndex = -1;
                     GUILayout.BeginHorizontal();
@@ -5256,7 +6058,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             GUILayout.BeginHorizontal();
                             horzIndex = 0;
                         }
-                        GUILayout.Button(o.ObjectID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth(200f));
+                        GUILayout.Button(
+                            o.ObjectID,
+                            UnityEditor.EditorStyles.miniButton,
+                            GUILayout.MaxWidth(200f)
+                        );
                     }
 
                     GUILayout.EndHorizontal();
@@ -5285,7 +6091,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         // }
 
-                        if (GUILayout.Button(o.ObjectID + suffix, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth(100f))) {
+                        if (
+                            GUILayout.Button(
+                                o.ObjectID + suffix,
+                                UnityEditor.EditorStyles.miniButton,
+                                GUILayout.MinWidth(100f)
+                            )
+                        ) {
                             CopyToClipboard(o.ObjectID);
                         }
                     }
@@ -5293,7 +6105,5 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 #endif
-
     }
 }
-

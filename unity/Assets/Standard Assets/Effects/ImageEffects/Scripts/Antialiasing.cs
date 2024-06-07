@@ -15,7 +15,7 @@ namespace UnityStandardAssets.ImageEffects
     }
 
     [ExecuteInEditMode]
-    [RequireComponent(typeof (Camera))]
+    [RequireComponent(typeof(Camera))]
     [AddComponentMenu("Image Effects/Other/Antialiasing")]
     public class Antialiasing : PostEffectsBase
     {
@@ -45,7 +45,6 @@ namespace UnityStandardAssets.ImageEffects
         private Material materialFXAAII;
         public Shader shaderFXAAIII;
         private Material materialFXAAIII;
-
 
         public Material CurrentAAMaterial()
         {
@@ -82,7 +81,6 @@ namespace UnityStandardAssets.ImageEffects
             return returnValue;
         }
 
-
         public override bool CheckResources()
         {
             CheckSupport(false);
@@ -104,7 +102,6 @@ namespace UnityStandardAssets.ImageEffects
             return isSupported;
         }
 
-
         public void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
             if (CheckResources() == false)
@@ -113,7 +110,7 @@ namespace UnityStandardAssets.ImageEffects
                 return;
             }
 
-			// ----------------------------------------------------------------
+            // ----------------------------------------------------------------
             // FXAA antialiasing modes
 
             if (mode == AAMode.FXAA3Console && (materialFXAAIII != null))
@@ -140,14 +137,14 @@ namespace UnityStandardAssets.ImageEffects
             }
             else if (mode == AAMode.SSAA && ssaa != null)
             {
-				// ----------------------------------------------------------------
+                // ----------------------------------------------------------------
                 // SSAA antialiasing
                 Graphics.Blit(source, destination, ssaa);
             }
             else if (mode == AAMode.DLAA && dlaa != null)
             {
-				// ----------------------------------------------------------------
-				// DLAA antialiasing
+                // ----------------------------------------------------------------
+                // DLAA antialiasing
 
                 source.anisoLevel = 0;
                 RenderTexture interim = RenderTexture.GetTemporary(source.width, source.height);

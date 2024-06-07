@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 using UnityStandardAssets.Characters.FirstPerson;
 
 public class CollisionListenerChild : MonoBehaviour {
@@ -13,7 +12,6 @@ public class CollisionListenerChild : MonoBehaviour {
     public void Start() {
         us = this.gameObject.GetComponent<Collider>();
     }
-
 
     public void OnDestroy() {
         if (parent != null) {
@@ -31,7 +29,12 @@ public class CollisionListenerChild : MonoBehaviour {
 #if UNITY_EDITOR
         if (!parent.externalColliderToInternalCollisions.ContainsKey(col)) {
             if (col.gameObject.name == "StandardIslandHeight" || col.gameObject.name == "Sphere") {
-                Debug.Log("got collision stay with " + col.gameObject.name + " this" + this.gameObject.name);
+                Debug.Log(
+                    "got collision stay with "
+                        + col.gameObject.name
+                        + " this"
+                        + this.gameObject.name
+                );
             }
         }
 #endif
@@ -44,7 +47,12 @@ public class CollisionListenerChild : MonoBehaviour {
 #if UNITY_EDITOR
         if (!parent.externalColliderToInternalCollisions.ContainsKey(col)) {
             if (col.gameObject.name == "StandardIslandHeight" || col.gameObject.name == "Sphere") {
-                Debug.Log("got collision enter with " + col.gameObject.name + " this" + this.gameObject.name);
+                Debug.Log(
+                    "got collision enter with "
+                        + col.gameObject.name
+                        + " this"
+                        + this.gameObject.name
+                );
             }
         }
 #endif

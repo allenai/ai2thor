@@ -1,16 +1,15 @@
 using System;
+using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using UnityEngine;
-
 
 namespace UnityStandardAssets.CrossPlatformInput
 {
     [ExecuteInEditMode]
     public class MobileControlRig : MonoBehaviour
 #if UNITY_EDITOR
-        , UnityEditor.Build.IActiveBuildTargetChanged
+            , UnityEditor.Build.IActiveBuildTargetChanged
 #endif
     {
         // this script enables or disables the child objects of a control rig
@@ -21,17 +20,14 @@ namespace UnityStandardAssets.CrossPlatformInput
 
 
 #if !UNITY_EDITOR
-	void OnEnable()
-	{
-		CheckEnableControlRig();
-	}
+        void OnEnable()
+        {
+            CheckEnableControlRig();
+        }
 #else
         public int callbackOrder
         {
-            get
-            {
-                return 1;
-            }
+            get { return 1; }
         }
 #endif
 
@@ -41,10 +37,11 @@ namespace UnityStandardAssets.CrossPlatformInput
             if (Application.isPlaying) // if in the editor, need to check if we are playing, as start is also called just after exiting play
 #endif
             {
-                UnityEngine.EventSystems.EventSystem system = GameObject.FindObjectOfType<UnityEngine.EventSystems.EventSystem>();
+                UnityEngine.EventSystems.EventSystem system =
+                    GameObject.FindObjectOfType<UnityEngine.EventSystems.EventSystem>();
 
                 if (system == null)
-                {// the scene have no event system, spawn one
+                { // the scene have no event system, spawn one
                     GameObject o = new GameObject("EventSystem");
 
                     o.AddComponent<UnityEngine.EventSystems.EventSystem>();
@@ -60,12 +57,10 @@ namespace UnityStandardAssets.CrossPlatformInput
             EditorApplication.update += Update;
         }
 
-
         private void OnDisable()
         {
             EditorApplication.update -= Update;
         }
-
 
         private void Update()
         {
@@ -73,16 +68,14 @@ namespace UnityStandardAssets.CrossPlatformInput
         }
 #endif
 
-
         private void CheckEnableControlRig()
         {
 #if MOBILE_INPUT
-		EnableControlRig(true);
+            EnableControlRig(true);
 #else
             EnableControlRig(false);
 #endif
         }
-
 
         private void EnableControlRig(bool enabled)
         {

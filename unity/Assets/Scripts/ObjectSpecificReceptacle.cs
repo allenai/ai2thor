@@ -41,10 +41,17 @@ public class ObjectSpecificReceptacle : MonoBehaviour {
     // Use this for initialization
     void Start() {
 #if UNITY_EDITOR
-        if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
-            Debug.LogError(this.name + " is missing the Secondary Property ObjectSpecificReceptacle!");
+        if (
+            !gameObject
+                .GetComponent<SimObjPhysics>()
+                .DoesThisObjectHaveThisSecondaryProperty(
+                    SimObjSecondaryProperty.ObjectSpecificReceptacle
+                )
+        ) {
+            Debug.LogError(
+                this.name + " is missing the Secondary Property ObjectSpecificReceptacle!"
+            );
         }
 #endif
     }
-
 }

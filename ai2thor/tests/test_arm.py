@@ -27,7 +27,7 @@ shared_args = dict(
     height=300,
     fieldOfView=45,
     agentCount=1,
-    agentMode="stretch"
+    agentMode="stretch",
 )
 
 _wsgi_controller = dict(server_class=WsgiServer, **shared_args)
@@ -44,6 +44,7 @@ def load_house(filename):
         house = json.load(f)
     return house
 
+
 def run(controller, actions_json_filename):
     actions = None
     with open(os.path.join(ARM_TEST_DATA_PATH, actions_json_filename)) as f:
@@ -55,10 +56,11 @@ def run(controller, actions_json_filename):
         # metadata_returns.append(copy.deepcopy(evt.metadata))
     return last_event
 
+
 @pytest.mark.parametrize("controller_args", fifo)
 def test_arm_pickup_object(controller_args):
     controller = build_controller(**controller_args)
-    
+
     house = load_house("procthor_train_1.json")
 
     evt = controller.step(action="CreateHouse", house=house)
@@ -76,13 +78,13 @@ def test_arm_pickup_object(controller_args):
 
     controller.stop()
 
-    assert ["Plate|surface|5|45"] == evt.metadata['arm']['heldObjects']
+    assert ["Plate|surface|5|45"] == evt.metadata["arm"]["heldObjects"]
 
 
 @pytest.mark.parametrize("controller_args", fifo)
 def test_arm_object_intersect(controller_args):
     controller = build_controller(**controller_args)
-    
+
     house = load_house("procthor_train_1_laptop.json")
 
     evt = controller.step(action="CreateHouse", house=house)
@@ -96,19 +98,26 @@ def test_arm_object_intersect(controller_args):
 
     prev_event = run(controller, "pickup_object.json")
 
-    evt = controller.step(**{
-        "action": "RotateWristRelative",
-        "yaw": 200, 
-        "physicsSimulationParams": {"autoSimulation": False},
-        "returnToStart": True, 
-        "speed": 1
-    })
+    evt = controller.step(
+        **{
+            "action": "RotateWristRelative",
+            "yaw": 200,
+            "physicsSimulationParams": {"autoSimulation": False},
+            "returnToStart": True,
+            "speed": 1,
+        }
+    )
 
     assert not evt.metadata["lastActionSuccess"]
 
     controller.stop()
 
-    diff = DeepDiff(evt.metadata['arm'], prev_event.metadata['arm'], significant_digits=2, ignore_numeric_type_changes=True)
+    diff = DeepDiff(
+        evt.metadata["arm"],
+        prev_event.metadata["arm"],
+        significant_digits=2,
+        ignore_numeric_type_changes=True,
+    )
     print(diff)
     assert diff == {}
 
@@ -116,7 +125,7 @@ def test_arm_object_intersect(controller_args):
 @pytest.mark.parametrize("controller_args", fifo)
 def test_arm_body_object_intersect(controller_args):
     controller = build_controller(**controller_args)
-    
+
     house = load_house("procthor_train_1.json")
 
     evt = controller.step(action="CreateHouse", house=house)
@@ -132,13 +141,14 @@ def test_arm_body_object_intersect(controller_args):
 
     assert evt.metadata["lastActionSuccess"]
 
-    evt = controller.step(**
-        {"action": "RotateWristRelative", 
-         "yaw": -10, 
-         "physicsSimulationParams": {"autoSimulation": False},
-         "returnToStart": True, 
-         "speed": 1
-         }               
+    evt = controller.step(
+        **{
+            "action": "RotateWristRelative",
+            "yaw": -10,
+            "physicsSimulationParams": {"autoSimulation": False},
+            "returnToStart": True,
+            "speed": 1,
+        }
     )
 
     print(
@@ -153,15 +163,21 @@ def test_arm_body_object_intersect(controller_args):
 
     controller.stop()
 
-    diff = DeepDiff(evt.metadata['arm'], prev_event.metadata['arm'], significant_digits=2, ignore_numeric_type_changes=True)
+    diff = DeepDiff(
+        evt.metadata["arm"],
+        prev_event.metadata["arm"],
+        significant_digits=2,
+        ignore_numeric_type_changes=True,
+    )
     print(diff)
     assert diff == {}
+
 
 # TODO: rewrite once new stretch parameters ar in
 # @pytest.mark.parametrize("controller_args", fifo)
 # def test_arm_pickup_drop_sequence(controller_args):
 #     controller = build_controller(**controller_args)
-    
+
 #     house = load_house("procthor_train_1.json")
 
 #     evt = controller.step(action="CreateHouse", house=house)
@@ -176,7 +192,7 @@ def test_arm_body_object_intersect(controller_args):
 #     evt = run(controller, "pickup_plate_before_intersect.json")
 
 #     assert ["Plate|surface|5|45"] == evt.metadata['arm']['heldObjects']
-    
+
 #     evt = run(controller, "object_drop.json")
 
 #     assert evt.metadata['arm']['heldObjects'] == []
@@ -187,7 +203,7 @@ def test_arm_body_object_intersect(controller_args):
 #     plate_metadata = object_dict["Plate|surface|5|45"]
 
 #     object_target = {
-#         'position': {'x': 9.562429428100586, 'y': 1.0261509418487549, 'z': 0.37188154458999634}, 
+#         'position': {'x': 9.562429428100586, 'y': 1.0261509418487549, 'z': 0.37188154458999634},
 #         'rotation': {'x': 359.0494384765625, 'y': 28.759014129638672, 'z': 0.06256783753633499},
 #         'parentReceptacles': ['CounterTop|2|0']
 #     }

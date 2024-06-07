@@ -1,16 +1,20 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using System;
 using System.Linq;
 using RandomExtensions;
+using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Rendering.PostProcessing;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public partial class ArticulatedAgentController : ArmAgentController {
-        public ArticulatedAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
-        }
+        public ArticulatedAgentController(
+            BaseAgentComponent baseAgentComponent,
+            AgentManager agentManager
+        )
+            : base(baseAgentComponent, agentManager) { }
+
         public ArticulatedAgentSolver agent;
 
         [SerializeField]
@@ -82,7 +86,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // fp_camera_2.fieldOfView = 90f;
 
             if (initializeAction != null) {
-
                 if (initializeAction.cameraNearPlane > 0) {
                     m_Camera.nearClipPlane = initializeAction.cameraNearPlane;
                     // fp_camera_2.nearClipPlane = initializeAction.cameraNearPlane;
@@ -92,7 +95,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     m_Camera.farClipPlane = initializeAction.cameraFarPlane;
                     // fp_camera_2.farClipPlane = initializeAction.cameraFarPlane;
                 }
-
             }
 
             // //            fp_camera_2.fieldOfView = 75f;
@@ -117,7 +119,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // // StretchSolver.ManipulateStretchArm();
 
             //get references to floor collider and physica material to change when moving arm
-            FloorCollider = this.gameObject.transform.Find("abFloorCollider").GetComponent<Collider>();
+            FloorCollider = this
+                .gameObject.transform.Find("abFloorCollider")
+                .GetComponent<Collider>();
             FloorColliderPhysicsMaterial = FloorCollider.material;
 
             getArmImplementation().ContinuousUpdate(Time.fixedDeltaTime);
@@ -128,8 +132,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ArticulatedArmController arm = GetComponentInChildren<ArticulatedArmController>();
             if (arm == null) {
                 throw new InvalidOperationException(
-                    "Agent does not havSe Stretch arm or is not enabled.\n" +
-                    $"Make sure there is a '{typeof(ArticulatedArmController).Name}' component as a child of this agent."
+                    "Agent does not havSe Stretch arm or is not enabled.\n"
+                        + $"Make sure there is a '{typeof(ArticulatedArmController).Name}' component as a child of this agent."
                 );
             }
             return arm;
@@ -147,10 +151,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override IEnumerator MoveArmBaseUp(
-             float distance,
-             float speed = 1,
-             bool returnToStart = true
-         ) {
+            float distance,
+            float speed = 1,
+            bool returnToStart = true
+        ) {
             Debug.Log("MoveArmBaseUp from ArticulatedAgentController");
             SetFloorColliderToHighFriction();
             var arm = getArmImplementation();
@@ -166,11 +170,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //with limits
         public IEnumerator MoveArmBaseUp(
-             float distance,
-             bool useLimits,
-             float speed = 1,
-             bool returnToStart = true
-         ) {
+            float distance,
+            bool useLimits,
+            float speed = 1,
+            bool returnToStart = true
+        ) {
             Debug.Log("MoveArmBaseUp from ArticulatedAgentController");
             SetFloorColliderToHighFriction();
             var arm = getArmImplementation();
@@ -189,7 +193,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 1,
             bool returnToStart = true
         ) {
-            Debug.Log("MoveArmBaseDown from ArticulatedAgentController (pass negative distance to MoveArmBaseUp)");
+            Debug.Log(
+                "MoveArmBaseDown from ArticulatedAgentController (pass negative distance to MoveArmBaseUp)"
+            );
             return MoveArmBaseUp(
                 distance: -distance,
                 speed: speed,
@@ -205,7 +211,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 1,
             bool returnToStart = true
         ) {
-            Debug.Log("MoveArmBaseDown from ArticulatedAgentController (pass negative distance to MoveArmBaseUp)");
+            Debug.Log(
+                "MoveArmBaseDown from ArticulatedAgentController (pass negative distance to MoveArmBaseUp)"
+            );
             return MoveArmBaseUp(
                 distance: -distance,
                 speed: speed,
@@ -232,11 +240,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //move arm overload with limits
-        public IEnumerator MoveArm(
-            Vector3 position,
-            bool useLimits,
-            float speed = 1
-        ) {
+        public IEnumerator MoveArm(Vector3 position, bool useLimits, float speed = 1) {
             var arm = getArmImplementation();
             SetFloorColliderToHighFriction();
             return arm.moveArmTarget(
@@ -262,7 +266,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //FloorColliderPhysicsMaterial.dynamicFriction = 1;
         }
 
-        public void TeleportFull(Vector3 position, Vector3 rotation, float? horizon = null, bool forceAction = false) {
+        public void TeleportFull(
+            Vector3 position,
+            Vector3 rotation,
+            float? horizon = null,
+            bool forceAction = false
+        ) {
             Debug.Log($"Original Position: {this.transform.position}");
 
             if (horizon == null) {
@@ -280,7 +289,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Quaternion realRotationAsQuaternionBecauseYes = Quaternion.Euler(rotation);
 
             //teleport must be finished in a coroutine because synctransforms DoESNt WoRK for ArTIcuLAtIONBodies soooooo
-            StartCoroutine(TeleportThenWait(position, realRotationAsQuaternionBecauseYes, horizonf));
+            StartCoroutine(
+                TeleportThenWait(position, realRotationAsQuaternionBecauseYes, horizonf)
+            );
         }
 
         IEnumerator TeleportThenWait(Vector3 position, Quaternion rotation, float cameraHorizon) {
@@ -303,7 +314,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float[] horizons = null,
             bool[] standings = null,
             float? maxDistance = null,
-            int maxPoses = int.MaxValue  // works like infinity
+            int maxPoses = int.MaxValue // works like infinity
         ) {
             getInteractablePosesAB(
                 objectId: objectId,
@@ -325,18 +336,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float[] horizons = null,
             bool[] standings = null,
             float? maxDistance = null,
-            int maxPoses = int.MaxValue  // works like infinity
+            int maxPoses = int.MaxValue // works like infinity
         ) {
             Debug.Log("Calling getInteractablePosesAB");
 
             if (standings != null) {
-                errorMessage = "Articulation Agent does not support 'standings' for GetInteractablePoses";
+                errorMessage =
+                    "Articulation Agent does not support 'standings' for GetInteractablePoses";
                 throw new InvalidActionException();
             }
 
-            Debug.Log($"Position of agent at start of getInteractablePosesAB: {this.transform.position}");
+            Debug.Log(
+                $"Position of agent at start of getInteractablePosesAB: {this.transform.position}"
+            );
             if (360 % rotateStepDegrees != 0 && rotations != null) {
-                throw new InvalidOperationException($"360 % rotateStepDegrees (360 % {rotateStepDegrees} != 0) must be 0, unless 'rotations: float[]' is overwritten.");
+                throw new InvalidOperationException(
+                    $"360 % rotateStepDegrees (360 % {rotateStepDegrees} != 0) must be 0, unless 'rotations: float[]' is overwritten."
+                );
             }
 
             if (maxPoses <= 0) {
@@ -348,7 +364,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (maxDistance == null) {
                 maxDistanceFloat = maxVisibleDistance;
             } else if ((float)maxDistance <= 0) {
-                throw new ArgumentOutOfRangeException("maxDistance must be >= 0 meters from the object.");
+                throw new ArgumentOutOfRangeException(
+                    "maxDistance must be >= 0 meters from the object."
+                );
             } else {
                 maxDistanceFloat = (float)maxDistance;
             }
@@ -379,12 +397,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // if rotateStepDegrees=90 and offset=10, then the paths would be [10, 100, 190, 280]
                 rotations = new float[(int)Math.Round(360 / rotateStepDegrees)];
                 int i = 0;
-                for (float rotation = offset; rotation < 360 + offset; rotation += rotateStepDegrees) {
+                for (
+                    float rotation = offset;
+                    rotation < 360 + offset;
+                    rotation += rotateStepDegrees
+                ) {
                     rotations[i++] = rotation;
                 }
             }
 
-            SimObjPhysics theObject = getInteractableSimObjectFromId(objectId: objectId, forceAction: true);
+            SimObjPhysics theObject = getInteractableSimObjectFromId(
+                objectId: objectId,
+                forceAction: true
+            );
 
             // populate the positions by those that are reachable
             if (positions == null) {
@@ -400,9 +425,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objectBounds.Encapsulate(vp.position);
             }
             float fudgeFactor = objectBounds.extents.magnitude;
-            List<Vector3> filteredPositions = positions.Where(
-                p => (Vector3.Distance(a: p, b: theObject.transform.position) <= maxDistanceFloat + fudgeFactor + gridSize)
-            ).ToList();
+            List<Vector3> filteredPositions = positions
+                .Where(p =>
+                    (
+                        Vector3.Distance(a: p, b: theObject.transform.position)
+                        <= maxDistanceFloat + fudgeFactor + gridSize
+                    )
+                )
+                .ToList();
 
             // save current agent pose
             Vector3 oldPosition = transform.position;
@@ -411,17 +441,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //now put all this into a coroutine to actually teleport and do the visibility checks on a delay
             //since TeleportRoot needs to sync with a waitForFixedUpdate
-            StartCoroutine(TeleportThenWaitThenCheckInteractable(
-                filteredPositions: filteredPositions,
-                horizons: horizons,
-                rotations: rotations,
-                theObject: theObject,
-                maxDistanceFloat: maxDistanceFloat,
-                maxPoses: maxPoses,
-                oldPosition: oldPosition,
-                oldHorizon: oldHorizon,
-                oldRotation: oldRotation
-            ));
+            StartCoroutine(
+                TeleportThenWaitThenCheckInteractable(
+                    filteredPositions: filteredPositions,
+                    horizons: horizons,
+                    rotations: rotations,
+                    theObject: theObject,
+                    maxDistanceFloat: maxDistanceFloat,
+                    maxPoses: maxPoses,
+                    oldPosition: oldPosition,
+                    oldHorizon: oldHorizon,
+                    oldRotation: oldRotation
+                )
+            );
         }
 
         IEnumerator TeleportThenWaitThenCheckInteractable(
@@ -433,10 +465,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int maxPoses,
             Vector3 oldPosition,
             Vector3 oldHorizon,
-            Quaternion oldRotation) {
-
+            Quaternion oldRotation
+        ) {
             // set each key to store a list
-            List<Dictionary<string, object>> validAgentPoses = new List<Dictionary<string, object>>();
+            List<Dictionary<string, object>> validAgentPoses =
+                new List<Dictionary<string, object>>();
 
             bool stopEarly = false;
             foreach (float horizon in horizons) {
@@ -451,8 +484,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     foreach (Vector3 position in filteredPositions) {
                         Debug.Log("////////////////////");
                         Debug.Log($"position Before SetTransform: {transform.position}");
-                        Debug.Log($"Passing in position to SetTransform: Vector3 {position}, Vector3? {(Vector3?)position}");
-                        SetTransform(transform: transform, position: (Vector3?)position, rotation: (Quaternion?)Quaternion.Euler(rotationVector));
+                        Debug.Log(
+                            $"Passing in position to SetTransform: Vector3 {position}, Vector3? {(Vector3?)position}"
+                        );
+                        SetTransform(
+                            transform: transform,
+                            position: (Vector3?)position,
+                            rotation: (Quaternion?)Quaternion.Euler(rotationVector)
+                        );
                         yield return new WaitForFixedUpdate();
                         Debug.Log($"Position After SetTransform(): {transform.position}");
                         Debug.Log("////////////////////");
@@ -460,13 +499,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // Each of these values is directly compatible with TeleportFull
                         // and should be used with .step(action='TeleportFull', **interactable_positions[0])
                         if (objectIsCurrentlyVisible(theObject, maxDistanceFloat)) {
-                            validAgentPoses.Add(new Dictionary<string, object> {
-                                ["x"] = position.x,
-                                ["y"] = position.y,
-                                ["z"] = position.z,
-                                ["rotation"] = rotation,
-                                ["horizon"] = horizon
-                            });
+                            validAgentPoses.Add(
+                                new Dictionary<string, object> {
+                                    ["x"] = position.x,
+                                    ["y"] = position.y,
+                                    ["z"] = position.z,
+                                    ["rotation"] = rotation,
+                                    ["horizon"] = horizon
+                                }
+                            );
 
                             if (validAgentPoses.Count >= maxPoses) {
                                 stopEarly = true;
@@ -475,17 +516,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 #if UNITY_EDITOR
                             // In the editor, draw lines indicating from where the object was visible.
-                            Debug.DrawLine(position, position + transform.forward * (gridSize * 0.5f), Color.red, 20f);
+                            Debug.DrawLine(
+                                position,
+                                position + transform.forward * (gridSize * 0.5f),
+                                Color.red,
+                                20f
+                            );
 #endif
                         }
                     }
-                    if (stopEarly) { break; }
+                    if (stopEarly) {
+                        break;
+                    }
                 }
-                if (stopEarly) { break; }
+                if (stopEarly) {
+                    break;
+                }
             }
 
             //reset to original position/rotation/horizon now that we are done
-            SetTransform(transform: transform, position: (Vector3?) oldPosition, rotation: (Quaternion?) oldRotation);
+            SetTransform(
+                transform: transform,
+                position: (Vector3?)oldPosition,
+                rotation: (Quaternion?)oldRotation
+            );
             m_Camera.transform.localEulerAngles = oldHorizon;
 
 #if UNITY_EDITOR
@@ -502,7 +556,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // }
         }
 
-        public IEnumerator MoveAgent(            
+        public IEnumerator MoveAgent(
             float moveMagnitude = 1,
             float speed = 1,
             float acceleration = 1
@@ -520,7 +574,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Debug.Log($"preparing agent {this.transform.name} to move");
             if (Mathf.Approximately(moveMagnitude, 0.0f)) {
                 Debug.Log("Error! distance to move must be nonzero");
-                // yield return nests the iterator structure because C# compiler forces 
+                // yield return nests the iterator structure because C# compiler forces
                 // to use yield return below and creates a nested Monad, (yield return (yield return val))
                 // better to return with .GetEnumerator();
                 return new ActionFinished() {
@@ -535,7 +589,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 speed = speed,
                 acceleration = acceleration,
                 agentMass = CalculateTotalMass(this.transform),
-                minMovementPerSecond = 0.001f,
+                minMovementPerSecond = 0.0001f,
                 maxTimePassed = 10.0f,
                 haltCheckTimeWindow = 0.2f,
                 direction = direction,
@@ -554,7 +608,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 )
             );
         }
-
 
         public IEnumerator MoveAhead(
             float? moveMagnitude = null,
@@ -586,7 +639,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float acceleration = 22.5f
         ) {
             return RotateAgent(
-
                 degrees: degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
                 acceleration: acceleration
@@ -633,7 +685,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 speed = Mathf.Deg2Rad * speed,
                 acceleration = Mathf.Deg2Rad * acceleration,
                 agentMass = CalculateTotalMass(this.transform),
-                minMovementPerSecond = 1f * Mathf.Deg2Rad,
+                minMovementPerSecond = 0.01f * Mathf.Deg2Rad,
                 maxTimePassed = 10.0f,
                 haltCheckTimeWindow = 0.2f,
                 direction = direction,
@@ -660,7 +712,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool worldRelative = false,
             bool forceAction = false
         ) {
-            GameObject posRotManip = this.GetComponent<BaseAgentComponent>().StretchArm.GetComponent<Stretch_Robot_Arm_Controller>().GetArmTarget();
+            GameObject posRotManip = this.GetComponent<BaseAgentComponent>()
+                .StretchArm.GetComponent<Stretch_Robot_Arm_Controller>()
+                .GetArmTarget();
 
             // cache old values in case there's a failure
             Vector3 oldLocalPosition = posRotManip.transform.localPosition;
@@ -705,9 +759,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             // pitch and roll are not supported for the stretch and so we throw an error
             if (pitch != 0f || roll != 0f) {
-                throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
+                throw new System.NotImplementedException(
+                    "Pitch and roll are not supported for the stretch agent."
+                );
             }
-            Debug.Log($"executing RotateWristRelative from ArticulatedAgentController with speed {speed}");
+            Debug.Log(
+                $"executing RotateWristRelative from ArticulatedAgentController with speed {speed}"
+            );
             var arm = getArmImplementation();
             SetFloorColliderToHighFriction();
             return arm.rotateWrist(

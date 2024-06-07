@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Rendering;
 using UnityStandardAssets.Characters.FirstPerson;
 
@@ -8,12 +8,8 @@ public class FirstPersonCharacterCull : MonoBehaviour {
     private bool _stopCullingThingsForASecond = false;
 
     public bool StopCullingThingsForASecond {
-        get {
-            return this._stopCullingThingsForASecond;
-        }
-        set {
-            this._stopCullingThingsForASecond = value;
-        }
+        get { return this._stopCullingThingsForASecond; }
+        set { this._stopCullingThingsForASecond = value; }
     }
 
     public MeshRenderer[] RenderersToHide; // Mesh renderer that you want this script's camera to cull
@@ -28,13 +24,11 @@ public class FirstPersonCharacterCull : MonoBehaviour {
         }
 
         RenderersToHide = renderers.ToArray();
-
     }
 
     void OnPreRender() // Just before this camera starts to render...
     {
         if (!StopCullingThingsForASecond) {
-
             if (
                 FPSController != null
                 && FPSController.agent != null
@@ -46,7 +40,6 @@ public class FirstPersonCharacterCull : MonoBehaviour {
                 }
             }
         }
-
     }
 
     void OnPostRender() // Immediately after this camera renders...
@@ -58,12 +51,10 @@ public class FirstPersonCharacterCull : MonoBehaviour {
                 && (RenderersToHide != null || RenderersToHide.Length != 0)
                 && FPSController.agent.IsVisible
             ) { // only do this if visibility capsule is toggled on
-
                 foreach (MeshRenderer mr in RenderersToHide) {
                     mr.enabled = true; // Turn it back on
                 }
             }
         }
     }
-
 }

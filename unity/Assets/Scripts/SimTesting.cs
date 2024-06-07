@@ -1,11 +1,10 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
-using System.Collections;
 using System;
+using System.Collections;
+using UnityEngine;
 
 // class for testing SimUtil functions
 public class SimTesting : MonoBehaviour {
-
     public enum TestMethod {
         SpherecastAll,
         CheckVisibility,
@@ -25,6 +24,7 @@ public class SimTesting : MonoBehaviour {
     public float SpherecastRadius;
     public Camera Cam;
     RaycastHit hit;
+
     // RaycastHit[] hits = new RaycastHit[MaxHits];
     public Vector3 placementPoint;
     public bool foundPlacementPoint;
@@ -50,12 +50,20 @@ public class SimTesting : MonoBehaviour {
                         GUILayout.BeginHorizontal();
                         horzIndex = 0;
                     }
-                    GUILayout.Button(o.ObjectID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth(200f));
+                    GUILayout.Button(
+                        o.ObjectID,
+                        UnityEditor.EditorStyles.miniButton,
+                        GUILayout.MaxWidth(200f)
+                    );
                 }
                 GUILayout.EndHorizontal();
             } else {
                 foreach (SimObj o in SimObjsInView) {
-                    GUILayout.Button(o.ObjectID, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth(100f));
+                    GUILayout.Button(
+                        o.ObjectID,
+                        UnityEditor.EditorStyles.miniButton,
+                        GUILayout.MinWidth(100f)
+                    );
                 }
             }
         }
@@ -73,9 +81,15 @@ public class SimTesting : MonoBehaviour {
 #endif
 
     void Update() {
-
         // check for a navmesh hit
-        foundPlacementPoint = PlacementManager.GetPlacementPoint(transform.position, Cam.transform.forward, Cam, ReachDistance, MaxPlaceDistance, ref placementPoint);
+        foundPlacementPoint = PlacementManager.GetPlacementPoint(
+            transform.position,
+            Cam.transform.forward,
+            Cam,
+            ReachDistance,
+            MaxPlaceDistance,
+            ref placementPoint
+        );
 
         if (inventoryObject != null && Input.GetKeyDown(KeyCode.P)) {
             if (inventoryObject.gameObject.activeSelf) {
@@ -94,7 +108,6 @@ public class SimTesting : MonoBehaviour {
                 break;
         }
 
-
         // resize the array to avoid confusion in the test
         if (SimObjsInView.Length != NumItems) {
             Array.Resize<SimObj>(ref SimObjsInView, NumItems);
@@ -106,13 +119,22 @@ public class SimTesting : MonoBehaviour {
         Gizmos.DrawSphere(Cam.transform.position, 0.1f);
         Gizmos.color = Color.grey;
         Gizmos.DrawWireSphere(Cam.transform.position, SpherecastRadius);
-        Gizmos.DrawWireSphere(Cam.transform.position + (Cam.transform.forward * MaxDistance), SpherecastRadius);
-        Gizmos.DrawLine(Cam.transform.position, Cam.transform.position + (Cam.transform.forward * MaxDistance));
+        Gizmos.DrawWireSphere(
+            Cam.transform.position + (Cam.transform.forward * MaxDistance),
+            SpherecastRadius
+        );
+        Gizmos.DrawLine(
+            Cam.transform.position,
+            Cam.transform.position + (Cam.transform.forward * MaxDistance)
+        );
 
         Gizmos.color = foundPlacementPoint ? Color.green : Color.gray;
         Gizmos.DrawSphere(transform.position + (Cam.transform.forward * ReachDistance), 0.05f);
         if (foundPlacementPoint) {
-            Gizmos.DrawLine(transform.position + (Cam.transform.forward * ReachDistance), placementPoint);
+            Gizmos.DrawLine(
+                transform.position + (Cam.transform.forward * ReachDistance),
+                placementPoint
+            );
             Gizmos.DrawWireCube(placementPoint, Vector3.one * 0.05f);
         }
     }

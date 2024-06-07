@@ -1,20 +1,24 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
-using System.Linq;
 
 public partial class IK_Robot_Arm_Controller : ArmController {
     [SerializeField]
-    private Transform armBase, elbowTarget, handCameraTransform, FirstJoint;
+    private Transform armBase,
+        elbowTarget,
+        handCameraTransform,
+        FirstJoint;
 
     public PhysicsRemoteFPSAgentController PhysicsController;
 
     // dict to track which picked up object has which set of trigger colliders
     // which we have to parent and reparent in order for arm collision to detect
     [SerializeField]
-    public new Dictionary<SimObjPhysics, HashSet<Collider>> heldObjects = new Dictionary<SimObjPhysics, HashSet<Collider>>();
+    public new Dictionary<SimObjPhysics, HashSet<Collider>> heldObjects =
+        new Dictionary<SimObjPhysics, HashSet<Collider>>();
 
     // private bool StopMotionOnContact = false;
     // Start is called before the first frame update
@@ -29,13 +33,15 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         return armTarget.gameObject;
     }
 
-     public override Transform pickupParent() {
+    public override Transform pickupParent() {
         return magnetSphere.transform;
     }
 
-    public override Vector3  wristSpaceOffsetToWorldPos(Vector3 offset) {
-        return handCameraTransform.TransformPoint(offset) - handCameraTransform.TransformPoint(Vector3.zero);
+    public override Vector3 wristSpaceOffsetToWorldPos(Vector3 offset) {
+        return handCameraTransform.TransformPoint(offset)
+            - handCameraTransform.TransformPoint(Vector3.zero);
     }
+
     public override Vector3 armBaseSpaceOffsetToWorldPos(Vector3 offset) {
         return this.transform.TransformPoint(offset) - this.transform.TransformPoint(Vector3.zero);
     }
@@ -43,6 +49,7 @@ public partial class IK_Robot_Arm_Controller : ArmController {
     public override Vector3 pointToWristSpace(Vector3 point) {
         return handCameraTransform.TransformPoint(point);
     }
+
     public override Vector3 pointToArmBaseSpace(Vector3 point) {
         return this.transform.Find("robot_arm_FK_IK_rig").transform.TransformPoint(point);
     }
@@ -56,7 +63,6 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         return armBase.gameObject;
     }
 
-    
     public GameObject GetElbowTarget() {
         return elbowTarget.gameObject;
     }
@@ -77,13 +83,11 @@ public partial class IK_Robot_Arm_Controller : ArmController {
     //     return ActionFinished.Success;
     //  }
 
-   
+
     void Start() {
         // calculating based on distance from origin of arm to the 2nd joint, which will always be constant
         this.originToShoulderLength = Vector3.Distance(
-            this.transform.FirstChildOrDefault(
-                x => x.name == "robot_arm_2_jnt"
-            ).position,
+            this.transform.FirstChildOrDefault(x => x.name == "robot_arm_2_jnt").position,
             this.transform.position
         );
 
@@ -144,7 +148,7 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         Vector3 rotatePoint,
         Quaternion rotation,
         float degreesPerSecond,
-         float fixedDeltaTime,
+        float fixedDeltaTime,
         bool returnToStartPositionIfFailed = false
     ) {
         collisionListener.Reset();
@@ -242,7 +246,12 @@ public partial class IK_Robot_Arm_Controller : ArmController {
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
 
-                jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, ConvertAngleToZeroCentricRange(angleRot));
+                jointMeta.rotation = new Vector4(
+                    vectorRot.x,
+                    vectorRot.y,
+                    vectorRot.z,
+                    ConvertAngleToZeroCentricRange(angleRot)
+                );
             } else {
                 jointMeta.rotation = new Vector4(1, 0, 0, 0);
             }
@@ -256,7 +265,12 @@ public partial class IK_Robot_Arm_Controller : ArmController {
             // Check that root-relative rotation is angle-axis-notation-compatible
             if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
-                jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, ConvertAngleToZeroCentricRange(angleRot));
+                jointMeta.rootRelativeRotation = new Vector4(
+                    vectorRot.x,
+                    vectorRot.y,
+                    vectorRot.z,
+                    ConvertAngleToZeroCentricRange(angleRot)
+                );
             } else {
                 jointMeta.rootRelativeRotation = new Vector4(1, 0, 0, 0);
             }
@@ -266,12 +280,19 @@ public partial class IK_Robot_Arm_Controller : ArmController {
                 parentJoint = joint.parent;
 
                 // Grab rotation of current joint's angler relative to parent joint's angler
-                currentRotation = Quaternion.Inverse(parentJoint.GetChild(0).rotation) * joint.GetChild(0).rotation;
+                currentRotation =
+                    Quaternion.Inverse(parentJoint.GetChild(0).rotation)
+                    * joint.GetChild(0).rotation;
 
                 // Check that parent-relative rotation is angle-axis-notation-compatible
                 if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                     currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
-                    jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, ConvertAngleToZeroCentricRange(angleRot));
+                    jointMeta.localRotation = new Vector4(
+                        vectorRot.x,
+                        vectorRot.y,
+                        vectorRot.z,
+                        ConvertAngleToZeroCentricRange(angleRot)
+                    );
                 } else {
                     jointMeta.localRotation = new Vector4(1, 0, 0, 0);
                 }
@@ -302,22 +323,23 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         meta.handSphereCenter = magnetSphere.transform.TransformPoint(magnetSphere.center);
         meta.handSphereRadius = magnetSphere.radius;
         List<SimObjPhysics> objectsInMagnet = WhatObjectsAreInsideMagnetSphereAsSOP(false);
-        meta.pickupableObjects = objectsInMagnet.Where(
-            x => x.PrimaryProperty == SimObjPrimaryProperty.CanPickup
-        ).Select(x => x.ObjectID).ToList();
+        meta.pickupableObjects = objectsInMagnet
+            .Where(x => x.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+            .Select(x => x.ObjectID)
+            .ToList();
         meta.touchedNotHeldObjects = objectsInMagnet.Select(x => x.ObjectID).ToList();
         return meta;
     }
 
-float ConvertAngleToZeroCentricRange(float degrees) {
-    if (degrees < 0) {
-        degrees = (degrees % 360f) + 360f;
+    float ConvertAngleToZeroCentricRange(float degrees) {
+        if (degrees < 0) {
+            degrees = (degrees % 360f) + 360f;
+        }
+        if (degrees > 180f) {
+            degrees = (degrees % 360f) - 360f;
+        }
+        return degrees;
     }
-    if (degrees > 180f) {
-        degrees = (degrees % 360f) - 360f;
-    }
-    return degrees;
-}
 
 #if UNITY_EDITOR
     public class GizmoDrawCapsule {

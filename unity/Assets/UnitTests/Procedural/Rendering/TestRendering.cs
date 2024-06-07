@@ -1,25 +1,27 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Media;
 using NUnit.Framework;
-using System;
-using UnityEngine;
-using UnityEngine.TestTools;
 using Thor.Procedural;
 using Thor.Procedural.Data;
-using System.Linq;
-using System.IO;
-using System.Media;
+using UnityEngine;
+using UnityEngine.TestTools;
 
-namespace Tests {
-    public class TestRendering : TestBaseProcedural {
-        protected HouseTemplate houseTemplate = new HouseTemplate() {
-            metadata = new HouseMetadata() {
-                schema = "1.0.0"
-            },
+namespace Tests
+{
+    public class TestRendering : TestBaseProcedural
+    {
+        protected HouseTemplate houseTemplate = new HouseTemplate()
+        {
+            metadata = new HouseMetadata() { schema = "1.0.0" },
             id = "house_0",
             // TODO, some assumptions can be done to place doors and objects in `layout`
             // and use `objectsLayouts` for any possible inconsistencies or layering instead of being mandatory for objects
-            layout = $@"
+            layout =
+                $@"
                         0 0 0 0 0 0
                         0 2 2 2 2 0
                         0 2 2 2 2 0
@@ -27,8 +29,9 @@ namespace Tests {
                         0 1 1 1 1 0
                         0 0 0 0 0 0
                     ",
-            objectsLayouts = new List<string>() {
-                        $@"
+            objectsLayouts = new List<string>()
+            {
+                $@"
                             0 0 0 0 0 0
                             0 2 2 2 2 0
                             0 2 2 2 = 0
@@ -36,44 +39,64 @@ namespace Tests {
                             0 1 1 1 1 0
                             0 0 0 0 0 0
                         "
-                    },
-            rooms = new Dictionary<string, RoomTemplate>() {
-                        {"1", new RoomTemplate(){
-                            wallTemplate = new PolygonWall() {
-                                material = new MaterialProperties() {
-                                    color = SerializableColor.fromUnityColor(Color.red),
-                                    unlit = true
-                                }
-                            },
-                            floorTemplate = new RoomHierarchy() {
-                                floorMaterial = new MaterialProperties() { name ="DarkWoodFloors" },
-                                roomType = "Bedroom"
-                            },
-                            wallHeight = 3.0f
-                        }},
-                        {"2", new RoomTemplate(){
-                            wallTemplate = new PolygonWall() {
-                                material = new MaterialProperties() {
-                                    color = SerializableColor.fromUnityColor(Color.blue),
-                                    unlit = true
-                                }
-                            },
-                            floorTemplate = new RoomHierarchy() {
-                                floorMaterial = new MaterialProperties() { name = "RedBrick" },
-                                roomType = "LivingRoom"
-                            },
-                            wallHeight = 3.0f
-                        }}
-                    },
-            doors = new Dictionary<string, Thor.Procedural.Data.Door>() {
-                        {"=", new Thor.Procedural.Data.Door(){
-                            openness = 1.0f,
-                            assetId = "Doorway_1",
-                            room0 = "1"
-
-                        }}
-                    },
-            proceduralParameters = new ProceduralParameters() {
+            },
+            rooms = new Dictionary<string, RoomTemplate>()
+            {
+                {
+                    "1",
+                    new RoomTemplate()
+                    {
+                        wallTemplate = new PolygonWall()
+                        {
+                            material = new MaterialProperties()
+                            {
+                                color = SerializableColor.fromUnityColor(Color.red),
+                                unlit = true
+                            }
+                        },
+                        floorTemplate = new RoomHierarchy()
+                        {
+                            floorMaterial = new MaterialProperties() { name = "DarkWoodFloors" },
+                            roomType = "Bedroom"
+                        },
+                        wallHeight = 3.0f
+                    }
+                },
+                {
+                    "2",
+                    new RoomTemplate()
+                    {
+                        wallTemplate = new PolygonWall()
+                        {
+                            material = new MaterialProperties()
+                            {
+                                color = SerializableColor.fromUnityColor(Color.blue),
+                                unlit = true
+                            }
+                        },
+                        floorTemplate = new RoomHierarchy()
+                        {
+                            floorMaterial = new MaterialProperties() { name = "RedBrick" },
+                            roomType = "LivingRoom"
+                        },
+                        wallHeight = 3.0f
+                    }
+                }
+            },
+            doors = new Dictionary<string, Thor.Procedural.Data.Door>()
+            {
+                {
+                    "=",
+                    new Thor.Procedural.Data.Door()
+                    {
+                        openness = 1.0f,
+                        assetId = "Doorway_1",
+                        room0 = "1"
+                    }
+                }
+            },
+            proceduralParameters = new ProceduralParameters()
+            {
                 ceilingMaterial = new MaterialProperties() { name = "ps_mat" },
                 floorColliderThickness = 1.0f,
                 receptacleHeight = 0.7f,
@@ -82,7 +105,8 @@ namespace Tests {
         };
 
         [UnityTest]
-        public IEnumerator TestUnlitRgbImage() {
+        public IEnumerator TestUnlitRgbImage()
+        {
             // $@"
             // 0 0 0 0 0 0
             // 0 2 2 2 2 0
@@ -93,46 +117,52 @@ namespace Tests {
             // ",
             var house = createTestHouse();
 
-            yield return step(new Dictionary<string, object>() {
-                { "gridSize", 0.25f},
-                { "agentCount", 1},
-                { "fieldOfView", 45.0f},
-                { "snapToGrid", true},
-                { "procedural", true},
-                { "action", "Initialize"}
-            });
+            yield return step(
+                new Dictionary<string, object>()
+                {
+                    { "gridSize", 0.25f },
+                    { "agentCount", 1 },
+                    { "fieldOfView", 45.0f },
+                    { "snapToGrid", true },
+                    { "procedural", true },
+                    { "action", "Initialize" }
+                }
+            );
 
             Debug.Log("Pre Agent pos " + this.getLastActionMetadata().agent.position);
 
             ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
 
             yield return step(
-                new Dictionary<string, object>() {
-                    { "position", new Vector3(3.0f, 1.0f, 0.2f)},
-                    { "rotation", new Vector3(0, 180, 0)},
-                    { "horizon", 0.0f},
-                    { "standing", true},
-                    { "forceAction", true},
-                    { "action", "TeleportFull"}
-            });
+                new Dictionary<string, object>()
+                {
+                    { "position", new Vector3(3.0f, 1.0f, 0.2f) },
+                    { "rotation", new Vector3(0, 180, 0) },
+                    { "horizon", 0.0f },
+                    { "standing", true },
+                    { "forceAction", true },
+                    { "action", "TeleportFull" }
+                }
+            );
 
             var rgbBytes = this.renderPayload.Find(e => e.Key == "image").Value;
 
             var eps = 40;
-            var assertResult = rgbBytes.Select((pixel, index) => (pixel, index))
-                .All(
-                    e =>
-                    (e.index % 3 == 0 && 255 - e.pixel <= eps) ||
-                    (e.index % 3 != 0 && e.pixel <= eps)
+            var assertResult = rgbBytes
+                .Select((pixel, index) => (pixel, index))
+                .All(e =>
+                    (e.index % 3 == 0 && 255 - e.pixel <= eps)
+                    || (e.index % 3 != 0 && e.pixel <= eps)
                 );
 
-            if (!assertResult) {
+            if (!assertResult)
+            {
                 savePng(rgbBytes, getBuildMachineTestOutputPath("test_comp.png", false));
             }
 
             // TODO: Disabling test because lighting in build machine is always enabled,
             // requires investigation, probably save the scene in this test with editor tools
-            // and examine scene in machine  
+            // and examine scene in machine
             // Unlit red wall
             // Assert.True(
             //    assertResult
@@ -140,7 +170,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestLitRgbImage() {
+        public IEnumerator TestLitRgbImage()
+        {
             // $@" // A is agent
             // 0 0 0 0 0 0
             // 0 2 2 2 2 0
@@ -149,11 +180,14 @@ namespace Tests {
             // 0 1 1 1 1 0
             // 0 0 0 0 0 0
             // ",
-            foreach (var room in houseTemplate.rooms.Values) {
+            foreach (var room in houseTemplate.rooms.Values)
+            {
                 room.wallTemplate.unlit = false;
             }
-            houseTemplate.objectsLayouts = houseTemplate.objectsLayouts.Concat(
-                new List<string>() {
+            houseTemplate.objectsLayouts = houseTemplate
+                .objectsLayouts.Concat(
+                    new List<string>()
+                    {
                         $@"
                             0 0 0 0 0 0
                             0 2 2 2 2 0
@@ -163,12 +197,14 @@ namespace Tests {
                             0 0 0 0 0 0
                         "
                     }
-            ).ToList();
-            houseTemplate.objects = new Dictionary<string, HouseObject>() {
-                {"+", new HouseObject(){
-                    assetId = "Chair_007_1",
-                    kinematic = true
-                }}
+                )
+                .ToList();
+            houseTemplate.objects = new Dictionary<string, HouseObject>()
+            {
+                {
+                    "+",
+                    new HouseObject() { assetId = "Chair_007_1", kinematic = true }
+                }
             };
 
             var house = createTestHouse();
@@ -183,14 +219,16 @@ namespace Tests {
             Debug.Log($"After Window width {Screen.width} height {Screen.height}");
 
             yield return step(
-                new Dictionary<string, object>() {
-                    { "position", new Vector3(3.0f, 1.0f, 1.0f)},
-                    { "rotation", new Vector3(0, 0, 0)},
-                    { "horizon", 0.0f},
-                    { "standing", true},
-                    { "forceAction", true},
-                    { "action", "TeleportFull"}
-            });
+                new Dictionary<string, object>()
+                {
+                    { "position", new Vector3(3.0f, 1.0f, 1.0f) },
+                    { "rotation", new Vector3(0, 0, 0) },
+                    { "horizon", 0.0f },
+                    { "standing", true },
+                    { "forceAction", true },
+                    { "action", "TeleportFull" }
+                }
+            );
 
             var rgbBytes = this.renderPayload.Find(e => e.Key == "image").Value;
             //Debug.Break();
@@ -214,16 +252,17 @@ namespace Tests {
             //     rgbBytes.Zip(compareToPixels, (pixel, comp) => (pixel, comp))
             //             .All(e => e.pixel == e.comp)
             // );
-
         }
 
-        Texture2D duplicateTexture(Texture2D source) {
+        Texture2D duplicateTexture(Texture2D source)
+        {
             RenderTexture renderTex = RenderTexture.GetTemporary(
-                        source.width,
-                        source.height,
-                        0,
-                        RenderTextureFormat.Default,
-                        RenderTextureReadWrite.Linear);
+                source.width,
+                source.height,
+                0,
+                RenderTextureFormat.Default,
+                RenderTextureReadWrite.Linear
+            );
 
             Graphics.Blit(source, renderTex);
             RenderTexture previous = RenderTexture.active;
@@ -237,8 +276,8 @@ namespace Tests {
         }
 
         [UnityTest]
-
-        public IEnumerator TestDepth() {
+        public IEnumerator TestDepth()
+        {
             // $@" // A is agent
             // 0 0 0 0 0 0
             // 0 2 2 2 2 0
@@ -248,28 +287,32 @@ namespace Tests {
             // 0 0 0 0 0 0
             // ",
             Screen.SetResolution(600, 600, false);
-            yield return step(new Dictionary<string, object>() {
-                { "gridSize", 0.25f},
-                { "agentCount", 1},
-                { "fieldOfView", 90f},
-                { "snapToGrid", false},
-                { "procedural", true},
-                { "renderDepthImage", true},
-                { "action", "Initialize"}
-        });
+            yield return step(
+                new Dictionary<string, object>()
+                {
+                    { "gridSize", 0.25f },
+                    { "agentCount", 1 },
+                    { "fieldOfView", 90f },
+                    { "snapToGrid", false },
+                    { "procedural", true },
+                    { "renderDepthImage", true },
+                    { "action", "Initialize" }
+                }
+            );
             var house = createTestHouse();
             ProceduralTools.CreateHouse(house, ProceduralTools.GetMaterials());
 
             yield return step(
-                new Dictionary<string, object>() {
-
-                { "position", new Vector3(3.0f, 1.0f, 4.0f)},
-                { "rotation", new Vector3(0, 180, 0)},
-                { "horizon", 0.0f},
-                { "standing", true},
-                { "forceAction", true},
-                { "action", "TeleportFull"}
-            });
+                new Dictionary<string, object>()
+                {
+                    { "position", new Vector3(3.0f, 1.0f, 4.0f) },
+                    { "rotation", new Vector3(0, 180, 0) },
+                    { "horizon", 0.0f },
+                    { "standing", true },
+                    { "forceAction", true },
+                    { "action", "TeleportFull" }
+                }
+            );
 
             var depth = this.renderPayload.Find(e => e.Key == "image_depth").Value;
 
@@ -277,38 +320,44 @@ namespace Tests {
 
             var centerIndex = (Screen.height / 2) + ((Screen.width / 2) * Screen.height);
 
-            Debug.Log($"Screen width: {Screen.width} height: {Screen.height}, Depth Element size: {itemSize}");
+            Debug.Log(
+                $"Screen width: {Screen.width} height: {Screen.height}, Depth Element size: {itemSize}"
+            );
             // TODO: Convert byte array into floats
-            Debug.Log($"r {depth[centerIndex]} g {depth[centerIndex + 1]} b {depth[centerIndex + 2]} a {depth[centerIndex + 3]} r1 {depth[centerIndex + 4]}");
-
+            Debug.Log(
+                $"r {depth[centerIndex]} g {depth[centerIndex + 1]} b {depth[centerIndex + 2]} a {depth[centerIndex + 3]} r1 {depth[centerIndex + 4]}"
+            );
         }
 
-        protected virtual ProceduralHouse createTestHouse() {
-            var house = Templates.createHouseFromTemplate(
-                this.houseTemplate
-            );
+        protected virtual ProceduralHouse createTestHouse()
+        {
+            var house = Templates.createHouseFromTemplate(this.houseTemplate);
             Debug.Log($"####### TEST HOUSE:\n {serializeHouse(house)}");
             return house;
         }
 
-        protected string serializeObject(object obj) {
+        protected string serializeObject(object obj)
+        {
             var jsonResolver = new ShouldSerializeContractResolver();
             return Newtonsoft.Json.JsonConvert.SerializeObject(
                 obj,
                 Newtonsoft.Json.Formatting.None,
-                new Newtonsoft.Json.JsonSerializerSettings() {
+                new Newtonsoft.Json.JsonSerializerSettings()
+                {
                     ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
                     ContractResolver = jsonResolver
                 }
             );
         }
 
-        protected string serializeHouse(ProceduralHouse house) {
+        protected string serializeHouse(ProceduralHouse house)
+        {
             var jsonResolver = new ShouldSerializeContractResolver();
             var houseString = Newtonsoft.Json.JsonConvert.SerializeObject(
                 house,
                 Newtonsoft.Json.Formatting.None,
-                new Newtonsoft.Json.JsonSerializerSettings() {
+                new Newtonsoft.Json.JsonSerializerSettings()
+                {
                     ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
                     ContractResolver = jsonResolver
                 }

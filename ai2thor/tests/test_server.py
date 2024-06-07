@@ -19,9 +19,7 @@ def generate_multi_agent_form(metadata, sequence_id=1):
         + boundary
         + b'\r\nContent-Type: text/plain; charset="utf-8"\r\nContent-disposition: form-data; name="metadata"\r\n\r\n'
     )
-    data += json.dumps(
-        dict(agents=agents, sequenceId=sequence_id, activeAgentId=1)
-    ).encode("utf8")
+    data += json.dumps(dict(agents=agents, sequenceId=sequence_id, activeAgentId=1)).encode("utf8")
     data += (
         b"\r\n"
         + boundary

@@ -52,9 +52,7 @@ def generate_metadata_payload(metadata, sequence_id):
 
 
 def generate_multi_agent_metadata_payload(metadata, sequence_id):
-    return msgpack.dumps(
-        dict(agents=[metadata, metadata], activeAgentId=1, sequenceId=sequence_id)
-    )
+    return msgpack.dumps(dict(agents=[metadata, metadata], activeAgentId=1, sequenceId=sequence_id))
 
 
 def test_simple():

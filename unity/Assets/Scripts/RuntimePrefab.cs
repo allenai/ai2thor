@@ -1,20 +1,17 @@
 using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Reflection;
 using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using EasyButtons;
 using UnityEngine;
-
-
 #if UNITY_EDITOR
 using EasyButtons.Editor;
 using UnityEditor.SceneManagement;
 #endif
-using EasyButtons;
 
 [ExecuteInEditMode]
 public class RuntimePrefab : MonoBehaviour {
-
     // Textures for runtime objects are stored on disk
     // so that they can easily be used across builds,
     // and do not make the build size massive. Here,
@@ -46,11 +43,10 @@ public class RuntimePrefab : MonoBehaviour {
     }
 
     private void reloadtextures() {
-         GameObject mesh = transform.Find("mesh").gameObject;
+        GameObject mesh = transform.Find("mesh").gameObject;
         // load the texture from disk
         if (!string.IsNullOrEmpty(albedoTexturePath)) {
             if (sharedMaterial.mainTexture == null) {
-                Debug.Log("adding texture!!!");
                 byte[] imageBytes = File.ReadAllBytes(albedoTexturePath);
                 Texture2D tex = new Texture2D(2, 2);
                 tex.LoadImage(imageBytes);
@@ -78,7 +74,8 @@ public class RuntimePrefab : MonoBehaviour {
         }
 
         if (!string.IsNullOrEmpty(emissionTexturePath)) {
-            sharedMaterial.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            sharedMaterial.globalIlluminationFlags =
+                MaterialGlobalIlluminationFlags.RealtimeEmissive;
             sharedMaterial.EnableKeyword("_EMISSION");
             byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);
             Texture2D tex = new Texture2D(2, 2);
@@ -89,17 +86,14 @@ public class RuntimePrefab : MonoBehaviour {
     }
 
     public void Awake() {
-
-       reloadtextures();
-    }
-
-    #if UNITY_EDITOR
-    [Button(Expanded = true)]
-    public void RealoadTextures() { 
         reloadtextures();
     }
 
-    #endif
+#if UNITY_EDITOR
+    [Button(Expanded = true)]
+    public void RealoadTextures() {
+        reloadtextures();
+    }
 
-
+#endif
 }

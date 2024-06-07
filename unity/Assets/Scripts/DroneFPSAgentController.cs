@@ -1,9 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using System;
 using System.Linq;
 using RandomExtensions;
+using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Rendering.PostProcessing;
 
@@ -13,18 +13,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject basket;
         public GameObject basketTrigger;
         public List<SimObjPhysics> caught_object = new List<SimObjPhysics>();
-        private bool hasFixedUpdateHappened = true;// track if the fixed physics update has happened
+        private bool hasFixedUpdateHappened = true; // track if the fixed physics update has happened
         protected Vector3 thrust;
         public float dronePositionRandomNoiseSigma = 0f;
+
         // count of fixed updates for use in droneCurrentTime
         public float fixupdateCnt = 0f;
+
         // Update is called once per frame
 
-        public DroneFPSAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) { }
-
+        public DroneFPSAgentController(
+            BaseAgentComponent baseAgentComponent,
+            AgentManager agentManager
+        )
+            : base(baseAgentComponent, agentManager) { }
 
         protected override void resumePhysics() {
-            if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused) {
+            if (
+                Time.timeScale == 0
+                && !Physics.autoSimulation
+                && physicsSceneManager.physicsSimulationPaused
+            ) {
                 Time.timeScale = this.autoResetTimeScale;
                 Physics.autoSimulation = true;
                 physicsSceneManager.physicsSimulationPaused = false;
@@ -61,7 +70,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             DroneVisCap.SetActive(true);
             return ActionFinished.Success;
         }
-
 
         public void MoveLeft(ServerAction action) {
             moveCharacter(action, 270);
@@ -130,9 +138,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (thrust.magnitude > 0.0001 && Time.timeScale != 0) {
                 if (dronePositionRandomNoiseSigma > 0) {
-                    var noiseX = (float)systemRandom.NextGaussian(0.0f, dronePositionRandomNoiseSigma / 3.0f);
-                    var noiseY = (float)systemRandom.NextGaussian(0.0f, dronePositionRandomNoiseSigma / 3.0f);
-                    var noiseZ = (float)systemRandom.NextGaussian(0.0f, dronePositionRandomNoiseSigma / 3.0f);
+                    var noiseX = (float)
+                        systemRandom.NextGaussian(0.0f, dronePositionRandomNoiseSigma / 3.0f);
+                    var noiseY = (float)
+                        systemRandom.NextGaussian(0.0f, dronePositionRandomNoiseSigma / 3.0f);
+                    var noiseZ = (float)
+                        systemRandom.NextGaussian(0.0f, dronePositionRandomNoiseSigma / 3.0f);
                     Vector3 noise = new Vector3(noiseX, noiseY, noiseZ);
                     m_CharacterController.Move((thrust * Time.fixedDeltaTime) + noise);
                 } else {
@@ -143,11 +154,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (this.agentState == AgentState.PendingFixedUpdate) {
                 this.agentState = AgentState.ActionComplete;
             }
-
         }
 
         // generates object metadata based on sim object's properties
-        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible, bool isInteractable) {
+        public override ObjectMetadata ObjectMetadataFromSimObjPhysics(
+            SimObjPhysics simObj,
+            bool isVisible,
+            bool isInteractable
+        ) {
             DroneObjectMetadata objMeta = new DroneObjectMetadata();
             objMeta.isCaught = this.isObjectCaught(simObj);
             objMeta.numSimObjHits = simObj.numSimObjHit;
@@ -231,8 +245,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // object temperature to string
             objMeta.temperature = simObj.CurrentObjTemp.ToString();
 
-            objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;// can this object be picked up?
-            objMeta.isPickedUp = simObj.isPickedUp;// returns true for if this object is currently being held by the agent
+            objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup; // can this object be picked up?
+            objMeta.isPickedUp = simObj.isPickedUp; // returns true for if this object is currently being held by the agent
 
             objMeta.moveable = simObj.PrimaryProperty == SimObjPrimaryProperty.Moveable;
 
@@ -246,7 +260,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //note using forceAction=True will ignore the isInteractable requirement
             objMeta.isInteractable = isInteractable;
 
-            objMeta.isMoving = simObj.inMotion;// keep track of if this object is actively moving
+            objMeta.isMoving = simObj.inMotion; // keep track of if this object is actively moving
 
             objMeta.objectOrientedBoundingBox = simObj.ObjectOrientedBoundingBox;
 
@@ -265,7 +279,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // TODO: clean this up with reflection.
             // it works, but will not update when something changes to AgentMetadata
-            // metadata.agent = new 
+            // metadata.agent = new
             AgentMetadata baseAgent = metadata.agent;
 
             DroneAgentMetadata droneMeta = new DroneAgentMetadata();
@@ -299,7 +313,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (actionOrientation.ContainsKey(delta)) {
                 m = actionOrientation[delta];
-
             } else {
                 actionOrientation = new Dictionary<int, Vector3>();
                 actionOrientation.Add(0, transform.forward);
@@ -326,7 +339,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             // if(Mathf.Abs(p.x-p2.x) < 0.5*Mathf.Abs(p.z-p2.z)){
                             // if(Mathf.Abs(p.x-p2.x) == 0){
                             if (Mathf.Abs(p.x - p2.x) <= 0.5) {
-                                float y = y_candidates.OrderBy(x => systemRandom.Next()).ToArray()[0];
+                                float y = y_candidates.OrderBy(x => systemRandom.Next()).ToArray()[
+                                    0
+                                ];
                                 output[0] = new Vector3(p.x, 1.0f, p.z);
                                 output[1] = new Vector3(p2.x, y, p2.z);
                                 return output;
@@ -345,21 +360,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void Teleport(
-            Vector3? position = null, Vector3? rotation = null, float? horizon = null, bool forceAction = false
+            Vector3? position = null,
+            Vector3? rotation = null,
+            float? horizon = null,
+            bool forceAction = false
         ) {
-            base.teleport(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+            base.teleport(
+                position: position,
+                rotation: rotation,
+                horizon: horizon,
+                forceAction: forceAction
+            );
             actionFinished(success: true);
         }
 
         public void TeleportFull(
-            Vector3? position, Vector3? rotation, float? horizon, bool forceAction = false
+            Vector3? position,
+            Vector3? rotation,
+            float? horizon,
+            bool forceAction = false
         ) {
-            base.teleportFull(position: position, rotation: rotation, horizon: horizon, forceAction: forceAction);
+            base.teleportFull(
+                position: position,
+                rotation: rotation,
+                horizon: horizon,
+                forceAction: forceAction
+            );
             actionFinished(success: true);
         }
 
         public void FlyRandomStart(float y) {
-            Vector3[] shuffledCurrentlyReachable = getReachablePositions().OrderBy(x => systemRandom.Next()).ToArray();
+            Vector3[] shuffledCurrentlyReachable = getReachablePositions()
+                .OrderBy(x => systemRandom.Next())
+                .ToArray();
             Vector3[] Random_output = SeekTwoPos(shuffledCurrentlyReachable);
 
             var thrust_dt_drone = Random_output[0];
@@ -436,7 +469,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // for use with the Drone to be able to launch an object into the air
         // Launch an object at a given Force (action.moveMagnitude), and angle (action.rotation)
-        public void LaunchDroneObject(float moveMagnitude, string objectName, bool objectRandom, float x, float y, float z) {
+        public void LaunchDroneObject(
+            float moveMagnitude,
+            string objectName,
+            bool objectRandom,
+            float x,
+            float y,
+            float z
+        ) {
             Launch(moveMagnitude, objectName, objectRandom, x, y, z);
             actionFinished(true);
             fixupdateCnt = 0f;
@@ -444,7 +484,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // spawn a launcher object at action.position coordinates
         public void SpawnDroneLauncher(Vector3 position) {
-
             SpawnLauncher(position);
             actionFinished(true);
         }
@@ -485,7 +524,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return caught_object_bool;
         }
 
-        public void Launch(float moveMagnitude, string objectName, bool objectRandom, float x, float y, float z) {
+        public void Launch(
+            float moveMagnitude,
+            string objectName,
+            bool objectRandom,
+            float x,
+            float y,
+            float z
+        ) {
             Vector3 LaunchAngle = new Vector3(x, y, z);
             DroneObjectLauncher.Launch(this, moveMagnitude, LaunchAngle, objectName, objectRandom);
         }
@@ -501,6 +547,5 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void SpawnLauncher(Vector3 position) {
             UnityEngine.Object.Instantiate(DroneObjectLauncher, position, Quaternion.identity);
         }
-
     }
 }

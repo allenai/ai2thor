@@ -1,20 +1,18 @@
-using System.Collections.Generic;
-using UnityEngine;
-using System.Linq;
-using UnityStandardAssets.Characters.FirstPerson;
 using System;
- using System.Runtime.Serialization.Formatters.Binary;
- using System.IO;
-using MessagePack.Resolvers;
-using MessagePack.Formatters;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using MessagePack;
+using MessagePack.Formatters;
+using MessagePack.Resolvers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-
+using UnityEngine;
+using UnityStandardAssets.Characters.FirstPerson;
 
 namespace Thor.Procedural.Data {
-
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class AssetMetadata {
@@ -44,14 +42,15 @@ namespace Thor.Procedural.Data {
         public string type { get; set; }
         public Vector3 position { get; set; }
         public Vector3 localPosition { get; set; }
-        public string[] cullingMaskOff { get; set;}
+        public string[] cullingMaskOff { get; set; }
         public FlexibleRotation rotation;
         public float intensity { get; set; }
         public float indirectMultiplier { get; set; }
         public float range { get; set; }
-        public float spotAngle { get; set; } //only used for spot lights, [1-179] valid range 
+        public float spotAngle { get; set; } //only used for spot lights, [1-179] valid range
         public SerializableColor rgb { get; set; }
         public ShadowParameters shadow = null;
+
         /*
         linked objects are one of two cases:
         this is a scene light and it is controlled by some light switch sim object, and is linked to that light switch
@@ -61,7 +60,7 @@ namespace Thor.Procedural.Data {
         public string linkedSimObj { get; set; } //explicit reference to what Sim Object controls if this light is enabled/disabled when using ToggleOnOff
         public bool enabled { get; set; }
         public string parentSimObjId { get; set; } //explicit reference to the objectID of a parent Sim Object this Light is a child of
-        public string parentSimObjName { get; set;} //explicit reference to the game object name of the parent Sim Object this Light is a child of
+        public string parentSimObjName { get; set; } //explicit reference to the game object name of the parent Sim Object this Light is a child of
     }
 
     [Serializable]
@@ -89,7 +88,12 @@ namespace Thor.Procedural.Data {
         }
 
         public static SerializableColor fromUnityColor(Color color) {
-            return new SerializableColor() {r = color.r, g = color.g, b = color.b, a = color.a};
+            return new SerializableColor() {
+                r = color.r,
+                g = color.g,
+                b = color.b,
+                a = color.a
+            };
         }
     }
 
@@ -129,7 +133,7 @@ namespace Thor.Procedural.Data {
         public float minWallColliderThickness { get; set; }
         public float receptacleHeight { get; set; }
         public string skyboxId { get; set; }
-        public SerializableColor skyboxColor { get; set; } 
+        public SerializableColor skyboxColor { get; set; }
         public string datetime { get; set; }
         public List<LightParameters> lights { get; set; }
 
@@ -197,6 +201,7 @@ namespace Thor.Procedural.Data {
         };
 
         public string layer { get; set; }
+
         // public float y { get; set; }
         public List<Vector3> floorPolygon { get; set; }
         public List<Ceiling> ceilings { get; set; }
@@ -236,7 +241,7 @@ namespace Thor.Procedural.Data {
     public class BoundingBoxWithOffset {
         public Vector3 min { get; set; }
         public Vector3 max { get; set; }
-        public Vector3 offset {get; set; }
+        public Vector3 offset { get; set; }
     }
 
     [Serializable]
@@ -360,7 +365,7 @@ namespace Thor.Procedural.Data {
         public float? openness { get; set; } = null;
         public bool? isOn { get; set; } = null;
         public bool? isDirty { get; set; } = null;
-        
+
         public bool unlit;
         public MaterialProperties material;
 
@@ -388,10 +393,9 @@ namespace Thor.Procedural.Data {
         public HouseMetadata metadata { get; set; }
     }
 
-     [Serializable]
+    [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class NavMeshConfig {
-
         public int id;
         public float agentRadius;
         public int? tileSize;
@@ -400,7 +404,6 @@ namespace Thor.Procedural.Data {
         public float? agentClimb;
         public float? voxelSize;
         public bool? overrideVoxelSize;
-
     }
 
     [Serializable]
@@ -424,7 +427,7 @@ namespace Thor.Procedural.Data {
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class MaterialProperties {
-        // TODO: move material id, color (as albedo) and tiling divisors 
+        // TODO: move material id, color (as albedo) and tiling divisors
         public string name { get; set; }
         public SerializableColor color { get; set; }
         public string shader { get; set; } = "Standard";
@@ -434,7 +437,7 @@ namespace Thor.Procedural.Data {
         public float? metallic;
         public float? smoothness;
     }
-    
+
     public interface WallRectangularHole {
         string id { get; set; }
         string assetId { get; set; }
@@ -494,12 +497,11 @@ namespace Thor.Procedural.Data {
     }
 
     public static class ExtensionMethods {
-        public static T DeepClone<T>(this T obj)
-        {
+        public static T DeepClone<T>(this T obj) {
             // Don't serialize a null object, simply return the default for that object
             if (ReferenceEquals(obj, null)) {
                 return default;
-            } 
+            }
 
             // initialize inner objects individually
             // for example in default constructor some list property initialized with some values,
@@ -520,24 +522,28 @@ namespace Thor.Procedural.Data {
             return jObj.ToObject<T>();
         }
 
-        public static TValue GetValueOrDefault<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue = default(TValue))
-        {
+        public static TValue GetValueOrDefault<TKey, TValue>(
+            this Dictionary<TKey, TValue> dictionary,
+            TKey key,
+            TValue defaultValue = default(TValue)
+        ) {
             TValue value;
             return dictionary.TryGetValue(key, out value) ? value : defaultValue;
         }
 
-        public static int AddCount<TKey>(this Dictionary<TKey, int> dictionary, TKey key, int count = 1)
-        {
+        public static int AddCount<TKey>(
+            this Dictionary<TKey, int> dictionary,
+            TKey key,
+            int count = 1
+        ) {
             int value;
             dictionary.TryGetValue(key, out value);
             if (dictionary.ContainsKey(key)) {
                 dictionary[key] = dictionary[key] + count;
-            }
-            else {
+            } else {
                 dictionary[key] = count;
             }
             return dictionary[key];
         }
     }
-    
 }
