@@ -448,8 +448,7 @@ class Controller(object):
             {
                 func
                 for func in dir(action_hook_runner)
-                if callable(getattr(action_hook_runner, func))
-                and not func.startswith("__")
+                if callable(getattr(action_hook_runner, func)) and not func.startswith("__")
             }
             if self.action_hook_runner is not None
             else None
@@ -461,8 +460,7 @@ class Controller(object):
             # numbers.Integral works for numpy.int32/64 and Python int
             if not isinstance(self.gpu_device, numbers.Integral) or self.gpu_device < 0:
                 raise ValueError(
-                    "Invalid gpu_device: '%s'. gpu_device must be >= 0"
-                    % self.gpu_device
+                    "Invalid gpu_device: '%s'. gpu_device must be >= 0" % self.gpu_device
                 )
             elif cuda_visible_devices:
                 if self.gpu_device >= len(cuda_visible_devices):
@@ -485,9 +483,7 @@ class Controller(object):
 
         if quality not in QUALITY_SETTINGS:
             valid_qualities = [
-                q
-                for q, v in sorted(QUALITY_SETTINGS.items(), key=lambda qv: qv[1])
-                if v > 0
+                q for q, v in sorted(QUALITY_SETTINGS.items(), key=lambda qv: qv[1]) if v > 0
             ]
 
             raise ValueError(
@@ -499,9 +495,7 @@ class Controller(object):
         elif QUALITY_SETTINGS[quality] == 0:
             raise ValueError(
                 "Quality {} is associated with an index of 0. "
-                "Due to a bug in unity, this quality setting would be ignored.".format(
-                    quality
-                )
+                "Due to a bug in unity, this quality setting would be ignored.".format(quality)
             )
 
         self.server_class = None
@@ -522,7 +516,7 @@ class Controller(object):
                 self.server_class = ai2thor.fifo_server.FifoServer
             else:
                 self.server_class = server_class
-        
+
         self._build = None
 
         self.interactive_controller = InteractiveControllerPrompt(
@@ -621,7 +615,6 @@ class Controller(object):
                 self.server.set_init_params(init_return)
                 logging.info(f"Initialize return: {init_return}")
 
-
     def _build_server(self, host, port, width, height):
         if self.server is not None:
             return
@@ -654,7 +647,7 @@ class Controller(object):
                 timeout=self.server_timeout,
                 depth_format=self.depth_format,
                 add_depth_noise=self.add_depth_noise,
-                start_unity=self.start_unity
+                start_unity=self.start_unity,
             )
 
     def __enter__(self):
@@ -711,8 +704,7 @@ class Controller(object):
 
             if (
                 scene in self.robothor_scenes()
-                and self.initialization_parameters.get("agentMode", "default").lower()
-                != "locobot"
+                and self.initialization_parameters.get("agentMode", "default").lower() != "locobot"
             ):
                 warnings.warn(
                     "You are using a RoboTHOR scene without using the standard LoCoBot.\n"
@@ -758,7 +750,7 @@ class Controller(object):
             warnings.warn(
                 "On reset and upon initialization, agentMode='bot' has been renamed to agentMode='locobot'."
             )
-        
+
         self.last_event = self.step(
             action="Initialize",
             raise_for_failure=True,
@@ -897,9 +889,7 @@ class Controller(object):
 
         # sort my mtime ascending, keeping the 3 most recent, attempt to prune anything older
         all_dirs = list(
-            filter(
-                os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir))
-            )
+            filter(os.path.isdir, map(lambda x: os.path.join(rdir, x), os.listdir(rdir)))
         )
         dir_stats = defaultdict(lambda: 0)
         for d in all_dirs:
@@ -1029,9 +1019,7 @@ class Controller(object):
 
         # XXX should be able to get rid of this with some sort of deprecation warning
         if "AI2THOR_VISIBILITY_DISTANCE" in os.environ:
-            action["visibilityDistance"] = float(
-                os.environ["AI2THOR_VISIBILITY_DISTANCE"]
-            )
+            action["visibilityDistance"] = float(os.environ["AI2THOR_VISIBILITY_DISTANCE"])
 
         self.last_action = action
 
@@ -1095,9 +1083,7 @@ class Controller(object):
             ]:
                 raise ValueError(self.last_event.metadata["errorMessage"])
             elif raise_for_failure:
-                raise RuntimeError(
-                    self.last_event.metadata.get("errorMessage", f"{action} failed")
-                )
+                raise RuntimeError(self.last_event.metadata.get("errorMessage", f"{action} failed"))
 
         return self.last_event
 
@@ -1120,9 +1106,7 @@ class Controller(object):
             # code finds the device_uuids for each GPU and then figures out the mapping
             # between the CUDA device ids and the Vulkan device ids.
 
-            cuda_vulkan_mapping_path = os.path.join(
-                self.base_dir, "cuda-vulkan-mapping.json"
-            )
+            cuda_vulkan_mapping_path = os.path.join(self.base_dir, "cuda-vulkan-mapping.json")
             with LockEx(cuda_vulkan_mapping_path):
                 if not os.path.exists(cuda_vulkan_mapping_path):
                     vulkan_result = None
@@ -1151,14 +1135,9 @@ class Controller(object):
                         elif "deviceUUID" in l:
                             device_uuid = l.split("=")[1].strip()
                             if device_uuid in device_uuid_to_vulkan_gpu_index:
-                                assert (
-                                    current_gpu
-                                    == device_uuid_to_vulkan_gpu_index[device_uuid]
-                                )
+                                assert current_gpu == device_uuid_to_vulkan_gpu_index[device_uuid]
                             else:
-                                device_uuid_to_vulkan_gpu_index[
-                                    device_uuid
-                                ] = current_gpu
+                                device_uuid_to_vulkan_gpu_index[device_uuid] = current_gpu
 
                     nvidiasmi_result = None
                     try:
@@ -1184,9 +1163,7 @@ class Controller(object):
 
                         current_gpu = int(gpu_match.group(1))
                         uuid_match = re.match(".*\\(UUID: GPU-([^)]+)\\)", l)
-                        nvidia_gpu_index_to_device_uuid[current_gpu] = uuid_match.group(
-                            1
-                        )
+                        nvidia_gpu_index_to_device_uuid[current_gpu] = uuid_match.group(1)
 
                     cuda_vulkan_mapping = {}
                     for (
@@ -1198,18 +1175,16 @@ class Controller(object):
                                 f"Could not find a Vulkan device corresponding"
                                 f" to the CUDA device with UUID {device_uuid}."
                             )
-                        cuda_vulkan_mapping[
-                            cuda_gpu_index
-                        ] = device_uuid_to_vulkan_gpu_index[device_uuid]
+                        cuda_vulkan_mapping[cuda_gpu_index] = device_uuid_to_vulkan_gpu_index[
+                            device_uuid
+                        ]
 
                     with open(cuda_vulkan_mapping_path, "w") as f:
                         json.dump(cuda_vulkan_mapping, f)
                 else:
                     with open(cuda_vulkan_mapping_path, "r") as f:
                         # JSON dictionaries always have strings as keys, need to re-map here
-                        cuda_vulkan_mapping = {
-                            int(k): v for k, v in json.load(f).items()
-                        }
+                        cuda_vulkan_mapping = {int(k): v for k, v in json.load(f).items()}
 
             command += f" -force-device-index {cuda_vulkan_mapping[self.gpu_device]}"
 
@@ -1227,9 +1202,7 @@ class Controller(object):
         # print("Viewer: http://%s:%s/viewer" % (host, port))
 
         command = self.unity_command(width, height, self.headless)
-        env.update(
-            self._build.platform.launch_env(self.width, self.height, self.x_display)
-        )
+        env.update(self._build.platform.launch_env(self.width, self.height, self.x_display))
 
         makedirs(self.log_dir)
         extra_args = {}
@@ -1325,8 +1298,7 @@ class Controller(object):
             else:
                 try:
                     res = requests.get(
-                        "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s"
-                        % branch
+                        "https://api.github.com/repos/allenai/ai2thor/commits?sha=%s" % branch
                     )
                     if res.status_code == 404:
                         raise ValueError("Invalid branch name: %s" % branch)
@@ -1360,9 +1332,7 @@ class Controller(object):
         return [c["sha"] for c in payload]
 
     def local_commits(self):
-        git_dir = os.path.normpath(
-            os.path.dirname(os.path.realpath(__file__)) + "/../.git"
-        )
+        git_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../.git")
         commits = (
             subprocess.check_output(
                 "git --git-dir=" + git_dir + " log -n 10 --format=%H", shell=True
@@ -1399,7 +1369,9 @@ class Controller(object):
         if platform is None:
             candidate_platforms = ai2thor.platform.select_platforms(request)
         else:
-            candidate_platforms = [STR_PLATFORM_MAP[platform] if isinstance(platform, str) else platform]
+            candidate_platforms = [
+                STR_PLATFORM_MAP[platform] if isinstance(platform, str) else platform
+            ]
 
         builds = self.find_platform_builds(
             candidate_platforms, request, commits, releases_dir, local_build
@@ -1442,12 +1414,9 @@ class Controller(object):
         ]
         for build in builds:
             errors = build.platform.validate(request)
-            message = (
-                "Platform %s failed validation with the following errors: %s\n  "
-                % (
-                    build.platform.name(),
-                    "\t\n".join(errors),
-                )
+            message = "Platform %s failed validation with the following errors: %s\n  " % (
+                build.platform.name(),
+                "\t\n".join(errors),
             )
             instructions = build.platform.dependency_instructions(request)
             if instructions:
@@ -1565,9 +1534,7 @@ class Controller(object):
 
 
 class BFSSearchPoint:
-    def __init__(
-        self, start_position, move_vector, heading_angle=0.0, horizon_angle=0.0
-    ):
+    def __init__(self, start_position, move_vector, heading_angle=0.0, horizon_angle=0.0):
         self.start_position = start_position
         self.move_vector = defaultdict(lambda: 0.0)
         self.move_vector.update(move_vector)
@@ -1648,8 +1615,7 @@ class BFSController(Controller):
             point_to_find = queue.pop()
             for p in self.grid_points:
                 dist = math.sqrt(
-                    ((point_to_find["x"] - p["x"]) ** 2)
-                    + ((point_to_find["z"] - p["z"]) ** 2)
+                    ((point_to_find["x"] - p["x"]) ** 2) + ((point_to_find["z"] - p["z"]) ** 2)
                 )
 
                 if dist < 0.05:
@@ -1671,9 +1637,7 @@ class BFSController(Controller):
 
     def _build_graph_point(self, graph, point):
         for p in self.grid_points:
-            dist = math.sqrt(
-                ((point["x"] - p["x"]) ** 2) + ((point["z"] - p["z"]) ** 2)
-            )
+            dist = math.sqrt(((point["x"] - p["x"]) ** 2) + ((point["z"] - p["z"]) ** 2))
             if dist <= (self.grid_size + 0.01) and dist > 0:
                 graph.add_edge(self.key_for_point(point), self.key_for_point(p))
 
@@ -1704,9 +1668,7 @@ class BFSController(Controller):
     def plan_horizons(self, agent_horizon, target_horizon):
         actions = []
         horizon_step_map = {330: 3, 0: 2, 30: 1, 60: 0}
-        look_diff = (
-            horizon_step_map[int(agent_horizon)] - horizon_step_map[int(target_horizon)]
-        )
+        look_diff = horizon_step_map[int(agent_horizon)] - horizon_step_map[int(target_horizon)]
         if look_diff > 0:
             for i in range(look_diff):
                 actions.append(dict(action="LookDown"))
@@ -1793,16 +1755,10 @@ class BFSController(Controller):
                 self.visited_seen_points,
             )
         ):
-            self.enqueue_point(
-                BFSSearchPoint(agent_position, dict(x=-1 * self.grid_size))
-            )
+            self.enqueue_point(BFSSearchPoint(agent_position, dict(x=-1 * self.grid_size)))
             self.enqueue_point(BFSSearchPoint(agent_position, dict(x=self.grid_size)))
-            self.enqueue_point(
-                BFSSearchPoint(agent_position, dict(z=-1 * self.grid_size))
-            )
-            self.enqueue_point(
-                BFSSearchPoint(agent_position, dict(z=1 * self.grid_size))
-            )
+            self.enqueue_point(BFSSearchPoint(agent_position, dict(z=-1 * self.grid_size)))
+            self.enqueue_point(BFSSearchPoint(agent_position, dict(z=1 * self.grid_size)))
             self.visited_seen_points.append(agent_position)
 
     def search_all_closed(self, scene_name):
@@ -1881,16 +1837,10 @@ class BFSController(Controller):
         for gp in self.grid_points:
             found = False
             for x in [1, -1]:
-                found |= (
-                    key_for_point(gp["x"] + (self.grid_size * x), gp["z"])
-                    in final_grid_points
-                )
+                found |= key_for_point(gp["x"] + (self.grid_size * x), gp["z"]) in final_grid_points
 
             for z in [1, -1]:
-                found |= (
-                    key_for_point(gp["x"], (self.grid_size * z) + gp["z"])
-                    in final_grid_points
-                )
+                found |= key_for_point(gp["x"], (self.grid_size * z) + gp["z"]) in final_grid_points
 
             if found:
                 pruned_grid_points.append(gp)
@@ -1919,10 +1869,7 @@ class BFSController(Controller):
                         forceVisible=True,
                     )
                 )
-            if (
-                visibility_object_id is None
-                and obj["objectType"] in visibility_object_types
-            ):
+            if visibility_object_id is None and obj["objectType"] in visibility_object_types:
                 visibility_object_id = obj["objectId"]
 
         for point in self.grid_points:
@@ -2054,17 +2001,13 @@ class BFSController(Controller):
         pickupable = {}
         is_open = {}
 
-        for obj in filter(
-            lambda x: x["receptacle"], self.last_event.metadata["objects"]
-        ):
+        for obj in filter(lambda x: x["receptacle"], self.last_event.metadata["objects"]):
             for oid in obj["receptacleObjectIds"]:
                 self.object_receptacle[oid] = obj
 
             is_open[obj["objectId"]] = obj["openable"] and obj["isOpen"]
 
-        for obj in filter(
-            lambda x: x["receptacle"], self.last_event.metadata["objects"]
-        ):
+        for obj in filter(lambda x: x["receptacle"], self.last_event.metadata["objects"]):
             for oid in obj["receptacleObjectIds"]:
                 if obj["openable"] or (
                     obj["objectId"] in self.object_receptacle
@@ -2079,9 +2022,7 @@ class BFSController(Controller):
             shuffled_keys = list(open_pickupable.keys())
             random.shuffle(shuffled_keys)
             for oid in shuffled_keys:
-                position_target = self.object_receptacle[self.target_objects[0]][
-                    "position"
-                ]
+                position_target = self.object_receptacle[self.target_objects[0]]["position"]
                 position_candidate = self.object_receptacle[oid]["position"]
                 dist = math.sqrt(
                     (position_target["x"] - position_candidate["x"]) ** 2

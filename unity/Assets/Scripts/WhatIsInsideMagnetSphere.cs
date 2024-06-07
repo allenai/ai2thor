@@ -1,11 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using System.Linq;
+using UnityEngine;
 
 public class WhatIsInsideMagnetSphere : MonoBehaviour {
-
-    [SerializeField] protected List<SimObjPhysics> CurrentlyContainedSOP = new List<SimObjPhysics>();
+    [SerializeField]
+    protected List<SimObjPhysics> CurrentlyContainedSOP = new List<SimObjPhysics>();
     SphereCollider sphereCol = null;
 
     // check if the sphere is actively colliding with anything
@@ -28,7 +28,13 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour {
         Collider[] hitColliders = Physics.OverlapSphere(
             position: center,
             radius: radius,
-            layerMask: LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
+            layerMask: LayerMask.GetMask(
+                "SimObjVisible",
+                "Procedural1",
+                "Procedural2",
+                "Procedural3",
+                "Procedural0"
+            ),
             queryTriggerInteraction: QueryTriggerInteraction.Ignore
         );
         foreach (var col in hitColliders) {
@@ -40,11 +46,7 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour {
             }
         }
         List<SimObjPhysics> toReturn = currentlyContainedObjects.ToList();
-        toReturn.Sort(
-            (a, b) => a.ObjectID.CompareTo(b.ObjectID)
-        );
+        toReturn.Sort((a, b) => a.ObjectID.CompareTo(b.ObjectID));
         return toReturn;
     }
-
-
 }

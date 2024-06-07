@@ -2,18 +2,19 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using UnityEditor;
 using UnityEngine;
-using System.Security.Cryptography;
 
-
-public class ExpRoomEditor : EditorWindow {
+public class ExpRoomEditor : EditorWindow
+{
     Vector2 scroll;
 
-    List <(SimObjPhysics, string)> sopAndPrefabTuples = null;
+    List<(SimObjPhysics, string)> sopAndPrefabTuples = null;
 
     [MenuItem("ExpRoom/Add all pickupable prefabs to AvailableObjects")]
-    static void AddPickupableToAvailableObjects() {
+    static void AddPickupableToAvailableObjects()
+    {
         GameObject availableObjectsGameObject = GameObject.Find("AvailableObjects");
         AddAllPrefabsAsOnlyChildrenOfObject(
             parent: availableObjectsGameObject,
@@ -24,7 +25,8 @@ public class ExpRoomEditor : EditorWindow {
     }
 
     [MenuItem("ExpRoom/Add all pickupable receptacle prefabs to AvailableContainers")]
-    static void AddPickupableReceptaclesToAvailableContainers() {
+    static void AddPickupableReceptaclesToAvailableContainers()
+    {
         GameObject availableContainersGameObject = GameObject.Find("AvailableContainers");
         AddAllPrefabsAsOnlyChildrenOfObject(
             parent: availableContainersGameObject,
@@ -35,8 +37,9 @@ public class ExpRoomEditor : EditorWindow {
     }
 
     [MenuItem("ExpRoom/Interactively add all pickupable prefabs to AvailableObjects")]
-    static void Init() {
-        ExpRoomEditor window = (ExpRoomEditor) EditorWindow.GetWindow(typeof(ExpRoomEditor));
+    static void Init()
+    {
+        ExpRoomEditor window = (ExpRoomEditor)EditorWindow.GetWindow(typeof(ExpRoomEditor));
         window.Show();
         window.position = new Rect(20, 80, 400, 300);
     }
@@ -45,12 +48,15 @@ public class ExpRoomEditor : EditorWindow {
     [MenuItem("ExpRoom/Add all pickupable prefabs to AvailableObjects", true)]
     [MenuItem("ExpRoom/Add all pickupable receptacle prefabs to AvailableContainers", true)]
     [MenuItem("ExpRoom/Interactively add all pickupable prefabs to AvailableObjects", true)]
-    static bool HideMenuIfNotInExpRoom() {
+    static bool HideMenuIfNotInExpRoom()
+    {
         //Debug.Log(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-        return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "FloorPlan_ExpRoom";
+        return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
+            == "FloorPlan_ExpRoom";
     }
 
-    void OnGUI() {
+    void OnGUI()
+    {
         GUILayout.Space(3);
         int oldValue = GUI.skin.window.padding.bottom;
         GUI.skin.window.padding.bottom = -20;
@@ -59,7 +65,8 @@ public class ExpRoomEditor : EditorWindow {
         windowRect.width -= 7;
         GUI.skin.window.padding.bottom = oldValue;
 
-        if (GUILayout.Button("Find all pickupable")) {
+        if (GUILayout.Button("Find all pickupable"))
+        {
             GameObject availableObjectsGameObject = GameObject.Find("AvailableObjects");
             sopAndPrefabTuples = AddAllPrefabsAsOnlyChildrenOfObject(
                 parent: availableObjectsGameObject,
@@ -68,21 +75,26 @@ public class ExpRoomEditor : EditorWindow {
             );
         }
 
-        if (sopAndPrefabTuples != null) {
-            if (sopAndPrefabTuples.Count == 0) {
+        if (sopAndPrefabTuples != null)
+        {
+            if (sopAndPrefabTuples.Count == 0)
+            {
                 GUILayout.Label("No pickupable objects found");
-            } else {
+            }
+            else
+            {
                 GUILayout.Label("The following prefabs were found:");
                 scroll = GUILayout.BeginScrollView(scroll);
 
-
-                foreach ((SimObjPhysics, string) sopAndPath in sopAndPrefabTuples) {
+                foreach ((SimObjPhysics, string) sopAndPath in sopAndPrefabTuples)
+                {
                     SimObjPhysics sop = sopAndPath.Item1;
                     string path = sopAndPath.Item2;
                     GUILayout.BeginHorizontal();
                     GUILayout.Label(path, GUILayout.Width(4 * position.width / 8));
                     GUILayout.Label(sop.Type.ToString(), GUILayout.Width(3 * position.width / 8));
-                    if (GUILayout.Button("Select", GUILayout.Width(position.width / 8 - 2))) {
+                    if (GUILayout.Button("Select", GUILayout.Width(position.width / 8 - 2)))
+                    {
                         Selection.activeObject = AssetDatabase.LoadMainAssetAtPath(path);
                     }
                     GUILayout.EndHorizontal();
@@ -92,10 +104,13 @@ public class ExpRoomEditor : EditorWindow {
         }
     }
 
-    public static void OpenBoxFlapsMore(SimObjPhysics sop) {
+    public static void OpenBoxFlapsMore(SimObjPhysics sop)
+    {
         CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
-        if (coo) {
-            for (int i = 0; i < coo.MovingParts.Length; i++) {
+        if (coo)
+        {
+            for (int i = 0; i < coo.MovingParts.Length; i++)
+            {
                 GameObject part = coo.MovingParts[i];
                 Vector3 openRot = coo.openPositions[i];
                 Vector3 closeRot = coo.closedPositions[i];
@@ -105,20 +120,23 @@ public class ExpRoomEditor : EditorWindow {
 
                 float angle = Quaternion.Angle(openRotQ, closeRotQ);
                 float newAngle = angle;
-                while (newAngle < 180f) {
-                     newAngle += 30f;
+                while (newAngle < 180f)
+                {
+                    newAngle += 30f;
                 }
                 part.transform.rotation = Quaternion.Euler(
                     (openRot - closeRot) * (newAngle / angle) + closeRot
                 );
                 // Debug.Log($"Open = {openRot}, closed = {closeRot}, Euler = {(openRot - closeRot) * (newAngle / angle) + openRot}");
-                Debug.Log($"Part = {part}, angle {angle}, new angle {newAngle}, true angle {Quaternion.Angle(openRotQ, part.transform.rotation)}");
+                Debug.Log(
+                    $"Part = {part}, angle {angle}, new angle {newAngle}, true angle {Quaternion.Angle(openRotQ, part.transform.rotation)}"
+                );
             }
         }
     }
 
-    public static void FixBoundingBox(SimObjPhysics sop) {
-
+    public static void FixBoundingBox(SimObjPhysics sop)
+    {
         Vector3 startPos = sop.transform.position;
         Quaternion startRot = sop.transform.rotation;
 
@@ -132,8 +150,10 @@ public class ExpRoomEditor : EditorWindow {
         Physics.SyncTransforms();
 
         Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
-        foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
-            if (c.enabled && !c.isTrigger) {
+        foreach (Collider c in sop.GetComponentsInChildren<Collider>())
+        {
+            if (c.enabled && !c.isTrigger)
+            {
                 objBounds.Encapsulate(c.bounds);
             }
         }
@@ -142,7 +162,8 @@ public class ExpRoomEditor : EditorWindow {
         bbox.center = objBounds.center;
         bbox.size = 2 * objBounds.extents;
 
-        foreach (Transform child in sop.transform) {
+        foreach (Transform child in sop.transform)
+        {
             child.position = child.position - bbox.center;
         }
         bbox.transform.position = Vector3.zero;
@@ -152,23 +173,29 @@ public class ExpRoomEditor : EditorWindow {
         sop.transform.rotation = startRot;
     }
 
-    public static string CreateSHA256Hash(string path) {
+    public static string CreateSHA256Hash(string path)
+    {
         SHA256 hasher = SHA256.Create();
 
-        using (System.IO.FileStream fs = System.IO.File.OpenRead(path)) {
+        using (System.IO.FileStream fs = System.IO.File.OpenRead(path))
+        {
             return string.Join("", hasher.ComputeHash(fs).Select(b => b.ToString("x2")).ToArray());
         }
     }
 
-    public static string[] GetAllPrefabs() {
-        return AssetDatabase.GetAllAssetPaths().Where(
-            s => s.Contains(".prefab")
+    public static string[] GetAllPrefabs()
+    {
+        return AssetDatabase
+            .GetAllAssetPaths()
+            .Where(s =>
+                s.Contains(".prefab")
                 && !s.Contains("Custom Project")
                 && !s.Contains("Assets/Resources/")
                 && !s.Contains("PhysicsTestPrefabs")
                 && !s.Contains("(Old)")
-             // && s.Contains("Assets/Physics/SimObjsPhysics") &&
-        ).ToArray();
+            // && s.Contains("Assets/Physics/SimObjsPhysics") &&
+            )
+            .ToArray();
     }
 
     public static List<(SimObjPhysics, string)> AddAllPrefabsAsOnlyChildrenOfObject(
@@ -176,59 +203,74 @@ public class ExpRoomEditor : EditorWindow {
         bool onlyPickupable,
         bool onlyReceptacles,
         string tag = ""
-    ) {
-        List <(SimObjPhysics, string)> sopAndPrefabTuples = new List <(SimObjPhysics, string)>();
+    )
+    {
+        List<(SimObjPhysics, string)> sopAndPrefabTuples = new List<(SimObjPhysics, string)>();
         string[] allPrefabs = GetAllPrefabs();
         int numAdded = 0;
-        foreach (string prefab in allPrefabs) {
+        foreach (string prefab in allPrefabs)
+        {
             GameObject go = null;
-            try {
+            try
+            {
                 Debug.Log($"Checking {prefab}");
-                go = (GameObject) AssetDatabase.LoadMainAssetAtPath(prefab);
+                go = (GameObject)AssetDatabase.LoadMainAssetAtPath(prefab);
                 SimObjPhysics sop = go.GetComponent<SimObjPhysics>();
 
                 // if (sop != null && sop.Type.ToString() == "Box" && sop.GetComponent<CanOpen_Object>()) {
-                if (sop != null) {
+                if (sop != null)
+                {
                     bool pickupable = sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
-                    bool isReceptacle = Array.IndexOf(
-                        sop.SecondaryProperties,
-                        SimObjSecondaryProperty.Receptacle
-                    ) > -1 && sop.ReceptacleTriggerBoxes != null;
-                    if (
-                        (pickupable || !onlyPickupable)
-                        && (isReceptacle || !onlyReceptacles)
-                    ) {
+                    bool isReceptacle =
+                        Array.IndexOf(sop.SecondaryProperties, SimObjSecondaryProperty.Receptacle)
+                            > -1
+                        && sop.ReceptacleTriggerBoxes != null;
+                    if ((pickupable || !onlyPickupable) && (isReceptacle || !onlyReceptacles))
+                    {
                         sopAndPrefabTuples.Add((go.GetComponent<SimObjPhysics>(), prefab));
                         numAdded += 1;
                     }
                 }
-            } catch {
-                try {
-                    if (go) {
+            }
+            catch
+            {
+                try
+                {
+                    if (go)
+                    {
                         DestroyImmediate(go);
                     }
-                } catch {}
+                }
+                catch { }
                 Debug.LogWarning($"Prefab {prefab} failed to load.");
             }
         }
 
-        sopAndPrefabTuples = sopAndPrefabTuples.OrderBy(
-            sopAndPath => (
-                sopAndPath.Item1.Type.ToString(),
-                int.Parse("0" + new string(
-                    sopAndPath.Item1.name
-                    .Split('/')
-                    .Last()
-                    .Where(c => char.IsDigit(c))
-                    .ToArray()))
+        sopAndPrefabTuples = sopAndPrefabTuples
+            .OrderBy(sopAndPath =>
+                (
+                    sopAndPath.Item1.Type.ToString(),
+                    int.Parse(
+                        "0"
+                            + new string(
+                                sopAndPath
+                                    .Item1.name.Split('/')
+                                    .Last()
+                                    .Where(c => char.IsDigit(c))
+                                    .ToArray()
+                            )
+                    )
+                )
             )
-        ).ToList();
+            .ToList();
         Debug.Log(
             $"Found {allPrefabs.Length} total prefabs of which {sopAndPrefabTuples.Count} were SimObjPhysics satisfying"
-            + $"onlyPickupable=={onlyPickupable} and onlyReceptacles=={onlyReceptacles}."
+                + $"onlyPickupable=={onlyPickupable} and onlyReceptacles=={onlyReceptacles}."
         );
 
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene());
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+            UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene()
+        );
 
         // Note that you cannot (unfortunately) combine the two below loops into
         // a single loop as doing something like
@@ -238,27 +280,32 @@ public class ExpRoomEditor : EditorWindow {
         // Will actually miss a large number of children because the way that looping through
         // parent.transform works (deleting while iterating results in missing elements).
         List<GameObject> toDestroy = new List<GameObject>();
-        foreach (Transform child in parent.transform) {
+        foreach (Transform child in parent.transform)
+        {
             toDestroy.Add(child.gameObject);
         }
-        foreach (GameObject child in toDestroy) {
+        foreach (GameObject child in toDestroy)
+        {
             Debug.Log($"Attempting to destroy {child.gameObject}");
             DestroyImmediate(child);
         }
 
-        if (tag != "") {
+        if (tag != "")
+        {
             tag = $"_{tag}";
         }
-        for (int i = 0; i < sopAndPrefabTuples.Count; i++) {
+        for (int i = 0; i < sopAndPrefabTuples.Count; i++)
+        {
             SimObjPhysics sop = sopAndPrefabTuples[i].Item1;
             string path = sopAndPrefabTuples[i].Item2;
             string hash = CreateSHA256Hash(path).Substring(0, 8);
 
-            GameObject go = (GameObject) PrefabUtility.InstantiatePrefab(sop.gameObject);
+            GameObject go = (GameObject)PrefabUtility.InstantiatePrefab(sop.gameObject);
 
             SimObjPhysics newSop = go.GetComponent<SimObjPhysics>();
 
-            if (onlyReceptacles && sop.Type.ToString() == "Box") {
+            if (onlyReceptacles && sop.Type.ToString() == "Box")
+            {
                 OpenBoxFlapsMore(newSop);
             }
 
@@ -275,98 +322,97 @@ public class ExpRoomEditor : EditorWindow {
         return sopAndPrefabTuples;
     }
 
-//    [MenuItem("ExpRoom/Fix All Moveable Object Prefabs")]
-//    public static void FixAllMoveableObjectPrefabs() {
-//        string[] allPrefabGUIDs = AssetDatabase.FindAssets("t:Prefab");
-//
-//        List<GameObject> toFixGOs = new List<GameObject>();
-//        List<string> toFixPrefabPaths = new List<string>();
-//        Dictionary<SimObjType, CanOpen_Object.MovementType> sopTypeToMovementType = new Dictionary<SimObjType, CanOpen_Object.MovementType>();
-//
-//        foreach (string guid in allPrefabGUIDs) {
-//            string prefab = AssetDatabase.GUIDToAssetPath(guid);
-//            GameObject go = null;
-//            try {
-//                go = AssetDatabase.LoadAssetAtPath<GameObject>(prefab);
-//                SimObjPhysics sop = go.GetComponent<SimObjPhysics>();
-//
-//                if (sop != null) {
-//                    CanOpen_Object coo = go.GetComponentInChildren<CanOpen_Object>();
-//                    if (coo != null) {
-//                        Debug.Log($"Checking {prefab}");
-//                        if (coo.movementType != CanOpen_Object.MovementType.Invalid) {
-//                            if (!sopTypeToMovementType.ContainsKey(sop.Type)) {
-//                                sopTypeToMovementType[sop.Type] = coo.movementType;
-//                            }
-//                            if (sopTypeToMovementType[sop.Type] != coo.movementType) {
-//                                throw new Exception($"Found two different movement types for {sop.Type}.");
-//                            }
-//                        } else {
-//                            toFixGOs.Add(go);
-//                            toFixPrefabPaths.Add(prefab);
-//                        }
-//                    }
-//                }
-//            } catch {
-//                Debug.LogWarning($"Prefab {prefab} failed to load.");
-//            }
-//        }
-//
-//        if (!sopTypeToMovementType.ContainsKey(SimObjType.ScreenFrame)) {
-//            sopTypeToMovementType[SimObjType.ScreenFrame] = CanOpen_Object.MovementType.Scale;
-//        }
-//        if (!sopTypeToMovementType.ContainsKey(SimObjType.Blinds)) {
-//            sopTypeToMovementType[SimObjType.Blinds] = CanOpen_Object.MovementType.Scale;
-//        }
-//
-//        foreach (SimObjType sopType in sopTypeToMovementType.Keys) {
-//            Debug.Log($"{sopType} has movement type {sopTypeToMovementType[sopType]}");
-//        }
-//
-//        foreach (string path in toFixPrefabPaths) {
-//            using (var editingScope = new PrefabUtility.EditPrefabContentsScope(path)) {
-//                GameObject go = editingScope.prefabContentsRoot;
-//                SimObjPhysics sop = go.GetComponentInChildren<SimObjPhysics>();
-//                CanOpen_Object coo = go.GetComponentInChildren<CanOpen_Object>();
-//
-//                if (!sopTypeToMovementType.ContainsKey(sop.Type)) {
-//                    Debug.LogError($"No movement type found for {sop.Type}.");
-//                    continue;
-//                }
-//                Debug.Log($"{go} does not have a valid movement type. Setting based on object type to {sopTypeToMovementType[sop.Type]}");
-//                coo.movementType = sopTypeToMovementType[sop.Type];
-//            }
-//        }
-//
-//
-//        // Loop through each scene
-//        Dictionary<string, List<string>> sceneToSopsThatNeedFix = new Dictionary<string, List<string>>();
-//        foreach (string scenePath in Build.GetAllScenePaths()) {
-//            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
-//            sceneToSopsThatNeedFix[scenePath] = new List<string>();
-//
-//            // Update game objects in the scene
-//            foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
-//                CanOpen_Object coo = sop.GetComponentInChildren<CanOpen_Object>();
-//                if (coo != null) {
-//                    if (coo.movementType == CanOpen_Object.MovementType.Invalid) {
-//                        Debug.Log($"Found invalid movement type for {sop.name} in {scenePath}");
-//                        sceneToSopsThatNeedFix[scenePath].Add(sop.name);
-//                    }
-//                }
-//            }
-//        }
-//
-//        // Print out scenes and sops that need fix
-//        foreach (string scenePath in sceneToSopsThatNeedFix.Keys) {
-//            if (sceneToSopsThatNeedFix[scenePath].Count > 0) {
-//                Debug.Log($"Scene {scenePath} has {sceneToSopsThatNeedFix[scenePath].Count} sops that need fix:");
-//                foreach (string sopName in sceneToSopsThatNeedFix[scenePath]) {
-//                    Debug.Log($"    {sopName}");
-//                }
-//            }
-//        }
-//
-//    }
-
+    //    [MenuItem("ExpRoom/Fix All Moveable Object Prefabs")]
+    //    public static void FixAllMoveableObjectPrefabs() {
+    //        string[] allPrefabGUIDs = AssetDatabase.FindAssets("t:Prefab");
+    //
+    //        List<GameObject> toFixGOs = new List<GameObject>();
+    //        List<string> toFixPrefabPaths = new List<string>();
+    //        Dictionary<SimObjType, CanOpen_Object.MovementType> sopTypeToMovementType = new Dictionary<SimObjType, CanOpen_Object.MovementType>();
+    //
+    //        foreach (string guid in allPrefabGUIDs) {
+    //            string prefab = AssetDatabase.GUIDToAssetPath(guid);
+    //            GameObject go = null;
+    //            try {
+    //                go = AssetDatabase.LoadAssetAtPath<GameObject>(prefab);
+    //                SimObjPhysics sop = go.GetComponent<SimObjPhysics>();
+    //
+    //                if (sop != null) {
+    //                    CanOpen_Object coo = go.GetComponentInChildren<CanOpen_Object>();
+    //                    if (coo != null) {
+    //                        Debug.Log($"Checking {prefab}");
+    //                        if (coo.movementType != CanOpen_Object.MovementType.Invalid) {
+    //                            if (!sopTypeToMovementType.ContainsKey(sop.Type)) {
+    //                                sopTypeToMovementType[sop.Type] = coo.movementType;
+    //                            }
+    //                            if (sopTypeToMovementType[sop.Type] != coo.movementType) {
+    //                                throw new Exception($"Found two different movement types for {sop.Type}.");
+    //                            }
+    //                        } else {
+    //                            toFixGOs.Add(go);
+    //                            toFixPrefabPaths.Add(prefab);
+    //                        }
+    //                    }
+    //                }
+    //            } catch {
+    //                Debug.LogWarning($"Prefab {prefab} failed to load.");
+    //            }
+    //        }
+    //
+    //        if (!sopTypeToMovementType.ContainsKey(SimObjType.ScreenFrame)) {
+    //            sopTypeToMovementType[SimObjType.ScreenFrame] = CanOpen_Object.MovementType.Scale;
+    //        }
+    //        if (!sopTypeToMovementType.ContainsKey(SimObjType.Blinds)) {
+    //            sopTypeToMovementType[SimObjType.Blinds] = CanOpen_Object.MovementType.Scale;
+    //        }
+    //
+    //        foreach (SimObjType sopType in sopTypeToMovementType.Keys) {
+    //            Debug.Log($"{sopType} has movement type {sopTypeToMovementType[sopType]}");
+    //        }
+    //
+    //        foreach (string path in toFixPrefabPaths) {
+    //            using (var editingScope = new PrefabUtility.EditPrefabContentsScope(path)) {
+    //                GameObject go = editingScope.prefabContentsRoot;
+    //                SimObjPhysics sop = go.GetComponentInChildren<SimObjPhysics>();
+    //                CanOpen_Object coo = go.GetComponentInChildren<CanOpen_Object>();
+    //
+    //                if (!sopTypeToMovementType.ContainsKey(sop.Type)) {
+    //                    Debug.LogError($"No movement type found for {sop.Type}.");
+    //                    continue;
+    //                }
+    //                Debug.Log($"{go} does not have a valid movement type. Setting based on object type to {sopTypeToMovementType[sop.Type]}");
+    //                coo.movementType = sopTypeToMovementType[sop.Type];
+    //            }
+    //        }
+    //
+    //
+    //        // Loop through each scene
+    //        Dictionary<string, List<string>> sceneToSopsThatNeedFix = new Dictionary<string, List<string>>();
+    //        foreach (string scenePath in Build.GetAllScenePaths()) {
+    //            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
+    //            sceneToSopsThatNeedFix[scenePath] = new List<string>();
+    //
+    //            // Update game objects in the scene
+    //            foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
+    //                CanOpen_Object coo = sop.GetComponentInChildren<CanOpen_Object>();
+    //                if (coo != null) {
+    //                    if (coo.movementType == CanOpen_Object.MovementType.Invalid) {
+    //                        Debug.Log($"Found invalid movement type for {sop.name} in {scenePath}");
+    //                        sceneToSopsThatNeedFix[scenePath].Add(sop.name);
+    //                    }
+    //                }
+    //            }
+    //        }
+    //
+    //        // Print out scenes and sops that need fix
+    //        foreach (string scenePath in sceneToSopsThatNeedFix.Keys) {
+    //            if (sceneToSopsThatNeedFix[scenePath].Count > 0) {
+    //                Debug.Log($"Scene {scenePath} has {sceneToSopsThatNeedFix[scenePath].Count} sops that need fix:");
+    //                foreach (string sopName in sceneToSopsThatNeedFix[scenePath]) {
+    //                    Debug.Log($"    {sopName}");
+    //                }
+    //            }
+    //        }
+    //
+    //    }
 }

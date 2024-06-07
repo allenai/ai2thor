@@ -1,21 +1,18 @@
-using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
 public interface Arm {
-
     // void ContinuousUpdate();
     bool IsArmColliding();
+
     // bool ShouldHalt();
     GameObject GetArmTarget();
 
     ArmMetadata GenerateMetadata();
-    
 
-    public Dictionary<SimObjPhysics, HashSet<Collider>> heldObjects {
-        get;
-    }
+    public Dictionary<SimObjPhysics, HashSet<Collider>> heldObjects { get; }
 
     IEnumerator moveArmRelative(
         PhysicsRemoteFPSAgentController controller,
@@ -36,7 +33,6 @@ public interface Arm {
         string coordinateSpace,
         bool restrictTargetPosition
     );
-
 
     IEnumerator moveArmBase(
         PhysicsRemoteFPSAgentController controller,
@@ -68,5 +64,4 @@ public interface Arm {
     IEnumerator PickupObject(List<string> objectIds);
 
     IEnumerator DropObject();
-
 }

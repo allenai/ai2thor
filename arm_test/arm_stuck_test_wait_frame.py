@@ -37,9 +37,7 @@ actions = [
 ]
 
 standard_pose()
-execute_actions(
-    actions, disableRendering=False, waitForFixedUpdate=False, returnToStart=True
-)
+execute_actions(actions, disableRendering=False, waitForFixedUpdate=False, returnToStart=True)
 event = arm_test.base.controller.step(
     "MoveArmBase",
     y=0.49074136446614885,

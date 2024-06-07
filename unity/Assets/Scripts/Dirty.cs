@@ -3,24 +3,30 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Dirty : MonoBehaviour {
-
     [SerializeField]
     public SwapObjList[] MaterialSwapObjects; // put objects that need amterial swaps here, use OnMaterials for Dirty, OffMaterials for Clean
 
     [SerializeField]
     public GameObject[] ObjectsToEnableIfClean; // for things like bed sheets, decals etc. that need to toggle on and off the entire game object
+
     [SerializeField]
     public GameObject[] ObjectsToEnableIfDirty;
+
     [SerializeField]
     protected bool isDirty = false;
 
     public bool IsDirty() {
         return isDirty;
     }
+
     // Start is called before the first frame update
     void Start() {
 #if UNITY_EDITOR
-        if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty)) {
+        if (
+            !gameObject
+                .GetComponent<SimObjPhysics>()
+                .DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty)
+        ) {
             Debug.LogError(gameObject.name + " is missing the CanBeDirty secondary property!");
         }
 #endif
@@ -40,7 +46,8 @@ public class Dirty : MonoBehaviour {
             // swap all material swap objects to OnMaterials
             if (MaterialSwapObjects.Length > 0) {
                 for (int i = 0; i < MaterialSwapObjects.Length; i++) {
-                    MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials = MaterialSwapObjects[i].OnMaterials;
+                    MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
+                        MaterialSwapObjects[i].OnMaterials;
                 }
             }
 
@@ -60,13 +67,13 @@ public class Dirty : MonoBehaviour {
 
             isDirty = true;
         }
-
         // if dirt, make clean
         else {
             // swap all material swap object to OffMaterials
             if (MaterialSwapObjects.Length > 0) {
                 for (int i = 0; i < MaterialSwapObjects.Length; i++) {
-                    MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials = MaterialSwapObjects[i].OffMaterials;
+                    MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
+                        MaterialSwapObjects[i].OffMaterials;
                 }
             }
 

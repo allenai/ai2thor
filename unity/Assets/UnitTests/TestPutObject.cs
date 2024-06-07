@@ -1,15 +1,18 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
-using System;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityStandardAssets.Characters.FirstPerson;
 
-namespace Tests {
-    public class TestPutObject : TestBase {
+namespace Tests
+{
+    public class TestPutObject : TestBase
+    {
         [UnityTest]
-        public IEnumerator TestPutObject_PutNearXY_True() {
+        public IEnumerator TestPutObject_PutNearXY_True()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -61,7 +64,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestPutObject_PutNearXY_False() {
+        public IEnumerator TestPutObject_PutNearXY_False()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -110,7 +114,6 @@ namespace Tests {
 
             result = Mathf.Approximately(creditCard.transform.position.z, 0.7573217f);
             Assert.AreEqual(result, true);
-
         }
 
         // this should fail if user calls PlaceHeldObject directly and tries to pass in a z value
@@ -118,7 +121,8 @@ namespace Tests {
         // note: if a user passes in both 'z' and 'maxDistance' then they may get a silent, unintended behavior.
         // we should decide how to handle extraneous parameters in the future
         [UnityTest]
-        public IEnumerator PlaceHeldObject_Deprecated_Z_objectId() {
+        public IEnumerator PlaceHeldObject_Deprecated_Z_objectId()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -161,7 +165,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator PlaceHeldObject_Deprecated_Z_XY() {
+        public IEnumerator PlaceHeldObject_Deprecated_Z_XY()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -205,7 +210,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator PlaceHeldObject_Deprecated_Z_XY_PutNearXY_True() {
+        public IEnumerator PlaceHeldObject_Deprecated_Z_XY_PutNearXY_True()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";

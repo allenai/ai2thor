@@ -11,7 +11,7 @@ namespace UnityStandardAssets.ImageEffects
         static Mesh[] meshes;
         static int currentQuads = 0;
 
-        static bool HasMeshes ()
+        static bool HasMeshes()
         {
             if (meshes == null)
                 return false;
@@ -21,8 +21,7 @@ namespace UnityStandardAssets.ImageEffects
             return true;
         }
 
-
-        public static void Cleanup ()
+        public static void Cleanup()
         {
             if (meshes == null)
                 return;
@@ -31,17 +30,17 @@ namespace UnityStandardAssets.ImageEffects
             {
                 if (null != meshes[i])
                 {
-                    Object.DestroyImmediate (meshes[i]);
+                    Object.DestroyImmediate(meshes[i]);
                     meshes[i] = null;
                 }
             }
             meshes = null;
         }
 
-
-        public static Mesh[] GetMeshes ( int totalWidth, int totalHeight)
+        public static Mesh[] GetMeshes(int totalWidth, int totalHeight)
         {
-            if (HasMeshes () && (currentQuads == (totalWidth * totalHeight))) {
+            if (HasMeshes() && (currentQuads == (totalWidth * totalHeight)))
+            {
                 return meshes;
             }
 
@@ -49,26 +48,26 @@ namespace UnityStandardAssets.ImageEffects
             int totalQuads = totalWidth * totalHeight;
             currentQuads = totalQuads;
 
-            int meshCount = Mathf.CeilToInt ((1.0f * totalQuads) / (1.0f * maxQuads));
+            int meshCount = Mathf.CeilToInt((1.0f * totalQuads) / (1.0f * maxQuads));
 
-            meshes = new Mesh [meshCount];
+            meshes = new Mesh[meshCount];
 
             int i = 0;
             int index = 0;
             for (i = 0; i < totalQuads; i += maxQuads)
             {
-                int quads = Mathf.FloorToInt (Mathf.Clamp ((totalQuads-i), 0, maxQuads));
+                int quads = Mathf.FloorToInt(Mathf.Clamp((totalQuads - i), 0, maxQuads));
 
-                meshes[index] = GetMesh (quads, i, totalWidth, totalHeight);
+                meshes[index] = GetMesh(quads, i, totalWidth, totalHeight);
                 index++;
             }
 
             return meshes;
         }
 
-        static Mesh GetMesh (int triCount, int triOffset, int totalWidth, int totalHeight)
+        static Mesh GetMesh(int triCount, int triOffset, int totalWidth, int totalHeight)
         {
-            var mesh = new Mesh ();
+            var mesh = new Mesh();
             mesh.hideFlags = HideFlags.DontSave;
 
             var verts = new Vector3[triCount * 4];
@@ -83,25 +82,25 @@ namespace UnityStandardAssets.ImageEffects
 
                 int vertexWithOffset = triOffset + i;
 
-                float x = Mathf.Floor (vertexWithOffset % totalWidth) / totalWidth;
-                float y = Mathf.Floor (vertexWithOffset / totalWidth) / totalHeight;
+                float x = Mathf.Floor(vertexWithOffset % totalWidth) / totalWidth;
+                float y = Mathf.Floor(vertexWithOffset / totalWidth) / totalHeight;
 
-                Vector3 position = new Vector3 (x * 2 - 1, y * 2 - 1, 1.0f);
+                Vector3 position = new Vector3(x * 2 - 1, y * 2 - 1, 1.0f);
 
                 verts[i4 + 0] = position;
                 verts[i4 + 1] = position;
                 verts[i4 + 2] = position;
                 verts[i4 + 3] = position;
 
-                uvs[i4 + 0] = new Vector2 (0.0f, 0.0f);
-                uvs[i4 + 1] = new Vector2 (1.0f, 0.0f);
-                uvs[i4 + 2] = new Vector2 (0.0f, 1.0f);
-                uvs[i4 + 3] = new Vector2 (1.0f, 1.0f);
+                uvs[i4 + 0] = new Vector2(0.0f, 0.0f);
+                uvs[i4 + 1] = new Vector2(1.0f, 0.0f);
+                uvs[i4 + 2] = new Vector2(0.0f, 1.0f);
+                uvs[i4 + 3] = new Vector2(1.0f, 1.0f);
 
-                uvs2[i4 + 0] = new Vector2 (x, y);
-                uvs2[i4 + 1] = new Vector2 (x, y);
-                uvs2[i4 + 2] = new Vector2 (x, y);
-                uvs2[i4 + 3] = new Vector2 (x, y);
+                uvs2[i4 + 0] = new Vector2(x, y);
+                uvs2[i4 + 1] = new Vector2(x, y);
+                uvs2[i4 + 2] = new Vector2(x, y);
+                uvs2[i4 + 3] = new Vector2(x, y);
 
                 tris[i6 + 0] = i4 + 0;
                 tris[i6 + 1] = i4 + 1;
@@ -110,7 +109,6 @@ namespace UnityStandardAssets.ImageEffects
                 tris[i6 + 3] = i4 + 1;
                 tris[i6 + 4] = i4 + 2;
                 tris[i6 + 5] = i4 + 3;
-
             }
 
             mesh.vertices = verts;
@@ -120,6 +118,5 @@ namespace UnityStandardAssets.ImageEffects
 
             return mesh;
         }
-
     }
 }

@@ -21,13 +21,14 @@ public class Breakdown : MonoBehaviour {
                 rb.AddTorque(new Vector3(Random.value, Random.value, Random.value));
 
                 // add the rigidbody to cache of all rigidbodies in scene
-                GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>().AddToRBSInScene(rb);
+                GameObject
+                    .Find("PhysicsSceneManager")
+                    .GetComponent<PhysicsSceneManager>()
+                    .AddToRBSInScene(rb);
             }
         }
     }
 
     // Update is called once per frame
-    void Update() {
-
-    }
+    void Update() { }
 }

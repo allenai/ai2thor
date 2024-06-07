@@ -2,17 +2,18 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public abstract class CollisionEventResolver : MonoBehaviour {
-
     protected void Start() {
         var listener = this.transform.GetComponentInParent<CollisionListener>();
         if (listener != null) {
             listener.setCollisionEventResolver(this);
         }
     }
-    public abstract StaticCollision resolveToStaticCollision(Collider externalCollider, HashSet<Collider> internalColliders);
 
+    public abstract StaticCollision resolveToStaticCollision(
+        Collider externalCollider,
+        HashSet<Collider> internalColliders
+    );
 }
 
 // Class to track what was hit while arm was moving

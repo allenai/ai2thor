@@ -1,10 +1,10 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using System.Collections;
-using System.Collections.Generic;
 
 public class TestCabinetVisibility : MonoBehaviour {
 #if UNITY_EDITOR
@@ -88,14 +88,31 @@ public class TestCabinetVisibility : MonoBehaviour {
                 }
                 RaycastHit hit;
                 // check to see if the agent is above the floor
-                bool aboveGround = Physics.Raycast(randomPos, Vector3.down, out hit, 1.1f, SimUtil.RaycastVisibleLayerMask, QueryTriggerInteraction.Ignore);
-                if (!aboveGround || !hit.collider.CompareTag(SimUtil.StructureTag) || !hit.collider.name.Equals("Floor")) {
+                bool aboveGround = Physics.Raycast(
+                    randomPos,
+                    Vector3.down,
+                    out hit,
+                    1.1f,
+                    SimUtil.RaycastVisibleLayerMask,
+                    QueryTriggerInteraction.Ignore
+                );
+                if (
+                    !aboveGround
+                    || !hit.collider.CompareTag(SimUtil.StructureTag)
+                    || !hit.collider.name.Equals("Floor")
+                ) {
                     numSkippedPositions++;
                 } else {
                     aboveGround = true;
                 }
                 bool hasOverlap = false;
-                Collider[] overlap = Physics.OverlapCapsule(randomPos + Vector3.up, randomPos + Vector3.down, 0.1f, SimUtil.RaycastVisibleLayerMask, QueryTriggerInteraction.Ignore);
+                Collider[] overlap = Physics.OverlapCapsule(
+                    randomPos + Vector3.up,
+                    randomPos + Vector3.down,
+                    0.1f,
+                    SimUtil.RaycastVisibleLayerMask,
+                    QueryTriggerInteraction.Ignore
+                );
                 foreach (Collider collider in overlap) {
                     if (!collider.name.Equals("Floor")) {
                         hasOverlap = true;
@@ -120,12 +137,13 @@ public class TestCabinetVisibility : MonoBehaviour {
                 EditorUtility.DisplayProgressBar(
                     "Testing " + cabinets.Count.ToString() + " cabinets",
                     currentCabinet.ObjectID + " (position " + i.ToString() + ")",
-                    ((float)cabinetNum / cabinets.Count) + (((float)i / ChecksPerCabinet) * progressInterval));
+                    ((float)cabinetNum / cabinets.Count)
+                        + (((float)i / ChecksPerCabinet) * progressInterval)
+                );
                 for (int j = 0; j < horizonAngles.Length; j++) {
                     float horizonAngle = horizonAngles[j];
                     float headingAngle = 0f;
                     for (int k = 0; k < headingAngles.Length; k++) {
-
                         headingAngle = headingAngles[k];
                         // at each step, check whether we can see the cabinet
                         bool cabinetVisibleClosed = false;
@@ -137,7 +155,9 @@ public class TestCabinetVisibility : MonoBehaviour {
                         // currentCabinet.Animator.SetBool ("AnimState1", false);
                         // yield return null;
                         // get visible again
-                        foreach (SimObj visibleSimObj in SimUtil.GetAllVisibleSimObjs(cam, MaxDistance)) {
+                        foreach (
+                            SimObj visibleSimObj in SimUtil.GetAllVisibleSimObjs(cam, MaxDistance)
+                        ) {
                             if (visibleSimObj == currentCabinet) {
                                 cabinetVisibleClosed = true;
                                 // seenAtLeastOnce = true;
@@ -155,7 +175,9 @@ public class TestCabinetVisibility : MonoBehaviour {
                         yield return null;
                         yield return new WaitForEndOfFrame();
                         // get visible objects again
-                        foreach (SimObj visibleSimObj in SimUtil.GetAllVisibleSimObjs(cam, MaxDistance)) {
+                        foreach (
+                            SimObj visibleSimObj in SimUtil.GetAllVisibleSimObjs(cam, MaxDistance)
+                        ) {
                             if (visibleSimObj == currentCabinet) {
                                 cabinetVisibleOpen = true;
                                 // seenAtLeastOnce = true;
@@ -185,11 +207,11 @@ public class TestCabinetVisibility : MonoBehaviour {
                 }
             }
             /*if (!seenAtLeastOnce) {
-				ProblemCabinets.Add (currentCabinet);
-				ProblemPositions.Add (Vector3.zero);
-				ProblemHeadingAngles.Add (0f);
-				ProblemhHorizonAngles.Add (0f);
-			}*/
+                ProblemCabinets.Add (currentCabinet);
+                ProblemPositions.Add (Vector3.zero);
+                ProblemHeadingAngles.Add (0f);
+                ProblemhHorizonAngles.Add (0f);
+            }*/
             yield return null;
             cabinetNum++;
         }

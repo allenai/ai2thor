@@ -109,7 +109,7 @@ class Benchmarker(ABC):
     @abstractmethod
     def benchmark(self, env, action_config, add_key_values={}):
         raise NotImplementedError
-    
+
     def step_for_config(self, env, action_config, out_errors):
         evt = None
         try:
@@ -119,7 +119,7 @@ class Benchmarker(ABC):
             out_errors["message"] = str(te)
         # TODO catch runtime error
         return evt
-    
+
     def step(self, env, action, out_errors, **kwargs):
         evt = None
         try:
@@ -132,7 +132,6 @@ class Benchmarker(ABC):
 
     def same(self, x):
         return x
-
 
     def aggregate_by(self, records, dimensions, transform=True, aggregate_out_key=None):
         if not isinstance(dimensions, list):
@@ -154,7 +153,7 @@ class Benchmarker(ABC):
                     {
                         "count": len(slice),
                         aggregate_out_key: np.sum([v[self.aggregate_key()] for v in slice])
-                        / len(slice)
+                        / len(slice),
                     }
                 )
                 for dimension, slice in groups
@@ -166,12 +165,12 @@ class Benchmarker(ABC):
                     "count": len(slice),
                     aggregate_out_key: np.sum([v[self.aggregate_key()] for v in slice])
                     / len(slice),
-                    "index": slice[0]["index"] if len(slice) == 1 else 0
+                    "index": slice[0]["index"] if len(slice) == 1 else 0,
                 }
                 if "timeout" in aggregate and aggregate["timeout"]:
                     aggregate["timeout_message"] = aggregate["message"]
                 if len(slice) == 1:
-                     aggregate["index"] = slice[0]["index"]
+                    aggregate["index"] = slice[0]["index"]
                 aggregated_groups[dimension] = aggregate
         return aggregated_groups
 
@@ -215,7 +214,8 @@ class SimsPerSecondBenchmarker(Benchmarker):
         if self.only_transformed_key:
             del report[self.aggregate_key()]
         return report
-    
+
+
 class PhysicsSimulateCountBenchmarker(Benchmarker):
     def __init__(self, only_transformed_key=False):
         self.only_transformed_key = only_transformed_key
@@ -254,23 +254,22 @@ class PhysicsSimulateCountBenchmarker(Benchmarker):
         if self.only_transformed_key:
             del report[self.aggregate_key()]
         return report
-    
-    
+
 
 class UnityActionBenchmarkRunner(BenchmarkConfig):
     def __clean_action(self, action: Union[str, Dict[str, Any]]):
-        if isinstance(action, str):           
+        if isinstance(action, str):
             return {"action": action, "args": {}}
         if "args" not in action:
-            action_name = action.pop('action', None)
-            return {"action":action_name, "args":{**action}}
+            action_name = action.pop("action", None)
+            return {"action": action_name, "args": {**action}}
         else:
             return {**action, "args": action.get("args", {})}
 
     def __get_complete_action_dict(self, action_group):
         group_copy = copy.deepcopy(action_group)
         actions_copy = group_copy["actions"]
-        
+
         group_copy["actions"] = [
             self.__clean_action(a)
             for a in actions_copy
@@ -286,9 +285,9 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             if group_copy["selector"] == "random":
                 group_copy["selector"] = default_selector
             elif group_copy["selector"] == "sequence":
-                group_copy['it'] = iter(group_copy["actions"])
-                
-                group_copy["selector"] = lambda x: next(group_copy['it'])
+                group_copy["it"] = iter(group_copy["actions"])
+
+                group_copy["selector"] = lambda x: next(group_copy["it"])
                 group_copy["sample_count"] = len(group_copy["actions"])
             # TODO: potentially add more selectors
         if group_copy["selector"] is None:
@@ -332,16 +331,10 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
 
     def __teleport_to_random_reachable(self, env, house=None):
         evt = env.step(action="GetReachablePositions")
-        if (
-            house is not None
-            and "metadata" in house
-            and not evt.metadata["lastActionSuccess"]
-        ):
+        if house is not None and "metadata" in house and not evt.metadata["lastActionSuccess"]:
             if "agent" in house["metadata"]:
                 logger.info("Teleporting")
-                evt = env.step(
-                    dict(action="TeleportFull", forceAction=True, **house["metadata"])
-                )
+                evt = env.step(dict(action="TeleportFull", forceAction=True, **house["metadata"]))
 
         if (
             not evt.metadata["lastActionSuccess"]
@@ -408,14 +401,12 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                     standing=True,
                 )
             )
-    
+
     def __init_env(self):
         args = self.init_params
         controller_params = copy.deepcopy(args)
         if "server_class" in args:
-            controller_params["server_type"] = controller_params[
-                "server_class"
-            ].server_type
+            controller_params["server_type"] = controller_params["server_class"].server_type
             del controller_params["server_class"]
         env = ai2thor.controller.Controller(**args)
         return env, controller_params
@@ -438,10 +429,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
 
         experiment_list = [
             [
-                [
-                    (scene, procedural_house, benchmarker, i)
-                    for benchmarker in self.benchmarkers
-                ]
+                [(scene, procedural_house, benchmarker, i) for benchmarker in self.benchmarkers]
                 for i in range(self.experiment_sample_count)
             ]
             for (scene, procedural_house) in scene_list
@@ -463,20 +451,16 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         return experiment_list
 
     def benchmark(self, action_map={}):
-        
+
         env, controller_params = self.__init_env()
         experiment_list = self.__create_experiments()
         hostname = ""
         try:
-            hostname = (
-            subprocess.check_output("hostname -f", shell=True)
-            .decode("utf8")
-            .strip()
-        )
+            hostname = subprocess.check_output("hostname -f", shell=True).decode("utf8").strip()
         except Exception as e:
             logger.exception(f"Could not run 'hostname -f' {str(e)}")
             pass
-        
+
         run_in_editor = controller_params["start_unity"] == False and controller_params["port"]
         benchmark_map = {
             "title": self.name,
@@ -486,7 +470,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                 "platform": platform.system(),
                 "arch": env._build.platform.__name__,
                 "ran_in_editor": run_in_editor,
-                "commit_id": env._build.commit_id if hasattr(env._build, 'commit_id') else None,
+                "commit_id": env._build.commit_id if hasattr(env._build, "commit_id") else None,
                 "filter_object_types": self.filter_object_types,
                 "experiment_sample_count": self.experiment_sample_count,
             },
@@ -511,9 +495,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             if house is not None:
                 success = self.__create_procedural_house(env, house)
                 if not success:
-                    logger.warn(
-                        f"Procedural house creation failed for house {house['id']}"
-                    )
+                    logger.warn(f"Procedural house creation failed for house {house['id']}")
                     continue
                 house_id = house["id"]
             logger.info(f"------ Scene: '{scene}', house={house_id}")
@@ -522,12 +504,12 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                 k: self.__get_complete_action_dict(group) for k, group in action_map.items()
             }
             records = []
-           
+
             for action_group_name, action_group in action_setup.items():
                 print(f"---- Action group: {action_group_name}")
                 if self.teleport_random_before_actions:
                     self.__teleport_to_random_reachable(env, house)
-                    
+
                 for i in range(action_group["sample_count"]):
                     # print(f"Selector {action_group['selector']} action_g? {action_group} actions {action_group['actions']}")
                     action_config = action_group["selector"](action_group["actions"])
@@ -541,14 +523,14 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                             "scene": scene,
                             "experiment_index": experiment_index,
                             "benchmarker": benchmarker.name(),
-                            "index": i
+                            "index": i,
                         },
                     )
                     records.append(record)
                     if "timeout" in record and record["timeout"]:
                         timeout = True
                         break
-                
+
                 if timeout:
                     break
 
@@ -568,7 +550,11 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         by_action_single = {}
         i = 0
         for benchmarker in self.benchmarkers:
-            benchmarker_records = [r for r in records_by_benchmarker[benchmarker.name()] if  r["benchmarker"] == benchmarker.name()]
+            benchmarker_records = [
+                r
+                for r in records_by_benchmarker[benchmarker.name()]
+                if r["benchmarker"] == benchmarker.name()
+            ]
             # print(f"---- benc {benchmarker_records}")
             # print("-----------")
             by_benchmarker.update(benchmarker.aggregate_by(benchmarker_records, "benchmarker"))
@@ -583,7 +569,8 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                 )
                 by_action_and_group.update(
                     benchmarker.aggregate_by(
-                        benchmarker_records, ["scene", "house", "benchmarker", "action_group", "action"]
+                        benchmarker_records,
+                        ["scene", "house", "benchmarker", "action_group", "action"],
                     )
                 )
 
@@ -592,10 +579,10 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
                         benchmarker.aggregate_by(
                             benchmarker_records,
                             ["scene", "house", "benchmarker", "action_group", "action", "index"],
-                            transform=False
+                            transform=False,
                         )
                     )
-                
+
             by_action_group.update(
                 benchmarker.aggregate_by(
                     benchmarker_records, ["scene", "house", "benchmarker", "action_group"]
@@ -604,10 +591,11 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             if i == 0:
                 with open("debug.json", "w") as f:
                     json.dump(benchmarker_records, f)
-            i+=1
+            i += 1
 
-
-        house_or_scene = lambda scene, house: scene if scene != "Procedural" or scene == "ProceduralAB" else house
+        house_or_scene = lambda scene, house: (
+            scene if scene != "Procedural" or scene == "ProceduralAB" else house
+        )
         benchmark_map["action_groups"] = {
             group_name: [a["action"] for a in group["actions"]]
             for group_name, group in action_map.items()
@@ -625,47 +613,46 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
 
             # print(by_action_and_group)
             #     # aggregate_copy = copy.deepcopy(aggregate)
-                
+
             #     print(f"------ aggregate {benchmarker_name} {action_group} : {aggregate_copy}")
             #     print("---------")
-                
-                
-                    
-            benchmark_map["benchmarks"][benchmarker_name][
-                house_or_scene(scene, house_id)
-            ][action_group] = aggregate_copy
 
-        for (
-            scene,
-            house_id,
-            benchmarker_name,
-            action_group,
-            action
-        ), aggregate in by_action_and_group.items():
-            benchmark_map["benchmarks"][benchmarker_name][
-                house_or_scene(scene, house_id)
-            ][action_group]["by_actions"][action] = aggregate
+            benchmark_map["benchmarks"][benchmarker_name][house_or_scene(scene, house_id)][
+                action_group
+            ] = aggregate_copy
 
-        
         for (
             scene,
             house_id,
             benchmarker_name,
             action_group,
             action,
-            index
-        ), aggregate in by_action_single.items():
-            if "individual" not in  benchmark_map["benchmarks"][benchmarker_name][
-                house_or_scene(scene, house_id)
-            ][action_group]["by_actions"][action]:
-                benchmark_map["benchmarks"][benchmarker_name][
-                    house_or_scene(scene, house_id)
-                ][action_group]["by_actions"][action]["individual"] = []
-            
-            benchmark_map["benchmarks"][benchmarker_name][
-                house_or_scene(scene, house_id)
-            ][action_group]["by_actions"][action]["individual"].append(aggregate)
+        ), aggregate in by_action_and_group.items():
+            benchmark_map["benchmarks"][benchmarker_name][house_or_scene(scene, house_id)][
+                action_group
+            ]["by_actions"][action] = aggregate
 
+        for (
+            scene,
+            house_id,
+            benchmarker_name,
+            action_group,
+            action,
+            index,
+        ), aggregate in by_action_single.items():
+            if (
+                "individual"
+                not in benchmark_map["benchmarks"][benchmarker_name][
+                    house_or_scene(scene, house_id)
+                ][action_group]["by_actions"][action]
+            ):
+                benchmark_map["benchmarks"][benchmarker_name][house_or_scene(scene, house_id)][
+                    action_group
+                ]["by_actions"][action]["individual"] = []
+
+            benchmark_map["benchmarks"][benchmarker_name][house_or_scene(scene, house_id)][
+                action_group
+            ]["by_actions"][action]["individual"].append(aggregate)
 
         for (
             scene,
@@ -673,22 +660,22 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
             benchmarker_name,
             action_name,
         ), aggregate in by_action_across.items():
-            benchmark_map["benchmarks"][benchmarker_name][
-                house_or_scene(scene, house_id)
-            ][action_name] = aggregate
+            benchmark_map["benchmarks"][benchmarker_name][house_or_scene(scene, house_id)][
+                action_name
+            ] = aggregate
 
         for (scene, house_id, benchmarker_name), aggregate in by_scene.items():
-            benchmark_map["benchmarks"][benchmarker_name][
-                house_or_scene(scene, house_id)
-            ]["scene"] = aggregate
+            benchmark_map["benchmarks"][benchmarker_name][house_or_scene(scene, house_id)][
+                "scene"
+            ] = aggregate
             if scene == "Procedural" or scene == "ProceduralAB":
                 print(f"----- house or scene: {house_or_scene(scene, house_id)}")
-                benchmark_map["benchmarks"][benchmarker_name][
-                    house_or_scene(scene, house_id)
-                ]["scene"]["procedural"] = True
-                benchmark_map["benchmarks"][benchmarker_name][
-                    house_or_scene(scene, house_id)
-                ]["scene"]["house_id"] = house_id
+                benchmark_map["benchmarks"][benchmarker_name][house_or_scene(scene, house_id)][
+                    "scene"
+                ]["procedural"] = True
+                benchmark_map["benchmarks"][benchmarker_name][house_or_scene(scene, house_id)][
+                    "scene"
+                ]["house_id"] = house_id
 
         for benchmarker_name, aggregate in by_benchmarker.items():
             benchmark_map["benchmarks"][benchmarker_name]["global"] = aggregate

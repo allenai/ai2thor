@@ -1,10 +1,9 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 [ExecuteInEditMode]
 public class Bathtub : MonoBehaviour {
-
     public SimObj ParentObj;
     public bool EditorFilled = false;
     public GameObject FilledObject;
@@ -20,7 +19,8 @@ public class Bathtub : MonoBehaviour {
             Animator a = ParentObj.gameObject.GetComponent<Animator>();
             if (a == null) {
                 a = ParentObj.gameObject.AddComponent<Animator>();
-                a.runtimeAnimatorController = Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
+                a.runtimeAnimatorController =
+                    Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
             }
         }
     }

@@ -1,14 +1,15 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 [ExecuteInEditMode]
 public class Bed : MonoBehaviour {
-
     public SimObj ParentObj;
+
     // public GameObject FittedSheet;
     public GameObject TidyBlanket;
     public GameObject MessyBlanket;
+
     [Range(0, 2)]
     public int EditorState = 0;
 
@@ -23,13 +24,13 @@ public class Bed : MonoBehaviour {
             Animator a = ParentObj.gameObject.GetComponent<Animator>();
             if (a == null) {
                 a = ParentObj.gameObject.AddComponent<Animator>();
-                a.runtimeAnimatorController = Resources.Load("StateAnimController") as RuntimeAnimatorController;
+                a.runtimeAnimatorController =
+                    Resources.Load("StateAnimController") as RuntimeAnimatorController;
             }
         }
     }
 
     void Update() {
-
         int state = EditorState;
         if (Application.isPlaying) {
             state = ParentObj.Animator.GetInteger("AnimState1");

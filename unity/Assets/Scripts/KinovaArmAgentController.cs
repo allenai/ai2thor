@@ -1,16 +1,18 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using System;
 using System.Linq;
 using RandomExtensions;
+using UnityEngine;
 using UnityEngine.AI;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-
     public partial class KinovaArmAgentController : ArmAgentController {
-        public KinovaArmAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
-        }
+        public KinovaArmAgentController(
+            BaseAgentComponent baseAgentComponent,
+            AgentManager agentManager
+        )
+            : base(baseAgentComponent, agentManager) { }
 
         public override ActionFinished InitializeBody(ServerAction initializeAction) {
             base.InitializeBody(initializeAction);
@@ -18,7 +20,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             IKArm.SetActive(true);
             Arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             Arm.PhysicsController = this;
-            var armTarget = Arm.transform.Find("robot_arm_FK_IK_rig").Find("IK_rig").Find("IK_pos_rot_manipulator");
+            var armTarget = Arm
+                .transform.Find("robot_arm_FK_IK_rig")
+                .Find("IK_rig")
+                .Find("IK_pos_rot_manipulator");
             Vector3 pos = armTarget.transform.localPosition;
             pos.z = 0.4f; // pulls the arm in from being fully extended
             armTarget.transform.localPosition = pos;
@@ -32,8 +37,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             IK_Robot_Arm_Controller arm = GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm == null) {
                 throw new InvalidOperationException(
-                    "Agent does not have kinematic arm or is not enabled.\n" +
-                    $"Make sure there is a '{typeof(IK_Robot_Arm_Controller).Name}' component as a child of this agent."
+                    "Agent does not have kinematic arm or is not enabled.\n"
+                        + $"Make sure there is a '{typeof(IK_Robot_Arm_Controller).Name}' component as a child of this agent."
                 );
             }
             return arm;
@@ -52,17 +57,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceAction = false
         ) {
             GameObject heightManip = this.GetComponent<BaseAgentComponent>().IKArm;
-            GameObject posRotManip = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmTarget();
-            GameObject elbowManip = this.GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetElbowTarget();
+            GameObject posRotManip = this.GetComponent<BaseAgentComponent>()
+                .IKArm.GetComponent<IK_Robot_Arm_Controller>()
+                .GetArmTarget();
+            GameObject elbowManip = this.GetComponent<BaseAgentComponent>()
+                .IKArm.GetComponent<IK_Robot_Arm_Controller>()
+                .GetElbowTarget();
 
             // cache old values in case there's a failure
             Vector3 oldLocalPosition = posRotManip.transform.localPosition;
             float oldLocalRotationAngle;
             Vector3 oldLocalRotationAxis;
-            posRotManip.transform.localRotation.ToAngleAxis(angle: out oldLocalRotationAngle, axis: out oldLocalRotationAxis);
+            posRotManip.transform.localRotation.ToAngleAxis(
+                angle: out oldLocalRotationAngle,
+                axis: out oldLocalRotationAxis
+            );
             float oldArmHeight = heightManip.transform.localPosition.y;
             float oldElbowOrientation = elbowManip.transform.localEulerAngles.z;
-            
+
             // establish defaults in the absence of inputs
             if (position == null) {
                 position = new Vector3(0f, 0f, 0.4f);
@@ -89,17 +101,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // teleport arm-elements
             if (!worldRelative) {
-                    posRotManip.transform.localPosition = (Vector3)position;
-                    posRotManip.transform.localRotation = Quaternion.AngleAxis(
-                        ((Vector4)rotation).w % 360,
-                        new Vector3(((Vector4)rotation).x, ((Vector4)rotation).y, ((Vector4)rotation).z)
-                    );
+                posRotManip.transform.localPosition = (Vector3)position;
+                posRotManip.transform.localRotation = Quaternion.AngleAxis(
+                    ((Vector4)rotation).w % 360,
+                    new Vector3(((Vector4)rotation).x, ((Vector4)rotation).y, ((Vector4)rotation).z)
+                );
             } else {
-                    posRotManip.transform.position = (Vector3)position;
-                    posRotManip.transform.rotation = Quaternion.AngleAxis(
-                        ((Vector4)rotation).w % 360,
-                        new Vector3(((Vector4)rotation).x, ((Vector4)rotation).y, ((Vector4)rotation).z)
-                    );
+                posRotManip.transform.position = (Vector3)position;
+                posRotManip.transform.rotation = Quaternion.AngleAxis(
+                    ((Vector4)rotation).w % 360,
+                    new Vector3(((Vector4)rotation).x, ((Vector4)rotation).y, ((Vector4)rotation).z)
+                );
             }
 
             elbowManip.transform.localEulerAngles = new Vector3(
@@ -113,13 +125,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 heightManip.transform.localPosition = new Vector3(
                     heightManip.transform.localPosition.x,
                     oldArmHeight,
-                    heightManip.transform.localPosition.z);
+                    heightManip.transform.localPosition.z
+                );
                 posRotManip.transform.localPosition = oldLocalPosition;
-                posRotManip.transform.localRotation = Quaternion.AngleAxis(oldLocalRotationAngle, oldLocalRotationAxis);
+                posRotManip.transform.localRotation = Quaternion.AngleAxis(
+                    oldLocalRotationAngle,
+                    oldLocalRotationAxis
+                );
                 elbowManip.transform.localEulerAngles = new Vector3(
                     elbowManip.transform.localEulerAngles.x,
                     elbowManip.transform.localEulerAngles.y,
-                    oldElbowOrientation);
+                    oldElbowOrientation
+                );
                 actionFinished(false);
             } else {
                 actionFinished(true);
@@ -162,8 +179,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 actionFinished(
                     success: false,
-                    errorMessage: $"Cannot RotateWristAroundHeldObject when holding" +
-                        $" != 1 objects, currently holding {arm.heldObjects.Count} objects."
+                    errorMessage: $"Cannot RotateWristAroundHeldObject when holding"
+                        + $" != 1 objects, currently holding {arm.heldObjects.Count} objects."
                 );
             }
         }
@@ -203,11 +220,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         account for the hierarchy of rigidbodies of each arm joint and
         determine how to detect collision between a given arm joint and other arm joints.
         */
-        public void RotateElbowRelative(
-            float degrees,
-            float speed = 10f,
-            bool returnToStart = true
-        ) {
+        public void RotateElbowRelative(float degrees, float speed = 10f, bool returnToStart = true) {
             IK_Robot_Arm_Controller arm = getArmImplementation();
 
             arm.rotateElbowRelative(
@@ -222,11 +235,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         /*
         Same as RotateElbowRelative but rotates the elbow to a given angle directly.
         */
-        public void RotateElbow(
-            float degrees,
-            float speed = 10f,
-            bool returnToStart = true
-        ) {
+        public void RotateElbow(float degrees, float speed = 10f, bool returnToStart = true) {
             IK_Robot_Arm_Controller arm = getArmImplementation();
 
             arm.rotateElbow(

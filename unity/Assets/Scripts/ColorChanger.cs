@@ -1,8 +1,6 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using Random = UnityEngine.Random;
-
-
 
 public class ColorChanger : MonoBehaviour {
     // These will eventually be turned into sets, such that they are
@@ -14,7 +12,8 @@ public class ColorChanger : MonoBehaviour {
     private ResourceAssetManager assetManager;
 
     protected void cacheMaterials() {
-        var objectMaterialLabels = new string[] {
+        var objectMaterialLabels = new string[]
+        {
             "AlarmClockMaterials",
             "AppleMaterials",
             "BasketballMaterials",
@@ -68,7 +67,8 @@ public class ColorChanger : MonoBehaviour {
             "PanDecalMaterials",
             "CoffeeMachineMaterials"
         };
-        var materialGroupLabels = new string[] {
+        var materialGroupLabels = new string[]
+        {
             "RawTrainMaterials",
             "RawValMaterials",
             "RawTestMaterials",
@@ -89,7 +89,11 @@ public class ColorChanger : MonoBehaviour {
         materialGroupPaths = new Dictionary<string, HashSet<string>>();
         foreach (var label in materialGroupLabels) {
             HashSet<string> paths = new HashSet<string>();
-            foreach (var resourceAssetRef in this.assetManager.FindResourceAssetReferences<Material>(label)) {
+            foreach (
+                var resourceAssetRef in this.assetManager.FindResourceAssetReferences<Material>(
+                    label
+                )
+            ) {
                 paths.Add(resourceAssetRef.ResourcePath);
             }
 
@@ -120,7 +124,10 @@ public class ColorChanger : MonoBehaviour {
         }
     }
 
-    private void shuffleMaterials(HashSet<string> activeMaterialNames, List<ResourceAssetReference<Material>> materialGroup) {
+    private void shuffleMaterials(
+        HashSet<string> activeMaterialNames,
+        List<ResourceAssetReference<Material>> materialGroup
+    ) {
         for (int n = materialGroup.Count - 1; n >= 0; n--) {
             int i = Random.Range(0, n + 1);
 
@@ -135,8 +142,6 @@ public class ColorChanger : MonoBehaviour {
             }
         }
     }
-
-
 
     public int RandomizeMaterials(
         bool useTrainMaterials,
@@ -165,7 +170,7 @@ public class ColorChanger : MonoBehaviour {
         int numTotalMaterials = 0;
 
         // the purpose of finding all the active materials is to limit what
-        // assets actually get loaded.  Without this filter, all assets would 
+        // assets actually get loaded.  Without this filter, all assets would
         // need to get loaded and shuffled, using this the shuffle step
         // can limit what materials actually get loaded through Resources.Load()
         HashSet<string> activeMaterialNames = new HashSet<string>();
@@ -180,13 +185,25 @@ public class ColorChanger : MonoBehaviour {
             }
         }
 
-        foreach (KeyValuePair<string, List<ResourceAssetReference<Material>>> materialGroup in objectMaterials) {
-            List<ResourceAssetReference<Material>> validMaterials = new List<ResourceAssetReference<Material>>();
+        foreach (
+            KeyValuePair<
+                string,
+                List<ResourceAssetReference<Material>>
+            > materialGroup in objectMaterials
+        ) {
+            List<ResourceAssetReference<Material>> validMaterials =
+                new List<ResourceAssetReference<Material>>();
             foreach (ResourceAssetReference<Material> resourceAssetReference in materialGroup.Value) {
                 if (
-                    useTrainMaterials && materialGroupPaths["RawTrainMaterials"].Contains(resourceAssetReference.ResourcePath) ||
-                    useValMaterials && materialGroupPaths["RawValMaterials"].Contains(resourceAssetReference.ResourcePath) ||
-                    useTestMaterials && materialGroupPaths["RawTestMaterials"].Contains(resourceAssetReference.ResourcePath)
+                    useTrainMaterials
+                        && materialGroupPaths["RawTrainMaterials"]
+                            .Contains(resourceAssetReference.ResourcePath)
+                    || useValMaterials
+                        && materialGroupPaths["RawValMaterials"]
+                            .Contains(resourceAssetReference.ResourcePath)
+                    || useTestMaterials
+                        && materialGroupPaths["RawTestMaterials"]
+                            .Contains(resourceAssetReference.ResourcePath)
                 ) {
                     if (inRoomTypes == null) {
                         validMaterials.Add(resourceAssetReference);
@@ -194,7 +211,10 @@ public class ColorChanger : MonoBehaviour {
                     } else {
                         foreach (string roomType in inRoomTypes) {
                             string roomLabel = roomTypeLabelMap[roomType];
-                            if (materialGroupPaths[roomLabel].Contains(resourceAssetReference.ResourcePath)) {
+                            if (
+                                materialGroupPaths[roomLabel]
+                                    .Contains(resourceAssetReference.ResourcePath)
+                            ) {
                                 validMaterials.Add(resourceAssetReference);
                                 numTotalMaterials++;
                                 break;
@@ -206,8 +226,6 @@ public class ColorChanger : MonoBehaviour {
 
             shuffleMaterials(activeMaterialNames, validMaterials);
         }
-
-
 
         return numTotalMaterials;
     }

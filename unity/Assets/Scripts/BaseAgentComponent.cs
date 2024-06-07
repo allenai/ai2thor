@@ -1,5 +1,6 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
+
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
     public class BaseAgentComponent : MonoBehaviour {
@@ -14,15 +15,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public GameObject DebugPointPrefab;
         public GameObject GridRenderer = null;
         public GameObject DebugTargetPointPrefab;
-        public GameObject VisibilityCapsule = null;// used to keep track of currently active VisCap: see different vis caps for modes below
-        public GameObject TallVisCap;// meshes used for Tall mode
-        public GameObject DroneVisCap;// meshes used for Drone mode
+        public GameObject VisibilityCapsule = null; // used to keep track of currently active VisCap: see different vis caps for modes below
+        public GameObject TallVisCap; // meshes used for Tall mode
+        public GameObject DroneVisCap; // meshes used for Drone mode
         public GameObject StretchVisCap; // meshes used for Stretch mode
         public GameObject IKArm; // reference to the IK_Robot_Arm_Controller arm
         public GameObject StretchArm; // reference to the Stretch_Arm_Controller arm
         public GameObject StretchBodyColliders; //reference to the
-        public GameObject BotVisCap;// meshes used for Bot mode
-        public GameObject DroneBasket;// reference to the drone's basket object
+        public GameObject BotVisCap; // meshes used for Bot mode
+        public GameObject DroneBasket; // reference to the drone's basket object
         public GameObject CrackedCameraCanvas = null;
         public GameObject[] ToSetActive = null;
         public Material[] ScreenFaces; // 0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
@@ -40,11 +41,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-
 #if UNITY_WEBGL
-                // For object highlight shader to properly work, all visible objects should be populated not conditioned
-                // on the objectid of a completed action
-                this.agent.VisibleSimObjPhysics = this.agent.VisibleSimObjs(false);
+            // For object highlight shader to properly work, all visible objects should be populated not conditioned
+            // on the objectid of a completed action
+            this.agent.VisibleSimObjPhysics = this.agent.VisibleSimObjs(false);
 #endif
 
             // editor
@@ -53,7 +53,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //     this.agent.VisibleSimObjPhysics = this.agent.VisibleSimObjs(false);
             // }
 #endif
-
         }
 
         void FixedUpdate() {
@@ -61,6 +60,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.agent.FixedUpdate();
             }
         }
+
         // Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
         // XXX: this will be used for truly continuous movement over time, for now this is unused
         protected void OnControllerColliderHit(ControllerColliderHit hit) {
@@ -69,11 +69,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (hit.gameObject.GetComponent<StructureObject>()) {
-                if (hit.gameObject.GetComponent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Floor) {
+                if (
+                    hit.gameObject.GetComponent<StructureObject>().WhatIsMyStructureObjectTag
+                    == StructureObjectTag.Floor
+                ) {
                     return;
                 }
             }
-
 
             if (!this.agent.collisionsInAction.Contains(hit.gameObject.name)) {
                 this.agent.collisionsInAction.Add(hit.gameObject.name);
@@ -100,11 +102,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // body.AddForceAtPosition (m_CharacterController.velocity * 15f, hit.point, ForceMode.Acceleration);// might have to adjust the force vector scalar later
         }
 
-        #if UNITY_EDITOR
-        public void OnDrawGizmos() {
-
-        }
-        #endif
-
+#if UNITY_EDITOR
+        public void OnDrawGizmos() { }
+#endif
     }
 }

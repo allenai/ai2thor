@@ -23,9 +23,7 @@ def updateNavMeshParamsForScene(scene_file_name):
     doc.dump_yaml()
 
 
-def GetRoboSceneNames(
-    last_index, last_subIndex, nameTemplate, prefix_path="unity/Assets/Scenes"
-):
+def GetRoboSceneNames(last_index, last_subIndex, nameTemplate, prefix_path="unity/Assets/Scenes"):
     return [
         "{}/FloorPlan_{}{}_{}.unity".format(prefix_path, nameTemplate, i, j)
         for i in range(1, last_index + 1)
@@ -33,9 +31,7 @@ def GetRoboSceneNames(
     ]
 
 
-def GetSceneNames(
-    start_index, last_index, nameTemplate="", prefix_path="unity/Assets/Scenes"
-):
+def GetSceneNames(start_index, last_index, nameTemplate="", prefix_path="unity/Assets/Scenes"):
     return [
         "{}/FloorPlan{}{}_physics.unity".format(prefix_path, i, nameTemplate)
         for i in range(start_index, last_index + 1)

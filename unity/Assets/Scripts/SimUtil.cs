@@ -1,14 +1,13 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
-using System.Collections;
 using System;
-using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public static class SimUtil {
-
     // how fast smooth-animated s / cabinets / etc animate
     public const float SmoothAnimationSpeed = 0.5f;
 
@@ -18,12 +17,12 @@ public static class SimUtil {
     public const int RaycastHiddenLayerMask = 1 << RaycastHiddenLayer;
     public const string ReceptacleTag = "Receptacle";
     public const string SimObjTag = "SimObj";
-    public const string StructureTag = "Structure";// what is this used for?
+    public const string StructureTag = "Structure"; // what is this used for?
     public const float ViewPointRangeHigh = 1f;
     public const float ViewPointRangeLow = 0f;
     public const int VisibilityCheckSteps = 10;
 
-    public const float DownwardRangeExtension = 2.0f;// 1.45f; changed this so the agent can see low enough to open all drawers
+    public const float DownwardRangeExtension = 2.0f; // 1.45f; changed this so the agent can see low enough to open all drawers
     public const float MinDownwardLooKangle = 15f;
     public const float MaxDownwardLookAngle = 60f;
 
@@ -50,7 +49,6 @@ public static class SimUtil {
             }
         }
 
-
 #endif
         // the final list of visible items
         List<SimObj> items = new List<SimObj>();
@@ -59,13 +57,20 @@ public static class SimUtil {
 
         HashSet<SimObj> uniqueItems = new HashSet<SimObj>();
 
-
         // get a list of all the colliders we intersect with in a sphere
         Vector3 agentCameraPos = agentCamera.transform.position;
-        Collider[] colliders = Physics.OverlapSphere(agentCameraPos, maxDistance * DownwardRangeExtension, SimUtil.RaycastVisibleLayerMask, QueryTriggerInteraction.Collide);
+        Collider[] colliders = Physics.OverlapSphere(
+            agentCameraPos,
+            maxDistance * DownwardRangeExtension,
+            SimUtil.RaycastVisibleLayerMask,
+            QueryTriggerInteraction.Collide
+        );
         // go through them one by one and determine if they're actually simObjs
         for (int i = 0; i < colliders.Length; i++) {
-            if (colliders[i].CompareTag(SimUtil.SimObjTag) || colliders[i].CompareTag(SimUtil.ReceptacleTag)) {
+            if (
+                colliders[i].CompareTag(SimUtil.SimObjTag)
+                || colliders[i].CompareTag(SimUtil.ReceptacleTag)
+            ) {
                 SimObj o = null;
                 if (GetSimObjFromCollider(colliders[i], out o)) {
                     // this may result in duplicates because of 'open' receptacles
@@ -78,7 +83,6 @@ public static class SimUtil {
         // now check to see if they're actually visible
         RaycastHit hit = new RaycastHit();
         foreach (SimObj item in uniqueItems) {
-
             if (!CheckItemBounds(item, agentCameraPos)) {
                 // if the camera isn't in bounds, skip this item
                 continue;
@@ -98,7 +102,8 @@ public static class SimUtil {
                         SimUtil.RaycastVisibleLayerMask,
                         true,
                         maxDistance,
-                        out hit);
+                        out hit
+                    );
                     // if we can see it no need for more checks!
                     if (canSeeItem) {
                         break;
@@ -110,13 +115,18 @@ public static class SimUtil {
                 for (int i = 0; i < VisibilityCheckSteps; i++) {
                     canSeeItem = CheckPointVisibility(
                         item,
-                        Vector3.Lerp(item.TopPoint, item.BottomPoint, (float)i / VisibilityCheckSteps),
+                        Vector3.Lerp(
+                            item.TopPoint,
+                            item.BottomPoint,
+                            (float)i / VisibilityCheckSteps
+                        ),
                         agentCamera,
                         agentCameraPos,
                         SimUtil.RaycastVisibleLayerMask,
                         true,
                         maxDistance,
-                        out hit);
+                        out hit
+                    );
 
                     // if we can see it no need for more checks!
                     if (canSeeItem) {
@@ -134,12 +144,24 @@ public static class SimUtil {
                 // now check to see if it's a receptacle interior
                 if (item.IsReceptacle && hit.collider.CompareTag(SimUtil.ReceptacleTag)) {
                     // if it is, add the items in the receptacle as well
-                    items.AddRange(GetVisibleItemsFromReceptacle(item.Receptacle, agentCamera, agentCameraPos, maxDistance));
+                    items.AddRange(
+                        GetVisibleItemsFromReceptacle(
+                            item.Receptacle,
+                            agentCamera,
+                            agentCameraPos,
+                            maxDistance
+                        )
+                    );
                 }
             }
         }
         // now sort the items by distance to camera
-        items.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
+        items.Sort(
+            (x, y) =>
+                Vector3
+                    .Distance(x.transform.position, agentCameraPos)
+                    .CompareTo(Vector3.Distance(y.transform.position, agentCameraPos))
+        );
         // we're done!
         return items.ToArray();
     }
@@ -147,9 +169,13 @@ public static class SimUtil {
     // checks whether a point is in view of the camera
     public static bool CheckPointVisibility(Vector3 itemTargetPoint, Camera agentCamera) {
         Vector3 viewPoint = agentCamera.WorldToViewportPoint(itemTargetPoint);
-        if (viewPoint.z > 0// in front of camera
-            && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow// within x bounds
-            && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow) { // within y bounds
+        if (
+            viewPoint.z > 0 // in front of camera
+            && viewPoint.x < ViewPointRangeHigh
+            && viewPoint.x > ViewPointRangeLow // within x bounds
+            && viewPoint.y < ViewPointRangeHigh
+            && viewPoint.y > ViewPointRangeLow
+        ) { // within y bounds
             return true;
         }
         return false;
@@ -157,13 +183,26 @@ public static class SimUtil {
 
     // checks whether a point is in view of the camera
     // and whether it can be seen via raycast
-    static bool CheckPointVisibility(SimObj item, Vector3 itemTargetPoint, Camera agentCamera, Vector3 agentCameraPos, int raycastLayerMask, bool checkTrigger, float maxDistance, out RaycastHit hit) {
+    static bool CheckPointVisibility(
+        SimObj item,
+        Vector3 itemTargetPoint,
+        Camera agentCamera,
+        Vector3 agentCameraPos,
+        int raycastLayerMask,
+        bool checkTrigger,
+        float maxDistance,
+        out RaycastHit hit
+    ) {
         hit = new RaycastHit();
         Vector3 viewPoint = agentCamera.WorldToViewportPoint(itemTargetPoint);
 
-        if (viewPoint.z > 0// in front of camera
-            && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow// within x bounds
-            && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow) { // within y bounds
+        if (
+            viewPoint.z > 0 // in front of camera
+            && viewPoint.x < ViewPointRangeHigh
+            && viewPoint.x > ViewPointRangeLow // within x bounds
+            && viewPoint.y < ViewPointRangeHigh
+            && viewPoint.y > ViewPointRangeLow
+        ) { // within y bounds
             Vector3 itemDirection = Vector3.zero;
             // do a raycast in the direction of the item
             itemDirection = (itemTargetPoint - agentCameraPos).normalized;
@@ -174,21 +213,41 @@ public static class SimUtil {
             agentForward.Normalize();
             // clap the angle so we can't wrap around
             float maxDistanceLerp = 0f;
-            float lookAngle = Mathf.Clamp(Vector3.Angle(agentForward, itemDirection), 0f, MaxDownwardLookAngle) - MinDownwardLooKangle;
+            float lookAngle =
+                Mathf.Clamp(Vector3.Angle(agentForward, itemDirection), 0f, MaxDownwardLookAngle)
+                - MinDownwardLooKangle;
             maxDistanceLerp = lookAngle / MaxDownwardLookAngle;
-            maxDistance = Mathf.Lerp(maxDistance, maxDistance * DownwardRangeExtension, maxDistanceLerp);
+            maxDistance = Mathf.Lerp(
+                maxDistance,
+                maxDistance * DownwardRangeExtension,
+                maxDistanceLerp
+            );
             // try to raycast for the object
-            if (Physics.Raycast(
+            if (
+                Physics.Raycast(
                     agentCameraPos,
                     itemDirection,
                     out hit,
                     maxDistance,
                     raycastLayerMask,
-                    (checkTrigger ? QueryTriggerInteraction.Collide : QueryTriggerInteraction.Ignore))) {
+                    (
+                        checkTrigger
+                            ? QueryTriggerInteraction.Collide
+                            : QueryTriggerInteraction.Ignore
+                    )
+                )
+            ) {
                 // check to see if we hit the item we're after
-                if (hit.collider.attachedRigidbody != null && hit.collider.attachedRigidbody.gameObject == item.gameObject) {
+                if (
+                    hit.collider.attachedRigidbody != null
+                    && hit.collider.attachedRigidbody.gameObject == item.gameObject
+                ) {
 #if UNITY_EDITOR
-                    Debug.DrawLine(agentCameraPos, hit.point, Color.Lerp(Color.green, Color.blue, maxDistanceLerp));
+                    Debug.DrawLine(
+                        agentCameraPos,
+                        hit.point,
+                        Color.Lerp(Color.green, Color.blue, maxDistanceLerp)
+                    );
 #endif
                     return true;
                 }
@@ -222,7 +281,9 @@ public static class SimUtil {
                     item.gameObject.SetActive(true);
                     result = true;
                 } else {
-                    Debug.LogWarning("Item had no startup transform. This probably means it was spawned in a receptacle.");
+                    Debug.LogWarning(
+                        "Item had no startup transform. This probably means it was spawned in a receptacle."
+                    );
                 }
                 break;
 
@@ -258,7 +319,10 @@ public static class SimUtil {
         // use the item's bounds transform as a bounding box
         // this is NOT axis-aligned so objects rotated strangely may return unexpected results
         // but it should work for 99% of cases
-        Bounds itemBounds = new Bounds(item.BoundsTransform.position, item.BoundsTransform.lossyScale);
+        Bounds itemBounds = new Bounds(
+            item.BoundsTransform.position,
+            item.BoundsTransform.lossyScale
+        );
         return itemBounds.Contains(agentPosition);
     }
 
@@ -294,7 +358,11 @@ public static class SimUtil {
 
     // searches for a SimObj item under a receptacle by ID
     // this does not TAKE the item, it just searches for it
-    public static bool FindItemFromReceptacleByType(SimObjType itemType, Receptacle r, out SimObj item) {
+    public static bool FindItemFromReceptacleByType(
+        SimObjType itemType,
+        Receptacle r,
+        out SimObj item
+    ) {
         item = null;
         // make sure we're not doing something insane
         if (r == null) {
@@ -347,7 +415,6 @@ public static class SimUtil {
         return AddItemToReceptaclePivot(item, emptyPivot);
     }
 
-
     // adds the item to a receptacle
     // enabled the object, parents it under an empty pivot, then makes it invisible to raycasts
     // returns false if there are no available pivots in the receptacle
@@ -378,14 +445,17 @@ public static class SimUtil {
     // enabled the object, parents it under an empty pivot, then makes it invisible to raycasts
     // returns false if there are no available pivots in the receptacle
     public static bool AddItemToReceptaclePivot(SimObj item, Transform pivot) {
-
         if (item == null) {
             Debug.LogError("SimObj item was null in AddItemToReceptaclePivot, not adding");
             return false;
         }
 
         if (pivot == null) {
-            Debug.LogError("Pivot was null when attempting to add item " + item.name + " to Receptacle pivot, not adding");
+            Debug.LogError(
+                "Pivot was null when attempting to add item "
+                    + item.name
+                    + " to Receptacle pivot, not adding"
+            );
             return false;
         }
 
@@ -417,8 +487,11 @@ public static class SimUtil {
         return emptyPivot != null;
     }
 
-
-    public static bool GetFirstEmptyVisibleReceptaclePivot(Receptacle r, Camera camera, out Transform emptyPivot) {
+    public static bool GetFirstEmptyVisibleReceptaclePivot(
+        Receptacle r,
+        Camera camera,
+        out Transform emptyPivot
+    ) {
         Plane[] planes = GeometryUtility.CalculateFrustumPlanes(camera);
 
         emptyPivot = null;
@@ -470,7 +543,12 @@ public static class SimUtil {
 
     // gets all VISIBILE SimObjs contained in a receptacle
     // this does not TAKE any of these items
-    public static SimObj[] GetVisibleItemsFromReceptacle(Receptacle r, Camera agentCamera, Vector3 agentCameraPos, float maxDistance) {
+    public static SimObj[] GetVisibleItemsFromReceptacle(
+        Receptacle r,
+        Camera agentCamera,
+        Vector3 agentCameraPos,
+        float maxDistance
+    ) {
         List<SimObj> items = new List<SimObj>();
         // RaycastHit hit = new RaycastHit();
         foreach (Transform t in r.Pivots) {
@@ -517,7 +595,13 @@ public static class SimUtil {
         }
     }
 
-    public static void BuildScene(string scenePath, string buildName, string outputPath, UnityEditor.BuildTarget buildTarget, bool launchOnBuild) {
+    public static void BuildScene(
+        string scenePath,
+        string buildName,
+        string outputPath,
+        UnityEditor.BuildTarget buildTarget,
+        bool launchOnBuild
+    ) {
         Debug.Log("Building scene '" + scenePath + "' to '" + outputPath + "'");
         // set up the player correctly
         UnityEditor.PlayerSettings.companyName = "Allen Institute for Artificial Intelligence";
@@ -534,12 +618,14 @@ public static class SimUtil {
         UnityEditor.PlayerSettings.allowFullscreenSwitch = true;
 
         UnityEditor.BuildPipeline.BuildPlayer(
-            new UnityEditor.EditorBuildSettingsScene[] {
-                new UnityEditor.EditorBuildSettingsScene (scenePath, true)
+            new UnityEditor.EditorBuildSettingsScene[]
+            {
+                new UnityEditor.EditorBuildSettingsScene(scenePath, true)
             },
             System.IO.Path.Combine(outputPath, buildName),
             buildTarget,
-            launchOnBuild ? UnityEditor.BuildOptions.AutoRunPlayer : UnityEditor.BuildOptions.None);
+            launchOnBuild ? UnityEditor.BuildOptions.AutoRunPlayer : UnityEditor.BuildOptions.None
+        );
     }
 
     [UnityEditor.MenuItem("AI2-THOR/RandomizeMaterials/Bin Materials")]
@@ -549,8 +635,12 @@ public static class SimUtil {
             HashSet<Material> sceneMaterials = new HashSet<Material>();
 
             // Get all MeshRenderers under Objects and Structures groups
-            sceneMeshRenderers.UnionWith(GameObject.Find("Objects").GetComponentsInChildren<MeshRenderer>());
-            sceneMeshRenderers.UnionWith(GameObject.Find("Structure").GetComponentsInChildren<MeshRenderer>());
+            sceneMeshRenderers.UnionWith(
+                GameObject.Find("Objects").GetComponentsInChildren<MeshRenderer>()
+            );
+            sceneMeshRenderers.UnionWith(
+                GameObject.Find("Structure").GetComponentsInChildren<MeshRenderer>()
+            );
 
             // Get all shared Materials from MeshRenderers
             foreach (MeshRenderer meshRenderer in sceneMeshRenderers) {
@@ -560,7 +650,10 @@ public static class SimUtil {
             return sceneMaterials;
         }
 
-        Dictionary<string, HashSet<Material>> materialMetadata = new Dictionary<string, HashSet<Material>>() {
+        Dictionary<string, HashSet<Material>> materialMetadata = new Dictionary<
+            string,
+            HashSet<Material>
+        >() {
             ["RawTrainMaterials"] = new HashSet<Material>(),
             ["RawValMaterials"] = new HashSet<Material>(),
             ["RawTestMaterials"] = new HashSet<Material>(),
@@ -646,16 +739,22 @@ public static class SimUtil {
         }
 
         // overrides the saved values on the prefab
-        UnityEditor.PrefabUtility.SaveAsPrefabAsset(instanceRoot: physicsSceneManager, assetPath: prefabPath);
+        UnityEditor.PrefabUtility.SaveAsPrefabAsset(
+            instanceRoot: physicsSceneManager,
+            assetPath: prefabPath
+        );
     }
-
 
     [UnityEditor.MenuItem("AI2-THOR/Replace Generic Prefabs in All Scenes")]
     static void ReplacePrefabsInAllScenes() {
         UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
         for (int i = 1; i <= 30; i++) {
             string scenePath = "Assets/Scenes/FloorPlan" + i.ToString() + ".unity";
-            UnityEditor.EditorUtility.DisplayProgressBar("Replacing generics...", scenePath, (1f / 30) * i);
+            UnityEditor.EditorUtility.DisplayProgressBar(
+                "Replacing generics...",
+                scenePath,
+                (1f / 30) * i
+            );
             UnityEngine.SceneManagement.Scene openScene = new UnityEngine.SceneManagement.Scene();
             try {
                 openScene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
@@ -680,7 +779,11 @@ public static class SimUtil {
         UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
         for (int i = 1; i <= 30; i++) {
             string scenePath = "Assets/Scenes/FloorPlan" + (i + 200).ToString() + ".unity";
-            UnityEditor.EditorUtility.DisplayProgressBar("Setting scene numbers...", scenePath, (1f / 30) * i);
+            UnityEditor.EditorUtility.DisplayProgressBar(
+                "Setting scene numbers...",
+                scenePath,
+                (1f / 30) * i
+            );
             UnityEngine.SceneManagement.Scene openScene = new UnityEngine.SceneManagement.Scene();
             try {
                 openScene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
@@ -707,7 +810,9 @@ public static class SimUtil {
             if (t.name.Contains("Pivot")) {
                 GameObject prefabParent = null;
                 if (UnityEditor.EditorUtility.IsPersistent(t)) {
-                    prefabParent = UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(t.gameObject) as GameObject;
+                    prefabParent =
+                        UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(t.gameObject)
+                        as GameObject;
                 }
                 Transform pivot = t;
                 Transform tempParent = pivot.parent;
@@ -718,7 +823,12 @@ public static class SimUtil {
                 }
                 pivot.parent = null;
                 if (pivot.localScale != Vector3.one) {
-                    Debug.Log("Found pivot with non-uniform scale (" + pivot.localScale.ToString() + ") " + pivot.name);
+                    Debug.Log(
+                        "Found pivot with non-uniform scale ("
+                            + pivot.localScale.ToString()
+                            + ") "
+                            + pivot.name
+                    );
                 }
                 pivot.localScale = Vector3.one;
                 if (child != null) {
@@ -727,31 +837,35 @@ public static class SimUtil {
                 pivot.parent = tempParent;
                 if (prefabParent != null) {
                     Debug.Log("Reconnecting to " + prefabParent.name);
-                    UnityEditor.PrefabUtility.RevertPrefabInstance(t.gameObject, UnityEditor.InteractionMode.AutomatedAction);
+                    UnityEditor.PrefabUtility.RevertPrefabInstance(
+                        t.gameObject,
+                        UnityEditor.InteractionMode.AutomatedAction
+                    );
                 }
             }
         }
-        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(UnityEngine.SceneManagement.SceneManager.GetActiveScene());//(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene ());
-
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene()
+        ); //(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene ());
     }
 
     [UnityEditor.MenuItem("AI2-THOR/Add Pickupable Objects to Physics Scene Manager")]
     static void AddPickupableObjectsToPhysicsSceneManager() {
-        PhysicsSceneManager physicsSceneManager = GameObject.FindObjectOfType<PhysicsSceneManager>();
-        
+        PhysicsSceneManager physicsSceneManager =
+            GameObject.FindObjectOfType<PhysicsSceneManager>();
+
         SimObjPhysics[] simObjPhysicsArray = GameObject.FindObjectsOfType<SimObjPhysics>();
 
-
-        if (physicsSceneManager.RequiredObjects.Count != 0 || physicsSceneManager.SpawnedObjects.Count != 0)
-        {
+        if (
+            physicsSceneManager.RequiredObjects.Count != 0
+            || physicsSceneManager.SpawnedObjects.Count != 0
+        ) {
             physicsSceneManager.RequiredObjects.Clear();
             physicsSceneManager.RequiredObjects.Clear();
         }
 
-        foreach (SimObjPhysics simObj in simObjPhysicsArray)
-        {
-            if (simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
-            {
+        foreach (SimObjPhysics simObj in simObjPhysicsArray) {
+            if (simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
                 physicsSceneManager.RequiredObjects.Add(simObj.gameObject);
                 physicsSceneManager.SpawnedObjects.Add(simObj.gameObject);
             }

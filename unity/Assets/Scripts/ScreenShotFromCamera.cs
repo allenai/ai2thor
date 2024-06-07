@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System.Collections;
+using UnityEngine;
 
 public class ScreenShotFromCamera : MonoBehaviour {
     public int resWidth = 3840;
@@ -8,10 +8,13 @@ public class ScreenShotFromCamera : MonoBehaviour {
     private bool takeHiResShot = false;
 
     public static string ScreenShotName(int width, int height) {
-        return string.Format("{0}/screenshots/screen_{1}x{2}_{3}.png",
-                             Application.dataPath,
-                             width, height,
-                             System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss"));
+        return string.Format(
+            "{0}/screenshots/screen_{1}x{2}_{3}.png",
+            Application.dataPath,
+            width,
+            height,
+            System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss")
+        );
     }
 
     public void TakeHiResShot() {

@@ -21,14 +21,10 @@ public class UsedUp : MonoBehaviour {
     public bool isUsedUp = false;
 
     // Start is called before the first frame update
-    void Start() {
-
-    }
+    void Start() { }
 
     // Update is called once per frame
-    void Update() {
-
-    }
+    void Update() { }
 
     public void UseUp() {
         usedUpRenderer.enabled = false;
@@ -43,7 +39,7 @@ public class UsedUp : MonoBehaviour {
             col.enabled = false;
         }
 
-        // reference to SimObjPhysics component to 
+        // reference to SimObjPhysics component to
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
 
         // set colliders to ones active while used up

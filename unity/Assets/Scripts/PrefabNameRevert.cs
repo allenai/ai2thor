@@ -29,6 +29,7 @@ public class PrefabNameRevert {
         }
         PrefabUtility.SetPropertyModifications(aObj, mods.ToArray());
     }
+
     public static void RevertAllNames(Object[] aObjects) {
         var items = new List<Object>();
         foreach (var item in aObjects) {
@@ -44,6 +45,5 @@ public class PrefabNameRevert {
             RemoveNameModification(item);
         }
     }
-
 }
 #endif

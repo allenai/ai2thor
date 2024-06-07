@@ -101,6 +101,7 @@ house_template = {
     "metadata": {"schema": "1.0.0"},
 }
 
+
 # TODO rendering is different for fifo and wsgi server
 @pytest.mark.parametrize("controller_args", fifo)
 def test_render_lit(controller_args):
@@ -147,9 +148,7 @@ def test_render_lit(controller_args):
 
     controller.stop()
 
-    assert images_near(
-        evt.cv2img, ground_truth, max_mean_pixel_diff=52, debug_save=True
-    )
+    assert images_near(evt.cv2img, ground_truth, max_mean_pixel_diff=52, debug_save=True)
 
 
 #
@@ -215,11 +214,12 @@ def test_depth(controller_args):
 @pytest.mark.parametrize("controller_args", fifo)
 def test_determinism(controller_args):
     from dictdiffer import diff
+
     controller_args.update(
-        physicsSimulationParams = {
+        physicsSimulationParams={
             "autoSimulation": False,
             # default fixedDeltaTime is 0.02 so 10 simulations
-            "minSimulateTimeSeconds": 0.2
+            "minSimulateTimeSeconds": 0.2,
         }
     )
     # add apple '$' on top of chair and table '*' to the left
@@ -233,22 +233,21 @@ def test_determinism(controller_args):
           0 0 0 0 0 0
         """
     )
-    house_template['objects']["$"] = {
-         "kinematic": False, 
-         "assetId": "Apple_4",
-         "position": {"x": 0, "y": 2, "z": 0}
+    house_template["objects"]["$"] = {
+        "kinematic": False,
+        "assetId": "Apple_4",
+        "position": {"x": 0, "y": 2, "z": 0},
     }
 
-    house_template['objects']["*"] = {
+    house_template["objects"]["*"] = {
         "assetId": "Dining_Table_16_2",
         "kinematic": False,
-        "rotation": { "axis": {"x": 0, "y": 1, "z": 0}, "degrees": 90}
+        "rotation": {"axis": {"x": 0, "y": 1, "z": 0}, "degrees": 90},
     }
 
     object_ids = ["+", "$", "*"]
 
-    house_template['objects']['+']['kinematic'] = False
-    
+    house_template["objects"]["+"]["kinematic"] = False
 
     controller = build_controller(**controller_args)
 
@@ -272,11 +271,15 @@ def test_determinism(controller_args):
             )
         )
         assert evt.metadata["lastActionSuccess"]
-        pos = {x['name']: {'position': x['position'], 'rotation': x['rotation']} for x in evt.metadata['objects'] if x["name"] in object_ids}
+        pos = {
+            x["name"]: {"position": x["position"], "rotation": x["rotation"]}
+            for x in evt.metadata["objects"]
+            if x["name"] in object_ids
+        }
         print(f"{pos}")
         object_positions.append(pos)
         if prev_pos:
-           
+
             diffs = list(diff(pos, prev_pos, tolerance=0.00001))
             print(diffs)
             assert [] == diffs

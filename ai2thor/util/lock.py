@@ -25,7 +25,6 @@ if system() == "Windows":
         def lockf(fd, operation, length=0, start=0, whence=0):
             return
 
-
 else:
     import fcntl
 

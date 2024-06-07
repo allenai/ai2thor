@@ -1,9 +1,8 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 public class PlacementManager : MonoBehaviour {
-
     public static PlacementManager Current {
         get {
             if (current == null) {
@@ -42,9 +41,9 @@ public class PlacementManager : MonoBehaviour {
             Vector3 pointDirection = Vector3.zero;
             Vector3 agentCameraPos = agentCamera.transform.position;
             if (
-                viewPoint.z > 0// in front of camera
+                viewPoint.z > 0 // in front of camera
                 && viewPoint.x < SimUtil.ViewPointRangeHigh
-                && viewPoint.x > SimUtil.ViewPointRangeLow// within x bounds
+                && viewPoint.x > SimUtil.ViewPointRangeLow // within x bounds
                 && viewPoint.y < SimUtil.ViewPointRangeHigh
                 && viewPoint.y > SimUtil.ViewPointRangeLow
             ) { // within y bounds
@@ -59,9 +58,7 @@ public class PlacementManager : MonoBehaviour {
                         maxDistance * 2,
                         SimUtil.RaycastVisibleLayerMask,
                         QueryTriggerInteraction.Ignore
-                    ) && (
-                        Vector3.Distance(pointHit.point, hit.position) < MaxRaycastCheckDistance
-                    )
+                    ) && (Vector3.Distance(pointHit.point, hit.position) < MaxRaycastCheckDistance)
                 ) {
                     // if it's within reasonable distance of the original point, we'll know we're fine
                     point = hit.position;

@@ -1,34 +1,52 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
 // Check Assets/Prefabs/DebugController for ReadMe on how to use this Debug Controller
-using UnityEngine;
-using Random = UnityEngine.Random;
 using System;
-using System.IO;
 using System.Collections;
 using System.Collections.Generic;
-using UnityStandardAssets.CrossPlatformInput;
-using UnityStandardAssets.Utility;
+using System.IO;
+using Newtonsoft.Json.Linq;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Newtonsoft.Json.Linq;
+using UnityStandardAssets.CrossPlatformInput;
+using UnityStandardAssets.Utility;
+using Random = UnityEngine.Random;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
     public class DebugFPSAgentController : MonoBehaviour {
         // for use with mouse/keyboard input
-        [SerializeField] protected bool m_IsWalking;
-        [SerializeField] protected float m_WalkSpeed;
-        [SerializeField] protected float m_RunSpeed;
+        [SerializeField]
+        protected bool m_IsWalking;
 
-        [SerializeField] protected float m_GravityMultiplier;
-        [SerializeField] protected MouseLook m_MouseLook;
+        [SerializeField]
+        protected float m_WalkSpeed;
 
-        [SerializeField] protected GameObject Debug_Canvas = null;
+        [SerializeField]
+        protected float m_RunSpeed;
+
+        [SerializeField]
+        protected float m_GravityMultiplier;
+
+        [SerializeField]
+        protected MouseLook m_MouseLook;
+
+        [SerializeField]
+        protected GameObject Debug_Canvas = null;
+
         //        [SerializeField] private GameObject Inventory_Text = null;
-        [SerializeField] protected GameObject InputMode_Text = null;
-        [SerializeField] protected float MaxViewDistance = 5.0f;
-        [SerializeField] private float MaxChargeThrowSeconds = 1.4f;
-        [SerializeField] private float MaxThrowForce = 1000.0f;
+        [SerializeField]
+        protected GameObject InputMode_Text = null;
+
+        [SerializeField]
+        protected float MaxViewDistance = 5.0f;
+
+        [SerializeField]
+        private float MaxChargeThrowSeconds = 1.4f;
+
+        [SerializeField]
+        private float MaxThrowForce = 1000.0f;
+
         // public bool FlightMode = false;
 
         public bool FPSEnabled = true;
@@ -52,16 +70,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera = Camera.main;
             m_MouseLook.Init(transform, m_Camera.transform);
 
-            // find debug canvas related objects 
+            // find debug canvas related objects
             Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
             InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
 
             InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
-            AgentManager agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            AgentManager agentManager = GameObject
+                .Find("PhysicsSceneManager")
+                .GetComponentInChildren<AgentManager>();
             agentManager.SetUpPhysicsController();
             PhysicsController = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
 
-            highlightController = new ObjectHighlightController(PhysicsController, MaxViewDistance, enableHighlightShader, true, MaxThrowForce, MaxChargeThrowSeconds);
+            highlightController = new ObjectHighlightController(
+                PhysicsController,
+                MaxViewDistance,
+                enableHighlightShader,
+                true,
+                MaxThrowForce,
+                MaxChargeThrowSeconds
+            );
 
             // if this component is enabled, turn on the targeting reticle and target text
             if (this.isActiveAndEnabled) {
@@ -73,12 +100,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // FlightMode = PhysicsController.FlightMode;
 
 #if UNITY_WEBGL
-                FPSEnabled = false;
-                Cursor.visible = true;
-                Cursor.lockState = CursorLockMode.None;
-                HideHUD();
+            FPSEnabled = false;
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+            HideHUD();
 #endif
         }
+
         public Vector3 ScreenPointMoveHand(float yOffset) {
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -165,10 +193,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // swap between text input and not
 #if !UNITY_WEBGL
-            if (
-                Input.GetKeyDown(KeyCode.BackQuote)
-                || Input.GetKeyDown(KeyCode.Escape)
-            ) {
+            if (Input.GetKeyDown(KeyCode.BackQuote) || Input.GetKeyDown(KeyCode.Escape)) {
                 // Switch to Text Mode
                 if (FPSEnabled) {
                     DisableMouseControl();
@@ -187,17 +212,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 var eps = 1e-6;
                 if (Mathf.Abs(scrollAmount) > eps) {
                     // webGL action
-                    var action = new Dictionary<string, object>() {
-                            {"action", "MoveHandAhead"},
-                            {"moveMagnitude", scrollAmount}
-                        };
+                    var action = new Dictionary<string, object>()
+                    {
+                        { "action", "MoveHandAhead" },
+                        { "moveMagnitude", scrollAmount }
+                    };
                     this.PhysicsController.ProcessControlCommand(action);
                 }
             }
         }
 
         private void Update() {
-            highlightController.UpdateHighlightedObject(new Vector3(Screen.width / 2, Screen.height / 2));
+            highlightController.UpdateHighlightedObject(
+                new Vector3(Screen.width / 2, Screen.height / 2)
+            );
             highlightController.MouseControls();
 
             DebugKeyboardControls();
@@ -220,15 +248,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     var eps = 1e-6;
                     if (Mathf.Abs(scrollAmount.x) > eps || Mathf.Abs(scrollAmount.y) > eps) {
                         // Actioned called through webGL, using dynamic not supported by IL2CPP
-                        var action = new Dictionary<string, object>() {
-                            {"action", "MoveHandDelta"},
-                            {"x", scrollAmount.x * 0.05f},
-                            {"z", scrollAmount.y * -0.05f},
-                            {"y", 0.0f}
+                        var action = new Dictionary<string, object>()
+                        {
+                            { "action", "MoveHandDelta" },
+                            { "x", scrollAmount.x * 0.05f },
+                            { "z", scrollAmount.y * -0.05f },
+                            { "y", 0.0f }
                         };
                         this.PhysicsController.ProcessControlCommand(action);
                     }
-
                 }
             }
         }
@@ -253,7 +281,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (m_Input.sqrMagnitude > 1) {
                 m_Input.Normalize();
             }
-
         }
 
         public MouseLook GetMouseLook() {
@@ -273,8 +300,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // get a normal for the surface that is being touched to move along it
             RaycastHit hitInfo;
 
-            Physics.SphereCast(transform.position, m_CharacterController.radius, Vector3.down, out hitInfo,
-                m_CharacterController.height / 2f, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+            Physics.SphereCast(
+                transform.position,
+                m_CharacterController.radius,
+                Vector3.down,
+                out hitInfo,
+                m_CharacterController.height / 2f,
+                Physics.AllLayers,
+                QueryTriggerInteraction.Ignore
+            );
             desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
 
             m_MoveDir.x = desiredMove.x * speed;
@@ -288,8 +322,5 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_CharacterController.Move(m_MoveDir * Time.deltaTime);
             }
         }
-
-
     }
 }
-

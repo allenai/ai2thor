@@ -1,30 +1,40 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using System;
 using System.Linq;
 using RandomExtensions;
+using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UIElements;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-        
     public partial class StretchAgentController : ArmAgentController {
         public int gripperOpennessState = 0;
 
         //define default parameters for both main camera and secondary camera, specific to real-life stretch bot rig
         //these are kind of magic numbers, but can be adjusted via UpdateMainCamera and UpdateThirdPartyCamera as needed if our
         //real rig changes
-        private Vector3 defaultMainCameraLocalPosition = new Vector3(0.001920350f, 0.544700900f, 0.067880400f);
+        private Vector3 defaultMainCameraLocalPosition = new Vector3(
+            0.001920350f,
+            0.544700900f,
+            0.067880400f
+        );
         private Vector3 defaultMainCameraLocalRotation = new Vector3(30f, 0, 0);
         private float defaultMainCameraFieldOfView = 59f;
-        private Vector3 defaultSecondaryCameraLocalPosition = new Vector3(0.053905130f, 0.523833600f, -0.058848570f);
-        private Vector3 defaultSecondaryCameraLocalRotation =new Vector3(50f, 90f, 0);
+        private Vector3 defaultSecondaryCameraLocalPosition = new Vector3(
+            0.053905130f,
+            0.523833600f,
+            -0.058848570f
+        );
+        private Vector3 defaultSecondaryCameraLocalRotation = new Vector3(50f, 90f, 0);
         private float defaultSecondaryCameraFieldOfView = 59f;
 
-        public StretchAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
-        }
+        public StretchAgentController(
+            BaseAgentComponent baseAgentComponent,
+            AgentManager agentManager
+        )
+            : base(baseAgentComponent, agentManager) { }
 
         public override void updateImageSynthesis(bool status) {
             base.updateImageSynthesis(status);
@@ -60,7 +70,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var secondaryCameraName = "SecondaryCamera";
 
             // activate arm-camera
-            Camera fp_camera_2 = m_CharacterController.transform.Find(secondaryCameraName).GetComponent<Camera>();
+            Camera fp_camera_2 = m_CharacterController
+                .transform.Find(secondaryCameraName)
+                .GetComponent<Camera>();
             fp_camera_2.gameObject.SetActive(true);
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
             if (initializeAction.antiAliasing != null) {
@@ -94,7 +106,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             var secondaryCameraParams = new CameraParameters();
-            var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(secondaryCameraName, out secondaryCameraParams);
+            var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(
+                secondaryCameraName,
+                out secondaryCameraParams
+            );
 
             if (setSecondaryParams.GetValueOrDefault()) {
                 CameraParameters.setCameraParameters(fp_camera_2, secondaryCameraParams);
@@ -106,7 +121,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //initialize all things needed for the stretch arm controller
             SArm = this.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
             SArm.PhysicsController = this;
-            var armTarget = SArm.transform.Find("stretch_robot_arm_rig").Find("stretch_robot_pos_rot_manipulator");
+            var armTarget = SArm
+                .transform.Find("stretch_robot_arm_rig")
+                .Find("stretch_robot_pos_rot_manipulator");
             Vector3 pos = armTarget.transform.localPosition;
             pos.z = 0.0f; // pulls the arm in to be fully contracted
             armTarget.transform.localPosition = pos;
@@ -117,20 +134,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private ArmController getArmImplementation() {
-            Stretch_Robot_Arm_Controller arm = GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+            Stretch_Robot_Arm_Controller arm =
+                GetComponentInChildren<Stretch_Robot_Arm_Controller>();
             if (arm == null) {
                 throw new InvalidOperationException(
-                    "Agent does not have Stretch arm or is not enabled.\n" +
-                    $"Make sure there is a '{typeof(Stretch_Robot_Arm_Controller).Name}' component as a child of this agent."
+                    "Agent does not have Stretch arm or is not enabled.\n"
+                        + $"Make sure there is a '{typeof(Stretch_Robot_Arm_Controller).Name}' component as a child of this agent."
                 );
             }
             return arm;
         }
 
-        protected override ArmController getArm() { 
+        protected override ArmController getArm() {
             return getArmImplementation();
         }
-
 
         public bool teleportArm(
             Vector3? position = null,
@@ -138,7 +155,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool worldRelative = false,
             bool forceAction = false
         ) {
-            Stretch_Robot_Arm_Controller arm = getArmImplementation() as Stretch_Robot_Arm_Controller;
+            Stretch_Robot_Arm_Controller arm =
+                getArmImplementation() as Stretch_Robot_Arm_Controller;
             GameObject posRotManip = arm.GetArmTarget();
 
             // cache old values in case there's a failure
@@ -157,10 +175,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // teleport arm!
             if (!worldRelative) {
                 posRotManip.transform.localPosition = (Vector3)position;
-                posRotManip.transform.localEulerAngles = new Vector3 (0, (float)rotation % 360, 0);
+                posRotManip.transform.localEulerAngles = new Vector3(0, (float)rotation % 360, 0);
             } else {
                 posRotManip.transform.position = (Vector3)position;
-                posRotManip.transform.eulerAngles = new Vector3 (0, (float)rotation % 360, 0);
+                posRotManip.transform.eulerAngles = new Vector3(0, (float)rotation % 360, 0);
             }
 
             bool success = false;
@@ -216,17 +234,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                return new ActionFinished() {
-                    success = false,
-                    toEmitState = true
-                };
+                return new ActionFinished() { success = false, toEmitState = true };
             }
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
 
             Vector3 oldPos = transform.position;
             Quaternion oldRot = transform.rotation;
 
-            Stretch_Robot_Arm_Controller arm = getArmImplementation() as Stretch_Robot_Arm_Controller;
+            Stretch_Robot_Arm_Controller arm =
+                getArmImplementation() as Stretch_Robot_Arm_Controller;
             GameObject armTarget = arm.GetArmTarget();
 
             Vector3 oldArmLocalPosition = armTarget.transform.localPosition;
@@ -243,7 +259,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objectId: objectId,
                 point: new Vector3(
                     transform.position.x,
-                    target.AxisAlignedBoundingBox.center.y + target.AxisAlignedBoundingBox.size.y / 2f, // Y from the object
+                    target.AxisAlignedBoundingBox.center.y
+                        + target.AxisAlignedBoundingBox.size.y / 2f, // Y from the object
                     transform.position.z
                 )
             );
@@ -262,17 +279,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             foreach (Vector3 point in closePoints) {
 #if UNITY_EDITOR
-                Debug.DrawLine(
-                    point,
-                    point + transform.up * 0.3f,
-                    Color.red,
-                    20f
-                );
+                Debug.DrawLine(point, point + transform.up * 0.3f, Color.red, 20f);
 #endif
                 transform.LookAt(
-                    worldPosition: new Vector3(
-                        point.x, transform.position.y, point.z
-                    ),
+                    worldPosition: new Vector3(point.x, transform.position.y, point.z),
                     worldUp: transform.up
                 );
 
@@ -297,7 +307,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Physics.SyncTransforms();
 
                 agentToMagnetSphere = arm.MagnetSphereWorldCenter() - transform.position;
-                Vector3 agentToMagnetSphereDir2D = new Vector3(agentToMagnetSphere.x, 0f, agentToMagnetSphere.z).normalized;
+                Vector3 agentToMagnetSphereDir2D = new Vector3(
+                    agentToMagnetSphere.x,
+                    0f,
+                    agentToMagnetSphere.z
+                ).normalized;
 
                 if (
                     !teleportArm(
@@ -339,7 +353,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     continue;
                 }
 
-
 # if UNITY_EDITOR
                 Debug.Log($"Found successful position {point}.");
 # endif
@@ -350,12 +363,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Dictionary<string, Vector3> actionReturn = null;
             if (success) {
-                actionReturn = new Dictionary<string, Vector3>() {
-                    {"position", transform.position},
-                    {"rotation", transform.rotation.eulerAngles},
-                    {"localArmPosition", armTarget.transform.localPosition},
-                    {"localArmRotation", armTarget.transform.localEulerAngles},
-                    {"pointOnObject", pointOnObject}
+                actionReturn = new Dictionary<string, Vector3>()
+                {
+                    { "position", transform.position },
+                    { "rotation", transform.rotation.eulerAngles },
+                    { "localArmPosition", armTarget.transform.localPosition },
+                    { "localArmRotation", armTarget.transform.localEulerAngles },
+                    { "pointOnObject", pointOnObject }
                 };
             }
 
@@ -401,14 +415,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectId,
             Vector3[] positions = null,
             float maxDistance = 1f,
-            int maxPoses = int.MaxValue  // works like infinity
+            int maxPoses = int.MaxValue // works like infinity
         ) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
-                return new ActionFinished() {
-                    success = false,
-                    toEmitState = true
-                };
+                return new ActionFinished() { success = false, toEmitState = true };
             }
             if (maxPoses <= 0) {
                 throw new ArgumentOutOfRangeException("maxPoses must be > 0.");
@@ -423,9 +434,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 positions = getReachablePositions();
             }
 
-            List<Vector3> filteredPositions = positions.Where(
-                p => (Vector3.Distance(a: p, b: sop.transform.position) <= maxDistance + fudgeFactor + gridSize)
-            ).ToList();
+            List<Vector3> filteredPositions = positions
+                .Where(p =>
+                    (
+                        Vector3.Distance(a: p, b: sop.transform.position)
+                        <= maxDistance + fudgeFactor + gridSize
+                    )
+                )
+                .ToList();
 
             List<object> poses = new List<object>();
             foreach (Vector3 position in filteredPositions) {
@@ -440,7 +456,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 # if UNITY_EDITOR
                     Debug.DrawLine(
                         start: position,
-                        end: ((Dictionary<string, Vector3>) af.actionReturn)["pointOnObject"],
+                        end: ((Dictionary<string, Vector3>)af.actionReturn)["pointOnObject"],
                         color: Color.green,
                         duration: 15f
                     );
@@ -459,7 +475,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return new ActionFinished() { success = true, actionReturn = poses };
         }
 
-
         public override IEnumerator RotateWristRelative(
             float pitch = 0f,
             float yaw = 0f,
@@ -469,7 +484,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             // pitch and roll are not supported for the stretch and so we throw an error
             if (pitch != 0f || roll != 0f) {
-                throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
+                throw new System.NotImplementedException(
+                    "Pitch and roll are not supported for the stretch agent."
+                );
             }
 
             var arm = getArmImplementation() as Stretch_Robot_Arm_Controller;
@@ -495,7 +512,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             // pitch and roll are not supported for the stretch and so we throw an error
             if (pitch != 0f || roll != 0f) {
-                throw new System.NotImplementedException("Pitch and roll are not supported for the stretch agent.");
+                throw new System.NotImplementedException(
+                    "Pitch and roll are not supported for the stretch agent."
+                );
             }
 
             // GameObject posRotManip = this.GetComponent<BaseAgentComponent>().StretchArm.GetComponent<Stretch_Robot_Arm_Controller>().GetArmTarget();
@@ -547,6 +566,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
         }
+
         public ActionFinished SetGripperOpenness(float? openness, int? openState = null) {
             if (openness.HasValue == openState.HasValue) {
                 throw new InvalidOperationException(
@@ -560,39 +580,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (GameObject opennessState in GripperOpennessStates) {
                 opennessState.SetActive(false);
             }
-            
+
             GripperOpennessStates[openState.Value].SetActive(true);
             gripperOpennessState = openState.Value;
             return ActionFinished.Success;
         }
 
-//        public void RotateCameraBase(float yawDegrees, float rollDegrees) {
-//            var target = gimbalBase;
-//            var maxDegree = maxBaseXYRotation;
-//            Debug.Log("yaw is " + yawDegrees + " and roll is " + rollDegrees);
-//            if (yawDegrees < -maxDegree || maxDegree < yawDegrees) {
-//                throw new InvalidOperationException(
-//                    $"Invalid value for `yawDegrees`: '{yawDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
-//                );
-//            } else if (rollDegrees < -maxDegree || maxDegree < rollDegrees) {
-//                throw new InvalidOperationException(
-//                    $"Invalid value for `rollDegrees`: '{rollDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
-//                );
-//            } else {
-//                gimbalBase.localEulerAngles = new Vector3(
-//                    gimbalBaseStartingXRotation + rollDegrees,
-//                    gimbalBaseStartingYRotation + yawDegrees,
-//                    gimbalBase.transform.localEulerAngles.z
-//                );
-//            }
-//            actionFinished(true);
-//        }
+        //        public void RotateCameraBase(float yawDegrees, float rollDegrees) {
+        //            var target = gimbalBase;
+        //            var maxDegree = maxBaseXYRotation;
+        //            Debug.Log("yaw is " + yawDegrees + " and roll is " + rollDegrees);
+        //            if (yawDegrees < -maxDegree || maxDegree < yawDegrees) {
+        //                throw new InvalidOperationException(
+        //                    $"Invalid value for `yawDegrees`: '{yawDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+        //                );
+        //            } else if (rollDegrees < -maxDegree || maxDegree < rollDegrees) {
+        //                throw new InvalidOperationException(
+        //                    $"Invalid value for `rollDegrees`: '{rollDegrees}'. Value should be between '{-maxDegree}' and '{maxDegree}'."
+        //                );
+        //            } else {
+        //                gimbalBase.localEulerAngles = new Vector3(
+        //                    gimbalBaseStartingXRotation + rollDegrees,
+        //                    gimbalBaseStartingYRotation + yawDegrees,
+        //                    gimbalBase.transform.localEulerAngles.z
+        //                );
+        //            }
+        //            actionFinished(true);
+        //        }
 
         public void RotateCameraMount(float degrees, bool secondary = false) {
             var minDegree = -80.00001f;
             var maxDegree = 80.00001f;
             if (degrees >= minDegree && degrees <= maxDegree) {
-
                 Camera cam;
                 if (secondary) {
                     cam = agentManager.thirdPartyCameras[0];
@@ -600,7 +619,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     cam = m_Camera;
                 }
                 AgentManager.OptionalVector3 localEulerAngles = new AgentManager.OptionalVector3(
-                    x: degrees, y: cam.transform.localEulerAngles.y, z: cam.transform.localEulerAngles.z
+                    x: degrees,
+                    y: cam.transform.localEulerAngles.y,
+                    z: cam.transform.localEulerAngles.z
                 );
 
                 int agentId = -1;
@@ -626,13 +647,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 } else {
                     agentManager.UpdateMainCamera(rotation: localEulerAngles);
                 }
-            }
-            else {
-                errorMessage = $"Invalid value for `degrees`: '{degrees}'. Value should be between '{minDegree}' and '{maxDegree}'.";
+            } else {
+                errorMessage =
+                    $"Invalid value for `degrees`: '{degrees}'. Value should be between '{minDegree}' and '{maxDegree}'.";
                 actionFinished(false);
             }
         }
-
     }
-
 }

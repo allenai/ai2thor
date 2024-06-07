@@ -1,10 +1,9 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 [ExecuteInEditMode]
 public class Blinds : MonoBehaviour {
-
     public SimObj ParentObj;
     public bool EditorOpen = false;
     public bool OpenByDefault = true;
@@ -23,7 +22,8 @@ public class Blinds : MonoBehaviour {
             Animator a = ParentObj.gameObject.GetComponent<Animator>();
             if (a == null) {
                 a = ParentObj.gameObject.AddComponent<Animator>();
-                a.runtimeAnimatorController = Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
+                a.runtimeAnimatorController =
+                    Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
             }
         } else {
             if (OpenByDefault) {

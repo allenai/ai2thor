@@ -1,14 +1,12 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-
-
+using UnityEngine;
+using UnityStandardAssets.Characters.FirstPerson;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using System.Collections;
-using UnityStandardAssets.Characters.FirstPerson;
 
 [ExecuteInEditMode]
 public class SceneManager : MonoBehaviour {
@@ -65,7 +63,6 @@ public class SceneManager : MonoBehaviour {
         }
 #endif
         this.AnimationMode = SceneAnimationMode.Instant;
-
     }
 
     // generates a object ID for a sim object
@@ -91,7 +88,6 @@ public class SceneManager : MonoBehaviour {
 #if UNITY_EDITOR
     // returns an array of required types NOT found in scene
     public SimObjType[] CheckSceneForRequiredTypes() {
-
         List<SimObjType> typesToCheck = null;
         switch (LocalSceneType) {
             case SceneType.Kitchen:
@@ -137,11 +133,20 @@ public class SceneManager : MonoBehaviour {
                 GameObjectUtility.SetNavMeshArea(t.gameObject, PlacementManager.NavmeshFloorArea);
             } else {
                 // if it's not already set to none (ie sittable objects) set it to 'shelves'
-                if (GameObjectUtility.GetNavMeshArea(t.gameObject) != PlacementManager.NavemeshNoneArea) {
-                    GameObjectUtility.SetNavMeshArea(t.gameObject, PlacementManager.NavmeshShelfArea);
+                if (
+                    GameObjectUtility.GetNavMeshArea(t.gameObject)
+                    != PlacementManager.NavemeshNoneArea
+                ) {
+                    GameObjectUtility.SetNavMeshArea(
+                        t.gameObject,
+                        PlacementManager.NavmeshShelfArea
+                    );
                 }
             }
-            GameObjectUtility.SetStaticEditorFlags(t.gameObject, StaticEditorFlags.BatchingStatic | StaticEditorFlags.NavigationStatic);
+            GameObjectUtility.SetStaticEditorFlags(
+                t.gameObject,
+                StaticEditorFlags.BatchingStatic | StaticEditorFlags.NavigationStatic
+            );
         }
     }
 
@@ -158,16 +163,20 @@ public class SceneManager : MonoBehaviour {
             }
         }
 
-        GameObject[] rootObjects = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects();
+        GameObject[] rootObjects = UnityEngine
+            .SceneManagement.SceneManager.GetActiveScene()
+            .GetRootGameObjects();
         foreach (GameObject rootObject in rootObjects) {
             // make sure it's not a parent
-            if (rootObject != gameObject
+            if (
+                rootObject != gameObject
                 && rootObject.transform != LightingParent
                 && rootObject.transform != ObjectsParent
                 && rootObject.transform != StructureParent
                 && rootObject.transform != TargetsParent
                 && rootObject.transform != ControlsParent
-                && rootObject.name != FPSControllerPrefab.name) {
+                && rootObject.name != FPSControllerPrefab.name
+            ) {
                 rootObject.transform.parent = StructureParent;
                 EditorUtility.SetDirty(rootObject);
             }
@@ -206,11 +215,14 @@ public class SceneManager : MonoBehaviour {
             foreach (SimObj platonic in PlatonicPrefabs) {
                 if (generic.Type == platonic.Type) {
                     // make sure one isn't a prefab of the other
-                    GameObject prefab = PrefabUtility.GetCorrespondingObjectFromSource(generic.gameObject) as GameObject;
+                    GameObject prefab =
+                        PrefabUtility.GetCorrespondingObjectFromSource(generic.gameObject)
+                        as GameObject;
                     if (prefab == null || prefab != platonic.gameObject) {
                         Debug.Log("Replacing " + generic.name + " with " + platonic.name);
                         // as long as it's not a prefab, swap it out with the prefab
-                        GameObject newSimObj = PrefabUtility.InstantiatePrefab(platonic.gameObject) as GameObject;
+                        GameObject newSimObj =
+                            PrefabUtility.InstantiatePrefab(platonic.gameObject) as GameObject;
                         newSimObj.transform.position = generic.transform.position;
                         newSimObj.transform.rotation = generic.transform.rotation;
                         newSimObj.transform.parent = generic.transform.parent;
@@ -227,19 +239,23 @@ public class SceneManager : MonoBehaviour {
     public void SetUpLighting() {
         // thanks for not exposing these props, Unity :P
         // this may break in later versions
-        var getLightmapSettingsMethod = typeof(LightmapEditorSettings).GetMethod("GetLightmapSettings", BindingFlags.Static | BindingFlags.NonPublic);
+        var getLightmapSettingsMethod = typeof(LightmapEditorSettings).GetMethod(
+            "GetLightmapSettings",
+            BindingFlags.Static | BindingFlags.NonPublic
+        );
         var lightmapSettings = getLightmapSettingsMethod.Invoke(null, null) as Object;
         SerializedObject settingsObject = new SerializedObject(lightmapSettings);
 
         /*var iter = settingsObject.GetIterator();
-		do {
-			Debug.Log("member:  " + iter.name);
-		} while (iter.Next(true));*/
+        do {
+            Debug.Log("member:  " + iter.name);
+        } while (iter.Next(true));*/
 
         settingsObject.FindProperty("m_GISettings.m_EnableBakedLightmaps").boolValue = false;
         settingsObject.FindProperty("m_GISettings.m_EnableRealtimeLightmaps").boolValue = false;
         settingsObject.FindProperty("m_LightmapEditorSettings.m_FinalGather").boolValue = false;
-        settingsObject.FindProperty("m_LightmapEditorSettings.m_LightmapsBakeMode").boolValue = false;
+        settingsObject.FindProperty("m_LightmapEditorSettings.m_LightmapsBakeMode").boolValue =
+            false;
 
         settingsObject.ApplyModifiedProperties();
     }
@@ -247,12 +263,14 @@ public class SceneManager : MonoBehaviour {
     public void SetUpNavigation() {
         // thanks for not exposing these props, Unity :P
         // this may break in later versions
-        SerializedObject settingsObject = new SerializedObject(UnityEditor.AI.NavMeshBuilder.navMeshSettingsObject);
+        SerializedObject settingsObject = new SerializedObject(
+            UnityEditor.AI.NavMeshBuilder.navMeshSettingsObject
+        );
 
         /*var iter = settingsObject.GetIterator();
-		do {
-			Debug.Log("member:  " + iter.displayName);
-		} while (iter.Next(true));*/
+        do {
+            Debug.Log("member:  " + iter.displayName);
+        } while (iter.Next(true));*/
 
         settingsObject.FindProperty("m_BuildSettings.agentRadius").floatValue = 0.05f;
         settingsObject.FindProperty("m_BuildSettings.agentHeight").floatValue = .25f;
@@ -279,7 +297,8 @@ public class SceneManager : MonoBehaviour {
             fpsObj.name = FPSControllerPrefab.name;
         } else {
             // re-attach to prefab
-            GameObject prefabParent = PrefabUtility.GetCorrespondingObjectFromSource(fpsObj) as GameObject;
+            GameObject prefabParent =
+                PrefabUtility.GetCorrespondingObjectFromSource(fpsObj) as GameObject;
             if (prefabParent == null) {
                 // if it's not attached to a prefab, delete and start over
                 Vector3 pos = fpsObj.transform.position;
@@ -310,7 +329,8 @@ public class SceneManager : MonoBehaviour {
         rb.isKinematic = true;
         rb.interpolation = RigidbodyInterpolation.None;
         rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
-        rb.constraints = RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationY;
+        rb.constraints =
+            RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotationY;
 
         cam.fieldOfView = 60f;
         cam.farClipPlane = 1000f;

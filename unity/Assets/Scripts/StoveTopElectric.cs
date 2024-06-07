@@ -1,9 +1,8 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 public class StoveTopElectric : MonoBehaviour {
-
     public SimObj ParentObj;
     public Material BurnerOnMat;
     public int MatIndex;
@@ -20,6 +19,8 @@ public class StoveTopElectric : MonoBehaviour {
     }
 
     void Update() {
-        BurnerRenderer.sharedMaterials = ParentObj.Animator.GetBool("AnimState1") ? matArrayOn : matArrayOff;
+        BurnerRenderer.sharedMaterials = ParentObj.Animator.GetBool("AnimState1")
+            ? matArrayOn
+            : matArrayOff;
     }
 }

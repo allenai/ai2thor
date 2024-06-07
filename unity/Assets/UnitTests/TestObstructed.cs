@@ -1,23 +1,29 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
-using System;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityStandardAssets.Characters.FirstPerson;
 
-namespace Tests {
-    public class TestObstructed : TestBase {
-
+namespace Tests
+{
+    public class TestObstructed : TestBase
+    {
         [SetUp]
-        public override void Setup() {
+        public override void Setup()
+        {
             UnityEngine.SceneManagement.SceneManager.LoadScene("FloorPlan402_physics");
         }
 
         [UnityTest]
-        public IEnumerator TestBehindGlassThenOpenDoor() {
-            Debug.Log("what is the current scene? " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-            
+        public IEnumerator TestBehindGlassThenOpenDoor()
+        {
+            Debug.Log(
+                "what is the current scene? "
+                    + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
+            );
+
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -38,7 +44,8 @@ namespace Tests {
             action.Clear();
 
             action["action"] = "SetObjectPoses";
-            ObjectPose pose = new ObjectPose() {
+            ObjectPose pose = new ObjectPose()
+            {
                 objectName = "SoapBottle_a48be41a",
                 position = new Vector3(-1.022f, 0f, 1.456f),
                 rotation = new Vector3(0, -180f, 0)
@@ -70,6 +77,6 @@ namespace Tests {
             yield return step(action);
 
             Assert.AreEqual(lastActionSuccess, true);
-        } 
+        }
     }
 }

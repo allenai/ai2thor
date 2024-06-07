@@ -5,13 +5,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using Priority_Queue;
+using RandomExtensions;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
-using RandomExtensions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public partial class PhysicsRemoteFPSAgentController : BaseFPSAgentController {
@@ -49,7 +49,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void WhichContainersDoesAvailableObjectFitIn(
-            string objectName, int? thirdPartyCameraIndex = null
+            string objectName,
+            int? thirdPartyCameraIndex = null
         ) {
             Camera camera = m_Camera;
             if (thirdPartyCameraIndex.HasValue) {
@@ -58,7 +59,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             PhysicsSceneManager.StartPhysicsCoroutine(
                 startCoroutineUsing: this.baseAgentComponent,
                 enumerator: whichContainersDoesAvailableObjectFitIn(
-                    objectName: objectName, visibilityCheckCamera: camera
+                    objectName: objectName,
+                    visibilityCheckCamera: camera
                 )
             );
         }
@@ -97,12 +99,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             activateSop(toCover);
 
-            if (!PlaceObjectAtPoint(
-                target: toCover,
-                position: middleOfTable,
-                rotation: null,
-                forceKinematic: true
-            )) {
+            if (
+                !PlaceObjectAtPoint(
+                    target: toCover,
+                    position: middleOfTable,
+                    rotation: null,
+                    forceKinematic: true
+                )
+            ) {
                 deactivateSop(toCover);
                 errorMessage = $"{toCover.name} failed to place";
                 actionFinished(false);
@@ -115,9 +119,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             int numberFit = 0;
             foreach (
-                SimObjPhysics cover in availableExpRoomContainersDict.OrderBy(
-                        kvp => kvp.Key
-                    ).Select(kvp => kvp.Value)
+                SimObjPhysics cover in availableExpRoomContainersDict
+                    .OrderBy(kvp => kvp.Key)
+                    .Select(kvp => kvp.Value)
             ) {
                 if (cover.GetComponent<Break>()) {
                     cover.GetComponent<Break>().Unbreakable = true;
@@ -137,23 +141,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 float lastScale = 1.0f;
                 Func<float, bool> tryScale = (scale) => {
-                    emptyEnumerator(scaleObject(
-                        scale: scale / lastScale,
-                        target: cover,
-                        scaleOverSeconds: 0f,
-                        skipActionFinished: true
-                    ));
+                    emptyEnumerator(
+                        scaleObject(
+                            scale: scale / lastScale,
+                            target: cover,
+                            scaleOverSeconds: 0f,
+                            skipActionFinished: true
+                        )
+                    );
                     lastScale = scale;
 
                     Physics.SyncTransforms();
 
-                    if (!PlaceObjectAtPoint(
-                        target: cover,
-                        position: rightOfTable,
-                        rotation: null,
-                        forceKinematic: true,
-                        includeErrorMessage: true
-                    )) {
+                    if (
+                        !PlaceObjectAtPoint(
+                            target: cover,
+                            position: rightOfTable,
+                            rotation: null,
+                            forceKinematic: true,
+                            includeErrorMessage: true
+                        )
+                    ) {
 #if UNITY_EDITOR
                         Debug.Log($"{cover.name} failed to place: {errorMessage}");
 #endif
@@ -172,9 +180,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         Physics.SyncTransforms();
 
-                        Collider coverCollidingWith = UtilityFunctions.firstColliderObjectCollidingWith(
-                            go: cover.gameObject
-                        );
+                        Collider coverCollidingWith =
+                            UtilityFunctions.firstColliderObjectCollidingWith(go: cover.gameObject);
                         if (coverCollidingWith != null) {
                             //Debug.Log($"{cover.name} colliding with {coverCollidingWith.transform.parent.name}");
                             return false;
@@ -205,12 +212,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     numberFit += 1;
                 }
 
-                emptyEnumerator(scaleObject(
-                    scale: 1.0f / lastScale,
-                    target: cover,
-                    scaleOverSeconds: 0f,
-                    skipActionFinished: true
-                ));
+                emptyEnumerator(
+                    scaleObject(
+                        scale: 1.0f / lastScale,
+                        target: cover,
+                        scaleOverSeconds: 0f,
+                        skipActionFinished: true
+                    )
+                );
 
                 deactivateSop(cover);
             }
@@ -309,7 +318,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            Rigidbody rb = physicsSceneManager.ObjectIdToSimObjPhysics[objectId].GetComponent<Rigidbody>();
+            Rigidbody rb = physicsSceneManager
+                .ObjectIdToSimObjPhysics[objectId]
+                .GetComponent<Rigidbody>();
             if (isKinematic.HasValue) {
                 rb.isKinematic = isKinematic.Value;
             } else {
@@ -360,9 +371,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public List<Vector3> pointOnObjectsCollidersClosestToPoint(
-            string objectId, Vector3 point
-        ) {
+        public List<Vector3> pointOnObjectsCollidersClosestToPoint(string objectId, Vector3 point) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
                 return null;
@@ -375,17 +384,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // on certain collider types. We fall back to using the object's bounding box (see below)
                 // if there are no colliders of the supported types.
                 if (
-                    c.enabled && !c.isTrigger && (
-                        c is BoxCollider ||
-                        c is SphereCollider ||
-                        c is CapsuleCollider ||
-                        (c is MeshCollider && ((MeshCollider) c).convex)
+                    c.enabled
+                    && !c.isTrigger
+                    && (
+                        c is BoxCollider
+                        || c is SphereCollider
+                        || c is CapsuleCollider
+                        || (c is MeshCollider && ((MeshCollider)c).convex)
                     )
                 ) {
                     closePoints.Add(c.ClosestPoint(point));
 #if UNITY_EDITOR
                     Vector3 closePoint = closePoints[closePoints.Count - 1];
-                    Debug.Log($"For collider {c}, {closePoint} has dist {Vector3.Distance(closePoint, point)}");
+                    Debug.Log(
+                        $"For collider {c}, {closePoint} has dist {Vector3.Distance(closePoint, point)}"
+                    );
 #endif
                 }
             }
@@ -398,15 +411,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if UNITY_EDITOR
                 Vector3 closePoint = closePoints[closePoints.Count - 1];
                 Debug.Log(
-                    $"Could not find any usable colliders in {objectId}. Instead using the bounding box," +
-                    $" for the bounding box {closePoint} has dist {Vector3.Distance(closePoint, point)}"
+                    $"Could not find any usable colliders in {objectId}. Instead using the bounding box,"
+                        + $" for the bounding box {closePoint} has dist {Vector3.Distance(closePoint, point)}"
                 );
 #endif
             }
             closePoints = closePoints.OrderBy(x => Vector3.Distance(point, x)).ToList();
             return closePoints;
         }
-
 
         /// <summary>
         /// Finds the points on an object's colliders that are closest to a specified point in space.
@@ -430,16 +442,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///
         /// In the Unity Editor, this method also logs the distance from the closest points to the specified point, aiding in debugging and visualization.
         /// </remarks>
-        public void PointOnObjectsCollidersClosestToPoint(
-            string objectId, Vector3 point
-        ) {
-            List<Vector3> closePoints = pointOnObjectsCollidersClosestToPoint(objectId: objectId, point: point);
+        public void PointOnObjectsCollidersClosestToPoint(string objectId, Vector3 point) {
+            List<Vector3> closePoints = pointOnObjectsCollidersClosestToPoint(
+                objectId: objectId,
+                point: point
+            );
             actionFinishedEmit(closePoints != null, closePoints);
         }
 
-        public void PointOnObjectsMeshClosestToPoint(
-            string objectId, Vector3 point
-        ) {
+        public void PointOnObjectsMeshClosestToPoint(string objectId, Vector3 point) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinishedEmit(false);
@@ -463,9 +474,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, points);
         }
 
-        public void ProportionOfObjectVisible(
-            string objectId, int? thirdPartyCameraIndex = null
-        ) {
+        public void ProportionOfObjectVisible(string objectId, int? thirdPartyCameraIndex = null) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinishedEmit(false);
@@ -479,7 +488,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Transform[] visPoints = target.VisibilityPoints;
                 int visPointCount = 0;
 
-                Camera camera = thirdPartyCameraIndex.HasValue ? agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value] : m_Camera;
+                Camera camera = thirdPartyCameraIndex.HasValue
+                    ? agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value]
+                    : m_Camera;
                 foreach (Transform point in visPoints) {
                     // if this particular point is in view...
 
@@ -573,9 +584,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, toReturn);
         }
 
-        public void AddClippingPlaneToObjectToExcludeBox(
-            string objectId, List<Vector3> boxCorners
-        ) {
+        public void AddClippingPlaneToObjectToExcludeBox(string objectId, List<Vector3> boxCorners) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinishedEmit(false);
@@ -599,8 +608,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             toReturn["normal"] = planeGo.transform.up;
             if (!(bool)toReturn["enabled"]) {
                 errorMessage = (
-                    "Clipping plane was placed on object but is disabled as the" +
-                    " input bounding box contained no points on the object's mesh."
+                    "Clipping plane was placed on object but is disabled as the"
+                    + " input bounding box contained no points on the object's mesh."
                 );
                 actionFinished(false, toReturn);
             } else {
@@ -618,7 +627,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Ronja.ClippingPlane clipPlane = target.GetComponentInChildren<Ronja.ClippingPlane>();
             if (clipPlane == null) {
-                errorMessage = $"Object with id {objectId} does not have a clipping plane associated with it.";
+                errorMessage =
+                    $"Object with id {objectId} does not have a clipping plane associated with it.";
                 actionFinishedEmit(false);
                 return;
             }
@@ -631,9 +641,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, toReturn);
         }
 
-        public void ToggleClippingPlane(
-            string objectId, bool? enabled = null
-        ) {
+        public void ToggleClippingPlane(string objectId, bool? enabled = null) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinishedEmit(false);
@@ -643,7 +651,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Ronja.ClippingPlane clipPlane = target.GetComponentInChildren<Ronja.ClippingPlane>();
             if (clipPlane == null) {
-                errorMessage = $"Object with id {objectId} does not have a clipping plane associated with it.";
+                errorMessage =
+                    $"Object with id {objectId} does not have a clipping plane associated with it.";
                 actionFinished(false);
                 return;
             }
@@ -689,7 +698,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public GameObject addClippingPlaneToObjectToExcludeBox(
-            SimObjPhysics target, float[][] boxCorners
+            SimObjPhysics target,
+            float[][] boxCorners
         ) {
             List<Vector3> boxCornersV3 = new List<Vector3>();
             for (int i = 0; i < boxCorners.Length; i++) {
@@ -699,7 +709,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public GameObject addClippingPlaneToObjectToExcludeBox(
-            SimObjPhysics target, List<Vector3> boxCorners
+            SimObjPhysics target,
+            List<Vector3> boxCorners
         ) {
             GameObject clipPlaneGo = addClippingPlaneToObject(target);
 
@@ -739,26 +750,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 clipPlaneGo.transform.LookAt(lookOffset + startPos);
                 clipPlaneGo.transform.Rotate(new Vector3(90f, 0f, 0f));
                 if (lookOffset.x > 0f) {
-                    clipPlaneGo.transform.position = new Vector3(
-                        boundsOfVerticesToExclude.min.x - startPos.x, 0f, 0f
-                    ) + startPos;
+                    clipPlaneGo.transform.position =
+                        new Vector3(boundsOfVerticesToExclude.min.x - startPos.x, 0f, 0f)
+                        + startPos;
                 } else {
-                    clipPlaneGo.transform.position = new Vector3(
-                        boundsOfVerticesToExclude.max.x - startPos.x, 0f, 0f
-                    ) + startPos;
+                    clipPlaneGo.transform.position =
+                        new Vector3(boundsOfVerticesToExclude.max.x - startPos.x, 0f, 0f)
+                        + startPos;
                 }
             } else {
                 Vector3 lookOffset = new Vector3(0f, 0f, Mathf.Sign(direction.z));
                 clipPlaneGo.transform.LookAt(lookOffset + startPos);
                 clipPlaneGo.transform.Rotate(new Vector3(90f, 0f, 0f));
                 if (lookOffset.z > 0f) {
-                    clipPlaneGo.transform.position = new Vector3(
-                        0f, 0f, boundsOfVerticesToExclude.min.z - startPos.z
-                    ) + startPos;
+                    clipPlaneGo.transform.position =
+                        new Vector3(0f, 0f, boundsOfVerticesToExclude.min.z - startPos.z)
+                        + startPos;
                 } else {
-                    clipPlaneGo.transform.position = new Vector3(
-                        0f, 0f, boundsOfVerticesToExclude.max.z - startPos.z
-                    ) + startPos;
+                    clipPlaneGo.transform.position =
+                        new Vector3(0f, 0f, boundsOfVerticesToExclude.max.z - startPos.z)
+                        + startPos;
                 }
             }
 
@@ -771,9 +782,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // grid will be a 2n+1 by n grid in the orientation of agent right/left by agent forward
         public void GetReceptacleCoordinatesExpRoom(float gridSize, int maxStepCount) {
             var agent = this.agentManager.agents[0];
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             // good defaults would be gridSize 0.1m, maxStepCount 20 to cover the room
-            var ret = ersm.ValidGrid(agent.AgentHand.transform.position, gridSize, maxStepCount, agent);
+            var ret = ersm.ValidGrid(
+                agent.AgentHand.transform.position,
+                gridSize,
+                maxStepCount,
+                agent
+            );
             // var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
             actionFinished(true, ret);
         }
@@ -788,13 +805,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int objectVariation = 0
         ) {
             if (receptacleObjectId == null) {
-                errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtPoint action";
+                errorMessage =
+                    "please give valid receptacleObjectId for SpawnExperimentReceptacleAtPoint action";
                 actionFinished(false);
                 return;
             }
 
             if (objectType == null) {
-                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
+                errorMessage =
+                    "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
                 actionFinished(false);
                 return;
             }
@@ -808,14 +827,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (target == null) {
-                errorMessage = "no receptacle object with id: " +
-                receptacleObjectId + " could not be found during SpawnExperimentReceptacleAtPoint";
+                errorMessage =
+                    "no receptacle object with id: "
+                    + receptacleObjectId
+                    + " could not be found during SpawnExperimentReceptacleAtPoint";
                 actionFinished(false);
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if (ersm.SpawnExperimentObjAtPoint(this, objectType, objectVariation, target, position, rotation)) {
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            if (
+                ersm.SpawnExperimentObjAtPoint(
+                    this,
+                    objectType,
+                    objectVariation,
+                    target,
+                    position,
+                    rotation
+                )
+            ) {
                 actionFinished(true);
             } else {
                 errorMessage = $"Experiment object could not be placed on {receptacleObjectId}";
@@ -833,13 +864,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int objectVariation = 0
         ) {
             if (receptacleObjectId == null) {
-                errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtRandom action";
+                errorMessage =
+                    "please give valid receptacleObjectId for SpawnExperimentReceptacleAtRandom action";
                 actionFinished(false);
                 return;
             }
 
             if (objectType == null) {
-                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
+                errorMessage =
+                    "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
                 actionFinished(false);
                 return;
             }
@@ -853,14 +886,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (target == null) {
-                errorMessage = "no receptacle object with id: " +
-                receptacleObjectId + " could not be found during SpawnExperimentReceptacleAtRandom";
+                errorMessage =
+                    "no receptacle object with id: "
+                    + receptacleObjectId
+                    + " could not be found during SpawnExperimentReceptacleAtRandom";
                 actionFinished(false);
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if (ersm.SpawnExperimentObjAtRandom(this, objectType, objectVariation, randomSeed, target, rotation)) {
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            if (
+                ersm.SpawnExperimentObjAtRandom(
+                    this,
+                    objectType,
+                    objectVariation,
+                    randomSeed,
+                    target,
+                    rotation
+                )
+            ) {
                 actionFinished(true);
             } else {
                 errorMessage = "Experiment object could not be placed on " + receptacleObjectId;
@@ -892,24 +937,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (target == null) {
-                errorMessage = "no object with id: " +
-                objectId + " could be found during ChangeScreenMaterialExpRoom";
+                errorMessage =
+                    "no object with id: "
+                    + objectId
+                    + " could be found during ChangeScreenMaterialExpRoom";
                 actionFinished(false);
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeScreenMaterial(target, objectVariation);
             actionFinished(true);
         }
 
         // specify a screen in exp room by objectId and change material color to rgb
         public void ChangeScreenColorExpRoom(string objectId, float r, float g, float b) {
-            if (
-                r < 0 || r > 255 ||
-                g < 0 || g > 255 ||
-                b < 0 || b > 255
-            ) {
+            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
                 errorMessage = "rgb values must be [0-255]";
                 actionFinished(false);
                 return;
@@ -924,13 +968,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (target == null) {
-                errorMessage = "no object with id: " +
-                objectId + " could not be found during ChangeScreenColorExpRoom";
+                errorMessage =
+                    "no object with id: "
+                    + objectId
+                    + " could not be found during ChangeScreenColorExpRoom";
                 actionFinished(false);
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeScreenColor(target, r, g, b);
             actionFinished(true);
         }
@@ -944,24 +991,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeWallMaterial(objectVariation);
             actionFinished(true);
         }
 
         // change wall color to rgb (0-255, 0-255, 0-255)
         public void ChangeWallColorExpRoom(float r, float g, float b) {
-            if (
-                r < 0 || r > 255 ||
-                g < 0 || g > 255 ||
-                b < 0 || b > 255
-            ) {
+            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
                 errorMessage = "rgb values must be [0-255]";
                 actionFinished(false);
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeWallColor(r, g, b);
             actionFinished(true);
         }
@@ -975,41 +1020,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeFloorMaterial(objectVariation);
             actionFinished(true);
         }
 
         // change wall color to rgb (0-255, 0-255, 0-255)
         public void ChangeFloorColorExpRoom(float r, float g, float b) {
-            if (
-                r < 0 || r > 255 ||
-                g < 0 || g > 255 ||
-                b < 0 || b > 255
-            ) {
+            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
                 errorMessage = "rgb values must be [0-255]";
                 actionFinished(false);
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeFloorColor(r, g, b);
             actionFinished(true);
         }
 
         // change color of ceiling lights in exp room to rgb (0-255, 0-255, 0-255)
         public void ChangeLightColorExpRoom(float r, float g, float b) {
-            if (
-                r < 0 || r > 255 ||
-                g < 0 || g > 255 ||
-                b < 0 || b > 255
-            ) {
+            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
                 errorMessage = "rgb values must be [0-255]";
                 actionFinished(false);
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeLightColor(r, g, b);
             actionFinished(true);
         }
@@ -1024,7 +1064,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeLightIntensity(intensity);
             actionFinished(true);
         }
@@ -1037,23 +1078,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeTableTopMaterial(objectVariation);
             actionFinished(true);
         }
 
         public void ChangeTableTopColorExpRoom(float r, float g, float b) {
-            if (
-                r < 0 || r > 255 ||
-                g < 0 || g > 255 ||
-                b < 0 || b > 255
-            ) {
+            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
                 errorMessage = "rgb values must be [0-255]";
                 actionFinished(false);
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeTableTopColor(r, g, b);
             actionFinished(true);
         }
@@ -1066,23 +1105,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeTableLegMaterial(objectVariation);
             actionFinished(true);
         }
 
         public void ChangeTableLegColorExpRoom(float r, float g, float b) {
-            if (
-                r < 0 || r > 255 ||
-                g < 0 || g > 255 ||
-                b < 0 || b > 255
-            ) {
+            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
                 errorMessage = "rgb values must be [0-255]";
                 actionFinished(false);
                 return;
             }
 
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeTableLegColor(r, g, b);
             actionFinished(true);
         }
@@ -1090,15 +1127,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // returns valid spawn points for spawning an object on a receptacle in the experiment room
         // checks if <objectId> at <y> rotation can spawn without falling off
         // table <receptacleObjectId>
-        public void ReturnValidSpawnsExpRoom(string objectType, string receptacleObjectId, float rotation, int objectVariation = 0) {
+        public void ReturnValidSpawnsExpRoom(
+            string objectType,
+            string receptacleObjectId,
+            float rotation,
+            int objectVariation = 0
+        ) {
             if (receptacleObjectId == null) {
-                errorMessage = "please give valid receptacleObjectId for ReturnValidSpawnsExpRoom action";
+                errorMessage =
+                    "please give valid receptacleObjectId for ReturnValidSpawnsExpRoom action";
                 actionFinished(false);
                 return;
             }
 
             if (objectType == null) {
-                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
+                errorMessage =
+                    "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
                 actionFinished(false);
                 return;
             }
@@ -1111,8 +1155,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[receptacleObjectId];
 
             // return all valid spawn coordinates
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            actionFinished(true, ersm.ReturnValidSpawns(this, objectType, objectVariation, target, rotation));
+            ExperimentRoomSceneManager ersm =
+                physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            actionFinished(
+                true,
+                ersm.ReturnValidSpawns(this, objectType, objectVariation, target, rotation)
+            );
         }
     }
 }

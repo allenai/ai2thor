@@ -12,14 +12,12 @@ with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
 
 VERSION = __version__
 
+
 def _read_reqs(relpath):
-        fullpath = os.path.join(os.path.dirname(__file__), relpath)
-        with open(fullpath) as f:
-            return [
-                s.strip()
-                for s in f.readlines()
-                if (s.strip() and not s.startswith("#"))
-            ]
+    fullpath = os.path.join(os.path.dirname(__file__), relpath)
+    with open(fullpath) as f:
+        return [s.strip() for s in f.readlines() if (s.strip() and not s.startswith("#"))]
+
 
 REQUIREMENTS = _read_reqs("requirements.txt")
 REQUIREMENTS_TEST = _read_reqs("requirements-dev.txt")
@@ -59,4 +57,3 @@ setup(
     scripts=["scripts/ai2thor-xorg"],
     include_package_data=False,
 )
-

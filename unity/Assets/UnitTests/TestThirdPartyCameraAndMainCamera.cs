@@ -1,14 +1,17 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
-using System;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace Tests {
-    public class TestThirdPartyCameraAndMainCamera : TestBase {
+namespace Tests
+{
+    public class TestThirdPartyCameraAndMainCamera : TestBase
+    {
         [UnityTest]
-        public IEnumerator TestAddThirdPartyCamera() {
+        public IEnumerator TestAddThirdPartyCamera()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -67,7 +70,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestAddMultipleThirdPartyCamera() {
+        public IEnumerator TestAddMultipleThirdPartyCamera()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -90,7 +94,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestUpdateThirdPartyCamera() {
+        public IEnumerator TestUpdateThirdPartyCamera()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -112,13 +117,13 @@ namespace Tests {
 
             //update third party camera to be attached to agent
             action["action"] = "UpdateThirdPartyCamera";
-            action["thirdPartyCameraId"]=0;
+            action["thirdPartyCameraId"] = 0;
             action["position"] = new Vector3(1, 2, 3);
             action["rotation"] = new Vector3(20, 20, 20);
             action["parent"] = "agent";
             action["orthographic"] = true;
             action["orthographicSize"] = 5;
-            action["agentPositionRelativeCoordinates"]=true;
+            action["agentPositionRelativeCoordinates"] = true;
             yield return step(action);
 
             //make sure camera is now a child of the primary agent
@@ -146,13 +151,13 @@ namespace Tests {
             action.Clear();
             //ok now update camera so it detaches from the agent and also repositions in world space
             action["action"] = "UpdateThirdPartyCamera";
-            action["thirdPartyCameraId"]=0;
+            action["thirdPartyCameraId"] = 0;
             action["position"] = new Vector3(10, 10, 10);
             action["rotation"] = new Vector3(1f, 1f, 1f);
             action["parent"] = "world";
             action["orthographic"] = true;
             action["orthographicSize"] = 5;
-            action["agentPositionRelativeCoordinates"]=false;
+            action["agentPositionRelativeCoordinates"] = false;
             action["parent"] = "agent";
             yield return step(action);
 
@@ -169,7 +174,9 @@ namespace Tests {
             result = Mathf.Approximately(agentThirdPartyCam.transform.position.z, 10.0f);
             Assert.AreEqual(result, true);
 
-            Debug.Log($"ok what even are the eulers: {agentThirdPartyCam.transform.eulerAngles.x}, {agentThirdPartyCam.transform.eulerAngles.y}, {agentThirdPartyCam.transform.eulerAngles.z}");
+            Debug.Log(
+                $"ok what even are the eulers: {agentThirdPartyCam.transform.eulerAngles.x}, {agentThirdPartyCam.transform.eulerAngles.y}, {agentThirdPartyCam.transform.eulerAngles.z}"
+            );
             //check rotation set as expected
             Debug.Log("x rot");
             result = Mathf.Approximately(agentThirdPartyCam.transform.eulerAngles.x, 1.0f);
@@ -185,7 +192,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestUpdateMainCamera() {
+        public IEnumerator TestUpdateMainCamera()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";

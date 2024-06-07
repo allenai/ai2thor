@@ -1,14 +1,11 @@
-using UnityEngine;
 using System;
-
 using System.Collections;
 using System.Collections.Generic;
-using UnityStandardAssets.Characters.FirstPerson;
 using System.Linq;
+using UnityEngine;
+using UnityStandardAssets.Characters.FirstPerson;
 
 public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
-
-
     [SerializeField]
     public Transform FinalJoint;
 
@@ -18,30 +15,30 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
     [SerializeField]
     protected WhatIsInsideMagnetSphere magnetSphereComp;
 
-    [SerializeField] 
+    [SerializeField]
     public SphereCollider magnetSphere = null;
 
     [SerializeField]
     protected GameObject MagnetRenderer = null;
 
     [SerializeField]
-    public CapsuleCollider[] ArmCapsuleColliders {get; protected set; }
+    public CapsuleCollider[] ArmCapsuleColliders { get; protected set; }
 
     [SerializeField]
-    public BoxCollider[] ArmBoxColliders {get; protected set; }
+    public BoxCollider[] ArmBoxColliders { get; protected set; }
 
     [SerializeField]
-    public CapsuleCollider agentCapsuleCollider {get; protected set; } = null;
+    public CapsuleCollider agentCapsuleCollider { get; protected set; } = null;
 
     [HideInInspector]
     public CollisionListener collisionListener;
 
     //
     [SerializeField]
-    public Dictionary<SimObjPhysics, HashSet<Collider>> heldObjects { get; protected set; } = new Dictionary<SimObjPhysics, HashSet<Collider>>();
+    public Dictionary<SimObjPhysics, HashSet<Collider>> heldObjects { get; protected set; } =
+        new Dictionary<SimObjPhysics, HashSet<Collider>>();
 
     protected bool ignoreHeldObjectToAgentCollisions = false;
-
 
     protected virtual bool validArmTargetPosition(Vector3 targetWorldPosition) {
         return true;
@@ -63,22 +60,19 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         bool actionSuccess = !this.ShouldHalt();
         string errorMessage = this.GetHaltMessage();
 
-        return new ActionFinished() {
-            success = actionSuccess,
-            errorMessage = errorMessage
-        };
+        return new ActionFinished() { success = actionSuccess, errorMessage = errorMessage };
     }
 
     // bool actionSuccess = !movable.ShouldHalt();
-            // string errorMessage = movable.GetHaltMessage();
-            // if (!actionSuccess) {
-            //      setProp(moveTransform, resetProp);
-            // }
+    // string errorMessage = movable.GetHaltMessage();
+    // if (!actionSuccess) {
+    //      setProp(moveTransform, resetProp);
+    // }
 
-            // return new ActionFinished() {
-            //     success = actionSuccess,
-            //     errorMessage = errorMessage
-            // };
+    // return new ActionFinished() {
+    //     success = actionSuccess,
+    //     errorMessage = errorMessage
+    // };
     public abstract GameObject GetArmTarget();
     public abstract ArmMetadata GenerateMetadata();
 
@@ -93,21 +87,29 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
     public virtual string GetHaltMessage() {
         var staticCollisions = collisionListener?.StaticCollisions().ToList();
 
-            // decide if we want to return to original property or last known property before collision
-            if (staticCollisions.Count > 0) {
-                var sc = staticCollisions[0];
+        // decide if we want to return to original property or last known property before collision
+        if (staticCollisions.Count > 0) {
+            var sc = staticCollisions[0];
 
-                // if we hit a sim object
-                if (sc.isSimObj) {
-                    return "Collided with static/kinematic sim object: '" + sc.simObjPhysics.name + "', could not reach target: '" + armTarget + "'.";
-                }
-
-                // if we hit a structural object that isn't a sim object but still has static collision
-                if (!sc.isSimObj) {
-                    return "Collided with static structure in scene: '" + sc.gameObject.name + "', could not reach target: '" + armTarget + "'.";
-                }
+            // if we hit a sim object
+            if (sc.isSimObj) {
+                return "Collided with static/kinematic sim object: '"
+                    + sc.simObjPhysics.name
+                    + "', could not reach target: '"
+                    + armTarget
+                    + "'.";
             }
-            return "";
+
+            // if we hit a structural object that isn't a sim object but still has static collision
+            if (!sc.isSimObj) {
+                return "Collided with static structure in scene: '"
+                    + sc.gameObject.name
+                    + "', could not reach target: '"
+                    + armTarget
+                    + "'.";
+            }
+        }
+        return "";
     }
 
     // public virtual ActionFinished FinishContinuousMove(
@@ -124,11 +126,11 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         lastStepCallback();
     }
 
-     public HashSet<Collider> currentArmCollisions() {
-         HashSet<Collider> colliders = new HashSet<Collider>();
+    public HashSet<Collider> currentArmCollisions() {
+        HashSet<Collider> colliders = new HashSet<Collider>();
 
-         // add the AgentCapsule to the ArmCapsuleColliders for the capsule collider check
-         List<CapsuleCollider> capsules = new List<CapsuleCollider>();
+        // add the AgentCapsule to the ArmCapsuleColliders for the capsule collider check
+        List<CapsuleCollider> capsules = new List<CapsuleCollider>();
 
         capsules.AddRange(ArmCapsuleColliders);
         capsules.Add(agentCapsuleCollider);
@@ -193,7 +195,13 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
                 point0: point0,
                 point1: point1,
                 radius: radius,
-                layerMask: LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
+                layerMask: LayerMask.GetMask(
+                    "SimObjVisible",
+                    "Procedural1",
+                    "Procedural2",
+                    "Procedural3",
+                    "Procedural0"
+                ),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
             foreach (Collider col in cols) {
@@ -210,7 +218,13 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
                 center: b.transform.TransformPoint(b.center),
                 halfExtents: b.size / 2.0f,
                 orientation: b.transform.rotation,
-                layerMask: LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
+                layerMask: LayerMask.GetMask(
+                    "SimObjVisible",
+                    "Procedural1",
+                    "Procedural2",
+                    "Procedural3",
+                    "Procedural0"
+                ),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
             foreach (Collider col in cols) {
@@ -219,7 +233,6 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         }
         return colliders;
     }
-
 
     public virtual IEnumerator moveArmRelative(
         PhysicsRemoteFPSAgentController controller,
@@ -258,8 +271,6 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
             restrictTargetPosition: restrictTargetPosition
         );
     }
-
-    
 
     public virtual IEnumerator moveArmTarget(
         PhysicsRemoteFPSAgentController controller,
@@ -315,7 +326,6 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         );
     }
 
-
     public virtual IEnumerator moveArmBase(
         PhysicsRemoteFPSAgentController controller,
         float height,
@@ -330,7 +340,8 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
         Vector3 capsuleWorldCenter = cc.transform.TransformPoint(cc.center);
 
-        float minY, maxY;
+        float minY,
+            maxY;
         getCapsuleMinMaxY(controller, out minY, out maxY);
 
         if (normalizedY) {
@@ -338,12 +349,14 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         }
 
         if (height < minY || height > maxY) {
-            throw new ArgumentOutOfRangeException($"height={height} value must be in [{minY}, {maxY}].");
+            throw new ArgumentOutOfRangeException(
+                $"height={height} value must be in [{minY}, {maxY}]."
+            );
         }
 
         Vector3 target = new Vector3(this.transform.position.x, height, this.transform.position.z);
         return withLastStepCallback(
-                ContinuousMovement.move(
+            ContinuousMovement.move(
                 movable: this,
                 controller: controller,
                 moveTransform: this.transform,
@@ -356,7 +369,11 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         );
     }
 
-     private void getCapsuleMinMaxY(PhysicsRemoteFPSAgentController controller, out float minY, out float maxY) {
+    private void getCapsuleMinMaxY(
+        PhysicsRemoteFPSAgentController controller,
+        out float minY,
+        out float maxY
+    ) {
         CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
         Vector3 capsuleWorldCenter = cc.transform.TransformPoint(cc.center);
 
@@ -376,7 +393,8 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
 
         CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
         Vector3 capsuleWorldCenter = cc.transform.TransformPoint(cc.center);
-        float minY, maxY;
+        float minY,
+            maxY;
         getCapsuleMinMaxY(controller, out minY, out maxY);
         float targetY = this.transform.position.y + distance;
         targetY = Mathf.Max(Mathf.Min(targetY, maxY), minY);
@@ -417,7 +435,9 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         return magnetSphereComp.CurrentlyContainedSimObjects(onlyPickupable: onlyPickupable);
     }
 
-    public IEnumerator ReturnObjectsInMagnetAfterPhysicsUpdate(PhysicsRemoteFPSAgentController controller) {
+    public IEnumerator ReturnObjectsInMagnetAfterPhysicsUpdate(
+        PhysicsRemoteFPSAgentController controller
+    ) {
         yield return new WaitForFixedUpdate();
         List<string> listOfSOP = new List<string>();
         foreach (SimObjPhysics sop in this.WhatObjectsAreInsideMagnetSphereAsSOP(false)) {
@@ -426,7 +446,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         Debug.Log("objs: " + string.Join(", ", listOfSOP));
         controller.actionFinished(true, listOfSOP);
     }
-    
+
     private Dictionary<GameObject, Vector3> getGameObjectToMultipliedScale(
         GameObject go,
         Vector3 currentScale,
@@ -450,7 +470,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         return gameObjectToScale;
     }
 
-   public virtual IEnumerator PickupObject(List<string> objectIds) {
+    public virtual IEnumerator PickupObject(List<string> objectIds) {
         // var at = this.transform.InverseTransformPoint(armTarget.position) - new Vector3(0, 0, originToShoulderLength);
         // Debug.Log("Pickup " + at.magnitude);
         bool pickedUp = false;
@@ -463,10 +483,11 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
                 }
             }
 
-            Dictionary<GameObject, Vector3> gameObjectToMultipliedScale = getGameObjectToMultipliedScale(
-                go: sop.gameObject,
-                currentScale: new Vector3(1f, 1f, 1f)
-            );
+            Dictionary<GameObject, Vector3> gameObjectToMultipliedScale =
+                getGameObjectToMultipliedScale(
+                    go: sop.gameObject,
+                    currentScale: new Vector3(1f, 1f, 1f)
+                );
             Rigidbody rb = sop.GetComponent<Rigidbody>();
             rb.isKinematic = true;
             sop.transform.SetParent(pickupParent());
@@ -477,7 +498,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
                 CanOpen_Object coj = sop.gameObject.GetComponent<CanOpen_Object>();
 
                 // if an openable object receives OnTriggerEnter events
-                // the RigidBody can be switched to Kinematic false 
+                // the RigidBody can be switched to Kinematic false
                 coj.triggerEnabled = false;
             }
 
@@ -520,7 +541,9 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
             // TODO: Ignore all collisions between arm/held object colliders (for efficiency)!
             // Removed first loop because of  wanting heldobject->arm collision events
             var colliders = this.GetComponentsInChildren<Collider>();
-            Debug.Log($"------- ignoreHeldObjectToAgentCollisions {ignoreHeldObjectToAgentCollisions}");
+            Debug.Log(
+                $"------- ignoreHeldObjectToAgentCollisions {ignoreHeldObjectToAgentCollisions}"
+            );
             if (ignoreHeldObjectToAgentCollisions) {
                 foreach (Collider c0 in colliders) {
                     foreach (Collider c1 in cols) {
@@ -542,17 +565,14 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         if (!pickedUp) {
             errorMessage = (
                 objectIds != null
-                ? "No objects (specified by objectId) were valid to be picked up by the arm"
-                : "No objects were valid to be picked up by the arm"
+                    ? "No objects (specified by objectId) were valid to be picked up by the arm"
+                    : "No objects were valid to be picked up by the arm"
             );
         }
 
         // note: how to handle cases where object breaks if it is shoved into another object?
         // make them all unbreakable?
-        yield return new ActionFinished() {
-            success = pickedUp,
-            errorMessage= errorMessage
-        };
+        yield return new ActionFinished() { success = pickedUp, errorMessage = errorMessage };
     }
 
     public virtual IEnumerator DropObject() {
@@ -603,6 +623,4 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
         magnetSphere.transform.localPosition = new Vector3(0, 0, 0.01f + radius);
         MagnetRenderer.transform.localPosition = new Vector3(0, 0, 0.01f + radius);
     }
-
-
 }

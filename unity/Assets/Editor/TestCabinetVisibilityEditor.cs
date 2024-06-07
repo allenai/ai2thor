@@ -1,18 +1,23 @@
-﻿using UnityEngine;
+﻿using System.Collections;
 using UnityEditor;
-using System.Collections;
+using UnityEngine;
 
 [CustomEditor(typeof(TestCabinetVisibility))]
-public class TestCabinetVisibilityEditor : Editor {
-    public override void OnInspectorGUI() {
+public class TestCabinetVisibilityEditor : Editor
+{
+    public override void OnInspectorGUI()
+    {
         DrawDefaultInspector();
 
         TestCabinetVisibility t = (TestCabinetVisibility)target;
 
-        if (!Application.isPlaying) {
-            if (GUILayout.Button("Next position")) {
+        if (!Application.isPlaying)
+        {
+            if (GUILayout.Button("Next position"))
+            {
                 t.ProblemIndex++;
-                if (t.ProblemIndex >= t.ProblemCabinets.Count) {
+                if (t.ProblemIndex >= t.ProblemCabinets.Count)
+                {
                     t.ProblemIndex = 0;
                 }
                 float headingAngle = t.ProblemHeadingAngles[t.ProblemIndex];

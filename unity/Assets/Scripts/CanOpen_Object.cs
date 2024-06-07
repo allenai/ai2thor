@@ -22,21 +22,29 @@ public class CanOpen_Object : MonoBehaviour {
     public bool triggerEnabled = true;
 
     [SerializeField]
-    public float currentOpenness = 1.0f; // 0.0 to 1.0 - percent of openPosition the object opens. 
-    
+    public float currentOpenness = 1.0f; // 0.0 to 1.0 - percent of openPosition the object opens.
+
     // used to reset on failure
     private float startOpenness;
     private float lastSuccessfulOpenness;
-    public enum failState {none, collision, hyperextension};
+
+    public enum failState {
+        none,
+        collision,
+        hyperextension
+    };
+
     private failState failure = failState.none;
     private GameObject failureCollision;
-    
+
     // used to store whether moving parts should treat non-static SimObjects as barriers
     private bool forceAction = false;
     private bool ignoreAgentInTransition = false;
     private bool stopAtNonStaticCol = false;
 
-    [Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
+    [Header(
+        "Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together"
+    )]
     // these are objects to ignore collision with. This is in case the fridge doors touch each other or something that might
     // prevent them from closing all the way. Probably not needed but it's here if there is an edge case
     [SerializeField]
@@ -47,18 +55,22 @@ public class CanOpen_Object : MonoBehaviour {
     public bool isOpen = false;
 
     private bool isCurrentlyLerping = false;
+
     // [SerializeField]
     //public bool isCurrentlyResetting = false;
     // private bool isCurrentlyResetting = false;
 
-    public enum MovementType { Slide, Rotate, Scale };
+    public enum MovementType {
+        Slide,
+        Rotate,
+        Scale
+    };
 
     [SerializeField]
     protected MovementType movementType;
 
     // keep a list of all objects that, if able to turn on/off, must be in the Off state before opening (no opening microwave unless it's off!);
-    private List<SimObjType> MustBeOffToOpen = new List<SimObjType>()
-    {SimObjType.Microwave};
+    private List<SimObjType> MustBeOffToOpen = new List<SimObjType>() { SimObjType.Microwave };
 
     //[Header("References for the Open or Closed bounding box for openable and pickupable objects")]
     //// the bounding box to use when this object is in the open state
@@ -75,9 +87,11 @@ public class CanOpen_Object : MonoBehaviour {
 
     // Use this for initialization
     void Start() {
-
 #if UNITY_EDITOR
-        if (!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
+        if (
+            !this.GetComponent<SimObjPhysics>()
+                .DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)
+        ) {
             Debug.LogError(this.name + "is missing the CanOpen Secondary Property! Please set it!");
         }
 #endif
@@ -105,8 +119,14 @@ public class CanOpen_Object : MonoBehaviour {
 #if UNITY_EDITOR
     void OnEnable() {
         // debug check for missing CanOpen property
-        if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
-            Debug.LogError(gameObject.transform.name + " is missing the Secondary Property CanOpen!");
+        if (
+            !gameObject
+                .GetComponent<SimObjPhysics>()
+                .DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)
+        ) {
+            Debug.LogError(
+                gameObject.transform.name + " is missing the Secondary Property CanOpen!"
+            );
         }
     }
 
@@ -121,14 +141,14 @@ public class CanOpen_Object : MonoBehaviour {
     public void SetMovementToScale() {
         movementType = MovementType.Scale;
     }
-
 #endif
 
     //sets the openness of a "rotation" based open/close object immediately without using tweening
     //specifically used for pre-scene setup
     public void SetOpennessImmediate(float openness = 1.0f) {
         for (int i = 0; i < MovingParts.Length; i++) {
-            Vector3 newRot = new Vector3(openPositions[i].x, openPositions[i].y, openPositions[i].z) * openness;
+            Vector3 newRot =
+                new Vector3(openPositions[i].x, openPositions[i].y, openPositions[i].z) * openness;
             MovingParts[i].transform.localRotation = Quaternion.Euler(newRot);
         }
 
@@ -143,8 +163,7 @@ public class CanOpen_Object : MonoBehaviour {
         bool returnToStartMode = false,
         GameObject posRotManip = null,
         GameObject posRotRef = null
-        ) {
-
+    ) {
         // if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         // before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
@@ -165,48 +184,60 @@ public class CanOpen_Object : MonoBehaviour {
         // okay let's open / reset the object!
         if (movementType == MovementType.Slide) {
             if (failure == failState.none || returnToStart == true) {
-                 StartCoroutine(LerpPosition(
-                    movingParts: MovingParts,
-                    closedLocalPositions: closedPositions,
-                    openLocalPositions: openPositions,
-                    initialOpenness: currentOpenness,
-                    desiredOpenness: targetOpenness,
-                    animationTime: animationTime,
-                    physicsInterval: (float)physicsInterval,
-                    useGripper: useGripper,
-                    returnToStartMode: returnToStartMode,
-                    posRotManip: posRotManip,
-                    posRotRef: posRotRef
-                 ));
+                StartCoroutine(
+                    LerpPosition(
+                        movingParts: MovingParts,
+                        closedLocalPositions: closedPositions,
+                        openLocalPositions: openPositions,
+                        initialOpenness: currentOpenness,
+                        desiredOpenness: targetOpenness,
+                        animationTime: animationTime,
+                        physicsInterval: (float)physicsInterval,
+                        useGripper: useGripper,
+                        returnToStartMode: returnToStartMode,
+                        posRotManip: posRotManip,
+                        posRotRef: posRotRef
+                    )
+                );
             } else {
                 currentOpenness = lastSuccessfulOpenness;
                 for (int i = 0; i < MovingParts.Length; i++) {
-                    MovingParts[i].transform.localPosition = Vector3.Lerp(closedPositions[i], openPositions[i], currentOpenness);
+                    MovingParts[i].transform.localPosition = Vector3.Lerp(
+                        closedPositions[i],
+                        openPositions[i],
+                        currentOpenness
+                    );
                 }
                 SyncPosRot(posRotManip, posRotRef);
-                
+
                 setIsOpen(currentOpenness);
                 isCurrentlyLerping = false;
             }
         } else if (movementType == MovementType.Rotate) {
             if (failure == failState.none || returnToStart == true) {
-                StartCoroutine(LerpRotation(
-                    movingParts: MovingParts,
-                    closedLocalRotations: closedPositions,
-                    openLocalRotations: openPositions,
-                    initialOpenness: currentOpenness,
-                    desiredOpenness: targetOpenness,
-                    animationTime: animationTime,
-                    physicsInterval: (float)physicsInterval,
-                    useGripper: useGripper,
-                    returnToStartMode: returnToStartMode,
-                    posRotManip: posRotManip,
-                    posRotRef: posRotRef
-                ));
+                StartCoroutine(
+                    LerpRotation(
+                        movingParts: MovingParts,
+                        closedLocalRotations: closedPositions,
+                        openLocalRotations: openPositions,
+                        initialOpenness: currentOpenness,
+                        desiredOpenness: targetOpenness,
+                        animationTime: animationTime,
+                        physicsInterval: (float)physicsInterval,
+                        useGripper: useGripper,
+                        returnToStartMode: returnToStartMode,
+                        posRotManip: posRotManip,
+                        posRotRef: posRotRef
+                    )
+                );
             } else {
                 currentOpenness = lastSuccessfulOpenness;
                 for (int i = 0; i < MovingParts.Length; i++) {
-                    MovingParts[i].transform.localRotation = Quaternion.Lerp(Quaternion.Euler(closedPositions[i]), Quaternion.Euler(openPositions[i]), currentOpenness);
+                    MovingParts[i].transform.localRotation = Quaternion.Lerp(
+                        Quaternion.Euler(closedPositions[i]),
+                        Quaternion.Euler(openPositions[i]),
+                        currentOpenness
+                    );
                 }
                 SyncPosRot(posRotManip, posRotRef);
 
@@ -215,23 +246,29 @@ public class CanOpen_Object : MonoBehaviour {
             }
         } else if (movementType == MovementType.Scale) {
             if (failure == failState.none || returnToStart == true) {
-                StartCoroutine(LerpScale(
-                    movingParts: MovingParts,
-                    closedLocalScales: closedPositions,
-                    openLocalScales: openPositions,
-                    initialOpenness: currentOpenness,
-                    desiredOpenness: targetOpenness,
-                    animationTime: animationTime,
-                    physicsInterval: (float)physicsInterval,
-                    useGripper: useGripper,
-                    returnToStartMode: returnToStartMode,
-                    posRotManip: posRotManip,
-                    posRotRef: posRotRef
-                ));
+                StartCoroutine(
+                    LerpScale(
+                        movingParts: MovingParts,
+                        closedLocalScales: closedPositions,
+                        openLocalScales: openPositions,
+                        initialOpenness: currentOpenness,
+                        desiredOpenness: targetOpenness,
+                        animationTime: animationTime,
+                        physicsInterval: (float)physicsInterval,
+                        useGripper: useGripper,
+                        returnToStartMode: returnToStartMode,
+                        posRotManip: posRotManip,
+                        posRotRef: posRotRef
+                    )
+                );
             } else {
                 currentOpenness = lastSuccessfulOpenness;
                 for (int i = 0; i < MovingParts.Length; i++) {
-                    MovingParts[i].transform.localScale = Vector3.Lerp(closedPositions[i], openPositions[i], currentOpenness);
+                    MovingParts[i].transform.localScale = Vector3.Lerp(
+                        closedPositions[i],
+                        openPositions[i],
+                        currentOpenness
+                    );
                 }
                 SyncPosRot(posRotManip, posRotRef);
 
@@ -255,17 +292,24 @@ public class CanOpen_Object : MonoBehaviour {
         GameObject posRotRef
     ) {
         float elapsedTime = 0f;
-        while (elapsedTime < animationTime && (failure == failState.none || returnToStartMode == true))
-        {
+        while (
+            elapsedTime < animationTime && (failure == failState.none || returnToStartMode == true)
+        ) {
             lastSuccessfulOpenness = currentOpenness;
             elapsedTime += physicsInterval;
             currentOpenness = Mathf.Clamp(
-                initialOpenness + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
+                initialOpenness
+                    + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
                 Mathf.Min(initialOpenness, desiredOpenness),
-                Mathf.Max(initialOpenness, desiredOpenness));
+                Mathf.Max(initialOpenness, desiredOpenness)
+            );
 
             for (int i = 0; i < movingParts.Length; i++) {
-                movingParts[i].transform.localPosition = Vector3.Lerp(closedLocalPositions[i], openLocalPositions[i], currentOpenness);
+                movingParts[i].transform.localPosition = Vector3.Lerp(
+                    closedLocalPositions[i],
+                    openLocalPositions[i],
+                    currentOpenness
+                );
             }
 
             if (useGripper == true) {
@@ -297,17 +341,24 @@ public class CanOpen_Object : MonoBehaviour {
         GameObject posRotRef
     ) {
         float elapsedTime = 0f;
-        while (elapsedTime < animationTime && (failure == failState.none || returnToStartMode == true))
-        {
+        while (
+            elapsedTime < animationTime && (failure == failState.none || returnToStartMode == true)
+        ) {
             lastSuccessfulOpenness = currentOpenness;
             elapsedTime += physicsInterval;
             currentOpenness = Mathf.Clamp(
-                initialOpenness + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
+                initialOpenness
+                    + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
                 Mathf.Min(initialOpenness, desiredOpenness),
-                Mathf.Max(initialOpenness, desiredOpenness));
+                Mathf.Max(initialOpenness, desiredOpenness)
+            );
 
             for (int i = 0; i < movingParts.Length; i++) {
-                movingParts[i].transform.localRotation = Quaternion.Lerp(Quaternion.Euler(closedLocalRotations[i]), Quaternion.Euler(openLocalRotations[i]), currentOpenness);
+                movingParts[i].transform.localRotation = Quaternion.Lerp(
+                    Quaternion.Euler(closedLocalRotations[i]),
+                    Quaternion.Euler(openLocalRotations[i]),
+                    currentOpenness
+                );
             }
 
             if (useGripper == true) {
@@ -340,17 +391,24 @@ public class CanOpen_Object : MonoBehaviour {
     ) {
         float elapsedTime = 0f;
 
-        while (elapsedTime < animationTime && (failure == failState.none || returnToStartMode == true))
-        {
+        while (
+            elapsedTime < animationTime && (failure == failState.none || returnToStartMode == true)
+        ) {
             lastSuccessfulOpenness = currentOpenness;
             elapsedTime += physicsInterval;
             currentOpenness = Mathf.Clamp(
-                initialOpenness + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
+                initialOpenness
+                    + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
                 Mathf.Min(initialOpenness, desiredOpenness),
-                Mathf.Max(initialOpenness, desiredOpenness));
+                Mathf.Max(initialOpenness, desiredOpenness)
+            );
 
             for (int i = 0; i < movingParts.Length; i++) {
-                movingParts[i].transform.localScale = Vector3.Lerp(closedLocalScales[i], openLocalScales[i], currentOpenness);
+                movingParts[i].transform.localScale = Vector3.Lerp(
+                    closedLocalScales[i],
+                    openLocalScales[i],
+                    currentOpenness
+                );
             }
 
             if (useGripper == true) {
@@ -377,10 +435,7 @@ public class CanOpen_Object : MonoBehaviour {
         return isOpen;
     }
 
-    public void stepOpen(
-        float physicsInterval,
-        bool useGripper,
-        float elapsedTime) {
+    public void stepOpen(float physicsInterval, bool useGripper, float elapsedTime) {
         if (Physics.autoSimulation != true) {
             PhysicsSceneManager.PhysicsSimulateTHOR(physicsInterval);
             Physics.SyncTransforms();
@@ -389,11 +444,19 @@ public class CanOpen_Object : MonoBehaviour {
         // failure check (The OnTriggerEnter collision check is listening at all times,
         // but this hyperextension check must be called manually)
         if (useGripper == true && forceAction == false) {
-            FK_IK_Solver armBase = GameObject.Find("FPSController").GetComponent<BaseAgentComponent>().IKArm.GetComponent<IK_Robot_Arm_Controller>().GetArmBase().GetComponent<FK_IK_Solver>();
-            if ((armBase.IKTarget.position - armBase.armShoulder.position).magnitude + 1e-5 >= armBase.bone2Length + armBase.bone3Length) {
+            FK_IK_Solver armBase = GameObject
+                .Find("FPSController")
+                .GetComponent<BaseAgentComponent>()
+                .IKArm.GetComponent<IK_Robot_Arm_Controller>()
+                .GetArmBase()
+                .GetComponent<FK_IK_Solver>();
+            if (
+                (armBase.IKTarget.position - armBase.armShoulder.position).magnitude + 1e-5
+                >= armBase.bone2Length + armBase.bone3Length
+            ) {
                 failure = failState.hyperextension;
 #if UNITY_EDITOR
-        Debug.Log("Agent-arm hyperextended at " + elapsedTime + ". Resetting openness.");
+                Debug.Log("Agent-arm hyperextended at " + elapsedTime + ". Resetting openness.");
 #endif
             }
         }
@@ -432,7 +495,7 @@ public class CanOpen_Object : MonoBehaviour {
         }
 
         // If the collider is a BoundingBox or ReceptacleTriggerBox, then ignore
-        if (other.gameObject.layer ==  LayerMask.NameToLayer ("SimObjectInvisible")) {
+        if (other.gameObject.layer == LayerMask.NameToLayer("SimObjectInvisible")) {
             // Debug.Log(other + " is bounding box or receptacle trigger box");
             return;
         }
@@ -444,16 +507,22 @@ public class CanOpen_Object : MonoBehaviour {
         }
 
         // If the overlapping collider is a descendant of the agent when ignoreAgentInTransition is true, then ignore
-        if (ignoreAgentInTransition == true && hasAncestor(other.transform.gameObject, GameObject.Find("FPSController"))) {
+        if (
+            ignoreAgentInTransition == true
+            && hasAncestor(other.transform.gameObject, GameObject.Find("FPSController"))
+        ) {
             // Debug.Log(other + " belongs to agent, and ignoreAgentInTransition is active!");
             return;
         }
 
         // If the overlapping collider belongs to a non-static SimObject, then ignore
         // (Unless we explicitly tell the action to treat non-static SimObjects as barriers)
-        if (ancestorSimObjPhysics(other.gameObject) != null &&
-            ancestorSimObjPhysics(other.gameObject).PrimaryProperty != SimObjPrimaryProperty.Static &&
-            stopAtNonStaticCol == false) {
+        if (
+            ancestorSimObjPhysics(other.gameObject) != null
+            && ancestorSimObjPhysics(other.gameObject).PrimaryProperty
+                != SimObjPrimaryProperty.Static
+            && stopAtNonStaticCol == false
+        ) {
             // Debug.Log("Ignore nonstatics " + other);
             return;
         }
@@ -462,8 +531,7 @@ public class CanOpen_Object : MonoBehaviour {
         failure = failState.collision;
         if (ancestorSimObjPhysics(other.gameObject) != null) {
             failureCollision = other.GetComponentInParent<SimObjPhysics>().gameObject;
-        }
-        else {
+        } else {
             failureCollision = other.gameObject;
         }
 #if UNITY_EDITOR
@@ -475,12 +543,13 @@ public class CanOpen_Object : MonoBehaviour {
     // return true if it should ignore the object hit. Return false to cause this object to reset to the original position
     public bool IsInIgnoreArray(Collider other, GameObject[] ignoredObjects) {
         foreach (GameObject ignoredObject in ignoredObjects) {
-            foreach (Collider ignoredCollider in ignoredObject.GetComponentsInChildren<Collider>())
+            foreach (Collider ignoredCollider in ignoredObject.GetComponentsInChildren<Collider>()) {
                 if (other == ignoredCollider) {
                     return true;
                 }
+            }
         }
-    return false;
+        return false;
     }
 
     private bool hasAncestor(GameObject child, GameObject potentialAncestor) {
@@ -510,43 +579,53 @@ public class CanOpen_Object : MonoBehaviour {
     public MovementType GetMovementType() {
         return movementType;
     }
+
     public float GetStartOpenness() {
         return startOpenness;
     }
+
     public void SetFailState(failState failState) {
         failure = failState;
     }
+
     public failState GetFailState() {
         return failure;
     }
+
     public void SetFailureCollision(GameObject collision) {
         failureCollision = collision;
     }
+
     public GameObject GetFailureCollision() {
         return failureCollision;
     }
+
     public void SetForceAction(bool forceAction) {
         this.forceAction = forceAction;
     }
+
     public void SetIgnoreAgentInTransition(bool ignoreAgentInTransition) {
         this.ignoreAgentInTransition = ignoreAgentInTransition;
     }
+
     public void SetStopAtNonStaticCol(bool stopAtNonStaticCol) {
         this.stopAtNonStaticCol = stopAtNonStaticCol;
     }
+
     public bool GetIsCurrentlyLerping() {
         if (this.isCurrentlyLerping) {
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
+
     public void SetIsCurrentlyLerping(bool isCurrentlyLerping) {
         this.isCurrentlyLerping = isCurrentlyLerping;
     }
+
     public void SyncPosRot(GameObject child, GameObject parent) {
-            child.transform.position = parent.transform.position;
-            child.transform.rotation = parent.transform.rotation;
+        child.transform.position = parent.transform.position;
+        child.transform.rotation = parent.transform.rotation;
     }
 }

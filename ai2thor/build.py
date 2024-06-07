@@ -9,7 +9,13 @@ import logging
 from ai2thor.util.lock import LockSh, LockEx
 from ai2thor.util import atomic_write
 import io
-from ai2thor.platform import STR_PLATFORM_MAP, OSXIntel64, Linux64, CloudRendering, StandaloneWindows64
+from ai2thor.platform import (
+    STR_PLATFORM_MAP,
+    OSXIntel64,
+    Linux64,
+    CloudRendering,
+    StandaloneWindows64,
+)
 import platform
 
 logger = logging.getLogger(__name__)
@@ -57,7 +63,9 @@ class EditorBuild(object):
         self.server_types = ["FIFO", "WSGI"]
         self.url = None
         self.unity_proc = None
-        external_system_platforms = dict(Linux=Linux64, Darwin=OSXIntel64, Windows=StandaloneWindows64)
+        external_system_platforms = dict(
+            Linux=Linux64, Darwin=OSXIntel64, Windows=StandaloneWindows64
+        )
         self.platform = external_system_platforms[platform.system()]
 
     def download(self):
@@ -71,14 +79,7 @@ class EditorBuild(object):
 
     @property
     def base_dir(self):
-       return os.path.join(
-        os.path.dirname(
-            os.path.dirname(
-                os.path.realpath(__file__)
-            )
-        ),
-        "unity"
-       )
+        return os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "unity")
 
 
 class ExternalBuild(object):
@@ -101,13 +102,9 @@ class ExternalBuild(object):
 
     @property
     def base_dir(self):
-       return os.path.dirname(
-           os.path.dirname(
-            os.path.dirname(
-                os.path.dirname(self.executable_path)
-           )
+        return os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.dirname(self.executable_path)))
         )
-    )
 
 
 class Build(object):
@@ -155,9 +152,7 @@ class Build(object):
                 logger.debug("%s exists - skipping download" % (self.executable_path,))
 
     def zipfile(self):
-        zip_data = ai2thor.downloader.download(
-            self.url, self.sha256(), self.include_private_scenes
-        )
+        zip_data = ai2thor.downloader.download(self.url, self.sha256(), self.include_private_scenes)
 
         return zipfile.ZipFile(io.BytesIO(zip_data))
 
@@ -217,9 +212,7 @@ class Build(object):
 
     @property
     def name(self):
-        return build_name(
-            self.platform.name(), self.commit_id, self.include_private_scenes
-        )
+        return build_name(self.platform.name(), self.commit_id, self.include_private_scenes)
 
     def unlock(self):
         if self._lock:

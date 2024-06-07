@@ -1,16 +1,18 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
-using System;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityStandardAssets.Characters.FirstPerson;
 
-namespace Tests {
+namespace Tests
+{
     public class TestStretchArmMeta : TestBase
     {
         [UnityTest]
-        public IEnumerator TestStretchArmGripperOpennessMetadata () {
+        public IEnumerator TestStretchArmGripperOpennessMetadata()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -18,7 +20,8 @@ namespace Tests {
             yield return step(action);
 
             BaseFPSAgentController agent = agentManager.PrimaryAgent;
-            Stretch_Robot_Arm_Controller armController = agent.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+            Stretch_Robot_Arm_Controller armController =
+                agent.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
 
             action.Clear();
 
@@ -37,7 +40,7 @@ namespace Tests {
             action["action"] = "SetGripperOpenness";
             action["openness"] = 10f;
             //this should set the gripper to state 2
-            yield return step(action);        
+            yield return step(action);
 
             meta = armController.GenerateMetadata();
             Debug.Log($"openness should be 2 but is: {meta.gripperOpennessState}");
@@ -45,7 +48,8 @@ namespace Tests {
         }
 
         [UnityTest]
-        public IEnumerator TestStretchArmRootRelativeHandSphere () {
+        public IEnumerator TestStretchArmRootRelativeHandSphere()
+        {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
             action["action"] = "Initialize";
@@ -53,7 +57,8 @@ namespace Tests {
             yield return step(action);
 
             BaseFPSAgentController agent = agentManager.PrimaryAgent;
-            Stretch_Robot_Arm_Controller armController = agent.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
+            Stretch_Robot_Arm_Controller armController =
+                agent.GetComponentInChildren<Stretch_Robot_Arm_Controller>();
 
             action.Clear();
 
@@ -69,10 +74,8 @@ namespace Tests {
             string rootRelativeCenter = meta.rootRelativeHandSphereCenter.ToString("F5");
             Assert.AreEqual(rootRelativeCenter, "(-0.00007, 0.16460, -0.20476)");
 
-
             //Debug.Log($"world handSphereCenter is {meta.handSphereCenter.ToString("F5")}");
             //Debug.Log($"root relative sphere center: {meta.rootRelativeHandSphereCenter.ToString("F5")}");
         }
     }
-
 }

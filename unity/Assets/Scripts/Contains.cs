@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 // we need to grab the FPSController for some checks
 using UnityStandardAssets.Characters.FirstPerson;
 
@@ -26,7 +25,8 @@ public class ReceptacleSpawnPoint {
 }
 
 public class Contains : MonoBehaviour {
-    [SerializeField] protected List<SimObjPhysics> CurrentlyContains = new List<SimObjPhysics>();
+    [SerializeField]
+    protected List<SimObjPhysics> CurrentlyContains = new List<SimObjPhysics>();
 
     // this is an object reference to the sim object that is linked to this receptacle box
     public GameObject myParent = null;
@@ -49,14 +49,16 @@ public class Contains : MonoBehaviour {
                 myParent = gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject;
             }
         }
-
     }
+
     void Start() {
         // check that all objects with receptacles components have the correct Receptacle secondary property
 #if UNITY_EDITOR
         SimObjPhysics go = gameObject.GetComponentInParent<SimObjPhysics>();
         if (!go.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-            Debug.LogError(go.transform.name + " is missing Receptacle Secondary Property! please hook them up");
+            Debug.LogError(
+                go.transform.name + " is missing Receptacle Secondary Property! please hook them up"
+            );
         }
 #endif
     }
@@ -100,27 +102,33 @@ public class Contains : MonoBehaviour {
         Vector3 worldCenter = b.transform.TransformPoint(b.center);
 
         // size of this receptacle box, but we need to scale by transform
-        Vector3 worldHalfExtents = new Vector3(b.size.x * b.transform.lossyScale.x / 2, b.size.y * b.transform.lossyScale.y / 2, b.size.z * b.transform.lossyScale.z / 2);
+        Vector3 worldHalfExtents = new Vector3(
+            b.size.x * b.transform.lossyScale.x / 2,
+            b.size.y * b.transform.lossyScale.y / 2,
+            b.size.z * b.transform.lossyScale.z / 2
+        );
 
         //////////////////////////////////////////////////
         // uncomment to debug "draw" where the OverlapBox goes
-        // GameObject surrogateGeo = GameObject.CreatePrimitive(PrimitiveType.Cube);	
-        // Destroy(surrogateGeo.GetComponent<Collider>());	
-        // surrogateGeo.name = transform.parent.gameObject + "_dimensions";	
-        // surrogateGeo.transform.position = worldCenter;	
-        // surrogateGeo.transform.rotation = b.transform.rotation;	
-        // surrogateGeo.transform.localScale = worldHalfExtents * 2;	
-        // surrogateGeo.transform.parent = b.transform;	
+        // GameObject surrogateGeo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        // Destroy(surrogateGeo.GetComponent<Collider>());
+        // surrogateGeo.name = transform.parent.gameObject + "_dimensions";
+        // surrogateGeo.transform.position = worldCenter;
+        // surrogateGeo.transform.rotation = b.transform.rotation;
+        // surrogateGeo.transform.localScale = worldHalfExtents * 2;
+        // surrogateGeo.transform.parent = b.transform;
         ////////////////////////////////////////////////////
 
         // ok now create an overlap box using these values and return all contained objects
-        foreach (Collider col in Physics.OverlapBox(worldCenter, worldHalfExtents, b.transform.rotation)) {
+        foreach (
+            Collider col in Physics.OverlapBox(worldCenter, worldHalfExtents, b.transform.rotation)
+        ) {
             // ignore triggers
             if (col.GetComponentInParent<SimObjPhysics>() && !col.isTrigger) {
                 // grab reference to game object this collider is part of
                 SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
 
-                // don't add any colliders from our parent object, so things like a 
+                // don't add any colliders from our parent object, so things like a
                 // shelf or drawer nested inside another shelving unit or dresser sim object
                 // don't contain the object they are nested inside
                 if (!hasAncestor(this.transform.gameObject, sop.transform.gameObject)) {
@@ -171,7 +179,9 @@ public class Contains : MonoBehaviour {
 
     //returns the gridpoints in local space relative to the trigger box collider of this Contains.cs object
     public List<Vector3> GetValidSpawnPointsFromTriggerBoxLocalSpace(bool top = true) {
-        Vector3 p1, p2, p4; // in case we need all the corners later for something...
+        Vector3 p1,
+            p2,
+            p4; // in case we need all the corners later for something...
 
         BoxCollider b = GetComponent<BoxCollider>();
 
@@ -212,16 +222,18 @@ public class Contains : MonoBehaviour {
 
         //ok at this point all the grid points I believe are in world space??? sooo
         List<Vector3> localGridPoints = new List<Vector3>();
-        foreach(Vector3 point in gridpoints) {
+        foreach (Vector3 point in gridpoints) {
             localGridPoints.Add(this.transform.InverseTransformPoint(point));
-        } 
+        }
 
         return localGridPoints;
     }
 
     // returns a grid of points above the target receptacle
     public List<Vector3> GetValidSpawnPointsFromTriggerBox(bool top = true) {
-        Vector3 p1, p2, p4; // in case we need all the corners later for something...
+        Vector3 p1,
+            p2,
+            p4; // in case we need all the corners later for something...
 
         BoxCollider b = GetComponent<BoxCollider>();
 
@@ -259,16 +271,15 @@ public class Contains : MonoBehaviour {
                 gridpoints.Add(PointsOnLineXdir[i] + zdir * (zdist * (j * lineincrement)));
             }
         }
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         foreach (Vector3 point in gridpoints) {
             //debug draw the gridpoints if you wanna see em
             Debug.DrawLine(point, point + new Vector3(0, 0.2f, 0), Color.red, 100f);
         }
-        #endif    
+#endif
 
         return gridpoints;
     }
-    
 
     // generate a grid of potential spawn points, set ReturnPointsClosestToAgent to true if
     // the list of points should be filtered closest to agent, if false
@@ -276,7 +287,11 @@ public class Contains : MonoBehaviour {
     public List<ReceptacleSpawnPoint> GetValidSpawnPoints(BaseFPSAgentController agent = null) {
         List<ReceptacleSpawnPoint> PossibleSpawnPoints = new List<ReceptacleSpawnPoint>();
 
-        Vector3 p1, p2, /*p3,*/ p4, p5 /*p6, p7, p8*/; // in case we need all the corners later for something...
+        Vector3 p1,
+            p2, /*p3,*/
+            p4,
+            p5 /*p6, p7, p8*/
+        ; // in case we need all the corners later for something...
 
         BoxCollider b = GetComponent<BoxCollider>();
 
@@ -336,19 +351,38 @@ public class Contains : MonoBehaviour {
                     -ydir,
                     out hit,
                     ydist,
-                    LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"),
+                    LayerMask.GetMask(
+                        "SimObjVisible",
+                        "Procedural1",
+                        "Procedural2",
+                        "Procedural3",
+                        "Procedural0"
+                    ),
                     QueryTriggerInteraction.Collide
                 )
             ) {
-
                 // IMPORTANT NOTE: For objects like Sinks and Bathtubs where the interior simobject (SinkBasin, BathtubBasin) are children, make sure the interior Contains scripts have their 'myParent' field
                 // set to the PARENT object of the sim object, not the sim object itself ie: SinkBasin's myParent = Sink
                 if (hit.transform == myParent.transform) {
                     // print("raycast hit: " + hit.transform.name);
                     if (agent == null) {
-                        PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
+                        PossibleSpawnPoints.Add(
+                            new ReceptacleSpawnPoint(
+                                hit.point,
+                                b,
+                                this,
+                                myParent.GetComponent<SimObjPhysics>()
+                            )
+                        );
                     } else if (narrowDownValidSpawnPoints(agent, hit.point)) {
-                        PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
+                        PossibleSpawnPoints.Add(
+                            new ReceptacleSpawnPoint(
+                                hit.point,
+                                b,
+                                this,
+                                myParent.GetComponent<SimObjPhysics>()
+                            )
+                        );
                     }
                 }
             }
@@ -356,9 +390,23 @@ public class Contains : MonoBehaviour {
             Vector3 BottomPoint = point + -(ydir * ydist);
             // didn't hit anything that could obstruct, so this point is good to go
             if (agent == null) {
-                PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
+                PossibleSpawnPoints.Add(
+                    new ReceptacleSpawnPoint(
+                        BottomPoint,
+                        b,
+                        this,
+                        myParent.GetComponent<SimObjPhysics>()
+                    )
+                );
             } else if (narrowDownValidSpawnPoints(agent, BottomPoint)) {
-                PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
+                PossibleSpawnPoints.Add(
+                    new ReceptacleSpawnPoint(
+                        BottomPoint,
+                        b,
+                        this,
+                        myParent.GetComponent<SimObjPhysics>()
+                    )
+                );
             }
         }
 
@@ -378,7 +426,6 @@ public class Contains : MonoBehaviour {
 
     // additional checks if the point is valid. Return true if it's valid
     private bool narrowDownValidSpawnPoints(BaseFPSAgentController agent, Vector3 point) {
-
         // get agent's camera point, get point to check, find the distance from agent camera point to point to check
 
         // set the distance so that it is within the radius maxvisdist from the agent
@@ -390,7 +437,7 @@ public class Contains : MonoBehaviour {
             return false;
         }
 
-        // ok cool, it's within distance to the agent, now let's check 
+        // ok cool, it's within distance to the agent, now let's check
         // if the point is within the viewport of the agent as well
 
         Camera agentCam = agent.m_Camera;
@@ -415,7 +462,6 @@ public class Contains : MonoBehaviour {
         }
 
         return false;
-
     }
 
     // used to check if a given Vector3 is inside this receptacle box in world space
@@ -428,9 +474,14 @@ public class Contains : MonoBehaviour {
         float halfX = (myBox.size.x * 0.5f);
         float halfY = (myBox.size.y * 0.5f);
         float halfZ = (myBox.size.z * 0.5f);
-        if (point.x < halfX && point.x > -halfX &&
-            point.y < halfY && point.y > -halfY &&
-            point.z < halfZ && point.z > -halfZ) {
+        if (
+            point.x < halfX
+            && point.x > -halfX
+            && point.y < halfY
+            && point.y > -halfY
+            && point.z < halfZ
+            && point.z > -halfZ
+        ) {
             return true;
         } else {
             return false;
@@ -445,9 +496,14 @@ public class Contains : MonoBehaviour {
         float halfX = (myBox.size.x * 0.5f);
         float BIGY = (myBox.size.y * 10.0f);
         float halfZ = (myBox.size.z * 0.5f);
-        if (point.x < halfX && point.x > -halfX &&
-            point.y < BIGY && point.y > -BIGY &&
-            point.z < halfZ && point.z > -halfZ) {
+        if (
+            point.x < halfX
+            && point.x > -halfX
+            && point.y < BIGY
+            && point.y > -BIGY
+            && point.z < halfZ
+            && point.z > -halfZ
+        ) {
             return true;
         } else {
             return false;
@@ -462,15 +518,41 @@ public class Contains : MonoBehaviour {
         // these values will be off. Make sure that all parents in the heirarchy are at 1,1,1 scale and we can use these values
         // as a "valid area" for spawning objects inside of receptacles.
         Gizmos.color = Color.green;
-        Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-        Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-        Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-        Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+        Gizmos.DrawCube(
+            transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f),
+            new Vector3(0.01f, 0.01f, 0.01f)
+        );
+        Gizmos.DrawCube(
+            transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f),
+            new Vector3(0.01f, 0.01f, 0.01f)
+        );
+        Gizmos.DrawCube(
+            transform.TransformPoint(
+                b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f
+            ),
+            new Vector3(0.01f, 0.01f, 0.01f)
+        );
+        Gizmos.DrawCube(
+            transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f),
+            new Vector3(0.01f, 0.01f, 0.01f)
+        );
 
-        Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-        Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-        Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-        Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+        Gizmos.DrawCube(
+            transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f),
+            new Vector3(0.01f, 0.01f, 0.01f)
+        );
+        Gizmos.DrawCube(
+            transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f),
+            new Vector3(0.01f, 0.01f, 0.01f)
+        );
+        Gizmos.DrawCube(
+            transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f),
+            new Vector3(0.01f, 0.01f, 0.01f)
+        );
+        Gizmos.DrawCube(
+            transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f),
+            new Vector3(0.01f, 0.01f, 0.01f)
+        );
 
         // foreach(Vector3 v in Corners)
         // {
@@ -501,7 +583,7 @@ public class Contains : MonoBehaviour {
         // 	Vector3 boxPosition = coll.transform.position;
         // 	// Vector3 boxPosition = coll.transform.TransformPoint(coll.center);
 
-        // 	// convert from world position to local position 
+        // 	// convert from world position to local position
         // 	boxPosition = transform.InverseTransformPoint(boxPosition) + coll.center;
 
         // 	Gizmos.DrawWireCube(boxPosition, coll.size);
@@ -510,7 +592,6 @@ public class Contains : MonoBehaviour {
         // 	Gizmos.color = prevColor;
         // 	Gizmos.matrix = prevMatrix;
         // }
-
     }
 #endif
 }

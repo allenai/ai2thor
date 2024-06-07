@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-
-using UnityStandardAssets.Characters.FirstPerson;
 using System.Linq;
+using UnityEngine;
+using UnityStandardAssets.Characters.FirstPerson;
 
 public class CollisionListener : MonoBehaviour {
-    public Dictionary<Collider, HashSet<Collider>> externalColliderToInternalCollisions = new Dictionary<Collider, HashSet<Collider>>();
+    public Dictionary<Collider, HashSet<Collider>> externalColliderToInternalCollisions =
+        new Dictionary<Collider, HashSet<Collider>>();
     public List<GameObject> doNotRegisterChildrenWithin = new List<GameObject>();
     public bool deadZoneCheck;
     public static bool useMassThreshold = false;
@@ -15,14 +15,17 @@ public class CollisionListener : MonoBehaviour {
 
     public CollisionEventResolver collisionEventResolver;
 
-    private HashSet<CollisionListenerChild> collisionListenerChildren = new HashSet<CollisionListenerChild>();
+    private HashSet<CollisionListenerChild> collisionListenerChildren =
+        new HashSet<CollisionListenerChild>();
 
     void Start() {
         registerAllChildColliders();
         foreach (CollisionListener cl in this.GetComponentsInChildren<CollisionListener>()) {
             if (cl.gameObject != this.gameObject) {
 #if UNITY_EDITOR
-                Debug.Log($"Offending CollisionListener: {cl.gameObject} a descendent of {this.gameObject}");
+                Debug.Log(
+                    $"Offending CollisionListener: {cl.gameObject} a descendent of {this.gameObject}"
+                );
 #endif
                 throw new InvalidOperationException(
                     "A CollisionListener should not be included as a component on a descendent of a GameObject that already has a CollisionListener component."
@@ -104,7 +107,8 @@ public class CollisionListener : MonoBehaviour {
     }
 
     private static bool debugCheckIfCollisionIsNonTrivial(
-        Collider internalCollider, Collider externalCollider
+        Collider internalCollider,
+        Collider externalCollider
     ) {
         Vector3 direction;
         float distance = 0f;
@@ -118,7 +122,9 @@ public class CollisionListener : MonoBehaviour {
             out direction,
             out distance
         );
-        Debug.Log($"Us: {internalCollider.transform.gameObject}, Them: {externalCollider.gameObject}");
+        Debug.Log(
+            $"Us: {internalCollider.transform.gameObject}, Them: {externalCollider.gameObject}"
+        );
         Debug.Log($"Distance: {distance}, direction: {direction.ToString("F4")}");
         return distance > 0.001f;
     }
@@ -129,14 +135,16 @@ public class CollisionListener : MonoBehaviour {
             if (collider.GetComponentInParent<SimObjPhysics>()) {
                 // how does this handle nested sim objects? maybe it's fine?
                 SimObjPhysics sop = collider.GetComponentInParent<SimObjPhysics>();
-                if (sop.PrimaryProperty == SimObjPrimaryProperty.Static || sop.GetComponent<Rigidbody>().isKinematic == true) {
+                if (
+                    sop.PrimaryProperty == SimObjPrimaryProperty.Static
+                    || sop.GetComponent<Rigidbody>().isKinematic == true
+                ) {
                     // #if UNITY_EDITOR
                     // Debug.Log("Collided with static sim obj " + sop.name);
                     // #endif
                     sc = new StaticCollision();
                     sc.simObjPhysics = sop;
                     sc.gameObject = collider.gameObject;
-
                 } else if (useMassThreshold) {
                     // if a moveable or pickupable object is too heavy for the arm to move
                     // flag it as a static collision so the arm will stop
@@ -149,19 +157,17 @@ public class CollisionListener : MonoBehaviour {
             } else if (collider.gameObject.CompareTag("Structure")) {
                 sc = new StaticCollision();
                 sc.gameObject = collider.gameObject;
+            } else if (collisionEventResolver != null) {
+                sc = collisionEventResolver.resolveToStaticCollision(
+                    collider,
+                    externalColliderToInternalCollisions[collider]
+                );
             }
-            else if (collisionEventResolver != null) {
-                sc = collisionEventResolver.resolveToStaticCollision(collider, externalColliderToInternalCollisions[collider]);
-            }
-
-
         }
         return sc;
     }
 
-    public IEnumerable<StaticCollision> StaticCollisions(
-        IEnumerable<Collider> colliders
-    ) {
+    public IEnumerable<StaticCollision> StaticCollisions(IEnumerable<Collider> colliders) {
         foreach (Collider c in colliders) {
             var staticCollision = ColliderToStaticCollision(collider: c);
             if (staticCollision != null) {
@@ -182,9 +188,13 @@ public class CollisionListener : MonoBehaviour {
         // this action is specifically for a stretch wrist-rotation with limits
         if (deadZoneCheck) {
             float currentYaw = objectTarget.rotation.eulerAngles.y;
-            float cLimit = controller.gameObject.GetComponentInChildren<Stretch_Robot_Arm_Controller>().wristClockwiseLocalRotationLimit;
-            float ccLimit = controller.gameObject.GetComponentInChildren<Stretch_Robot_Arm_Controller>().wristCounterClockwiseLocalRotationLimit;
-            
+            float cLimit = controller
+                .gameObject.GetComponentInChildren<Stretch_Robot_Arm_Controller>()
+                .wristClockwiseLocalRotationLimit;
+            float ccLimit = controller
+                .gameObject.GetComponentInChildren<Stretch_Robot_Arm_Controller>()
+                .wristCounterClockwiseLocalRotationLimit;
+
             // Consolidate reachable euler-rotations (which are normally bounded by [0, 360)) into a continuous number line,
             // bounded instead by [continuousCounterClockwiseLocalRotationLimit, continuousClockwiseLocalRotationLimit + 360)
             if (cLimit < ccLimit) {
@@ -207,5 +217,4 @@ public class CollisionListener : MonoBehaviour {
     public virtual bool ShouldHalt() {
         return StaticCollisions().GetEnumerator().MoveNext();
     }
-
 }

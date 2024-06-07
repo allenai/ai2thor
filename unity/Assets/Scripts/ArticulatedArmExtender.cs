@@ -4,8 +4,9 @@ using UnityEngine;
 
 // Handles collider stretching and arm extension animation
 public class ArticulatedArmExtender : MonoBehaviour {
-
-    public Transform arm2, arm3, arm4;
+    public Transform arm2,
+        arm3,
+        arm4;
     public Transform[] myColliders;
     public float initialZPos;
     public float arm2InitialZPos;
@@ -24,7 +25,11 @@ public class ArticulatedArmExtender : MonoBehaviour {
     private void scaleColliders() {
         var currentZPos = this.gameObject.transform.localPosition.z;
         foreach (Transform go in myColliders) {
-            go.localScale = new Vector3(go.localScale.x, go.localScale.y, 1 + (currentZPos - initialZPos) * scaleMultiplier);
+            go.localScale = new Vector3(
+                go.localScale.x,
+                go.localScale.y,
+                1 + (currentZPos - initialZPos) * scaleMultiplier
+            );
         }
     }
 

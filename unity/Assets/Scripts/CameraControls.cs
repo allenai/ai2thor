@@ -1,9 +1,8 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 public class CameraControls : MonoBehaviour {
-
     Camera cam;
 
     void Start() {

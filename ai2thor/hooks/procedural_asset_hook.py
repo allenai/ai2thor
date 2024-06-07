@@ -13,13 +13,13 @@ import pathlib
 
 from typing import Dict, Any, List
 
-from objathor.asset_conversion.util import ( 
-    get_existing_thor_asset_file_path, 
-    create_runtime_asset_file, 
+from objathor.asset_conversion.util import (
+    get_existing_thor_asset_file_path,
+    create_runtime_asset_file,
     get_existing_thor_asset_file_path,
     change_asset_paths,
     add_default_annotations,
-    load_existing_thor_asset_file
+    load_existing_thor_asset_file,
 )
 
 logger = logging.getLogger(__name__)
@@ -31,9 +31,8 @@ EXTENSIONS_LOADABLE_IN_UNITY = {
     ".msgpack.gz",
 }
 
-def get_all_asset_ids_recursively(
-    objects: List[Dict[str, Any]], asset_ids: List[str]
-) -> List[str]:
+
+def get_all_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List[str]) -> List[str]:
     """
     Get all asset IDs in a house.
     """
@@ -46,6 +45,7 @@ def get_all_asset_ids_recursively(
         assets_set.remove("")
     return list(assets_set)
 
+
 def create_asset(
     thor_controller,
     asset_id,
@@ -55,7 +55,7 @@ def create_asset(
     load_file_in_unity=False,
     extension=None,
     raise_for_failure=True,
-    fail_if_not_unity_loadable=False
+    fail_if_not_unity_loadable=False,
 ):
     return create_assets(
         thor_controller=thor_controller,
@@ -69,6 +69,7 @@ def create_asset(
         raise_for_failure=raise_for_failure,
     )
 
+
 def create_assets(
     thor_controller: Any,
     asset_ids: List[str],
@@ -81,9 +82,7 @@ def create_assets(
     raise_for_failure=True,
 ):
     copy_to_dir = (
-        os.path.join(thor_controller._build.base_dir)
-        if copy_to_dir is None
-        else copy_to_dir
+        os.path.join(thor_controller._build.base_dir) if copy_to_dir is None else copy_to_dir
     )
 
     multi_create_unity_loadable = dict(
@@ -124,7 +123,7 @@ def create_assets(
             save_dir=copy_to_dir,
             asset_id=asset_id,
             load_file_in_unity=load_asset_in_unity,
-            verbose=verbose
+            verbose=verbose,
         )
 
         if not load_asset_in_unity:
@@ -133,9 +132,7 @@ def create_assets(
             #     out_dir=asset_target_dir, object_name=asset_id, force_extension=file_extension
             # )
             asset = change_asset_paths(asset=asset, save_dir=copy_to_dir)
-            asset = add_default_annotations(
-                asset=asset, asset_directory=asset_dir, verbose=verbose
-            )
+            asset = add_default_annotations(asset=asset, asset_directory=asset_dir, verbose=verbose)
             create_prefab_action = {
                 "action": "CreateRuntimeAsset",
                 "asset": asset,
@@ -150,15 +147,15 @@ def create_assets(
             asset_args = add_default_annotations(
                 asset=asset_args, asset_directory=asset_dir, verbose=verbose
             )
-            multi_create_unity_loadable["assets"].append(
-                asset_args
-            )
-    
+            multi_create_unity_loadable["assets"].append(asset_args)
+
     if fail_if_not_unity_loadable:
-        error_strs = ', '.join(errors)
-        extensions = ', '.join(EXTENSIONS_LOADABLE_IN_UNITY)
-        raise RuntimeError(f"Set to fail if files are not loadable in unity. Invalid extension of files `{error_strs}` must be of any of extensions {extensions}")
-    
+        error_strs = ", ".join(errors)
+        extensions = ", ".join(EXTENSIONS_LOADABLE_IN_UNITY)
+        raise RuntimeError(
+            f"Set to fail if files are not loadable in unity. Invalid extension of files `{error_strs}` must be of any of extensions {extensions}"
+        )
+
     events = []
     # Slow pass asset data to pipe
     if len(create_with_data_actions):
@@ -189,23 +186,21 @@ def create_assets_if_not_exist(
     asset_ids,
     asset_directory,
     copy_to_dir,
-    asset_symlink, # TODO remove
+    asset_symlink,  # TODO remove
     stop_if_fail,
     load_file_in_unity,
     extension=None,
     verbose=False,
     raise_for_failure=True,
-    fail_if_not_unity_loadable=False
+    fail_if_not_unity_loadable=False,
 ):
     evt = controller.step(
         action="AssetsInDatabase", assetIds=asset_ids, updateProceduralLRUCache=True
     )
 
     asset_in_db = evt.metadata["actionReturn"]
-    assets_not_created = [
-        asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db
-    ]
-    
+    assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db]
+
     events = create_assets(
         thor_controller=controller,
         asset_ids=assets_not_created,
@@ -214,16 +209,19 @@ def create_assets_if_not_exist(
         verbose=verbose,
         load_file_in_unity=load_file_in_unity,
         extension=extension,
-        fail_if_not_unity_loadable=fail_if_not_unity_loadable
+        fail_if_not_unity_loadable=fail_if_not_unity_loadable,
     )
-    for (evt, i) in zip(events, range(len(events))) :
+    for evt, i in zip(events, range(len(events))):
         if not evt.metadata["lastActionSuccess"]:
             # TODO do a better matching of asset_ids and event
-            asset_id =  assets_not_created[i] if i < len(events) else None
-            asset_path = get_existing_thor_asset_file_path(out_dir=asset_directory, asset_id=asset_id) if asset_id is not None else ""
+            asset_id = assets_not_created[i] if i < len(events) else None
+            asset_path = (
+                get_existing_thor_asset_file_path(out_dir=asset_directory, asset_id=asset_id)
+                if asset_id is not None
+                else ""
+            )
             warnings.warn(
-                f"Could not create asset `{asset_path}`."
-                f"\nError: {evt.metadata['errorMessage']}"
+                f"Could not create asset `{asset_path}`." f"\nError: {evt.metadata['errorMessage']}"
             )
     return events[-1]
 
@@ -248,7 +246,6 @@ def create_assets_if_not_exist(
     #         )
     #     if stop_if_fail:
     #         return evt
-    
 
 
 class ProceduralAssetHookRunner:
@@ -309,9 +306,7 @@ class ProceduralAssetHookRunner:
 
     def GetHouseFromTemplate(self, action, controller):
         template = action["template"]
-        asset_ids = get_all_asset_ids_recursively(
-            [v for (k, v) in template["objects"].items()], []
-        )
+        asset_ids = get_all_asset_ids_recursively([v for (k, v) in template["objects"].items()], [])
         return create_assets_if_not_exist(
             controller=controller,
             asset_ids=asset_ids,
@@ -338,9 +333,7 @@ class ObjaverseAssetHookRunner(object):
         asset_ids = list(set(obj["assetId"] for obj in house["objects"]))
         evt = controller.step(action="AssetsInDatabase", assetIds=asset_ids)
         asset_in_db = evt.metadata["actionReturn"]
-        assets_not_created = [
-            asset_id for (asset_id, in_db) in asset_in_db.items() if in_db
-        ]
+        assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if in_db]
         not_created_set = set(assets_not_created)
         not_objeverse_not_created = not_created_set.difference(self.objaverse_uid_set)
         if len(not_created_set):

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace UnityStandardAssets.ImageEffects
 {
     [ExecuteInEditMode]
-    [RequireComponent(typeof (Camera))]
+    [RequireComponent(typeof(Camera))]
     [AddComponentMenu("Image Effects/Color Adjustments/Tonemapping")]
     public class Tonemapping : PostEffectsBase
     {
@@ -52,7 +52,6 @@ namespace UnityStandardAssets.ImageEffects
         private RenderTexture rt = null;
         private RenderTextureFormat rtFormat = RenderTextureFormat.ARGBHalf;
 
-
         public override bool CheckResources()
         {
             CheckSupport(false, true);
@@ -71,7 +70,6 @@ namespace UnityStandardAssets.ImageEffects
             return isSupported;
         }
 
-
         public float UpdateCurve()
         {
             float range = 1.0f;
@@ -81,16 +79,15 @@ namespace UnityStandardAssets.ImageEffects
             {
                 if (remapCurve.length > 0)
                     range = remapCurve[remapCurve.length - 1].time;
-                for (float i = 0.0f; i <= 1.0f; i += 1.0f/255.0f)
+                for (float i = 0.0f; i <= 1.0f; i += 1.0f / 255.0f)
                 {
-                    float c = remapCurve.Evaluate(i*1.0f*range);
-                    curveTex.SetPixel((int) Mathf.Floor(i*255.0f), 0, new Color(c, c, c));
+                    float c = remapCurve.Evaluate(i * 1.0f * range);
+                    curveTex.SetPixel((int)Mathf.Floor(i * 255.0f), 0, new Color(c, c, c));
                 }
                 curveTex.Apply();
             }
-            return 1.0f/range;
+            return 1.0f / range;
         }
-
 
         private void OnDisable()
         {
@@ -111,19 +108,19 @@ namespace UnityStandardAssets.ImageEffects
             }
         }
 
-
         private bool CreateInternalRenderTexture()
         {
             if (rt)
             {
                 return false;
             }
-            rtFormat = SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.RGHalf) ? RenderTextureFormat.RGHalf : RenderTextureFormat.ARGBHalf;
+            rtFormat = SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.RGHalf)
+                ? RenderTextureFormat.RGHalf
+                : RenderTextureFormat.ARGBHalf;
             rt = new RenderTexture(1, 1, 0, rtFormat);
             rt.hideFlags = HideFlags.DontSave;
             return true;
         }
-
 
         // attribute indicates that the image filter chain will continue in LDR
         [ImageEffectTransformsToLDR]
@@ -181,7 +178,7 @@ namespace UnityStandardAssets.ImageEffects
 
             if (type == TonemapperType.OptimizedHejiDawson)
             {
-                tonemapMaterial.SetFloat("_ExposureAdjustment", 0.5f*exposureAdjustment);
+                tonemapMaterial.SetFloat("_ExposureAdjustment", 0.5f * exposureAdjustment);
                 Graphics.Blit(source, destination, tonemapMaterial, 7);
                 return;
             }
@@ -195,16 +192,26 @@ namespace UnityStandardAssets.ImageEffects
 
             bool freshlyBrewedInternalRt = CreateInternalRenderTexture(); // this retrieves rtFormat, so should happen before rt allocations
 
-            RenderTexture rtSquared = RenderTexture.GetTemporary((int) adaptiveTextureSize, (int) adaptiveTextureSize, 0, rtFormat);
+            RenderTexture rtSquared = RenderTexture.GetTemporary(
+                (int)adaptiveTextureSize,
+                (int)adaptiveTextureSize,
+                0,
+                rtFormat
+            );
             Graphics.Blit(source, rtSquared);
 
-            int downsample = (int) Mathf.Log(rtSquared.width*1.0f, 2);
+            int downsample = (int)Mathf.Log(rtSquared.width * 1.0f, 2);
 
             int div = 2;
             var rts = new RenderTexture[downsample];
             for (int i = 0; i < downsample; i++)
             {
-                rts[i] = RenderTexture.GetTemporary(rtSquared.width/div, rtSquared.width/div, 0, rtFormat);
+                rts[i] = RenderTexture.GetTemporary(
+                    rtSquared.width / div,
+                    rtSquared.width / div,
+                    0,
+                    rtFormat
+                );
                 div *= 2;
             }
 
@@ -235,18 +242,20 @@ namespace UnityStandardAssets.ImageEffects
             tonemapMaterial.SetFloat("_AdaptionSpeed", adaptionSpeed);
 
             rt.MarkRestoreExpected(); // keeping luminance values between frames, RT restore expected
-
 #if UNITY_EDITOR
             if (Application.isPlaying && !freshlyBrewedInternalRt)
                 Graphics.Blit(lumRt, rt, tonemapMaterial, 2);
             else
                 Graphics.Blit(lumRt, rt, tonemapMaterial, 3);
 #else
-			Graphics.Blit (lumRt, rt, tonemapMaterial, freshlyBrewedInternalRt ? 3 : 2);
+            Graphics.Blit(lumRt, rt, tonemapMaterial, freshlyBrewedInternalRt ? 3 : 2);
 #endif
 
             middleGrey = middleGrey < 0.001f ? 0.001f : middleGrey;
-            tonemapMaterial.SetVector("_HdrParams", new Vector4(middleGrey, middleGrey, middleGrey, white*white));
+            tonemapMaterial.SetVector(
+                "_HdrParams",
+                new Vector4(middleGrey, middleGrey, middleGrey, white * white)
+            );
             tonemapMaterial.SetTexture("_SmallTex", rt);
             if (type == TonemapperType.AdaptiveReinhard)
             {

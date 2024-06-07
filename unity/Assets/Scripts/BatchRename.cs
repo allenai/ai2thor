@@ -2,13 +2,10 @@
 // Via Alan Thorn (TW: @thorn_alan)
 #if UNITY_EDITOR
 using UnityEngine;
-
 using UnityEditor;
-
 using System.Collections;
 
 public class BatchRename : ScriptableWizard {
-
     /// <summary>
     /// Base name
     /// </summary>
@@ -47,7 +44,6 @@ public class BatchRename : ScriptableWizard {
     /// Update selection counter
     /// </summary>
     void UpdateSelectionHelper() {
-
         helpString = "";
 
         if (Selection.objects != null) {
@@ -55,12 +51,10 @@ public class BatchRename : ScriptableWizard {
         }
     }
 
-
     /// <summary>
     /// Rename
     /// </summary>
     void OnWizardCreate() {
-
         // If selection is empty, then exit
         if (Selection.objects == null) {
             return;

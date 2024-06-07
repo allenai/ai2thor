@@ -36,9 +36,7 @@ controller = ai2thor.controller.Controller(
 def upload_video(data):
     s3 = boto3.resource("s3")
     acl = "public-read"
-    key = os.path.join(
-        sys.argv[0].split("/")[-1].split(".")[0], str(uuid.uuid4()) + ".webm"
-    )
+    key = os.path.join(sys.argv[0].split("/")[-1].split(".")[0], str(uuid.uuid4()) + ".webm")
     print(
         "Video is available at: https://ai2-thor-exproom-arm-test.s3-us-west-2.amazonaws.com/%s"
         % key
@@ -59,12 +57,7 @@ def write_video(frames):
     if not args.record_video:
         return
     temp_file = (
-        str(time.time())
-        + "-"
-        + str(random.randint(0, 2 ** 32))
-        + "-"
-        + str(os.getpid())
-        + ".webm"
+        str(time.time()) + "-" + str(random.randint(0, 2**32)) + "-" + str(os.getpid()) + ".webm"
     )
     video = cv2.VideoWriter(
         temp_file,
@@ -131,9 +124,7 @@ def execute_actions(actions, **kwargs):
         controller.step(a)
         print("success: %s" % controller.last_event.metadata["lastActionSuccess"])
         print("return: %s" % controller.last_event.metadata["actionReturn"])
-        print(
-            "position: %s" % (controller.last_event.metadata["arm"]["handSphereCenter"])
-        )
+        print("position: %s" % (controller.last_event.metadata["arm"]["handSphereCenter"]))
         for j in controller.last_event.metadata["arm"]["joints"]:
             rot = " ".join(map(lambda x: str(j["rotation"][x]), ["x", "y", "z", "w"]))
             print("%s %s" % (j["name"], rot))

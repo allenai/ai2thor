@@ -20,7 +20,10 @@ public class coffeemachine : MonoBehaviour {
     public void Serve() {
         SimObjPhysics target;
 
-        if (osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>() && onOff.isTurnedOnOrOff()) {
+        if (
+            osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>()
+            && onOff.isTurnedOnOrOff()
+        ) {
             target = osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>();
             Fill f = target.GetComponent<Fill>();
 

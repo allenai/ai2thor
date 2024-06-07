@@ -10,12 +10,10 @@ namespace UnityStandardAssets.Utility
         public bool ignoreTimescale;
         private float m_LastRealTime;
 
-
         private void Start()
         {
             m_LastRealTime = Time.realtimeSinceStartup;
         }
-
 
         // Update is called once per frame
         private void Update()
@@ -26,10 +24,9 @@ namespace UnityStandardAssets.Utility
                 deltaTime = (Time.realtimeSinceStartup - m_LastRealTime);
                 m_LastRealTime = Time.realtimeSinceStartup;
             }
-            transform.Translate(moveUnitsPerSecond.value*deltaTime, moveUnitsPerSecond.space);
-            transform.Rotate(rotateDegreesPerSecond.value*deltaTime, moveUnitsPerSecond.space);
+            transform.Translate(moveUnitsPerSecond.value * deltaTime, moveUnitsPerSecond.space);
+            transform.Rotate(rotateDegreesPerSecond.value * deltaTime, moveUnitsPerSecond.space);
         }
-
 
         [Serializable]
         public class Vector3andSpace

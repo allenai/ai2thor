@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using EasyButtons;
+using UnityEngine;
 
 public enum ConnectionType {
     Unknown = 0,
@@ -19,8 +19,6 @@ public class ConnectionProperties : MonoBehaviour {
     //public Material WallMaterialId
     [Button]
     public void ToggleOpen() {
-
-
         var canOpen = this.gameObject.GetComponentInChildren<CanOpen_Object>();
         if (canOpen != null) {
             canOpen.SetOpennessImmediate(!this.IsOpen ? 1.0f : 0.0f);
@@ -29,7 +27,7 @@ public class ConnectionProperties : MonoBehaviour {
     }
 
     // [Button]
-    // public void Close() { 
+    // public void Close() {
     //    this.IsOpen = false;
     //     var canOpen = this.gameObject..GetComponentInChildren<CanOpen_Object>();
     //     if (canOpen != null) {

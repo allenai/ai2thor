@@ -3257,9 +3257,7 @@ def event_with_frame(event):
         metadata = json.loads(f.read())
 
     e = Event(metadata)
-    with open(
-        os.path.join(TESTS_DATA_DIR, "instance_segmentation_frame_rgb24.raw"), "rb"
-    ) as f:
+    with open(os.path.join(TESTS_DATA_DIR, "instance_segmentation_frame_rgb24.raw"), "rb") as f:
         seg_frame_data = f.read()
         e.add_image_ids(seg_frame_data)
 
@@ -3425,48 +3423,80 @@ def test_objects_by_test(event):
     assert all_mugs == mug_object_ids
     assert event.objects_by_type("FOO") == []
 
+
 def test_depth_float32():
     metadata = json.loads(json.dumps(metadata_simple))
     metadata["depthFormat"] = "Meters"
-    data =  open(os.path.join(TESTS_DATA_DIR, "image-depth-datafloat32.raw"), "rb").read()
+    data = open(os.path.join(TESTS_DATA_DIR, "image-depth-datafloat32.raw"), "rb").read()
     event_float32 = Event(metadata)
     event_float32.add_image_depth(
-                data,
-                depth_format=DepthFormat.Meters,
-                camera_near_plane=0.1,
-                camera_far_plane=20.0,
-                add_noise=False
-            )
+        data,
+        depth_format=DepthFormat.Meters,
+        camera_near_plane=0.1,
+        camera_far_plane=20.0,
+        add_noise=False,
+    )
 
-    assert np.all(event_float32.depth_frame[0:1, 0:8] == np.array([[0.82262456, 0.82262456, 0.82262456, 0.82262456, 0.82262456, 0.82262456, 0.82262456, 0.82262456]], dtype=np.float32))
+    assert np.all(
+        event_float32.depth_frame[0:1, 0:8]
+        == np.array(
+            [
+                [
+                    0.82262456,
+                    0.82262456,
+                    0.82262456,
+                    0.82262456,
+                    0.82262456,
+                    0.82262456,
+                    0.82262456,
+                    0.82262456,
+                ]
+            ],
+            dtype=np.float32,
+        )
+    )
+
 
 def test_depth_256():
     metadata = json.loads(json.dumps(metadata_simple))
 
     if "depthFormat" in metadata:
-        del(metadata["depthFormat"])
+        del metadata["depthFormat"]
     event_256 = Event(metadata)
-    data =  open(os.path.join(TESTS_DATA_DIR, "image-depth-data256.raw"), "rb").read()
+    data = open(os.path.join(TESTS_DATA_DIR, "image-depth-data256.raw"), "rb").read()
     event_256.add_image_depth(
-                data,
-                depth_format=DepthFormat.Meters,
-                camera_near_plane=0.1,
-                camera_far_plane=20.0,
-                add_noise=False)
-    assert np.all(event_256.depth_frame[0:1, 0:8] == np.array([[0.8223207, 0.8223207, 0.8223207, 0.8223207, 0.8223207, 0.8223207, 0.8223207, 0.8223207]], dtype=np.float32))
+        data,
+        depth_format=DepthFormat.Meters,
+        camera_near_plane=0.1,
+        camera_far_plane=20.0,
+        add_noise=False,
+    )
+    assert np.all(
+        event_256.depth_frame[0:1, 0:8]
+        == np.array(
+            [
+                [
+                    0.8223207,
+                    0.8223207,
+                    0.8223207,
+                    0.8223207,
+                    0.8223207,
+                    0.8223207,
+                    0.8223207,
+                    0.8223207,
+                ]
+            ],
+            dtype=np.float32,
+        )
+    )
 
 
 def test_process_colors(event_complex):
     event_complex.process_colors
     assert len(event_complex.color_to_object_id.keys()) == 125
     assert event_complex.color_to_object_id[(207, 119, 70)] == "Spatula3.001"
-    assert (
-        event_complex.color_to_object_id[(141, 139, 54)]
-        == "Cabinet|-00.63|+00.39|-02.51"
-    )
-    assert (
-        event_complex.color_to_object_id[(29, 84, 249)] == "Spoon|-00.50|+00.78|-01.45"
-    )
+    assert event_complex.color_to_object_id[(141, 139, 54)] == "Cabinet|-00.63|+00.39|-02.51"
+    assert event_complex.color_to_object_id[(29, 84, 249)] == "Spoon|-00.50|+00.78|-01.45"
     assert event_complex.color_to_object_id[(235, 57, 90)] == "Spoon"
 
     assert event_complex.object_id_to_color["Spatula3.001"] == (207, 119, 70)
@@ -3486,10 +3516,7 @@ def test_process_colors(event_complex):
 @pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_instance_segmentation(event_with_segmentation):
     assert (
-        event_with_segmentation.instance_masks[
-            "CoffeeMachine|+00.89|+00.90|-02.13"
-        ].sum()
-        == 14833
+        event_with_segmentation.instance_masks["CoffeeMachine|+00.89|+00.90|-02.13"].sum() == 14833
     )
     expected_keys = [
         "CoffeeMachine|+00.89|+00.90|-02.13",
@@ -3522,11 +3549,13 @@ def test_lazy_instance_segmentation(event_with_segmentation):
     ]
     assert list(event_with_segmentation.instance_masks.keys()) == expected_keys
 
+
 @pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_test_lazy_instance_contains(event_with_segmentation):
     assert "CoffeeMachine|+00.89|+00.90|-02.13" in event_with_segmentation.instance_masks
     assert not "Cabinet|+00.65|+00.48|+00.24" in event_with_segmentation.instance_masks
     assert not "Foo" in event_with_segmentation.instance_masks
+
 
 @pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_test_lazy_class_contains(event_with_segmentation):
@@ -3534,11 +3563,15 @@ def test_test_lazy_class_contains(event_with_segmentation):
     assert not "Window" in event_with_segmentation.class_masks
     assert not "Foo" in event_with_segmentation.class_masks
 
+
 @pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_instance_detections2d(event_with_segmentation):
-    assert event_with_segmentation.instance_detections2D[
-        "CoffeeMachine|+00.89|+00.90|-02.13"
-    ] == (509, 371, 599, 576)
+    assert event_with_segmentation.instance_detections2D["CoffeeMachine|+00.89|+00.90|-02.13"] == (
+        509,
+        371,
+        599,
+        576,
+    )
 
 
 @pytest.mark.parametrize("event_with_segmentation", segmentation_events)
@@ -3577,9 +3610,7 @@ def test_lazy_class_segmentation_missing(event_with_segmentation):
 @pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_class_segmentation_background(event_with_segmentation):
     # colors that don't appear in the metadata get labeled as "background"
-    class_colors_copy = json.loads(
-        json.dumps(event_with_segmentation.instance_masks.class_colors)
-    )
+    class_colors_copy = json.loads(json.dumps(event_with_segmentation.instance_masks.class_colors))
     del event_with_segmentation.instance_masks.class_colors["Cabinet"]
 
     if "background" in event_with_segmentation.class_masks._masks:
@@ -3612,98 +3643,101 @@ def test_lazy_class_detections2d_missing(event_with_segmentation):
     with pytest.raises(KeyError):
         event_with_segmentation.class_detections2D["Stove"]
 
+
 @pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_instance_masks_keys(event_with_segmentation):
     keys = set(
         {
-         'StoveTopGas|-1.503001|0|-1.06545',
-         'Cabinet|+00.95|+02.16|-02.38',
-         'Cup|+01.08|+00.90|-00.77',
-         'StoveBurner|+00.84|+00.92|-01.50',
-         'StandardUpperCabinetHeightWidth|1.28|0|0.18',
-         'Spatula|+01.10|+00.91|-00.63',
-         'PaperTowelRoll|+01.22|+01.01|-00.52',
-         'StoveBase1|0.997|0|-1.302',
-         'Cabinet|+00.95|+02.16|-00.76',
-         'StoveKnob|+00.67|+00.90|-01.09',
-         'StoveBurner|+01.08|+00.92|-01.10',
-         'StoveKnob|+00.67|+00.90|-01.37',
-         'StandardCounterHeightWidth|0.98|0|0.18',
-         'StoveBurner|+00.84|+00.92|-01.10',
-         'StandardWallSize|1|0|2',
-         'StoveKnob|+00.67|+00.90|-01.52',
-         'Microwave|+01.04|+01.68|-01.30',
-         'CoffeeMachine|+00.89|+00.90|-02.13',
-         'Cabinet|+00.95|+02.44|-01.78',
-         'StoveBurner|+01.08|+00.92|-01.50',
-         'StandardWallTileHeight1|1.3|0|0.18',
-         'StoveKnob|+00.67|+00.90|-01.24',
-         'CounterTop|+00.93|+00.95|-00.21',
-         'Pan|+00.85|+00.95|-01.08',
-         'SaltShaker|+01.19|+00.90|-01.80',
-         'PepperShaker|+01.09|+00.90|-01.82',
-         'CounterTop|+00.93|+00.95|-02.05',
+            "StoveTopGas|-1.503001|0|-1.06545",
+            "Cabinet|+00.95|+02.16|-02.38",
+            "Cup|+01.08|+00.90|-00.77",
+            "StoveBurner|+00.84|+00.92|-01.50",
+            "StandardUpperCabinetHeightWidth|1.28|0|0.18",
+            "Spatula|+01.10|+00.91|-00.63",
+            "PaperTowelRoll|+01.22|+01.01|-00.52",
+            "StoveBase1|0.997|0|-1.302",
+            "Cabinet|+00.95|+02.16|-00.76",
+            "StoveKnob|+00.67|+00.90|-01.09",
+            "StoveBurner|+01.08|+00.92|-01.10",
+            "StoveKnob|+00.67|+00.90|-01.37",
+            "StandardCounterHeightWidth|0.98|0|0.18",
+            "StoveBurner|+00.84|+00.92|-01.10",
+            "StandardWallSize|1|0|2",
+            "StoveKnob|+00.67|+00.90|-01.52",
+            "Microwave|+01.04|+01.68|-01.30",
+            "CoffeeMachine|+00.89|+00.90|-02.13",
+            "Cabinet|+00.95|+02.44|-01.78",
+            "StoveBurner|+01.08|+00.92|-01.50",
+            "StandardWallTileHeight1|1.3|0|0.18",
+            "StoveKnob|+00.67|+00.90|-01.24",
+            "CounterTop|+00.93|+00.95|-00.21",
+            "Pan|+00.85|+00.95|-01.08",
+            "SaltShaker|+01.19|+00.90|-01.80",
+            "PepperShaker|+01.09|+00.90|-01.82",
+            "CounterTop|+00.93|+00.95|-02.05",
         }
     )
     assert set(event_with_segmentation.instance_masks.keys()) == keys
+
 
 @pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_instance_detections2d_keys(event_with_segmentation):
     keys = set(
         {
-         'StoveTopGas|-1.503001|0|-1.06545',
-         'Cabinet|+00.95|+02.16|-02.38',
-         'Cup|+01.08|+00.90|-00.77',
-         'StoveBurner|+00.84|+00.92|-01.50',
-         'StandardUpperCabinetHeightWidth|1.28|0|0.18',
-         'Spatula|+01.10|+00.91|-00.63',
-         'PaperTowelRoll|+01.22|+01.01|-00.52',
-         'StoveBase1|0.997|0|-1.302',
-         'Cabinet|+00.95|+02.16|-00.76',
-         'StoveKnob|+00.67|+00.90|-01.09',
-         'StoveBurner|+01.08|+00.92|-01.10',
-         'StoveKnob|+00.67|+00.90|-01.37',
-         'StandardCounterHeightWidth|0.98|0|0.18',
-         'StoveBurner|+00.84|+00.92|-01.10',
-         'StandardWallSize|1|0|2',
-         'StoveKnob|+00.67|+00.90|-01.52',
-         'Microwave|+01.04|+01.68|-01.30',
-         'CoffeeMachine|+00.89|+00.90|-02.13',
-         'Cabinet|+00.95|+02.44|-01.78',
-         'StoveBurner|+01.08|+00.92|-01.50',
-         'StandardWallTileHeight1|1.3|0|0.18',
-         'StoveKnob|+00.67|+00.90|-01.24',
-         'CounterTop|+00.93|+00.95|-00.21',
-         'Pan|+00.85|+00.95|-01.08',
-         'SaltShaker|+01.19|+00.90|-01.80',
-         'PepperShaker|+01.09|+00.90|-01.82',
-         'CounterTop|+00.93|+00.95|-02.05',
+            "StoveTopGas|-1.503001|0|-1.06545",
+            "Cabinet|+00.95|+02.16|-02.38",
+            "Cup|+01.08|+00.90|-00.77",
+            "StoveBurner|+00.84|+00.92|-01.50",
+            "StandardUpperCabinetHeightWidth|1.28|0|0.18",
+            "Spatula|+01.10|+00.91|-00.63",
+            "PaperTowelRoll|+01.22|+01.01|-00.52",
+            "StoveBase1|0.997|0|-1.302",
+            "Cabinet|+00.95|+02.16|-00.76",
+            "StoveKnob|+00.67|+00.90|-01.09",
+            "StoveBurner|+01.08|+00.92|-01.10",
+            "StoveKnob|+00.67|+00.90|-01.37",
+            "StandardCounterHeightWidth|0.98|0|0.18",
+            "StoveBurner|+00.84|+00.92|-01.10",
+            "StandardWallSize|1|0|2",
+            "StoveKnob|+00.67|+00.90|-01.52",
+            "Microwave|+01.04|+01.68|-01.30",
+            "CoffeeMachine|+00.89|+00.90|-02.13",
+            "Cabinet|+00.95|+02.44|-01.78",
+            "StoveBurner|+01.08|+00.92|-01.50",
+            "StandardWallTileHeight1|1.3|0|0.18",
+            "StoveKnob|+00.67|+00.90|-01.24",
+            "CounterTop|+00.93|+00.95|-00.21",
+            "Pan|+00.85|+00.95|-01.08",
+            "SaltShaker|+01.19|+00.90|-01.80",
+            "PepperShaker|+01.09|+00.90|-01.82",
+            "CounterTop|+00.93|+00.95|-02.05",
         }
     )
     assert set(event_with_segmentation.instance_detections2D.keys()) == keys
 
+
 @pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_class_detections2d_keys(event_with_segmentation):
     keys = set(
-            {
-             'Cabinet',
-             'CoffeeMachine',
-             'CounterTop',
-             'Cup',
-             'Microwave',
-             'Pan',
-             'PaperTowelRoll',
-             'PepperShaker',
-             'SaltShaker',
-             'Spatula',
-             'StandardCounterHeightWidth',
-             'StandardUpperCabinetHeightWidth',
-             'StandardWallSize',
-             'StandardWallTileHeight1',
-             'StoveBase1',
-             'StoveBurner',
-             'StoveKnob',
-             'StoveTopGas',
-            }
+        {
+            "Cabinet",
+            "CoffeeMachine",
+            "CounterTop",
+            "Cup",
+            "Microwave",
+            "Pan",
+            "PaperTowelRoll",
+            "PepperShaker",
+            "SaltShaker",
+            "Spatula",
+            "StandardCounterHeightWidth",
+            "StandardUpperCabinetHeightWidth",
+            "StandardWallSize",
+            "StandardWallTileHeight1",
+            "StoveBase1",
+            "StoveBurner",
+            "StoveKnob",
+            "StoveTopGas",
+        }
     )
     assert set(event_with_segmentation.class_detections2D.keys()) == keys

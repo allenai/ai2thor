@@ -13,9 +13,7 @@ public class IgnoreCollision : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update() {
-
-    }
+    void Update() { }
 
     public void SetupIgnoreCollision() {
         if (gameObject.GetComponentInParent<SimObjPhysics>() && myColliders.Length == 0) {
@@ -28,19 +26,28 @@ public class IgnoreCollision : MonoBehaviour {
         if (objectToIgnoreCollisionsWith != null) {
             // do this if we are ignoring a sim object like a dresser with drawers in it
             if (objectToIgnoreCollisionsWith.GetComponent<SimObjPhysics>()) {
-                otherCollidersToIgnore = objectToIgnoreCollisionsWith.GetComponent<SimObjPhysics>().MyColliders;
+                otherCollidersToIgnore = objectToIgnoreCollisionsWith
+                    .GetComponent<SimObjPhysics>()
+                    .MyColliders;
             }
 
             // do this if we are ignoring the agent
             if (objectToIgnoreCollisionsWith.GetComponent<BaseAgentComponent>()) {
-                otherCollidersToIgnore = new Collider[] { objectToIgnoreCollisionsWith.GetComponent<BaseAgentComponent>().GetComponent<CapsuleCollider>() };
+                otherCollidersToIgnore = new Collider[]
+                {
+                    objectToIgnoreCollisionsWith
+                        .GetComponent<BaseAgentComponent>()
+                        .GetComponent<CapsuleCollider>()
+                };
             }
-
         }
-
 #if UNITY_EDITOR
         else {
-            Debug.LogError("IgnoreCollision on " + gameObject.transform.name + " is missing an objectToIgnoreCollisionsWith!");
+            Debug.LogError(
+                "IgnoreCollision on "
+                    + gameObject.transform.name
+                    + " is missing an objectToIgnoreCollisionsWith!"
+            );
         }
 #endif
         // // otherwise, default to finding the SimObjPhysics component in the nearest parent to use as the object to ignore

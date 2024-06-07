@@ -1,31 +1,42 @@
-﻿using System.Collections;
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
 public class ExperimentRoomSceneManager : MonoBehaviour {
     public GameObject[] replacementObjectsToSpawn = null;
+
     // set of experiment receptacle objects
     public GameObject[] receptaclesToSpawn = null;
+
     // screens to place on table
     public GameObject[] screensToSpawn = null;
+
     // reference to wall renderer
     public Renderer wall;
+
     // wall materials to swap between
     public Material[] wallMaterials = null;
+
     // reference to floor renderer
     public Renderer floor;
+
     // floor materials to swap between
     public Material[] floorMaterials = null;
+
     // reference to table renderer, material[0] is top, material [1] are legs
     public Renderer table;
+
     // table top materials to swap between
     public Material[] tableTopMaterials = null;
+
     // reference to table leg renderer
     public Material[] tableLegMaterials = null;
+
     // reference to lights in screen
     public GameObject[] allOfTheLights;
+
     // material screen options
     public Material[] screenMaterials = null;
 
@@ -44,9 +55,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update() {
-
-    }
+    void Update() { }
 
 #if UNITY_EDITOR
     List<Vector3> debugCoords = new List<Vector3>();
@@ -58,7 +67,12 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
     // the y value will be wherever the agent's hand currently is
     // gridIncrement- size between grid points in meters
     // count - casts a grid forward <2 * count + 1> by <count>
-    public List<Vector3> ValidGrid(Vector3 origin, float gridIncrement, int count, BaseFPSAgentController agent) {
+    public List<Vector3> ValidGrid(
+        Vector3 origin,
+        float gridIncrement,
+        int count,
+        BaseFPSAgentController agent
+    ) {
         // start from origin which will be agent's hand
         List<Vector3> pointsOnGrid = new List<Vector3>();
 
@@ -114,8 +128,8 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
 
         // ok we now have grid points in a grid, now raycast down from each of those and see if we hit a receptacle...
         return actualPoints;
-
     }
+
     // change specified screen object's material to color rgb
     public void ChangeScreenColor(SimObjPhysics screen, float r, float g, float b) {
         List<MeshRenderer> renderers = GetAllRenderersOfObject(screen);
@@ -207,7 +221,13 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
 
     // return spawn coordinates above the <receptacleObjectId> that the <objectId> will fit at a given rotation <yRot>
     // excludes coordinates that would cause object <objectId> to fall off the table
-    public List<Vector3> ReturnValidSpawns(PhysicsRemoteFPSAgentController agent, string objType, int variation, SimObjPhysics targetReceptacle, float yRot = 0) {
+    public List<Vector3> ReturnValidSpawns(
+        PhysicsRemoteFPSAgentController agent,
+        string objType,
+        int variation,
+        SimObjPhysics targetReceptacle,
+        float yRot = 0
+    ) {
         toSpawn = null;
 
         if (objType == "screen") {
@@ -218,7 +238,11 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
             toSpawn = receptaclesToSpawn[variation].GetComponent<SimObjPhysics>();
         }
 
-        SimObjPhysics spawned = GameObject.Instantiate(toSpawn, initialSpawnPosition, Quaternion.identity);
+        SimObjPhysics spawned = GameObject.Instantiate(
+            toSpawn,
+            initialSpawnPosition,
+            Quaternion.identity
+        );
         Rigidbody rb = spawned.GetComponent<Rigidbody>();
 
         // apply rotation to object, default quaternion.identity
@@ -268,9 +292,16 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
     }
 
     // Note: always run ReturnValidSpawns - to get the current scene state's set of useable coordinates for the objType and Variation
-    // spawn receptacle/screen <objType> of index [variation] on <targetReceptacle> table object at coordinate <point> 
+    // spawn receptacle/screen <objType> of index [variation] on <targetReceptacle> table object at coordinate <point>
     // a valid <point> should be generated from the ReturnValidSpawns() return
-    public bool SpawnExperimentObjAtPoint(PhysicsRemoteFPSAgentController agent, string objType, int variation, SimObjPhysics targetReceptacle, Vector3 point, float yRot = 0) {
+    public bool SpawnExperimentObjAtPoint(
+        PhysicsRemoteFPSAgentController agent,
+        string objType,
+        int variation,
+        SimObjPhysics targetReceptacle,
+        Vector3 point,
+        float yRot = 0
+    ) {
         toSpawn = null;
 
         bool success = false;
@@ -288,7 +319,11 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
         }
 
         // instantiate the prefab toSpawn away from every other object
-        SimObjPhysics spawned = GameObject.Instantiate(toSpawn, initialSpawnPosition, Quaternion.identity);
+        SimObjPhysics spawned = GameObject.Instantiate(
+            toSpawn,
+            initialSpawnPosition,
+            Quaternion.identity
+        );
         Rigidbody rb = spawned.GetComponent<Rigidbody>();
         // make sure object doesn't fall until we are done preparing to reposition it on the target receptacle
         rb.isKinematic = true;
@@ -336,9 +371,15 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
         return success;
     }
 
-
     // spawn receptacle/screen <objType> of index [variation] on <targetReceptacle> table object using random seed to pick which spawn coordinate used
-    public bool SpawnExperimentObjAtRandom(PhysicsRemoteFPSAgentController agent, string objType, int variation, int seed, SimObjPhysics targetReceptacle, float yRot = 0) {
+    public bool SpawnExperimentObjAtRandom(
+        PhysicsRemoteFPSAgentController agent,
+        string objType,
+        int variation,
+        int seed,
+        SimObjPhysics targetReceptacle,
+        float yRot = 0
+    ) {
         toSpawn = null;
 
         bool success = false;
@@ -358,7 +399,11 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
         spawnCoordinates.Shuffle_(seed);
 
         // instantiate the prefab toSpawn away from every other object
-        SimObjPhysics spawned = GameObject.Instantiate(toSpawn, initialSpawnPosition, Quaternion.identity);
+        SimObjPhysics spawned = GameObject.Instantiate(
+            toSpawn,
+            initialSpawnPosition,
+            Quaternion.identity
+        );
         Rigidbody rb = spawned.GetComponent<Rigidbody>();
         // make sure object doesn't fall until we are done preparing to reposition it on the target receptacle
         rb.isKinematic = true;
@@ -429,21 +474,53 @@ public class ExperimentRoomSceneManager : MonoBehaviour {
         // keep track of all 8 corners of the OverlapBox
         List<Vector3> corners = new List<Vector3>();
         // bottom forward right
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f));
+        corners.Add(
+            bb.transform.TransformPoint(
+                bbCenter + new Vector3(bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f
+            )
+        );
         // bottom forward left
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f));
+        corners.Add(
+            bb.transform.TransformPoint(
+                bbCenter + new Vector3(-bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f
+            )
+        );
         // bottom back left
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f));
+        corners.Add(
+            bb.transform.TransformPoint(
+                bbCenter + new Vector3(-bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f
+            )
+        );
         // bottom back right
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f));
+        corners.Add(
+            bb.transform.TransformPoint(
+                bbCenter + new Vector3(bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f
+            )
+        );
         // top forward right
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f));
+        corners.Add(
+            bb.transform.TransformPoint(
+                bbCenter + new Vector3(bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f
+            )
+        );
         // top forward left
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f));
+        corners.Add(
+            bb.transform.TransformPoint(
+                bbCenter + new Vector3(-bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f
+            )
+        );
         // top back left
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
+        corners.Add(
+            bb.transform.TransformPoint(
+                bbCenter + new Vector3(-bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f
+            )
+        );
         // top back right
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
+        corners.Add(
+            bb.transform.TransformPoint(
+                bbCenter + new Vector3(bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f
+            )
+        );
 
         return corners;
     }

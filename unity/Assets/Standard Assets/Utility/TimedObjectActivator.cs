@@ -19,7 +19,6 @@ namespace UnityStandardAssets.Utility
             Call,
         }
 
-
         [Serializable]
         public class Entry
         {
@@ -28,17 +27,14 @@ namespace UnityStandardAssets.Utility
             public float delay;
         }
 
-
         [Serializable]
         public class Entries
         {
             public Entry[] entries;
         }
-        
-        
+
         public Entries entries = new Entries();
 
-        
         private void Awake()
         {
             foreach (Entry entry in entries.entries)
@@ -62,13 +58,11 @@ namespace UnityStandardAssets.Utility
             }
         }
 
-
         private IEnumerator Activate(Entry entry)
         {
             yield return new WaitForSeconds(entry.delay);
             entry.target.SetActive(true);
         }
-
 
         private IEnumerator Deactivate(Entry entry)
         {
@@ -76,26 +70,24 @@ namespace UnityStandardAssets.Utility
             entry.target.SetActive(false);
         }
 
-
         private IEnumerator ReloadLevel(Entry entry)
         {
             yield return new WaitForSeconds(entry.delay);
             UnityEngine.SceneManagement.SceneManager.LoadScene(
-                UnityEngine.SceneManagement.SceneManager.GetSceneAt(0).name);
+                UnityEngine.SceneManagement.SceneManager.GetSceneAt(0).name
+            );
         }
     }
 }
 
-
 namespace UnityStandardAssets.Utility.Inspector
 {
 #if UNITY_EDITOR
-    [CustomPropertyDrawer(typeof (TimedObjectActivator.Entries))]
+    [CustomPropertyDrawer(typeof(TimedObjectActivator.Entries))]
     public class EntriesDrawer : PropertyDrawer
     {
         private const float k_LineHeight = 18;
         private const float k_Spacing = 4;
-
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
@@ -116,10 +108,10 @@ namespace UnityStandardAssets.Utility.Inspector
 
             if (entries.arraySize > 0)
             {
-                float actionWidth = .25f*width;
-                float targetWidth = .6f*width;
-                float delayWidth = .1f*width;
-                float buttonWidth = .05f*width;
+                float actionWidth = .25f * width;
+                float targetWidth = .6f * width;
+                float delayWidth = .1f * width;
+                float buttonWidth = .05f * width;
 
                 for (int i = 0; i < entries.arraySize; ++i)
                 {
@@ -144,19 +136,37 @@ namespace UnityStandardAssets.Utility.Inspector
 
                     // Draw fields - passs GUIContent.none to each so they are drawn without labels
 
-                    if (entry.FindPropertyRelative("action").enumValueIndex !=
-                        (int) TimedObjectActivator.Action.ReloadLevel)
+                    if (
+                        entry.FindPropertyRelative("action").enumValueIndex
+                        != (int)TimedObjectActivator.Action.ReloadLevel
+                    )
                     {
-                        EditorGUI.PropertyField(actionRect, entry.FindPropertyRelative("action"), GUIContent.none);
-                        EditorGUI.PropertyField(targetRect, entry.FindPropertyRelative("target"), GUIContent.none);
+                        EditorGUI.PropertyField(
+                            actionRect,
+                            entry.FindPropertyRelative("action"),
+                            GUIContent.none
+                        );
+                        EditorGUI.PropertyField(
+                            targetRect,
+                            entry.FindPropertyRelative("target"),
+                            GUIContent.none
+                        );
                     }
                     else
                     {
                         actionRect.width = actionRect.width + targetRect.width;
-                        EditorGUI.PropertyField(actionRect, entry.FindPropertyRelative("action"), GUIContent.none);
+                        EditorGUI.PropertyField(
+                            actionRect,
+                            entry.FindPropertyRelative("action"),
+                            GUIContent.none
+                        );
                     }
 
-                    EditorGUI.PropertyField(delayRect, entry.FindPropertyRelative("delay"), GUIContent.none);
+                    EditorGUI.PropertyField(
+                        delayRect,
+                        entry.FindPropertyRelative("delay"),
+                        GUIContent.none
+                    );
                     if (GUI.Button(buttonRect, "-"))
                     {
                         entries.DeleteArrayElementAtIndex(i);
@@ -164,7 +174,7 @@ namespace UnityStandardAssets.Utility.Inspector
                     }
                 }
             }
-            
+
             // add & sort buttons
             y += k_LineHeight + k_Spacing;
 
@@ -186,7 +196,10 @@ namespace UnityStandardAssets.Utility.Inspector
                         var e1 = entries.GetArrayElementAtIndex(i);
                         var e2 = entries.GetArrayElementAtIndex(i + 1);
 
-                        if (e1.FindPropertyRelative("delay").floatValue > e2.FindPropertyRelative("delay").floatValue)
+                        if (
+                            e1.FindPropertyRelative("delay").floatValue
+                            > e2.FindPropertyRelative("delay").floatValue
+                        )
                         {
                             entries.MoveArrayElement(i + 1, i);
                             changed = true;
@@ -196,7 +209,6 @@ namespace UnityStandardAssets.Utility.Inspector
                 }
             }
 
-
             // Set indent back to what it was
             EditorGUI.indentLevel = indent;
             //
@@ -205,12 +217,11 @@ namespace UnityStandardAssets.Utility.Inspector
             EditorGUI.EndProperty();
         }
 
-
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             SerializedProperty entries = property.FindPropertyRelative("entries");
             float lineAndSpace = k_LineHeight + k_Spacing;
-            return 40 + (entries.arraySize*lineAndSpace) + lineAndSpace;
+            return 40 + (entries.arraySize * lineAndSpace) + lineAndSpace;
         }
     }
 #endif

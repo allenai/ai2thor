@@ -58,8 +58,7 @@ def bridge_gateway():
         return output
     else:
         raise Exception(
-            "Didn't receive a single ip address from network inspect bridge: %s"
-            % output
+            "Didn't receive a single ip address from network inspect bridge: %s" % output
         )
 
 

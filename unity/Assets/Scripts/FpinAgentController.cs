@@ -1,18 +1,17 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using System;
 using System.Linq;
+using MessagePack;
 using RandomExtensions;
+using Thor.Procedural;
+using Thor.Procedural.Data;
+using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UIElements;
-using Thor.Procedural.Data;
-using Thor.Procedural;
-using MessagePack;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-
     public class BoxBounds {
         public Vector3 worldCenter;
         public Vector3 agentRelativeCenter;
@@ -28,16 +27,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public ObjectAnnotations annotations = null;
     }
 
-    #nullable enable
+#nullable enable
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
     public class BodyAsset {
         public string? assetId = null;
         public LoadInUnityProceduralAsset? dynamicAsset = null;
         public ProceduralAsset? asset = null;
-        
     }
-    #nullable disable
+
+#nullable disable
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
@@ -65,8 +64,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public string visibilityScheme = VisibilityScheme.Collider.ToString();
     }
 
-    public class FpinAgentController : PhysicsRemoteFPSAgentController{
-
+    public class FpinAgentController : PhysicsRemoteFPSAgentController {
         private static readonly Vector3 agentSpawnOffset = new Vector3(100.0f, 100.0f, 100.0f);
         private FpinMovableContinuous fpinMovable;
         public BoxCollider spawnedBoxCollider = null;
@@ -77,42 +75,52 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public BoxBounds boxBounds = null;
         public BoxBounds BoxBounds {
             get {
-                if(spawnedBoxCollider != null) {
+                if (spawnedBoxCollider != null) {
                     BoxBounds currentBounds = new BoxBounds();
 
-                    currentBounds.worldCenter = spawnedBoxCollider.transform.TransformPoint(spawnedBoxCollider.center);
+                    currentBounds.worldCenter = spawnedBoxCollider.transform.TransformPoint(
+                        spawnedBoxCollider.center
+                    );
                     currentBounds.size = GetTrueSizeOfBoxCollider(spawnedBoxCollider);
-                    currentBounds.agentRelativeCenter = this.transform.InverseTransformPoint(currentBounds.worldCenter);
+                    currentBounds.agentRelativeCenter = this.transform.InverseTransformPoint(
+                        currentBounds.worldCenter
+                    );
 
                     boxBounds = currentBounds;
 
                     // Debug.Log($"world center: {boxBounds.worldCenter}");
                     // Debug.Log($"size: {boxBounds.size}");
                     // Debug.Log($"agentRelativeCenter: {boxBounds.agentRelativeCenter}");
-                } else { 
+                } else {
                     // Debug.Log("why is it nullll");
                     return null;
                 }
 
                 return boxBounds;
             }
-            set {
-                boxBounds = value;
-            }
+            set { boxBounds = value; }
         }
 
         public CollisionListener collisionListener;
-        
-        public FpinAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager) : base(baseAgentComponent, agentManager) {
-        }
+
+        public FpinAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager)
+            : base(baseAgentComponent, agentManager) { }
 
         public void Start() {
             //put stuff we need here when we need it maybe
         }
 
-        public override RaycastHit[] CastBodyTrayectory(Vector3 startPosition, Vector3 direction, float skinWidth, float moveMagnitude, int layerMask, CapsuleData cachedCapsule) { 
-            
-            Vector3 startPositionBoxCenter = startPosition + this.transform.TransformDirection(this.boxBounds.agentRelativeCenter);
+        public override RaycastHit[] CastBodyTrayectory(
+            Vector3 startPosition,
+            Vector3 direction,
+            float skinWidth,
+            float moveMagnitude,
+            int layerMask,
+            CapsuleData cachedCapsule
+        ) {
+            Vector3 startPositionBoxCenter =
+                startPosition
+                + this.transform.TransformDirection(this.boxBounds.agentRelativeCenter);
 
             return Physics.BoxCastAll(
                 center: startPositionBoxCenter,
@@ -134,8 +142,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Transform currentTransform = collider.transform;
 
             // Apply the scale from the collider's transform and all parent transforms
-            while (currentTransform != null)
-            {
+            while (currentTransform != null) {
                 trueSize.x *= currentTransform.localScale.x;
                 trueSize.y *= currentTransform.localScale.y;
                 trueSize.z *= currentTransform.localScale.z;
@@ -147,13 +154,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return trueSize;
         }
 
-
         //override so we can access to fpin specific stuff
         public override MetadataWrapper generateMetadataWrapper() {
-
             //get all the usual stuff from base agent's implementation
             MetadataWrapper metaWrap = base.generateMetadataWrapper();
-            
+
             //here's the fpin specific stuff
             if (boxBounds != null) {
                 //get from BoxBounds as box world center will update as agent moves so we can't cache it
@@ -167,9 +172,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return metaWrap;
         }
 
-        public List<Vector3> SamplePointsOnNavMesh(
-            int sampleCount, float maxDistance
-        ) {
+        public List<Vector3> SamplePointsOnNavMesh(int sampleCount, float maxDistance) {
             float minX = agentManager.SceneBounds.min.x;
             float minZ = agentManager.SceneBounds.min.z;
             float maxX = agentManager.SceneBounds.max.x;
@@ -177,20 +180,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             Debug.Log($"Scene bounds: X: {minX} z: {minZ} max x: {maxX} z: {maxZ}");
 
-            int n = (int) Mathf.Ceil(Mathf.Sqrt(sampleCount));
+            int n = (int)Mathf.Ceil(Mathf.Sqrt(sampleCount));
 
             List<Vector3> initPoints = new List<Vector3>();
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    initPoints.Add(new Vector3(
-                        Mathf.Lerp(minX, maxX, (i + 0.5f) / n),
-                        0f,
-                        Mathf.Lerp(minZ, maxZ, (j + 0.5f) / n)
-                    ));
+                    initPoints.Add(
+                        new Vector3(
+                            Mathf.Lerp(minX, maxX, (i + 0.5f) / n),
+                            0f,
+                            Mathf.Lerp(minZ, maxZ, (j + 0.5f) / n)
+                        )
+                    );
                 }
             }
             initPoints.Shuffle_();
-            
 
             List<Vector3> pointsOnMesh = new List<Vector3>();
             for (int i = 0; i < initPoints.Count; i++) {
@@ -202,7 +206,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Vector3 randomPoint = initPoints[i];
                 if (NavMesh.SamplePosition(randomPoint, out hit, maxDistance, NavMesh.AllAreas)) {
 # if UNITY_EDITOR
-                    Debug.DrawLine(hit.position, hit.position + new Vector3(0f, 0.1f, 0f), Color.cyan, 15f);
+                    Debug.DrawLine(
+                        hit.position,
+                        hit.position + new Vector3(0f, 0.1f, 0f),
+                        Color.cyan,
+                        15f
+                    );
 # endif
                     pointsOnMesh.Add(hit.position);
                 }
@@ -223,7 +232,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (Collider c in GetComponentsInChildren<Collider>()) {
                 b.Encapsulate(c.bounds);
             }
-            
+
             //Debug.Log($"current transform.position.y: {transform.position.y}");
             float yOffset = 0.001f + transform.position.y - b.min.y;
             //Debug.Log($"yOffset is: {yOffset}");
@@ -248,15 +257,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void spawnAgentBoxCollider(
-            GameObject agent, 
+            GameObject agent,
             Type agentType,
             Vector3 originalPosition,
             Quaternion originalRotation,
             Bounds agentBounds,
             bool useVisibleColliderBase = false,
             bool spawnCollidersWithoutMesh = false
-            ) {
-            
+        ) {
             //create colliders based on the agent bounds
             var col = new GameObject("fpinCollider", typeof(BoxCollider));
             col.layer = LayerMask.NameToLayer("Agent");
@@ -267,24 +275,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             tCol.layer = LayerMask.NameToLayer("Agent");
             spawnedTriggerBoxCollider = tCol.GetComponent<BoxCollider>();
             spawnedTriggerBoxCollider.isTrigger = true;
-            
+
             //move both of these colliders to the bounds center
-            spawnedBoxCollider.transform.position = spawnedTriggerBoxCollider.transform.position = agentBounds.center;
-            spawnedBoxCollider.transform.rotation = spawnedTriggerBoxCollider.transform.rotation = Quaternion.identity;
+            spawnedBoxCollider.transform.position = spawnedTriggerBoxCollider.transform.position =
+                agentBounds.center;
+            spawnedBoxCollider.transform.rotation = spawnedTriggerBoxCollider.transform.rotation =
+                Quaternion.identity;
 
             //parent these colliders to the viscap really quick, so if we scale the fpinVisibilityCapsule later it all stays the same
-            spawnedBoxCollider.transform.parent = spawnedTriggerBoxCollider.transform.parent = fpinVisibilityCapsule.transform;
-            
+            spawnedBoxCollider.transform.parent = spawnedTriggerBoxCollider.transform.parent =
+                fpinVisibilityCapsule.transform;
+
             //calculate collider size based on what the size of the bounds of the mesh are
-            Vector3 colliderSize = new Vector3(agentBounds.size.x, agentBounds.size.y, agentBounds.size.z);
+            Vector3 colliderSize = new Vector3(
+                agentBounds.size.x,
+                agentBounds.size.y,
+                agentBounds.size.z
+            );
             spawnedBoxCollider.size = spawnedTriggerBoxCollider.size = colliderSize;
-        
+
             return;
         }
 
         //helper function to remove the currently generated agent box collider
         //make sure to follow this up with a subsequent generation so BoxBounds isn't left null
-        public void destroyAgentBoxCollider(){
+        public void destroyAgentBoxCollider() {
             GameObject visibleBox = GameObject.Find("VisibleBox");
             if (spawnedBoxCollider != null) {
                 UnityEngine.Object.DestroyImmediate(spawnedBoxCollider.transform.gameObject);
@@ -297,12 +312,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (visibleBox != null) {
                 UnityEngine.Object.DestroyImmediate(visibleBox);
             }
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             GameObject visualizedBoxCollider = GameObject.Find("VisualizedBoxCollider");
             if (visualizedBoxCollider != null) {
                 UnityEngine.Object.DestroyImmediate(visualizedBoxCollider);
             }
-            #endif
+#endif
 
             //clear out any leftover values for BoxBounds just in case
             BoxBounds = null;
@@ -311,7 +326,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        private Transform CopyMeshChildrenRecursive(Transform sourceTransform, Transform targetTransform, bool isTopMost = true) {
+        private Transform CopyMeshChildrenRecursive(
+            Transform sourceTransform,
+            Transform targetTransform,
+            bool isTopMost = true
+        ) {
             Transform thisTransform = null;
             foreach (Transform child in sourceTransform) {
                 GameObject copiedChild = null;
@@ -323,7 +342,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // Process children only if necessary (i.e., they contain MeshFilters)
                 if (HasMeshInChildrenOrSelf(child)) {
-                    Transform parentForChildren = (copiedChild != null) ? copiedChild.transform : CreateContainerForHierarchy(child, targetTransform).transform;
+                    Transform parentForChildren =
+                        (copiedChild != null)
+                            ? copiedChild.transform
+                            : CreateContainerForHierarchy(child, targetTransform).transform;
                     CopyMeshChildrenRecursive(child, parentForChildren, false);
                     if (isTopMost) {
                         thisTransform = parentForChildren;
@@ -371,7 +393,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     return true;
                 }
             }
-            
+
             if (transform.GetComponent<MeshFilter>() != null) {
                 return true;
             }
@@ -388,7 +410,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return container;
         }
 
-        private HashSet<Vector3> TransformedMeshRendererVertices(MeshRenderer mr, bool returnFirstVertexOnly = false) {
+        private HashSet<Vector3> TransformedMeshRendererVertices(
+            MeshRenderer mr,
+            bool returnFirstVertexOnly = false
+        ) {
             MeshFilter mf = mr.gameObject.GetComponent<MeshFilter>();
             Matrix4x4 localToWorld = mr.transform.localToWorldMatrix;
             HashSet<Vector3> vertices = new HashSet<Vector3>(mf.sharedMesh.vertices);
@@ -400,24 +425,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public ActionFinished GetBoxBounds() {
-            return new ActionFinished() {
-                success = true,
-                actionReturn = this.BoxBounds
-            };
+            return new ActionFinished() { success = true, actionReturn = this.BoxBounds };
         }
 
-        public Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles)
-        {
+        public Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles) {
             // Move the point to the pivot's origin
-            Vector3 dir = point - pivot; 
+            Vector3 dir = point - pivot;
             // Rotate it
-            dir = Quaternion.Euler(angles) * dir; 
+            dir = Quaternion.Euler(angles) * dir;
             // Move it back
-            point = dir + pivot; 
+            point = dir + pivot;
             return point;
         }
-        
-        public ActionFinished BackwardsCompatibleInitialize(BackwardsCompatibleInitializeParams args) {
+
+        public ActionFinished BackwardsCompatibleInitialize(
+            BackwardsCompatibleInitializeParams args
+        ) {
             Debug.Log("RUNNING BackCompatInitialize from FpinAgentController.cs");
             // limit camera from looking too far down/up
             //default max are 30 up and 60 down, different agent types may overwrite this
@@ -483,28 +506,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.rotateStepDegrees = args.rotateStepDegrees;
             }
 
-             if (args.snapToGrid && !ValidRotateStepDegreesWithSnapToGrid(args.rotateStepDegrees)) {
-                errorMessage = $"Invalid values 'rotateStepDegrees': ${args.rotateStepDegrees} and 'snapToGrid':${args.snapToGrid}. 'snapToGrid': 'True' is not supported when 'rotateStepDegrees' is different from grid rotation steps of 0, 90, 180, 270 or 360.";
+            if (args.snapToGrid && !ValidRotateStepDegreesWithSnapToGrid(args.rotateStepDegrees)) {
+                errorMessage =
+                    $"Invalid values 'rotateStepDegrees': ${args.rotateStepDegrees} and 'snapToGrid':${args.snapToGrid}. 'snapToGrid': 'True' is not supported when 'rotateStepDegrees' is different from grid rotation steps of 0, 90, 180, 270 or 360.";
                 Debug.Log(errorMessage);
                 return new ActionFinished(success: false, errorMessage: errorMessage);
             }
 
-            if(args.maxDownwardLookAngle < 0) {
+            if (args.maxDownwardLookAngle < 0) {
                 errorMessage = "maxDownwardLookAngle must be a non-negative float";
                 Debug.Log(errorMessage);
                 return new ActionFinished(success: false, errorMessage: errorMessage);
             }
 
-            if(args.maxUpwardLookAngle < 0) {
+            if (args.maxUpwardLookAngle < 0) {
                 errorMessage = "maxUpwardLookAngle must be a non-negative float";
                 Debug.Log(errorMessage);
                 return new ActionFinished(success: false, errorMessage: errorMessage);
             }
 
-
             this.snapToGrid = args.snapToGrid;
 
-            if (args.renderDepthImage || args.renderSemanticSegmentation || args.renderInstanceSegmentation || args.renderNormalsImage) {
+            if (
+                args.renderDepthImage
+                || args.renderSemanticSegmentation
+                || args.renderInstanceSegmentation
+                || args.renderNormalsImage
+            ) {
                 this.updateImageSynthesis(true);
             }
 
@@ -518,7 +546,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (collider != null && navmeshAgent != null) {
                 navmeshAgent.radius = collider.radius;
                 navmeshAgent.height = collider.height;
-                navmeshAgent.transform.localPosition = new Vector3(navmeshAgent.transform.localPosition.x, navmeshAgent.transform.localPosition.y, collider.center.z);
+                navmeshAgent.transform.localPosition = new Vector3(
+                    navmeshAgent.transform.localPosition.x,
+                    navmeshAgent.transform.localPosition.y,
+                    collider.center.z
+                );
             }
 
             // navmeshAgent.radius =
@@ -539,17 +571,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Debug.Log("Object " + action.controllerInitialization.ToString() + " dict "  + (action.controllerInitialization.variableInitializations == null));//+ string.Join(";", action.controllerInitialization.variableInitializations.Select(x => x.Key + "=" + x.Value).ToArray()));
 
-            this.visibilityScheme = ServerAction.GetVisibilitySchemeFromString(args.visibilityScheme);
+            this.visibilityScheme = ServerAction.GetVisibilitySchemeFromString(
+                args.visibilityScheme
+            );
             // this.originalLightingValues = null;
             // Physics.autoSimulation = true;
             // Debug.Log("True if physics is auto-simulating: " + Physics.autoSimulation);
 
             this.AgentHand.gameObject.SetActive(false);
 
-            return new ActionFinished(success: true, actionReturn: new InitializeReturn {
-                        cameraNearPlane = m_Camera.nearClipPlane,
-                        cameraFarPlane = m_Camera.farClipPlane
-                    });
+            return new ActionFinished(
+                success: true,
+                actionReturn: new InitializeReturn {
+                    cameraNearPlane = m_Camera.nearClipPlane,
+                    cameraFarPlane = m_Camera.farClipPlane
+                }
+            );
         }
 
         public ActionFinished Initialize(
@@ -557,11 +594,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // TODO: do we want to allow non relative to the box offsets?
             float originOffsetX = 0.0f,
             float originOffsetZ = 0.0f,
-            Vector3? colliderScaleRatio = null,  
-            bool useAbsoluteSize = false, 
+            Vector3? colliderScaleRatio = null,
+            bool useAbsoluteSize = false,
             bool useVisibleColliderBase = false
         ) {
-
             this.visibilityScheme = VisibilityScheme.Distance;
             var actionFinished = this.InitializeBody(
                 bodyAsset: bodyAsset,
@@ -585,12 +621,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool useVisibleColliderBase = false
         ) {
             // if using no source body mesh, we default to using absolute size via the colliderScaleRatio
-            // since a non absolute size doesn't make sense if we have no default mesh size to base the scale 
+            // since a non absolute size doesn't make sense if we have no default mesh size to base the scale
             // ratio on
             Vector3 meshScaleRatio = colliderScaleRatio.GetValueOrDefault(Vector3.one);
 
             bool noMesh = false;
-            if(bodyAsset == null) {
+            if (bodyAsset == null) {
                 useAbsoluteSize = true;
                 noMesh = true;
             }
@@ -598,7 +634,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // Store the current rotation
             Vector3 originalPosition = this.transform.position;
             Quaternion originalRotation = this.transform.rotation;
-            
+
             // Move the agent to a safe place and temporarily align the agent's rotation with the world coordinate system (i.e. zero it out)
             this.transform.position = originalPosition + agentSpawnOffset;
             this.transform.rotation = Quaternion.identity;
@@ -612,7 +648,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var spawnAssetActionFinished = new ActionFinished();
 
             Bounds meshBoundsWorld = new Bounds(this.transform.position, Vector3.zero);
-            if(bodyAsset != null) {
+            if (bodyAsset != null) {
                 //spawn in a default mesh in an out-of-the-way location (currently 200,200,200) to base the new bounds on
                 spawnAssetActionFinished = spawnBodyAsset(bodyAsset, out GameObject spawnedMesh);
                 // Return early if spawn failed
@@ -621,14 +657,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // duplicate the entire mesh hierarchy from "agentMesh" to "FPSController" (with all of the local-transforms intact), and return top-level transform
-                topMeshTransform = CopyMeshChildrenRecursive(sourceTransform: spawnedMesh.transform, targetTransform: this.transform);
+                topMeshTransform = CopyMeshChildrenRecursive(
+                    sourceTransform: spawnedMesh.transform,
+                    targetTransform: this.transform
+                );
 
                 // get unscaled bounds of mesh
 
                 // we need a bounds-center to start from that is guaranteed to fall inside of the mesh's geometry,
                 // so we'll take the bounds-center of the first meshRenderer
-                MeshRenderer[] meshRenderers = topMeshTransform.gameObject.GetComponentsInChildren<MeshRenderer>();
-                foreach(MeshRenderer mr in meshRenderers) {
+                MeshRenderer[] meshRenderers =
+                    topMeshTransform.gameObject.GetComponentsInChildren<MeshRenderer>();
+                foreach (MeshRenderer mr in meshRenderers) {
                     // No need to run TransformedMeshRendererVertices if the meshRenderer's GameObject isn't rotated
                     if (mr.transform.eulerAngles.magnitude < 1e-4f) {
                         meshBoundsWorld.Encapsulate(mr.bounds);
@@ -646,15 +686,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 topMeshTransform.GetChild(0).position = currentTopMeshTransformChildPos;
 
                 if (useAbsoluteSize) {
-                    topMeshTransform.localScale = new Vector3(meshScaleRatio.x / meshBoundsWorld.size.x,
-                                                                meshScaleRatio.y / meshBoundsWorld.size.y,
-                                                                meshScaleRatio.z / meshBoundsWorld.size.z);
+                    topMeshTransform.localScale = new Vector3(
+                        meshScaleRatio.x / meshBoundsWorld.size.x,
+                        meshScaleRatio.y / meshBoundsWorld.size.y,
+                        meshScaleRatio.z / meshBoundsWorld.size.z
+                    );
                     meshBoundsWorld.size = meshScaleRatio;
                 } else {
                     topMeshTransform.localScale = meshScaleRatio;
-                    meshBoundsWorld.size = new Vector3(meshScaleRatio.x * meshBoundsWorld.size.x,
-                                                        meshScaleRatio.y * meshBoundsWorld.size.y,
-                                                        meshScaleRatio.z * meshBoundsWorld.size.z);
+                    meshBoundsWorld.size = new Vector3(
+                        meshScaleRatio.x * meshBoundsWorld.size.x,
+                        meshScaleRatio.y * meshBoundsWorld.size.y,
+                        meshScaleRatio.z * meshBoundsWorld.size.z
+                    );
                 }
 
                 // Move the topMeshTransform by a Vector3 that closes the distance between the current bounds-center's
@@ -663,7 +707,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // Move topMeshTransform so its bounds-footprint is centered on the  FPSAgentController-origin
                 topMeshTransform.position += Vector3.up * meshBoundsWorld.extents.y;
                 // Now that meshBoundsWorld's position is no longer accurate, update it
-                meshBoundsWorld.center = this.transform.position + Vector3.up * meshBoundsWorld.extents.y;
+                meshBoundsWorld.center =
+                    this.transform.position + Vector3.up * meshBoundsWorld.extents.y;
 
                 // remove the spawned mesh cause we are done with it
                 foreach (var sop in spawnedMesh.GetComponentsInChildren<SimObjPhysics>()) {
@@ -674,7 +719,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     UnityEngine.Object.DestroyImmediate(spawnedMesh);
                 }
             } else {
-                meshBoundsWorld = new Bounds(this.transform.position + (Vector3.up * meshScaleRatio.y / 2), meshScaleRatio);
+                meshBoundsWorld = new Bounds(
+                    this.transform.position + (Vector3.up * meshScaleRatio.y / 2),
+                    meshScaleRatio
+                );
             }
 
             // Create new "viscap" object to hold all the meshes and use it as the new pivot poitn for them
@@ -698,7 +746,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 agentBounds: meshBoundsWorld,
                 useVisibleColliderBase: useVisibleColliderBase,
                 spawnCollidersWithoutMesh: noMesh //if noMesh is true, we have no mesh so we need to spawn colliders without a mesh
-                );
+            );
 
             // spawn the visible collider base if we need to
             if (useVisibleColliderBase) {
@@ -713,13 +761,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     meshBoundsWorld.size.z
                 );
                 // get the y-offset for how low we need to move the visible collider base so it is flush with the bottomost extents of the spawnedBoxCollider
-                float yOffset = visibleBase.GetComponent<MeshRenderer>().bounds.min.y - meshBoundsWorld.min.y;
+                float yOffset =
+                    visibleBase.GetComponent<MeshRenderer>().bounds.min.y - meshBoundsWorld.min.y;
                 // we have the offset now so lets set the local position for the visible base as needed
                 visibleBase.transform.localPosition -= yOffset * Vector3.up;
             }
 
             // now lets reposition the agent origin with originOffsetX and originOffsetZ
-            fpinVisibilityCapsule.transform.position += new Vector3(-originOffsetX, 0, -originOffsetZ);
+            fpinVisibilityCapsule.transform.position += new Vector3(
+                -originOffsetX,
+                0,
+                -originOffsetZ
+            );
             // now that meshBoundsWorld's position is no longer accurate, update it
             meshBoundsWorld.center += new Vector3(-originOffsetX, 0, -originOffsetZ);
 
@@ -729,7 +782,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             characterController.center = boxCenter;
 
             // set the radius to fit inside the box, considering the smallest length, width, or height
-            float minRadius = Mathf.Min(Mathf.Min(meshBoundsWorld.extents.x, meshBoundsWorld.extents.z), meshBoundsWorld.extents.y);
+            float minRadius = Mathf.Min(
+                Mathf.Min(meshBoundsWorld.extents.x, meshBoundsWorld.extents.z),
+                meshBoundsWorld.extents.y
+            );
             characterController.radius = minRadius;
 
             // adjust the capsule size based on the size of the bounds
@@ -743,14 +799,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // ok recalibrate navmesh child component based on the new agent capsule now that its updated
             var navmeshchild = this.transform.GetComponentInChildren<NavMeshAgent>();
-            navmeshchild.transform.localPosition = new Vector3(meshBoundsWorld.center.x - this.transform.position.x, 0.0f, meshBoundsWorld.center.z - this.transform.position.z);
+            navmeshchild.transform.localPosition = new Vector3(
+                meshBoundsWorld.center.x - this.transform.position.x,
+                0.0f,
+                meshBoundsWorld.center.z - this.transform.position.z
+            );
             navmeshchild.baseOffset = 0.0f;
             navmeshchild.height = boxHeight;
             navmeshchild.radius = minRadius;
 
             // ok now check if we were to teleport back to our original position and rotation....
             // will our current box colliders clip with anything? If so, send a failure message
-            Vector3 boxCenterAtInitialTransform = RotatePointAroundPivot(meshBoundsWorld.center - agentSpawnOffset, originalPosition, originalRotation.eulerAngles);
+            Vector3 boxCenterAtInitialTransform = RotatePointAroundPivot(
+                meshBoundsWorld.center - agentSpawnOffset,
+                originalPosition,
+                originalRotation.eulerAngles
+            );
 
 #if UNITY_EDITOR
             // /////////////////////////////////////////////////
@@ -761,7 +825,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cube.transform.rotation = originalRotation;
             cube.transform.localScale = meshBoundsWorld.size;
             cube.GetComponent<BoxCollider>().enabled = false;
-            
+
             var material = cube.GetComponent<MeshRenderer>().material;
             material.SetColor("_Color", new Color(1.0f, 0.0f, 0.0f, 0.4f));
             // Set transparency XD ...
@@ -777,17 +841,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
 
             // used to check if there is enough free space given the generated colliders for the agent to return to its original pose
-            int checkBoxLayerMask = LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0");
+            int checkBoxLayerMask = LayerMask.GetMask(
+                "SimObjVisible",
+                "Procedural1",
+                "Procedural2",
+                "Procedural3",
+                "Procedural0"
+            );
 
             // check if we were to teleport our agent back to its starting position, will the new box colliders generated clip with anything?
             // if we do clip with something, leave the agent where it is, and send a message saying there is clipping actively happening
-            // the reccomended thing to do here is either reset the scene entirely and load in with a new agent, or try and use `InitializeBody` with 
+            // the reccomended thing to do here is either reset the scene entirely and load in with a new agent, or try and use `InitializeBody` with
             // a smaller mesh size that would potentially fit here
             Debug.Log($"{boxCenterAtInitialTransform:F5} and {meshBoundsWorld.extents:F5}");
-            if (Physics.CheckBox(boxCenterAtInitialTransform, meshBoundsWorld.extents, originalRotation, checkBoxLayerMask)) {
+            if (
+                Physics.CheckBox(
+                    boxCenterAtInitialTransform,
+                    meshBoundsWorld.extents,
+                    originalRotation,
+                    checkBoxLayerMask
+                )
+            ) {
                 this.transform.position = originalPosition;
                 this.transform.rotation = originalRotation;
-                string error = "Spawned box collider is colliding with other objects. Cannot spawn box collider.";
+                string error =
+                    "Spawned box collider is colliding with other objects. Cannot spawn box collider.";
                 actionReturn = error;
                 errorMessage = error;
                 throw new InvalidOperationException(error);
@@ -805,24 +883,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             fpinMovable = new FpinMovableContinuous(this.GetComponentInParent<CollisionListener>());
 
             // we had a body asset used, so actionFinished returns info related to that
-            if(bodyAsset != null){
+            if (bodyAsset != null) {
                 return new ActionFinished(spawnAssetActionFinished) {
                     // TODO: change to a proper class once metadata return is defined
-                    actionReturn = new Dictionary<string, object>() {
+                    actionReturn = new Dictionary<string, object>()
+                    {
                         //objectSphereBounds... how is this being used??? currently if we scale the mesh asset this value may not be correct
-                        {"objectSphereBounds", spawnAssetActionFinished.actionReturn as ObjectSphereBounds},
-                        {"BoxBounds", this.BoxBounds},
-                        {"cameraNearPlane", m_Camera.nearClipPlane},
-                        {"cameraFarPlane", m_Camera.farClipPlane}
+                        {
+                            "objectSphereBounds",
+                            spawnAssetActionFinished.actionReturn as ObjectSphereBounds
+                        },
+                        { "BoxBounds", this.BoxBounds },
+                        { "cameraNearPlane", m_Camera.nearClipPlane },
+                        { "cameraFarPlane", m_Camera.farClipPlane }
                     }
                 };
             } else {
                 return new ActionFinished() {
                     // TODO: change to a proper class once metadata return is defined
-                    actionReturn = new Dictionary<string, object>() {
-                        {"BoxBounds", this.BoxBounds},
-                        {"cameraNearPlane", m_Camera.nearClipPlane},
-                        {"cameraFarPlane", m_Camera.farClipPlane}
+                    actionReturn = new Dictionary<string, object>()
+                    {
+                        { "BoxBounds", this.BoxBounds },
+                        { "cameraNearPlane", m_Camera.nearClipPlane },
+                        { "cameraFarPlane", m_Camera.farClipPlane }
                     }
                 };
             }
@@ -831,18 +914,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private ActionFinished spawnBodyAsset(BodyAsset bodyAsset, out GameObject spawnedMesh) {
             if (bodyAsset == null) {
                 throw new ArgumentNullException("bodyAsset is null");
+            } else if (
+                  bodyAsset.assetId == null
+                  && bodyAsset.dynamicAsset == null
+                  && bodyAsset.asset == null
+              ) {
+                throw new ArgumentNullException(
+                    "`bodyAsset.assetId`, `bodyAsset.dynamicAsset` or `bodyAsset.asset` must be provided all are null."
+                );
             }
-            else if (bodyAsset.assetId == null && bodyAsset.dynamicAsset == null && bodyAsset.asset == null) {
-                throw new ArgumentNullException("`bodyAsset.assetId`, `bodyAsset.dynamicAsset` or `bodyAsset.asset` must be provided all are null.");
-            }
-            ActionFinished actionFinished = new ActionFinished(success: false, errorMessage: "No body specified");
+            ActionFinished actionFinished = new ActionFinished(
+                success: false,
+                errorMessage: "No body specified"
+            );
             spawnedMesh = null;
-            
-            if ( (bodyAsset.dynamicAsset != null || bodyAsset.asset != null) && bodyAsset.assetId == null) {
-                var id = bodyAsset.dynamicAsset != null ? bodyAsset.dynamicAsset.id : bodyAsset.asset.name;
+
+            if (
+                (bodyAsset.dynamicAsset != null || bodyAsset.asset != null)
+                && bodyAsset.assetId == null
+            ) {
+                var id =
+                    bodyAsset.dynamicAsset != null
+                        ? bodyAsset.dynamicAsset.id
+                        : bodyAsset.asset.name;
 
                 var assetMap = ProceduralTools.getAssetMap();
-                // Check if asset is in AssetDatabase already 
+                // Check if asset is in AssetDatabase already
                 if (assetMap.ContainsKey(id)) {
                     Debug.Log("------- Already contains key");
                     bodyAsset.assetId = id;
@@ -850,11 +947,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (bodyAsset.assetId != null) {
-                actionFinished = SpawnAsset(bodyAsset.assetId, "agentMesh", new Vector3(200f, 200f, 200f));
+                actionFinished = SpawnAsset(
+                    bodyAsset.assetId,
+                    "agentMesh",
+                    new Vector3(200f, 200f, 200f)
+                );
                 spawnedMesh = GameObject.Find("agentMesh");
-            }
-
-            else if (bodyAsset.dynamicAsset != null) {
+            } else if (bodyAsset.dynamicAsset != null) {
                 actionFinished = this.CreateRuntimeAsset(
                     id: bodyAsset.dynamicAsset.id,
                     dir: bodyAsset.dynamicAsset.dir,
@@ -863,18 +962,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     serializable: true
                 );
                 spawnedMesh = GameObject.Find("mesh");
-            }
-            else if (bodyAsset.asset != null) {
+            } else if (bodyAsset.asset != null) {
                 bodyAsset.asset.serializable = true;
-                actionFinished = this.CreateRuntimeAsset(
-                    asset: bodyAsset.asset
-                );
+                actionFinished = this.CreateRuntimeAsset(asset: bodyAsset.asset);
             }
 
-            if (bodyAsset.assetId == null && (bodyAsset.dynamicAsset != null || bodyAsset.asset != null)) {
-
-                var id = bodyAsset.dynamicAsset != null ? bodyAsset.dynamicAsset.id : bodyAsset.asset.name;
-                Debug.Log($"-- checks {bodyAsset.assetId == null} {bodyAsset.dynamicAsset != null} {bodyAsset.asset != null} ");
+            if (
+                bodyAsset.assetId == null
+                && (bodyAsset.dynamicAsset != null || bodyAsset.asset != null)
+            ) {
+                var id =
+                    bodyAsset.dynamicAsset != null
+                        ? bodyAsset.dynamicAsset.id
+                        : bodyAsset.asset.name;
+                Debug.Log(
+                    $"-- checks {bodyAsset.assetId == null} {bodyAsset.dynamicAsset != null} {bodyAsset.asset != null} "
+                );
                 if (!actionFinished.success || actionFinished.actionReturn == null) {
                     return new ActionFinished(
                         success: false,
@@ -883,16 +986,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 var assetData = actionFinished.actionReturn as Dictionary<string, object>;
                 Debug.Log($"-- dynamicAsset id: {id} keys {string.Join(", ", assetData.Keys)}");
-                spawnedMesh = assetData["gameObject"] as GameObject;//.transform.Find("mesh").gameObject;
+                spawnedMesh = assetData["gameObject"] as GameObject; //.transform.Find("mesh").gameObject;
             }
             return actionFinished;
         }
 
-
         protected override LayerMask GetVisibilityRaycastLayerMask(bool withSimObjInvisible = false) {
             // No agent because camera can be in the path of colliders
-            string[] layers = new string[] {
-                "SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0" //, "Agent"
+            string[] layers = new string[]
+            {
+                "SimObjVisible",
+                "Procedural1",
+                "Procedural2",
+                "Procedural3",
+                "Procedural0" //, "Agent"
             };
             if (withSimObjInvisible) {
                 layers = layers.Append("SimObjInvisible").ToArray();
@@ -923,21 +1030,35 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceAction
         ) {
             //Debug.Log($"what even is the position passed in at the start? {position:F8}");
-            if (rotation.HasValue && (!Mathf.Approximately(rotation.Value.x, 0f) || !Mathf.Approximately(rotation.Value.z, 0f))) {
+            if (
+                rotation.HasValue
+                && (
+                    !Mathf.Approximately(rotation.Value.x, 0f)
+                    || !Mathf.Approximately(rotation.Value.z, 0f)
+                )
+            ) {
                 throw new ArgumentOutOfRangeException(
-                    "No agents currently can change in pitch or roll. So, you must set rotation(x=0, y=yaw, z=0)." +
-                    $" You gave {rotation.Value.ToString("F6")}."
+                    "No agents currently can change in pitch or roll. So, you must set rotation(x=0, y=yaw, z=0)."
+                        + $" You gave {rotation.Value.ToString("F6")}."
                 );
             }
 
             // recall that horizon=60 is look down 60 degrees and horizon=-30 is look up 30 degrees
-            if (!forceAction && horizon.HasValue && (horizon.Value > maxDownwardLookAngle || horizon.Value < -maxUpwardLookAngle)) {
+            if (
+                !forceAction
+                && horizon.HasValue
+                && (horizon.Value > maxDownwardLookAngle || horizon.Value < -maxUpwardLookAngle)
+            ) {
                 throw new ArgumentOutOfRangeException(
                     $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
                 );
             }
 
-            if (!forceAction && position.HasValue && !agentManager.SceneBounds.Contains(position.Value)) {
+            if (
+                !forceAction
+                && position.HasValue
+                && !agentManager.SceneBounds.Contains(position.Value)
+            ) {
                 throw new ArgumentOutOfRangeException(
                     $"Teleport position {position.Value.ToString("F6")} out of scene bounds! Ignore this by setting forceAction=true."
                 );
@@ -968,11 +1089,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             //we teleported the agent a little bit above the ground just so we are clear, now snap agent flush with the floor
-            this.assertTeleportedNearGround(targetPosition: position.GetValueOrDefault(transform.position));
+            this.assertTeleportedNearGround(
+                targetPosition: position.GetValueOrDefault(transform.position)
+            );
 
             if (!forceAction) {
-
-                if (isAgentCapsuleColliding(collidersToIgnore: collidersToIgnoreDuringMovement, includeErrorMessage: true)) {
+                if (
+                    isAgentCapsuleColliding(
+                        collidersToIgnore: collidersToIgnoreDuringMovement,
+                        includeErrorMessage: true
+                    )
+                ) {
                     transform.position = oldPosition;
                     transform.rotation = oldRotation;
                     autoSyncTransforms();
@@ -980,10 +1107,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     throw new InvalidOperationException(errorMessage);
                 }
 
-                if (isAgentBoxColliding(
-                    transformWithBoxCollider: spawnedBoxCollider.transform,
-                    collidersToIgnore: collidersToIgnoreDuringMovement, 
-                    includeErrorMessage: true)) {
+                if (
+                    isAgentBoxColliding(
+                        transformWithBoxCollider: spawnedBoxCollider.transform,
+                        collidersToIgnore: collidersToIgnoreDuringMovement,
+                        includeErrorMessage: true
+                    )
+                ) {
                     transform.position = oldPosition;
                     transform.rotation = oldRotation;
                     autoSyncTransforms();
@@ -991,7 +1121,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     throw new InvalidOperationException(errorMessage);
                 }
             }
-            
+
             actionFinished(success: true);
         }
 
@@ -1006,15 +1136,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // move otherwise the agent will end up in a different
             // location from the targetPosition
             autoSyncTransforms();
-            m_CharacterController.Move(new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f));
+            m_CharacterController.Move(
+                new Vector3(0f, Physics.gravity.y * this.m_GravityMultiplier, 0f)
+            );
             autoSyncTransforms();
 
             // perhaps like y=2 was specified, with an agent's standing height of 0.9
             if (Mathf.Abs(transform.position.y - pos.y) > 1.0f) {
                 throw new InvalidOperationException(
-                    "After teleporting and adjusting agent position to floor, there was too large a change." +
-                    " This may be due to the target teleport coordinates causing the agent to fall through the floor." +
-                    $"({Mathf.Abs(transform.position.y - pos.y)} > 1.0f) in the y position."
+                    "After teleporting and adjusting agent position to floor, there was too large a change."
+                        + " This may be due to the target teleport coordinates causing the agent to fall through the floor."
+                        + $"({Mathf.Abs(transform.position.y - pos.y)} > 1.0f) in the y position."
                 );
             }
         }

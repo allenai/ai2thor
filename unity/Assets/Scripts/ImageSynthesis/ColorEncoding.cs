@@ -1,7 +1,5 @@
-﻿using UnityEngine;
-using System.Security.Cryptography;
-
-
+﻿using System.Security.Cryptography;
+using UnityEngine;
 
 public class ColorEncoding {
     public static byte ReverseBits(byte value) {
@@ -24,9 +22,9 @@ public class ColorEncoding {
         }
 
         var sid =
-            (SparsifyBits((byte)(uid >> 16), 3) << 2) |
-            (SparsifyBits((byte)(uid >> 8), 3) << 1) |
-             SparsifyBits((byte)(uid), 3);
+            (SparsifyBits((byte)(uid >> 16), 3) << 2)
+            | (SparsifyBits((byte)(uid >> 8), 3) << 1)
+            | SparsifyBits((byte)(uid), 3);
         // Debug.Log(uid + " >>> " + System.Convert.ToString(sid, 2).PadLeft(24, '0'));
 
         var r = (byte)(sid >> 8);
@@ -39,12 +37,10 @@ public class ColorEncoding {
 
     public static Color EncodeTagAsColor(string tag) {
         using (MD5 md5 = MD5.Create()) {
-
             byte[] data = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(tag));
 
             return new Color32(data[0], data[1], data[2], data[3]);
         }
-
     }
 
     public static Color EncodeLayerAsColor(int layer) {
@@ -56,15 +52,25 @@ public class ColorEncoding {
         // Unity supports up to 32 layers in total
 
         // Lets create palette of unique 16 colors
-        var uniqueColors = new Color[] {
-            new Color(1,1,1,1), new Color(z,z,z,1),						// 0
-			new Color(1,1,z,1), new Color(1,z,1,1), new Color(z,1,1,1), // 
-			new Color(1,z,0,1), new Color(z,0,1,1), new Color(0,1,z,1), // 7
-			
-			new Color(1,0,0,1), new Color(0,1,0,1), new Color(0,0,1,1), // 8
-			new Color(1,1,0,1), new Color(1,0,1,1), new Color(0,1,1,1), // 
-			new Color(1,z,z,1), new Color(z,1,z,1)						// 15
-		};
+        var uniqueColors = new Color[]
+        {
+            new Color(1, 1, 1, 1),
+            new Color(z, z, z, 1), // 0
+            new Color(1, 1, z, 1),
+            new Color(1, z, 1, 1),
+            new Color(z, 1, 1, 1), //
+            new Color(1, z, 0, 1),
+            new Color(z, 0, 1, 1),
+            new Color(0, 1, z, 1), // 7
+            new Color(1, 0, 0, 1),
+            new Color(0, 1, 0, 1),
+            new Color(0, 0, 1, 1), // 8
+            new Color(1, 1, 0, 1),
+            new Color(1, 0, 1, 1),
+            new Color(0, 1, 1, 1), //
+            new Color(1, z, z, 1),
+            new Color(z, 1, z, 1) // 15
+        };
 
         // Create as many colors as necessary by using base 16 color palette
         // To create more than 16 - will simply adjust brightness with 'divider'

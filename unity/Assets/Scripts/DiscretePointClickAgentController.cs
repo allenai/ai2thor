@@ -5,15 +5,19 @@ using UnityEngine.UI;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class DiscretePointClickAgentController : MonoBehaviour {
-        [SerializeField] private float HandMoveMagnitude = 0.1f;
+        [SerializeField]
+        private float HandMoveMagnitude = 0.1f;
         public PhysicsRemoteFPSAgentController PhysicsController = null;
         private GameObject InputMode_Text = null;
         private ObjectHighlightController highlightController = null;
         private GameObject throwForceBar = null;
         private bool handMode = false;
+
         void Start() {
             var Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
-            AgentManager agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            AgentManager agentManager = GameObject
+                .Find("PhysicsSceneManager")
+                .GetComponentInChildren<AgentManager>();
             agentManager.SetUpPhysicsController();
             PhysicsController = agentManager.PrimaryAgent as PhysicsRemoteFPSAgentController;
 
@@ -21,7 +25,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Cursor.lockState = CursorLockMode.None;
             Debug_Canvas.GetComponent<Canvas>().enabled = true;
 
-            highlightController = new ObjectHighlightController(PhysicsController, PhysicsController.maxVisibleDistance, true, false);
+            highlightController = new ObjectHighlightController(
+                PhysicsController,
+                PhysicsController.maxVisibleDistance,
+                true,
+                false
+            );
         }
 
         public void OnEnable() {
@@ -33,7 +42,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (throwForceBar) {
                 throwForceBar.SetActive(false);
             }
-            
+
             // InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
             // TODO: move debug input field script from, Input Field and disable here
         }
@@ -89,12 +98,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         executeAction("LookDown");
                     }
 
-                    if (Input.GetKeyDown(KeyCode.LeftArrow))//|| Input.GetKeyDown(KeyCode.J))
+                    if (Input.GetKeyDown(KeyCode.LeftArrow)) //|| Input.GetKeyDown(KeyCode.J))
                     {
                         executeAction("RotateLeft");
                     }
 
-                    if (Input.GetKeyDown(KeyCode.RightArrow))//|| Input.GetKeyDown(KeyCode.L))
+                    if (Input.GetKeyDown(KeyCode.RightArrow)) //|| Input.GetKeyDown(KeyCode.L))
                     {
                         executeAction("RotateRight");
                     }

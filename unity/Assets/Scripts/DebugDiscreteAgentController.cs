@@ -1,8 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using System;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class DebugDiscreteAgentController : MonoBehaviour {
@@ -10,14 +10,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public AgentManager AManager = null;
         private InputField inputField;
 
-        [SerializeField] private GameObject InputMode_Text = null;
+        [SerializeField]
+        private GameObject InputMode_Text = null;
+
         // Start is called before the first frame update
         void Start() {
             InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
             var Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
             inputField = InputFieldObj.GetComponent<InputField>();
 
-            AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            AManager = GameObject
+                .Find("PhysicsSceneManager")
+                .GetComponentInChildren<AgentManager>();
 
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
@@ -27,7 +31,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Cursor.visible = true;
                 Cursor.lockState = CursorLockMode.None;
             }
-
         }
 
         BaseFPSAgentController CurrentActiveController() {
@@ -41,9 +44,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void OnDisable() {
-
-        }
+        public void OnDisable() { }
 
         void Update() {
             // use these for the Breakable Window demo video
@@ -81,17 +82,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // if we press enter, select the input field
             if (CurrentActiveController().ReadyForCommand) {
                 if (Input.GetKeyDown(KeyCode.Return)) {
-                    UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(InputFieldObj);
+                    UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(
+                        InputFieldObj
+                    );
                 }
 
                 if (!inputField.isFocused) {
-                    bool shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+                    bool shiftHeld =
+                        Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
                     bool altHeld = Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt);
                     bool noModifier = (!shiftHeld) && (!altHeld);
                     bool armMoveMode = shiftHeld && !altHeld;
                     bool armRotateMode = shiftHeld && altHeld;
 
-                    bool isArticulated = CurrentActiveController().GetType() == typeof(ArticulatedAgentController);
+                    bool isArticulated =
+                        CurrentActiveController().GetType() == typeof(ArticulatedAgentController);
                     Dictionary<string, object> action = new Dictionary<string, object>();
                     var physicsSimulationParams = new PhysicsSimulationParams() {
                         autoSimulation = false
@@ -129,7 +134,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 action["acceleration"] = 22.5f;
                             }
                         } else {
-
                             if (Input.GetKeyDown(KeyCode.W)) {
                                 action["action"] = "MoveAhead";
                                 action["moveMagnitude"] = WalkMagnitude;
@@ -170,13 +174,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if ((string)action["action"] != "") {
                             if (
                                 ((string)action["action"]).Contains("Move")
-                                && CurrentActiveController().GetType() == typeof(KinovaArmAgentController)
+                                && CurrentActiveController().GetType()
+                                    == typeof(KinovaArmAgentController)
                             ) {
                                 action["returnToStart"] = false;
                             }
                             this.CurrentActiveController().ProcessControlCommand(action);
                         }
-
                     } else if (armMoveMode) {
                         var actionName = "MoveArmRelative";
                         var localPos = new Vector3(0, 0, 0);
@@ -224,7 +228,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             }
 
                             if (actionName != "") {
-                                if (((string) action["action"]).StartsWith("MoveArm")) {
+                                if (((string)action["action"]).StartsWith("MoveArm")) {
                                     action["useLimits"] = useLimits;
                                 }
                                 this.CurrentActiveController().ProcessControlCommand(action);

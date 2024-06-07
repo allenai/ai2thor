@@ -19,11 +19,10 @@ public class SwapObjList {
     [Header("Materials for Off state")]
     [SerializeField]
     public Material[] OffMaterials;
-
 }
 
 public class CanToggleOnOff : MonoBehaviour {
-    // the array of moving parts and lightsources will correspond with each other based on their 
+    // the array of moving parts and lightsources will correspond with each other based on their
     // position in the array
 
     // these are any switches, dials, levers, etc that should change position or orientation when toggle on or off
@@ -47,7 +46,6 @@ public class CanToggleOnOff : MonoBehaviour {
     public GameObject[] effects;
 
     [Header("Animation Parameters")]
-
     // rotations or translations for the MovingParts when On
     [SerializeField]
     public Vector3[] OnPositions;
@@ -66,14 +64,19 @@ public class CanToggleOnOff : MonoBehaviour {
 
     private bool isCurrentlyLerping = false;
 
-    protected enum MovementType { Slide, Rotate };
+    protected enum MovementType {
+        Slide,
+        Rotate
+    };
 
     [SerializeField]
     protected MovementType movementType;
 
     // keep a list of all objects that can turn on, but must be in the closed state before turning on (ie: can't microwave an object with the door open!)
     protected List<SimObjType> MustBeClosedToTurnOn = new List<SimObjType>()
-    {SimObjType.Microwave};
+    {
+        SimObjType.Microwave
+    };
 
     // if this object controls the on/off state of ONLY itself, set to true (lamps, laptops, etc.)
     // if this object's on/off state is not controlled by itself, but instead controlled by another sim object (ex: stove burner is controlled by the stove knob) set this to false
@@ -115,17 +118,20 @@ public class CanToggleOnOff : MonoBehaviour {
     public void SetMovementToRotate() {
         movementType = MovementType.Rotate;
     }
-
 #endif
 
     // Use this for initialization
     void Start() {
-
         //setLightSourcesNames();
 
 #if UNITY_EDITOR
-        if (!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)) {
-            Debug.LogError(this.name + "is missing the CanToggleOnOff Secondary Property! Please set it!");
+        if (
+            !this.GetComponent<SimObjPhysics>()
+                .DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)
+        ) {
+            Debug.LogError(
+                this.name + "is missing the CanToggleOnOff Secondary Property! Please set it!"
+            );
         }
 #endif
     }
@@ -135,7 +141,7 @@ public class CanToggleOnOff : MonoBehaviour {
     // public void setLightSourcesNames () {
     //     for (int i = 0; i < LightSources.Length; i++ ) {
     //         Light actualLightCauseSometimesTheseAreNested = LightSources[i].GetComponentInChildren<Light>();
-    //         actualLightCauseSometimesTheseAreNested.name = 
+    //         actualLightCauseSometimesTheseAreNested.name =
     //         this.GetComponent<SimObjPhysics>().objectID + "|" + LightSources[i].GetComponentInChildren<Light>().type.ToString()+ "|" + i.ToString();
     //     }
     // }
@@ -143,12 +149,11 @@ public class CanToggleOnOff : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         // // test if it can open without Agent Command - Debug Purposes
-        #if UNITY_EDITOR
-        if (Input.GetKeyDown(KeyCode.Minus))
-        {
+#if UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.Minus)) {
             Toggle();
         }
-        #endif
+#endif
     }
 
     public void Toggle() {
@@ -156,7 +161,7 @@ public class CanToggleOnOff : MonoBehaviour {
         if (!SelfControlled) {
             return;
         }
-        
+
         isCurrentlyLerping = true;
         // check if there are moving parts
         // check if there are lights/materials etc to swap out
@@ -164,25 +169,27 @@ public class CanToggleOnOff : MonoBehaviour {
             if (MovingParts.Length > 0) {
                 for (int i = 0; i < MovingParts.Length; i++) {
                     if (movementType == MovementType.Slide) {
-                        StartCoroutine(LerpPosition(
-                            movingParts: MovingParts,
-                            offLocalPositions: OffPositions,
-                            onLocalPositions: OnPositions,
-                            initialOpenness: 0,
-                            desiredOpenness: 1,
-                            animationTime: animationTime
-                        ));
-                    }
-
-                    else if (movementType == MovementType.Rotate) { 
-                        StartCoroutine(LerpRotation(
-                            movingParts: MovingParts,
-                            offLocalRotations: OffPositions,
-                            onLocalRotations: OnPositions,
-                            initialOpenness: 0,
-                            desiredOpenness: 1,
-                            animationTime: animationTime
-                        ));
+                        StartCoroutine(
+                            LerpPosition(
+                                movingParts: MovingParts,
+                                offLocalPositions: OffPositions,
+                                onLocalPositions: OnPositions,
+                                initialOpenness: 0,
+                                desiredOpenness: 1,
+                                animationTime: animationTime
+                            )
+                        );
+                    } else if (movementType == MovementType.Rotate) {
+                        StartCoroutine(
+                            LerpRotation(
+                                movingParts: MovingParts,
+                                offLocalRotations: OffPositions,
+                                onLocalRotations: OnPositions,
+                                initialOpenness: 0,
+                                desiredOpenness: 1,
+                                animationTime: animationTime
+                            )
+                        );
                     }
                 }
             }
@@ -192,26 +199,28 @@ public class CanToggleOnOff : MonoBehaviour {
             if (MovingParts.Length > 0) {
                 for (int i = 0; i < MovingParts.Length; i++) {
                     if (movementType == MovementType.Slide) {
-                        StartCoroutine(LerpPosition(
-                            movingParts: MovingParts,
-                            offLocalPositions: OffPositions,
-                            onLocalPositions: OnPositions,
-                            initialOpenness: 1,
-                            desiredOpenness: 0,
-                            animationTime: animationTime
-                        ));
+                        StartCoroutine(
+                            LerpPosition(
+                                movingParts: MovingParts,
+                                offLocalPositions: OffPositions,
+                                onLocalPositions: OnPositions,
+                                initialOpenness: 1,
+                                desiredOpenness: 0,
+                                animationTime: animationTime
+                            )
+                        );
+                    } else if (movementType == MovementType.Rotate) {
+                        StartCoroutine(
+                            LerpRotation(
+                                movingParts: MovingParts,
+                                offLocalRotations: OffPositions,
+                                onLocalRotations: OnPositions,
+                                initialOpenness: 1,
+                                desiredOpenness: 0,
+                                animationTime: animationTime
+                            )
+                        );
                     }
-
-                    else if (movementType == MovementType.Rotate) { 
-                        StartCoroutine(LerpRotation(
-                            movingParts: MovingParts,
-                            offLocalRotations: OffPositions,
-                            onLocalRotations: OnPositions,
-                            initialOpenness: 1,
-                            desiredOpenness: 0,
-                            animationTime: animationTime
-                        ));
-                    }                    
                 }
             }
 
@@ -230,8 +239,8 @@ public class CanToggleOnOff : MonoBehaviour {
                 }
             }
 
-            if(effects.Length > 0) {
-                for (int i = 0; i< effects.Length; i++) {
+            if (effects.Length > 0) {
+                for (int i = 0; i < effects.Length; i++) {
                     effects[i].SetActive(false);
                 }
             }
@@ -239,7 +248,7 @@ public class CanToggleOnOff : MonoBehaviour {
             if (MaterialSwapObjects.Length > 0) {
                 for (int i = 0; i < MaterialSwapObjects.Length; i++) {
                     MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
-                    MaterialSwapObjects[i].OffMaterials;
+                        MaterialSwapObjects[i].OffMaterials;
                 }
             }
 
@@ -252,7 +261,6 @@ public class CanToggleOnOff : MonoBehaviour {
 
             isOn = false;
         }
-
         // if isOn false, set to true and then turn ON all lights and activate material swaps
         else {
             if (LightSources.Length > 0) {
@@ -261,8 +269,8 @@ public class CanToggleOnOff : MonoBehaviour {
                 }
             }
 
-            if(effects.Length > 0) {
-                for (int i = 0; i< effects.Length; i++) {
+            if (effects.Length > 0) {
+                for (int i = 0; i < effects.Length; i++) {
                     effects[i].SetActive(true);
                 }
             }
@@ -270,7 +278,7 @@ public class CanToggleOnOff : MonoBehaviour {
             if (MaterialSwapObjects.Length > 0) {
                 for (int i = 0; i < MaterialSwapObjects.Length; i++) {
                     MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
-                    MaterialSwapObjects[i].OnMaterials;
+                        MaterialSwapObjects[i].OnMaterials;
                 }
             }
 
@@ -297,15 +305,22 @@ public class CanToggleOnOff : MonoBehaviour {
         while (elapsedTime < animationTime) {
             elapsedTime += Time.fixedDeltaTime;
             float currentOpenness = Mathf.Clamp(
-                initialOpenness + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
+                initialOpenness
+                    + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
                 Mathf.Min(initialOpenness, desiredOpenness),
-                Mathf.Max(initialOpenness, desiredOpenness));
+                Mathf.Max(initialOpenness, desiredOpenness)
+            );
             for (int i = 0; i < movingParts.Length; i++) {
-                movingParts[i].transform.localPosition = Vector3.Lerp(offLocalPositions[i], onLocalPositions[i], currentOpenness);
+                movingParts[i].transform.localPosition = Vector3.Lerp(
+                    offLocalPositions[i],
+                    onLocalPositions[i],
+                    currentOpenness
+                );
             }
         }
         yield break;
     }
+
     private protected IEnumerator LerpRotation(
         GameObject[] movingParts,
         Vector3[] offLocalRotations,
@@ -318,30 +333,36 @@ public class CanToggleOnOff : MonoBehaviour {
         while (elapsedTime < animationTime) {
             elapsedTime += Time.fixedDeltaTime;
             float currentOpenness = Mathf.Clamp(
-                initialOpenness + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
+                initialOpenness
+                    + (desiredOpenness - initialOpenness) * (elapsedTime / animationTime),
                 Mathf.Min(initialOpenness, desiredOpenness),
-                Mathf.Max(initialOpenness, desiredOpenness));
+                Mathf.Max(initialOpenness, desiredOpenness)
+            );
             for (int i = 0; i < MovingParts.Length; i++) {
-                    MovingParts[i].transform.localRotation = Quaternion.Lerp(Quaternion.Euler(offLocalRotations[i]), Quaternion.Euler(onLocalRotations[i]), currentOpenness);
-                }
+                MovingParts[i].transform.localRotation = Quaternion.Lerp(
+                    Quaternion.Euler(offLocalRotations[i]),
+                    Quaternion.Euler(onLocalRotations[i]),
+                    currentOpenness
+                );
+            }
         }
         yield break;
     }
+
     public bool GetIsCurrentlyLerping() {
         if (this.isCurrentlyLerping) {
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
-    
+
     // [ContextMenu("Get On-Off Materials")]
     // void ContextOnOffMaterials()
     // {
     // 	foreach (SwapObjList swap in MaterialSwapObjects)
     // 	{
-    // 		List<Material> list = 
+    // 		List<Material> list =
     // 		new List<Material>(swap.MyObject.GetComponent<MeshRenderer>().sharedMaterials);
 
     // 		// print(swap.MyObject.name);

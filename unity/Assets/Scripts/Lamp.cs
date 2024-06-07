@@ -1,10 +1,9 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 [ExecuteInEditMode]
 public class Lamp : MonoBehaviour {
-
     public SimObj ParentObj;
     public bool EditorOn = false;
     public bool OnByDefault = true;
@@ -24,7 +23,8 @@ public class Lamp : MonoBehaviour {
             Animator a = ParentObj.gameObject.GetComponent<Animator>();
             if (a == null) {
                 a = ParentObj.gameObject.AddComponent<Animator>();
-                a.runtimeAnimatorController = Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
+                a.runtimeAnimatorController =
+                    Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
             }
         } else {
             if (OnByDefault) {
@@ -40,7 +40,12 @@ public class Lamp : MonoBehaviour {
         }
 
         // lights.length was == null
-        if (LampshadeRenderer == null || OnMaterial == null || OffMaterial == null || Lights.Length == 0) {
+        if (
+            LampshadeRenderer == null
+            || OnMaterial == null
+            || OffMaterial == null
+            || Lights.Length == 0
+        ) {
             Debug.LogError("Required item null in lamp " + name);
             return;
         }

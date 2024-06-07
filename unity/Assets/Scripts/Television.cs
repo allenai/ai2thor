@@ -1,10 +1,9 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 [ExecuteInEditMode]
 public class Television : MonoBehaviour {
-
     public SimObj ParentSimObj;
     public Renderer[] ScreenRenderers;
     public int[] ScreenMatIndexes;

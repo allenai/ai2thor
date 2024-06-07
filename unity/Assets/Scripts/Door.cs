@@ -1,10 +1,9 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 [ExecuteInEditMode]
 public class Door : MonoBehaviour {
-
     public SimObj ParentObj;
     public Vector3 OpenRotation;
     public Vector3 ClosedRotation;
@@ -21,7 +20,8 @@ public class Door : MonoBehaviour {
             Animator a = ParentObj.gameObject.GetComponent<Animator>();
             if (a == null) {
                 a = ParentObj.gameObject.AddComponent<Animator>();
-                a.runtimeAnimatorController = Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
+                a.runtimeAnimatorController =
+                    Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
             }
         }
     }

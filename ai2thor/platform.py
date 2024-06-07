@@ -57,9 +57,7 @@ class Linux64(BaseLinuxPlatform):
 
         displays = cls._valid_x_displays(request.width, request.height)
         if displays:
-            message += "The following valid displays were found %s" % (
-                ", ".join(displays)
-            )
+            message += "The following valid displays were found %s" % (", ".join(displays))
         else:
             message += "If you have a NVIDIA GPU, please run: sudo ai2thor-xorg start"
 
@@ -95,9 +93,7 @@ class Linux64(BaseLinuxPlatform):
                 # this Xlib.display will find a valid screen if an
                 # invalid screen was passed in (e.g. :0.9999999 -> :0.1)
                 if screen_parts[1] != str(disp_screen.get_default_screen()):
-                    errors.append(
-                        "Invalid display, non-existent screen: %s" % display_screen_str
-                    )
+                    errors.append("Invalid display, non-existent screen: %s" % display_screen_str)
 
             if "GLX" not in disp_screen.list_extensions():
                 errors.append(
@@ -126,9 +122,7 @@ class Linux64(BaseLinuxPlatform):
                     % (display_screen_str, disp_screen.screen()["root_depth"])
                 )
         except (Xlib.error.DisplayNameError, Xlib.error.DisplayConnectionError) as e:
-            errors.append(
-                "Invalid display: %s. Failed to connect %s " % (display_screen_str, e)
-            )
+            errors.append("Invalid display: %s. Failed to connect %s " % (display_screen_str, e))
 
         return errors
 
@@ -151,9 +145,7 @@ class Linux64(BaseLinuxPlatform):
                         valid_displays.append(disp_screen_str)
 
             except Xlib.error.DisplayConnectionError as e:
-                warnings.warn(
-                    "could not connect to X Display: %s, %s" % (display_str, e)
-                )
+                warnings.warn("could not connect to X Display: %s, %s" % (display_str, e))
 
         return valid_displays
 
@@ -162,9 +154,7 @@ class Linux64(BaseLinuxPlatform):
         if request.headless:
             return []
         elif request.x_display:
-            return cls._validate_screen(
-                request.x_display, request.width, request.height
-            )
+            return cls._validate_screen(request.x_display, request.width, request.height)
         elif cls._select_x_display(request.width, request.height) is None:
             return ["No valid X display found"]
         else:
@@ -179,9 +169,7 @@ class OSXIntel64(BasePlatform):
     @classmethod
     def executable_path(cls, base_dir, name):
         plist = cls.parse_plist(base_dir, name)
-        return os.path.join(
-            base_dir, name + ".app", "Contents/MacOS", plist["CFBundleExecutable"]
-        )
+        return os.path.join(base_dir, name + ".app", "Contents/MacOS", plist["CFBundleExecutable"])
 
     @classmethod
     def parse_plist(cls, base_dir, name):
@@ -219,18 +207,22 @@ class CloudRendering(BaseLinuxPlatform):
 class WebGL(BasePlatform):
     pass
 
+
 class StandaloneWindows64(BasePlatform):
     @classmethod
     def executable_path(cls, base_dir, name):
         return os.path.join(base_dir, name)
 
+
 def select_platforms(request):
     candidates = []
-    system_platform_map = dict(Linux=(Linux64,CloudRendering), Darwin=(OSXIntel64,), Windows=(StandaloneWindows64,))
+    system_platform_map = dict(
+        Linux=(Linux64, CloudRendering), Darwin=(OSXIntel64,), Windows=(StandaloneWindows64,)
+    )
     for p in system_platform_map.get(request.system, ()):
         if not p.enabled:
             continue
-        # 
+        #
         # if p == CloudRendering and request.x_display is not None:
         #    continue
         candidates.append(p)
@@ -238,5 +230,9 @@ def select_platforms(request):
 
 
 STR_PLATFORM_MAP = dict(
-    CloudRendering=CloudRendering, Linux64=Linux64, OSXIntel64=OSXIntel64, WebGL=WebGL, StandaloneWindows64=StandaloneWindows64
+    CloudRendering=CloudRendering,
+    Linux64=Linux64,
+    OSXIntel64=OSXIntel64,
+    WebGL=WebGL,
+    StandaloneWindows64=StandaloneWindows64,
 )

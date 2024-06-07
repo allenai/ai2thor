@@ -82,14 +82,10 @@ def execute_command(controller, command, action_dict_addition):
         if "moveSpeed" in action_dict_addition:
             action_dict_addition["speed"] = action_dict_addition["moveSpeed"]
         controller.step(
-            action="MoveContinuous",
-            direction=dict(x=0.0, y=0.0, z=0.2),
-            **action_dict_addition
+            action="MoveContinuous", direction=dict(x=0.0, y=0.0, z=0.2), **action_dict_addition
         )
         action_details = dict(
-            action="MoveContinuous",
-            direction=dict(x=0.0, y=0.0, z=0.2),
-            **action_dict_addition
+            action="MoveContinuous", direction=dict(x=0.0, y=0.0, z=0.2), **action_dict_addition
         )
 
     elif command == "rr":
@@ -98,15 +94,11 @@ def execute_command(controller, command, action_dict_addition):
         if "moveSpeed" in action_dict_addition:
             action_dict_addition["speed"] = action_dict_addition["moveSpeed"]
         controller.step(action="RotateContinuous", degrees=45, **action_dict_addition)
-        action_details = dict(
-            action="RotateContinuous", degrees=45, **action_dict_addition
-        )
+        action_details = dict(action="RotateContinuous", degrees=45, **action_dict_addition)
     elif command == "ll":
         action_dict_addition = copy.copy(action_dict_addition)
         controller.step(action="RotateContinuous", degrees=-45, **action_dict_addition)
-        action_details = dict(
-            action="RotateContinuous", degrees=-45, **action_dict_addition
-        )
+        action_details = dict(action="RotateContinuous", degrees=-45, **action_dict_addition)
     elif command == "m":
         controller.step(action="MoveAhead", **action_dict_addition)
         action_details = dict(action="MoveAhead", **action_dict_addition)
@@ -129,19 +121,15 @@ def execute_command(controller, command, action_dict_addition):
 
         controller.step(
             action="MoveMidLevelArm",
-            position=dict(
-                x=base_position["x"], y=base_position["y"], z=base_position["z"]
-            ),
+            position=dict(x=base_position["x"], y=base_position["y"], z=base_position["z"]),
             handCameraSpace=False,
-            **action_dict_addition
+            **action_dict_addition,
         )
         action_details = dict(
             action="MoveMidLevelArm",
-            position=dict(
-                x=base_position["x"], y=base_position["y"], z=base_position["z"]
-            ),
+            position=dict(x=base_position["x"], y=base_position["y"], z=base_position["z"]),
             handCameraSpace=False,
-            **action_dict_addition
+            **action_dict_addition,
         )
 
     elif command in ["u", "j"]:
@@ -150,12 +138,8 @@ def execute_command(controller, command, action_dict_addition):
         elif base_position["h"] < 0:
             base_position["h"] = 0
 
-        controller.step(
-            action="MoveArmBase", y=base_position["h"], **action_dict_addition
-        )
-        action_details = dict(
-            action="MoveArmBase", y=base_position["h"], **action_dict_addition
-        )
+        controller.step(action="MoveArmBase", y=base_position["h"], **action_dict_addition)
+        action_details = dict(action="MoveArmBase", y=base_position["h"], **action_dict_addition)
 
     return action_details
 

@@ -1,7 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System;
 using Random = UnityEngine.Random;
 
 public class Fill : MonoBehaviour {
@@ -31,7 +31,11 @@ public class Fill : MonoBehaviour {
 
     void Awake() {
 #if UNITY_EDITOR
-        if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)) {
+        if (
+            !gameObject
+                .GetComponent<SimObjPhysics>()
+                .DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled)
+        ) {
             Debug.LogError(gameObject.name + " is missing the CanBeFilled secondary property!");
         }
 #endif
@@ -76,9 +80,7 @@ public class Fill : MonoBehaviour {
         // check if this object has whichLiquid setup as fillable: If the object has a null reference this object
         // is not setup for that liquid
         if (Liquids[whichLiquid] == null) {
-            throw new ArgumentException(
-                $"The liquid {whichLiquid} is not setup for this object."
-            );
+            throw new ArgumentException($"The liquid {whichLiquid} is not setup for this object.");
         }
 
         Liquids[whichLiquid].transform.gameObject.SetActive(true);
@@ -101,7 +103,7 @@ public class Fill : MonoBehaviour {
     public void EmptyObject() {
         // for each thing in Liquids, if it exists set it to false and then set bools appropriately
         foreach (KeyValuePair<string, GameObject> gogogo in Liquids) {
-            // if the value field is not null and has a reference to a liquid object 
+            // if the value field is not null and has a reference to a liquid object
             if (gogogo.Value != null) {
                 gogogo.Value.SetActive(false);
             }

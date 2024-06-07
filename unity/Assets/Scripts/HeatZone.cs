@@ -8,14 +8,10 @@ public class HeatZone : MonoBehaviour {
     public bool CanToastBread = true;
 
     // Start is called before the first frame update
-    void Start() {
-
-    }
+    void Start() { }
 
     // Update is called once per frame
-    void Update() {
-
-    }
+    void Update() { }
 
     public void OnTriggerStay(Collider other) {
         if (other.GetComponentInParent<SimObjPhysics>()) {
@@ -40,7 +36,6 @@ public class HeatZone : MonoBehaviour {
                         sopcook.Cook();
                     }
                 }
-
                 // oh it's not bread, no worries just cook it now
                 else if (sop.Type != SimObjType.BreadSliced) {
                     if (!sopcook.IsCooked()) {
@@ -48,8 +43,6 @@ public class HeatZone : MonoBehaviour {
                     }
                 }
             }
-
-
         }
     }
 }

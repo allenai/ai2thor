@@ -40,8 +40,8 @@ def queue_get(que, unity_proc=None, timeout: Optional[float] = 100.0):
 
     max_attempts = (
         float("inf")
-        if timeout is None or timeout == float("inf") else
-        max(int(math.ceil(timeout / queue_get_timeout_per_try)), 1)
+        if timeout is None or timeout == float("inf")
+        else max(int(math.ceil(timeout / queue_get_timeout_per_try)), 1)
     )
     while True:
         try:
@@ -130,9 +130,7 @@ class MultipartFormParser(object):
                 headers[k.strip()] = v.strip()
 
             ctype, ct_opts = werkzeug.http.parse_options_header(headers["Content-Type"])
-            cdisp, cd_opts = werkzeug.http.parse_options_header(
-                headers["Content-disposition"]
-            )
+            cdisp, cd_opts = werkzeug.http.parse_options_header(headers["Content-disposition"])
             assert cdisp == "form-data"
 
             if "filename" in cd_opts:
@@ -169,18 +167,14 @@ class WsgiServer(ai2thor.server.Server):
         app = Flask(
             __name__,
             template_folder=os.path.realpath(
-                os.path.join(
-                    os.path.dirname(os.path.abspath(__file__)), "..", "templates"
-                )
+                os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "templates")
             ),
         )
 
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
         self.app = app
-        self.app.config.update(
-            PROPAGATE_EXCEPTIONS=False, JSONIFY_PRETTYPRINT_REGULAR=False
-        )
+        self.app.config.update(PROPAGATE_EXCEPTIONS=False, JSONIFY_PRETTYPRINT_REGULAR=False)
         self.port = port
         self.last_rate_timestamp = time.time()
         self.frame_counter = 0
@@ -201,7 +195,7 @@ class WsgiServer(ai2thor.server.Server):
             height=height,
             timeout=timeout,
             depth_format=depth_format,
-            add_depth_noise=add_depth_noise
+            add_depth_noise=add_depth_noise,
         )
 
         @app.route("/ping", methods=["get"])
@@ -220,10 +214,7 @@ class WsgiServer(ai2thor.server.Server):
                 )
                 metadata = json.loads(form.form["metadata"][0])
                 # backwards compatibility
-                if (
-                    "actionReturns" in form.form
-                    and len(form.form["actionReturns"][0]) > 0
-                ):
+                if "actionReturns" in form.form and len(form.form["actionReturns"][0]) > 0:
                     action_returns = json.loads(form.form["actionReturns"][0])
                 token = form.form["token"][0]
             else:
@@ -261,9 +252,7 @@ class WsgiServer(ai2thor.server.Server):
             else:
                 self.sequence_id = next_action["sequenceId"]
 
-            resp = make_response(
-                json.dumps(next_action, cls=ai2thor.server.NumpyAwareEncoder)
-            )
+            resp = make_response(json.dumps(next_action, cls=ai2thor.server.NumpyAwareEncoder))
 
             return resp
 
@@ -281,7 +270,7 @@ class WsgiServer(ai2thor.server.Server):
         return queue_get(
             self.request_queue,
             unity_proc=self.unity_proc,
-            timeout=self.timeout if timeout is None else timeout
+            timeout=self.timeout if timeout is None else timeout,
         )
 
     def send(self, action):

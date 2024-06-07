@@ -2,9 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class DirtCoordinateBounds {
-    public float minX, maxX, minZ, maxZ;
+    public float minX,
+        maxX,
+        minZ,
+        maxZ;
 }
 
 public class DirtSpawnPosition {
@@ -12,32 +14,34 @@ public class DirtSpawnPosition {
     public float z;
 }
 
-public class DecalSpawner : MonoBehaviour
-{
- // If true Guarantees that other spawn planes under the same parent will have the same stencil value
+public class DecalSpawner : MonoBehaviour {
+    // If true Guarantees that other spawn planes under the same parent will have the same stencil value
     [SerializeField]
     private bool sameStencilAsSiblings = false;
+
     [SerializeField]
     private int stencilWriteValue = 1;
+
     [SerializeField]
     private GameObject[] decals = null;
+
     [SerializeField]
     private float nextDecalWaitTimeSeconds = 1;
+
     [SerializeField]
     private Vector3 decalScale = new Vector3(0.3f, 0.3f, 0.2f);
+
     [SerializeField]
     private bool transparent = false;
 
     [SerializeField]
-
     protected bool stencilSet = false;
+
     // In local space
     private Vector3 transparentDecalSpawnOffset = new Vector3(0, 0, 0);
     private float prevTime;
 
     private static int currentStencilId = 0;
-
-
 
     void OnEnable() {
         //breakType = BreakType.Decal;
@@ -49,12 +53,16 @@ public class DecalSpawner : MonoBehaviour
                 if (!sameStencilAsSiblings) {
                     setStencilWriteValue(mr);
                 } else {
-                    var otherPlanes = this.transform.parent.gameObject.GetComponentsInChildren<DecalSpawner>();
+                    var otherPlanes =
+                        this.transform.parent.gameObject.GetComponentsInChildren<DecalSpawner>();
                     // var otherPlanes = this.gameObject.GetComponentsInParent<DecalCollision>();
                     // Debug.Log("other planes id " + this.stencilWriteValue + " len " + otherPlanes.Length);
                     foreach (var spawnPlane in otherPlanes) {
-
-                        if (spawnPlane.isActiveAndEnabled && spawnPlane.stencilSet && spawnPlane.sameStencilAsSiblings) {
+                        if (
+                            spawnPlane.isActiveAndEnabled
+                            && spawnPlane.stencilSet
+                            && spawnPlane.sameStencilAsSiblings
+                        ) {
                             this.stencilWriteValue = spawnPlane.stencilWriteValue;
                             this.stencilSet = true;
                             mr.material.SetInt("_StencilRef", this.stencilWriteValue);
@@ -73,17 +81,15 @@ public class DecalSpawner : MonoBehaviour
         }
     }
 
-    public void Update() {
-
-    }
-
+    public void Update() { }
 
     public DirtCoordinateBounds GetDirtCoordinateBounds() {
-
         DirtCoordinateBounds coords = new DirtCoordinateBounds();
 
         SimObjPhysics myParentSimObj = this.transform.GetComponentInParent<SimObjPhysics>();
-        Vector3[] spawnPointsArray = myParentSimObj.FindMySpawnPointsFromTriggerBoxInLocalSpace().ToArray();
+        Vector3[] spawnPointsArray = myParentSimObj
+            .FindMySpawnPointsFromTriggerBoxInLocalSpace()
+            .ToArray();
 
         coords.minX = spawnPointsArray[0].x;
         coords.maxX = spawnPointsArray[0].x;
@@ -108,19 +114,22 @@ public class DecalSpawner : MonoBehaviour
             }
         }
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         Debug.Log($"minX: {coords.minX}");
         Debug.Log($"minZ: {coords.minZ}");
         Debug.Log($"maxX: {coords.maxX}");
         Debug.Log($"maxZ: {coords.maxZ}");
 
-        #endif
+#endif
         return coords;
     }
 
-    public void SpawnDirt(int howMany = 1, int randomSeed = 0, DirtSpawnPosition[] spawnPointsArray = null) {
-        
-        if(spawnPointsArray == null) {
+    public void SpawnDirt(
+        int howMany = 1,
+        int randomSeed = 0,
+        DirtSpawnPosition[] spawnPointsArray = null
+    ) {
+        if (spawnPointsArray == null) {
             DirtCoordinateBounds c = GetDirtCoordinateBounds();
 
             Random.InitState(randomSeed);
@@ -131,16 +140,23 @@ public class DecalSpawner : MonoBehaviour
                 var randomZ = Random.Range(c.minZ, c.maxZ);
 
                 //generate random scale cause dirt
-                var randomScale = new Vector3(Random.Range(0.1f, 0.4f), Random.Range(0.1f, 0.4f), 0.2f);
+                var randomScale = new Vector3(
+                    Random.Range(0.1f, 0.4f),
+                    Random.Range(0.1f, 0.4f),
+                    0.2f
+                );
                 //this decalPosition is in local space relative to the trigger box
-                Vector3 decalPosition = new Vector3(randomX, 0.0f , randomZ);
+                Vector3 decalPosition = new Vector3(randomX, 0.0f, randomZ);
                 //spawnDecal expects coordinates in world space, so TransformPoint
-                spawnDecal(this.transform.parent.transform.TransformPoint(decalPosition) + this.transform.rotation * transparentDecalSpawnOffset
-                , this.transform.rotation,
-                randomScale, DecalRotationAxis.FORWARD);
+                spawnDecal(
+                    this.transform.parent.transform.TransformPoint(decalPosition)
+                        + this.transform.rotation * transparentDecalSpawnOffset,
+                    this.transform.rotation,
+                    randomScale,
+                    DecalRotationAxis.FORWARD
+                );
             }
         }
-
         //instead pass in exact coordinates you want to spawn decals
         //note this ignores the howMany variable, instead will spawn
         //decals based on exactly what spawn points are passed in via spawnPointsArray
@@ -148,10 +164,23 @@ public class DecalSpawner : MonoBehaviour
             Random.InitState(randomSeed);
 
             for (int i = 0; i < spawnPointsArray.Length; i++) {
-                var randomScale = new Vector3(Random.Range(0.1f, 0.4f), Random.Range(0.1f, 0.4f), 0.2f);
-                Vector3 decalPosition = new Vector3(spawnPointsArray[i].x, 0.0f, spawnPointsArray[i].z);
-                spawnDecal(this.transform.parent.transform.TransformPoint(decalPosition) + this.transform.rotation * transparentDecalSpawnOffset
-                , this.transform.rotation, randomScale, DecalRotationAxis.FORWARD);
+                var randomScale = new Vector3(
+                    Random.Range(0.1f, 0.4f),
+                    Random.Range(0.1f, 0.4f),
+                    0.2f
+                );
+                Vector3 decalPosition = new Vector3(
+                    spawnPointsArray[i].x,
+                    0.0f,
+                    spawnPointsArray[i].z
+                );
+                spawnDecal(
+                    this.transform.parent.transform.TransformPoint(decalPosition)
+                        + this.transform.rotation * transparentDecalSpawnOffset,
+                    this.transform.rotation,
+                    randomScale,
+                    DecalRotationAxis.FORWARD
+                );
             }
         }
     }
@@ -168,16 +197,31 @@ public class DecalSpawner : MonoBehaviour
         this.stencilSet = true;
     }
 
-    public void SpawnDecal(Vector3 position, bool worldSpace = false, Vector3? scale = null,  DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE) {
-
+    public void SpawnDecal(
+        Vector3 position,
+        bool worldSpace = false,
+        Vector3? scale = null,
+        DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE
+    ) {
         var pos = position;
         if (worldSpace) {
-            pos =  this.transform.InverseTransformPoint(position);
+            pos = this.transform.InverseTransformPoint(position);
         }
-        spawnDecal(pos, this.transform.rotation, scale.GetValueOrDefault(this.decalScale), randomRotationAxis);
+        spawnDecal(
+            pos,
+            this.transform.rotation,
+            scale.GetValueOrDefault(this.decalScale),
+            randomRotationAxis
+        );
     }
 
-    private void spawnDecal(Vector3 position, Quaternion rotation, Vector3 scale, DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE, int index = -1) {
+    private void spawnDecal(
+        Vector3 position,
+        Quaternion rotation,
+        Vector3 scale,
+        DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE,
+        int index = -1
+    ) {
         var minimumScale = this.transform.localScale;
         var decalScale = scale;
         if (minimumScale.x < scale.x || minimumScale.y < scale.y) {
@@ -197,7 +241,12 @@ public class DecalSpawner : MonoBehaviour
             randomRotation = Quaternion.AngleAxis(randomAngle, Vector3.right);
         }
 
-        var decalCopy = Object.Instantiate(decals[selectIndex], position, rotation * randomRotation, this.transform.parent);
+        var decalCopy = Object.Instantiate(
+            decals[selectIndex],
+            position,
+            rotation * randomRotation,
+            this.transform.parent
+        );
         decalCopy.transform.localScale = decalScale;
 
         var mr = decalCopy.GetComponent<MeshRenderer>();

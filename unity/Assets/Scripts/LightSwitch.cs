@@ -1,10 +1,9 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
 using System.Collections;
+using UnityEngine;
 
 [ExecuteInEditMode]
 public class LightSwitch : MonoBehaviour {
-
     public SimObj ParentObj;
     public bool OnByDefault = true;
     public bool EditorOn = false;
@@ -31,7 +30,8 @@ public class LightSwitch : MonoBehaviour {
             Animator a = ParentObj.gameObject.GetComponent<Animator>();
             if (a == null) {
                 a = ParentObj.gameObject.AddComponent<Animator>();
-                a.runtimeAnimatorController = Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
+                a.runtimeAnimatorController =
+                    Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
             }
         } else {
             if (OnByDefault) {
@@ -59,8 +59,12 @@ public class LightSwitch : MonoBehaviour {
             SourceRenderers[i].sharedMaterials = sharedMats;
         }
 
-        RenderSettings.ambientEquatorColor = on ? equatorColor : Color.Lerp(equatorColor, Color.black, 0.5f);
+        RenderSettings.ambientEquatorColor = on
+            ? equatorColor
+            : Color.Lerp(equatorColor, Color.black, 0.5f);
         RenderSettings.ambientSkyColor = on ? skyColor : Color.Lerp(skyColor, Color.black, 0.5f);
-        RenderSettings.ambientGroundColor = on ? groundColor : Color.Lerp(groundColor, Color.black, 0.5f);
+        RenderSettings.ambientGroundColor = on
+            ? groundColor
+            : Color.Lerp(groundColor, Color.black, 0.5f);
     }
 }

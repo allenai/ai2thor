@@ -58,9 +58,7 @@ def compute_single_spl(path, shortest_path, successful_path):
     return spl
 
 
-def get_shortest_path_to_object(
-    controller, object_id, initial_position, initial_rotation=None
-):
+def get_shortest_path_to_object(controller, object_id, initial_position, initial_rotation=None):
     """
     Computes the shortest path to an object from an initial position using a controller
     :param controller: agent controller
@@ -80,9 +78,7 @@ def get_shortest_path_to_object(
     if event.metadata["lastActionSuccess"]:
         return event.metadata["actionReturn"]["corners"]
     else:
-        raise ValueError(
-            "Unable to find shortest path for objectId '{}'".format(object_id)
-        )
+        raise ValueError("Unable to find shortest path for objectId '{}'".format(object_id))
 
 
 def get_shortest_path_to_object_type(
@@ -123,9 +119,7 @@ def get_shortest_path_to_object_type(
         )
 
 
-def get_shortest_path_to_point(
-    controller, initial_position, target_position, allowed_error=None
-):
+def get_shortest_path_to_point(controller, initial_position, target_position, allowed_error=None):
     """
     Computes the shortest path to a point from an initial position using an agent controller
     :param controller: agent controller

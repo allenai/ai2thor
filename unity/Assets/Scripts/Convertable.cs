@@ -1,7 +1,7 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
-using System.Collections;
 using System;
+using System.Collections;
+using UnityEngine;
 
 [Serializable]
 public class SimObjState {
@@ -14,9 +14,7 @@ public class Convertable : MonoBehaviour {
     public SimObjState[] States;
     public int DefaultState = 0;
     public int CurrentState {
-        get {
-            return currentState;
-        }
+        get { return currentState; }
     }
 #if UNITY_EDITOR
     public int EditorState;

@@ -14,11 +14,23 @@ public class Adjust_Slider : MonoBehaviour {
 
     void Update() {
         if (robotArmRoot.localPosition.y < minThreshold) {
-            this.transform.localPosition = new Vector3(this.transform.localPosition.x, localStartingPoint.y - Mathf.Abs(robotArmRoot.localPosition.y - minThreshold), this.transform.localPosition.z);
+            this.transform.localPosition = new Vector3(
+                this.transform.localPosition.x,
+                localStartingPoint.y - Mathf.Abs(robotArmRoot.localPosition.y - minThreshold),
+                this.transform.localPosition.z
+            );
         } else if (robotArmRoot.localPosition.y > maxThreshold) {
-            this.transform.localPosition = new Vector3(this.transform.localPosition.x, localStartingPoint.y + Mathf.Abs(robotArmRoot.localPosition.y - maxThreshold), this.transform.localPosition.z);
+            this.transform.localPosition = new Vector3(
+                this.transform.localPosition.x,
+                localStartingPoint.y + Mathf.Abs(robotArmRoot.localPosition.y - maxThreshold),
+                this.transform.localPosition.z
+            );
         }
 
-        this.transform.GetChild(0).position = new Vector3(this.transform.GetChild(0).position.x, robotArmRoot.position.y, this.transform.GetChild(0).position.z);
+        this.transform.GetChild(0).position = new Vector3(
+            this.transform.GetChild(0).position.x,
+            robotArmRoot.position.y,
+            this.transform.GetChild(0).position.z
+        );
     }
 }

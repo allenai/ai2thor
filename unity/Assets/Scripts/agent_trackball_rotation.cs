@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 public class agent_trackball_rotation : MonoBehaviour {
     float ballPositionToRotationRatio = 3 * Mathf.PI / 1200; // Circumference over 360 euler degrees
     float changeInPosition; // How far agent has moved
@@ -16,12 +17,20 @@ public class agent_trackball_rotation : MonoBehaviour {
 
     void Start() // Initialize "previous" values
     {
-        prevPosition = new Vector3(gameObject.transform.position.x, 0, gameObject.transform.position.z);
+        prevPosition = new Vector3(
+            gameObject.transform.position.x,
+            0,
+            gameObject.transform.position.z
+        );
         prevLookDirection = gameObject.transform.parent.transform.rotation.eulerAngles.y;
     }
 
     void Update() {
-        currentPosition = new Vector3(gameObject.transform.position.x, 0, gameObject.transform.position.z); // Ball's current position
+        currentPosition = new Vector3(
+            gameObject.transform.position.x,
+            0,
+            gameObject.transform.position.z
+        ); // Ball's current position
         currentLookDirection = gameObject.transform.parent.transform.rotation.eulerAngles.y; // Direction agent is looking in
 
         directionVector = currentPosition - prevPosition; // Direction of ball's movement
@@ -30,7 +39,9 @@ public class agent_trackball_rotation : MonoBehaviour {
         {
             changeInPosition = Mathf.Abs(Vector3.Magnitude(directionVector)); // How far agent has moved
             axisOfRotation = Vector3.Cross(Vector3.up, directionVector); // Axis of ball's rotation
-            rotationVector = Quaternion.AngleAxis(changeInPosition / ballPositionToRotationRatio, axisOfRotation).eulerAngles; // Ball's rotation values
+            rotationVector = Quaternion
+                .AngleAxis(changeInPosition / ballPositionToRotationRatio, axisOfRotation)
+                .eulerAngles; // Ball's rotation values
             gameObject.transform.Rotate(rotationVector, Space.World); // Rotate ball
             prevPosition = currentPosition; // Record position to compare against next frame
         } else // If agent is still

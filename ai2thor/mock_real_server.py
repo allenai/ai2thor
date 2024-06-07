@@ -40,22 +40,22 @@ class MockServer(object):
             content = request.json
 
             metadata = {
-                u"sequenceId": content["sequenceId"],
-                u"agents": [
+                "sequenceId": content["sequenceId"],
+                "agents": [
                     {
-                        u"agentId": 0,
-                        u"screenHeight": self.height,
-                        u"screenWidth": self.width,
-                        u"lastAction": content["action"],
-                        u"lastActionSuccess": True,
+                        "agentId": 0,
+                        "screenHeight": self.height,
+                        "screenWidth": self.width,
+                        "lastAction": content["action"],
+                        "lastActionSuccess": True,
                     }
                 ],
             }
 
             result = {
-                u"image": [random_image(self.height, self.width).tostring()],
-                u"image_depth": [],
-                u"metadata": metadata,
+                "image": [random_image(self.height, self.width).tostring()],
+                "image_depth": [],
+                "metadata": metadata,
             }
             out = msgpack.packb(result, use_bin_type=True)
 

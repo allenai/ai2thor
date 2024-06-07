@@ -44,7 +44,9 @@ class FieldType(IntEnum):
     THIRD_PARTY_FLOW = 16
     END_OF_MESSAGE = 255
 
+
 import signal
+
 
 # Define the function to be called on timeout
 def handle_fifo_connect_timeout(signum, frame):
@@ -64,7 +66,7 @@ class FifoServer(ai2thor.server.Server):
         timeout: Optional[float] = 100.0,
         depth_format=ai2thor.server.DepthFormat.Meters,
         add_depth_noise: bool = False,
-        start_unity: bool = True
+        start_unity: bool = True,
     ):
         if not start_unity:
             raise NotImplemented
@@ -123,9 +125,7 @@ class FifoServer(ai2thor.server.Server):
     def _create_header(self, message_type, body):
         return struct.pack(self.header_format, message_type, len(body))
 
-    def _read_with_timeout(
-        self, server_pipe, message_size: int, timeout: Optional[float]
-    ):
+    def _read_with_timeout(self, server_pipe, message_size: int, timeout: Optional[float]):
         if timeout is None:
             return server_pipe.read(message_size)
 
@@ -259,9 +259,7 @@ class FifoServer(ai2thor.server.Server):
         self.client_pipe.flush()
 
     def receive(self, timeout: Optional[float] = None):
-        metadata, files = self._recv_message(
-            timeout=self.timeout if timeout is None else timeout
-        )
+        metadata, files = self._recv_message(timeout=self.timeout if timeout is None else timeout)
 
         if metadata is None:
             raise ValueError("no metadata received from recv_message")
