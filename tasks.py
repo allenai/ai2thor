@@ -3704,7 +3704,9 @@ def format_cs(context):
     # Now run dotnet-format as it allows more configuration options (e.g. curly brace with no new line).
     # The following message will get emitted, this can safely be ignored
     # "Warnings were encountered while loading the workspace. Set the verbosity option to the 'diagnostic' level to log warnings"
-    for proj in glob.glob("unity/*.csproj"):
+    cs_projs = glob.glob("unity/*.csproj")
+    cs_projs = ["unity/AI2-THOR-Base.csproj"]
+    for proj in cs_projs:
         if any(
             k in proj
             for k in [
