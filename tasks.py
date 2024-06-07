@@ -3701,10 +3701,8 @@ def format_cs(context):
         shell=True,
     )
 
-    # Now run dotnet-format as it allows more configuration options (e.g. curly brace with no new line).
-    # The following message will get emitted, this can safely be ignored
-    # "Warnings were encountered while loading the workspace. Set the verbosity option to the 'diagnostic' level to log warnings"
-    cs_projs = glob.glob("unity/*.csproj")
+    # If you want to run on all csproj, all but AI2-THOR-Base are external packages so no need to
+    # cs_projs = glob.glob("unity/*.csproj")
     cs_projs = ["unity/AI2-THOR-Base.csproj"]
     for proj in cs_projs:
         if any(
@@ -3721,9 +3719,13 @@ def format_cs(context):
         ):
             continue
 
+        # Now run dotnet-format as it allows more configuration options (e.g. curly brace with no new line).
+        # The following message will get emitted, this can safely be ignored
+        # "Warnings were encountered while loading the workspace. Set the verbosity option to the 'diagnostic' level to log warnings"
+    
         print(f"\nRunning dotnet-format on {proj}")
         subprocess.check_call(
-            f".dotnet/dotnet tool run dotnet-format {proj} -w -s",
+            f".dotnet/dotnet tool run dotnet-format {proj} -w -s --verbosity diagnostic",
             shell=True,
         )
 
