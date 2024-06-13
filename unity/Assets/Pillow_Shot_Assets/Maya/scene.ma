@@ -1,6 +1,6 @@
 //Maya ASCII 2024 scene
 //Name: scene.ma
-//Last modified: Wed, Jun 12, 2024 08:52:18 PM
+//Last modified: Thu, Jun 13, 2024 08:41:16 AM
 //Codeset: 1252
 requires maya "2024";
 requires "stereoCamera" "10.0";
@@ -13,12 +13,12 @@ fileInfo "product" "Maya 2024";
 fileInfo "version" "2024";
 fileInfo "cutIdentifier" "202310181224-69282f2959";
 fileInfo "osv" "Windows 11 Home v2009 (Build: 22631)";
-fileInfo "UUID" "08B02A63-4760-A431-7ECB-BA92AAEE15CD";
+fileInfo "UUID" "59DCEB79-4848-9366-8445-5D80AE9A52B4";
 createNode transform -s -n "persp";
 	rename -uid "D781439B-4C30-AD9A-94EC-A29823C9DC69";
 	setAttr ".v" no;
-	setAttr ".t" -type "double3" -1351.0715321636428 1109.1160020123036 1050.7424992441095 ;
-	setAttr ".r" -type "double3" -51.338352728388664 356.20000000008167 2.7891173091216096e-15 ;
+	setAttr ".t" -type "double3" -1822.5429383664343 1027.007251637307 979.94260613910251 ;
+	setAttr ".r" -type "double3" -45.938352728388722 325.00000000008095 1.9413701666465525e-15 ;
 createNode camera -s -n "perspShape" -p "persp";
 	rename -uid "E9B57461-459D-F90E-5B39-A0B179F45F47";
 	setAttr -k off ".v" no;
@@ -363,6 +363,7 @@ createNode mesh -n "Wall_1Shape" -p "Wall_1";
 	setAttr ".iog[0].og[0].gcl" -type "componentList" 1 "f[0:11]";
 	setAttr ".vir" yes;
 	setAttr ".vif" yes;
+	setAttr ".pv" -type "double2" 0.28828410431742668 -0.00026008486747741699 ;
 	setAttr ".uvst[0].uvsn" -type "string" "UVSet0";
 	setAttr -s 27 ".uvst[0].uvsp[0:26]" -type "float2" -0.60816157 -0.41632032
 		 -0.10173998 -0.41632035 -0.54403484 0.85993862 -0.60816157 0.85993862 -0.10173997
@@ -4695,7 +4696,7 @@ createNode groupId -n "groupId371";
 	rename -uid "C0A4C2D8-4F6D-DE5D-1C11-219B4914CC62";
 	setAttr ".ihi" 0;
 createNode mayaUsdLayerManager -n "mayaUsdLayerManager1";
-	rename -uid "1A2E6ACA-4673-631C-4FC5-5CB2DB3676EB";
+	rename -uid "E028BB73-4759-8340-E636-A89DD51D2636";
 	setAttr ".sst" -type "string" "";
 select -ne :time1;
 	setAttr ".o" 0;
