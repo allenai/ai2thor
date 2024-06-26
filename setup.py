@@ -54,11 +54,12 @@ setup(
         "python-xlib",
         "opencv-python",
         "werkzeug>=0.15.0",  # needed for unix socket support
-        "compress_pickle"
+        "compress_pickle",
+        "grpcio",
+        "grpcio-tools",
+        "protobuf<=3.20.3" #3.2.x or lower, not >=4.0.0"
     ],
     setup_requires=["pytest-runner"],
     tests_require=["pytest", "pytest-timeout", "pytest-cov", "jsonschema", "shapely", "pytest-mock", "dictdiffer"],
     scripts=["scripts/ai2thor-xorg"],
-    include_package_data=False,
 )
-

@@ -1,0 +1,49 @@
+// reference : https://github.com/boston-dynamics/spot-sdk/blob/master/protos/bosdyn/api/robot_state.proto
+
+syntax = "proto3";
+
+package ai2thor.api;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+service RobotStateService {
+    rpc GetRobotState(RobotStateRequest) returns (RobotState) {}
+}
+
+message RobotStateRequest {
+    string client_name = 1;
+    // bool disable_rpc_logging = 2;
+}
+
+message RobotState {
+    google.protobuf.Timestamp timestamp = 1;
+
+    RobotBaseState base = 2;
+    
+    RobotArmState arm = 3;
+
+}
+
+message XYZ {
+    //google.protobuf.DoubleValue x = 1;
+    float x = 1;
+    float y = 2;
+    float z = 3;
+}
+
+message RobotBaseState {
+    XYZ position = 1;
+    XYZ rotation = 2;
+}
+
+message RobotArmState {
+    float extension_pos = 6;
+    float extension_force = 1;
+    float lift_pos = 2;
+    float lift_force = 3; // field number
+    float wrist_degree = 4;
+    float wrist_effort_percent = 5;
+    float grip_percent = 7;
+    float grip_effort = 8;
+}

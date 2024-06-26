@@ -7,6 +7,7 @@ import warnings
 from pprint import pprint
 import shutil
 import copy
+import time
 
 from ai2thor.server import Event, MultiAgentEvent, DepthFormat
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
@@ -82,16 +83,58 @@ class Controller(object):
 
         return self.last_event
 
-    def step(self, action=None, **action_args):
+    async def async_get_images(self, shape=(1280,720)):
+        import aiohttp
 
+        all_images = []
+        
+        async with aiohttp.ClientSession as session:
+            async with session.post(self._get_url('nav-rgb'), json=shape) as response:
+                data_rgb = await response.content
+                message = msgpack.unpackb(data_rgb, raw=False)
+                im_bytes = np.frombuffer(message["data"], dtype=np.uint8)
+                im_bytes = cv2.imdecode(im_bytes, flags=1)
+                image_rgb = im_bytes.reshape(message["height"], message["width"], -1)
+                all_images.append(image_rgb)
+                print("RGB done")
+
+            async with session.post(self._get_url('nav-depth'), json=shape) as response:
+                data_depth = await response.content            
+                message = msgpack.unpackb(data_rgb, raw=False)
+                im_bytes = np.frombuffer(message["data"], dtype=np.uint8)
+                im_bytes = cv2.imdecode(im_bytes, flags=1)
+                image_depth = im_bytes.reshape(message["height"], message["width"], -1)
+                all_images.append(image_depth)
+                print("Depth done")
+
+            #return image_rgb, image_depth
+            await asyncio.gather(*all_images)
+        print(len(all_images))
+
+
+    def get_image(self, source="nav-rgb", shape=(1280,720)):
+        start_time = time.time()
+        r = requests.post(self._get_url(source), json=shape)
+        print("processing_time: ", time.time()-start_time)
+
+        message = msgpack.unpackb(r.content, raw=False)
+        im_bytes = np.frombuffer(message["data"], dtype=np.uint8)
+        #im_bytes = cv2.imdecode(im_bytes, flags=1)
+        image = im_bytes.reshape(message["height"], message["width"], -1)
+        return image
+
+    def step(self, action=None, **action_args):
+        #start_time = time.time()
+        
         if type(action) is dict:
             action = copy.deepcopy(action)  # prevent changes from leaking
         else:
             action = dict(action=action)
-
+        
         raise_for_failure = action_args.pop("raise_for_failure", False)
 
         action.update(action_args)
+        #print("1 processing_time: ", time.time()-start_time)
 
         if self.headless:
             action["renderImage"] = False
@@ -100,13 +143,18 @@ class Controller(object):
         action["agentId"] = self.agent_id
 
         self.last_action = action
+        #print("2 processing_time: ", time.time()-start_time)
 
         rotation = action.get("rotation")
         if rotation is not None and type(rotation) != dict:
             action["rotation"] = {}
             action["rotation"]["y"] = rotation
 
+        #print("3 processing_time: ", time.time()-start_time)
+        start_time = time.time()
         payload = self._post_event("step", action)
+        print("Response return time: ", time.time()-start_time)
+
         events = []
         for i, agent_metadata in enumerate(payload["metadata"]["agents"]):
             event = Event(agent_metadata)
@@ -166,6 +214,7 @@ class Controller(object):
         # pprint("Display event:")
         # Controller._display_step_event(self.last_event)
 
+        print("[Step] processing_time: ", time.time()-start_time)
         return self.last_event
 
     def interact(
@@ -185,8 +234,27 @@ class Controller(object):
             metadata=metadata,
         )
 
+    """
+    async def _post_event(self, route="", data=None):
+        start_time = time.time()
+        
+        import asyncio
+        loop = asyncio.get_event_loop()
+        future1 = loop.run_in_executor(None, requests.post(self._get_url(route), json=data))
+        future2 = loop.run_in_executor(None, requests.post(self._get_url(route), json=data))
+        response1 = await future1
+        response2 = await future2
+        print("processing_time: ", time.time()-start_time, response1.content)
+        print("processing_time: ", time.time()-start_time, response2.content) 
+        return msgpack.unpackb(response1.content, raw=False)
+    """
+
     def _post_event(self, route="", data=None):
+        start_time = time.time()
+        
         r = requests.post(self._get_url(route), json=data)
+        print("processing_time: ", time.time()-start_time)
+
         pprint('ACTION "{}"'.format(data["action"]))
         pprint("POST")
         # pprint(r.content)
