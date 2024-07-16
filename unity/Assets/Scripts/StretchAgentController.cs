@@ -68,33 +68,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var secondaryCameraName = "SecondaryCamera";
 
-            // activate arm-camera
-            Camera fp_camera_2 = m_CharacterController
-                .transform.Find(secondaryCameraName)
-                .GetComponent<Camera>();
-            fp_camera_2.gameObject.SetActive(true);
-            agentManager.registerAsThirdPartyCamera(fp_camera_2);
-            if (initializeAction.antiAliasing != null) {
-                agentManager.updateAntiAliasing(
-                    postProcessLayer: fp_camera_2.gameObject.GetComponentInChildren<PostProcessLayer>(),
-                    antiAliasing: initializeAction.antiAliasing
-                );
-            }
+            // DISABLED UNTIL ROSE ASKS FOR SECOND GOPRO CAMERA
+            // // activate arm-camera
+            // Camera fp_camera_2 = m_CharacterController
+            //     .transform.Find(secondaryCameraName)
+            //     .GetComponent<Camera>();
+            // fp_camera_2.gameObject.SetActive(true);
+            // agentManager.registerAsThirdPartyCamera(fp_camera_2);
+            // if (initializeAction.antiAliasing != null) {
+            //     agentManager.updateAntiAliasing(
+            //         postProcessLayer: fp_camera_2.gameObject.GetComponentInChildren<PostProcessLayer>(),
+            //         antiAliasing: initializeAction.antiAliasing
+            //     );
+            // }
+            // 
 
             // set up primary camera parameters for stretch specific parameters
             m_Camera.transform.localPosition = defaultMainCameraLocalPosition;
             m_Camera.transform.localEulerAngles = defaultMainCameraLocalRotation;
             m_Camera.fieldOfView = defaultMainCameraFieldOfView;
 
-            // set up secondary camera paremeters for stretch bot
-            fp_camera_2.transform.localPosition = defaultSecondaryCameraLocalPosition;
-            fp_camera_2.transform.localEulerAngles = defaultSecondaryCameraLocalRotation;
-            fp_camera_2.fieldOfView = defaultSecondaryCameraFieldOfView;
+            // DISABLED UNTIL ROSE ASKS FOR SECOND GOPRO CAMERA
+            // // set up secondary camera paremeters for stretch bot
+            // fp_camera_2.transform.localPosition = defaultSecondaryCameraLocalPosition;
+            // fp_camera_2.transform.localEulerAngles = defaultSecondaryCameraLocalRotation;
+            // fp_camera_2.fieldOfView = defaultSecondaryCameraFieldOfView;
 
             // set up lens distortion for stretch bot cameras
             if (distortLens == true) {
                 enableLensDistortion(m_Camera);
-                enableLensDistortion(fp_camera_2);
+                // DISABLED UNTIL ROSE ASKS FOR SECOND GOPRO CAMERA
+                // enableLensDistortion(fp_camera_2);
             }
 
             // limit camera from looking too far down/up
@@ -110,15 +114,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
             }
 
-            var secondaryCameraParams = new CameraParameters();
-            var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(
-                secondaryCameraName,
-                out secondaryCameraParams
-            );
+            // DISABLED UNTIL ROSE ASKS FOR SECOND GOPRO CAMERA
+            // var secondaryCameraParams = new CameraParameters();
+            // var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(
+            //     secondaryCameraName,
+            //     out secondaryCameraParams
+            // );
 
-            if (setSecondaryParams.GetValueOrDefault()) {
-                CameraParameters.setCameraParameters(fp_camera_2, secondaryCameraParams);
-            }
+            // if (setSecondaryParams.GetValueOrDefault()) {
+            //     CameraParameters.setCameraParameters(fp_camera_2, secondaryCameraParams);
+            // }
 
             // enable stretch arm component
             Debug.Log("initializing stretch arm");
