@@ -9,7 +9,7 @@ using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UIElements;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
-        
+
     public partial class StretchAgentController : ArmAgentController {
         public int gripperOpennessState = 0;
 
@@ -22,6 +22,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private Vector3 defaultSecondaryCameraLocalPosition = new Vector3(0.053905130f, 0.523833600f, -0.058848570f);
         private Vector3 defaultSecondaryCameraLocalRotation =new Vector3(50f, 90f, 0);
         private float defaultSecondaryCameraFieldOfView = 59f;
+        private bool distortLens = true;
 
         protected bool applyActionNoise = true;
         protected float movementGaussianMu = 0.001f;
@@ -54,8 +55,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cc.center = m_CharacterController.center;
             cc.radius = m_CharacterController.radius;
             cc.height = m_CharacterController.height;
-            m_Camera.GetComponent<PostProcessVolume>().enabled = true;
-            m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
             // set camera stand/crouch local positions for Tall mode
             standingLocalCameraPosition = m_Camera.transform.localPosition;
@@ -86,6 +85,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             fp_camera_2.transform.localPosition = defaultSecondaryCameraLocalPosition;
             fp_camera_2.transform.localEulerAngles = defaultSecondaryCameraLocalRotation;
             fp_camera_2.fieldOfView = defaultSecondaryCameraFieldOfView;
+
+            // set up lens distortion for stretch bot cameras
+            if (distortLens == true) {
+                enableLensDistortion(m_Camera);
+                enableLensDistortion(fp_camera_2);
+            }
 
             // limit camera from looking too far down/up
             if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f)) {
@@ -176,6 +181,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void enableLensDistortion(Camera camera) {
+            // "enableLensDistortion" - Set this up as an external function that takes a camera, then run it for both!!!
+            // don't forget to emulate this logic for LocoBot, but only if you think it's worth standardizing, and not one-offing like here...
+            PostProcessVolume cameraPPVolume = camera.GetComponent<PostProcessVolume>();
+            cameraPPVolume.enabled = true;
+
+            PostProcessLayer cameraPPLayer = camera.GetComponent<PostProcessLayer>();
+            cameraPPLayer.enabled = true;
+
+            PostProcessProfile cameraPPProfile = cameraPPVolume.profile;
+
+            if (cameraPPProfile.TryGetSettings(out LensDistortion lensDistortion)) {
+                lensDistortion.active = true; // Toggle Lens Distortion on based on some condition
+            }
+        }
+
         private ArmController getArmImplementation() {
             Stretch_Robot_Arm_Controller arm = GetComponentInChildren<Stretch_Robot_Arm_Controller>();
             if (arm == null) {
@@ -187,7 +208,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arm;
         }
 
-        protected override ArmController getArm() { 
+        protected override ArmController getArm() {
             return getArmImplementation();
         }
 
@@ -620,7 +641,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (GameObject opennessState in GripperOpennessStates) {
                 opennessState.SetActive(false);
             }
-            
+
             GripperOpennessStates[openState.Value].SetActive(true);
             gripperOpennessState = openState.Value;
             return ActionFinished.Success;
@@ -707,7 +728,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     forceAction: forceAction
             );
             Physics.SyncTransforms();
-            
+
             if (quickMoveSuccess){
                 Debug.Log("Use quick MoveAhead");
                 yield return new ActionFinished() {success = true, actionReturn = "Use quick MoveAhead"};
@@ -735,7 +756,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     forceAction: forceAction
             );
             Physics.SyncTransforms();
-            
+
             if (quickMoveSuccess){
                 Debug.Log("Use quick MoveBack");
                 yield return new ActionFinished() {success = true, actionReturn = "Use quick MoveBack"};
