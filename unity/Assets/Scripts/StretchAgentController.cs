@@ -69,19 +69,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var secondaryCameraName = "SecondaryCamera";
 
             // DISABLED UNTIL ROSE ASKS FOR SECOND GOPRO CAMERA
-            // // activate arm-camera
-            // Camera fp_camera_2 = m_CharacterController
-            //     .transform.Find(secondaryCameraName)
-            //     .GetComponent<Camera>();
-            // fp_camera_2.gameObject.SetActive(true);
-            // agentManager.registerAsThirdPartyCamera(fp_camera_2);
-            // if (initializeAction.antiAliasing != null) {
-            //     agentManager.updateAntiAliasing(
-            //         postProcessLayer: fp_camera_2.gameObject.GetComponentInChildren<PostProcessLayer>(),
-            //         antiAliasing: initializeAction.antiAliasing
-            //     );
-            // }
-            // 
+            // activate arm-camera
+            Camera fp_camera_2 = m_CharacterController
+                .transform.Find(secondaryCameraName)
+                .GetComponent<Camera>();
+            fp_camera_2.gameObject.SetActive(true);
+            agentManager.registerAsThirdPartyCamera(fp_camera_2);
+            if (initializeAction.antiAliasing != null) {
+                agentManager.updateAntiAliasing(
+                    postProcessLayer: fp_camera_2.gameObject.GetComponentInChildren<PostProcessLayer>(),
+                    antiAliasing: initializeAction.antiAliasing
+                );
+            }
+            
 
             // set up primary camera parameters for stretch specific parameters
             m_Camera.transform.localPosition = defaultMainCameraLocalPosition;
@@ -89,16 +89,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera.fieldOfView = defaultMainCameraFieldOfView;
 
             // DISABLED UNTIL ROSE ASKS FOR SECOND GOPRO CAMERA
-            // // set up secondary camera paremeters for stretch bot
-            // fp_camera_2.transform.localPosition = defaultSecondaryCameraLocalPosition;
-            // fp_camera_2.transform.localEulerAngles = defaultSecondaryCameraLocalRotation;
-            // fp_camera_2.fieldOfView = defaultSecondaryCameraFieldOfView;
+            // set up secondary camera paremeters for stretch bot
+            fp_camera_2.transform.localPosition = defaultSecondaryCameraLocalPosition;
+            fp_camera_2.transform.localEulerAngles = defaultSecondaryCameraLocalRotation;
+            fp_camera_2.fieldOfView = defaultSecondaryCameraFieldOfView;
 
             // set up lens distortion for stretch bot cameras
             if (distortLens == true) {
                 enableLensDistortion(m_Camera);
                 // DISABLED UNTIL ROSE ASKS FOR SECOND GOPRO CAMERA
-                // enableLensDistortion(fp_camera_2);
+                enableLensDistortion(fp_camera_2);
             }
 
             // limit camera from looking too far down/up
@@ -115,11 +115,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // DISABLED UNTIL ROSE ASKS FOR SECOND GOPRO CAMERA
-            // var secondaryCameraParams = new CameraParameters();
-            // var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(
-            //     secondaryCameraName,
-            //     out secondaryCameraParams
-            // );
+            var secondaryCameraParams = new CameraParameters();
+            var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(
+                secondaryCameraName,
+                out secondaryCameraParams
+            );
 
             // if (setSecondaryParams.GetValueOrDefault()) {
             //     CameraParameters.setCameraParameters(fp_camera_2, secondaryCameraParams);
