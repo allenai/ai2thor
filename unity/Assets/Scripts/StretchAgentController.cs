@@ -68,7 +68,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var secondaryCameraName = "SecondaryCamera";
 
-            // DISABLED UNTIL ROSE ASKS FOR SECOND GOPRO CAMERA
             // activate arm-camera
             Camera fp_camera_2 = m_CharacterController
                 .transform.Find(secondaryCameraName)
@@ -82,13 +81,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
             
-
             // set up primary camera parameters for stretch specific parameters
             m_Camera.transform.localPosition = defaultMainCameraLocalPosition;
             m_Camera.transform.localEulerAngles = defaultMainCameraLocalRotation;
             m_Camera.fieldOfView = defaultMainCameraFieldOfView;
 
-            // DISABLED UNTIL ROSE ASKS FOR SECOND GOPRO CAMERA
             // set up secondary camera paremeters for stretch bot
             fp_camera_2.transform.localPosition = defaultSecondaryCameraLocalPosition;
             fp_camera_2.transform.localEulerAngles = defaultSecondaryCameraLocalRotation;
@@ -97,7 +94,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // set up lens distortion for stretch bot cameras
             if (distortLens == true) {
                 enableLensDistortion(m_Camera);
-                // DISABLED UNTIL ROSE ASKS FOR SECOND GOPRO CAMERA
                 enableLensDistortion(fp_camera_2);
             }
 
@@ -114,16 +110,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
             }
 
-            // DISABLED UNTIL ROSE ASKS FOR SECOND GOPRO CAMERA
             var secondaryCameraParams = new CameraParameters();
             var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(
                 secondaryCameraName,
                 out secondaryCameraParams
             );
 
-            // if (setSecondaryParams.GetValueOrDefault()) {
-            //     CameraParameters.setCameraParameters(fp_camera_2, secondaryCameraParams);
-            // }
+            if (setSecondaryParams.GetValueOrDefault()) {
+                CameraParameters.setCameraParameters(fp_camera_2, secondaryCameraParams);
+            }
 
             // enable stretch arm component
             Debug.Log("initializing stretch arm");
