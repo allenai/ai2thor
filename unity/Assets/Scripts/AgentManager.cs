@@ -2176,6 +2176,7 @@ public class ServerAction {
     public string antiAliasing = null;
     public float cameraNearPlane;
     public float cameraFarPlane;
+    public bool distortLens = true;
     public float x;
     public float z;
     public float pushAngle;

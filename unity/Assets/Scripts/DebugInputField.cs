@@ -576,6 +576,55 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     break;
                 }
+
+                case "initslens": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "Initialize";
+                    action["agentMode"] = "stretch";
+                    action["agentControllerType"] = "stretch";
+                    action["visibilityScheme"] = "Distance";
+                    action["renderInstanceSegmentation"] = true;
+                    action["renderDepth"] = true;
+                    action["massThreshold"] = 10.0f;
+
+                    if (splitcommand.Length > 1) {
+                        action["distortLens"] = bool.Parse(splitcommand[1]);
+                    }
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                    //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                    break;
+                }
+
+                case "MainSetLensDistortion": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "SetLensDistortionMainCamera";
+
+                    if (splitcommand.Length > 1) {
+                        action["state"] = bool.Parse(splitcommand[1]);
+                    }
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
+
+                case "SecondarySetLensDistortion": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "SetLensDistortionSecondaryCamera";
+
+                    if (splitcommand.Length > 1) {
+                        action["state"] = bool.Parse(splitcommand[1]);
+                    }
+                    
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
                 case "inits-cp": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 
