@@ -13,13 +13,14 @@ public class DownloadThorAssets : MonoBehaviour
     public string materialPath = "Assets/Resources/QuickMaterials";
     //public string doorAssetPath = "Assets/Physics/SimObjsPhysics/ManipulaTHOR Objects/Doorways/Prefabs";
     public bool applyBoundingBox = false;
-    public bool saveTransform = true;
+    public bool saveSubMeshes = true;
+    public bool saveSubMeshTransform = true;
 
     Dictionary<string, Material> allMaterials = new Dictionary<string, Material>();
     Dictionary<string, Dictionary<string, string>> Mat2Texture = new Dictionary<string, Dictionary<string, string>>();
 
-    bool skipMeshExport = false;
-    bool skipMaterialExport = false;
+    public bool skipMeshExport = false;
+    public bool skipMaterialExport = true;
 
     [System.Serializable]
     public class SerializableKeyValuePair
@@ -62,16 +63,19 @@ public class DownloadThorAssets : MonoBehaviour
         //Directory.CreateDirectory(Path.Combine(savePath, "Textures"));
 
         // get all assets and export obj
-        GatherGameObjectsFromPrefabsAndSave(assetPath, applyBoundingBox, saveTransform);
+        GatherGameObjectsFromPrefabsAndSave(assetPath, applyBoundingBox, saveSubMeshes, saveSubMeshTransform);
         //GatherGameObjectsFromPrefabsAndSave(doorAssetPath, false, true);
 
-        GetAllMaterials(materialPath);
+        if(!skipMaterialExport)
+        {
+            GetAllMaterials(materialPath);
 
-        // save material dictionary to json
-        //Debug.Log(Mat2Texture.Count);
-        string json = JsonUtility.ToJson(new SerializableDictionary(Mat2Texture), true);
-        File.WriteAllText(Path.Combine(savePath, "quick_material_to_textures.json"), json);
-        Debug.Log("Saving material to textures dictionary to: " + Path.Combine(savePath, "material_to_textures.json"));
+            // save material dictionary to json
+            //Debug.Log(Mat2Texture.Count);
+            string json = JsonUtility.ToJson(new SerializableDictionary(Mat2Texture), true);
+            File.WriteAllText(Path.Combine(savePath, "quick_material_to_textures.json"), json);
+            Debug.Log("Saving material to textures dictionary to: " + Path.Combine(savePath, "material_to_textures.json"));
+        }
     }
 
 
@@ -137,7 +141,7 @@ public class DownloadThorAssets : MonoBehaviour
         return relativePath;
     }
 
-    void GatherGameObjectsFromPrefabsAndSave(string directoryPath, bool applyBoundingBox = false, bool saveTransform = true)
+    void GatherGameObjectsFromPrefabsAndSave(string directoryPath, bool applyBoundingBox = false, bool saveSubMeshes = false, bool saveSubMeshTransform = false)
     {
         if (!Directory.Exists(directoryPath))
         {
@@ -164,9 +168,8 @@ public class DownloadThorAssets : MonoBehaviour
             if (prefab != null)
             {
                 GameObject instantiatedPrefab = Instantiate(prefab);
-                SaveEachAsset(instantiatedPrefab, relativePrefabPath, applyBoundingBox, saveTransform);
-                //Destroy(instantiatedPrefab);
-                //allGameObjects.Add(prefab);
+                SaveEachAsset(instantiatedPrefab, relativePrefabPath, applyBoundingBox, saveSubMeshes, saveSubMeshTransform);
+                Destroy(instantiatedPrefab);
             }
             else
             {
@@ -176,7 +179,7 @@ public class DownloadThorAssets : MonoBehaviour
     }
 
     
-    void SaveEachAsset(GameObject go, string relativeExportPath, bool applyBoundingBox = true, bool saveTransform = false)
+    void SaveEachAsset(GameObject go, string relativeExportPath, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false)
     {        
         Directory.CreateDirectory(Path.Combine(savePath, Path.GetDirectoryName(relativeExportPath)));
         
@@ -184,11 +187,13 @@ public class DownloadThorAssets : MonoBehaviour
         MeshFilter[] meshFilters = go.transform.GetComponentsInChildren<MeshFilter>();
 
         Vector3 center = Vector3.zero;
-        Transform parent =go.transform.Find("BoundingBox");
+        SimObjPhysics parent = go.transform.GetComponent<SimObjPhysics>();
 
         if(parent != null)  
         {
-            center = parent.GetComponent<BoxCollider>().center;
+            AxisAlignedBoundingBox box = parent.AxisAlignedBoundingBox;
+            center = box.center;
+            //Debug.Log("center" + center.ToString());
         }       
         else
         {
@@ -199,13 +204,16 @@ public class DownloadThorAssets : MonoBehaviour
             Debug.Log("No bounding box found for " + go.name);
         } 
     
-        Debug.Log("saving mesh1");
+        Debug.Log("saving mesh1" + center.ToString());
 
-        SaveMeshes(relativeExportPath, meshFilters, center, applyBoundingBox, saveTransform);
+        SaveMeshes(relativeExportPath, meshFilters, center, applyBoundingBox, saveSubMeshes, saveSubMeshTransform);
         Debug.Log("saving mesh2");
 
-        SaveMaterials(relativeExportPath);
-        allMaterials.Clear();
+        if (!skipMaterialExport)
+        {
+            SaveMaterials(relativeExportPath);
+            allMaterials.Clear();
+        }
 
     }
 
@@ -220,33 +228,34 @@ public class DownloadThorAssets : MonoBehaviour
             sbMaterials.Append(MaterialToString(entry.Value));
             sbMaterials.AppendLine();
         }
-
-        if (skipMaterialExport)
-            return;
     
         //write to disk
         System.IO.File.WriteAllText( Path.Combine(Path.Combine(savePath, Path.GetDirectoryName(relativeExportPath)), baseFileName + ".mtl"),  sbMaterials.ToString());
         print("material saved");
     }
 
-    void SaveMeshes(string relativeExportPath, MeshFilter[] meshFilters, Vector3 center, bool applyBoundingBox = true, bool saveTransform = false)
+    void SaveMeshes(string relativeExportPath, MeshFilter[] meshFilters, Vector3 center, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false)
     {
         Debug.Log("saving mesh");
 
         string baseFileName = Path.GetFileNameWithoutExtension(relativeExportPath);
 
-        //StringBuilder sb = new StringBuilder();
-        //sb.AppendLine("mtllib " + baseFileName + ".mtl");
-        //int lastIndex = 0;
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("mtllib " + baseFileName + ".mtl");
+        int lastIndex = 0;
+    
 
         Dictionary<string, Dictionary<string, string>> mesh_transforms = new Dictionary<string, Dictionary<string, string>>();
         mesh_transforms["bbox_center"] = new Dictionary<string, string>();
         mesh_transforms["bbox_center"]["position"] = center.ToString("0.00000");
         for(int i = 0; i < meshFilters.Length; i++)
         {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("mtllib " + baseFileName + ".mtl");
-            int lastIndex = 0;
+            if(saveSubMeshes)
+            {
+                sb = new StringBuilder();
+                sb.AppendLine("mtllib " + baseFileName + ".mtl");
+                lastIndex = 0;
+            }
 
             string meshName = meshFilters[i].gameObject.name; //+ "_" + i.ToString();
             Debug.Log(meshName);
@@ -341,21 +350,21 @@ public class DownloadThorAssets : MonoBehaviour
                     v = MultiplyVec3s(v, mf.gameObject.transform.lossyScale);
                 }
                 
-                if (false) //true) //applyRotation)
+                if (!saveSubMeshes) //true) //applyRotation)
                 {
   
-                    //v = RotateAroundPoint(v, Vector3.zero, mf.gameObject.transform.rotation);
-                    v = RotateAroundPoint(v, Vector3.zero, mf.gameObject.transform.localRotation);
+                    v = RotateAroundPoint(v, Vector3.zero, mf.gameObject.transform.rotation);
+                    //v = RotateAroundPoint(v, Vector3.zero, mf.gameObject.transform.localRotation);
 
                 }
 
-                if (false) //true) //applyPosition)
+                if (!saveSubMeshes) //true) //applyPosition)
                 {
-                    //v += mf.gameObject.transform.position;
-                    v += mf.gameObject.transform.localPosition;
+                    v += mf.gameObject.transform.position;
+                    //v += mf.gameObject.transform.localPosition;
                 }
 
-                if (false) //true)// move to bouning box center
+                if (applyBoundingBox) //true)// move to bouning box center
                     v -= center;                
 
                 v.x *= -1;
@@ -370,18 +379,18 @@ public class DownloadThorAssets : MonoBehaviour
                 {
                     v = MultiplyVec3s(v, mf.gameObject.transform.lossyScale.normalized);
                 }
-                if (false) //applyRotation)
+                if (!saveSubMeshes) //applyRotation)
                 {
-                    //v = RotateAroundPoint(v, Vector3.zero, mf.gameObject.transform.rotation);
-                    v = RotateAroundPoint(v, Vector3.zero, mf.gameObject.transform.localRotation);
+                    v = RotateAroundPoint(v, Vector3.zero, mf.gameObject.transform.rotation);
+                    //v = RotateAroundPoint(v, Vector3.zero, mf.gameObject.transform.localRotation);
                 }
-                if (false) //true) //applyPosition)
+                if (!saveSubMeshes) //true) //applyPosition)
                 {
-                    //v += mf.gameObject.transform.position;
-                    v += mf.gameObject.transform.localPosition;
+                    v += mf.gameObject.transform.position;
+                    //v += mf.gameObject.transform.localPosition;
                 }
 
-                if (false) //true)// move to bouning box center
+                if (applyBoundingBox) //true)// move to bouning box center
                     v -= center;    
 
                 v.x *= -1;
@@ -430,11 +439,14 @@ public class DownloadThorAssets : MonoBehaviour
                     
                 }
             }
- 
-            //write to disk
-            Debug.Log("writing to disk: " + Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + "_" + i.ToString() + ".obj")));
-            System.IO.File.WriteAllText( Path.Combine(savePath,  Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + "_" + i.ToString() + ".obj")), sb.ToString());
-            Debug.Log("Write to disk done");
+
+            if(saveSubMeshes)
+            {
+                //write to disk
+                Debug.Log("writing to disk: " + Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + "_" + i.ToString() + ".obj")));
+                System.IO.File.WriteAllText( Path.Combine(savePath,  Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + "_" + i.ToString() + ".obj")), sb.ToString());
+                Debug.Log("Write to disk done");
+            }
 
             lastIndex += msh.vertices.Length;
         }
@@ -443,14 +455,16 @@ public class DownloadThorAssets : MonoBehaviour
         if (skipMeshExport)
             return;
 
+        if(!saveSubMeshes)
+        {
+            //write to disk
+            Debug.Log("writing to disk: " + Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".obj")));
+            System.IO.File.WriteAllText( Path.Combine(savePath,  Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".obj")), sb.ToString());
+            Debug.Log("Write to disk done");
+            print("mesh saved");
+        }
 
-        //write to disk
-        //Debug.Log("writing to disk: " + Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".obj")));
-        //System.IO.File.WriteAllText( Path.Combine(savePath,  Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".obj")), sb.ToString());
-        //Debug.Log("Write to disk done");
-        //print("mesh saved");
-
-        if (saveTransform)  
+        if (saveSubMeshes & saveSubMeshTransform)  
         {
             string json = JsonUtility.ToJson(new SerializableDictionary(mesh_transforms), true);
             File.WriteAllText(Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".json")), json);
