@@ -568,6 +568,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public ActionFinished SetGripperOpenness(float? openness, int? openState = null) {
+            setGripperOpenness(openness: openness, openState: openState);
+            return ActionFinished.Success;
+        }
+
+        //moving this to a helper function so we can call it without sending back an ActionFinished call
+        public void setGripperOpenness(float? openness, int? openState = null) {
             if (openness.HasValue == openState.HasValue) {
                 throw new InvalidOperationException(
                     $"Only one of openness or openState should have a value"
@@ -583,7 +589,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             GripperOpennessStates[openState.Value].SetActive(true);
             gripperOpennessState = openState.Value;
-            return ActionFinished.Success;
         }
 
         //        public void RotateCameraBase(float yawDegrees, float rollDegrees) {

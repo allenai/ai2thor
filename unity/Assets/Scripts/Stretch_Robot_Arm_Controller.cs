@@ -143,6 +143,9 @@ public partial class Stretch_Robot_Arm_Controller : ArmController {
         }
 
         solver = this.gameObject.GetComponentInChildren<Stretch_Arm_Solver>();
+
+        //call SetGripperOpenness logic in StretchAgentController here
+        ((StretchAgentController)PhysicsController).setGripperOpenness(openness: null, openState: 1);
     }
 
     public void resetPosRotManipulator() {
