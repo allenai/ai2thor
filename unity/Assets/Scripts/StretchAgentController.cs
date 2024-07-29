@@ -22,6 +22,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private Vector3 defaultSecondaryCameraLocalPosition = new Vector3(0.053905130f, 0.523833600f, -0.058848570f);
         private Vector3 defaultSecondaryCameraLocalRotation =new Vector3(50f, 90f, 0);
         private float defaultSecondaryCameraFieldOfView = 59f;
+        private Vector3[] defaultGoProCameraLocalPositions = new Vector3[]
+        {
+            new Vector3(-0.1299001f, 0.5560812f, 0.02734984f),
+            new Vector3(-0.09227128f, 0.5560812f, -0.03782498f),
+            new Vector3(-0.1675288f, 0.5560812f, -0.03782497f),
+            new Vector3(-0.1376f, 0.4340732f, 0.006196275f)
+        };
+        private Vector3[] defaultGoProCameraLocalEulerAngles = new Vector3[]
+        {
+            new Vector3(30f, 0f, 0f),
+            new Vector3(30f, 120f, 0f),
+            new Vector3(30f, -120f, 0f),
+            new Vector3(90f, 0f, 0f)
+        };
+        private float defaultGoProCameraFieldOfView = 69f;
 
         protected bool applyActionNoise = true;
         protected float movementGaussianMu = 0.001f;
@@ -75,6 +90,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     postProcessLayer: fp_camera_2.gameObject.GetComponentInChildren<PostProcessLayer>(),
                     antiAliasing: initializeAction.antiAliasing
                 );
+            }
+
+            // activate GoPro cameras
+            Transform goProCameraGroup = m_CharacterController.transform.Find("GoProCameras");
+            goProCameraGroup.gameObject.SetActive(true);
+
+            Camera[] goProCameras = new Camera[goProCameraGroup.childCount];
+
+            // Assign each pre-existing camera to goProCameras array, and set up their codified parameters
+            for (int i = 0; i < goProCameras.Length; i++) {
+                goProCameras[i] = goProCameraGroup.GetChild(i).GetComponent<Camera>();
+
+                goProCameras[i].transform.localPosition = defaultGoProCameraLocalPositions[i];
+                goProCameras[i].transform.localEulerAngles = defaultGoProCameraLocalPositions[i];
+                goProCameras[i].fieldOfView = defaultGoProCameraFieldOfView;
+
+                agentManager.registerAsThirdPartyCamera(goProCameras[i]);
+                if (initializeAction.antiAliasing != null) {
+                    agentManager.updateAntiAliasing(
+                        postProcessLayer: goProCameras[i].gameObject.GetComponentInChildren<PostProcessLayer>(),
+                        antiAliasing: initializeAction.antiAliasing
+                    );
+                }
             }
 
             // set up primary camera parameters for stretch specific parameters
