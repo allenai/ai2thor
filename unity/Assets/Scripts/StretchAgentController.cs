@@ -76,9 +76,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             standingLocalCameraPosition = m_Camera.transform.localPosition;
             crouchingLocalCameraPosition = m_Camera.transform.localPosition;
 
-            // set up main camera parameters
-            m_Camera.fieldOfView = 65f;
-
             var secondaryCameraName = "SecondaryCamera";
 
             // activate arm-camera
