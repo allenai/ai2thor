@@ -31,9 +31,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         };
         private Vector3[] defaultGoProCameraLocalEulerAngles = new Vector3[]
         {
-            new Vector3(30f, 0f, 0f),
-            new Vector3(30f, 120f, 0f),
-            new Vector3(30f, -120f, 0f),
+            new Vector3(20f, 0f, 0f),
+            new Vector3(20f, 120f, 0f),
+            new Vector3(20f, -120f, 0f),
             new Vector3(90f, 0f, 0f)
         };
         private float defaultGoProCameraFieldOfView = 69f;
