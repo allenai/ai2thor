@@ -100,7 +100,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 goProCameras[i] = goProCameraGroup.GetChild(i).GetComponent<Camera>();
 
                 goProCameras[i].transform.localPosition = defaultGoProCameraLocalPositions[i];
-                goProCameras[i].transform.localEulerAngles = defaultGoProCameraLocalPositions[i];
+                goProCameras[i].transform.localEulerAngles = defaultGoProCameraLocalEulerAngles[i];
                 goProCameras[i].fieldOfView = defaultGoProCameraFieldOfView;
 
                 agentManager.registerAsThirdPartyCamera(goProCameras[i]);
