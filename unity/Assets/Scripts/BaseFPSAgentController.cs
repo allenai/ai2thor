@@ -3807,9 +3807,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     collidingWithId = collidingWith.gameObject.name;
                 }
             }
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             Debug.Log(collidingWithId);
-            #endif
+#endif
             actionFinishedEmit(true, actionReturn: collidingWithId);
         }
 

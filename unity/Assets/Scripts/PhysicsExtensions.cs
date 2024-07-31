@@ -469,7 +469,6 @@ public static class PhysicsExtensions {
             queryTriggerInteraction
         );
 
-
         // Check each candidate collider for actual collision
         foreach (Collider candidateCollider in candidateColliders) {
             if (candidateCollider == meshCollider) {
@@ -484,17 +483,19 @@ public static class PhysicsExtensions {
             float distance;
 
             // Use ComputePenetration to check for actual collision
-            if (Physics.ComputePenetration(
-                meshCollider,
-                meshCollider.transform.position,
-                meshCollider.transform.rotation,
-                candidateCollider,
-                candidateCollider.transform.position,
-                candidateCollider.transform.rotation,
-                out direction,
-                out distance)
+            if (
+                Physics.ComputePenetration(
+                    meshCollider,
+                    meshCollider.transform.position,
+                    meshCollider.transform.rotation,
+                    candidateCollider,
+                    candidateCollider.transform.position,
+                    candidateCollider.transform.rotation,
+                    out direction,
+                    out distance
+                )
             ) {
-                 yield return candidateCollider;
+                yield return candidateCollider;
             }
         }
     }
