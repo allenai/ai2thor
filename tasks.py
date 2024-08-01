@@ -1209,7 +1209,6 @@ def ci_build(
                                 if arch == "OSXIntel64":
                                     commit_build.download()
                             else:
-
                                 if arch in ["CloudRendering", "OSXIntel64"]:
                                     # In Linux the OSX build cache is used for Unity Tests as cloud rendering fails
                                     commit_build.download()
