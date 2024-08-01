@@ -4907,4 +4907,3 @@ def procedural_asset_cache_test(ctx, asset_dir, house_path, asset_ids="", cache_
     print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
     print(f'return {evt.metadata["actionReturn"]}')
-
