@@ -1752,32 +1752,41 @@ namespace Thor.Procedural {
                 }
             }
 
-            // buildNavMesh(floorGameObject, house.proceduralParameters.navmeshVoxelSize);
-
             buildNavMeshes(floorGameObject, house.metadata.navMeshes);
 
             if (
                 string.IsNullOrEmpty(house.proceduralParameters.skyboxId)
                 || !materialDb.ContainsKey(house.proceduralParameters.skyboxId)
             ) {
-                var mat = new Material(Shader.Find("Standard"));
-                mat.color = house.proceduralParameters.skyboxColor.toUnityColor();
-                RenderSettings.skybox = mat;
+                Color flatColor = house.proceduralParameters.skyboxColor.toUnityColor();
 
-                // var cam = GameObject.FindObjectOfType<Camera>();
+                // The below is commented out as setting the skybox color like this results in unexpected/bad behavior
+                // like heavily exposed scenes or arbitrarily lit objects. We instead will not use the skybox material at all in this case.
+                // so everything is determined by the scene lights.
+
+                // // Set the Tint color for all six sides
+                // Material skyboxMaterial = new Material(Shader.Find("Skybox/6 Sided"));
+                // skyboxMaterial.SetColor("_Tint", flatColor);
+                // skyboxMaterial.SetFloat("_Exposure", 0.0001f); // A very light as otherwise objects are totally overexposed
+
+                Material skyboxMaterial = null;
+
+                // Set this material as the current skybox
+                RenderSettings.skybox = skyboxMaterial;
+
+                // Set the camera background color to the "skybox" color so that it renders as expected.
                 var cam = GameObject.Find("FirstPersonCharacter").GetComponent<Camera>();
                 cam.clearFlags = CameraClearFlags.SolidColor;
-                cam.backgroundColor = mat.color;
-
-                // RenderSettings.ambientSkyColor =
-            } else {
+                cam.backgroundColor = flatColor;
+            }
+            else {
                 RenderSettings.skybox = materialDb.getAsset(house.proceduralParameters.skyboxId);
             }
             DynamicGI.UpdateEnvironment();
-            GameObject
-                .FindObjectOfType<ReflectionProbe>()
-                .GetComponent<ReflectionProbe>()
-                .RenderProbe();
+
+            foreach (ReflectionProbe probe in GameObject.FindObjectsOfType<ReflectionProbe>()) {
+                probe.RenderProbe();
+            }
 
             // generate objectId for newly created wall/floor objects
             // also add them to objectIdToSimObjPhysics dict so they can be found via
