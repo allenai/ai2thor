@@ -3802,7 +3802,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
                 }
-
                 // Stretch arm
                 else if (SArm != null && SArm.gameObject.activeSelf) {
                     if (this.IsVisible) {
