@@ -39,7 +39,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cc.radius = m_CharacterController.radius;
             cc.height = m_CharacterController.height;
 
-            m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
             // camera position

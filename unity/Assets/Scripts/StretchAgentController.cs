@@ -69,7 +69,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cc.center = m_CharacterController.center;
             cc.radius = m_CharacterController.radius;
             cc.height = m_CharacterController.height;
-            m_Camera.GetComponent<PostProcessVolume>().enabled = true;
+
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
             // set camera stand/crouch local positions for Tall mode
