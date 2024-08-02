@@ -279,7 +279,6 @@ def test_determinism(controller_args):
         print(f"{pos}")
         object_positions.append(pos)
         if prev_pos:
-
             diffs = list(diff(pos, prev_pos, tolerance=0.00001))
             print(diffs)
             assert [] == diffs
