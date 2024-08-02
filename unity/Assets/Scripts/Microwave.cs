@@ -3,7 +3,8 @@ using System.Collections;
 using UnityEngine;
 
 //[ExecuteInEditMode]
-public class Microwave : MonoBehaviour {
+public class Microwave : MonoBehaviour
+{
     public Transform Door;
     public Vector3 DoorOpenRot;
     public Vector3 DoorClosedRot;
@@ -20,15 +21,21 @@ public class Microwave : MonoBehaviour {
 
     bool displayedError = false;
 
-    public void Update() {
-        if (!Application.isPlaying) {
+    public void Update()
+    {
+        if (!Application.isPlaying)
+        {
             Door.localEulerAngles = EditorOpen ? DoorOpenRot : DoorClosedRot;
             Material[] sharedMats = GlassRenderer.sharedMaterials;
             sharedMats[MatIndex] = EditorOn ? OnGlassMat : OffGlassMat;
             GlassRenderer.sharedMaterials = sharedMats;
-        } else {
-            if (SimObjParent == null || GlassRenderer == null || Door == null) {
-                if (!displayedError) {
+        }
+        else
+        {
+            if (SimObjParent == null || GlassRenderer == null || Door == null)
+            {
+                if (!displayedError)
+                {
                     Debug.LogError("Component null in microwave " + name);
                     displayedError = true;
                 }
@@ -41,7 +48,8 @@ public class Microwave : MonoBehaviour {
             // 3 - Closed, On
             Material[] sharedMats = GlassRenderer.sharedMaterials;
             bool waitForDoorToClose = false;
-            switch (animState) {
+            switch (animState)
+            {
                 case 1:
                 default:
                     targetDoorRotation = DoorClosedRot;
@@ -60,7 +68,8 @@ public class Microwave : MonoBehaviour {
                     break;
             }
 
-            switch (SceneManager.Current.AnimationMode) {
+            switch (SceneManager.Current.AnimationMode)
+            {
                 case SceneAnimationMode.Smooth:
                     Quaternion doorStartRotation = Quaternion.identity;
 
@@ -79,11 +88,13 @@ public class Microwave : MonoBehaviour {
                         Door.localEulerAngles,
                         targetDoorRotation
                     );
-                    if (distanceToTarget >= 360f) {
+                    if (distanceToTarget >= 360f)
+                    {
                         distanceToTarget -= 360f;
                     }
 
-                    if (!waitForDoorToClose || distanceToTarget < 0.005f) {
+                    if (!waitForDoorToClose || distanceToTarget < 0.005f)
+                    {
                         GlassRenderer.sharedMaterials = sharedMats;
                     }
 

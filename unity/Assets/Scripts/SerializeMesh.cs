@@ -7,9 +7,11 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace Thor.Utils {
+namespace Thor.Utils
+{
     [System.Serializable]
-    public class SerializableMesh {
+    public class SerializableMesh
+    {
         // [SerializeField] public Vector2[] uv;
         // [SerializeField] public Vector3[] verticies;
         // [SerializeField] public Vector3[] normals;
@@ -24,7 +26,8 @@ namespace Thor.Utils {
 
     [ExecuteInEditMode]
     [RequireComponent(typeof(MeshFilter))]
-    public class SerializeMesh : MonoBehaviour {
+    public class SerializeMesh : MonoBehaviour
+    {
         // [HideInInspector] [SerializeField] Vector2[] uv;
         // [HideInInspector] [SerializeField] Vector3[] verticies;
         // [HideInInspector] [SerializeField] Vector3[] normals;
@@ -42,11 +45,13 @@ namespace Thor.Utils {
 
         private static int materialCount = 0;
 
-        private static string getAssetRelativePath(string absPath) {
+        private static string getAssetRelativePath(string absPath)
+        {
             return string.Join("/", absPath.Split('/').SkipWhile(x => x != "Assets"));
         }
 
-        public static string MeshToObj(string name, Mesh mesh) {
+        public static string MeshToObj(string name, Mesh mesh)
+        {
             var objString = $"o {name}";
             var verts = string.Join(
                 "\n",
@@ -83,10 +88,12 @@ namespace Thor.Utils {
             string outPath,
             string prefix = "",
             bool overwite = true
-        ) {
+        )
+        {
             var obj = MeshToObj(assetId, mesh);
 
-            if (!Directory.Exists(outPath)) {
+            if (!Directory.Exists(outPath))
+            {
                 Directory.CreateDirectory(outPath);
             }
 
@@ -94,11 +101,14 @@ namespace Thor.Utils {
             var sep = prefix == "" ? "" : "_";
             var fileObj = $"{outPath}/{prefix}_{assetId}.obj";
 
-            if (!File.Exists(fileObj) || overwite) {
+            if (!File.Exists(fileObj) || overwite)
+            {
                 Debug.Log($"Writing obj to `{fileObj}`");
 
                 File.WriteAllText(fileObj, obj);
-            } else {
+            }
+            else
+            {
                 Debug.Log($"File `{fileObj}` exists, skipping");
             }
 
@@ -113,7 +123,8 @@ namespace Thor.Utils {
             string collidersOutPath,
             bool overwrite = true,
             GameObject sourceGo = null
-        ) {
+        )
+        {
             var meshGo = go.transform.Find("mesh");
             var useOriginalAssetGeo = sourceGo != null;
 
@@ -123,7 +134,8 @@ namespace Thor.Utils {
 
             var collidersSourceMeshes = colliders.Select(c => c.sharedMesh);
 
-            if (useOriginalAssetGeo) {
+            if (useOriginalAssetGeo)
+            {
                 mainMesh = sourceGo
                     .transform.Find("mesh")
                     .GetComponentInChildren<MeshFilter>()
@@ -152,7 +164,8 @@ namespace Thor.Utils {
             AssetDatabase.Refresh();
 
             // is this necessary?
-            if (mainMesh.indexFormat == UnityEngine.Rendering.IndexFormat.UInt32) {
+            if (mainMesh.indexFormat == UnityEngine.Rendering.IndexFormat.UInt32)
+            {
                 var mi = AssetImporter.GetAtPath(getAssetRelativePath(objPath)) as ModelImporter;
                 mi.indexFormat = ModelImporterIndexFormat.UInt32;
             }
@@ -167,9 +180,11 @@ namespace Thor.Utils {
                     (Mesh)AssetDatabase.LoadAssetAtPath(getAssetRelativePath(path), typeof(Mesh))
                 )
                 .ToArray();
-            for (var i = 0; i < colliders.Length; i++) {
+            for (var i = 0; i < colliders.Length; i++)
+            {
                 // is this necessary?
-                if (colliders[i].sharedMesh.indexFormat == UnityEngine.Rendering.IndexFormat.UInt32) {
+                if (colliders[i].sharedMesh.indexFormat == UnityEngine.Rendering.IndexFormat.UInt32)
+                {
                     var mi =
                         AssetImporter.GetAtPath(getAssetRelativePath(colliderObjPaths[i]))
                         as ModelImporter;
@@ -181,15 +196,18 @@ namespace Thor.Utils {
             colliders = go
                 .transform.Find("TriggerColliders")
                 .GetComponentsInChildren<MeshCollider>();
-            for (var i = 0; i < colliders.Length; i++) {
+            for (var i = 0; i < colliders.Length; i++)
+            {
                 colliders[i].sharedMesh = collisionMeshes[i];
             }
         }
 #endif
 
-        void Awake() {
+        void Awake()
+        {
             Debug.Log("--- Awake called on object " + transform.parent.gameObject.name);
-            if (serialized) {
+            if (serialized)
+            {
                 GetComponent<MeshFilter>().sharedMesh = Rebuild();
             }
             // else {
@@ -197,15 +215,18 @@ namespace Thor.Utils {
             // }
         }
 
-        void Start() {
-            if (serialized) {
+        void Start()
+        {
+            if (serialized)
+            {
                 return;
             }
 
             Serialize();
         }
 
-        private SerializableMesh serializeMesh(Mesh mesh) {
+        private SerializableMesh serializeMesh(Mesh mesh)
+        {
             var outMesh = new SerializableMesh();
             outMesh.uv = mesh.uv;
             outMesh.verticies = mesh.vertices;
@@ -214,7 +235,8 @@ namespace Thor.Utils {
             return outMesh;
         }
 
-        private Mesh deSerializeMesh(SerializableMesh serializedMesh) {
+        private Mesh deSerializeMesh(SerializableMesh serializedMesh)
+        {
             Mesh mesh = new Mesh();
             mesh.vertices = serializedMesh.verticies;
             mesh.triangles = serializedMesh.triangles;
@@ -223,7 +245,8 @@ namespace Thor.Utils {
             return mesh;
         }
 
-        public void Serialize() {
+        public void Serialize()
+        {
             Debug.Log("--- Serialize called  " + transform.parent.gameObject.name);
             var mesh = GetComponent<MeshFilter>().mesh;
 
@@ -242,7 +265,8 @@ namespace Thor.Utils {
             // }
 
             Debug.Log($"----- Serializing collider meshes {colliders.Length}");
-            for (var i = 0; i < colliders.Length; i++) {
+            for (var i = 0; i < colliders.Length; i++)
+            {
                 var collisionMesh = colliders[i].sharedMesh;
                 this.collisionMeshes[i] = this.serializeMesh(collisionMesh);
             }
@@ -272,7 +296,8 @@ namespace Thor.Utils {
             // }
         }
 
-        public Mesh Rebuild() {
+        public Mesh Rebuild()
+        {
             Mesh mesh = this.deSerializeMesh(model);
 
             // Mesh mesh = new Mesh();
@@ -290,7 +315,8 @@ namespace Thor.Utils {
                 .parent.Find("Colliders")
                 .GetComponentsInChildren<MeshCollider>();
 
-            for (var i = 0; i < colliders.Length; i++) {
+            for (var i = 0; i < colliders.Length; i++)
+            {
                 colliders[i].sharedMesh = deSerializeMesh(this.collisionMeshes[i]);
             }
 
@@ -298,7 +324,8 @@ namespace Thor.Utils {
                 .parent.Find("TriggerColliders")
                 .GetComponentsInChildren<MeshCollider>();
 
-            for (var i = 0; i < colliders.Length; i++) {
+            for (var i = 0; i < colliders.Length; i++)
+            {
                 colliders[i].sharedMesh = deSerializeMesh(this.collisionMeshes[i]);
             }
 
@@ -308,24 +335,31 @@ namespace Thor.Utils {
 
 #if UNITY_EDITOR
     [CustomEditor(typeof(SerializeMesh))]
-    class SerializeMeshEditor : Editor {
+    class SerializeMeshEditor : Editor
+    {
         SerializeMesh obj;
 
-        void OnSceneGUI() {
+        void OnSceneGUI()
+        {
             obj = (SerializeMesh)target;
         }
 
-        public override void OnInspectorGUI() {
+        public override void OnInspectorGUI()
+        {
             base.OnInspectorGUI();
 
-            if (GUILayout.Button("Rebuild")) {
-                if (obj) {
+            if (GUILayout.Button("Rebuild"))
+            {
+                if (obj)
+                {
                     obj.gameObject.GetComponent<MeshFilter>().mesh = obj.Rebuild();
                 }
             }
 
-            if (GUILayout.Button("Serialize")) {
-                if (obj) {
+            if (GUILayout.Button("Serialize"))
+            {
+                if (obj)
+                {
                     obj.Serialize();
                 }
             }

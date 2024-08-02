@@ -25,7 +25,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public static class PhysicsExtensions {
+public static class PhysicsExtensions
+{
     //
     // Box
     //
@@ -36,7 +37,8 @@ public static class PhysicsExtensions {
         float maxDistance = Mathf.Infinity,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 center,
             halfExtents;
         Quaternion orientation;
@@ -59,7 +61,8 @@ public static class PhysicsExtensions {
         float maxDistance = Mathf.Infinity,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 center,
             halfExtents;
         Quaternion orientation;
@@ -82,7 +85,8 @@ public static class PhysicsExtensions {
         float maxDistance = Mathf.Infinity,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 center,
             halfExtents;
         Quaternion orientation;
@@ -105,7 +109,8 @@ public static class PhysicsExtensions {
         float maxDistance = Mathf.Infinity,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 center,
             halfExtents;
         Quaternion orientation;
@@ -126,7 +131,8 @@ public static class PhysicsExtensions {
         BoxCollider box,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 center,
             halfExtents;
         Quaternion orientation;
@@ -145,12 +151,14 @@ public static class PhysicsExtensions {
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
         float expandBy = 0.0f
-    ) {
+    )
+    {
         Vector3 center,
             halfExtents;
         Quaternion orientation;
         box.ToWorldSpaceBox(out center, out halfExtents, out orientation);
-        if (expandBy != 0.0f) {
+        if (expandBy != 0.0f)
+        {
             halfExtents = new Vector3(
                 expandBy + halfExtents.x,
                 expandBy + halfExtents.y,
@@ -171,7 +179,8 @@ public static class PhysicsExtensions {
         Collider[] results,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 center,
             halfExtents;
         Quaternion orientation;
@@ -191,7 +200,8 @@ public static class PhysicsExtensions {
         out Vector3 center,
         out Vector3 halfExtents,
         out Quaternion orientation
-    ) {
+    )
+    {
         orientation = box.transform.rotation;
         center = box.transform.TransformPoint(box.center);
         var lossyScale = box.transform.lossyScale;
@@ -210,7 +220,8 @@ public static class PhysicsExtensions {
         float maxDistance = Mathf.Infinity,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 center;
         float radius;
         sphere.ToWorldSpaceSphere(out center, out radius);
@@ -231,7 +242,8 @@ public static class PhysicsExtensions {
         float maxDistance = Mathf.Infinity,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 center;
         float radius;
         sphere.ToWorldSpaceSphere(out center, out radius);
@@ -252,7 +264,8 @@ public static class PhysicsExtensions {
         float maxDistance = Mathf.Infinity,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 center;
         float radius;
         sphere.ToWorldSpaceSphere(out center, out radius);
@@ -271,7 +284,8 @@ public static class PhysicsExtensions {
         SphereCollider sphere,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 center;
         float radius;
         sphere.ToWorldSpaceSphere(out center, out radius);
@@ -283,7 +297,8 @@ public static class PhysicsExtensions {
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
         float expandBy = 0.0f
-    ) {
+    )
+    {
         Vector3 center;
         float radius;
         sphere.ToWorldSpaceSphere(out center, out radius);
@@ -296,7 +311,8 @@ public static class PhysicsExtensions {
         Collider[] results,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 center;
         float radius;
         sphere.ToWorldSpaceSphere(out center, out radius);
@@ -313,7 +329,8 @@ public static class PhysicsExtensions {
         this SphereCollider sphere,
         out Vector3 center,
         out float radius
-    ) {
+    )
+    {
         center = sphere.transform.TransformPoint(sphere.center);
         radius = sphere.radius * MaxVec3(AbsVec3(sphere.transform.lossyScale));
     }
@@ -329,7 +346,8 @@ public static class PhysicsExtensions {
         float maxDistance = Mathf.Infinity,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 point0,
             point1;
         float radius;
@@ -352,7 +370,8 @@ public static class PhysicsExtensions {
         float maxDistance = Mathf.Infinity,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 point0,
             point1;
         float radius;
@@ -375,7 +394,8 @@ public static class PhysicsExtensions {
         float maxDistance = Mathf.Infinity,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 point0,
             point1;
         float radius;
@@ -396,7 +416,8 @@ public static class PhysicsExtensions {
         CapsuleCollider capsule,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 point0,
             point1;
         float radius;
@@ -409,7 +430,8 @@ public static class PhysicsExtensions {
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
         float expandBy = 0.0f
-    ) {
+    )
+    {
         Vector3 point0,
             point1;
         float radius;
@@ -428,7 +450,8 @@ public static class PhysicsExtensions {
         Collider[] results,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    ) {
+    )
+    {
         Vector3 point0,
             point1;
         float radius;
@@ -448,14 +471,16 @@ public static class PhysicsExtensions {
         out Vector3 point0,
         out Vector3 point1,
         out float radius
-    ) {
+    )
+    {
         var center = capsule.transform.TransformPoint(capsule.center);
         radius = 0f;
         float height = 0f;
         Vector3 lossyScale = AbsVec3(capsule.transform.lossyScale);
         Vector3 dir = Vector3.zero;
 
-        switch (capsule.direction) {
+        switch (capsule.direction)
+        {
             case 0: // x
                 radius = Mathf.Max(lossyScale.y, lossyScale.z) * capsule.radius;
                 height = lossyScale.x * capsule.height;
@@ -473,7 +498,8 @@ public static class PhysicsExtensions {
                 break;
         }
 
-        if (height < radius * 2f) {
+        if (height < radius * 2f)
+        {
             dir = Vector3.zero;
         }
 
@@ -485,12 +511,15 @@ public static class PhysicsExtensions {
     // Util
     //
 
-    public static void SortClosestToFurthest(RaycastHit[] hits, int hitCount = -1) {
-        if (hitCount == 0) {
+    public static void SortClosestToFurthest(RaycastHit[] hits, int hitCount = -1)
+    {
+        if (hitCount == 0)
+        {
             return;
         }
 
-        if (hitCount < 0) {
+        if (hitCount < 0)
+        {
             hitCount = hits.Length;
         }
 
@@ -501,19 +530,23 @@ public static class PhysicsExtensions {
     // Private
     //
 
-    private class AscendingDistanceComparer : IComparer<RaycastHit> {
-        public int Compare(RaycastHit h1, RaycastHit h2) {
+    private class AscendingDistanceComparer : IComparer<RaycastHit>
+    {
+        public int Compare(RaycastHit h1, RaycastHit h2)
+        {
             return h1.distance < h2.distance ? -1 : (h1.distance > h2.distance ? 1 : 0);
         }
     }
 
     private static AscendingDistanceComparer ascendDistance = new AscendingDistanceComparer();
 
-    private static Vector3 AbsVec3(Vector3 v) {
+    private static Vector3 AbsVec3(Vector3 v)
+    {
         return new Vector3(Mathf.Abs(v.x), Mathf.Abs(v.y), Mathf.Abs(v.z));
     }
 
-    private static float MaxVec3(Vector3 v) {
+    private static float MaxVec3(Vector3 v)
+    {
         return Mathf.Max(v.x, Mathf.Max(v.y, v.z));
     }
 }

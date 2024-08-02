@@ -2,10 +2,14 @@
 using System.Collections;
 using UnityEngine;
 
-public class PlacementManager : MonoBehaviour {
-    public static PlacementManager Current {
-        get {
-            if (current == null) {
+public class PlacementManager : MonoBehaviour
+{
+    public static PlacementManager Current
+    {
+        get
+        {
+            if (current == null)
+            {
                 current = GameObject.FindObjectOfType<PlacementManager>();
             }
             return current;
@@ -26,7 +30,8 @@ public class PlacementManager : MonoBehaviour {
         float reach,
         float maxDistance,
         ref Vector3 point
-    ) {
+    )
+    {
         UnityEngine.AI.NavMeshHit hit;
         if (
             UnityEngine.AI.NavMesh.SamplePosition(
@@ -35,7 +40,8 @@ public class PlacementManager : MonoBehaviour {
                 maxDistance: maxDistance,
                 areaMask: 1 << NavmeshShelfArea
             )
-        ) {
+        )
+        {
             // check whether we can see this point
             Vector3 viewPoint = agentCamera.WorldToViewportPoint(hit.position);
             Vector3 pointDirection = Vector3.zero;
@@ -46,7 +52,8 @@ public class PlacementManager : MonoBehaviour {
                 && viewPoint.x > SimUtil.ViewPointRangeLow // within x bounds
                 && viewPoint.y < SimUtil.ViewPointRangeHigh
                 && viewPoint.y > SimUtil.ViewPointRangeLow
-            ) { // within y bounds
+            )
+            { // within y bounds
                 // do a raycast in the direction of the item
                 pointDirection = (hit.position - agentCameraPos).normalized;
                 RaycastHit pointHit;
@@ -59,7 +66,8 @@ public class PlacementManager : MonoBehaviour {
                         SimUtil.RaycastVisibleLayerMask,
                         QueryTriggerInteraction.Ignore
                     ) && (Vector3.Distance(pointHit.point, hit.position) < MaxRaycastCheckDistance)
-                ) {
+                )
+                {
                     // if it's within reasonable distance of the original point, we'll know we're fine
                     point = hit.position;
                     return true;
@@ -69,13 +77,15 @@ public class PlacementManager : MonoBehaviour {
         return false;
     }
 
-    public static void PlaceObjectAtPoint(SimObj simObj, Vector3 point) {
+    public static void PlaceObjectAtPoint(SimObj simObj, Vector3 point)
+    {
         simObj.transform.position = point + Vector3.up * DefaultDropDistance;
         simObj.gameObject.SetActive(true);
         Current.StartCoroutine(current.EnableSimObjPhysics(simObj));
     }
 
-    public IEnumerator EnableSimObjPhysics(SimObj simObj) {
+    public IEnumerator EnableSimObjPhysics(SimObj simObj)
+    {
         // always wait for 1 frame to allow sim object to wake itself up
         yield return null;
         // move the simObj to the object root to ensure it's not parented under another rigidbody

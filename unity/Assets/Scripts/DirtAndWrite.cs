@@ -10,7 +10,8 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 
-public class DirtAndWrite : MonoBehaviour {
+public class DirtAndWrite : MonoBehaviour
+{
     // Start is called before the first frame update
     void Start() { }
 

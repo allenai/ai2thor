@@ -1,23 +1,29 @@
 ﻿using System.Security.Cryptography;
 using UnityEngine;
 
-public class ColorEncoding {
-    public static byte ReverseBits(byte value) {
+public class ColorEncoding
+{
+    public static byte ReverseBits(byte value)
+    {
         return (byte)((value * 0x0202020202 & 0x010884422010) % 1023);
     }
 
-    public static int SparsifyBits(byte value, int sparse) {
+    public static int SparsifyBits(byte value, int sparse)
+    {
         int retVal = 0;
-        for (int bits = 0; bits < 8; bits++, value >>= 1) {
+        for (int bits = 0; bits < 8; bits++, value >>= 1)
+        {
             retVal |= (value & 1);
             retVal <<= sparse;
         }
         return retVal >> sparse;
     }
 
-    public static Color EncodeIDAsColor(int instanceId) {
+    public static Color EncodeIDAsColor(int instanceId)
+    {
         var uid = instanceId * 2;
-        if (uid < 0) {
+        if (uid < 0)
+        {
             uid = -uid + 1;
         }
 
@@ -35,15 +41,18 @@ public class ColorEncoding {
         return new Color32(r, g, b, 255);
     }
 
-    public static Color EncodeTagAsColor(string tag) {
-        using (MD5 md5 = MD5.Create()) {
+    public static Color EncodeTagAsColor(string tag)
+    {
+        using (MD5 md5 = MD5.Create())
+        {
             byte[] data = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(tag));
 
             return new Color32(data[0], data[1], data[2], data[3]);
         }
     }
 
-    public static Color EncodeLayerAsColor(int layer) {
+    public static Color EncodeLayerAsColor(int layer)
+    {
         // Following value must be in the range (0.5 .. 1.0)
         // in order to avoid color overlaps when using 'divider' in this func
         var z = .7f;

@@ -17,11 +17,13 @@ using UnityEditor.SceneManagement;
 #endif
 
 [ExecuteInEditMode]
-public class ProceduralRoomEditor : MonoBehaviour {
+public class ProceduralRoomEditor : MonoBehaviour
+{
     private List<(Vector3, Color)> spheres = new List<(Vector3, Color)>();
     public ProceduralHouse loadedHouse;
 
-    protected class NamedSimObj {
+    protected class NamedSimObj
+    {
         public string assetId;
         public string id;
         public SimObjPhysics simObj;
@@ -33,7 +35,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
 #if UNITY_EDITOR
 
-    private ProceduralHouse readHouseFromJson(string fileName) {
+    private ProceduralHouse readHouseFromJson(string fileName)
+    {
         var path = BuildLayoutPath(fileName);
         Debug.Log($"Loading: '{path}'");
         var jsonStr = System.IO.File.ReadAllText(path);
@@ -44,10 +47,12 @@ public class ProceduralRoomEditor : MonoBehaviour {
         return obj.ToObject<ProceduralHouse>();
     }
 
-    private List<NamedSimObj> assignObjectIds() {
+    private List<NamedSimObj> assignObjectIds()
+    {
         var root = GameObject.Find(ProceduralTools.DefaultObjectsRootName);
         //var counter = new Dictionary<SimObjType, int>();
-        if (root != null) {
+        if (root != null)
+        {
             var simobjs = root.transform.GetComponentsInChildren<SimObjPhysics>();
 
             var namedObjects = simobjs
@@ -56,7 +61,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                 .SelectMany(objsOfType =>
                     objsOfType.Select(
                         (simObj, index) =>
-                            new NamedSimObj {
+                            new NamedSimObj
+                            {
                                 assetId = !string.IsNullOrEmpty(simObj.assetID)
                                     ? simObj.assetID
                                     : PrefabNameRevert.GetPrefabAssetName(simObj.gameObject),
@@ -66,7 +72,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     )
                 )
                 .ToList();
-            foreach (var namedObj in namedObjects) {
+            foreach (var namedObj in namedObjects)
+            {
                 Debug.Log(
                     $" Renaming obj: {namedObj.simObj.gameObject.name} to {namedObj.id}, assetId: {namedObj.assetId}"
                 );
@@ -78,14 +85,17 @@ public class ProceduralRoomEditor : MonoBehaviour {
             // foreach (var namedObj in this.namedSimObjects) {
             //     Debug.Log($" Renamed obj: {namedObj.simObj.gameObject.name} to {namedObj.id}, assetId: {namedObj.assetId}" );
             // }
-        } else {
+        }
+        else
+        {
             Debug.LogError($"No root object '{ProceduralTools.DefaultObjectsRootName}'");
             return null;
         }
     }
 
     [Button(Expanded = true)]
-    public void LoadLayout() {
+    public void LoadLayout()
+    {
         this.loadedHouse = readHouseFromJson(this.layoutJSONFilename);
 
         var houseObj = ProceduralTools.CreateHouse(
@@ -94,7 +104,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
         );
     }
 
-    private List<Vector3> getPolygonFromWallPoints(Vector3 p0, Vector3 p1, float height) {
+    private List<Vector3> getPolygonFromWallPoints(Vector3 p0, Vector3 p1, float height)
+    {
         return new List<Vector3>() { p0, p1, p1 + Vector3.up * height, p0 + Vector3.up * height };
     }
 
@@ -103,12 +114,14 @@ public class ProceduralRoomEditor : MonoBehaviour {
         GameObject wall,
         bool reverse = false,
         bool debug = false
-    ) {
+    )
+    {
         var box = wall.GetComponent<BoxCollider>();
         var offset = box.size / 2.0f;
         offset.z = 0.0f;
 
-        if (debug) {
+        if (debug)
+        {
             Debug.Log(
                 " wall "
                     + $"name: '{wall.gameObject.name}' "
@@ -137,14 +150,18 @@ public class ProceduralRoomEditor : MonoBehaviour {
             wall.transform.TransformPoint(box.center + new Vector3(-offset.x, offset.y, 0.0f)),
         };
 
-        if (!reverse) {
+        if (!reverse)
+        {
             return r;
-        } else {
+        }
+        else
+        {
             return new List<Vector3>() { r[1], r[0], r[3], r[2] };
         }
     }
 
-    public class ConnectionAndWalls {
+    public class ConnectionAndWalls
+    {
         public WallRectangularHole connection;
         public List<(PolygonWall wall, string afterWallId)> walls;
 
@@ -157,12 +174,14 @@ public class ProceduralRoomEditor : MonoBehaviour {
         string prefix,
         Dictionary<string, PolygonWall> wallMap,
         Dictionary<string, WallRectangularHole> connectionMap = null
-    ) {
+    )
+    {
         var flippedForward = filterType == SimObjType.Window;
         var connectionsWithWalls = connections
             .Where(s => s.Type == filterType)
             .Select(
-                (d, i) => {
+                (d, i) =>
+                {
                     var id = d.gameObject.name;
 
                     // Debug.Log($"----- {prefix} " + d.gameObject.name);
@@ -229,7 +248,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
                     var normal = Vector3.Cross((p1World - p0World).normalized, p0UpWorld);
 
-                    var colliderDistances = wallColliders.Select(collider => {
+                    var colliderDistances = wallColliders.Select(collider =>
+                    {
                         var offset = collider.size / 2.0f;
 
                         // Debug.Log("Getting collider: " + collider.gameObject.name + " in dic " + wallMap.ContainsKey(collider.gameObject.name));
@@ -252,7 +272,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
                         var upVec = (topP0 - cP0).normalized;
 
-                        return new {
+                        return new
+                        {
                             collider = collider,
                             p0SqrDistance = (p1World - cP0).sqrMagnitude,
                             p1SqrDistance = (p0World - cP1).sqrMagnitude,
@@ -286,7 +307,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                         Vector3 direction,
                         Vector3 wallNormal,
                         string name
-                    ) {
+                    )
+                    {
                         var p0Ref = new Vector3(p0World.x, wallP0.y, p0World.z);
                         var p1Ref = new Vector3(p1World.x, wallP1.y, p1World.z);
 
@@ -326,7 +348,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                         if (
                             name == "wall_3_1"
                             || name == "wall_3_2" && d.gameObject.name == "Window_3"
-                        ) {
+                        )
+                        {
                             Debug.Log(
                                 $" ^^^^^^^^^^ DIRECTION p0 {p0World.x},{p0World.y},{p0World.z} p1 {p1World.x},{p1World.y},{p1World.z} dir {dir.x},{dir.y},{dir.z}"
                             );
@@ -392,7 +415,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                         Vector3 origin,
                         string name,
                         string side = ""
-                    ) {
+                    )
+                    {
                         var originRef = new Vector3(origin.x, p.y, origin.z);
                         var originToP = (p - originRef);
 
@@ -413,7 +437,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                             name == "wall_2_6"
                             || name == "wall_2_7"
                             || name == "wall_2_8" && d.gameObject.name == "Window_5"
-                        ) {
+                        )
+                        {
                             Debug.Log(
                                 $"!!!!!!!!!!!!!!! Window_Hung_48x44 wall {name} - {side} walls, p {p}, orig {originRef}, dir {direction} dot0 {dot0} originToP {originToP} t.x {t.x}, t.y {t.y}, t.z {t.z} onLine {onLine} t.x <= (1.0f+tEps) {t.x <= (1.0f + tEps)} t.x >= (0.0f-tEps) {t.x >= (0.0f - tEps)} (Math.Abs(direction.x) > dirEps && t.x <= (1.0f+tEps) && t.x >= (0.0f-tEps))  {(Math.Abs(direction.x) > dirEps && t.x <= (1.0f + tEps) && t.x >= (0.0f - tEps))} ((Math.Abs(direction.z) > dirEps && t.z <= (1.0f+tEps) && t.z >= (0.0f-tEps))) {((Math.Abs(direction.z) > dirEps && t.z <= (1.0f + tEps) && t.z >= (0.0f - tEps)))} "
                             );
@@ -448,7 +473,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     // };
 
                     var wallRight = colliderDistances.Aggregate(
-                        new {
+                        new
+                        {
                             collider = box,
                             p0SqrDistance = float.MaxValue,
                             p1SqrDistance = float.MaxValue,
@@ -474,7 +500,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
                     // && Vector3.Dot(next.normal, normal) > 0
                     var wallLeft = colliderDistances.Aggregate(
-                        new {
+                        new
+                        {
                             collider = box,
                             p0SqrDistance = float.MaxValue,
                             p1SqrDistance = float.MaxValue,
@@ -483,10 +510,12 @@ public class ProceduralRoomEditor : MonoBehaviour {
                             height = 0.0f,
                             normal = new Vector3()
                         },
-                        (min, next) => {
+                        (min, next) =>
+                        {
                             var name = next.collider.gameObject.name;
                             // if (name == "wall1_7" || name == "wall1_6" || name == "wall1_5" && d.gameObject.name == "Window_1") {
-                            if (name == "wall_2_8" && d.gameObject.name == "Window_Hung_48x44") {
+                            if (name == "wall_2_8" && d.gameObject.name == "Window_Hung_48x44")
+                            {
                                 Debug.Log(
                                     $"########## -- connection {d.gameObject.name} wall Left {name} p1SqrDistance {next.p1SqrDistance}, normal {Vector3.Dot(next.collider.transform.forward, connectionNormal)} !onLine {!pointOnWallLine(next.p1, -dirNormalized, p1World, next.collider.gameObject.name)}"
                                 );
@@ -512,7 +541,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     Debug.Log($"^^^^^^^^^^^^ Wall left p0: {wallLeft.p0} p1: {wallLeft.p1}");
 
                     var backWallClosestLeft = colliderDistances.Aggregate(
-                        new {
+                        new
+                        {
                             collider = box,
                             p0SqrDistance = float.MaxValue,
                             p1SqrDistance = float.MaxValue,
@@ -537,7 +567,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     );
 
                     var backWallClosestRight = colliderDistances.Aggregate(
-                        new {
+                        new
+                        {
                             collider = box,
                             p0SqrDistance = float.MaxValue,
                             p1SqrDistance = float.MaxValue,
@@ -679,7 +710,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                         .sharedMaterial;
                     var lenn = (wall.polygon[1] - wall.polygon[0]).magnitude;
                     //   var height =
-                    var wallRev = new PolygonWall {
+                    var wallRev = new PolygonWall
+                    {
                         id = $"wall_{id}_back",
                         roomId = connectionProps?.OpenToRoomId,
                         polygon = new List<Vector3>()
@@ -692,7 +724,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                         // polygon = getPolygonFromWallPoints(p0, p1, backWallClosestRight.height),
                         // TODO get material somehow
                         // material = connectionProps?.openFromWallMaterial?.name
-                        material = new MaterialProperties() {
+                        material = new MaterialProperties()
+                        {
                             name = material.name,
                             tilingDivisorX = lenn / material.mainTextureScale.x,
                             tilingDivisorY =
@@ -728,8 +761,10 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
                     // assetId = assetId == null ? d.assetID : assetId;
 
-                    if (filterType == SimObjType.Doorway) {
-                        connection = new Thor.Procedural.Data.Door {
+                    if (filterType == SimObjType.Doorway)
+                    {
+                        connection = new Thor.Procedural.Data.Door
+                        {
                             id = id,
 
                             room0 = connectionProps?.OpenFromRoomId,
@@ -753,9 +788,12 @@ public class ProceduralRoomEditor : MonoBehaviour {
                             openness = (connectionProps?.IsOpen).GetValueOrDefault() ? 1.0f : 0.0f,
                             assetId = assetId
                         };
-                    } else if (filterType == SimObjType.Window) {
+                    }
+                    else if (filterType == SimObjType.Window)
+                    {
                         var yMin = p0World.y - wallLeft.p1.y;
-                        connection = new Thor.Procedural.Data.Window {
+                        connection = new Thor.Procedural.Data.Window
+                        {
                             id = id,
 
                             room0 = connectionProps?.OpenFromRoomId,
@@ -860,7 +898,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                         $"~~~~~~~~~~ Walls to delete {string.Join(", ", toDelete.Select(o => o.collider.name))}"
                     );
 
-                    return new ConnectionAndWalls() {
+                    return new ConnectionAndWalls()
+                    {
                         connection = connection,
                         walls = wallsToCreate,
                         wallIdsToDelete = toDelete.Select(o => o.collider.name).ToList()
@@ -924,8 +963,10 @@ public class ProceduralRoomEditor : MonoBehaviour {
     //     return doorWalls;
     // }
 
-    void OnDrawGizmosSelected() {
-        foreach (var (c, color) in spheres) {
+    void OnDrawGizmosSelected()
+    {
+        foreach (var (c, color) in spheres)
+        {
             Gizmos.color = color;
             Gizmos.DrawSphere(c, 0.2f);
         }
@@ -938,15 +979,18 @@ public class ProceduralRoomEditor : MonoBehaviour {
         Vector3 p1,
         float height,
         Material material
-    ) {
+    )
+    {
         var len = (p1 - p0).magnitude;
-        return new PolygonWall {
+        return new PolygonWall
+        {
             id = id,
             roomId = connectionProps?.OpenFromRoomId,
             polygon = getPolygonFromWallPoints(p0, p1, height),
             // TODO get material somehow
             // material = connectionProps?.openFromWallMaterial?.name
-            material = new MaterialProperties() {
+            material = new MaterialProperties()
+            {
                 name = material.name,
                 tilingDivisorX = len / material.mainTextureScale.x,
                 tilingDivisorY = height / material.mainTextureScale.y
@@ -954,7 +998,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
         };
     }
 
-    private ProceduralHouse regenerateWallsData(ProceduralHouse house) {
+    private ProceduralHouse regenerateWallsData(ProceduralHouse house)
+    {
         // if (this.loadedHouse == null) {
         //     this.loadedHouse = readHouseFromJson(this.layoutJSONFilename);
         // }
@@ -967,16 +1012,19 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
         var wallsJson = wallsGOs
             .Select(
-                (w, i) => {
+                (w, i) =>
+                {
                     var material = w.GetComponent<MeshRenderer>().sharedMaterial;
                     var poly = getPolygonFromWallObject(w.gameObject);
                     var box = w.GetComponent<BoxCollider>();
 
-                    return new PolygonWall {
+                    return new PolygonWall
+                    {
                         id = w.gameObject.name,
                         roomId = w.GetComponentInChildren<WallProperties>().RoomId,
                         polygon = poly,
-                        material = new MaterialProperties() {
+                        material = new MaterialProperties()
+                        {
                             name = material.name,
                             tilingDivisorX = box.size.x / material.mainTextureScale.x,
                             tilingDivisorY = box.size.y / material.mainTextureScale.y
@@ -1022,7 +1070,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
         var wallWithInsertLocation = allNewConnections
             .SelectMany(s => s.walls)
-            .Select(wallIdPair => {
+            .Select(wallIdPair =>
+            {
                 //    Debug.Log($"All Walls: {string.Join(", ", wallsJson.Select(w => w.id))}");
                 // Debug.Log("Wall " +  wallIdPair.wall.id + " search after: '" + wallIdPair.afterWallId + "' find: " + wallsJson.FirstOrDefault( w => string.Equals(w.id, wallIdPair.afterWallId,StringComparison.InvariantCultureIgnoreCase ) )+ " ." + $" find '{string.Join(", ", wallsJson.Where(w => string.Equals(w.id, "wall0_17")))}'");
                 return (
@@ -1035,7 +1084,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
             });
         var toDeleteSet = new HashSet<string>(allNewConnections.SelectMany(w => w.wallIdsToDelete));
         //wallsJson = wallsJson.Where(w => !toDeleteSet.Contains(w.id)).ToList();
-        foreach (var pair in wallWithInsertLocation) {
+        foreach (var pair in wallWithInsertLocation)
+        {
             wallsJson.Insert(pair.index + 1, pair.wall);
         }
 
@@ -1051,7 +1101,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
         );
         // house.doors = doors.ToList();
         // house.windows = windows.ToList();
-        return new ProceduralHouse {
+        return new ProceduralHouse
+        {
             proceduralParameters = house.proceduralParameters,
             id = house.id,
             rooms = house.rooms,
@@ -1072,26 +1123,30 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
     // }
     [Button]
-    public void AssigObjectIds() {
+    public void AssigObjectIds()
+    {
         this.assignObjectIds();
     }
 
     [Button]
-    public void ReloadScene() {
+    public void ReloadScene()
+    {
         var scene = UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene();
 
         UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scene.path);
     }
 
     [Button(Expanded = true)]
-    public void SerializeSceneFromGameObjects(string outFilename) {
+    public void SerializeSceneFromGameObjects(string outFilename)
+    {
         // var path = BuildLayoutPath(layoutJSONFilename);
         // var jsonStr = System.IO.File.ReadAllText(path);
         // JObject jsonObj = JObject.Parse(jsonStr);
         // this.loadedHouse = jsonObj.ToObject<ProceduralHouse>();
 
         // if (this.loadedHouse != null) {
-        if (String.IsNullOrWhiteSpace(this.layoutJSONFilename)) {
+        if (String.IsNullOrWhiteSpace(this.layoutJSONFilename))
+        {
             Debug.LogError(
                 "No base layout filename provided, need this to get procedural params. Add a 'layoutJSONFilename'"
             );
@@ -1121,7 +1176,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
         var skipObjects = new HashSet<SimObjType>() { SimObjType.Doorway, SimObjType.Window };
         house.objects = simObjects
             .Where(obj => !skipObjects.Contains(obj.simObj.Type))
-            .Select(obj => {
+            .Select(obj =>
+            {
                 Vector3 axis;
                 float degrees;
                 obj.simObj.transform.rotation.ToAngleAxis(out degrees, out axis);
@@ -1143,25 +1199,29 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     LayerMask.GetMask("NonInteractive")
                 );
                 string room = "";
-                if (didHit) {
+                if (didHit)
+                {
                     room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
                 }
                 Debug.Log("Processing " + obj.assetId + " ...");
-                if (!assetDb.ContainsKey(obj.assetId)) {
+                if (!assetDb.ContainsKey(obj.assetId))
+                {
                     Debug.LogError(
                         $"Asset '{obj.assetId}' not in AssetLibrary, so it won't be able to be loaded as part of a procedural scene. Save the asset and rebuild asset library."
                     );
                 }
                 // var box = obj.simObj.BoundingBox.GetComponent<BoxCollider>();
                 // box.enabled = true;
-                var serializedObj = new HouseObject() {
+                var serializedObj = new HouseObject()
+                {
                     id = obj.id,
                     position = bb.center,
                     rotation = new FlexibleRotation() { axis = axis, degrees = degrees },
                     kinematic = (
                         obj.simObj.GetComponentInChildren<Rigidbody>()?.isKinematic
                     ).GetValueOrDefault(),
-                    boundingBox = new BoundingBox() {
+                    boundingBox = new BoundingBox()
+                    {
                         min = bb.center - (bb.size / 2.0f),
                         max = bb.center + (bb.size / 2.0f)
                     },
@@ -1182,7 +1242,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
         GameObject floorRoot;
         floorRoot = GameObject.Find(house.id);
-        if (floorRoot == null) {
+        if (floorRoot == null)
+        {
             floorRoot = GameObject.Find(ProceduralTools.DefaultHouseRootObjectName);
         }
 
@@ -1194,7 +1255,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
             );
 
         house.rooms = house
-            .rooms.Select(r => {
+            .rooms.Select(r =>
+            {
                 r.roomType = roomIdToProps[r.id].roomProps.RoomType;
                 // TODO add more room annotations here
                 return r;
@@ -1214,7 +1276,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
         var gatheredLights = new List<LightParameters>();
 
         house.proceduralParameters.lights = sceneLights
-            .Select(l => {
+            .Select(l =>
+            {
                 RaycastHit hit;
                 var didHit = Physics.Raycast(
                     l.transform.position,
@@ -1224,22 +1287,26 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     LayerMask.GetMask("NonInteractive")
                 );
                 string room = "";
-                if (didHit) {
+                if (didHit)
+                {
                     room = hit.collider.transform.GetComponentInParent<SimObjPhysics>()?.ObjectID;
                 }
                 // didHit = Physics.Raycast(l.transform.position, -Vector3.up,out hit, 1.0f, LayerMask.GetMask("SimObjVisible", "Procedural1", "Procedural2", "Procedural3", "Procedural0"));
                 string objectLink = "";
                 var parentSim = l.GetComponentInParent<SimObjPhysics>();
                 //SimObjType.Lamp
-                if (parentSim != null) { //( parentSim?.ObjType).GetValueOrDefault() == SimObjType.FloorLamp )
+                if (parentSim != null)
+                { //( parentSim?.ObjType).GetValueOrDefault() == SimObjType.FloorLamp )
                     objectLink = parentSim.ObjectID;
                 }
                 // if (didHit) {
                 //     objectLink = hit.transform.GetComponentInParent<SimObjPhysics>()?.objectID;
                 // }
                 ShadowParameters sp = null;
-                if (l.shadows != LightShadows.None) {
-                    sp = new ShadowParameters() {
+                if (l.shadows != LightShadows.None)
+                {
+                    sp = new ShadowParameters()
+                    {
                         strength = l.shadowStrength,
                         type = Enum.GetName(typeof(LightShadows), l.shadows),
                         normalBias = l.shadowNormalBias,
@@ -1251,7 +1318,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                         )
                     };
                 }
-                return new LightParameters() {
+                return new LightParameters()
+                {
                     id = l.gameObject.name,
                     type = LightType.GetName(typeof(LightType), l.type),
                     position = l.transform.position,
@@ -1260,7 +1328,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     intensity = l.intensity,
                     indirectMultiplier = l.bounceIntensity,
                     range = l.range,
-                    rgb = new SerializableColor() {
+                    rgb = new SerializableColor()
+                    {
                         r = l.color.r,
                         g = l.color.g,
                         b = l.color.b,
@@ -1280,8 +1349,10 @@ public class ProceduralRoomEditor : MonoBehaviour {
                     .GetComponentsInChildren<ReflectionProbe>()
             );
         house.proceduralParameters.reflections = probes
-            .Select(probeComp => {
-                return new ProbeParameters() {
+            .Select(probeComp =>
+            {
+                return new ProbeParameters()
+                {
                     background = SerializableColor.fromUnityColor(probeComp.backgroundColor),
                     intensity = probeComp.intensity,
                     boxSize = probeComp.size,
@@ -1293,7 +1364,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
             })
             .ToList();
 
-        foreach (var probe in house.proceduralParameters.reflections) {
+        foreach (var probe in house.proceduralParameters.reflections)
+        {
             var go = new GameObject(probe.id);
             go.transform.position = probe.position;
 
@@ -1306,7 +1378,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
             probeComp.shadowDistance = probe.shadowDistance;
         }
 
-        house.proceduralParameters.ceilingMaterial = new MaterialProperties() {
+        house.proceduralParameters.ceilingMaterial = new MaterialProperties()
+        {
             name = GameObject
                 .Find(ProceduralTools.DefaultCeilingRootObjectName)
                 .GetComponentInChildren<MeshRenderer>()
@@ -1319,7 +1392,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
         var jsonResolver = new ShouldSerializeContractResolver();
         var outJson = JObject.FromObject(
             house,
-            new Newtonsoft.Json.JsonSerializer() {
+            new Newtonsoft.Json.JsonSerializer()
+            {
                 ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
                 ContractResolver = jsonResolver
             }
@@ -1329,9 +1403,11 @@ public class ProceduralRoomEditor : MonoBehaviour {
         System.IO.File.WriteAllText(outPath, outJson.ToString());
     }
 
-    private string BuildLayoutPath(string layoutFilename) {
+    private string BuildLayoutPath(string layoutFilename)
+    {
         layoutFilename = layoutFilename.Trim();
-        if (!layoutFilename.EndsWith(".json")) {
+        if (!layoutFilename.EndsWith(".json"))
+        {
             layoutFilename += ".json";
         }
         var path = Application.dataPath + LoadBasePath + layoutFilename;
@@ -1339,7 +1415,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
     }
 
     [UnityEditor.MenuItem("Procedural/Build Asset Database")]
-    public static void BuildAssetDB() {
+    public static void BuildAssetDB()
+    {
         var proceduralADB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
         // proceduralADB.prefabs = new AssetMap<GameObject>(ProceduralTools.FindPrefabsInAssets().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
         // proceduralADB.materials = new AssetMap<Material>(ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
@@ -1354,7 +1431,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
     }
 
     [UnityEditor.MenuItem("Procedural/Filter Asset Database")]
-    public static void ReduceAssetDb() {
+    public static void ReduceAssetDb()
+    {
         var proceduralADB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
 
         var house = readHouseFromJsonStatic("test_0_out.json");
@@ -1373,14 +1451,16 @@ public class ProceduralRoomEditor : MonoBehaviour {
     public static void filterADBFromHousesAssets(
         ProceduralAssetDatabase assetDb,
         IEnumerable<ProceduralHouse> houses
-    ) {
+    )
+    {
         var mats = new HashSet<string>(houses.SelectMany(h => getAllMaterials(h)));
         var assets = new HashSet<string>(houses.SelectMany(h => getAssetIds(h)));
         assetDb.prefabs = assetDb.prefabs.Where(p => assets.Contains(p.name)).ToList();
         assetDb.materials = assetDb.materials.Where(p => mats.Contains(p.name)).ToList();
     }
 
-    public static IEnumerable<string> getAllMaterials(ProceduralHouse house) {
+    public static IEnumerable<string> getAllMaterials(ProceduralHouse house)
+    {
         return house
             .rooms.SelectMany(r =>
                 r.ceilings.Select(c => c.material.name)
@@ -1390,14 +1470,16 @@ public class ProceduralRoomEditor : MonoBehaviour {
             .Concat(new List<string>() { house.proceduralParameters.ceilingMaterial.name });
     }
 
-    public static IEnumerable<string> getAssetIds(ProceduralHouse house) {
+    public static IEnumerable<string> getAssetIds(ProceduralHouse house)
+    {
         return house
             .objects.Select(o => o.assetId)
             .Concat(house.windows.Select(w => w.assetId))
             .Concat(house.doors.Select(d => d.assetId));
     }
 
-    public static ProceduralHouse readHouseFromJsonStatic(string fileName) {
+    public static ProceduralHouse readHouseFromJsonStatic(string fileName)
+    {
         var path = BuildLayoutPathStatic(fileName);
         Debug.Log($"Loading: '{path}'");
         var jsonStr = System.IO.File.ReadAllText(path);
@@ -1408,10 +1490,12 @@ public class ProceduralRoomEditor : MonoBehaviour {
         return obj.ToObject<ProceduralHouse>();
     }
 
-    public static string BuildLayoutPathStatic(string layoutFilename) {
+    public static string BuildLayoutPathStatic(string layoutFilename)
+    {
         layoutFilename = layoutFilename.Trim();
         string LoadBasePath = "/Resources/rooms/";
-        if (!layoutFilename.EndsWith(".json")) {
+        if (!layoutFilename.EndsWith(".json"))
+        {
             layoutFilename += ".json";
         }
         var path = Application.dataPath + LoadBasePath + layoutFilename;

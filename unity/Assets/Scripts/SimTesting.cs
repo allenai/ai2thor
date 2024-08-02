@@ -4,8 +4,10 @@ using System.Collections;
 using UnityEngine;
 
 // class for testing SimUtil functions
-public class SimTesting : MonoBehaviour {
-    public enum TestMethod {
+public class SimTesting : MonoBehaviour
+{
+    public enum TestMethod
+    {
         SpherecastAll,
         CheckVisibility,
         Raycast,
@@ -30,22 +32,29 @@ public class SimTesting : MonoBehaviour {
     public bool foundPlacementPoint;
     public SimObj inventoryObject;
 
-    void Start() {
-        if (inventoryObject != null) {
+    void Start()
+    {
+        if (inventoryObject != null)
+        {
             inventoryObject.gameObject.SetActive(false);
         }
     }
 
 #if UNITY_EDITOR
     // used to show what's currently visible
-    void OnGUI() {
-        if (SimObjsInView != null) {
-            if (SimObjsInView.Length > 10) {
+    void OnGUI()
+    {
+        if (SimObjsInView != null)
+        {
+            if (SimObjsInView.Length > 10)
+            {
                 int horzIndex = -1;
                 GUILayout.BeginHorizontal();
-                foreach (SimObj o in SimObjsInView) {
+                foreach (SimObj o in SimObjsInView)
+                {
                     horzIndex++;
-                    if (horzIndex >= 3) {
+                    if (horzIndex >= 3)
+                    {
                         GUILayout.EndHorizontal();
                         GUILayout.BeginHorizontal();
                         horzIndex = 0;
@@ -57,8 +66,11 @@ public class SimTesting : MonoBehaviour {
                     );
                 }
                 GUILayout.EndHorizontal();
-            } else {
-                foreach (SimObj o in SimObjsInView) {
+            }
+            else
+            {
+                foreach (SimObj o in SimObjsInView)
+                {
                     GUILayout.Button(
                         o.ObjectID,
                         UnityEditor.EditorStyles.miniButton,
@@ -71,16 +83,19 @@ public class SimTesting : MonoBehaviour {
 #endif
 
 #if UNITY_EDITOR
-    void OnDisable() {
+    void OnDisable()
+    {
         // make all sim objs invisible
         SimObj[] simObjs = GameObject.FindObjectsOfType<SimObj>();
-        foreach (SimObj o in simObjs) {
+        foreach (SimObj o in simObjs)
+        {
             o.VisibleNow = false;
         }
     }
 #endif
 
-    void Update() {
+    void Update()
+    {
         // check for a navmesh hit
         foundPlacementPoint = PlacementManager.GetPlacementPoint(
             transform.position,
@@ -91,15 +106,20 @@ public class SimTesting : MonoBehaviour {
             ref placementPoint
         );
 
-        if (inventoryObject != null && Input.GetKeyDown(KeyCode.P)) {
-            if (inventoryObject.gameObject.activeSelf) {
+        if (inventoryObject != null && Input.GetKeyDown(KeyCode.P))
+        {
+            if (inventoryObject.gameObject.activeSelf)
+            {
                 SimUtil.TakeItem(inventoryObject);
-            } else if (foundPlacementPoint) {
+            }
+            else if (foundPlacementPoint)
+            {
                 PlacementManager.PlaceObjectAtPoint(inventoryObject, placementPoint);
             }
         }
 
-        switch (Method) {
+        switch (Method)
+        {
             case TestMethod.CheckVisibility:
             default:
                 SimObjsInView = SimUtil.GetAllVisibleSimObjs(Cam, MaxDistance);
@@ -109,12 +129,14 @@ public class SimTesting : MonoBehaviour {
         }
 
         // resize the array to avoid confusion in the test
-        if (SimObjsInView.Length != NumItems) {
+        if (SimObjsInView.Length != NumItems)
+        {
             Array.Resize<SimObj>(ref SimObjsInView, NumItems);
         }
     }
 
-    void OnDrawGizmos() {
+    void OnDrawGizmos()
+    {
         Gizmos.color = Color.cyan;
         Gizmos.DrawSphere(Cam.transform.position, 0.1f);
         Gizmos.color = Color.grey;
@@ -130,7 +152,8 @@ public class SimTesting : MonoBehaviour {
 
         Gizmos.color = foundPlacementPoint ? Color.green : Color.gray;
         Gizmos.DrawSphere(transform.position + (Cam.transform.forward * ReachDistance), 0.05f);
-        if (foundPlacementPoint) {
+        if (foundPlacementPoint)
+        {
             Gizmos.DrawLine(
                 transform.position + (Cam.transform.forward * ReachDistance),
                 placementPoint

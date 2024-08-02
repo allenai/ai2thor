@@ -5,7 +5,8 @@ using System.Linq;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public partial class ArticulatedArmController : ArmController {
+public partial class ArticulatedArmController : ArmController
+{
     public ArticulatedArmJointSolver[] joints;
 
     [SerializeField]
@@ -27,48 +28,58 @@ public partial class ArticulatedArmController : ArmController {
     public new List<SimObjPhysics> heldObjects;
 
     // TODO: Possibly reimplement this fucntions, if AB read of transform is ok then may not need to reimplement
-    public override Transform pickupParent() {
+    public override Transform pickupParent()
+    {
         return magnetSphere.transform;
     }
 
-    public override Vector3 wristSpaceOffsetToWorldPos(Vector3 offset) {
+    public override Vector3 wristSpaceOffsetToWorldPos(Vector3 offset)
+    {
         return handCameraTransform.TransformPoint(offset)
             - handCameraTransform.position
             + WristToManipulator;
     }
 
-    public override Vector3 armBaseSpaceOffsetToWorldPos(Vector3 offset) {
+    public override Vector3 armBaseSpaceOffsetToWorldPos(Vector3 offset)
+    {
         return this.transform.TransformPoint(offset) - this.transform.position;
     }
 
-    public override Vector3 pointToWristSpace(Vector3 point) {
+    public override Vector3 pointToWristSpace(Vector3 point)
+    {
         return handCameraTransform.TransformPoint(point) + WristToManipulator;
     }
 
-    public override Vector3 pointToArmBaseSpace(Vector3 point) {
+    public override Vector3 pointToArmBaseSpace(Vector3 point)
+    {
         return armBase.transform.TransformPoint(point);
     }
 
-    public override void ContinuousUpdate(float fixedDeltaTime) {
+    public override void ContinuousUpdate(float fixedDeltaTime)
+    {
         //so assume each joint that needs to move has had its `currentArmMoveParams` set
         //now we call `ControlJointFromAction` on all joints each physics update to get it to move...
         //Debug.Log("starting ArticulatedArmController.manipulateArm");
-        foreach (ArticulatedArmJointSolver j in joints) {
+        foreach (ArticulatedArmJointSolver j in joints)
+        {
             j.ControlJointFromAction(fixedDeltaTime);
         }
     }
 
-    public override bool ShouldHalt() {
+    public override bool ShouldHalt()
+    {
         //Debug.Log("checking ArticulatedArmController shouldHalt");
         bool shouldHalt = false;
-        foreach (ArticulatedArmJointSolver j in joints) {
+        foreach (ArticulatedArmJointSolver j in joints)
+        {
             //only halt if all joints report back that shouldHalt = true
             //joints that are idle and not moving will return shouldHalt = true by default
             //Debug.Log($"checking joint: {j.transform.name}");
             //Debug.Log($"distance moved so far for this joint is: {j.distanceTransformedSoFar}");
 
             //check all joints that have had movement params set to see if they have halted or not
-            if (j.currentArmMoveParams != null) {
+            if (j.currentArmMoveParams != null)
+            {
                 if (
                     !j.shouldHalt(
                         distanceTransformedSoFar: j.distanceTransformedSoFar,
@@ -77,14 +88,16 @@ public partial class ArticulatedArmController : ArmController {
                         minMovementPerSecond: j.currentArmMoveParams.minMovementPerSecond,
                         haltCheckTimeWindow: j.currentArmMoveParams.haltCheckTimeWindow
                     )
-                ) {
+                )
+                {
                     //if any single joint is still not halting, return false
                     //Debug.Log("still not done, don't halt yet");
                     shouldHalt = false;
                     return shouldHalt;
                 }
                 //this joint returns that it should stop! Now we must wait to see if there rest
-                else {
+                else
+                {
                     //Debug.Log($"halted! Distance moved: {j.distanceTransformedSoFar}");
                     shouldHalt = true;
                     continue;
@@ -96,14 +109,16 @@ public partial class ArticulatedArmController : ArmController {
         return shouldHalt;
     }
 
-    public override ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
+    public override ActionFinished FinishContinuousMove(BaseFPSAgentController controller)
+    {
         Debug.Log("starting continuousMoveFinishAB");
         string debugMessage = "I guess everything is fine?";
 
         // TODO inherit both solvers from common code
         // bool actionSuccess = IsFingerTransformCorrect();
         bool actionSuccess = true;
-        if (!actionSuccess) {
+        if (!actionSuccess)
+        {
             controller.agentManager.SetCriticalErrorState();
         }
 
@@ -115,11 +130,13 @@ public partial class ArticulatedArmController : ArmController {
         return new ActionFinished { success = actionSuccess, errorMessage = debugMessage };
     }
 
-    public override GameObject GetArmTarget() {
+    public override GameObject GetArmTarget()
+    {
         return armTarget.gameObject;
     }
 
-    void Start() {
+    void Start()
+    {
         wristPlaceholderForwardOffset = wristPlaceholderTransform.transform.localPosition.z;
         agentCapsuleCollider = PhysicsController.GetComponent<CapsuleCollider>();
         //Debug.Log($"wrist offset is: {wristPlaceholderForwardOffset}");
@@ -142,7 +159,8 @@ public partial class ArticulatedArmController : ArmController {
         bool returnToStart,
         string coordinateSpace,
         bool restrictTargetPosition
-    ) {
+    )
+    {
         yield return new ActionFinished() { success = false, errorMessage = "Not implemented" };
         //not doing this one yet soooo uhhhhh ignore for now
     }
@@ -153,7 +171,8 @@ public partial class ArticulatedArmController : ArmController {
         float unitsPerSecond,
         float fixedDeltaTime,
         bool useLimits = false
-    ) {
+    )
+    {
         float minMovementPerSecond = 1e-3f;
         float maxTimePassed = 10.0f;
         float haltCheckTimeWindow = 0.2f;
@@ -168,17 +187,20 @@ public partial class ArticulatedArmController : ArmController {
         int direction = 0;
 
         //this is sort of a wonky way to detect direction but it'll work for noooooow
-        if (target.z < 0) {
+        if (target.z < 0)
+        {
             direction = -1;
         }
-        if (target.z > 0) {
+        if (target.z > 0)
+        {
             direction = 1;
         }
 
         Dictionary<ArticulatedArmJointSolver, float> jointToArmDistanceRatios =
             new Dictionary<ArticulatedArmJointSolver, float>();
 
-        ArmMoveParams amp = new ArmMoveParams {
+        ArmMoveParams amp = new ArmMoveParams
+        {
             distance = distance,
             speed = unitsPerSecond,
             minMovementPerSecond = minMovementPerSecond,
@@ -204,15 +226,18 @@ public partial class ArticulatedArmController : ArmController {
     public float GetDriveUpperLimit(
         ArticulatedArmJointSolver joint,
         JointAxisType jointAxisType = JointAxisType.Extend
-    ) {
+    )
+    {
         float upperLimit = 0.0f;
 
-        if (jointAxisType == JointAxisType.Extend) {
+        if (jointAxisType == JointAxisType.Extend)
+        {
             //z drive
             upperLimit = joint.myAB.zDrive.upperLimit;
         }
 
-        if (jointAxisType == JointAxisType.Lift) {
+        if (jointAxisType == JointAxisType.Lift)
+        {
             //y drive
             upperLimit = joint.myAB.yDrive.upperLimit;
         }
@@ -230,21 +255,25 @@ public partial class ArticulatedArmController : ArmController {
         bool returnToStartPositionIfFailed,
         bool normalizedY,
         bool useLimits
-    ) {
+    )
+    {
         Debug.Log("starting moveArmBase in ArticulatedArmController");
         float minMovementPerSecond = 1e-3f;
         float maxTimePassed = 10.0f;
         float haltCheckTimeWindow = 0.2f;
 
         int direction = 0;
-        if (distance < 0) {
+        if (distance < 0)
+        {
             direction = -1;
         }
-        if (distance > 0) {
+        if (distance > 0)
+        {
             direction = 1;
         }
 
-        ArmMoveParams amp = new ArmMoveParams {
+        ArmMoveParams amp = new ArmMoveParams
+        {
             distance = Mathf.Abs(distance),
             speed = unitsPerSecond,
             minMovementPerSecond = minMovementPerSecond,
@@ -279,7 +308,8 @@ public partial class ArticulatedArmController : ArmController {
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed,
         bool useLimits
-    ) {
+    )
+    {
         return moveArmBase(
             controller: controller,
             distance: distance,
@@ -294,7 +324,8 @@ public partial class ArticulatedArmController : ArmController {
     private void prepAllTheThingsBeforeJointMoves(
         ArticulatedArmJointSolver joint,
         ArmMoveParams armMoveParams
-    ) {
+    )
+    {
         //FloorCollider.material = sticky;
         joint.PrepToControlJointFromAction(armMoveParams);
     }
@@ -305,21 +336,25 @@ public partial class ArticulatedArmController : ArmController {
         float degreesPerSecond,
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed
-    ) {
+    )
+    {
         Debug.Log("starting rotateWrist in ArticulatedArmController");
         float minMovementPerSecond = 1f * Mathf.Deg2Rad;
         float maxTimePassed = 10.0f;
         float haltCheckTimeWindow = 0.2f;
 
         int direction = 0;
-        if (distance < 0) {
+        if (distance < 0)
+        {
             direction = -1;
         }
-        if (distance > 0) {
+        if (distance > 0)
+        {
             direction = 1;
         }
 
-        ArmMoveParams amp = new ArmMoveParams {
+        ArmMoveParams amp = new ArmMoveParams
+        {
             distance = Mathf.Abs(distance),
             speed = degreesPerSecond,
             minMovementPerSecond = minMovementPerSecond,
@@ -343,15 +378,19 @@ public partial class ArticulatedArmController : ArmController {
         );
     }
 
-    public IEnumerable PickupObject(List<string> objectIds) {
+    public IEnumerable PickupObject(List<string> objectIds)
+    {
         Debug.Log("calling PickupObject from ArticulatedArmController");
         bool pickedUp = false;
 
-        foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP(onlyPickupable: true)) {
+        foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP(onlyPickupable: true))
+        {
             Debug.Log($"sop named: {sop.objectID} found inside sphere");
-            if (objectIds != null) {
+            if (objectIds != null)
+            {
                 //only grab objects specified by objectIds
-                if (!objectIds.Contains(sop.objectID)) {
+                if (!objectIds.Contains(sop.objectID))
+                {
                     continue;
                 }
             }
@@ -374,7 +413,8 @@ public partial class ArticulatedArmController : ArmController {
             heldObjects.Add(sop);
         }
         var errorMessage = "";
-        if (!pickedUp) {
+        if (!pickedUp)
+        {
             errorMessage = (
                 objectIds != null
                     ? "No objects (specified by objectId) were valid to be picked up by the arm"
@@ -386,8 +426,10 @@ public partial class ArticulatedArmController : ArmController {
     }
 
     //called by ArmAgentController ReleaseObject
-    public override IEnumerator DropObject() {
-        foreach (SimObjPhysics sop in heldObjects) {
+    public override IEnumerator DropObject()
+    {
+        foreach (SimObjPhysics sop in heldObjects)
+        {
             //remove the joint component
             //may need a null check for if we decide to break joints via force at some poine.
             //look into the OnJointBreak callback if needed
@@ -400,23 +442,28 @@ public partial class ArticulatedArmController : ArmController {
         yield return ActionFinished.Success;
     }
 
-    protected override void lastStepCallback() {
-        foreach (ArticulatedArmJointSolver joint in joints) {
+    protected override void lastStepCallback()
+    {
+        foreach (ArticulatedArmJointSolver joint in joints)
+        {
             ArticulationBody myAB = joint.myAB;
 
-            if (myAB == null) {
+            if (myAB == null)
+            {
                 Debug.LogWarning("Articulated body is null, skipping.");
                 continue;
             }
 
             // Check the joint type and get the current joint position and velocity
-            if (myAB.jointType == ArticulationJointType.PrismaticJoint) {
+            if (myAB.jointType == ArticulationJointType.PrismaticJoint)
+            {
                 //                Debug.Log($"joint {joint.gameObject}");
                 //                Debug.Log($"joint {myAB.jointType}");
                 //                Debug.Log($"solverIterations {myAB.solverIterations}");
                 //                Debug.Log($"solverVelocityIterations {myAB.solverVelocityIterations}");
 
-                if (myAB.dofCount != 1) {
+                if (myAB.dofCount != 1)
+                {
                     throw new NotImplementedException(
                         "Prismatic joint must have 1 degree of freedom"
                     );
@@ -430,11 +477,13 @@ public partial class ArticulatedArmController : ArmController {
                 // Super hacky way to get which drive is active
                 string whichDrive = "x";
                 ArticulationDrive activeDrive = xDrive;
-                if (yDrive.target != 0.0f) {
+                if (yDrive.target != 0.0f)
+                {
                     activeDrive = yDrive;
                     whichDrive = "y";
                 }
-                if (zDrive.target != 0.0f) {
+                if (zDrive.target != 0.0f)
+                {
                     activeDrive = zDrive;
                     whichDrive = "z";
                 }
@@ -445,18 +494,24 @@ public partial class ArticulatedArmController : ArmController {
                 activeDrive.target = currentPosition;
                 activeDrive.targetVelocity = 0f;
 
-                if (whichDrive == "x") {
+                if (whichDrive == "x")
+                {
                     myAB.xDrive = activeDrive;
                 }
-                if (whichDrive == "y") {
+                if (whichDrive == "y")
+                {
                     myAB.yDrive = activeDrive;
                 }
-                if (whichDrive == "z") {
+                if (whichDrive == "z")
+                {
                     myAB.zDrive = activeDrive;
                 }
-            } else if (myAB.jointType == ArticulationJointType.RevoluteJoint) {
+            }
+            else if (myAB.jointType == ArticulationJointType.RevoluteJoint)
+            {
                 // For revolute joints
-                if (myAB.dofCount != 1) {
+                if (myAB.dofCount != 1)
+                {
                     throw new NotImplementedException(
                         "Revolute joint must have 1 degree of freedom"
                     );
@@ -471,21 +526,25 @@ public partial class ArticulatedArmController : ArmController {
                 xDrive.targetVelocity = 0f;
 
                 myAB.xDrive = xDrive;
-            } else {
+            }
+            else
+            {
                 throw new NotImplementedException($"Unsupported joint type {myAB.jointType}");
             }
         }
     }
 
     //ignore this, we need new metadata that makes more sense for the articulation heirarchy soooooo
-    public override ArmMetadata GenerateMetadata() {
+    public override ArmMetadata GenerateMetadata()
+    {
         // TODO: Reimplement, low prio for benchmark
         ArmMetadata meta = new ArmMetadata();
         return meta;
     }
 
     //actual metadata implementation for articulation heirarchy
-    public ArticulationArmMetadata GenerateArticulationMetadata() {
+    public ArticulationArmMetadata GenerateArticulationMetadata()
+    {
         ArticulationArmMetadata meta = new ArticulationArmMetadata();
 
         List<ArticulationJointMetadata> metaJoints = new List<ArticulationJointMetadata>();
@@ -495,7 +554,8 @@ public partial class ArticulatedArmController : ArmController {
         float angleRot;
         Vector3 vectorRot;
 
-        for (int i = 0; i < joints.Count(); i++) {
+        for (int i = 0; i < joints.Count(); i++)
+        {
             ArticulationJointMetadata jMeta = new ArticulationJointMetadata();
 
             jMeta.name = joints[i].name;
@@ -511,10 +571,13 @@ public partial class ArticulatedArmController : ArmController {
             currentRotation = joints[i].transform.rotation;
 
             // Check that world-relative rotation is angle-axis-notation-compatible
-            if (currentRotation != new Quaternion(0, 0, 0, -1)) {
+            if (currentRotation != new Quaternion(0, 0, 0, -1))
+            {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                 jMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
-            } else {
+            }
+            else
+            {
                 jMeta.rotation = new Vector4(1, 0, 0, 0);
             }
 
@@ -522,7 +585,8 @@ public partial class ArticulatedArmController : ArmController {
             // Grab rotation of current joint's angler relative to root joint
             currentRotation =
                 Quaternion.Inverse(joints[0].transform.rotation) * joints[i].transform.rotation;
-            if (currentRotation != new Quaternion(0, 0, 0, -1)) {
+            if (currentRotation != new Quaternion(0, 0, 0, -1))
+            {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                 jMeta.rootRelativeRotation = new Vector4(
                     vectorRot.x,
@@ -530,20 +594,24 @@ public partial class ArticulatedArmController : ArmController {
                     vectorRot.z,
                     angleRot
                 );
-            } else {
+            }
+            else
+            {
                 jMeta.rootRelativeRotation = new Vector4(1, 0, 0, 0);
             }
 
             // LOCAL POSITION AND LOCAL ROTATION
             //get local position and local rotation relative to immediate parent in heirarchy
-            if (i != 0) {
+            if (i != 0)
+            {
                 jMeta.localPosition = joints[i - 1]
                     .transform.InverseTransformPoint(joints[i].transform.position);
 
                 var currentLocalRotation =
                     Quaternion.Inverse(joints[i - 1].transform.rotation)
                     * joints[i].transform.rotation;
-                if (currentLocalRotation != new Quaternion(0, 0, 0, -1)) {
+                if (currentLocalRotation != new Quaternion(0, 0, 0, -1))
+                {
                     currentLocalRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                     jMeta.localRotation = new Vector4(
                         vectorRot.x,
@@ -551,10 +619,14 @@ public partial class ArticulatedArmController : ArmController {
                         vectorRot.z,
                         angleRot
                     );
-                } else {
+                }
+                else
+                {
                     jMeta.localRotation = new Vector4(1, 0, 0, 0);
                 }
-            } else {
+            }
+            else
+            {
                 //special case for the lift since its the base of the arm
                 jMeta.localPosition = jMeta.position;
                 jMeta.localRotation = jMeta.rootRelativeRotation;
@@ -569,8 +641,10 @@ public partial class ArticulatedArmController : ArmController {
         // note this is different from objects intersecting the hand's sphere,
         // there could be a case where an object is inside the sphere but not picked up by the hand
         List<string> heldObjectIDs = new List<string>();
-        if (heldObjects != null) {
-            foreach (SimObjPhysics sop in heldObjects) {
+        if (heldObjects != null)
+        {
+            foreach (SimObjPhysics sop in heldObjects)
+            {
                 heldObjectIDs.Add(sop.objectID);
             }
         }
@@ -589,7 +663,8 @@ public partial class ArticulatedArmController : ArmController {
     }
 
 #if UNITY_EDITOR
-    public class GizmoDrawCapsule {
+    public class GizmoDrawCapsule
+    {
         public Vector3 p0;
         public Vector3 p1;
         public float radius;
@@ -597,9 +672,12 @@ public partial class ArticulatedArmController : ArmController {
 
     List<GizmoDrawCapsule> debugCapsules = new List<GizmoDrawCapsule>();
 
-    private void OnDrawGizmos() {
-        if (debugCapsules.Count > 0) {
-            foreach (GizmoDrawCapsule thing in debugCapsules) {
+    private void OnDrawGizmos()
+    {
+        if (debugCapsules.Count > 0)
+        {
+            foreach (GizmoDrawCapsule thing in debugCapsules)
+            {
                 Gizmos.DrawWireSphere(thing.p0, thing.radius);
                 Gizmos.DrawWireSphere(thing.p1, thing.radius);
             }

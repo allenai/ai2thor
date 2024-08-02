@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public interface Arm {
+public interface Arm
+{
     // void ContinuousUpdate();
     bool IsArmColliding();
 

@@ -3,7 +3,8 @@ using System.Collections;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class Toilet : MonoBehaviour {
+public class Toilet : MonoBehaviour
+{
     public SimObj ParentSimObj;
     public Transform Lid;
     public Vector3 OpenRotation;
@@ -13,16 +14,20 @@ public class Toilet : MonoBehaviour {
     [Range(0, 2)]
     public int EditorState = 0;
 
-    void OnEnable() {
+    void OnEnable()
+    {
         ParentSimObj = gameObject.GetComponent<SimObj>();
-        if (ParentSimObj == null) {
+        if (ParentSimObj == null)
+        {
             ParentSimObj = gameObject.AddComponent<SimObj>();
         }
         ParentSimObj.Type = SimObjType.Toilet;
 
-        if (!Application.isPlaying) {
+        if (!Application.isPlaying)
+        {
             Animator a = ParentSimObj.gameObject.GetComponent<Animator>();
-            if (a == null) {
+            if (a == null)
+            {
                 a = ParentSimObj.gameObject.AddComponent<Animator>();
                 a.runtimeAnimatorController =
                     Resources.Load("StateAnimController") as RuntimeAnimatorController;
@@ -31,9 +36,11 @@ public class Toilet : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update() {
+    void Update()
+    {
         int state = EditorState;
-        if (Application.isPlaying) {
+        if (Application.isPlaying)
+        {
             state = ParentSimObj.Animator.GetInteger("AnimState1");
         }
 
@@ -41,7 +48,8 @@ public class Toilet : MonoBehaviour {
         // 1 - open, dirty
         // 2 - open, clean
 
-        switch (state) {
+        switch (state)
+        {
             case 0:
             default:
                 Lid.localEulerAngles = ClosedRotation;

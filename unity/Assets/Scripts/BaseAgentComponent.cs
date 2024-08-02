@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace UnityStandardAssets.Characters.FirstPerson {
+namespace UnityStandardAssets.Characters.FirstPerson
+{
     [RequireComponent(typeof(CharacterController))]
-    public class BaseAgentComponent : MonoBehaviour {
+    public class BaseAgentComponent : MonoBehaviour
+    {
         // debug draw bounds of objects in editor
 #if UNITY_EDITOR
         protected List<Bounds> gizmobounds = new List<Bounds>();
@@ -36,8 +38,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public DroneObjectLauncher DroneObjectLauncher;
 
-        void LateUpdate() {
-            if (this.agent == null) {
+        void LateUpdate()
+        {
+            if (this.agent == null)
+            {
                 return;
             }
 
@@ -55,44 +59,54 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
         }
 
-        void FixedUpdate() {
-            if (this.agent != null) {
+        void FixedUpdate()
+        {
+            if (this.agent != null)
+            {
                 this.agent.FixedUpdate();
             }
         }
 
         // Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
         // XXX: this will be used for truly continuous movement over time, for now this is unused
-        protected void OnControllerColliderHit(ControllerColliderHit hit) {
-            if (this.agent == null) {
+        protected void OnControllerColliderHit(ControllerColliderHit hit)
+        {
+            if (this.agent == null)
+            {
                 return;
             }
 
-            if (hit.gameObject.GetComponent<StructureObject>()) {
+            if (hit.gameObject.GetComponent<StructureObject>())
+            {
                 if (
                     hit.gameObject.GetComponent<StructureObject>().WhatIsMyStructureObjectTag
                     == StructureObjectTag.Floor
-                ) {
+                )
+                {
                     return;
                 }
             }
 
-            if (!this.agent.collisionsInAction.Contains(hit.gameObject.name)) {
+            if (!this.agent.collisionsInAction.Contains(hit.gameObject.name))
+            {
                 this.agent.collisionsInAction.Add(hit.gameObject.name);
             }
 
             Rigidbody body = hit.collider.attachedRigidbody;
             // don't move the rigidbody if the character is on top of it
-            if (this.agent.m_CollisionFlags == CollisionFlags.Below) {
+            if (this.agent.m_CollisionFlags == CollisionFlags.Below)
+            {
                 return;
             }
 
-            if (body == null || body.isKinematic) {
+            if (body == null || body.isKinematic)
+            {
                 return;
             }
 
             // push objects out of the way if moving through them and they are Moveable or CanPickup (Physics)
-            if (this.agent.PushMode) {
+            if (this.agent.PushMode)
+            {
                 float pushPower = 2.0f;
                 Vector3 pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
                 body.velocity = pushDir * pushPower;

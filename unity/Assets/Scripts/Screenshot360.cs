@@ -6,11 +6,13 @@ using UnityEngine.SceneManagement;
 using UnityEditor;
 #endif
 
-public class Screenshot360 : MonoBehaviour {
+public class Screenshot360 : MonoBehaviour
+{
 #if UNITY_EDITOR
     [MenuItem("GameObject/Take 360 Screenshot")]
 #endif
-    private static void Generate360Screenshot() {
+    private static void Generate360Screenshot()
+    {
         int imageWidth = 4096;
         bool saveAsJPEG = true;
         bool newFileName = false;
@@ -19,8 +21,10 @@ public class Screenshot360 : MonoBehaviour {
 
         byte[] bytes = I360Render.Capture(imageWidth, saveAsJPEG);
 
-        if (bytes != null) {
-            while (!newFileName) {
+        if (bytes != null)
+        {
+            while (!newFileName)
+            {
                 if (
                     File.Exists(
                         "Assets/360Photos/360Render_"
@@ -29,9 +33,12 @@ public class Screenshot360 : MonoBehaviour {
                             + currentCount
                             + (saveAsJPEG ? ".jpeg" : ".png")
                     )
-                ) {
+                )
+                {
                     currentCount++;
-                } else {
+                }
+                else
+                {
                     path = Path.Combine(
                         "Assets/360Photos",
                         "360Render_"

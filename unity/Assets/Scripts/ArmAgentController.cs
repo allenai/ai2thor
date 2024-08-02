@@ -7,8 +7,10 @@ using RandomExtensions;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace UnityStandardAssets.Characters.FirstPerson {
-    public abstract class ArmAgentController : PhysicsRemoteFPSAgentController {
+namespace UnityStandardAssets.Characters.FirstPerson
+{
+    public abstract class ArmAgentController : PhysicsRemoteFPSAgentController
+    {
         public ArmAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager)
             : base(baseAgentComponent, agentManager) { }
 
@@ -17,19 +19,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         /*
         Toggles the visibility of the magnet sphere at the end of the arm.
         */
-        public ActionFinished ToggleMagnetVisibility(bool? visible = null) {
+        public ActionFinished ToggleMagnetVisibility(bool? visible = null)
+        {
             MeshRenderer mr = GameObject
                 .Find("MagnetRenderer")
                 .GetComponentInChildren<MeshRenderer>();
-            if (visible.HasValue) {
+            if (visible.HasValue)
+            {
                 mr.enabled = visible.Value;
-            } else {
+            }
+            else
+            {
                 mr.enabled = !mr.enabled;
             }
             return ActionFinished.Success;
         }
 
-        public override void updateImageSynthesis(bool status) {
+        public override void updateImageSynthesis(bool status)
+        {
             base.updateImageSynthesis(status);
 
             // updateImageSynthesis is run in BaseFPSController's Initialize method after the
@@ -64,7 +71,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStart = true,
             string coordinateSpace = "armBase",
             bool restrictMovement = false
-        ) {
+        )
+        {
             var arm = getArm();
             return arm.moveArmRelative(
                 controller: this,
@@ -83,7 +91,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool returnToStart = true,
             string coordinateSpace = "armBase",
             bool restrictMovement = false
-        ) {
+        )
+        {
             var arm = getArm();
             return arm.moveArmTarget(
                 controller: this,
@@ -99,7 +108,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // perhaps this should fail if no object is picked up?
         // currently action success happens as long as the arm is
         // enabled because it is a successful "attempt" to pickup something
-        public IEnumerator PickupObject(List<string> objectIdCandidates = null) {
+        public IEnumerator PickupObject(List<string> objectIdCandidates = null)
+        {
             var arm = getArm();
             return arm.PickupObject(objectIdCandidates);
         }
@@ -109,7 +119,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float y,
             bool forceAction = false,
             bool manualInteract = false
-        ) {
+        )
+        {
             throw new InvalidOperationException(
                 "You are passing in iTHOR PickupObject parameters (x, y) to the arm agent!"
             );
@@ -119,21 +130,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectId,
             bool forceAction = false,
             bool manualInteract = false
-        ) {
+        )
+        {
             throw new InvalidOperationException(
                 "You are passing in iTHOR PickupObject parameters (objectId) to the arm agent!"
             );
         }
 
-        public IEnumerator ReleaseObject() {
+        public IEnumerator ReleaseObject()
+        {
             var arm = getArm();
             return arm.DropObject();
         }
 
         // note this does not reposition the center point of the magnet orb
         // so expanding the radius too much will cause it to clip backward into the wrist joint
-        public ActionFinished SetHandSphereRadius(float radius) {
-            if (radius < 0.04f || radius > 0.5f) {
+        public ActionFinished SetHandSphereRadius(float radius)
+        {
+            if (radius < 0.04f || radius > 0.5f)
+            {
                 throw new ArgumentOutOfRangeException(
                     $"radius={radius} of hand cannot be less than 0.04m nor greater than 0.5m"
                 );
@@ -149,8 +164,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float ahead = 0,
             float right = 0,
             float speed = 1
-        ) {
-            if (ahead == 0 && right == 0) {
+        )
+        {
+            if (ahead == 0 && right == 0)
+            {
                 throw new ArgumentException("Must specify ahead or right!");
             }
             Vector3 direction = new Vector3(x: right, y: 0, z: ahead);
@@ -178,7 +195,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? moveMagnitude = null,
             float speed = 1,
             bool returnToStart = true
-        ) {
+        )
+        {
             return MoveAgent(
                 ahead: moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
@@ -190,7 +208,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? moveMagnitude = null,
             float speed = 1,
             bool returnToStart = true
-        ) {
+        )
+        {
             return MoveAgent(
                 ahead: -moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
@@ -202,7 +221,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? moveMagnitude = null,
             float speed = 1,
             bool returnToStart = true
-        ) {
+        )
+        {
             return MoveAgent(
                 right: moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
@@ -214,7 +234,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? moveMagnitude = null,
             float speed = 1,
             bool returnToStart = true
-        ) {
+        )
+        {
             return MoveAgent(
                 right: -moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
@@ -226,7 +247,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? degrees = null,
             float speed = 1.0f,
             bool returnToStart = true
-        ) {
+        )
+        {
             return RotateAgent(
                 degrees: degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
@@ -238,7 +260,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? degrees = null,
             float speed = 1.0f,
             bool returnToStart = true
-        ) {
+        )
+        {
             return RotateAgent(
                 degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
@@ -250,7 +273,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float degrees,
             float speed = 1.0f,
             bool returnToStart = true
-        ) {
+        )
+        {
             CollisionListener collisionListener = this.GetComponentInParent<CollisionListener>();
             collisionListener.Reset();
 
@@ -282,7 +306,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float roll = 0f,
             float speed = 10f,
             bool returnToStart = true
-        ) {
+        )
+        {
             var arm = getArm();
             return arm.rotateWrist(
                 controller: this,
@@ -301,8 +326,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float speed = 1,
             bool returnToStart = true,
             bool normalizedY = true
-        ) {
-            if (normalizedY && (y < 0f || y > 1f)) {
+        )
+        {
+            if (normalizedY && (y < 0f || y > 1f))
+            {
                 // Checking for bounds when normalizedY == false is handled by arm.moveArmBase
                 throw new ArgumentOutOfRangeException(
                     $"y={y} value must be in [0, 1] when normalizedY=true."
@@ -324,7 +351,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float distance,
             float speed = 1,
             bool returnToStart = true
-        ) {
+        )
+        {
             var arm = getArm();
             return arm.moveArmBaseUp(
                 controller: this,
@@ -339,24 +367,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float distance,
             float speed = 1,
             bool returnToStart = true
-        ) {
+        )
+        {
             return MoveArmBaseUp(distance: -distance, speed: speed, returnToStart: returnToStart);
         }
 
 #if UNITY_EDITOR
         // debug for static arm collisions from collision listener
-        public void GetMidLevelArmCollisions() {
+        public void GetMidLevelArmCollisions()
+        {
             var arm = getArm();
             CollisionListener collisionListener = arm.GetComponentInChildren<CollisionListener>();
-            if (collisionListener != null) {
+            if (collisionListener != null)
+            {
                 List<Dictionary<string, string>> collisions =
                     new List<Dictionary<string, string>>();
-                foreach (var sc in collisionListener.StaticCollisions()) {
+                foreach (var sc in collisionListener.StaticCollisions())
+                {
                     Dictionary<string, string> element = new Dictionary<string, string>();
-                    if (sc.simObjPhysics != null) {
+                    if (sc.simObjPhysics != null)
+                    {
                         element["objectType"] = "simObjPhysics";
                         element["name"] = sc.simObjPhysics.objectID;
-                    } else {
+                    }
+                    else
+                    {
                         element["objectType"] = "gameObject";
                         element["name"] = sc.gameObject.name;
                     }
@@ -367,11 +402,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // debug for static arm collisions from collision listener
-        public void DebugMidLevelArmCollisions() {
+        public void DebugMidLevelArmCollisions()
+        {
             var arm = getArm();
             List<StaticCollision> scs = arm.collisionListener.StaticCollisions().ToList();
             Debug.Log("Total current active static arm collisions: " + scs.Count);
-            foreach (StaticCollision sc in scs) {
+            foreach (StaticCollision sc in scs)
+            {
                 Debug.Log("Arm static collision: " + sc.name);
             }
             actionFinished(true);

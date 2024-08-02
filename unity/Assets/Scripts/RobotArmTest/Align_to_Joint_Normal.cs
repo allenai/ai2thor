@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Align_to_Joint_Normal : MonoBehaviour {
+public class Align_to_Joint_Normal : MonoBehaviour
+{
     public Transform root;
     public Transform mid;
     public Transform tip;
@@ -13,15 +14,19 @@ public class Align_to_Joint_Normal : MonoBehaviour {
         jointTangent;
     Transform positionAlignedJoint;
 
-    void Update() {
+    void Update()
+    {
         joint1 = mid.position - root.position;
         joint2 = tip.position - mid.position;
         jointNormal = Vector3.Cross(joint1, joint2);
 
-        if (isMidJointAngler == true) {
+        if (isMidJointAngler == true)
+        {
             positionAlignedJoint = tip;
             jointTangent = Vector3.Cross(joint2, jointNormal);
-        } else {
+        }
+        else
+        {
             positionAlignedJoint = mid;
             jointTangent = Vector3.Cross(joint1, jointNormal);
         }

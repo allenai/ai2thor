@@ -6,7 +6,8 @@ using UnityEngine;
 
 // this is used to tag Structural objects in the scene. Structural objects are objects with physical collision and are rendered, but are not SimObjects themselves.
 // these objects are all located under the "Structure" object in the Heirarchy, and are always static and purely environmental.
-public class StructureObject : MonoBehaviour {
+public class StructureObject : MonoBehaviour
+{
     [SerializeField]
     public StructureObjectTag WhatIsMyStructureObjectTag;
 
@@ -18,7 +19,8 @@ public class StructureObject : MonoBehaviour {
 }
 
 [Serializable]
-public enum StructureObjectTag : int {
+public enum StructureObjectTag : int
+{
     Undefined = 0,
     Wall = 1,
     Floor = 2,

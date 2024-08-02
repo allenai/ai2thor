@@ -13,8 +13,10 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
 
-namespace UnityStandardAssets.Characters.FirstPerson {
-    public class LocobotFPSAgentController : BaseFPSAgentController {
+namespace UnityStandardAssets.Characters.FirstPerson
+{
+    public class LocobotFPSAgentController : BaseFPSAgentController
+    {
         protected bool applyActionNoise = true;
         protected float movementGaussianMu = 0.001f;
         protected float movementGaussianSigma = 0.005f;
@@ -28,7 +30,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         )
             : base(baseAgentComponent, agentManager) { }
 
-        public override ActionFinished InitializeBody(ServerAction initializeAction) {
+        public override ActionFinished InitializeBody(ServerAction initializeAction)
+        {
             // toggle FirstPersonCharacterCull
 
             VisibilityCapsule = BotVisCap;
@@ -56,36 +59,47 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_Camera.transform.localPosition + new Vector3(0, -0.2206f, 0); // smaller y offset if Bot
 
             // limit camera from looking too far down/up
-            if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f)) {
+            if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f))
+            {
                 this.maxUpwardLookAngle = 30f;
-            } else {
+            }
+            else
+            {
                 this.maxUpwardLookAngle = initializeAction.maxUpwardLookAngle;
             }
 
-            if (Mathf.Approximately(initializeAction.maxDownwardLookAngle, 0.0f)) {
+            if (Mathf.Approximately(initializeAction.maxDownwardLookAngle, 0.0f))
+            {
                 this.maxDownwardLookAngle = 30f;
-            } else {
+            }
+            else
+            {
                 this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
             }
             return ActionFinished.Success;
         }
 
-        public new void Initialize(ServerAction action) {
+        public new void Initialize(ServerAction action)
+        {
             this.applyActionNoise = action.applyActionNoise;
 
-            if (action.movementGaussianMu > 0.0f) {
+            if (action.movementGaussianMu > 0.0f)
+            {
                 this.movementGaussianMu = action.movementGaussianMu;
             }
 
-            if (action.movementGaussianSigma > 0.0f) {
+            if (action.movementGaussianSigma > 0.0f)
+            {
                 this.movementGaussianSigma = action.movementGaussianSigma;
             }
 
-            if (action.rotateGaussianMu > 0.0f) {
+            if (action.rotateGaussianMu > 0.0f)
+            {
                 this.rotateGaussianMu = action.rotateGaussianMu;
             }
 
-            if (action.rotateGaussianSigma > 0.0f) {
+            if (action.rotateGaussianSigma > 0.0f)
+            {
                 this.rotateGaussianSigma = action.rotateGaussianSigma;
             }
 
@@ -103,7 +117,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (
                 UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
                 == "FloorPlan_Train_Generated"
-            ) {
+            )
+            {
                 GenerateRoboTHOR colorChangeComponent =
                     physicsSceneManager.GetComponent<GenerateRoboTHOR>();
                 colorChangeComponent.GenerateConfig(agentTransform: transform);
@@ -111,7 +126,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // reset visible objects while in editor, for debug purposes only
-        private void LateUpdate() {
+        private void LateUpdate()
+        {
 #if UNITY_EDITOR || UNITY_WEBGL
             VisibleSimObjPhysics = VisibleSimObjs();
 #endif
@@ -123,14 +139,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float z = 0f,
             float noise = 0f,
             bool forceAction = false
-        ) {
-            if (!moveMagnitude.HasValue) {
+        )
+        {
+            if (!moveMagnitude.HasValue)
+            {
                 moveMagnitude = gridSize;
-            } else if (moveMagnitude.Value <= 0f) {
+            }
+            else if (moveMagnitude.Value <= 0f)
+            {
                 throw new InvalidOperationException("moveMagnitude must be null or >= 0.");
             }
 
-            if (!allowHorizontalMovement && Math.Abs(x) > 0) {
+            if (!allowHorizontalMovement && Math.Abs(x) > 0)
+            {
                 throw new InvalidOperationException(
                     "Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller."
                 );
@@ -138,9 +159,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var moveLocal = new Vector3(x, 0, z);
             float xzMag = moveLocal.magnitude;
-            if (xzMag > 1e-5f) {
+            if (xzMag > 1e-5f)
+            {
                 // rotate a small amount with every movement since robot doesn't always move perfectly straight
-                if (this.applyActionNoise) {
+                if (this.applyActionNoise)
+                {
                     var rotateNoise = (float)
                         systemRandom.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
                     transform.rotation =
@@ -159,23 +182,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         forceAction: forceAction
                     )
                 );
-            } else {
+            }
+            else
+            {
                 errorMessage = "either x or z must be != 0 for the MoveRelative action";
                 actionFinished(false);
             }
         }
 
         // NOOP action to allow evaluation to know that the episode has finished
-        public void Stop() {
+        public void Stop()
+        {
             // i don't know why, but we have two no-op actions so here we go
             base.Pass();
         }
 
-        public override void LookDown(ServerAction action) {
+        public override void LookDown(ServerAction action)
+        {
             // default degree increment to 30
-            if (action.degrees == 0) {
+            if (action.degrees == 0)
+            {
                 action.degrees = 30f;
-            } else {
+            }
+            else
+            {
                 errorMessage = "Must have degrees == 0 for now.";
                 actionFinished(false);
                 return;
@@ -185,7 +215,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // this is to prevent too small of a degree increment change that could cause float imprecision
             action.degrees = Mathf.Round(action.degrees * 10.0f) / 10.0f;
 
-            if (!checkForUpDownAngleLimit("down", action.degrees)) {
+            if (!checkForUpDownAngleLimit("down", action.degrees))
+            {
                 errorMessage =
                     "can't look down beyond "
                     + maxDownwardLookAngle
@@ -199,11 +230,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        public override void LookUp(ServerAction action) {
+        public override void LookUp(ServerAction action)
+        {
             // default degree increment to 30
-            if (action.degrees == 0) {
+            if (action.degrees == 0)
+            {
                 action.degrees = 30f;
-            } else {
+            }
+            else
+            {
                 errorMessage = "Must have degrees == 0 for now.";
                 actionFinished(false);
                 return;
@@ -213,7 +248,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // this is to prevent too small of a degree increment change that could cause float imprecision
             action.degrees = Mathf.Round(action.degrees * 10.0f) / 10.0f;
 
-            if (!checkForUpDownAngleLimit("up", action.degrees)) {
+            if (!checkForUpDownAngleLimit("up", action.degrees))
+            {
                 errorMessage =
                     "can't look up beyond "
                     + maxUpwardLookAngle
@@ -227,13 +263,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         // NOTE: This is necessary to avoid an ambiguous action between base and stochastic.
-        public void Rotate(Vector3 rotation) {
+        public void Rotate(Vector3 rotation)
+        {
             Rotate(rotation: rotation, noise: 0);
         }
 
-        public void Rotate(Vector3 rotation, float noise, bool manualInteract = false) {
+        public void Rotate(Vector3 rotation, float noise, bool manualInteract = false)
+        {
             // only default hand if not manually Interacting with things
-            if (!manualInteract) {
+            if (!manualInteract)
+            {
                 DefaultAgentHand();
             }
 
@@ -249,20 +288,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void RotateRight(ServerAction action) {
+        public void RotateRight(ServerAction action)
+        {
             float rotationAmount = this.rotateStepDegrees;
 
-            if (action.degrees != 0.0f) {
+            if (action.degrees != 0.0f)
+            {
                 rotationAmount = action.degrees;
             }
 
             Rotate(rotation: new Vector3(0, rotationAmount, 0));
         }
 
-        public void RotateLeft(ServerAction action) {
+        public void RotateLeft(ServerAction action)
+        {
             float rotationAmount = this.rotateStepDegrees;
 
-            if (action.degrees != 0.0f) {
+            if (action.degrees != 0.0f)
+            {
                 rotationAmount = action.degrees;
             }
 
@@ -284,7 +327,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3? rotation = null,
             float? horizon = null,
             bool forceAction = false
-        ) {
+        )
+        {
             Teleport(
                 position: new Vector3(x, y, z),
                 rotation: rotation,
@@ -298,7 +342,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3? rotation = null,
             float? horizon = null,
             bool forceAction = false
-        ) {
+        )
+        {
             base.teleport(
                 position: position,
                 rotation: rotation,
@@ -324,7 +369,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3? rotation,
             float? horizon,
             bool forceAction = false
-        ) {
+        )
+        {
             TeleportFull(
                 position: new Vector3(x, y, z),
                 rotation: rotation,
@@ -338,7 +384,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3? rotation,
             float? horizon,
             bool forceAction = false
-        ) {
+        )
+        {
             base.teleportFull(
                 position: position,
                 rotation: rotation,
@@ -353,7 +400,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? moveMagnitude = null,
             float noise = 0f,
             bool forceAction = false
-        ) {
+        )
+        {
             MoveRelative(
                 z: 1.0f,
                 moveMagnitude: moveMagnitude,
@@ -366,7 +414,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? moveMagnitude = null,
             float noise = 0f,
             bool forceAction = false
-        ) {
+        )
+        {
             MoveRelative(
                 z: -1.0f,
                 moveMagnitude: moveMagnitude,
@@ -379,8 +428,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? moveMagnitude = null,
             float noise = 0f,
             bool forceAction = false
-        ) {
-            if (!allowHorizontalMovement) {
+        )
+        {
+            if (!allowHorizontalMovement)
+            {
                 throw new InvalidOperationException(
                     "Controller does not support horizontal movement by default. Set AllowHorizontalMovement to true on the Controller."
                 );
@@ -397,8 +448,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? moveMagnitude = null,
             float noise = 0f,
             bool forceAction = false
-        ) {
-            if (!allowHorizontalMovement) {
+        )
+        {
+            if (!allowHorizontalMovement)
+            {
                 throw new InvalidOperationException(
                     "Controller does not support horizontal movement by default. Set AllowHorizontalMovement to true on the Controller."
                 );
@@ -411,14 +464,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        protected float GetMoveMagnitudeWithNoise(float moveMagnitude, float noise) {
+        protected float GetMoveMagnitudeWithNoise(float moveMagnitude, float noise)
+        {
             float internalNoise = applyActionNoise
                 ? (float)systemRandom.NextGaussian(movementGaussianMu, movementGaussianSigma)
                 : 0;
             return moveMagnitude + noise + (float)internalNoise;
         }
 
-        protected float GetRotateMagnitudeWithNoise(Vector3 rotation, float noise) {
+        protected float GetRotateMagnitudeWithNoise(Vector3 rotation, float noise)
+        {
             float internalNoise = applyActionNoise
                 ? (float)systemRandom.NextGaussian(rotateGaussianMu, rotateGaussianSigma)
                 : 0;

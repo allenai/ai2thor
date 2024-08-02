@@ -3,7 +3,8 @@ using System.Collections;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class Lamp : MonoBehaviour {
+public class Lamp : MonoBehaviour
+{
     public SimObj ParentObj;
     public bool EditorOn = false;
     public bool OnByDefault = true;
@@ -13,29 +14,38 @@ public class Lamp : MonoBehaviour {
     public Material OffMaterial;
     public Light[] Lights;
 
-    void OnEnable() {
+    void OnEnable()
+    {
         ParentObj = gameObject.GetComponent<SimObj>();
-        if (ParentObj == null) {
+        if (ParentObj == null)
+        {
             ParentObj = gameObject.AddComponent<SimObj>();
         }
 
-        if (!Application.isPlaying) {
+        if (!Application.isPlaying)
+        {
             Animator a = ParentObj.gameObject.GetComponent<Animator>();
-            if (a == null) {
+            if (a == null)
+            {
                 a = ParentObj.gameObject.AddComponent<Animator>();
                 a.runtimeAnimatorController =
                     Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
             }
-        } else {
-            if (OnByDefault) {
+        }
+        else
+        {
+            if (OnByDefault)
+            {
                 ParentObj.Animator.SetBool("AnimState1", true);
             }
         }
     }
 
-    void Update() {
+    void Update()
+    {
         bool on = EditorOn;
-        if (Application.isPlaying) {
+        if (Application.isPlaying)
+        {
             on = ParentObj.Animator.GetBool("AnimState1");
         }
 
@@ -45,7 +55,8 @@ public class Lamp : MonoBehaviour {
             || OnMaterial == null
             || OffMaterial == null
             || Lights.Length == 0
-        ) {
+        )
+        {
             Debug.LogError("Required item null in lamp " + name);
             return;
         }
@@ -53,7 +64,8 @@ public class Lamp : MonoBehaviour {
         Material[] sharedMats = LampshadeRenderer.sharedMaterials;
         sharedMats[LampshadeMatIndex] = on ? OnMaterial : OffMaterial;
         LampshadeRenderer.sharedMaterials = sharedMats;
-        foreach (Light l in Lights) {
+        foreach (Light l in Lights)
+        {
             l.enabled = on;
         }
     }

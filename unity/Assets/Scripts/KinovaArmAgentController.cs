@@ -6,15 +6,18 @@ using RandomExtensions;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace UnityStandardAssets.Characters.FirstPerson {
-    public partial class KinovaArmAgentController : ArmAgentController {
+namespace UnityStandardAssets.Characters.FirstPerson
+{
+    public partial class KinovaArmAgentController : ArmAgentController
+    {
         public KinovaArmAgentController(
             BaseAgentComponent baseAgentComponent,
             AgentManager agentManager
         )
             : base(baseAgentComponent, agentManager) { }
 
-        public override ActionFinished InitializeBody(ServerAction initializeAction) {
+        public override ActionFinished InitializeBody(ServerAction initializeAction)
+        {
             base.InitializeBody(initializeAction);
             Debug.Log("initializing arm");
             IKArm.SetActive(true);
@@ -33,9 +36,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ActionFinished.Success;
         }
 
-        private IK_Robot_Arm_Controller getArmImplementation() {
+        private IK_Robot_Arm_Controller getArmImplementation()
+        {
             IK_Robot_Arm_Controller arm = GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if (arm == null) {
+            if (arm == null)
+            {
                 throw new InvalidOperationException(
                     "Agent does not have kinematic arm or is not enabled.\n"
                         + $"Make sure there is a '{typeof(IK_Robot_Arm_Controller).Name}' component as a child of this agent."
@@ -44,7 +49,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arm;
         }
 
-        protected override ArmController getArm() {
+        protected override ArmController getArm()
+        {
             return getArmImplementation();
         }
 
@@ -55,7 +61,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? elbowOrientation = null,
             bool worldRelative = false,
             bool forceAction = false
-        ) {
+        )
+        {
             GameObject heightManip = this.GetComponent<BaseAgentComponent>().IKArm;
             GameObject posRotManip = this.GetComponent<BaseAgentComponent>()
                 .IKArm.GetComponent<IK_Robot_Arm_Controller>()
@@ -76,19 +83,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float oldElbowOrientation = elbowManip.transform.localEulerAngles.z;
 
             // establish defaults in the absence of inputs
-            if (position == null) {
+            if (position == null)
+            {
                 position = new Vector3(0f, 0f, 0.4f);
             }
 
-            if (rotation == null) {
+            if (rotation == null)
+            {
                 rotation = new Vector4(1f, 0f, 0f, 0f);
             }
 
-            if (armHeight == null) {
+            if (armHeight == null)
+            {
                 armHeight = -0.003f;
             }
 
-            if (elbowOrientation == null) {
+            if (elbowOrientation == null)
+            {
                 elbowOrientation = 0f;
             }
 
@@ -100,13 +111,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             // teleport arm-elements
-            if (!worldRelative) {
+            if (!worldRelative)
+            {
                 posRotManip.transform.localPosition = (Vector3)position;
                 posRotManip.transform.localRotation = Quaternion.AngleAxis(
                     ((Vector4)rotation).w % 360,
                     new Vector3(((Vector4)rotation).x, ((Vector4)rotation).y, ((Vector4)rotation).z)
                 );
-            } else {
+            }
+            else
+            {
                 posRotManip.transform.position = (Vector3)position;
                 posRotManip.transform.rotation = Quaternion.AngleAxis(
                     ((Vector4)rotation).w % 360,
@@ -120,7 +134,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 (float)elbowOrientation
             );
 
-            if (Arm.IsArmColliding() && !forceAction) {
+            if (Arm.IsArmColliding() && !forceAction)
+            {
                 errorMessage = "collision detected at desired transform, cannot teleport";
                 heightManip.transform.localPosition = new Vector3(
                     heightManip.transform.localPosition.x,
@@ -138,7 +153,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     oldElbowOrientation
                 );
                 actionFinished(false);
-            } else {
+            }
+            else
+            {
                 actionFinished(true);
             }
         }
@@ -163,10 +180,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float roll = 0f,
             float speed = 10f,
             bool returnToStart = true
-        ) {
+        )
+        {
             var arm = getArm();
 
-            if (arm.heldObjects.Count == 1) {
+            if (arm.heldObjects.Count == 1)
+            {
                 SimObjPhysics sop = arm.heldObjects.Keys.ToArray()[0];
                 RotateWristAroundPoint(
                     point: sop.gameObject.transform.position,
@@ -176,7 +195,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     speed: speed,
                     returnToStart: returnToStart
                 );
-            } else {
+            }
+            else
+            {
                 actionFinished(
                     success: false,
                     errorMessage: $"Cannot RotateWristAroundHeldObject when holding"
@@ -197,7 +218,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float roll = 0f,
             float speed = 10f,
             bool returnToStart = true
-        ) {
+        )
+        {
             IK_Robot_Arm_Controller arm = getArmImplementation();
 
             arm.rotateWristAroundPoint(
@@ -220,7 +242,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         account for the hierarchy of rigidbodies of each arm joint and
         determine how to detect collision between a given arm joint and other arm joints.
         */
-        public void RotateElbowRelative(float degrees, float speed = 10f, bool returnToStart = true) {
+        public void RotateElbowRelative(float degrees, float speed = 10f, bool returnToStart = true)
+        {
             IK_Robot_Arm_Controller arm = getArmImplementation();
 
             arm.rotateElbowRelative(
@@ -235,7 +258,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         /*
         Same as RotateElbowRelative but rotates the elbow to a given angle directly.
         */
-        public void RotateElbow(float degrees, float speed = 10f, bool returnToStart = true) {
+        public void RotateElbow(float degrees, float speed = 10f, bool returnToStart = true)
+        {
             IK_Robot_Arm_Controller arm = getArmImplementation();
 
             arm.rotateElbow(

@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CrackedCameraManager : MonoBehaviour {
+public class CrackedCameraManager : MonoBehaviour
+{
     public List<GameObject> cracks;
 
-    public void SpawnCrack(int seed = 0) {
+    public void SpawnCrack(int seed = 0)
+    {
         UnityEngine.Random.InitState(seed);
 
         GameObject whichCrack = cracks[Random.Range(0, cracks.Count)];

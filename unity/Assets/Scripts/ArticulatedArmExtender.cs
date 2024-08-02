@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Handles collider stretching and arm extension animation
-public class ArticulatedArmExtender : MonoBehaviour {
+public class ArticulatedArmExtender : MonoBehaviour
+{
     public Transform arm2,
         arm3,
         arm4;
@@ -15,16 +16,19 @@ public class ArticulatedArmExtender : MonoBehaviour {
 
     public float scaleMultiplier = 1f;
 
-    public void Start() {
+    public void Start()
+    {
         initialZPos = this.gameObject.transform.localPosition.z;
         arm2InitialZPos = arm2.gameObject.transform.localPosition.z;
         arm3InitialZPos = arm3.gameObject.transform.localPosition.z;
         arm4InitialZPos = arm4.gameObject.transform.localPosition.z;
     }
 
-    private void scaleColliders() {
+    private void scaleColliders()
+    {
         var currentZPos = this.gameObject.transform.localPosition.z;
-        foreach (Transform go in myColliders) {
+        foreach (Transform go in myColliders)
+        {
             go.localScale = new Vector3(
                 go.localScale.x,
                 go.localScale.y,
@@ -33,7 +37,8 @@ public class ArticulatedArmExtender : MonoBehaviour {
         }
     }
 
-    private void animate(float currentZPos) {
+    private void animate(float currentZPos)
+    {
         //Extend each part of arm by one-quarter of extension length, in local z-direction, also adds offset from origin of arm_1 to each arm position
         float armExtensionLength = currentZPos - initialZPos;
         arm2.localPosition = new Vector3(0, 0, 1 * (armExtensionLength / 4) + arm2InitialZPos); //+ 0.01300028f);
@@ -43,11 +48,13 @@ public class ArticulatedArmExtender : MonoBehaviour {
     }
 
     //should this be in fixed update????
-    public void FixedUpdate() {
+    public void FixedUpdate()
+    {
         Extend();
     }
 
-    public void Extend() {
+    public void Extend()
+    {
         scaleColliders();
         var currentZPos = this.gameObject.transform.localPosition.z;
         animate(currentZPos);
