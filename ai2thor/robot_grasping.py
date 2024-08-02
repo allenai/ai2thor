@@ -39,10 +39,15 @@ T_ARM_FROM_BASE_188 = np.array([[   -0.98555,   -0.076904,    -0.15093,    0.091
        [    0.10522,     -0.9762,    -0.18964,      1.2793],
        [          0,           0,           0,           1]])
 
-T_ARM_FROM_BASE_205 = np.array([[   -0.99686,   -0.078317,   -0.011768,   -0.064451],
-       [  -0.030594,     0.51788,    -0.85491,    -0.05393],
-       [   0.073048,    -0.85186,    -0.51865,      1.4639],
-       [          0,           0,           0,           1]])
+#T_ARM_FROM_BASE_205 = np.array([[   -0.99686,   -0.078317,   -0.011768,   -0.064451],
+#       [  -0.030594,     0.51788,    -0.85491,    -0.05393],
+#       [   0.073048,    -0.85186,    -0.51865,      1.4639],
+#       [          0,           0,           0,           1]])
+
+T_ARM_FROM_BASE_205 = np.array([[-0.99007709, -0.03041019, -0.13719542,  0.00868434],
+       [-0.10682328,  0.79719857,  0.59419124, -0.86751574],
+       [ 0.09130252,  0.6029508 , -0.79253655,  1.45133677],
+       [ 0.        ,  0.        ,  0.        ,  1.        ]])
 
 T_ROTATED_STRETCH_FROM_BASE = np.array([[-0.00069263, 1, -0.0012349, -0.017],
                     [ 0.5214, -0.00069263, -0.85331, -0.038],
@@ -112,6 +117,10 @@ def inverse_homogeneous_matrix(matrix):
 
 class BaseObjectDetector():
     def __init__(self, camera_source="arm205"):
+        if camera_source in ["arm205", "arm248"]:
+            camera_source = "arm205"
+        if camera_source in ["stretch205", "stretch248"]:
+            camera_source = "stretch205"
         self.camera_source = camera_source
         self.update_camera_info(camera_source)
 
