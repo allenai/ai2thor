@@ -39,15 +39,15 @@ T_ARM_FROM_BASE_188 = np.array([[   -0.98555,   -0.076904,    -0.15093,    0.091
        [    0.10522,     -0.9762,    -0.18964,      1.2793],
        [          0,           0,           0,           1]])
 
-#T_ARM_FROM_BASE_205 = np.array([[   -0.99686,   -0.078317,   -0.011768,   -0.064451],
-#       [  -0.030594,     0.51788,    -0.85491,    -0.05393],
-#       [   0.073048,    -0.85186,    -0.51865,      1.4639],
-#       [          0,           0,           0,           1]])
+T_ARM_FROM_BASE_205 = np.array([[   -0.99686,   -0.078317,   -0.011768,   -0.064451],
+       [  -0.030594,     0.51788,    -0.85491,    -0.05393],
+       [   0.073048,    -0.85186,    -0.51865,      1.4639],
+       [          0,           0,           0,           1]])
 
-T_ARM_FROM_BASE_205 = np.array([[-0.99007709, -0.03041019, -0.13719542,  0.00868434],
-       [-0.10682328,  0.79719857,  0.59419124, -0.86751574],
-       [ 0.09130252,  0.6029508 , -0.79253655,  1.45133677],
-       [ 0.        ,  0.        ,  0.        ,  1.        ]])
+#T_ARM_FROM_BASE_205 = np.array([[-0.99007709, -0.03041019, -0.13719542,  0.00868434],
+#       [-0.10682328,  0.79719857,  0.59419124, -0.86751574],
+#       [ 0.09130252,  0.6029508 , -0.79253655,  1.45133677],
+#       [ 0.        ,  0.        ,  0.        ,  1.        ]])
 
 T_ROTATED_STRETCH_FROM_BASE = np.array([[-0.00069263, 1, -0.0012349, -0.017],
                     [ 0.5214, -0.00069263, -0.85331, -0.038],
@@ -262,7 +262,7 @@ class BaseObjectDetector():
         pcd, ind = pcd.remove_radius_outlier(nb_points=20, radius=0.02)
         pcd, ind = pcd.remove_statistical_outlier(nb_neighbors=20, std_ratio=0.1)
         print("pcd pointcloud numbers after outlier removal: ", len(pcd.points))
-        if len(pcd.points==0):
+        if len(pcd.points)==0:
             return None 
         
         center = pcd.get_center()
@@ -343,7 +343,7 @@ class OwlVitSegAnyObjectDetector(BaseObjectDetector):
         results = self.processor_owlvit.post_process_object_detection(outputs=outputs, target_sizes=target_sizes, threshold=0.1)
         boxes = results[0]["boxes"].detach().cpu().numpy() #results[0]["scores"], results[0]["labels"]
         scores = results[0]["scores"].detach().cpu().numpy()
-
+        print(results)
         if len(boxes)==0:
             print(f"{object_str} Not Detected.")
             return None
@@ -848,7 +848,8 @@ class VIDAGraspPlanner(GraspPlanner):
         ## 205 constants
         ARM_OFFSET_205 = 0.125          # checked with detected object pose
         WRIST_YAW_TO_BASE_205 = -0.04   # checked with 133 aruco marker
-        GRIPPER_LENGTH_205 = 0.230
+        GRIPPER_LENGTH_205 = 0.210 #0.230
+
 
         ## 188 constants (need to check)
         ARM_OFFSET_188 = 0.225
@@ -952,7 +953,7 @@ class VIDAGraspPlanner(GraspPlanner):
         trajectory = []
 
         curr_arm = last_event.metadata["arm"]["extension_m"]
-        
+        print(curr_arm)
         for new_position in new_wrist_positions:
             new_arm_position = -new_position[1] 
             if not isReachable and (curr_arm + new_arm_position) < 0.5193114280700684 and (curr_arm + new_arm_position) > 0.0:
