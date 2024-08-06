@@ -34,7 +34,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             new Vector3(20f, 0f, 0f),
             new Vector3(30f, 120f, 0f),
             new Vector3(20f, -120f, 0f),
-            new Vector3(65f, 90f, 90f)
+            new Vector3(90f, 0f, 0f)
         };
         private float defaultGoProCameraFieldOfView = 69f;
 
