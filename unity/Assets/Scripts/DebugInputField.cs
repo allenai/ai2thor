@@ -598,6 +598,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     break;
                 }
+
+                case "ldtoggle": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "ToggleLensDistortion";
+                    if (splitcommand.Length > 1) {
+                        action["state"] = bool.Parse(splitcommand[1]);
+                    }
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
                 case "ssc": {
                     Dictionary<string, object> action = new Dictionary<string, object>();
 

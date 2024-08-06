@@ -25,16 +25,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private Vector3[] defaultGoProCameraLocalPositions = new Vector3[]
         {
             new Vector3(-0.1299001f, 0.5560812f, 0.02734984f),
-            new Vector3(-0.09227128f, 0.5560812f, -0.03782498f),
+            new Vector3(0.04f, 0.5560812f, 0f),
             new Vector3(-0.1675288f, 0.5560812f, -0.03782497f),
             new Vector3(-0.1376f, 0.4340732f, 0.006196275f)
         };
         private Vector3[] defaultGoProCameraLocalEulerAngles = new Vector3[]
         {
             new Vector3(20f, 0f, 0f),
-            new Vector3(20f, 120f, 0f),
+            new Vector3(30f, 120f, 0f),
             new Vector3(20f, -120f, 0f),
-            new Vector3(90f, 0f, 0f)
+            new Vector3(65f, 90f, 90f)
         };
         private float defaultGoProCameraFieldOfView = 69f;
 
@@ -199,6 +199,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
             actionFinished(true);
+        }
+
+        public void ToggleLensDistortion (bool state) {
+            toggleLensDistortion(state);
+            actionFinished(true);
+        }
+
+        public void toggleLensDistortion (bool state) {
+            PostProcessVolume ppVolume = GameObject.Find("ppProfileSecondary").GetComponent<PostProcessVolume>();
+            ppVolume.enabled = state;
+
+            // // Keeping this here in case we ever decide unravel the secrets of this obnoxious post-processing instancing when you change anything about its settings
+            // LensDistortion lensDistortion = null;
+            // ppVolume.profile.TryGetSettings(out lensDistortion);
+            // lensDistortion.enabled = new BoolParameter { value = state };
         }
 
         public void DisableSecondaryCamera(){
