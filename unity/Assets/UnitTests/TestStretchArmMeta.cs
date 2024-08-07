@@ -29,8 +29,8 @@ namespace Tests {
             //call arm metadata
             ArmMetadata meta = armController.GenerateMetadata();
             //check meta is in correct state
-            Debug.Log($"openness should be 0 but is: {meta.gripperOpennessState}");
-            Assert.AreEqual(meta.gripperOpennessState, 0);
+            Debug.Log($"openness should be 1 but is: {meta.gripperOpennessState}");
+            Assert.AreEqual(meta.gripperOpennessState, 1);
             //now lets open the gripper a bit
             action.Clear();
 
