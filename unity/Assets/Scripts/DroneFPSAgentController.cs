@@ -43,7 +43,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cc.radius = m_CharacterController.radius;
             cc.height = m_CharacterController.height;
 
-            m_Camera.GetComponent<PostProcessVolume>().enabled = false;
+            // we should do this in a different way later, now that post-processing effects are meant to be
+            // disabled by turning off the referenced post-processing volume in its dedicated stack, not by toggling
+            // on and off the individual layer component
             m_Camera.GetComponent<PostProcessLayer>().enabled = false;
 
             // camera position set forward a bit for drone
