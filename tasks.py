@@ -1144,7 +1144,7 @@ def ci_build(
                     "id": None,
                 }
 
-            novelty_thor_add_branches = ["new_cam_adjust"]
+            novelty_thor_add_branches = ["new_cam_adjust", "stretch_with_many_cameras"]
             if is_travis_build and build and build["branch"] in novelty_thor_add_branches:
                 novelty_thor_scenes = True
                 private_repos.append(novelty_thor_repo)
