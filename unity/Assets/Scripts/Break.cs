@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public class Break : MonoBehaviour {
+public class Break : MonoBehaviour
+{
     [SerializeField]
     private GameObject PrefabToSwapTo = null;
 
@@ -29,7 +30,8 @@ public class Break : MonoBehaviour {
 
     // what does this object need to do when it is in the broken state?
     // Some need a decal to show a cracked screen on the surface, others need a prefab swap to shattered pieces
-    protected enum BreakType {
+    protected enum BreakType
+    {
         PrefabSwap,
         MaterialSwap,
         Decal
@@ -72,12 +74,14 @@ public class Break : MonoBehaviour {
         SimObjType.HandTowel
     };
 
-    public bool isBroken() {
+    public bool isBroken()
+    {
         return broken;
     }
 
     // Start is called before the first frame update
-    void Start() {
+    void Start()
+    {
 #if UNITY_EDITOR
         // TODO refactor Break logic as separate from DecalCollision.cs to avoid error, and remove last part of AND
         if (
@@ -87,12 +91,15 @@ public class Break : MonoBehaviour {
                     .GetComponentInParent<SimObjPhysics>()
                     .DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)
             ) && !gameObject.GetComponentInParent<SimObjPhysics>().IsReceptacle
-        ) {
+        )
+        {
             Debug.LogError(gameObject.name + " is missing the CanBreak secondary property!");
         }
 
-        if (gameObject.GetComponent<Dirty>()) {
-            if (DirtyPrefabToSwapTo == null) {
+        if (gameObject.GetComponent<Dirty>())
+        {
+            if (DirtyPrefabToSwapTo == null)
+            {
                 Debug.LogError(gameObject.name + " is missing a DirtyPrefabToSpawnTo!");
             }
         }
@@ -101,9 +108,11 @@ public class Break : MonoBehaviour {
         CurrentImpulseThreshold = ImpulseThreshold;
     }
 
-    public void BreakObject(Collision collision) {
+    public void BreakObject(Collision collision)
+    {
         // prefab swap will switch the entire object out with a new prefab object entirely
-        if (breakType == BreakType.PrefabSwap) {
+        if (breakType == BreakType.PrefabSwap)
+        {
             // Disable this game object and spawn in the broken pieces
             Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
@@ -111,14 +120,18 @@ public class Break : MonoBehaviour {
             Transform objectsTransform = GameObject.Find("Objects").transform;
 
             //before disabling things, if this object is a receptacle, unparent all objects contained
-            if (gameObject.GetComponent<SimObjPhysics>().IsReceptacle) {
+            if (gameObject.GetComponent<SimObjPhysics>().IsReceptacle)
+            {
                 foreach (
                     GameObject go in gameObject.GetComponent<SimObjPhysics>().ContainedGameObjects()
-                ) {
+                )
+                {
                     //only reset rigidbody properties if contained object was pickupable/moveable
-                    if (go.GetComponentInParent<SimObjPhysics>()) {
+                    if (go.GetComponentInParent<SimObjPhysics>())
+                    {
                         SimObjPhysics containedSOP = go.GetComponentInParent<SimObjPhysics>();
-                        if (containedSOP.IsMoveable || containedSOP.IsPickupable) {
+                        if (containedSOP.IsMoveable || containedSOP.IsPickupable)
+                        {
                             go.transform.SetParent(objectsTransform);
                             Rigidbody childrb = go.GetComponent<Rigidbody>();
                             childrb.isKinematic = false;
@@ -132,7 +145,8 @@ public class Break : MonoBehaviour {
             }
 
             // turn off everything except the top object
-            foreach (Transform t in gameObject.transform) {
+            foreach (Transform t in gameObject.transform)
+            {
                 t.gameObject.SetActive(false);
             }
 
@@ -142,9 +156,11 @@ public class Break : MonoBehaviour {
             // if gameObject.GetComponent<Dirty>() - first check to make sure if this object can become dirty
             // if object is dirty - probably get this from the "Dirty" component to keep everything nice and self contained
             // PrefabToSwapTo = DirtyPrefabToSwapTo
-            if (gameObject.GetComponent<Dirty>()) {
+            if (gameObject.GetComponent<Dirty>())
+            {
                 // if the object is not clean, swap to the dirty prefab
-                if (gameObject.GetComponent<Dirty>().IsDirty()) {
+                if (gameObject.GetComponent<Dirty>().IsDirty())
+                {
                     PrefabToSwapTo = DirtyPrefabToSwapTo;
                 }
             }
@@ -158,7 +174,8 @@ public class Break : MonoBehaviour {
             broken = true;
 
             // ContactPoint cp = collision.GetContact(0);
-            foreach (Rigidbody subRb in resultObject.GetComponentsInChildren<Rigidbody>()) {
+            foreach (Rigidbody subRb in resultObject.GetComponentsInChildren<Rigidbody>())
+            {
                 subRb.velocity = rb.velocity * 0.4f;
                 subRb.angularVelocity = rb.angularVelocity * 0.4f;
             }
@@ -168,8 +185,10 @@ public class Break : MonoBehaviour {
 
             // if this object breaking is an egg, set rotation for the EggCracked object
             // quick if the result object is an egg hard set it's rotation because EGGS ARE WEIRD and are not the same form as their shelled version
-            if (resultObject.GetComponent<SimObjPhysics>()) {
-                if (resultObject.GetComponent<SimObjPhysics>().Type == SimObjType.EggCracked) {
+            if (resultObject.GetComponent<SimObjPhysics>())
+            {
+                if (resultObject.GetComponent<SimObjPhysics>().Type == SimObjType.EggCracked)
+                {
                     resultObject.transform.rotation = Quaternion.Euler(Vector3.zero);
                     PhysicsSceneManager psm = GameObject
                         .Find("PhysicsSceneManager")
@@ -191,17 +210,21 @@ public class Break : MonoBehaviour {
         }
 
         // if decal type, do not switch out the object but instead swap materials to show cracked/broken parts
-        if (breakType == BreakType.MaterialSwap) {
+        if (breakType == BreakType.MaterialSwap)
+        {
             // decal logic here
-            if (MaterialSwapObjects.Length > 0) {
-                for (int i = 0; i < MaterialSwapObjects.Length; i++) {
+            if (MaterialSwapObjects.Length > 0)
+            {
+                for (int i = 0; i < MaterialSwapObjects.Length; i++)
+                {
                     MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
                         MaterialSwapObjects[i].OnMaterials;
                 }
             }
 
             // if the object can be toggled on/off, if it is on, turn it off since it is now broken
-            if (gameObject.GetComponent<CanToggleOnOff>()) {
+            if (gameObject.GetComponent<CanToggleOnOff>())
+            {
                 gameObject.GetComponent<CanToggleOnOff>().isOn = false;
             }
 
@@ -210,7 +233,8 @@ public class Break : MonoBehaviour {
             readytobreak = false;
         }
 
-        if (breakType == BreakType.Decal) {
+        if (breakType == BreakType.Decal)
+        {
             // move shattered decal to location of the collision, or if there was no collision and this is being called
             // directly from the Break() action, create a default decal i guess?
             BreakForDecalType(collision);
@@ -220,8 +244,10 @@ public class Break : MonoBehaviour {
             .Find("PhysicsSceneManager")
             .GetComponent<AgentManager>()
             .PrimaryAgent;
-        if (primaryAgent.imageSynthesis) {
-            if (primaryAgent.imageSynthesis.enabled) {
+        if (primaryAgent.imageSynthesis)
+        {
+            if (primaryAgent.imageSynthesis.enabled)
+            {
                 primaryAgent.imageSynthesis.OnSceneChange();
             }
         }
@@ -230,9 +256,11 @@ public class Break : MonoBehaviour {
     // Override for Decal behavior
     protected virtual void BreakForDecalType(Collision collision) { }
 
-    void OnCollisionEnter(Collision col) {
+    void OnCollisionEnter(Collision col)
+    {
         // do nothing if this specific breakable sim objects has been set to unbreakable
-        if (Unbreakable) {
+        if (Unbreakable)
+        {
             return;
         }
 
@@ -243,12 +271,14 @@ public class Break : MonoBehaviour {
         // }
 
         // if the other collider hit is on the list of things that shouldn't cause this object to break, return and do nothing
-        if (col.transform.GetComponentInParent<SimObjPhysics>()) {
+        if (col.transform.GetComponentInParent<SimObjPhysics>())
+        {
             if (
                 TooSmalOrSoftToBreakOtherObjects.Contains(
                     col.transform.GetComponentInParent<SimObjPhysics>().Type
                 )
-            ) {
+            )
+            {
                 return;
             }
         }
@@ -257,8 +287,10 @@ public class Break : MonoBehaviour {
         if (
             col.impulse.magnitude > CurrentImpulseThreshold
             && !col.transform.GetComponentInParent<BaseAgentComponent>()
-        ) {
-            if (readytobreak) {
+        )
+        {
+            if (readytobreak)
+            {
                 readytobreak = false;
                 BreakObject(col);
             }
@@ -267,14 +299,18 @@ public class Break : MonoBehaviour {
 
     // change the ImpulseThreshold to higher if we are in a high friction zone, to simulate throwing an object at a "soft" object requiring
     // more force to break - ie: dropping mug on floor vs on a rug
-    public void OnTriggerEnter(Collider other) {
-        if (other.CompareTag("HighFriction")) {
+    public void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("HighFriction"))
+        {
             CurrentImpulseThreshold = ImpulseThreshold + HighFrictionImpulseOffset;
         }
     }
 
-    public void OnTriggerExit(Collider other) {
-        if (other.CompareTag("HighFriction")) {
+    public void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("HighFriction"))
+        {
             CurrentImpulseThreshold = ImpulseThreshold;
         }
     }

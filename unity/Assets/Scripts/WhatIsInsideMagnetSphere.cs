@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class WhatIsInsideMagnetSphere : MonoBehaviour {
+public class WhatIsInsideMagnetSphere : MonoBehaviour
+{
     [SerializeField]
     protected List<SimObjPhysics> CurrentlyContainedSOP = new List<SimObjPhysics>();
     SphereCollider sphereCol = null;
@@ -11,13 +12,16 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour {
     // check if the sphere is actively colliding with anything
     // public bool isColliding;
     // Start is called before the first frame update
-    void Start() {
-        if (sphereCol == null) {
+    void Start()
+    {
+        if (sphereCol == null)
+        {
             sphereCol = gameObject.GetComponent<SphereCollider>();
         }
     }
 
-    public List<SimObjPhysics> CurrentlyContainedSimObjects(bool onlyPickupable) {
+    public List<SimObjPhysics> CurrentlyContainedSimObjects(bool onlyPickupable)
+    {
         // clear lists of contained objects
 
         // create overlap sphere same location and dimensions as sphere collider
@@ -37,10 +41,13 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour {
             ),
             queryTriggerInteraction: QueryTriggerInteraction.Ignore
         );
-        foreach (var col in hitColliders) {
+        foreach (var col in hitColliders)
+        {
             SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
-            if (sop != null) {
-                if ((!onlyPickupable) || sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
+            if (sop != null)
+            {
+                if ((!onlyPickupable) || sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+                {
                     currentlyContainedObjects.Add(sop);
                 }
             }

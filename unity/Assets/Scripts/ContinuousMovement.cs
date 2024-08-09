@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public interface MovableContinuous {
+public interface MovableContinuous
+{
     public bool ShouldHalt();
     public void ContinuousUpdate(float fixedDeltaTime);
     public ActionFinished FinishContinuousMove(BaseFPSAgentController controller);
@@ -12,14 +13,18 @@ public interface MovableContinuous {
     // public string GetHaltMessage();
 }
 
-namespace UnityStandardAssets.Characters.FirstPerson {
-    public class ContinuousMovement {
-        public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime) {
+namespace UnityStandardAssets.Characters.FirstPerson
+{
+    public class ContinuousMovement
+    {
+        public static int unrollSimulatePhysics(IEnumerator enumerator, float fixedDeltaTime)
+        {
             int count = 0;
             PhysicsSceneManager.PhysicsSimulateCallCount = 0;
             var previousAutoSimulate = Physics.autoSimulation;
             Physics.autoSimulation = false;
-            while (enumerator.MoveNext()) {
+            while (enumerator.MoveNext())
+            {
                 // physics simulate happens in  updateTransformPropertyFixedUpdate as long
                 // as autoSimulation is off
                 count++;
@@ -37,7 +42,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float radiansPerSecond,
             bool returnToStartPropIfFailed = false,
             Quaternion? secTargetRotation = null
-        ) {
+        )
+        {
             bool teleport = (radiansPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
 
             float degreesPerSecond = radiansPerSecond * 180.0f / Mathf.PI;
@@ -47,7 +53,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Func<Transform, Quaternion, Quaternion> nextRotFunc = (t, target) =>
                 Quaternion.RotateTowards(t.rotation, target, fixedDeltaTime * degreesPerSecond);
 
-            if (teleport) {
+            if (teleport)
+            {
                 nextRotFunc = (t, target) => target;
             }
 
@@ -79,7 +86,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float unitsPerSecond,
             bool returnToStartPropIfFailed = false,
             bool localPosition = false
-        ) {
+        )
+        {
             bool teleport = (unitsPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
 
             Func<
@@ -106,19 +114,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Func<Transform, Vector3> getPosFunc;
             Action<Transform, Vector3> setPosFunc;
             Func<Transform, Vector3, Vector3> nextPosFunc;
-            if (localPosition) {
+            if (localPosition)
+            {
                 getPosFunc = (t) => t.localPosition;
                 setPosFunc = (t, pos) => t.localPosition = pos;
                 nextPosFunc = (t, direction) =>
                     t.localPosition + direction * unitsPerSecond * fixedDeltaTime;
-            } else {
+            }
+            else
+            {
                 getPosFunc = (t) => t.position;
                 setPosFunc = (t, pos) => t.position = pos;
                 nextPosFunc = (t, direction) =>
                     t.position + direction * unitsPerSecond * fixedDeltaTime;
             }
 
-            if (teleport) {
+            if (teleport)
+            {
                 nextPosFunc = (t, direction) => targetPosition;
             }
 
@@ -129,7 +141,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MovableContinuous movable,
             ArticulatedAgentController controller,
             float fixedDeltaTime
-        ) {
+        )
+        {
             return continuousUpdateAB(
                 movable: movable,
                 controller: controller,
@@ -140,12 +153,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected static IEnumerator finallyDestroyGameObjects(
             List<GameObject> gameObjectsToDestroy,
             IEnumerator steps
-        ) {
-            while (steps.MoveNext()) {
+        )
+        {
+            while (steps.MoveNext())
+            {
                 yield return steps.Current;
             }
 
-            foreach (GameObject go in gameObjectsToDestroy) {
+            foreach (GameObject go in gameObjectsToDestroy)
+            {
                 GameObject.Destroy(go);
             }
         }
@@ -159,7 +175,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float fixedDeltaTime,
             float degreesPerSecond,
             bool returnToStartPropIfFailed = false
-        ) {
+        )
+        {
             bool teleport = (degreesPerSecond == float.PositiveInfinity) && fixedDeltaTime == 0f;
 
             // To figure out how to translate/rotate the undateTransform
@@ -190,12 +207,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Quaternion.Angle(current, target);
 
             Func<Transform, Quaternion> getRotFunc = (t) => t.rotation;
-            Action<Transform, Quaternion> setRotFunc = (t, newRotation) => {
+            Action<Transform, Quaternion> setRotFunc = (t, newRotation) =>
+            {
                 t.rotation = newRotation;
                 updateTransform.position = wristProxy.transform.position;
                 updateTransform.rotation = newRotation;
             };
-            Func<Transform, Quaternion, Quaternion> nextRotFunc = (t, target) => {
+            Func<Transform, Quaternion, Quaternion> nextRotFunc = (t, target) =>
+            {
                 return Quaternion.RotateTowards(
                     t.rotation,
                     target,
@@ -203,7 +222,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             };
 
-            if (teleport) {
+            if (teleport)
+            {
                 nextRotFunc = (t, direction) => targetRotation;
             }
 
@@ -230,11 +250,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MovableContinuous movable,
             BaseFPSAgentController controller,
             float fixedDeltaTime
-        ) {
-            while (!movable.ShouldHalt()) {
+        )
+        {
+            while (!movable.ShouldHalt())
+            {
                 movable.ContinuousUpdate(fixedDeltaTime);
                 // TODO: Remove below?
-                if (!Physics.autoSimulation) {
+                if (!Physics.autoSimulation)
+                {
                     //Debug.Log("manual simulate from PhysicsManager");
                     PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
                 }
@@ -266,7 +289,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             double epsilon,
             T? secTarget = null
         )
-            where T : struct {
+            where T : struct
+        {
             T originalProperty = getProp(moveTransform);
             var previousProperty = originalProperty;
 
@@ -279,7 +303,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // yield return yieldInstruction;
 
             int transformIterations = 1;
-            if (secTarget != null) {
+            if (secTarget != null)
+            {
                 transformIterations = 2;
             }
 
@@ -290,12 +315,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float currentDistance = 0;
             bool haveGottenWithinEpsilon = currentDistance <= epsilon;
 
-            for (int i = 0; i < transformIterations; i++) {
+            for (int i = 0; i < transformIterations; i++)
+            {
                 // This syntax is a new method of pattern-matching that was introduced in C# 7.0, where the type check and
                 // variable assignment are performed in a single step
-                if (i == 0) {
+                if (i == 0)
+                {
                     currentTarget = target;
-                } else {
+                }
+                else
+                {
                     currentTarget = (T)secTarget;
                 }
 
@@ -307,7 +336,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //     Debug.Log("Oh, currentTarget is " + printTarget.eulerAngles.y);
                 // }
 
-                while (!movable.ShouldHalt()) {
+                while (!movable.ShouldHalt())
+                {
                     // TODO: put in movable && !collisionListener.TransformChecks(controller, moveTransform)) {
                     previousProperty = getProp(moveTransform);
 
@@ -321,9 +351,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (
                         nextDistance <= epsilon
                         || nextDistance > distanceMetric((T)currentTarget, getProp(moveTransform))
-                    ) {
+                    )
+                    {
                         setProp(moveTransform, (T)currentTarget);
-                    } else {
+                    }
+                    else
+                    {
                         setProp(moveTransform, next);
                     }
 
@@ -346,12 +379,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     currentDistance = distanceMetric((T)currentTarget, getProp(moveTransform));
 
-                    if (currentDistance <= epsilon) {
+                    if (currentDistance <= epsilon)
+                    {
                         // This logic is a bit unintuitive but it ensures we run the
                         // `setProp(moveTransform, currentTarget);` line above once we get within epsilon
-                        if (haveGottenWithinEpsilon) {
+                        if (haveGottenWithinEpsilon)
+                        {
                             break;
-                        } else {
+                        }
+                        else
+                        {
                             haveGottenWithinEpsilon = true;
                         }
                     }
@@ -360,7 +397,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //Debug.Log("4");
             T resetProp = previousProperty;
-            if (returnToStartPropIfFailed) {
+            if (returnToStartPropIfFailed)
+            {
                 resetProp = originalProperty;
             }
             //Debug.Log("about to continuousMoveFinish");
@@ -373,7 +411,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //     resetProp
             // );
             var actionFinished = movable.FinishContinuousMove(controller);
-            if (!actionFinished.success) {
+            if (!actionFinished.success)
+            {
                 setProp(moveTransform, resetProp);
             }
 

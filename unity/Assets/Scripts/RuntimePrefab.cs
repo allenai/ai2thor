@@ -11,7 +11,8 @@ using UnityEditor.SceneManagement;
 #endif
 
 [ExecuteInEditMode]
-public class RuntimePrefab : MonoBehaviour {
+public class RuntimePrefab : MonoBehaviour
+{
     // Textures for runtime objects are stored on disk
     // so that they can easily be used across builds,
     // and do not make the build size massive. Here,
@@ -29,9 +30,11 @@ public class RuntimePrefab : MonoBehaviour {
     // the texture again, since they can share it.
     public Material sharedMaterial;
 
-    Texture2D SwapChannelsRGBAtoRRRB(Texture2D originalTexture) {
+    Texture2D SwapChannelsRGBAtoRRRB(Texture2D originalTexture)
+    {
         Color[] pixels = originalTexture.GetPixels();
-        for (int i = 0; i < pixels.Length; i++) {
+        for (int i = 0; i < pixels.Length; i++)
+        {
             Color temp = pixels[i];
             pixels[i] = new Color(temp.r, temp.r, temp.r, temp.b); // Swap R and B
         }
@@ -42,11 +45,14 @@ public class RuntimePrefab : MonoBehaviour {
         return newTexture;
     }
 
-    private void reloadtextures() {
+    private void reloadtextures()
+    {
         GameObject mesh = transform.Find("mesh").gameObject;
         // load the texture from disk
-        if (!string.IsNullOrEmpty(albedoTexturePath)) {
-            if (sharedMaterial.mainTexture == null) {
+        if (!string.IsNullOrEmpty(albedoTexturePath))
+        {
+            if (sharedMaterial.mainTexture == null)
+            {
                 byte[] imageBytes = File.ReadAllBytes(albedoTexturePath);
                 Texture2D tex = new Texture2D(2, 2);
                 tex.LoadImage(imageBytes);
@@ -54,18 +60,21 @@ public class RuntimePrefab : MonoBehaviour {
             }
         }
 
-        if (!string.IsNullOrEmpty(metallicSmoothnessTexturePath)) {
+        if (!string.IsNullOrEmpty(metallicSmoothnessTexturePath))
+        {
             sharedMaterial.EnableKeyword("_METALLICGLOSSMAP");
             byte[] imageBytes = File.ReadAllBytes(metallicSmoothnessTexturePath);
             Texture2D tex = new Texture2D(2, 2);
             tex.LoadImage(imageBytes);
-            if (metallicSmoothnessTexturePath.ToLower().EndsWith(".jpg")) {
+            if (metallicSmoothnessTexturePath.ToLower().EndsWith(".jpg"))
+            {
                 tex = SwapChannelsRGBAtoRRRB(tex);
             }
             sharedMaterial.SetTexture("_MetallicGlossMap", tex);
         }
 
-        if (!string.IsNullOrEmpty(normalTexturePath)) {
+        if (!string.IsNullOrEmpty(normalTexturePath))
+        {
             sharedMaterial.EnableKeyword("_NORMALMAP");
             byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
             Texture2D tex = new Texture2D(2, 2);
@@ -73,7 +82,8 @@ public class RuntimePrefab : MonoBehaviour {
             sharedMaterial.SetTexture("_BumpMap", tex);
         }
 
-        if (!string.IsNullOrEmpty(emissionTexturePath)) {
+        if (!string.IsNullOrEmpty(emissionTexturePath))
+        {
             sharedMaterial.globalIlluminationFlags =
                 MaterialGlobalIlluminationFlags.RealtimeEmissive;
             sharedMaterial.EnableKeyword("_EMISSION");
@@ -85,13 +95,15 @@ public class RuntimePrefab : MonoBehaviour {
         }
     }
 
-    public void Awake() {
+    public void Awake()
+    {
         reloadtextures();
     }
 
 #if UNITY_EDITOR
     [Button(Expanded = true)]
-    public void RealoadTextures() {
+    public void RealoadTextures()
+    {
         reloadtextures();
     }
 

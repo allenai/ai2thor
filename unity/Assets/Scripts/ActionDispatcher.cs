@@ -7,7 +7,8 @@ using System.Threading;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-public class ActionFinished {
+public class ActionFinished
+{
     public bool success;
     public object actionReturn;
     public string errorMessage;
@@ -27,7 +28,8 @@ public class ActionFinished {
         bool toEmitState = false,
         ServerActionErrorCode errorCode = 0,
         bool isDummy = false
-    ) {
+    )
+    {
         this.success = success;
         this.actionReturn = actionReturn;
         this.errorMessage = errorMessage;
@@ -36,7 +38,8 @@ public class ActionFinished {
         this.isDummy = isDummy;
     }
 
-    public ActionFinished(ActionFinished toCopy) {
+    public ActionFinished(ActionFinished toCopy)
+    {
         this.success = toCopy.success;
         this.actionReturn = toCopy.actionReturn;
         this.errorMessage = toCopy.errorMessage;
@@ -48,12 +51,14 @@ public class ActionFinished {
     public static ActionFinished Success = new ActionFinished() { success = true };
     public static ActionFinished Fail = new ActionFinished() { success = false };
 
-    public static ActionFinished SuccessToEmitState = new ActionFinished() {
+    public static ActionFinished SuccessToEmitState = new ActionFinished()
+    {
         success = true,
         toEmitState = true
     };
 
-    public IEnumerator GetEnumerator() {
+    public IEnumerator GetEnumerator()
+    {
         yield return this;
     }
 }
@@ -65,7 +70,8 @@ public class ActionFinished {
 //     }
 // }
 
-public interface ActionInvokable {
+public interface ActionInvokable
+{
     void Complete(ActionFinished actionFinished);
     Coroutine StartCoroutine(System.Collections.IEnumerator routine);
 }
@@ -147,7 +153,8 @@ public interface ActionInvokable {
             value for forceThing.
 
 */
-public static class ActionDispatcher {
+public static class ActionDispatcher
+{
     private static Dictionary<Type, Dictionary<string, List<MethodInfo>>> allMethodDispatchTable =
         new Dictionary<Type, Dictionary<string, List<MethodInfo>>>();
     private static Dictionary<Type, MethodInfo[]> methodCache =
@@ -155,39 +162,49 @@ public static class ActionDispatcher {
 
     // look through all methods on a target type and attempt to get the MethodInfo
     // any ambiguous method will throw an exception.  This is used during testing.
-    public static List<string> FindAmbiguousActions(Type targetType) {
+    public static List<string> FindAmbiguousActions(Type targetType)
+    {
         List<string> actions = new List<string>();
         System.Reflection.MethodInfo[] allMethods = targetType.GetMethods(
             BindingFlags.Public | BindingFlags.Instance
         );
         HashSet<string> methodNames = new HashSet<string>();
-        foreach (var method in allMethods) {
+        foreach (var method in allMethods)
+        {
             methodNames.Add(method.Name);
         }
-        foreach (var methodName in methodNames) {
-            try {
+        foreach (var methodName in methodNames)
+        {
+            try
+            {
                 Dictionary<string, object> act = new Dictionary<string, object>();
                 act["action"] = methodName;
                 DynamicServerAction dynamicServerAction = new DynamicServerAction(act);
                 MethodInfo m = getDispatchMethod(targetType, dynamicServerAction);
-            } catch (AmbiguousActionException) {
+            }
+            catch (AmbiguousActionException)
+            {
                 actions.Add(methodName);
             }
         }
         return actions;
     }
 
-    private static MethodInfo[] getMethods(Type targetType) {
-        if (!methodCache.ContainsKey(targetType)) {
+    private static MethodInfo[] getMethods(Type targetType)
+    {
+        if (!methodCache.ContainsKey(targetType))
+        {
             var methods = new List<MethodInfo>();
             foreach (
                 MethodInfo mi in targetType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-            ) {
+            )
+            {
                 if (
                     mi.ReturnType == typeof(void)
                     || mi.ReturnType == typeof(ActionFinished)
                     || mi.ReturnType == typeof(IEnumerator)
-                ) {
+                )
+                {
                     methods.Add(mi);
                 }
             }
@@ -200,39 +217,48 @@ public static class ActionDispatcher {
     // Find public/void methods that have matching Method names and identical parameter names,
     // but either different parameter order or parameter types which make dispatching
     // ambiguous. This method is used during testing to find conflicts.
-    public static Dictionary<string, List<string>> FindMethodVariableNameConflicts(Type targetType) {
+    public static Dictionary<string, List<string>> FindMethodVariableNameConflicts(Type targetType)
+    {
         MethodInfo[] allMethods = getMethods(targetType);
         Dictionary<string, List<string>> methodConflicts = new Dictionary<string, List<string>>();
 
-        for (int i = 0; i < allMethods.Length - 1; i++) {
+        for (int i = 0; i < allMethods.Length - 1; i++)
+        {
             MethodInfo methodOut = allMethods[i];
             HashSet<string> paramSet = new HashSet<string>();
             ParameterInfo[] methodOutParams = methodOut.GetParameters();
-            foreach (var p in methodOutParams) {
+            foreach (var p in methodOutParams)
+            {
                 paramSet.Add(p.Name);
             }
-            for (int j = i + 1; j < allMethods.Length; j++) {
+            for (int j = i + 1; j < allMethods.Length; j++)
+            {
                 MethodInfo methodIn = allMethods[j];
                 ParameterInfo[] methodInParams = allMethods[j].GetParameters();
                 if (
                     methodIn.Name == methodOut.Name
                     && methodOutParams.Length == methodInParams.Length
-                ) {
+                )
+                {
                     bool allVariableNamesMatch = true;
                     bool allParamsMatch = true;
-                    for (int k = 0; k < methodInParams.Length; k++) {
+                    for (int k = 0; k < methodInParams.Length; k++)
+                    {
                         var mpIn = methodInParams[k];
                         var mpOut = methodOutParams[k];
                         // we assume the method is overriding if everything matches
-                        if (mpIn.Name != mpOut.Name || mpOut.ParameterType != mpIn.ParameterType) {
+                        if (mpIn.Name != mpOut.Name || mpOut.ParameterType != mpIn.ParameterType)
+                        {
                             allParamsMatch = false;
                         }
-                        if (!paramSet.Contains(mpIn.Name)) {
+                        if (!paramSet.Contains(mpIn.Name))
+                        {
                             allVariableNamesMatch = false;
                             break;
                         }
                     }
-                    if (allVariableNamesMatch && !allParamsMatch) {
+                    if (allVariableNamesMatch && !allParamsMatch)
+                    {
                         methodConflicts[methodOut.Name] = new List<string>(paramSet);
                     }
                 }
@@ -241,32 +267,39 @@ public static class ActionDispatcher {
         return methodConflicts;
     }
 
-    private static Dictionary<string, List<MethodInfo>> getMethodDispatchTable(Type targetType) {
-        if (!allMethodDispatchTable.ContainsKey(targetType)) {
+    private static Dictionary<string, List<MethodInfo>> getMethodDispatchTable(Type targetType)
+    {
+        if (!allMethodDispatchTable.ContainsKey(targetType))
+        {
             allMethodDispatchTable[targetType] = new Dictionary<string, List<MethodInfo>>();
         }
 
         return allMethodDispatchTable[targetType];
     }
 
-    private static List<MethodInfo> getCandidateMethods(Type targetType, string action) {
+    private static List<MethodInfo> getCandidateMethods(Type targetType, string action)
+    {
         Dictionary<string, List<MethodInfo>> methodDispatchTable = getMethodDispatchTable(
             targetType
         );
-        if (!methodDispatchTable.ContainsKey(action)) {
+        if (!methodDispatchTable.ContainsKey(action))
+        {
             List<MethodInfo> methods = new List<MethodInfo>();
 
             List<Type> hierarchy = new List<Type>();
 
             // not completely generic
             Type ht = targetType;
-            while (ht != typeof(object)) {
+            while (ht != typeof(object))
+            {
                 hierarchy.Add(ht);
                 ht = ht.BaseType;
             }
 
-            foreach (MethodInfo mi in getMethods(targetType)) {
-                if (mi.Name != action) {
+            foreach (MethodInfo mi in getMethods(targetType))
+            {
+                if (mi.Name != action)
+                {
                     continue;
                 }
                 bool replaced = false;
@@ -276,12 +309,15 @@ public static class ActionDispatcher {
                 // are not used
                 ParameterInfo[] sourceParams = mi.GetParameters();
 
-                for (int j = 0; j < methods.Count && !replaced; j++) {
+                for (int j = 0; j < methods.Count && !replaced; j++)
+                {
                     bool signatureMatch = true;
                     ParameterInfo[] targetParams = methods[j].GetParameters();
                     int minCommon = Math.Min(sourceParams.Length, targetParams.Length);
-                    for (int k = 0; k < minCommon; k++) {
-                        if (sourceParams[k].ParameterType != targetParams[k].ParameterType) {
+                    for (int k = 0; k < minCommon; k++)
+                    {
+                        if (sourceParams[k].ParameterType != targetParams[k].ParameterType)
+                        {
                             signatureMatch = false;
                             break;
                         }
@@ -290,21 +326,26 @@ public static class ActionDispatcher {
                     if (
                         sourceParams.Length > targetParams.Length
                         && !sourceParams[minCommon].HasDefaultValue
-                    ) {
+                    )
+                    {
                         signatureMatch = false;
-                    } else if (
-                          targetParams.Length > sourceParams.Length
-                          && !targetParams[minCommon].HasDefaultValue
-                      ) {
+                    }
+                    else if (
+                        targetParams.Length > sourceParams.Length
+                        && !targetParams[minCommon].HasDefaultValue
+                    )
+                    {
                         signatureMatch = false;
                     }
 
                     // if the method is more specific and the parameters match
                     // we will dispatch to this method instead of the base type
-                    if (signatureMatch) {
+                    if (signatureMatch)
+                    {
                         // this happens if one method has a trailing optional value and all
                         // other parameter types match
-                        if (targetParams.Length != sourceParams.Length) {
+                        if (targetParams.Length != sourceParams.Length)
+                        {
                             // TODO: This designation is based on ordered argument call assumption, which is not true for DynamicServerActions
                             // which are always passed as named arguments, order does not matter, Ambiguity should be determined on actual call
                             // not on method signatures
@@ -317,13 +358,15 @@ public static class ActionDispatcher {
                         if (
                             hierarchy.IndexOf(mi.DeclaringType)
                             < hierarchy.IndexOf(methods[j].DeclaringType)
-                        ) {
+                        )
+                        {
                             methods[j] = mi;
                         }
                     }
                 }
 
-                if (!replaced) {
+                if (!replaced)
+                {
                     // we sort the list of methods so that we evaluate
                     // methods with fewer and possible no params first
                     // and then match methods with greater params
@@ -344,7 +387,8 @@ public static class ActionDispatcher {
     public static MethodInfo getDispatchMethod(
         Type targetType,
         DynamicServerAction dynamicServerAction
-    ) {
+    )
+    {
         List<MethodInfo> actionMethods = getCandidateMethods(
             targetType,
             dynamicServerAction.action
@@ -358,7 +402,8 @@ public static class ActionDispatcher {
         // variable names.  In the future, this could be modified to include type information from
         // the inbound JSON object by mapping JSON types to csharp primitive types
         // (i.e. number -> [short, float, int], bool -> bool, string -> string, dict -> object, list -> list)
-        foreach (var method in actionMethods) {
+        foreach (var method in actionMethods)
+        {
             int matchCount = 0;
             ParameterInfo[] mParams = method.GetParameters();
 
@@ -379,7 +424,8 @@ public static class ActionDispatcher {
 
             // Throw the exception only if there are more than one methods at the same childmost class level,
             // if not, the child most method will be chosen so there is no ambiguity
-            if (serverActionMethods.Count() > 0 && childMostTypeMethods.Count() > 1) {
+            if (serverActionMethods.Count() > 0 && childMostTypeMethods.Count() > 1)
+            {
                 throw new AmbiguousActionException(
                     $"Mixing a ServerAction method with overloaded methods is not permitted. Ambiguous methods: {string.Join(" | ", serverActionMethods.Select(m => $"method: {m.method.Name} in class '{m.method.DeclaringType}' with params {$"{string.Join(", ", m.parameters.Select(p => $"{p.ParameterType} {p.Name}"))}"}"))}"
                 );
@@ -398,11 +444,16 @@ public static class ActionDispatcher {
                 matchedMethod == null
                 && mParams.Length == 1
                 && mParams[0].ParameterType == typeof(ServerAction)
-            ) {
+            )
+            {
                 matchedMethod = method;
-            } else {
-                foreach (var p in method.GetParameters()) {
-                    if (dynamicServerAction.ContainsKey(p.Name)) {
+            }
+            else
+            {
+                foreach (var p in method.GetParameters())
+                {
+                    if (dynamicServerAction.ContainsKey(p.Name))
+                    {
                         matchCount++;
                     }
                 }
@@ -422,7 +473,8 @@ public static class ActionDispatcher {
                     && isSubclassOfBestMatchDeclaringType
                     && matchedMethod.DeclaringType != method.DeclaringType
                 )
-            ) {
+            )
+            {
                 // TODO: decide if this check should be added, or we want whatever method ranked top by 'MethodParamComparer' to be chosen (based on param number and default params)
                 // if (matchedMethod.DeclaringType == method.DeclaringType) {
                 //     // if matchcount is the same between any two methods and same level of inheritance hierarchy throw ambiguous exeption, since no method
@@ -440,7 +492,8 @@ public static class ActionDispatcher {
     public static IEnumerable<MethodInfo> getMatchingMethodOverwrites(
         Type targetType,
         DynamicServerAction dynamicServerAction
-    ) {
+    )
+    {
         return getCandidateMethods(targetType, dynamicServerAction.action)
             .Select(method =>
                 (
@@ -455,10 +508,12 @@ public static class ActionDispatcher {
     }
 
     public static void Dispatch<T>(T target, DynamicServerAction dynamicServerAction)
-        where T : ActionInvokable {
+        where T : ActionInvokable
+    {
         MethodInfo method = getDispatchMethod(target.GetType(), dynamicServerAction);
 
-        if (method == null) {
+        if (method == null)
+        {
             throw new InvalidActionException();
         }
 
@@ -486,23 +541,29 @@ public static class ActionDispatcher {
                 typeof(IEnumerator) == method.ReturnType
                 || method.ReturnType == typeof(ActionFinished)
             )
-        ) {
+        )
+        {
             // New action types always pass down physicsSim params if interface has them
-            if (paramDict.ContainsKey(DynamicServerAction.physicsSimulationParamsVariable)) {
+            if (paramDict.ContainsKey(DynamicServerAction.physicsSimulationParamsVariable))
+            {
                 dynamicServerAction.AddPhysicsSimulationParams(physicsSimulationParams);
             }
         }
         // TODO: deprecate, eventually when no void actions are left
-        if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(ServerAction)) {
+        if (methodParams.Length == 1 && methodParams[0].ParameterType == typeof(ServerAction))
+        {
             ServerAction serverAction = dynamicServerAction.ToObject<ServerAction>();
             serverAction.dynamicServerAction = dynamicServerAction;
             arguments[0] = serverAction;
-        } else {
+        }
+        else
+        {
             var argumentKeys = dynamicServerAction.ArgumentKeys().ToList();
             var invalidArgs = argumentKeys
                 .Where(argName => !paramDict.ContainsKey(argName))
                 .ToList();
-            if (invalidArgs.Count > 0) {
+            if (invalidArgs.Count > 0)
+            {
                 Func<ParameterInfo, string> paramToString = (ParameterInfo param) =>
                     $"{param.ParameterType.Name} {param.Name}{(param.HasDefaultValue ? " = " + param.DefaultValue : "")}";
                 var matchingMethodOverWrites = getMatchingMethodOverwrites(
@@ -522,14 +583,19 @@ public static class ActionDispatcher {
                     matchingMethodOverWrites
                 );
             }
-            for (int i = 0; i < methodParams.Length; i++) {
+            for (int i = 0; i < methodParams.Length; i++)
+            {
                 System.Reflection.ParameterInfo pi = methodParams[i];
-                if (dynamicServerAction.ContainsKey(pi.Name)) {
-                    try {
+                if (dynamicServerAction.ContainsKey(pi.Name))
+                {
+                    try
+                    {
                         arguments[i] = dynamicServerAction
                             .GetValue(pi.Name)
                             .ToObject(pi.ParameterType);
-                    } catch (ArgumentException ex) {
+                    }
+                    catch (ArgumentException ex)
+                    {
                         throw new ToObjectArgumentActionException(
                             parameterName: pi.Name,
                             parameterType: pi.ParameterType,
@@ -537,9 +603,13 @@ public static class ActionDispatcher {
                             ex: ex
                         );
                     }
-                } else {
-                    if (!pi.HasDefaultValue) {
-                        if (missingArguments == null) {
+                }
+                else
+                {
+                    if (!pi.HasDefaultValue)
+                    {
+                        if (missingArguments == null)
+                        {
                             missingArguments = new List<string>();
                         }
                         missingArguments.Add(pi.Name);
@@ -548,7 +618,8 @@ public static class ActionDispatcher {
                 }
             }
         }
-        if (missingArguments != null) {
+        if (missingArguments != null)
+        {
             throw new MissingArgumentsActionException(missingArguments);
         }
 
@@ -556,30 +627,39 @@ public static class ActionDispatcher {
         object methodReturn;
 
         // TODO: deprecated actions called in the old way that return void
-        if (!usePhysicsSimulationParams && method.ReturnType == typeof(void)) {
+        if (!usePhysicsSimulationParams && method.ReturnType == typeof(void))
+        {
             method.Invoke(target, arguments);
-        } else {
+        }
+        else
+        {
             // Only IEnumerators return functions can be run in a coroutine
             var runAsCoroutine = false;
 
-            if (method.ReturnType == typeof(System.Collections.IEnumerator)) {
+            if (method.ReturnType == typeof(System.Collections.IEnumerator))
+            {
                 methodReturn = method.Invoke(target, arguments);
                 action = methodReturn as IEnumerator;
                 runAsCoroutine = physicsSimulationParams.autoSimulation;
-            } else if (method.ReturnType == typeof(ActionFinished)) {
+            }
+            else if (method.ReturnType == typeof(ActionFinished))
+            {
                 action = ActionFinishedDelayActionWrapper(
                     () => method.Invoke(target, arguments) as ActionFinished
                 );
             }
-              // TODO: when legacy actions are gone remove branch
-              else {
-                action = ActionFinishedDelayActionWrapper(() => {
+            // TODO: when legacy actions are gone remove branch
+            else
+            {
+                action = ActionFinishedDelayActionWrapper(() =>
+                {
                     method.Invoke(target, arguments);
                     // TODO: deprecated void action returns dummy ActionFinished
                     return new ActionFinished() { isDummy = true };
                 });
             }
-            if (!runAsCoroutine) {
+            if (!runAsCoroutine)
+            {
                 // Blocking
                 var actionFinished = PhysicsSceneManager.RunSimulatePhysicsForAction(
                     action,
@@ -587,7 +667,9 @@ public static class ActionDispatcher {
                 );
                 // Complete callback at action end, implementation should do any state changes
                 target.Complete(actionFinished);
-            } else {
+            }
+            else
+            {
                 // "Async" will run after unity's frame update
                 target.StartCoroutine(
                     PhysicsSceneManager.RunActionForCoroutine(
@@ -600,34 +682,43 @@ public static class ActionDispatcher {
         }
     }
 
-    public static IEnumerator ActionFinishedWrapper(ActionFinished actionFinished) {
+    public static IEnumerator ActionFinishedWrapper(ActionFinished actionFinished)
+    {
         yield return actionFinished;
     }
 
-    public static IEnumerator ActionFinishedDelayActionWrapper(Func<ActionFinished> action) {
+    public static IEnumerator ActionFinishedDelayActionWrapper(Func<ActionFinished> action)
+    {
         yield return action();
     }
 }
 
-public class MethodParamComparer : IComparer<MethodInfo> {
-    public int Compare(MethodInfo a, MethodInfo b) {
+public class MethodParamComparer : IComparer<MethodInfo>
+{
+    public int Compare(MethodInfo a, MethodInfo b)
+    {
         int requiredParamCountA = requiredParamCount(a);
         int requiredParamCountB = requiredParamCount(b);
         int result = requiredParamCountA.CompareTo(requiredParamCountB);
-        if (result == 0) {
+        if (result == 0)
+        {
             result = paramCount(a).CompareTo(paramCount(b));
         }
         return result;
     }
 
-    private static int paramCount(MethodInfo method) {
+    private static int paramCount(MethodInfo method)
+    {
         return method.GetParameters().Length;
     }
 
-    private static int requiredParamCount(MethodInfo method) {
+    private static int requiredParamCount(MethodInfo method)
+    {
         int count = 0;
-        foreach (var p in method.GetParameters()) {
-            if (!p.HasDefaultValue) {
+        foreach (var p in method.GetParameters())
+        {
+            if (!p.HasDefaultValue)
+            {
                 count++;
             }
         }
@@ -639,19 +730,22 @@ public class MethodParamComparer : IComparer<MethodInfo> {
 [Serializable]
 public class InvalidActionException : Exception { }
 
-public class InvalidActionCallWithPhysicsSimulationParams : Exception {
+public class InvalidActionCallWithPhysicsSimulationParams : Exception
+{
     public InvalidActionCallWithPhysicsSimulationParams(string message)
         : base(message) { }
 }
 
 [Serializable]
-public class AmbiguousActionException : Exception {
+public class AmbiguousActionException : Exception
+{
     public AmbiguousActionException(string message)
         : base(message) { }
 }
 
 [Serializable]
-public class ToObjectArgumentActionException : Exception {
+public class ToObjectArgumentActionException : Exception
+{
     public string parameterName;
     public ArgumentException innerException;
     public Type parameterType;
@@ -662,7 +756,8 @@ public class ToObjectArgumentActionException : Exception {
         Type parameterType,
         string parameterValueAsStr,
         ArgumentException ex
-    ) {
+    )
+    {
         this.parameterName = parameterName;
         this.parameterType = parameterType;
         this.parameterValueAsStr = parameterValueAsStr;
@@ -671,16 +766,19 @@ public class ToObjectArgumentActionException : Exception {
 }
 
 [Serializable]
-public class MissingArgumentsActionException : Exception {
+public class MissingArgumentsActionException : Exception
+{
     public List<string> ArgumentNames;
 
-    public MissingArgumentsActionException(List<string> argumentNames) {
+    public MissingArgumentsActionException(List<string> argumentNames)
+    {
         this.ArgumentNames = argumentNames;
     }
 }
 
 [Serializable]
-public class InvalidArgumentsException : Exception {
+public class InvalidArgumentsException : Exception
+{
     public IEnumerable<string> ArgumentNames;
     public IEnumerable<string> InvalidArgumentNames;
     public IEnumerable<string> ParameterNames;
@@ -691,7 +789,8 @@ public class InvalidArgumentsException : Exception {
         IEnumerable<string> invalidArgumentNames,
         IEnumerable<string> parameterNames = null,
         IEnumerable<string> possibleOverwrites = null
-    ) {
+    )
+    {
         this.ArgumentNames = argumentNames;
         this.InvalidArgumentNames = invalidArgumentNames;
         this.ParameterNames = parameterNames ?? new List<string>();
@@ -700,7 +799,8 @@ public class InvalidArgumentsException : Exception {
 }
 
 [Serializable]
-public class MissingActionFinishedException : Exception {
+public class MissingActionFinishedException : Exception
+{
     public MissingActionFinishedException(string message = "")
         : base(message) { }
 }

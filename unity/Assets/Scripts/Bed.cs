@@ -3,7 +3,8 @@ using System.Collections;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class Bed : MonoBehaviour {
+public class Bed : MonoBehaviour
+{
     public SimObj ParentObj;
 
     // public GameObject FittedSheet;
@@ -13,16 +14,20 @@ public class Bed : MonoBehaviour {
     [Range(0, 2)]
     public int EditorState = 0;
 
-    void OnEnable() {
+    void OnEnable()
+    {
         ParentObj = gameObject.GetComponent<SimObj>();
-        if (ParentObj == null) {
+        if (ParentObj == null)
+        {
             ParentObj = gameObject.AddComponent<SimObj>();
         }
         ParentObj.Type = SimObjType.Bed;
 
-        if (!Application.isPlaying) {
+        if (!Application.isPlaying)
+        {
             Animator a = ParentObj.gameObject.GetComponent<Animator>();
-            if (a == null) {
+            if (a == null)
+            {
                 a = ParentObj.gameObject.AddComponent<Animator>();
                 a.runtimeAnimatorController =
                     Resources.Load("StateAnimController") as RuntimeAnimatorController;
@@ -30,9 +35,11 @@ public class Bed : MonoBehaviour {
         }
     }
 
-    void Update() {
+    void Update()
+    {
         int state = EditorState;
-        if (Application.isPlaying) {
+        if (Application.isPlaying)
+        {
             state = ParentObj.Animator.GetInteger("AnimState1");
         }
 
@@ -40,7 +47,8 @@ public class Bed : MonoBehaviour {
         // 1 - clean, no sheet
         // 2 - clean, sheet
 
-        switch (state) {
+        switch (state)
+        {
             case 0:
             default:
                 MessyBlanket.SetActive(true);

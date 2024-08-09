@@ -8,7 +8,8 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 
-public class NavMeshSurfaceExtended : NavMeshSurface {
+public class NavMeshSurfaceExtended : NavMeshSurface
+{
     public NavMeshBuildSettings buildSettings { get; private set; }
 
     // static readonly List<NavMeshSurfaceExtended> s_NavMeshSurfaces = new List<NavMeshSurfaceExtended>();
@@ -20,14 +21,16 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
     // }
     // Dictionary<int, NavMeshData> navmeshes = new Dictionary<int, NavMeshData>();
 
-    public void BuildNavMesh(NavMeshBuildSettings buildSettings) {
+    public void BuildNavMesh(NavMeshBuildSettings buildSettings)
+    {
         var sources = CollectSources();
         this.buildSettings = buildSettings;
 
         // Use unscaled bounds - this differs in behaviour from e.g. collider components.
         // But is similar to reflection probe - and since navmesh data has no scaling support - it is the right choice here.
         var sourcesBounds = new Bounds(center, Abs(size));
-        if (collectObjects == CollectObjects.All || collectObjects == CollectObjects.Children) {
+        if (collectObjects == CollectObjects.All || collectObjects == CollectObjects.Children)
+        {
             sourcesBounds = CalculateWorldBounds(sources);
         }
 
@@ -39,11 +42,13 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
             transform.rotation
         );
 
-        if (data != null) {
+        if (data != null)
+        {
             data.name = gameObject.name;
             RemoveData();
             navMeshData = data;
-            if (isActiveAndEnabled) {
+            if (isActiveAndEnabled)
+            {
                 AddData();
             }
         }
@@ -78,24 +83,30 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
 
 
 
-    static Vector3 Abs(Vector3 v) {
+    static Vector3 Abs(Vector3 v)
+    {
         return new Vector3(Mathf.Abs(v.x), Mathf.Abs(v.y), Mathf.Abs(v.z));
     }
 
-    Bounds CalculateWorldBounds(List<NavMeshBuildSource> sources) {
+    Bounds CalculateWorldBounds(List<NavMeshBuildSource> sources)
+    {
         // Use the unscaled matrix for the NavMeshSurface
         Matrix4x4 worldToLocal = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
         worldToLocal = worldToLocal.inverse;
 
         var result = new Bounds();
-        foreach (var src in sources) {
-            switch (src.shape) {
-                case NavMeshBuildSourceShape.Mesh: {
-                        var m = src.sourceObject as Mesh;
-                        result.Encapsulate(GetWorldBounds(worldToLocal * src.transform, m.bounds));
-                        break;
-                    }
-                case NavMeshBuildSourceShape.Terrain: {
+        foreach (var src in sources)
+        {
+            switch (src.shape)
+            {
+                case NavMeshBuildSourceShape.Mesh:
+                {
+                    var m = src.sourceObject as Mesh;
+                    result.Encapsulate(GetWorldBounds(worldToLocal * src.transform, m.bounds));
+                    break;
+                }
+                case NavMeshBuildSourceShape.Terrain:
+                {
 #if NMC_CAN_ACCESS_TERRAIN
                     // Terrain pivot is lower/left corner - shift bounds accordingly
                     var t = src.sourceObject as TerrainData;
@@ -106,12 +117,12 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
                         )
                     );
 #else
-                        Debug.LogWarning(
-                            "The NavMesh cannot be properly baked for the terrain because the necessary functionality is missing. Add the com.unity.modules.terrain package through the Package Manager."
-                        );
+                    Debug.LogWarning(
+                        "The NavMesh cannot be properly baked for the terrain because the necessary functionality is missing. Add the com.unity.modules.terrain package through the Package Manager."
+                    );
 #endif
-                        break;
-                    }
+                    break;
+                }
                 case NavMeshBuildSourceShape.Box:
                 case NavMeshBuildSourceShape.Sphere:
                 case NavMeshBuildSourceShape.Capsule:
@@ -130,7 +141,8 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
         return result;
     }
 
-    static Bounds GetWorldBounds(Matrix4x4 mat, Bounds bounds) {
+    static Bounds GetWorldBounds(Matrix4x4 mat, Bounds bounds)
+    {
         var absAxisX = Abs(mat.MultiplyVector(Vector3.right));
         var absAxisY = Abs(mat.MultiplyVector(Vector3.up));
         var absAxisZ = Abs(mat.MultiplyVector(Vector3.forward));
@@ -140,34 +152,43 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
         return new Bounds(worldPosition, worldSize);
     }
 
-    void AppendModifierVolumes(ref List<NavMeshBuildSource> sources) {
+    void AppendModifierVolumes(ref List<NavMeshBuildSource> sources)
+    {
 #if UNITY_EDITOR
         var myStage = StageUtility.GetStageHandle(gameObject);
-        if (!myStage.IsValid()) {
+        if (!myStage.IsValid())
+        {
             return;
         }
 #endif
         // Modifiers
         List<NavMeshModifierVolume> modifiers;
-        if (collectObjects == CollectObjects.Children) {
+        if (collectObjects == CollectObjects.Children)
+        {
             modifiers = new List<NavMeshModifierVolume>(
                 GetComponentsInChildren<NavMeshModifierVolume>()
             );
             modifiers.RemoveAll(x => !x.isActiveAndEnabled);
-        } else {
+        }
+        else
+        {
             modifiers = NavMeshModifierVolume.activeModifiers;
         }
 
-        foreach (var m in modifiers) {
-            if ((layerMask & (1 << m.gameObject.layer)) == 0) {
+        foreach (var m in modifiers)
+        {
+            if ((layerMask & (1 << m.gameObject.layer)) == 0)
+            {
                 continue;
             }
 
-            if (!m.AffectsAgentType(agentTypeID)) {
+            if (!m.AffectsAgentType(agentTypeID))
+            {
                 continue;
             }
 #if UNITY_EDITOR
-            if (!myStage.Contains(m.gameObject)) {
+            if (!myStage.Contains(m.gameObject))
+            {
                 continue;
             }
 #endif
@@ -188,24 +209,31 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
         }
     }
 
-    public List<NavMeshBuildSource> CollectSources() {
+    public List<NavMeshBuildSource> CollectSources()
+    {
         var sources = new List<NavMeshBuildSource>();
         var markups = new List<NavMeshBuildMarkup>();
 
         List<NavMeshModifier> modifiers;
-        if (collectObjects == CollectObjects.Children) {
+        if (collectObjects == CollectObjects.Children)
+        {
             modifiers = new List<NavMeshModifier>(GetComponentsInChildren<NavMeshModifier>());
             modifiers.RemoveAll(x => !x.isActiveAndEnabled);
-        } else {
+        }
+        else
+        {
             modifiers = NavMeshModifier.activeModifiers;
         }
 
-        foreach (var m in modifiers) {
-            if ((layerMask & (1 << m.gameObject.layer)) == 0) {
+        foreach (var m in modifiers)
+        {
+            if ((layerMask & (1 << m.gameObject.layer)) == 0)
+            {
                 continue;
             }
 
-            if (!m.AffectsAgentType(agentTypeID)) {
+            if (!m.AffectsAgentType(agentTypeID))
+            {
                 continue;
             }
 
@@ -218,8 +246,10 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
         }
 
 #if UNITY_EDITOR
-        if (!EditorApplication.isPlaying) {
-            if (collectObjects == CollectObjects.All) {
+        if (!EditorApplication.isPlaying)
+        {
+            if (collectObjects == CollectObjects.All)
+            {
                 UnityEditor.AI.NavMeshBuilder.CollectSourcesInStage(
                     null,
                     layerMask,
@@ -229,7 +259,9 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
                     gameObject.scene,
                     sources
                 );
-            } else if (collectObjects == CollectObjects.Children) {
+            }
+            else if (collectObjects == CollectObjects.Children)
+            {
                 UnityEditor.AI.NavMeshBuilder.CollectSourcesInStage(
                     transform,
                     layerMask,
@@ -239,7 +271,9 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
                     gameObject.scene,
                     sources
                 );
-            } else if (collectObjects == CollectObjects.Volume) {
+            }
+            else if (collectObjects == CollectObjects.Volume)
+            {
                 Matrix4x4 localToWorld = Matrix4x4.TRS(
                     transform.position,
                     transform.rotation,
@@ -258,10 +292,12 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
                     sources
                 );
             }
-        } else
+        }
+        else
 #endif
         {
-            if (collectObjects == CollectObjects.All) {
+            if (collectObjects == CollectObjects.All)
+            {
                 NavMeshBuilder.CollectSources(
                     null,
                     layerMask,
@@ -270,7 +306,9 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
                     markups,
                     sources
                 );
-            } else if (collectObjects == CollectObjects.Children) {
+            }
+            else if (collectObjects == CollectObjects.Children)
+            {
                 NavMeshBuilder.CollectSources(
                     transform,
                     layerMask,
@@ -279,7 +317,9 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
                     markups,
                     sources
                 );
-            } else if (collectObjects == CollectObjects.Volume) {
+            }
+            else if (collectObjects == CollectObjects.Volume)
+            {
                 Matrix4x4 localToWorld = Matrix4x4.TRS(
                     transform.position,
                     transform.rotation,
@@ -297,7 +337,8 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
             }
         }
 
-        if (ignoreNavMeshAgent) {
+        if (ignoreNavMeshAgent)
+        {
             sources.RemoveAll(
                 (x) =>
                     (
@@ -307,7 +348,8 @@ public class NavMeshSurfaceExtended : NavMeshSurface {
             );
         }
 
-        if (ignoreNavMeshObstacle) {
+        if (ignoreNavMeshObstacle)
+        {
             sources.RemoveAll(
                 (x) =>
                     (

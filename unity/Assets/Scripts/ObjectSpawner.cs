@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ObjectSpawner : MonoBehaviour {
+public class ObjectSpawner : MonoBehaviour
+{
     public GameObject[] PrefabToSpawn = null;
 
     // Use this for initialization

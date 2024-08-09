@@ -39,7 +39,6 @@ def GetSceneNames(start_index, last_index, nameTemplate="", prefix_path="unity/A
 
 
 def main():
-
     # testSceneNames = GetRoboSceneNames(3, 5, "Val")
     # valSceneNames = GetRoboSceneNames(2, 2, "test-dev", "unity/Assets/Private/Scenes")
     # trainSceneNames = GetRoboSceneNames(12, 5, "Train")

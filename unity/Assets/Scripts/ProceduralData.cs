@@ -12,10 +12,12 @@ using Newtonsoft.Json.Serialization;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-namespace Thor.Procedural.Data {
+namespace Thor.Procedural.Data
+{
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class AssetMetadata {
+    public class AssetMetadata
+    {
         public string id;
         public string type;
         public string primaryProperty;
@@ -25,7 +27,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class ProbeParameters {
+    public class ProbeParameters
+    {
         public string id;
         public Vector3 position;
         public float intensity;
@@ -37,7 +40,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class LightParameters {
+    public class LightParameters
+    {
         public string id { get; set; }
         public string type { get; set; }
         public Vector3 position { get; set; }
@@ -65,7 +69,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class ShadowParameters {
+    public class ShadowParameters
+    {
         public string type { get; set; } = "Soft";
         public float strength { get; set; } = 1.0f;
 
@@ -77,18 +82,22 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class SerializableColor {
+    public class SerializableColor
+    {
         public float r { get; set; }
         public float g { get; set; }
         public float b { get; set; }
         public float a { get; set; } = 1.0f;
 
-        public Color toUnityColor() {
+        public Color toUnityColor()
+        {
             return new Color(r, g, b, a);
         }
 
-        public static SerializableColor fromUnityColor(Color color) {
-            return new SerializableColor() {
+        public static SerializableColor fromUnityColor(Color color)
+        {
+            return new SerializableColor()
+            {
                 r = color.r,
                 g = color.g,
                 b = color.b,
@@ -99,7 +108,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Margin {
+    public class Margin
+    {
         public float bottom { get; set; }
         public float top { get; set; }
         public float left { get; set; }
@@ -108,7 +118,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Door : WallRectangularHole {
+    public class Door : WallRectangularHole
+    {
         public string id { get; set; }
         public string room0 { get; set; }
         public string room1 { get; set; }
@@ -128,7 +139,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class ProceduralParameters {
+    public class ProceduralParameters
+    {
         public float floorColliderThickness { get; set; }
         public float minWallColliderThickness { get; set; }
         public float receptacleHeight { get; set; }
@@ -139,7 +151,8 @@ namespace Thor.Procedural.Data {
 
         public List<ProbeParameters> reflections;
 
-        public MaterialProperties? ceilingMaterial = new MaterialProperties() {
+        public MaterialProperties? ceilingMaterial = new MaterialProperties()
+        {
             tilingDivisorX = 1.0f,
             tilingDivisorY = 1.0f
         };
@@ -156,14 +169,16 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class SerializableCollider {
+    public class SerializableCollider
+    {
         public Vector3[] vertices;
         public int[] triangles;
     }
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class PhysicalProperties {
+    public class PhysicalProperties
+    {
         public float mass = 1;
         public float drag = 0;
         public float angularDrag = 0.05f;
@@ -173,7 +188,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class ObjectAnnotations {
+    public class ObjectAnnotations
+    {
         public string objectType = "Undefined";
         public string primaryProperty = "Undefined";
         public string[]? secondaryProperties = null;
@@ -181,10 +197,12 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Ceiling {
+    public class Ceiling
+    {
         public string id { get; set; }
         public List<Vector3> polygon { get; set; }
-        public MaterialProperties material = new MaterialProperties() {
+        public MaterialProperties material = new MaterialProperties()
+        {
             tilingDivisorX = null,
             tilingDivisorY = null
         };
@@ -192,10 +210,12 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class RoomHierarchy {
+    public class RoomHierarchy
+    {
         public string id { get; set; }
         public string roomType { get; set; }
-        public MaterialProperties floorMaterial = new MaterialProperties() {
+        public MaterialProperties floorMaterial = new MaterialProperties()
+        {
             tilingDivisorX = 1.0f,
             tilingDivisorY = 1.0f
         };
@@ -210,7 +230,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class PolygonWall {
+    public class PolygonWall
+    {
         public string id { get; set; }
         public List<Vector3> polygon { get; set; }
         public string roomId { get; set; }
@@ -223,22 +244,26 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class BoundingBox {
+    public class BoundingBox
+    {
         public Vector3 min { get; set; }
         public Vector3 max { get; set; }
 
-        public Vector3 center() {
+        public Vector3 center()
+        {
             return this.min + (this.max - this.min) / 2.0f;
         }
 
-        public Vector3 size() {
+        public Vector3 size()
+        {
             return (this.max - this.min);
         }
     }
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class BoundingBoxWithOffset {
+    public class BoundingBoxWithOffset
+    {
         public Vector3 min { get; set; }
         public Vector3 max { get; set; }
         public Vector3 offset { get; set; }
@@ -246,14 +271,16 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class VectorXZ {
+    public class VectorXZ
+    {
         public int x;
         public int z;
     }
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Window : WallRectangularHole {
+    public class Window : WallRectangularHole
+    {
         public string id { get; set; }
         public string room0 { get; set; }
         public string room1 { get; set; }
@@ -273,7 +300,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class FlexibleRotation {
+    public class FlexibleRotation
+    {
         // Support Angle-Axis rotation (axis, degrees)
         public Vector3 axis;
         public float degrees;
@@ -282,30 +310,38 @@ namespace Thor.Procedural.Data {
         private float? _x;
         private float? _y;
         private float? _z;
-        public float? x {
+        public float? x
+        {
             get { return _x; }
-            set {
+            set
+            {
                 _x = value;
                 setAngleAxis();
             }
         }
-        public float? y {
+        public float? y
+        {
             get { return _y; }
-            set {
+            set
+            {
                 _y = value;
                 setAngleAxis();
             }
         }
-        public float? z {
+        public float? z
+        {
             get { return _z; }
-            set {
+            set
+            {
                 _z = value;
                 setAngleAxis();
             }
         }
 
-        private void setAngleAxis() {
-            if (x == null || y == null || z == null) {
+        private void setAngleAxis()
+        {
+            if (x == null || y == null || z == null)
+            {
                 return;
             }
             Vector3 rot = new Vector3(x: x.Value, y: y.Value, z: z.Value);
@@ -314,41 +350,48 @@ namespace Thor.Procedural.Data {
                 (axis.x == Mathf.Infinity || axis.x == -Mathf.Infinity || float.IsNaN(axis.x))
                 && (axis.y == Mathf.Infinity || axis.y == -Mathf.Infinity || float.IsNaN(axis.y))
                 && (axis.z == Mathf.Infinity || axis.z == -Mathf.Infinity || float.IsNaN(axis.z))
-            ) {
+            )
+            {
                 axis = Vector3.up;
             }
-            if (degrees == Mathf.Infinity || degrees == -Mathf.Infinity || float.IsNaN(degrees)) {
+            if (degrees == Mathf.Infinity || degrees == -Mathf.Infinity || float.IsNaN(degrees))
+            {
                 degrees = 0;
             }
         }
 
-        public static FlexibleRotation fromQuaternion(Quaternion quat) {
+        public static FlexibleRotation fromQuaternion(Quaternion quat)
+        {
             var r = new FlexibleRotation();
             quat.ToAngleAxis(out r.degrees, out r.axis);
             return r;
         }
 
-        public Quaternion toQuaternion() {
+        public Quaternion toQuaternion()
+        {
             return Quaternion.AngleAxis(degrees, axis);
         }
     }
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Child {
+    public class Child
+    {
         public string type { get; set; }
     }
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Taxonomy {
+    public class Taxonomy
+    {
         public string name;
         public List<Taxonomy> children = null;
     }
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class HouseObject {
+    public class HouseObject
+    {
         public string id { get; set; } //set to SimObjPhysics.objectId
         public Vector3 position { get; set; }
         public FlexibleRotation rotation { get; set; }
@@ -374,14 +417,16 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Roof {
+    public class Roof
+    {
         public MaterialProperties material { get; set; }
         public string assetId { get; set; }
     }
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class ProceduralHouse {
+    public class ProceduralHouse
+    {
         public ProceduralParameters proceduralParameters { get; set; }
         public string id { get; set; }
         public List<RoomHierarchy> rooms { get; set; } = new List<RoomHierarchy>();
@@ -395,7 +440,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class NavMeshConfig {
+    public class NavMeshConfig
+    {
         public int id;
         public float agentRadius;
         public int? tileSize;
@@ -408,7 +454,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class HouseMetadata {
+    public class HouseMetadata
+    {
         public Dictionary<string, AgentPose> agentPoses { get; set; }
         public string schema { get; set; } = null;
 
@@ -417,7 +464,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class AgentPose {
+    public class AgentPose
+    {
         public float horizon;
         public Vector3 position;
         public Vector3 rotation;
@@ -426,7 +474,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class MaterialProperties {
+    public class MaterialProperties
+    {
         // TODO: move material id, color (as albedo) and tiling divisors
         public string name { get; set; }
         public SerializableColor color { get; set; }
@@ -438,7 +487,8 @@ namespace Thor.Procedural.Data {
         public float? smoothness;
     }
 
-    public interface WallRectangularHole {
+    public interface WallRectangularHole
+    {
         string id { get; set; }
         string assetId { get; set; }
         string room0 { get; set; }
@@ -456,7 +506,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class Wall {
+    public class Wall
+    {
         public string id;
         public float height;
         public Vector3 p0;
@@ -476,7 +527,8 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class ProceduralAsset {
+    public class ProceduralAsset
+    {
         public Vector3[] vertices;
         public Vector3[] normals;
         public string name;
@@ -496,10 +548,13 @@ namespace Thor.Procedural.Data {
         public string parentTexturesDir = null;
     }
 
-    public static class ExtensionMethods {
-        public static T DeepClone<T>(this T obj) {
+    public static class ExtensionMethods
+    {
+        public static T DeepClone<T>(this T obj)
+        {
             // Don't serialize a null object, simply return the default for that object
-            if (ReferenceEquals(obj, null)) {
+            if (ReferenceEquals(obj, null))
+            {
                 return default;
             }
 
@@ -511,7 +566,8 @@ namespace Thor.Procedural.Data {
             var str = Newtonsoft.Json.JsonConvert.SerializeObject(
                 obj,
                 Newtonsoft.Json.Formatting.None,
-                new Newtonsoft.Json.JsonSerializerSettings() {
+                new Newtonsoft.Json.JsonSerializerSettings()
+                {
                     ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
                     ContractResolver = jsonResolver
                 }
@@ -526,7 +582,8 @@ namespace Thor.Procedural.Data {
             this Dictionary<TKey, TValue> dictionary,
             TKey key,
             TValue defaultValue = default(TValue)
-        ) {
+        )
+        {
             TValue value;
             return dictionary.TryGetValue(key, out value) ? value : defaultValue;
         }
@@ -535,12 +592,16 @@ namespace Thor.Procedural.Data {
             this Dictionary<TKey, int> dictionary,
             TKey key,
             int count = 1
-        ) {
+        )
+        {
             int value;
             dictionary.TryGetValue(key, out value);
-            if (dictionary.ContainsKey(key)) {
+            if (dictionary.ContainsKey(key))
+            {
                 dictionary[key] = dictionary[key] + count;
-            } else {
+            }
+            else
+            {
                 dictionary[key] = count;
             }
             return dictionary[key];

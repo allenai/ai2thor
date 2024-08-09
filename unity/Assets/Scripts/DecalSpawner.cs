@@ -2,19 +2,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DirtCoordinateBounds {
+public class DirtCoordinateBounds
+{
     public float minX,
         maxX,
         minZ,
         maxZ;
 }
 
-public class DirtSpawnPosition {
+public class DirtSpawnPosition
+{
     public float x;
     public float z;
 }
 
-public class DecalSpawner : MonoBehaviour {
+public class DecalSpawner : MonoBehaviour
+{
     // If true Guarantees that other spawn planes under the same parent will have the same stencil value
     [SerializeField]
     private bool sameStencilAsSiblings = false;
@@ -43,26 +46,34 @@ public class DecalSpawner : MonoBehaviour {
 
     private static int currentStencilId = 0;
 
-    void OnEnable() {
+    void OnEnable()
+    {
         //breakType = BreakType.Decal;
         prevTime = Time.time;
 
         var mr = this.GetComponent<MeshRenderer>();
-        if (mr && mr.enabled) {
-            if (transparent) {
-                if (!sameStencilAsSiblings) {
+        if (mr && mr.enabled)
+        {
+            if (transparent)
+            {
+                if (!sameStencilAsSiblings)
+                {
                     setStencilWriteValue(mr);
-                } else {
+                }
+                else
+                {
                     var otherPlanes =
                         this.transform.parent.gameObject.GetComponentsInChildren<DecalSpawner>();
                     // var otherPlanes = this.gameObject.GetComponentsInParent<DecalCollision>();
                     // Debug.Log("other planes id " + this.stencilWriteValue + " len " + otherPlanes.Length);
-                    foreach (var spawnPlane in otherPlanes) {
+                    foreach (var spawnPlane in otherPlanes)
+                    {
                         if (
                             spawnPlane.isActiveAndEnabled
                             && spawnPlane.stencilSet
                             && spawnPlane.sameStencilAsSiblings
-                        ) {
+                        )
+                        {
                             this.stencilWriteValue = spawnPlane.stencilWriteValue;
                             this.stencilSet = true;
                             mr.material.SetInt("_StencilRef", this.stencilWriteValue);
@@ -70,11 +81,14 @@ public class DecalSpawner : MonoBehaviour {
                             break;
                         }
                     }
-                    if (!stencilSet) {
+                    if (!stencilSet)
+                    {
                         setStencilWriteValue(mr);
                     }
                 }
-            } else {
+            }
+            else
+            {
                 this.stencilWriteValue = 1;
                 mr.material.SetInt("_StencilRef", this.stencilWriteValue);
             }
@@ -83,7 +97,8 @@ public class DecalSpawner : MonoBehaviour {
 
     public void Update() { }
 
-    public DirtCoordinateBounds GetDirtCoordinateBounds() {
+    public DirtCoordinateBounds GetDirtCoordinateBounds()
+    {
         DirtCoordinateBounds coords = new DirtCoordinateBounds();
 
         SimObjPhysics myParentSimObj = this.transform.GetComponentInParent<SimObjPhysics>();
@@ -96,20 +111,25 @@ public class DecalSpawner : MonoBehaviour {
         coords.minZ = spawnPointsArray[0].z;
         coords.maxZ = spawnPointsArray[0].z;
 
-        foreach (Vector3 v in spawnPointsArray) {
-            if (v.x < coords.minX) {
+        foreach (Vector3 v in spawnPointsArray)
+        {
+            if (v.x < coords.minX)
+            {
                 coords.minX = v.x;
             }
 
-            if (v.x > coords.maxX) {
+            if (v.x > coords.maxX)
+            {
                 coords.maxX = v.x;
             }
 
-            if (v.z < coords.minZ) {
+            if (v.z < coords.minZ)
+            {
                 coords.minZ = v.z;
             }
 
-            if (v.z > coords.maxZ) {
+            if (v.z > coords.maxZ)
+            {
                 coords.maxZ = v.z;
             }
         }
@@ -128,13 +148,16 @@ public class DecalSpawner : MonoBehaviour {
         int howMany = 1,
         int randomSeed = 0,
         DirtSpawnPosition[] spawnPointsArray = null
-    ) {
-        if (spawnPointsArray == null) {
+    )
+    {
+        if (spawnPointsArray == null)
+        {
             DirtCoordinateBounds c = GetDirtCoordinateBounds();
 
             Random.InitState(randomSeed);
 
-            for (int i = 0; i < howMany; i++) {
+            for (int i = 0; i < howMany; i++)
+            {
                 //var randomPoint = Random.Range(0, spawnPointsArray.Length);
                 var randomX = Random.Range(c.minX, c.maxX);
                 var randomZ = Random.Range(c.minZ, c.maxZ);
@@ -160,10 +183,12 @@ public class DecalSpawner : MonoBehaviour {
         //instead pass in exact coordinates you want to spawn decals
         //note this ignores the howMany variable, instead will spawn
         //decals based on exactly what spawn points are passed in via spawnPointsArray
-        else {
+        else
+        {
             Random.InitState(randomSeed);
 
-            for (int i = 0; i < spawnPointsArray.Length; i++) {
+            for (int i = 0; i < spawnPointsArray.Length; i++)
+            {
                 var randomScale = new Vector3(
                     Random.Range(0.1f, 0.4f),
                     Random.Range(0.1f, 0.4f),
@@ -185,10 +210,12 @@ public class DecalSpawner : MonoBehaviour {
         }
     }
 
-    private void setStencilWriteValue(MeshRenderer mr) {
+    private void setStencilWriteValue(MeshRenderer mr)
+    {
         DecalSpawner.currentStencilId = DecalSpawner.currentStencilId + 1;
         this.stencilWriteValue = DecalSpawner.currentStencilId << 1;
-        if (this.stencilWriteValue > 0xFF) {
+        if (this.stencilWriteValue > 0xFF)
+        {
             this.stencilWriteValue = this.stencilWriteValue % 0xFF;
             // Debug.LogWarning("Stencil buffer write value overflow with: " + this.stencilWriteValue + " for " + this.gameObject.name + " wraping back to " + ", decal overlap with other spawn planes with same stencil value.");
         }
@@ -202,9 +229,11 @@ public class DecalSpawner : MonoBehaviour {
         bool worldSpace = false,
         Vector3? scale = null,
         DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE
-    ) {
+    )
+    {
         var pos = position;
-        if (worldSpace) {
+        if (worldSpace)
+        {
             pos = this.transform.InverseTransformPoint(position);
         }
         spawnDecal(
@@ -221,23 +250,29 @@ public class DecalSpawner : MonoBehaviour {
         Vector3 scale,
         DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE,
         int index = -1
-    ) {
+    )
+    {
         var minimumScale = this.transform.localScale;
         var decalScale = scale;
-        if (minimumScale.x < scale.x || minimumScale.y < scale.y) {
+        if (minimumScale.x < scale.x || minimumScale.y < scale.y)
+        {
             var minimumDim = Mathf.Min(minimumScale.x, minimumScale.y);
             decalScale = new Vector3(minimumDim, minimumDim, scale.z);
         }
         var selectIndex = index;
-        if (index < 0) {
+        if (index < 0)
+        {
             selectIndex = Random.Range(0, decals.Length);
         }
 
         var randomRotation = Quaternion.identity;
         var randomAngle = Random.Range(-180.0f, 180.0f);
-        if (randomRotationAxis == DecalRotationAxis.FORWARD) {
+        if (randomRotationAxis == DecalRotationAxis.FORWARD)
+        {
             randomRotation = Quaternion.AngleAxis(randomAngle, Vector3.forward);
-        } else if (randomRotationAxis == DecalRotationAxis.SIDE) {
+        }
+        else if (randomRotationAxis == DecalRotationAxis.SIDE)
+        {
             randomRotation = Quaternion.AngleAxis(randomAngle, Vector3.right);
         }
 
@@ -250,13 +285,16 @@ public class DecalSpawner : MonoBehaviour {
         decalCopy.transform.localScale = decalScale;
 
         var mr = decalCopy.GetComponent<MeshRenderer>();
-        if (transparent && mr && mr.enabled) {
+        if (transparent && mr && mr.enabled)
+        {
             mr.material.SetInt("_StencilRef", this.stencilWriteValue);
         }
         // Not needed if deffered decal prefab is correctly set with  _StencilRef to 1 in material
-        else {
+        else
+        {
             var decal = decalCopy.GetComponent<DeferredDecal>();
-            if (decal) {
+            if (decal)
+            {
                 decal.material.SetInt("_StencilRef", this.stencilWriteValue);
             }
         }

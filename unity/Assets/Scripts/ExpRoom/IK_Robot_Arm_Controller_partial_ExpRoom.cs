@@ -13,10 +13,14 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
 
-public partial class IK_Robot_Arm_Controller : ArmController {
-    public bool AttachObjectToArmWithFixedJoint(SimObjPhysics target) {
-        foreach (FixedJoint fj in magnetSphere.gameObject.GetComponents<FixedJoint>()) {
-            if (fj.connectedBody.gameObject == target.gameObject) {
+public partial class IK_Robot_Arm_Controller : ArmController
+{
+    public bool AttachObjectToArmWithFixedJoint(SimObjPhysics target)
+    {
+        foreach (FixedJoint fj in magnetSphere.gameObject.GetComponents<FixedJoint>())
+        {
+            if (fj.connectedBody.gameObject == target.gameObject)
+            {
                 return true;
             }
         }
@@ -30,8 +34,10 @@ public partial class IK_Robot_Arm_Controller : ArmController {
         return true;
     }
 
-    public bool BreakFixedJoints() {
-        foreach (FixedJoint fj in magnetSphere.gameObject.GetComponents<FixedJoint>()) {
+    public bool BreakFixedJoints()
+    {
+        foreach (FixedJoint fj in magnetSphere.gameObject.GetComponents<FixedJoint>())
+        {
             Destroy(fj);
         }
         return true;

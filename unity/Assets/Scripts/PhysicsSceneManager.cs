@@ -10,7 +10,8 @@ using UnityStandardAssets.Characters.FirstPerson;
 using UnityStandardAssets.ImageEffects;
 
 [ExecuteInEditMode]
-public class PhysicsSimulationParams {
+public class PhysicsSimulationParams
+{
     public bool autoSimulation = false;
     public float fixedDeltaTime = 0.02f;
     public float minSimulateTimeSeconds = 0;
@@ -19,14 +20,18 @@ public class PhysicsSimulationParams {
 
     // public int maxActionPhysicsSteps = int.MaxValue;
 
-    public override bool Equals(object p) {
-        if (p is null) {
+    public override bool Equals(object p)
+    {
+        if (p is null)
+        {
             return false;
         }
-        if (object.ReferenceEquals(this, p)) {
+        if (object.ReferenceEquals(this, p))
+        {
             return true;
         }
-        if (this.GetType() != p.GetType()) {
+        if (this.GetType() != p.GetType())
+        {
             return false;
         }
         var otherPhysicsParams = p as PhysicsSimulationParams;
@@ -38,7 +43,8 @@ public class PhysicsSimulationParams {
     }
 }
 
-public class PhysicsSceneManager : MonoBehaviour {
+public class PhysicsSceneManager : MonoBehaviour
+{
     // public static PhysicsSceneManager Instance { get; private set; }
     public bool ProceduralMode = false;
     public List<GameObject> RequiredObjects = new List<GameObject>();
@@ -89,16 +95,19 @@ public class PhysicsSceneManager : MonoBehaviour {
 
     public static PhysicsSimulationParams physicsSimulationParams { get; private set; }
 
-    public static float fixedDeltaTime {
+    public static float fixedDeltaTime
+    {
         get { return physicsSimulationParams.fixedDeltaTime; }
         private set { return; }
     }
 
-    void Awake() {
+    void Awake()
+    {
         SetDefaultSimulationParams(new PhysicsSimulationParams());
     }
 
-    private void OnEnable() {
+    private void OnEnable()
+    {
         // must do this here instead of Start() since OnEnable gets triggered prior to Start
         // when the component is enabled.
         agentManager = GameObject
@@ -108,17 +117,20 @@ public class PhysicsSceneManager : MonoBehaviour {
         // clear this on start so that the CheckForDuplicates function doesn't check pre-existing lists
         SetupScene();
 
-        if (GameObject.Find("HideAndSeek")) {
+        if (GameObject.Find("HideAndSeek"))
+        {
             HideAndSeek = GameObject.Find("HideAndSeek");
         }
 
-        if (!GameObject.Find("Objects")) {
+        if (!GameObject.Find("Objects"))
+        {
             GameObject c = new GameObject("Objects");
             Debug.Log(c.transform.name + " was missing and is now added");
         }
     }
 
-    public void SetupScene(bool generateObjectIds = true) {
+    public void SetupScene(bool generateObjectIds = true)
+    {
         Debug.Log("------- Setup Scene called " + (generateObjectIds && !ProceduralMode));
         ObjectIdToSimObjPhysics.Clear();
         GatherSimObjPhysInScene(generateObjectIds && !ProceduralMode);
@@ -126,24 +138,28 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     // Use this for initialization
-    void Start() {
+    void Start()
+    {
         PhysicsSceneManager.PhysicsSimulateCallCount = 0;
         GatherAllRBsInScene();
     }
 
     public static void SetDefaultSimulationParams(
         PhysicsSimulationParams defaultPhysicsSimulationParams
-    ) {
+    )
+    {
         PhysicsSceneManager.defaultPhysicsSimulationParams = defaultPhysicsSimulationParams; // ?? new PhysicsSimulationParams();
         PhysicsSceneManager.physicsSimulationParams =
             PhysicsSceneManager.defaultPhysicsSimulationParams;
     }
 
-    public static void SetPhysicsSimulationParams(PhysicsSimulationParams physicsSimulationParams) {
+    public static void SetPhysicsSimulationParams(PhysicsSimulationParams physicsSimulationParams)
+    {
         PhysicsSceneManager.physicsSimulationParams = physicsSimulationParams;
     }
 
-    public static void PhysicsSimulateTHOR(float deltaTime) {
+    public static void PhysicsSimulateTHOR(float deltaTime)
+    {
         Physics.Simulate(deltaTime);
         PhysicsSceneManager.PhysicsSimulateTimeSeconds += deltaTime;
         PhysicsSceneManager.PhysicsSimulateCallCount++;
@@ -152,16 +168,20 @@ public class PhysicsSceneManager : MonoBehaviour {
     public static ActionFinished ExpandIEnumerator(
         IEnumerator enumerator,
         PhysicsSimulationParams physicsSimulationParams
-    ) {
+    )
+    {
         ActionFinished actionFinished = null;
 
-        while (enumerator.MoveNext()) {
-            if (enumerator.Current == null) {
+        while (enumerator.MoveNext())
+        {
+            if (enumerator.Current == null)
+            {
                 continue;
             }
 
             // ActionFinished was found but enumerator keeps moving forward, throw error
-            if (actionFinished != null) {
+            if (actionFinished != null)
+            {
                 // Premature ActionFinished, same as yield break, stops iterator evaluation
                 break;
             }
@@ -169,22 +189,28 @@ public class PhysicsSceneManager : MonoBehaviour {
             if (
                 enumerator.Current.GetType() == typeof(WaitForFixedUpdate)
                 && !physicsSimulationParams.autoSimulation
-            ) {
+            )
+            {
                 // TODO: is this still used?
-                if (physicsSimulationParams.fixedDeltaTime == 0f) {
+                if (physicsSimulationParams.fixedDeltaTime == 0f)
+                {
                     Physics.SyncTransforms();
-                } else {
+                }
+                else
+                {
                     PhysicsSceneManager.PhysicsSimulateTHOR(physicsSimulationParams.fixedDeltaTime);
                 }
             }
             // else if (enumerator.Current.GetType() == typeof)
-            else if (enumerator.Current.GetType() == typeof(ActionFinished)) {
+            else if (enumerator.Current.GetType() == typeof(ActionFinished))
+            {
                 actionFinished = (ActionFinished)(enumerator.Current as ActionFinished);
             }
             // For recursive ienumerators, unity StartCoroutine must do something for cases when (yield return (yield return value))
             // Though C# compiler should handle it and MoveNext should recursively call MoveNext and set Current, but does not seem to work
             // so we manually expand iterators depth first
-            else if (typeof(IEnumerator).IsAssignableFrom(enumerator.Current.GetType())) {
+            else if (typeof(IEnumerator).IsAssignableFrom(enumerator.Current.GetType()))
+            {
                 actionFinished = PhysicsSceneManager.ExpandIEnumerator(
                     enumerator.Current as IEnumerator,
                     physicsSimulationParams
@@ -198,7 +224,8 @@ public class PhysicsSceneManager : MonoBehaviour {
     public static ActionFinished RunSimulatePhysicsForAction(
         IEnumerator enumerator,
         PhysicsSimulationParams physicsSimulationParams
-    ) {
+    )
+    {
         var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime;
         var previousAutoSimulate = Physics.autoSimulation;
         Physics.autoSimulation = physicsSimulationParams.autoSimulation;
@@ -210,7 +237,8 @@ public class PhysicsSceneManager : MonoBehaviour {
         // Recursive expansion of IEnumerator
         ActionFinished actionFinished = ExpandIEnumerator(enumerator, physicsSimulationParams);
 
-        if (actionFinished == null) {
+        if (actionFinished == null)
+        {
             throw new MissingActionFinishedException();
         }
 
@@ -220,18 +248,21 @@ public class PhysicsSceneManager : MonoBehaviour {
         if (
             !physicsSimulationParams.autoSimulation
             && physicsSimulationParams.minSimulateTimeSeconds > 0.0f
-        ) {
+        )
+        {
             // Because of floating point precision
             const float eps = 1e-5f;
             while (
                 PhysicsSceneManager.PhysicsSimulateTimeSeconds
                 <= (physicsSimulationParams.minSimulateTimeSeconds - eps)
-            ) {
+            )
+            {
                 PhysicsSceneManager.PhysicsSimulateTHOR(fixedDeltaTime);
             }
         }
 
-        if (physicsSimulationParams.syncTransformsAfterAction) {
+        if (physicsSimulationParams.syncTransformsAfterAction)
+        {
             Physics.SyncTransforms();
         }
 
@@ -243,21 +274,28 @@ public class PhysicsSceneManager : MonoBehaviour {
         ActionInvokable target,
         IEnumerator action,
         PhysicsSimulationParams physicsSimulationParams
-    ) {
+    )
+    {
         var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime;
         var previousFixedDeltaTime = Time.fixedDeltaTime;
         Time.fixedDeltaTime = fixedDeltaTime;
         var startFixedTimeSeconds = Time.fixedTime;
         ActionFinished actionFinished = null;
 
-        while (true) {
+        while (true)
+        {
             // Adds Exception handling for Coroutines!
-            try {
-                if (!action.MoveNext()) {
+            try
+            {
+                if (!action.MoveNext())
+                {
                     break;
                 }
-            } catch (Exception e) {
-                actionFinished = new ActionFinished() {
+            }
+            catch (Exception e)
+            {
+                actionFinished = new ActionFinished()
+                {
                     success = false,
                     errorMessage = $"{e.GetType()}: {e.StackTrace}",
                     errorCode = ServerActionErrorCode.UnhandledException
@@ -272,7 +310,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                 break;
             }
 
-            if (action.Current != null && typeof(ActionFinished) == action.Current.GetType()) {
+            if (action.Current != null && typeof(ActionFinished) == action.Current.GetType())
+            {
                 actionFinished = (ActionFinished)(action.Current as ActionFinished);
                 break;
             }
@@ -285,7 +324,8 @@ public class PhysicsSceneManager : MonoBehaviour {
         //     throw new MissingActionFinishedException();
         // }
 
-        actionFinished ??= new ActionFinished() {
+        actionFinished ??= new ActionFinished()
+        {
             success = false,
             errorMessage = "Action did not return an `ActionFinished`.",
             errorCode = ServerActionErrorCode.MissingActionFinished
@@ -294,12 +334,14 @@ public class PhysicsSceneManager : MonoBehaviour {
         var actionFixedTime = Time.fixedTime - startFixedTimeSeconds;
         const float eps = 1e-5f;
 
-        while (actionFixedTime <= (physicsSimulationParams.minSimulateTimeSeconds - eps)) {
+        while (actionFixedTime <= (physicsSimulationParams.minSimulateTimeSeconds - eps))
+        {
             yield return new WaitForFixedUpdate();
             actionFixedTime += fixedDeltaTime;
         }
 
-        if (physicsSimulationParams.syncTransformsAfterAction) {
+        if (physicsSimulationParams.syncTransformsAfterAction)
+        {
             Physics.SyncTransforms();
         }
 
@@ -311,31 +353,38 @@ public class PhysicsSceneManager : MonoBehaviour {
     // Returns previous parameters
     public static PhysicsSimulationParams applyPhysicsSimulationParams(
         PhysicsSimulationParams physicsSimulationParams
-    ) {
-        return new PhysicsSimulationParams() {
+    )
+    {
+        return new PhysicsSimulationParams()
+        {
             autoSimulation = Physics.autoSimulation,
             fixedDeltaTime = Time.fixedDeltaTime
         };
     }
 
-    private void GatherAllRBsInScene() {
+    private void GatherAllRBsInScene()
+    {
         // cache all rigidbodies that are in the scene by default
         // NOTE: any rigidbodies created from actions such as Slice/Break or spawned in should be added to this!
         rbsInScene = new HashSet<Rigidbody>(FindObjectsOfType<Rigidbody>());
     }
 
     // disabling LateUpdate to experiment with determinism
-    void LateUpdate() {
+    void LateUpdate()
+    {
         // check what objects in the scene are currently in motion
         // Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
-        foreach (Rigidbody rb in rbsInScene) {
-            if (rb == null) {
+        foreach (Rigidbody rb in rbsInScene)
+        {
+            if (rb == null)
+            {
                 return;
             }
 
             // if this rigidbody is part of a SimObject, calculate rest using lastVelocity/currentVelocity comparisons
             // make sure the object is actually active, otherwise skip the check
-            if (rb.GetComponentInParent<SimObjPhysics>() && rb.transform.gameObject.activeSelf) {
+            if (rb.GetComponentInParent<SimObjPhysics>() && rb.transform.gameObject.activeSelf)
+            {
                 SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
 
                 float currentVelocity = Math.Abs(
@@ -343,11 +392,14 @@ public class PhysicsSceneManager : MonoBehaviour {
                 );
                 float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
-                if (Mathf.Abs(accel) <= 0.0001f) {
+                if (Mathf.Abs(accel) <= 0.0001f)
+                {
                     sop.inMotion = false;
                     // print(sop.transform.name + " should be sleeping");
                     // rb.Sleep(); maybe do something to ensure object has stopped moving, and reduce jitter
-                } else {
+                }
+                else
+                {
                     // the rb's velocities are not 0, so it is in motion and the scene is not at rest
                     rb.GetComponentInParent<SimObjPhysics>().inMotion = true;
                     isSceneAtRest = false;
@@ -356,13 +408,17 @@ public class PhysicsSceneManager : MonoBehaviour {
                     // #endif
                 }
                 // only apply drag if autosimulation is on
-            } else if (Physics.autoSimulation) {
+            }
+            else if (Physics.autoSimulation)
+            {
                 // this rigidbody is not a SimOBject, and might be a piece of a shattered sim object spawned in, or something
-                if (rb.transform.gameObject.activeSelf) {
+                if (rb.transform.gameObject.activeSelf)
+                {
                     // is the rigidbody at non zero velocity? then the scene is not at rest
                     if (
                         Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) >= 0.01
-                    ) {
+                    )
+                    {
                         isSceneAtRest = false;
                         // make sure the rb's drag values are not at 0 exactly
                         // if (rb.drag < 0.1f)
@@ -375,14 +431,17 @@ public class PhysicsSceneManager : MonoBehaviour {
 #if UNITY_EDITOR
                         //print(rb.transform.name + " is still in motion!");
 #endif
-                    } else {
+                    }
+                    else
+                    {
                         // the velocities are small enough, assume object has come to rest and force this one to sleep
                         rb.drag = 1.0f;
                         rb.angularDrag = 1.0f;
                     }
 
                     // if the shard/broken piece gets out of bounds somehow and begins falling forever, get rid of it with this check
-                    if (rb.transform.position.y < -50f) {
+                    if (rb.transform.position.y < -50f)
+                    {
                         rb.transform.gameObject.SetActive(false);
                         // note: we might want to remove these from the list of rbs at some point but for now it'll be fine
                     }
@@ -392,17 +451,22 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     // used to add a reference to a rigidbody created after the scene was started
-    public void AddToRBSInScene(Rigidbody rb) {
+    public void AddToRBSInScene(Rigidbody rb)
+    {
         rbsInScene.Add(rb);
     }
 
-    public void RemoveFromRBSInScene(Rigidbody rb) {
+    public void RemoveFromRBSInScene(Rigidbody rb)
+    {
         rbsInScene.Remove(rb);
     }
 
-    public bool ToggleHideAndSeek(bool hide) {
-        if (HideAndSeek) {
-            if (HideAndSeek.activeSelf != hide) {
+    public bool ToggleHideAndSeek(bool hide)
+    {
+        if (HideAndSeek)
+        {
+            if (HideAndSeek.activeSelf != hide)
+            {
                 HideAndSeek.SetActive(hide);
                 SetupScene();
             }
@@ -415,23 +479,29 @@ public class PhysicsSceneManager : MonoBehaviour {
         return false;
     }
 
-    public void ResetObjectIdToSimObjPhysics() {
+    public void ResetObjectIdToSimObjPhysics()
+    {
         ObjectIdToSimObjPhysics.Clear();
-        foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+        foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>())
+        {
             ObjectIdToSimObjPhysics[so.ObjectID] = so;
         }
     }
 
-    public void MakeAllObjectsMoveable() {
-        foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+    public void MakeAllObjectsMoveable()
+    {
+        foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>())
+        {
             // check if the sopType is something that can be hung
             if (
                 sop.Type == SimObjType.Towel
                 || sop.Type == SimObjType.HandTowel
                 || sop.Type == SimObjType.ToiletPaper
-            ) {
+            )
+            {
                 // if this object is actively hung on its corresponding object specific receptacle... skip it so it doesn't fall on the floor
-                if (sop.GetComponentInParent<ObjectSpecificReceptacle>()) {
+                if (sop.GetComponentInParent<ObjectSpecificReceptacle>())
+                {
                     continue;
                 }
             }
@@ -439,7 +509,8 @@ public class PhysicsSceneManager : MonoBehaviour {
             if (
                 sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup
                 || sop.PrimaryProperty == SimObjPrimaryProperty.Moveable
-            ) {
+            )
+            {
                 Rigidbody rb = sop.GetComponent<Rigidbody>();
                 rb.isKinematic = false;
                 rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
@@ -447,27 +518,33 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
-    public void GatherSimObjPhysInScene(bool generateObjectIds = true) {
+    public void GatherSimObjPhysInScene(bool generateObjectIds = true)
+    {
         List<SimObjPhysics> allPhysObjects = new List<SimObjPhysics>();
 
         allPhysObjects.AddRange(FindObjectsOfType<SimObjPhysics>());
         allPhysObjects.Sort((x, y) => (x.Type.ToString().CompareTo(y.Type.ToString())));
 
-        foreach (SimObjPhysics o in allPhysObjects) {
-            if (generateObjectIds) {
+        foreach (SimObjPhysics o in allPhysObjects)
+        {
+            if (generateObjectIds)
+            {
                 Generate_ObjectID(o);
             }
 
             // debug in editor, make sure no two object share ids for some reason
 #if UNITY_EDITOR
-            if (CheckForDuplicateObjectIDs(o)) {
+            if (CheckForDuplicateObjectIDs(o))
+            {
                 Debug.Log(
                     "Yo there are duplicate ObjectIDs! Check"
                         + o.ObjectID
                         + "in scene "
                         + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
                 );
-            } else {
+            }
+            else
+            {
                 AddToObjectsInScene(o);
                 continue;
             }
@@ -476,24 +553,31 @@ public class PhysicsSceneManager : MonoBehaviour {
             AddToObjectsInScene(o);
         }
 
-        foreach (var agent in this.agentManager.agents) {
-            if (agent.imageSynthesis != null) {
+        foreach (var agent in this.agentManager.agents)
+        {
+            if (agent.imageSynthesis != null)
+            {
                 agent.imageSynthesis.OnSceneChange();
             }
         }
     }
 
-    public List<SimObjPhysics> GatherAllReceptaclesInScene() {
+    public List<SimObjPhysics> GatherAllReceptaclesInScene()
+    {
         List<SimObjPhysics> ReceptaclesInScene = new List<SimObjPhysics>();
 
-        foreach (SimObjPhysics sop in ObjectIdToSimObjPhysics.Values) {
-            if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+        foreach (SimObjPhysics sop in ObjectIdToSimObjPhysics.Values)
+        {
+            if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+            {
                 ReceptaclesInScene.Add(sop);
 
 #if UNITY_EDITOR
                 // debug if some of these receptacles were not set up correctly
-                foreach (GameObject go in sop.ReceptacleTriggerBoxes) {
-                    if (go == null) {
+                foreach (GameObject go in sop.ReceptacleTriggerBoxes)
+                {
+                    if (go == null)
+                    {
                         Debug.LogWarning(
                             sop.gameObject
                                 + " has non-empty receptacle trigger boxes but contains a null value."
@@ -504,14 +588,16 @@ public class PhysicsSceneManager : MonoBehaviour {
                     // c.CurrentlyContainedObjects().Clear();
                     // c.GetComponent<Collider>().enabled = false;
                     // c.GetComponent<Collider>().enabled = true;
-                    if (c == null) {
+                    if (c == null)
+                    {
                         Debug.LogWarning(
                             sop.gameObject
                                 + " is missing a contains script on one of its receptacle boxes."
                         );
                         continue;
                     }
-                    if (go.GetComponent<Contains>().myParent == null) {
+                    if (go.GetComponent<Contains>().myParent == null)
+                    {
                         go.GetComponent<Contains>().myParent = sop.transform.gameObject;
                     }
                 }
@@ -525,11 +611,14 @@ public class PhysicsSceneManager : MonoBehaviour {
         return ReceptaclesInScene;
     }
 
-    public void Generate_ObjectID(SimObjPhysics o) {
+    public void Generate_ObjectID(SimObjPhysics o)
+    {
         // check if this object requires it's parent simObjs ObjectID as a prefix
-        if (ReceptacleRestrictions.UseParentObjectIDasPrefix.Contains(o.Type)) {
+        if (ReceptacleRestrictions.UseParentObjectIDasPrefix.Contains(o.Type))
+        {
             SimObjPhysics parent = o.transform.parent.GetComponent<SimObjPhysics>();
-            if (parent == null) {
+            if (parent == null)
+            {
                 Debug.LogWarning(
                     "Object "
                         + o
@@ -540,7 +629,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                 return;
             }
 
-            if (parent.ObjectID == null) {
+            if (parent.ObjectID == null)
+            {
                 Vector3 ppos = parent.transform.position;
                 string xpPos = (ppos.x >= 0 ? "+" : "") + ppos.x.ToString("00.00");
                 string ypPos = (ppos.y >= 0 ? "+" : "") + ppos.y.ToString("00.00");
@@ -564,38 +654,47 @@ public class PhysicsSceneManager : MonoBehaviour {
         SimObjPhysics sourceObject,
         SimObjPhysics createdObject,
         int count
-    ) {
+    )
+    {
         createdObject.ObjectID = sourceObject.ObjectID + "|" + createdObject.ObjType + "_" + count;
         AddToObjectsInScene(createdObject);
     }
 
-    private bool CheckForDuplicateObjectIDs(SimObjPhysics sop) {
+    private bool CheckForDuplicateObjectIDs(SimObjPhysics sop)
+    {
         return ObjectIdToSimObjPhysics.ContainsKey(sop.ObjectID);
     }
 
-    public void AddToObjectsInScene(SimObjPhysics sop) {
+    public void AddToObjectsInScene(SimObjPhysics sop)
+    {
         ObjectIdToSimObjPhysics[sop.ObjectID] = sop;
-        if (sop.GetComponent<Rigidbody>()) {
+        if (sop.GetComponent<Rigidbody>())
+        {
             Rigidbody rb = sop.GetComponent<Rigidbody>();
             AddToRBSInScene(rb);
         }
     }
 
-    public void RemoveFromObjectsInScene(SimObjPhysics sop) {
-        if (ObjectIdToSimObjPhysics.ContainsKey(sop.ObjectID)) {
+    public void RemoveFromObjectsInScene(SimObjPhysics sop)
+    {
+        if (ObjectIdToSimObjPhysics.ContainsKey(sop.ObjectID))
+        {
             ObjectIdToSimObjPhysics.Remove(sop.ObjectID);
-            if (sop.GetComponent<Rigidbody>()) {
+            if (sop.GetComponent<Rigidbody>())
+            {
                 Rigidbody rb = sop.GetComponent<Rigidbody>();
                 RemoveFromRBSInScene(rb);
             }
         }
     }
 
-    public void RemoveFromSpawnedObjects(SimObjPhysics sop) {
+    public void RemoveFromSpawnedObjects(SimObjPhysics sop)
+    {
         SpawnedObjects.Remove(sop.gameObject);
     }
 
-    public void RemoveFromRequiredObjects(SimObjPhysics sop) {
+    public void RemoveFromRequiredObjects(SimObjPhysics sop)
+    {
         RequiredObjects.Remove(sop.gameObject);
     }
 
@@ -603,12 +702,14 @@ public class PhysicsSceneManager : MonoBehaviour {
         ObjectPose[] objectPoses,
         out string errorMessage,
         bool placeStationary
-    ) {
+    )
+    {
         SetupScene();
         errorMessage = "";
         bool shouldFail = false;
         GameObject topObject = GameObject.Find("Objects");
-        if (objectPoses != null && objectPoses.Length > 0) {
+        if (objectPoses != null && objectPoses.Length > 0)
+        {
             // Perform object location sets
             SimObjPhysics[] sceneObjects = FindObjectsOfType<SimObjPhysics>();
 
@@ -619,25 +720,30 @@ public class PhysicsSceneManager : MonoBehaviour {
                 new Dictionary<string, SimObjPhysics>();
 
             // get all sim objects in scene that are either pickupable or moveable and prepare them to be repositioned, cloned, or disabled
-            foreach (SimObjPhysics sop in sceneObjects) {
+            foreach (SimObjPhysics sop in sceneObjects)
+            {
                 // note that any moveable or pickupable sim objects not explicitly passed in via objectPoses
                 // will be disabled since we SetActive(false)
-                if (sop.IsPickupable || sop.IsMoveable) {
+                if (sop.IsPickupable || sop.IsMoveable)
+                {
                     sop.gameObject.SetActive(false);
                     // sop.gameObject.GetComponent<SimpleSimObj>().IsDisabled = true;
                     nameToObject[sop.name] = sop;
                 }
 
                 // track all static sim objects as well for reference later
-                if (sop.isStatic) {
+                if (sop.isStatic)
+                {
                     isStaticNameToObject[sop.name] = sop;
                 }
             }
             HashSet<SimObjPhysics> placedOriginal = new HashSet<SimObjPhysics>();
-            for (int ii = 0; ii < objectPoses.Length; ii++) {
+            for (int ii = 0; ii < objectPoses.Length; ii++)
+            {
                 ObjectPose objectPose = objectPoses[ii];
 
-                if (!nameToObject.ContainsKey(objectPose.objectName)) {
+                if (!nameToObject.ContainsKey(objectPose.objectName))
+                {
                     errorMessage =
                         "No Pickupable or Moveable object of name "
                         + objectPose.objectName
@@ -646,7 +752,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                     shouldFail = true;
                     continue;
                 }
-                if (isStaticNameToObject.ContainsKey(objectPose.objectName)) {
+                if (isStaticNameToObject.ContainsKey(objectPose.objectName))
+                {
                     errorMessage =
                         objectPose.objectName
                         + " is not a Moveable or Pickupable object. SetObjectPoses only works with Moveable and Pickupable sim objects.";
@@ -657,7 +764,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                 if (
                     !nameToObject.ContainsKey(objectPose.objectName)
                     && !isStaticNameToObject.ContainsKey(objectPose.objectName)
-                ) {
+                )
+                {
                     errorMessage = objectPose.objectName + " does not exist in scene.";
                     shouldFail = true;
                     continue;
@@ -666,13 +774,16 @@ public class PhysicsSceneManager : MonoBehaviour {
                 SimObjPhysics obj = nameToObject[objectPose.objectName];
                 SimObjPhysics existingSOP = obj.GetComponent<SimObjPhysics>();
                 SimObjPhysics copy;
-                if (placedOriginal.Contains(existingSOP)) {
+                if (placedOriginal.Contains(existingSOP))
+                {
                     copy = Instantiate(original: existingSOP);
                     copy.transform.parent = GameObject.Find("Objects").transform;
                     copy.name += "_copy_" + ii;
                     copy.ObjectID = existingSOP.ObjectID + "_copy_" + ii;
                     copy.objectID = copy.ObjectID;
-                } else {
+                }
+                else
+                {
                     copy = existingSOP;
                     placedOriginal.Add(existingSOP);
                 }
@@ -682,11 +793,14 @@ public class PhysicsSceneManager : MonoBehaviour {
                 copy.gameObject.SetActive(true);
                 copy.gameObject.transform.parent = topObject.transform;
 
-                if (placeStationary) {
+                if (placeStationary)
+                {
                     copy.GetComponent<Rigidbody>().collisionDetectionMode =
                         CollisionDetectionMode.Discrete;
                     copy.GetComponent<Rigidbody>().isKinematic = true;
-                } else {
+                }
+                else
+                {
                     copy.GetComponent<Rigidbody>().isKinematic = false;
                 }
             }
@@ -698,27 +812,34 @@ public class PhysicsSceneManager : MonoBehaviour {
     public System.Collections.Generic.IEnumerator<SimObjPhysics> GetValidReceptaclesForSimObj(
         SimObjPhysics simObj,
         List<SimObjPhysics> receptaclesInScene
-    ) {
+    )
+    {
         SimObjType goObjType = simObj.ObjType;
         bool typeFoundInDictionary = ReceptacleRestrictions.PlacementRestrictions.ContainsKey(
             goObjType
         );
-        if (typeFoundInDictionary) {
+        if (typeFoundInDictionary)
+        {
             List<SimObjType> typesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>(
                 ReceptacleRestrictions.PlacementRestrictions[goObjType]
             );
 
             // remove from list if receptacle isn't in this scene
             // compare to receptacles that exist in scene, get the ones that are the same
-            foreach (SimObjPhysics receptacleSop in receptaclesInScene) {
+            foreach (SimObjPhysics receptacleSop in receptaclesInScene)
+            {
                 // don't random spawn in objects that are pickupable to prevent Egg spawning in Plate with the plate spawned in Cabinet....
-                if (receptacleSop.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
-                    if (typesOfObjectsPrefabIsAllowedToSpawnIn.Contains(receptacleSop.ObjType)) {
+                if (receptacleSop.PrimaryProperty != SimObjPrimaryProperty.CanPickup)
+                {
+                    if (typesOfObjectsPrefabIsAllowedToSpawnIn.Contains(receptacleSop.ObjType))
+                    {
                         yield return receptacleSop;
                     }
                 }
             }
-        } else {
+        }
+        else
+        {
             // not found in dictionary!
 #if UNITY_EDITOR
             Debug.Log(simObj.ObjectID + "'s Type is not in the ReceptacleRestrictions dictionary!");
@@ -744,7 +865,8 @@ public class PhysicsSceneManager : MonoBehaviour {
         String[] receptacleObjectIds,
         String[] objectIds,
         bool allowMoveable
-    ) {
+    )
+    {
 #if UNITY_EDITOR
         var Masterwatch = System.Diagnostics.Stopwatch.StartNew();
 #endif
@@ -753,8 +875,10 @@ public class PhysicsSceneManager : MonoBehaviour {
         //sim objects in the scene at runtime to try and reposition
         SimObjPhysics[] simObjsInScene = GameObject.FindObjectsOfType<SimObjPhysics>();
         List<GameObject> simObjsInSceneToGameObjectList = new List<GameObject>();
-        foreach (SimObjPhysics sop in simObjsInScene) {
-            if (allowMoveable && sop.IsMoveable || sop.IsPickupable) {
+        foreach (SimObjPhysics sop in simObjsInScene)
+        {
+            if (allowMoveable && sop.IsMoveable || sop.IsPickupable)
+            {
                 simObjsInSceneToGameObjectList.Add(sop.gameObject);
             }
         }
@@ -763,7 +887,8 @@ public class PhysicsSceneManager : MonoBehaviour {
         RequiredObjects = simObjsInSceneToGameObjectList;
         SpawnedObjects = simObjsInSceneToGameObjectList;
 
-        if (RequiredObjects.Count == 0) {
+        if (RequiredObjects.Count == 0)
+        {
 #if UNITY_EDITOR
             Debug.Log("No objects in Required Objects array, please add them in editor");
 #endif
@@ -779,7 +904,8 @@ public class PhysicsSceneManager : MonoBehaviour {
         int HowManyCouldntSpawn = RequiredObjects.Count;
 
         // if we already spawned objects, lets just move them around
-        if (SpawnedObjects.Count > 0) {
+        if (SpawnedObjects.Count > 0)
+        {
             HowManyCouldntSpawn = SpawnedObjects.Count;
 
             Dictionary<SimObjType, List<SimObjPhysics>> typeToObjectList =
@@ -790,23 +916,27 @@ public class PhysicsSceneManager : MonoBehaviour {
             // List<SimObjType> listOfExcludedReceptacles = new List<SimObjType>();
             HashSet<GameObject> originalObjects = new HashSet<GameObject>(SpawnedObjects);
 
-            if (numDuplicatesOfType == null) {
+            if (numDuplicatesOfType == null)
+            {
                 numDuplicatesOfType = new ObjectTypeCount[0];
             }
 
-            foreach (ObjectTypeCount repeatCount in numDuplicatesOfType) {
+            foreach (ObjectTypeCount repeatCount in numDuplicatesOfType)
+            {
                 SimObjType objType = (SimObjType)
                     System.Enum.Parse(typeof(SimObjType), repeatCount.objectType);
                 requestedNumDuplicatesOfType[objType] = repeatCount.count;
             }
 
             // Now lets go through all pickupable sim objects that are in the current scene
-            foreach (GameObject go in SpawnedObjects) {
+            foreach (GameObject go in SpawnedObjects)
+            {
                 SimObjPhysics sop = null;
                 sop = go.GetComponent<SimObjPhysics>();
 
                 // Add object types in the current scene to the typeToObjectList if not already on it
-                if (!typeToObjectList.ContainsKey(sop.ObjType)) {
+                if (!typeToObjectList.ContainsKey(sop.ObjType))
+                {
                     typeToObjectList[sop.ObjType] = new List<SimObjPhysics>();
                 }
 
@@ -817,7 +947,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                         typeToObjectList[sop.ObjType].Count
                         < requestedNumDuplicatesOfType[sop.ObjType]
                     )
-                ) {
+                )
+                {
                     typeToObjectList[sop.ObjType].Add(sop);
                 }
             }
@@ -829,14 +960,17 @@ public class PhysicsSceneManager : MonoBehaviour {
             List<GameObject> unduplicatedSimObjects = new List<GameObject>();
 
             // Ok now lets go through each object type in the dictionary
-            foreach (SimObjType sopType in typeToObjectList.Keys) {
+            foreach (SimObjType sopType in typeToObjectList.Keys)
+            {
                 // we found a matching SimObjType and the requested count of duplicates is bigger than how many of that
                 // object are currently in the scene
                 if (
                     requestedNumDuplicatesOfType.ContainsKey(sopType)
                     && requestedNumDuplicatesOfType[sopType] > typeToObjectList[sopType].Count
-                ) {
-                    foreach (SimObjPhysics sop in typeToObjectList[sopType]) {
+                )
+                {
+                    foreach (SimObjPhysics sop in typeToObjectList[sopType])
+                    {
                         gameObjsToPlaceInReceptacles.Add(sop.gameObject);
                     }
 
@@ -844,7 +978,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                         requestedNumDuplicatesOfType[sopType] - typeToObjectList[sopType].Count;
 
                     // let's instantiate the duplicates now
-                    for (int j = 0; j < numExtra; j++) {
+                    for (int j = 0; j < numExtra; j++)
+                    {
                         // Add a copy of the item to try and match the requested number of duplicates
                         SimObjPhysics sop = typeToObjectList[sopType][
                             UnityEngine.Random.Range(0, typeToObjectList[sopType].Count - 1)
@@ -856,9 +991,12 @@ public class PhysicsSceneManager : MonoBehaviour {
                         copy.objectID = copy.ObjectID;
                         gameObjsToPlaceInReceptacles.Add(copy.gameObject);
                     }
-                } else {
+                }
+                else
+                {
                     // this object is not one that needs duplicates, so just add it to the unduplicatedSimObjects list
-                    foreach (SimObjPhysics sop in typeToObjectList[sopType]) {
+                    foreach (SimObjPhysics sop in typeToObjectList[sopType])
+                    {
                         unduplicatedSimObjects.Add(sop.gameObject);
                     }
                 }
@@ -872,7 +1010,8 @@ public class PhysicsSceneManager : MonoBehaviour {
 
             Dictionary<SimObjType, List<SimObjPhysics>> objTypeToReceptacles =
                 new Dictionary<SimObjType, List<SimObjPhysics>>();
-            foreach (SimObjPhysics receptacleSop in GatherAllReceptaclesInScene()) {
+            foreach (SimObjPhysics receptacleSop in GatherAllReceptaclesInScene())
+            {
                 SimObjType receptType = receptacleSop.ObjType;
                 if (
                     (
@@ -886,8 +1025,10 @@ public class PhysicsSceneManager : MonoBehaviour {
                             receptacleSop.ObjType
                         )
                     )
-                ) {
-                    if (!objTypeToReceptacles.ContainsKey(receptacleSop.ObjType)) {
+                )
+                {
+                    if (!objTypeToReceptacles.ContainsKey(receptacleSop.ObjType))
+                    {
                         objTypeToReceptacles[receptacleSop.ObjType] = new List<SimObjPhysics>();
                     }
                     objTypeToReceptacles[receptacleSop.ObjType].Add(receptacleSop);
@@ -895,11 +1036,13 @@ public class PhysicsSceneManager : MonoBehaviour {
             }
 
             InstantiatePrefabTest spawner = gameObject.GetComponent<InstantiatePrefabTest>();
-            foreach (GameObject gameObjToPlaceInReceptacle in gameObjsToPlaceInReceptacles) {
+            foreach (GameObject gameObjToPlaceInReceptacle in gameObjsToPlaceInReceptacles)
+            {
                 SimObjPhysics sopToPlaceInReceptacle =
                     gameObjToPlaceInReceptacle.GetComponent<SimObjPhysics>();
 
-                if (staticPlacement) {
+                if (staticPlacement)
+                {
                     sopToPlaceInReceptacle.GetComponent<Rigidbody>().isKinematic = true;
                 }
 
@@ -910,7 +1053,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                 if (
                     (objectIds != null && !objectIds.Contains(sopToPlaceInReceptacle.ObjectID))
                     || excludedSimObjects.Contains(sopToPlaceInReceptacle)
-                ) {
+                )
+                {
                     HowManyCouldntSpawn--;
                     continue;
                 }
@@ -921,13 +1065,15 @@ public class PhysicsSceneManager : MonoBehaviour {
                         objTypeToReceptacles,
                         rng
                     )
-                ) {
+                )
+                {
                     List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
 
                     if (
                         receptacleSop.ContainedGameObjects().Count > 0
                         && receptacleSop.IsPickupable
-                    ) {
+                    )
+                    {
                         //this pickupable object already has something in it, skip over it since we currently can't account for detecting bounds of a receptacle + any contained objects
                         continue;
                     }
@@ -939,15 +1085,18 @@ public class PhysicsSceneManager : MonoBehaviour {
                         receptacleSop.DoesThisObjectHaveThisSecondaryProperty(
                             SimObjSecondaryProperty.ObjectSpecificReceptacle
                         )
-                    ) {
+                    )
+                    {
                         ObjectSpecificReceptacle osr =
                             receptacleSop.GetComponent<ObjectSpecificReceptacle>();
 
-                        if (osr.HasSpecificType(sopToPlaceInReceptacle.ObjType)) {
+                        if (osr.HasSpecificType(sopToPlaceInReceptacle.ObjType))
+                        {
                             // in the random spawn function, we need this additional check because there isn't a chance for
                             // the physics update loop to fully update osr.isFull() correctly, which can cause multiple objects
                             // to be placed on the same spot (ie: 2 pots on the same burner)
-                            if (osr.attachPoint.transform.childCount > 0) {
+                            if (osr.attachPoint.transform.childCount > 0)
+                            {
                                 break;
                             }
 
@@ -955,7 +1104,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                             if (
                                 receptacleSop.GetComponent<SimObjPhysics>().Type
                                 == SimObjType.StoveBurner
-                            ) {
+                            )
+                            {
                                 if (
                                     StoveTopCheckSpawnArea(
                                         sopToPlaceInReceptacle,
@@ -963,7 +1113,8 @@ public class PhysicsSceneManager : MonoBehaviour {
                                         osr.attachPoint.transform.rotation,
                                         false
                                     ) == true
-                                ) {
+                                )
+                                {
                                     // print("moving object now");
                                     gameObjToPlaceInReceptacle.transform.position =
                                         osr.attachPoint.position;
@@ -985,7 +1136,9 @@ public class PhysicsSceneManager : MonoBehaviour {
 
                                     break;
                                 }
-                            } else { // for everything else (coffee maker, toilet paper holder, etc) just place it if there is nothing attached
+                            }
+                            else
+                            { // for everything else (coffee maker, toilet paper holder, etc) just place it if there is nothing attached
                                 gameObjToPlaceInReceptacle.transform.position =
                                     osr.attachPoint.position;
                                 gameObjToPlaceInReceptacle.transform.SetParent(
@@ -1018,31 +1171,37 @@ public class PhysicsSceneManager : MonoBehaviour {
                             90,
                             true
                         )
-                    ) {
+                    )
+                    {
                         HowManyCouldntSpawn--;
                         spawned = true;
                         break;
                     }
                 }
 
-                if (!spawned) {
+                if (!spawned)
+                {
 #if UNITY_EDITOR
                     Debug.Log(gameObjToPlaceInReceptacle.name + " could not be spawned.");
 #endif
                     // go.GetComponent<SimpleSimObj>().IsDisabled = true;
-                    if (!originalObjects.Contains(gameObjToPlaceInReceptacle)) {
+                    if (!originalObjects.Contains(gameObjToPlaceInReceptacle))
+                    {
                         gameObjToPlaceInReceptacle.SetActive(false);
                         Destroy(gameObjToPlaceInReceptacle);
                     }
                 }
             }
-        } else {
+        }
+        else
+        {
             /// XXX: add exception in at some point
             throw new NotImplementedException();
         }
 
 #if UNITY_EDITOR
-        if (HowManyCouldntSpawn > 0) {
+        if (HowManyCouldntSpawn > 0)
+        {
             Debug.Log(HowManyCouldntSpawn + " object(s) could not be spawned into the scene!");
         }
 
@@ -1063,13 +1222,15 @@ public class PhysicsSceneManager : MonoBehaviour {
         Vector3 position,
         Quaternion rotation,
         bool spawningInHand
-    ) {
+    )
+    {
         int layermask;
 
         // first do a check to see if the area is clear
 
         // if spawning in the agent's hand, ignore collisions with the Agent
-        if (spawningInHand) {
+        if (spawningInHand)
+        {
             layermask = LayerMask.GetMask(
                 "SimObjVisible",
                 "Procedural1",
@@ -1077,7 +1238,9 @@ public class PhysicsSceneManager : MonoBehaviour {
                 "Procedural3",
                 "Procedural0"
             );
-        } else {
+        }
+        else
+        {
             // oh we are spawning it somwhere in the environment,
             // we do need to make sure not to spawn inside the agent or the environment
             layermask = LayerMask.GetMask(
@@ -1094,8 +1257,10 @@ public class PhysicsSceneManager : MonoBehaviour {
         // laptops which have multiple sets of colliders, with one part moving...
         Collider[] objcols = simObj.transform.GetComponentsInChildren<Collider>();
 
-        foreach (Collider col in objcols) {
-            if (col.gameObject.name != "BoundingBox") {
+        foreach (Collider col in objcols)
+        {
+            if (col.gameObject.name != "BoundingBox")
+            {
                 col.enabled = false;
             }
         }
@@ -1133,21 +1298,27 @@ public class PhysicsSceneManager : MonoBehaviour {
         // now check if any of the hit colliders were any object EXCEPT other stove top objects i guess
         bool result = true;
 
-        if (hitColliders.Length > 0) {
-            foreach (Collider col in hitColliders) {
+        if (hitColliders.Length > 0)
+        {
+            foreach (Collider col in hitColliders)
+            {
                 // if we hit some structure object like a stove top or countertop mesh, ignore it since we are snapping this to a specific position right here
-                if (!col.GetComponentInParent<SimObjPhysics>()) {
+                if (!col.GetComponentInParent<SimObjPhysics>())
+                {
                     break;
                 }
 
                 // if any sim object is hit that is not a stove burner, then ABORT
-                if (col.GetComponentInParent<SimObjPhysics>().Type != SimObjType.StoveBurner) {
+                if (col.GetComponentInParent<SimObjPhysics>().Type != SimObjType.StoveBurner)
+                {
                     result = false;
                     simObj.transform.position = originalPos;
                     simObj.transform.rotation = originalRot;
 
-                    foreach (Collider yes in objcols) {
-                        if (yes.gameObject.name != "BoundingBox") {
+                    foreach (Collider yes in objcols)
+                    {
+                        if (yes.gameObject.name != "BoundingBox")
+                        {
                             yes.enabled = true;
                         }
                     }
@@ -1157,8 +1328,10 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
 
         // nothing hit in colliders, so we are good to spawn.
-        foreach (Collider col in objcols) {
-            if (col.gameObject.name != "BoundingBox") {
+        foreach (Collider col in objcols)
+        {
+            if (col.gameObject.name != "BoundingBox")
+            {
                 col.enabled = true;
             }
         }
@@ -1171,26 +1344,32 @@ public class PhysicsSceneManager : MonoBehaviour {
     public List<SimObjPhysics> ShuffleSimObjPhysicsDictList(
         Dictionary<SimObjType, List<SimObjPhysics>> dict,
         int seed
-    ) {
+    )
+    {
         List<SimObjType> types = new List<SimObjType>();
         Dictionary<SimObjType, int> indDict = new Dictionary<SimObjType, int>();
-        foreach (KeyValuePair<SimObjType, List<SimObjPhysics>> pair in dict) {
+        foreach (KeyValuePair<SimObjType, List<SimObjPhysics>> pair in dict)
+        {
             types.Add(pair.Key);
             indDict[pair.Key] = pair.Value.Count - 1;
         }
         types.Sort();
         types.Shuffle_(seed);
-        foreach (SimObjType t in types) {
+        foreach (SimObjType t in types)
+        {
             dict[t].Shuffle_(seed);
         }
 
         bool changed = true;
         List<SimObjPhysics> shuffledSopList = new List<SimObjPhysics>();
-        while (changed) {
+        while (changed)
+        {
             changed = false;
-            foreach (SimObjType type in types) {
+            foreach (SimObjType type in types)
+            {
                 int i = indDict[type];
-                if (i >= 0) {
+                if (i >= 0)
+                {
                     changed = true;
                     shuffledSopList.Add(dict[type][i]);
                     indDict[type]--;
@@ -1203,26 +1382,32 @@ public class PhysicsSceneManager : MonoBehaviour {
     public IEnumerable<SimObjPhysics> IterShuffleSimObjPhysicsDictList(
         Dictionary<SimObjType, List<SimObjPhysics>> dict,
         System.Random rng
-    ) {
+    )
+    {
         List<SimObjType> types = new List<SimObjType>();
         Dictionary<SimObjType, int> indDict = new Dictionary<SimObjType, int>();
-        foreach (KeyValuePair<SimObjType, List<SimObjPhysics>> pair in dict) {
+        foreach (KeyValuePair<SimObjType, List<SimObjPhysics>> pair in dict)
+        {
             types.Add(pair.Key);
             indDict[pair.Key] = pair.Value.Count - 1;
         }
         types.Sort();
         types.Shuffle_(rng);
-        foreach (SimObjType t in types) {
+        foreach (SimObjType t in types)
+        {
             dict[t].Shuffle_(rng);
         }
 
         bool changed = true;
         List<SimObjPhysics> shuffledSopList = new List<SimObjPhysics>();
-        while (changed) {
+        while (changed)
+        {
             changed = false;
-            foreach (SimObjType type in types) {
+            foreach (SimObjType type in types)
+            {
                 int i = indDict[type];
-                if (i >= 0) {
+                if (i >= 0)
+                {
                     changed = true;
                     yield return dict[type][i];
                     indDict[type]--;
@@ -1231,11 +1416,16 @@ public class PhysicsSceneManager : MonoBehaviour {
         }
     }
 
-    protected static IEnumerator toStandardCoroutineIEnumerator(IEnumerator<float?> enumerator) {
-        while (enumerator.MoveNext()) {
-            if ((!enumerator.Current.HasValue) || (enumerator.Current <= 0f)) {
+    protected static IEnumerator toStandardCoroutineIEnumerator(IEnumerator<float?> enumerator)
+    {
+        while (enumerator.MoveNext())
+        {
+            if ((!enumerator.Current.HasValue) || (enumerator.Current <= 0f))
+            {
                 yield return null;
-            } else {
+            }
+            else
+            {
                 yield return new WaitForFixedUpdate();
             }
         }
@@ -1245,24 +1435,31 @@ public class PhysicsSceneManager : MonoBehaviour {
         MonoBehaviour startCoroutineUsing,
         IEnumerator<float?> enumerator,
         bool? autoSimulation = null
-    ) {
+    )
+    {
         autoSimulation = autoSimulation.GetValueOrDefault(Physics.autoSimulation);
 
-        if (autoSimulation.Value) {
+        if (autoSimulation.Value)
+        {
             startCoroutineUsing.StartCoroutine(toStandardCoroutineIEnumerator(enumerator));
             return;
         }
         var previousAutoSimulate = Physics.autoSimulation;
         Physics.autoSimulation = false;
-        while (enumerator.MoveNext()) {
+        while (enumerator.MoveNext())
+        {
             float? fixedDeltaTime = enumerator.Current;
-            if (!fixedDeltaTime.HasValue) {
+            if (!fixedDeltaTime.HasValue)
+            {
                 fixedDeltaTime = Time.fixedDeltaTime;
             }
 
-            if (fixedDeltaTime == 0f) {
+            if (fixedDeltaTime == 0f)
+            {
                 Physics.SyncTransforms();
-            } else {
+            }
+            else
+            {
                 PhysicsSimulateTHOR(fixedDeltaTime.Value);
             }
         }
@@ -1270,7 +1467,8 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     // Immediately disable physics autosimulation
-    public void PausePhysicsAutoSim() {
+    public void PausePhysicsAutoSim()
+    {
         Physics.autoSimulation = false;
         Physics.autoSyncTransforms = false;
         physicsSimulationPaused = true;
@@ -1281,21 +1479,27 @@ public class PhysicsSceneManager : MonoBehaviour {
         float timeStep = 0.02f,
         float? simSeconds = null,
         bool allowAutoSimulation = false
-    ) {
-        if (timeStep <= 0f && simSeconds.GetValueOrDefault(0f) > 0f) {
+    )
+    {
+        if (timeStep <= 0f && simSeconds.GetValueOrDefault(0f) > 0f)
+        {
             throw new InvalidOperationException($"timestep must be > 0");
         }
         bool oldPhysicsAutoSim = Physics.autoSimulation;
         Physics.autoSimulation = false;
 
-        while (simSeconds.Value > 0.0f) {
+        while (simSeconds.Value > 0.0f)
+        {
             simSeconds = simSeconds.Value - timeStep;
-            if (simSeconds.Value <= 0) {
+            if (simSeconds.Value <= 0)
+            {
                 // This is necessary to keep lastVelocity up-to-date for all sim objects and is
                 // called just before the last physics simulation step.
                 Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
-                foreach (Rigidbody rb in rbs) {
-                    if (rb.GetComponentInParent<SimObjPhysics>()) {
+                foreach (Rigidbody rb in rbs)
+                {
+                    if (rb.GetComponentInParent<SimObjPhysics>())
+                    {
                         SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
                         sop.lastVelocity = Math.Abs(
                             rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude
@@ -1313,16 +1517,19 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     // Immediately enable physics autosimulation
-    public void UnpausePhysicsAutoSim() {
+    public void UnpausePhysicsAutoSim()
+    {
         Physics.autoSimulation = true;
         Physics.autoSyncTransforms = true;
         physicsSimulationPaused = false;
     }
 
 #if UNITY_EDITOR
-    void OnDrawGizmos() {
+    void OnDrawGizmos()
+    {
         Gizmos.color = Color.magenta;
-        if (m_Started) {
+        if (m_Started)
+        {
             Matrix4x4 cubeTransform = Matrix4x4.TRS(gizmopos, gizmoquaternion, gizmoscale);
             Matrix4x4 oldGizmosMatrix = Gizmos.matrix;
 

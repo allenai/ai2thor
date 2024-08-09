@@ -16,7 +16,8 @@ using UnityEditor.SceneManagement;
 //     public Dictionary<SimObjType, int> objectTypeCountInScene = new Dictionary<SimObjType, int>();
 // }
 
-public class GetAllScenesInstanceCount : MonoBehaviour {
+public class GetAllScenesInstanceCount : MonoBehaviour
+{
     // [MenuItem("GameObject/Test")]
     // private static void TestGetPrefabInstanceHandle()
     // {

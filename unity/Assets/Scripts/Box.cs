@@ -3,17 +3,22 @@ using System.Collections;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class Box : MonoBehaviour {
+public class Box : MonoBehaviour
+{
     public SimObj ParentSimObj;
     public GameObject[] Lids;
     public bool EditorClosed = true;
 
-    void OnEnable() {
-        if (Application.isPlaying) {
+    void OnEnable()
+    {
+        if (Application.isPlaying)
+        {
             ParentSimObj.Animator.SetBool("AnimState1", false);
-            foreach (GameObject lid in Lids) {
+            foreach (GameObject lid in Lids)
+            {
                 Renderer r = lid.GetComponent<MeshRenderer>();
-                if (r != null) {
+                if (r != null)
+                {
                     bool lighten = SceneManager.Current.SceneNumber % 2 == 0;
                     Material darkerMat = r.material;
                     darkerMat.color = Color.Lerp(
@@ -26,15 +31,20 @@ public class Box : MonoBehaviour {
         }
     }
 
-    void Update() {
+    void Update()
+    {
         bool closed = false;
-        if (Application.isPlaying) {
+        if (Application.isPlaying)
+        {
             closed = !ParentSimObj.Animator.GetBool("AnimState1");
-        } else {
+        }
+        else
+        {
             closed = EditorClosed;
         }
 
-        foreach (GameObject lid in Lids) {
+        foreach (GameObject lid in Lids)
+        {
             lid.SetActive(closed);
         }
     }

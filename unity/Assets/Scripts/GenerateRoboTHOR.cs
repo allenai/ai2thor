@@ -6,7 +6,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class GenerateRoboTHOR : MonoBehaviour {
+public class GenerateRoboTHOR : MonoBehaviour
+{
     [SerializeField]
     protected GameObject wallPrefab;
 
@@ -48,7 +49,8 @@ public class GenerateRoboTHOR : MonoBehaviour {
     protected float[] validStartingAgentRotations = new float[] { 0, 90, 180, 270 };
     protected string[] validOrientations = new string[] { "left", "right", "top", "bottom" };
 
-    protected class WallCell {
+    protected class WallCell
+    {
         public bool visited;
         public Dictionary<string, bool?> walls;
 
@@ -56,9 +58,11 @@ public class GenerateRoboTHOR : MonoBehaviour {
          * Walls are null if they are boundary walls. That is,
          * they are unable to be toggled on or off.
          */
-        public WallCell(bool visited, bool? left, bool? right, bool? top, bool? bottom) {
+        public WallCell(bool visited, bool? left, bool? right, bool? top, bool? bottom)
+        {
             this.visited = visited;
-            this.walls = new Dictionary<string, bool?> {
+            this.walls = new Dictionary<string, bool?>
+            {
                 ["left"] = left,
                 ["right"] = right,
                 ["top"] = top,
@@ -69,24 +73,30 @@ public class GenerateRoboTHOR : MonoBehaviour {
 
     // Returns the neighbor cell if a wall boundary is removed, and returns
     // null if all neighbors have been visited.
-    protected (int, int)? VisitCell(int xGridCell, int zGridCell) {
-        if (xGridCell < 0 || xGridCell >= xWalls) {
+    protected (int, int)? VisitCell(int xGridCell, int zGridCell)
+    {
+        if (xGridCell < 0 || xGridCell >= xWalls)
+        {
             throw new ArgumentOutOfRangeException(
                 $"xGridCell must be in [0:xWalls), not {xGridCell}"
             );
-        } else if (zGridCell < 0 || zGridCell >= zWalls) {
+        }
+        else if (zGridCell < 0 || zGridCell >= zWalls)
+        {
             throw new ArgumentOutOfRangeException(
                 $"zGridCell must be in [0:zWalls), not {zGridCell}"
             );
         }
 
-        if (!wallCells[xGridCell, zGridCell].visited) {
+        if (!wallCells[xGridCell, zGridCell].visited)
+        {
             cellsVisited += 1;
             wallCells[xGridCell, zGridCell].visited = true;
         }
 
         List<string> choicesToRemove = new List<string>();
-        foreach (string orientation in validOrientations) {
+        foreach (string orientation in validOrientations)
+        {
             (int, int)? neighborCell = GetNeighbor(
                 xGridCell: xGridCell,
                 zGridCell: zGridCell,
@@ -96,13 +106,15 @@ public class GenerateRoboTHOR : MonoBehaviour {
             if (
                 neighborCell.HasValue
                 && !wallCells[neighborCell.Value.Item1, neighborCell.Value.Item2].visited
-            ) {
+            )
+            {
                 choicesToRemove.Add(orientation);
             }
         }
 
         // all neighbors are visited
-        if (choicesToRemove.Count == 0) {
+        if (choicesToRemove.Count == 0)
+        {
             return null;
         }
 
@@ -123,40 +135,50 @@ public class GenerateRoboTHOR : MonoBehaviour {
     /**
      * Returns the position of the neighbor. If the neighbor is out of bounds, null is returned.
      */
-    protected (int, int)? GetNeighbor(int xGridCell, int zGridCell, string orientation) {
-        if (xGridCell < 0 || xGridCell >= xWalls) {
+    protected (int, int)? GetNeighbor(int xGridCell, int zGridCell, string orientation)
+    {
+        if (xGridCell < 0 || xGridCell >= xWalls)
+        {
             throw new ArgumentOutOfRangeException(
                 $"xGridCell must be in [0:xWalls), not {xGridCell}"
             );
-        } else if (zGridCell < 0 || zGridCell >= zWalls) {
+        }
+        else if (zGridCell < 0 || zGridCell >= zWalls)
+        {
             throw new ArgumentOutOfRangeException(
                 $"zGridCell must be in [0:zWalls), not {zGridCell}"
             );
         }
 
-        if (!wallCells[xGridCell, zGridCell].walls[orientation].HasValue) {
+        if (!wallCells[xGridCell, zGridCell].walls[orientation].HasValue)
+        {
             return null;
         }
 
         // remove neighboring instance
-        switch (orientation) {
+        switch (orientation)
+        {
             case "left":
-                if (xGridCell > 0) {
+                if (xGridCell > 0)
+                {
                     return (xGridCell - 1, zGridCell);
                 }
                 break;
             case "right":
-                if (xGridCell < xWalls - 1) {
+                if (xGridCell < xWalls - 1)
+                {
                     return (xGridCell + 1, zGridCell);
                 }
                 break;
             case "bottom":
-                if (zGridCell < zWalls - 1) {
+                if (zGridCell < zWalls - 1)
+                {
                     return (xGridCell, zGridCell + 1);
                 }
                 break;
             case "top":
-                if (zGridCell > 0) {
+                if (zGridCell > 0)
+                {
                     return (xGridCell, zGridCell - 1);
                 }
                 break;
@@ -173,18 +195,21 @@ public class GenerateRoboTHOR : MonoBehaviour {
         int xGridCell,
         int zGridCell,
         string orientation
-    ) {
+    )
+    {
         (int, int)? neighbor = GetNeighbor(
             xGridCell: xGridCell,
             zGridCell: zGridCell,
             orientation: orientation
         );
 
-        if (!neighbor.HasValue) {
+        if (!neighbor.HasValue)
+        {
             return null;
         }
 
-        switch (orientation) {
+        switch (orientation)
+        {
             case "left":
                 wallCells[neighbor.Value.Item1, neighbor.Value.Item2].walls["right"] = false;
                 break;
@@ -205,12 +230,16 @@ public class GenerateRoboTHOR : MonoBehaviour {
      * @param xGridCell is in [0:xWalls)
      * @param zGridCell is in [0:zWalls)
      */
-    protected Vector3 GetWallGridPointCenter(int xGridCell, int zGridCell) {
-        if (xGridCell < 0 || xGridCell >= xWalls) {
+    protected Vector3 GetWallGridPointCenter(int xGridCell, int zGridCell)
+    {
+        if (xGridCell < 0 || xGridCell >= xWalls)
+        {
             throw new ArgumentOutOfRangeException(
                 $"xGridCell must be in [0:xWalls), not {xGridCell}"
             );
-        } else if (zGridCell < 0 || zGridCell >= zWalls) {
+        }
+        else if (zGridCell < 0 || zGridCell >= zWalls)
+        {
             throw new ArgumentOutOfRangeException(
                 $"zGridCell must be in [0:zWalls), not {zGridCell}"
             );
@@ -234,12 +263,16 @@ public class GenerateRoboTHOR : MonoBehaviour {
      * @param xGridCell is in [0:xWalls)
      * @param zGridCell is in [0:zWalls)
      */
-    protected Vector3 GetAgentGridPointCenter(int xGridCell, int zGridCell) {
-        if (xGridCell < 0 || xGridCell >= xWalls) {
+    protected Vector3 GetAgentGridPointCenter(int xGridCell, int zGridCell)
+    {
+        if (xGridCell < 0 || xGridCell >= xWalls)
+        {
             throw new ArgumentOutOfRangeException(
                 $"xGridCell must be in [0:xWalls), not {xGridCell}"
             );
-        } else if (zGridCell < 0 || zGridCell >= zWalls) {
+        }
+        else if (zGridCell < 0 || zGridCell >= zWalls)
+        {
             throw new ArgumentOutOfRangeException(
                 $"zGridCell must be in [0:zWalls), not {zGridCell}"
             );
@@ -271,10 +304,12 @@ public class GenerateRoboTHOR : MonoBehaviour {
     /**
      * Place a single wall at a position and orientation.
      */
-    protected void PlaceWall(Vector3 gridPointCenter, string orientation) {
+    protected void PlaceWall(Vector3 gridPointCenter, string orientation)
+    {
         Quaternion rotation;
         Vector3 position = new Vector3(gridPointCenter.x, gridPointCenter.y, gridPointCenter.z);
-        switch (orientation) {
+        switch (orientation)
+        {
             case "top":
                 rotation = Quaternion.Euler(0, 180, 0);
                 break;
@@ -306,7 +341,8 @@ public class GenerateRoboTHOR : MonoBehaviour {
     /**
      * Place a single wall at a position and orientation.
      */
-    protected void PlaceWall(int xGridCell, int zGridCell, string orientation) {
+    protected void PlaceWall(int xGridCell, int zGridCell, string orientation)
+    {
         Vector3 gridPointCenter = GetWallGridPointCenter(
             xGridCell: xGridCell,
             zGridCell: zGridCell
@@ -317,27 +353,35 @@ public class GenerateRoboTHOR : MonoBehaviour {
     /**
      * Place all the walls based on wallCells.
      */
-    protected void PlaceWalls() {
-        for (int x = 0; x < xWalls; x++) {
+    protected void PlaceWalls()
+    {
+        for (int x = 0; x < xWalls; x++)
+        {
             PlaceWall(xGridCell: x, zGridCell: 0, orientation: "top");
         }
-        for (int z = 0; z < zWalls; z++) {
+        for (int z = 0; z < zWalls; z++)
+        {
             PlaceWall(xGridCell: 0, zGridCell: z, orientation: "left");
         }
 
-        for (int x = 0; x < xWalls; x++) {
-            for (int z = 0; z < zWalls; z++) {
-                if (wallCells[x, z].walls["right"] != false) {
+        for (int x = 0; x < xWalls; x++)
+        {
+            for (int z = 0; z < zWalls; z++)
+            {
+                if (wallCells[x, z].walls["right"] != false)
+                {
                     PlaceWall(xGridCell: x, zGridCell: z, orientation: "right");
                 }
-                if (wallCells[x, z].walls["bottom"] != false) {
+                if (wallCells[x, z].walls["bottom"] != false)
+                {
                     PlaceWall(xGridCell: x, zGridCell: z, orientation: "bottom");
                 }
             }
         }
     }
 
-    protected void AddOuterWalls() {
+    protected void AddOuterWalls()
+    {
         GameObject wall;
 
         // side 1
@@ -413,12 +457,15 @@ public class GenerateRoboTHOR : MonoBehaviour {
         );
     }
 
-    protected void PlaceCeilings() {
+    protected void PlaceCeilings()
+    {
         int xCeilings = (int)Math.Ceiling((xWalls + 2 * boundaryPadding) / ceilingSizeX);
         int zCeilings = (int)Math.Ceiling((zWalls + 2 * boundaryPadding) / ceilingSizeZ);
 
-        for (int x = 0; x < xCeilings; x++) {
-            for (int z = 0; z < zCeilings; z++) {
+        for (int x = 0; x < xCeilings; x++)
+        {
+            for (int z = 0; z < zCeilings; z++)
+            {
                 // Place ceilings
                 Instantiate(
                     original: ceilingPrefab,
@@ -451,13 +498,16 @@ public class GenerateRoboTHOR : MonoBehaviour {
         int xWalls = 16,
         int zWalls = 8,
         int boundaryPadding = 0
-    ) {
-        if (xWalls <= 0 || zWalls <= 0) {
+    )
+    {
+        if (xWalls <= 0 || zWalls <= 0)
+        {
             throw new ArgumentOutOfRangeException(
                 $"Must use > 0 walls in each direction, not xWalls={xWalls}, zWalls={zWalls}."
             );
         }
-        if (boundaryPadding < 0) {
+        if (boundaryPadding < 0)
+        {
             throw new ArgumentOutOfRangeException(
                 $"boundaryPadding must be >= 0, not {boundaryPadding}"
             );
@@ -472,14 +522,17 @@ public class GenerateRoboTHOR : MonoBehaviour {
 
         // There is a single floor tile under the agent at the start so that it
         // is caught by gravity.
-        for (int i = floorParent.childCount - 1; i >= 0; i--) {
+        for (int i = floorParent.childCount - 1; i >= 0; i--)
+        {
             Destroy(floorParent.GetChild(i).gameObject);
         }
 
         PlaceCeilings();
 
-        for (int x = 0; x < xWalls + boundaryPadding * 2; x++) {
-            for (int z = 0; z < zWalls + boundaryPadding * 2; z++) {
+        for (int x = 0; x < xWalls + boundaryPadding * 2; x++)
+        {
+            for (int z = 0; z < zWalls + boundaryPadding * 2; z++)
+            {
                 Instantiate(
                     original: floorPrefab,
                     parent: floorParent,
@@ -498,7 +551,8 @@ public class GenerateRoboTHOR : MonoBehaviour {
         // Only necessary because Initialize can be called within the
         // editor without calling Reset(). However, this is not supported
         // from the Python API.
-        for (int i = wallParent.childCount - 1; i >= 0; i--) {
+        for (int i = wallParent.childCount - 1; i >= 0; i--)
+        {
             Destroy(wallParent.GetChild(i).gameObject);
         }
 #endif
@@ -507,8 +561,10 @@ public class GenerateRoboTHOR : MonoBehaviour {
         cellsVisited = 0;
 
         // Start with walls everywhere!
-        for (int x = 0; x < xWalls; x++) {
-            for (int z = 0; z < zWalls; z++) {
+        for (int x = 0; x < xWalls; x++)
+        {
+            for (int z = 0; z < zWalls; z++)
+            {
                 wallCells[x, z] = new WallCell(
                     visited: false,
                     left: x == 0 ? (bool?)null : true,
@@ -523,12 +579,16 @@ public class GenerateRoboTHOR : MonoBehaviour {
         Stack<(int, int)> stack = new Stack<(int, int)>();
         (int, int) startingPosition = (Random.Range(0, xWalls), Random.Range(0, zWalls));
         stack.Push(startingPosition);
-        while (cellsVisited != xWalls * zWalls) {
+        while (cellsVisited != xWalls * zWalls)
+        {
             (int xGridCell, int zGridCell) = stack.Peek();
             (int, int)? neighbor = VisitCell(xGridCell: xGridCell, zGridCell: zGridCell);
-            if (neighbor.HasValue) {
+            if (neighbor.HasValue)
+            {
                 stack.Push(neighbor.Value);
-            } else {
+            }
+            else
+            {
                 stack.Pop();
             }
         }

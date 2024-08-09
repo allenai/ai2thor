@@ -3,7 +3,8 @@ using System.Collections;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class Television : MonoBehaviour {
+public class Television : MonoBehaviour
+{
     public SimObj ParentSimObj;
     public Renderer[] ScreenRenderers;
     public int[] ScreenMatIndexes;
@@ -17,27 +18,38 @@ public class Television : MonoBehaviour {
     // 2 - On, Unsynced
     // 3 - On, Synced
 
-    public void Update() {
-        if (ParentSimObj == null) {
+    public void Update()
+    {
+        if (ParentSimObj == null)
+        {
             return;
         }
 
-        if (OffScreenMat == null || OnScreenMat == null) {
+        if (OffScreenMat == null || OnScreenMat == null)
+        {
             return;
         }
 
         Material mat = OffScreenMat;
 
-        if (!Application.isPlaying) {
-            if (EditorOn) {
-                if (EditorConnected) {
+        if (!Application.isPlaying)
+        {
+            if (EditorOn)
+            {
+                if (EditorConnected)
+                {
                     mat = SyncedScreenMat;
-                } else {
+                }
+                else
+                {
                     mat = OnScreenMat;
                 }
             }
-        } else {
-            switch (ParentSimObj.Animator.GetInteger("AnimState1")) {
+        }
+        else
+        {
+            switch (ParentSimObj.Animator.GetInteger("AnimState1"))
+            {
                 case 1:
                 default:
                     break;
@@ -52,7 +64,8 @@ public class Television : MonoBehaviour {
             }
         }
 
-        for (int i = 0; i < ScreenRenderers.Length; i++) {
+        for (int i = 0; i < ScreenRenderers.Length; i++)
+        {
             Material[] sharedMats = ScreenRenderers[i].sharedMaterials;
             sharedMats[ScreenMatIndexes[i]] = mat;
             ScreenRenderers[i].sharedMaterials = sharedMats;

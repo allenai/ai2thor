@@ -6,13 +6,15 @@ using System.Timers;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public enum ABAgentState {
+public enum ABAgentState
+{
     Idle = 0,
     Moving = 1,
     Rotating = 2
 };
 
-public class ABAgentPhysicsParams {
+public class ABAgentPhysicsParams
+{
     public float distance;
     public float speed;
     public float maxTimePassed;
@@ -26,14 +28,16 @@ public class ABAgentPhysicsParams {
     public List<double> cachedFixedDeltaTimes;
 }
 
-public class AgentMoveParams : ABAgentPhysicsParams {
+public class AgentMoveParams : ABAgentPhysicsParams
+{
     public ABAgentState agentState;
     public float acceleration;
     public float agentMass;
     public Vector3 initialTransformation;
 }
 
-public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
+public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous
+{
     //pass in arm move parameters for Action based movement
     public AgentMoveParams currentAgentMoveParams = new AgentMoveParams();
 
@@ -59,7 +63,8 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
     private Transform fingersAB;
     private Vector3 fingersInitialOffset;
 
-    void Start() {
+    void Start()
+    {
         myAB = this.GetComponent<ArticulationBody>();
         currentAgentMoveParams.agentState = ABAgentState.Idle;
 
@@ -70,9 +75,11 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         fingersInitialOffset = fingersAB.localPosition;
     }
 
-    public void PrepToControlAgentFromAction(AgentMoveParams agentMoveParams) {
+    public void PrepToControlAgentFromAction(AgentMoveParams agentMoveParams)
+    {
         Debug.Log($"preparing {this.transform.name} to move");
-        if (Mathf.Approximately(agentMoveParams.distance, 0.0f)) {
+        if (Mathf.Approximately(agentMoveParams.distance, 0.0f))
+        {
             Debug.Log("Error! distance to move must be nonzero");
             return;
         }
@@ -90,11 +97,14 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         currentAgentMoveParams.cachedPositions = new List<double>();
         currentAgentMoveParams.cachedFixedDeltaTimes = new List<double>();
 
-        if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
+        if (currentAgentMoveParams.agentState == ABAgentState.Moving)
+        {
             // snapshot the initial agent position to compare with later during movement
             currentAgentMoveParams.initialTransformation = myAB.transform.position;
             prevStepTransformation = myAB.transform.position;
-        } else if (currentAgentMoveParams.agentState == ABAgentState.Rotating) {
+        }
+        else if (currentAgentMoveParams.agentState == ABAgentState.Rotating)
+        {
             currentAgentMoveParams.initialTransformation = myAB.transform.eulerAngles;
             prevStepTransformation = myAB.transform.eulerAngles;
         }
@@ -106,7 +116,8 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             Mathf.Pow(currentAgentMoveParams.speed, 2) / (2 * currentAgentMoveParams.acceleration);
         Debug.Log("accelerationDistance by default equals " + accelerationDistance);
 
-        if (2 * accelerationDistance > currentAgentMoveParams.distance) {
+        if (2 * accelerationDistance > currentAgentMoveParams.distance)
+        {
             accelerationDistance = currentAgentMoveParams.distance / 2;
             Debug.Log("accelerationDistance now equals " + accelerationDistance);
         }
@@ -114,7 +125,8 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         beginDeceleration = false;
     }
 
-    public void ContinuousUpdate(float fixedDeltaTime) {
+    public void ContinuousUpdate(float fixedDeltaTime)
+    {
         // Vector3 maxForce = currentAgentMoveParams.maxForce * currentAgentMoveParams.direction * Vector3.forward;
         float remainingDistance = currentAgentMoveParams.distance - distanceTransformedSoFar;
 
@@ -133,12 +145,14 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         );
 
         accelerationDistance = 0.0f;
-        if (currentAgentMoveParams.agentState == ABAgentState.Moving) {
+        if (currentAgentMoveParams.agentState == ABAgentState.Moving)
+        {
             float currentSpeed = Mathf.Abs(agentOrientedVelocity.z);
             float forceScaler = 1f / fixedDeltaTime;
 
             // CASE: Accelerate - Apply force calculated from difference between intended distance and actual distance after amount of time that has passed
-            if (distanceTransformedSoFar < accelerationDistance) {
+            if (distanceTransformedSoFar < accelerationDistance)
+            {
                 float desiredDistance =
                     0.5f
                     * currentAgentMoveParams.acceleration
@@ -165,11 +179,14 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));
 
                 // CASE: Decelerate - Apply force calculated from difference between intended velocity and actual velocity at given distance remaining to travel
-            } else if (
-                  distanceTransformedSoFar
-                  >= currentAgentMoveParams.distance - accelerationDistance
-              ) {
-                if (beginDeceleration == false) {
+            }
+            else if (
+                distanceTransformedSoFar
+                >= currentAgentMoveParams.distance - accelerationDistance
+            )
+            {
+                if (beginDeceleration == false)
+                {
                     beginDecelerationSpeed = currentSpeed;
                     beginDeceleration = true;
                 }
@@ -197,7 +214,9 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 myAB.AddRelativeForce(new Vector3(0, 0, relativeForce));
 
                 // CASE: Cruise Control - Apply force calculated from difference between intended velocity and current velocity
-            } else {
+            }
+            else
+            {
                 float speedDelta = currentAgentMoveParams.speed - currentSpeed;
 
                 float relativeForce =
@@ -240,7 +259,9 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             // Store current values for comparing with next FixedUpdate
             prevStepTransformation = currentPosition;
             prevStepForward = myAB.transform.forward;
-        } else if (currentAgentMoveParams.agentState == ABAgentState.Rotating) {
+        }
+        else if (currentAgentMoveParams.agentState == ABAgentState.Rotating)
+        {
             // When rotating the agent shouldn't be moving forward/backwards but its wheels are moving so we use a smaller
             // damping force to counteract forward/backward movement (as opposed to the force used for lateral movement
             // above)
@@ -258,7 +279,8 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
             float forceScaler = 1f / fixedDeltaTime;
 
             // CASE: Accelerate - Apply force calculated from difference between intended distance and actual distance after amount of time that has passed
-            if (distanceTransformedSoFar < accelerationDistance) {
+            if (distanceTransformedSoFar < accelerationDistance)
+            {
                 float desiredAngularDistance =
                     0.5f
                     * currentAgentMoveParams.acceleration
@@ -281,11 +303,14 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 myAB.AddRelativeTorque(new Vector3(0, relativeTorque, 0));
 
                 // CASE: Decelerate - Apply force calculated from difference between intended angular velocity and actual angular velocity at given angular distance remaining to travel
-            } else if (
-                  distanceTransformedSoFar
-                  >= currentAgentMoveParams.distance - accelerationDistance
-              ) {
-                if (beginDeceleration == false) {
+            }
+            else if (
+                distanceTransformedSoFar
+                >= currentAgentMoveParams.distance - accelerationDistance
+            )
+            {
+                if (beginDeceleration == false)
+                {
                     beginDecelerationSpeed = currentAngularSpeed;
                     beginDeceleration = true;
                 }
@@ -310,7 +335,9 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 myAB.AddRelativeTorque(new Vector3(0, relativeTorque, 0));
 
                 // CASE: Cruise - Apply force calculated from difference between intended angular velocity and current angular velocity
-            } else {
+            }
+            else
+            {
                 float angularSpeedDelta = currentAgentMoveParams.speed - currentAngularSpeed;
 
                 float relativeTorque = Mathf.Clamp(
@@ -346,9 +373,13 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
 
             // Store current values for comparing with next FixedUpdate
             prevStepTransformation = currentRotation;
-        } else if (currentAgentMoveParams.agentState == ABAgentState.Idle) {
+        }
+        else if (currentAgentMoveParams.agentState == ABAgentState.Idle)
+        {
             // Do nothing
-        } else {
+        }
+        else
+        {
             throw new System.NotImplementedException(
                 $"Agent is not in a valid movement state: {currentAgentMoveParams.agentState}."
             );
@@ -366,7 +397,8 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         return;
     }
 
-    public bool ShouldHalt() {
+    public bool ShouldHalt()
+    {
         // Debug.Log("checking ArticulatedAgentController shouldHalt");
         bool shouldStop = false;
         ArticulatedAgentSolver a = this;
@@ -383,12 +415,15 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 minMovementPerSecond: a.currentAgentMoveParams.minMovementPerSecond,
                 haltCheckTimeWindow: a.currentAgentMoveParams.haltCheckTimeWindow
             )
-        ) {
+        )
+        {
             // if any single joint is still not halting, return false
             // Debug.Log("still not done, don't halt yet");
             shouldStop = false;
             return shouldStop;
-        } else {
+        }
+        else
+        {
             //this joint returns that it should stop!
             Debug.Log($"halted! Return shouldStop! Distance moved: {a.distanceTransformedSoFar}");
             shouldStop = true;
@@ -397,11 +432,13 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
     }
 
     // TODO remove from API
-    public virtual string GetHaltMessage() {
+    public virtual string GetHaltMessage()
+    {
         return "";
     }
 
-    public ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
+    public ActionFinished FinishContinuousMove(BaseFPSAgentController controller)
+    {
         Debug.Log("starting continuousMoveFinishAB");
         controller.transform.GetComponent<ArticulationBody>().velocity = Vector3.zero;
         controller.transform.GetComponent<ArticulationBody>().angularVelocity = Vector3.zero;
@@ -415,7 +452,8 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         //controller.SetFloorColliderToSlippery();
 
         bool actionSuccess = IsFingerTransformCorrect();
-        if (!actionSuccess) {
+        if (!actionSuccess)
+        {
             controller.agentManager.SetCriticalErrorState();
         }
 
@@ -435,7 +473,8 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         List<double> cachedFixedTimeDeltas,
         double minMovementPerSecond,
         double haltCheckTimeWindow
-    ) {
+    )
+    {
         bool shouldHalt = false;
 
         //halt if positions/rotations are within tolerance and effectively not changing
@@ -448,21 +487,24 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
                 minMovementPerSecond: minMovementPerSecond,
                 haltCheckTimeWindow: haltCheckTimeWindow
             )
-        ) {
+        )
+        {
             shouldHalt = true;
             // IdleAllStates();
             Debug.Log("halt due to position delta within tolerance");
             return shouldHalt;
         }
         //check if the amount moved/rotated exceeds this agents target
-        else if (distanceTransformedSoFar >= currentAgentMoveParams.distance) {
+        else if (distanceTransformedSoFar >= currentAgentMoveParams.distance)
+        {
             shouldHalt = true;
             // IdleAllStates();
             Debug.Log("halt due to distance reached/exceeded");
             return shouldHalt;
         }
         //hard check for time limit
-        else if (currentAgentMoveParams.timePassed >= currentAgentMoveParams.maxTimePassed) {
+        else if (currentAgentMoveParams.timePassed >= currentAgentMoveParams.maxTimePassed)
+        {
             shouldHalt = true;
             // IdleAllStates();
             Debug.Log("halt from timeout");
@@ -478,18 +520,22 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         List<double> timeDeltas,
         double minMovementPerSecond,
         double haltCheckTimeWindow
-    ) {
+    )
+    {
         double totalTime = 0f;
         double totalDistanceTraveled = 0f;
-        for (int i = positionDeltas.Count - 1; i >= 0; i--) {
+        for (int i = positionDeltas.Count - 1; i >= 0; i--)
+        {
             totalTime += timeDeltas[i];
             totalDistanceTraveled += Mathf.Abs((float)positionDeltas[i]);
-            if (totalTime >= haltCheckTimeWindow) {
+            if (totalTime >= haltCheckTimeWindow)
+            {
                 break;
             }
         }
 
-        if (totalTime < haltCheckTimeWindow) {
+        if (totalTime < haltCheckTimeWindow)
+        {
             // Not enough time recorded to make a decision
             return false;
         }
@@ -497,9 +543,11 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         return totalDistanceTraveled / totalTime < minMovementPerSecond;
     }
 
-    void SetCenterOfMass(Vector3 worldCenterOfMass) {
+    void SetCenterOfMass(Vector3 worldCenterOfMass)
+    {
         ArticulationBody[] bodies = FindObjectsOfType<ArticulationBody>();
-        foreach (ArticulationBody body in bodies) {
+        foreach (ArticulationBody body in bodies)
+        {
             // Convert world-space center of mass to local space
             Vector3 localCenterOfMass = body.transform.InverseTransformPoint(worldCenterOfMass);
             body.centerOfMass = localCenterOfMass;
@@ -507,7 +555,8 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
         }
     }
 
-    private bool IsFingerTransformCorrect() {
+    private bool IsFingerTransformCorrect()
+    {
         var eps = 0.1;
         var diff = fingersAB.localPosition - fingersInitialOffset;
         return diff.magnitude <= eps;

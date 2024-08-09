@@ -109,7 +109,6 @@ class ExternalBuild(object):
 
 class Build(object):
     def __init__(self, platform, commit_id, include_private_scenes, releases_dir=None):
-
         if type(platform) is str:
             if platform in STR_PLATFORM_MAP:
                 platform = STR_PLATFORM_MAP[platform]
@@ -126,7 +125,6 @@ class Build(object):
             self.tmp_dir = os.path.normpath(self.releases_dir + "/../tmp")
 
     def download(self):
-
         makedirs(self.releases_dir)
         makedirs(self.tmp_dir)
 

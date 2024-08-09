@@ -18,7 +18,8 @@ using UnityEngine.Rendering;
 //      2) rendering several cameras with different aspect ratios - vectors do stretch to the sides of the screen
 
 [RequireComponent(typeof(Camera))]
-public class ImageSynthesis : MonoBehaviour {
+public class ImageSynthesis : MonoBehaviour
+{
     private bool initialized = false;
 
     // pass configuration
@@ -39,13 +40,15 @@ public class ImageSynthesis : MonoBehaviour {
         // new CapturePass() { name = "_position" },
     };
 
-    struct CapturePass {
+    struct CapturePass
+    {
         // configuration
         public string name;
         public bool supportsAntialiasing;
         public bool needsRescale;
 
-        public CapturePass(string name_) {
+        public CapturePass(string name_)
+        {
             name = name_;
             supportsAntialiasing = true;
             needsRescale = false;
@@ -56,18 +59,24 @@ public class ImageSynthesis : MonoBehaviour {
         public Camera camera;
     };
 
-    public bool hasCapturePass(string name) {
-        for (int i = 0; i < capturePasses.Length; i++) {
-            if (capturePasses[i].name == name) {
+    public bool hasCapturePass(string name)
+    {
+        for (int i = 0; i < capturePasses.Length; i++)
+        {
+            if (capturePasses[i].name == name)
+            {
                 return true;
             }
         }
         return false;
     }
 
-    public void updateCameraStatuses(bool enabled) {
-        for (int i = 0; i < capturePasses.Length; i++) {
-            if (capturePasses[i].camera != null && capturePasses[i].name != "_img") {
+    public void updateCameraStatuses(bool enabled)
+    {
+        for (int i = 0; i < capturePasses.Length; i++)
+        {
+            if (capturePasses[i].camera != null && capturePasses[i].name != "_img")
+            {
                 capturePasses[i].camera.enabled = enabled;
             }
         }
@@ -94,10 +103,12 @@ public class ImageSynthesis : MonoBehaviour {
 
     public Texture2D tex;
 
-    public void OnEnable() {
+    public void OnEnable()
+    {
         // This initialization code MUST live in OnEnable and not Start as we instantiate ThirdPartyCameras
         // programatically in other functions and need them to be initialized immediately.
-        if (!initialized) {
+        if (!initialized)
+        {
             // XXXXXXXXXXX************
             // Remember, adding any new Shaders requires them to be included in Project Settings->Graphics->Always Included Shaders
             // otherwise the standlone will build without the shaders and you will be sad
@@ -105,17 +116,20 @@ public class ImageSynthesis : MonoBehaviour {
 
             // default fallbacks, if shaders are unspecified
 
-            if (!uberReplacementShader) {
+            if (!uberReplacementShader)
+            {
                 uberReplacementShader = Shader.Find("Hidden/UberReplacement");
             }
 
-            if (!opticalFlowShader) {
+            if (!opticalFlowShader)
+            {
                 opticalFlowShader = Shader.Find("Hidden/OpticalFlow");
             }
 
 #if UNITY_EDITOR
 
-            if (!depthShader) {
+            if (!depthShader)
+            {
                 depthShader = Shader.Find("Hidden/DepthBW");
             }
 #else
@@ -131,7 +145,8 @@ public class ImageSynthesis : MonoBehaviour {
 
             // use real camera to capture final image
             capturePasses[0].camera = GetComponent<Camera>();
-            for (int q = 1; q < capturePasses.Length; q++) {
+            for (int q = 1; q < capturePasses.Length; q++)
+            {
                 capturePasses[q].camera = CreateHiddenCamera(capturePasses[q].name);
             }
             md5 = System.Security.Cryptography.MD5.Create();
@@ -142,9 +157,11 @@ public class ImageSynthesis : MonoBehaviour {
         initialized = true;
     }
 
-    void LateUpdate() {
+    void LateUpdate()
+    {
 #if UNITY_EDITOR
-        if (DetectPotentialSceneChangeInEditor()) {
+        if (DetectPotentialSceneChangeInEditor())
+        {
             OnSceneChange();
         }
 
@@ -154,7 +171,8 @@ public class ImageSynthesis : MonoBehaviour {
         // OnCameraChange();
     }
 
-    private Camera CreateHiddenCamera(string name) {
+    private Camera CreateHiddenCamera(string name)
+    {
         var go = new GameObject(name, typeof(Camera));
 #if !UNITY_EDITOR // Useful to be able to see these cameras in the editor
         go.hideFlags = HideFlags.HideAndDontSave;
@@ -177,7 +195,8 @@ public class ImageSynthesis : MonoBehaviour {
         return newCamera;
     }
 
-    private static void SetupCameraWithReplacementShader(Camera cam, Shader shader) {
+    private static void SetupCameraWithReplacementShader(Camera cam, Shader shader)
+    {
         var cb = new CommandBuffer();
         cam.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, cb);
         cam.AddCommandBuffer(CameraEvent.BeforeFinalPass, cb);
@@ -190,7 +209,8 @@ public class ImageSynthesis : MonoBehaviour {
         Camera cam,
         Shader shader,
         ReplacelementModes mode
-    ) {
+    )
+    {
         SetupCameraWithReplacementShader(cam, shader, mode, Color.blue);
     }
 
@@ -199,7 +219,8 @@ public class ImageSynthesis : MonoBehaviour {
         Shader shader,
         ReplacelementModes mode,
         Color clearColor
-    ) {
+    )
+    {
         var cb = new CommandBuffer();
         cb.SetGlobalFloat("_OutputMode", (int)mode); // @TODO: CommandBuffer is missing SetGlobalInt() method
         cam.renderingPath = RenderingPath.Forward;
@@ -214,14 +235,16 @@ public class ImageSynthesis : MonoBehaviour {
         Camera cam,
         Material material,
         DepthTextureMode depthTextureMode = DepthTextureMode.None
-    ) {
+    )
+    {
         var cb = new CommandBuffer();
         cb.Blit(null, BuiltinRenderTextureType.CurrentActive, material);
         cam.AddCommandBuffer(CameraEvent.AfterEverything, cb);
         cam.depthTextureMode = depthTextureMode;
     }
 
-    enum ReplacelementModes {
+    enum ReplacelementModes
+    {
         ObjectId = 0,
         CatergoryId = 1,
         DepthCompressed = 2,
@@ -232,8 +255,10 @@ public class ImageSynthesis : MonoBehaviour {
 
     // Call this if the settings on the main camera ever change? But the main camera now uses slightly different layer masks and deffered/forward render settings than these image synth cameras
     // do, so maybe it's fine for now I dunno
-    public void OnCameraChange() {
-        if (tex != null) {
+    public void OnCameraChange()
+    {
+        if (tex != null)
+        {
             Destroy(tex);
             tex = null;
         }
@@ -242,8 +267,10 @@ public class ImageSynthesis : MonoBehaviour {
         // TODO: add tests, not needed when target display is different
         // mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
 
-        foreach (var pass in capturePasses) {
-            if (pass.camera == mainCamera) {
+        foreach (var pass in capturePasses)
+        {
+            if (pass.camera == mainCamera)
+            {
                 continue;
             }
 
@@ -262,12 +289,14 @@ public class ImageSynthesis : MonoBehaviour {
         }
 
         // cache materials and setup material properties
-        if (!opticalFlowMaterial || opticalFlowMaterial.shader != opticalFlowShader) {
+        if (!opticalFlowMaterial || opticalFlowMaterial.shader != opticalFlowShader)
+        {
             opticalFlowMaterial = new Material(opticalFlowShader);
         }
         opticalFlowMaterial.SetFloat("_Sensitivity", opticalFlowSensitivity);
 
-        if (!depthMaterial || depthMaterial.shader != depthShader) {
+        if (!depthMaterial || depthMaterial.shader != depthShader)
+        {
             depthMaterial = new Material(depthShader);
         }
 
@@ -297,7 +326,8 @@ public class ImageSynthesis : MonoBehaviour {
         );
 
 #if UNITY_EDITOR
-        for (int i = 0; i < capturePasses.Length; i++) {
+        for (int i = 0; i < capturePasses.Length; i++)
+        {
             // Debug.Log("Setting camera " + capturePasses[i].camera.gameObject.name + " to display " + i);
             capturePasses[i].camera.targetDisplay = i;
         }
@@ -308,25 +338,31 @@ public class ImageSynthesis : MonoBehaviour {
         */
     }
 
-    public string MD5Hash(string input) {
+    public string MD5Hash(string input)
+    {
         byte[] data = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(input));
         // Create string representation
         System.Text.StringBuilder sb = new System.Text.StringBuilder();
-        for (int i = 0; i < data.Length; ++i) {
+        for (int i = 0; i < data.Length; ++i)
+        {
             sb.Append(data[i].ToString("x2"));
         }
         return sb.ToString();
     }
 
-    private string getObjectId(GameObject gameObject) {
+    private string getObjectId(GameObject gameObject)
+    {
         // the object id is generated this way to handle the edge case
         // where a non-simobject could get moved from its initial position
         // during a simulation.  This forces the objectId to get generated once
         // on scene startup
         int key = gameObject.GetInstanceID();
-        if (nonSimObjObjectIds.ContainsKey(key)) {
+        if (nonSimObjObjectIds.ContainsKey(key))
+        {
             return nonSimObjObjectIds[key];
-        } else {
+        }
+        else
+        {
             Transform t = gameObject.transform;
             string objectId =
                 gameObject.name + "|" + t.position.x + "|" + t.position.y + "|" + t.position.z;
@@ -335,13 +371,15 @@ public class ImageSynthesis : MonoBehaviour {
         }
     }
 
-    public void OnSceneChange() {
+    public void OnSceneChange()
+    {
         sentColorCorrespondence = false;
         var renderers = UnityEngine.Object.FindObjectsOfType<Renderer>();
         colorIds = new Dictionary<Color, string>();
         var mpb = new MaterialPropertyBlock();
 
-        foreach (var r in renderers) {
+        foreach (var r in renderers)
+        {
             // var layer = r.gameObject.layer;
             // var tag = r.gameObject.tag;
 
@@ -349,20 +387,24 @@ public class ImageSynthesis : MonoBehaviour {
             string objTag = getObjectId(r.gameObject);
 
             StructureObject so = r.gameObject.GetComponent<StructureObject>();
-            if (so == null) {
+            if (so == null)
+            {
                 so = r.gameObject.GetComponentInParent<StructureObject>();
             }
 
             SimObjPhysics sop = r.gameObject.GetComponent<SimObjPhysics>();
-            if (sop == null) {
+            if (sop == null)
+            {
                 sop = r.gameObject.GetComponentInParent<SimObjPhysics>();
             }
 
-            if (so != null) {
+            if (so != null)
+            {
                 classTag = "" + so.WhatIsMyStructureObjectTag;
                 // objTag = so.gameObject.name;
             }
-            if (sop != null) {
+            if (sop != null)
+            {
                 classTag = "" + sop.Type;
                 objTag = sop.ObjectID;
             }
@@ -372,10 +414,13 @@ public class ImageSynthesis : MonoBehaviour {
 
             capturePasses[0].camera.WorldToScreenPoint(r.bounds.center);
 
-            if (so != null || sop != null) {
+            if (so != null || sop != null)
+            {
                 colorIds[objColor] = objTag;
                 colorIds[classColor] = classTag;
-            } else {
+            }
+            else
+            {
                 colorIds[objColor] = r.gameObject.name;
             }
 
@@ -384,7 +429,8 @@ public class ImageSynthesis : MonoBehaviour {
             if (
                 r.gameObject.name.ToLower().Contains("lightray")
                 && r.material.name.ToLower().Contains("lightray")
-            ) {
+            )
+            {
                 r.enabled = false;
                 continue;
             }
@@ -406,18 +452,23 @@ public class ImageSynthesis : MonoBehaviour {
         int width = -1,
         int height = -1,
         bool jpg = false
-    ) {
+    )
+    {
         // Must be called after end of Frame
 
-        if (width <= 0) {
+        if (width <= 0)
+        {
             width = Screen.width;
         }
-        if (height <= 0) {
+        if (height <= 0)
+        {
             height = Screen.height;
         }
 
-        foreach (var pass in capturePasses) {
-            if (pass.name == passName) {
+        foreach (var pass in capturePasses)
+        {
+            if (pass.name == passName)
+            {
                 return Encode(
                     pass.camera,
                     width,
@@ -434,14 +485,17 @@ public class ImageSynthesis : MonoBehaviour {
         return (new byte[0]);
     }
 
-    public void Save(string filename, int width = -1, int height = -1, string path = "") {
-        if (width <= 0 || height <= 0) {
+    public void Save(string filename, int width = -1, int height = -1, string path = "")
+    {
+        if (width <= 0 || height <= 0)
+        {
             width = Screen.width;
             height = Screen.height;
         }
 
         var filenameExtension = System.IO.Path.GetExtension(filename);
-        if (filenameExtension == "") {
+        if (filenameExtension == "")
+        {
             filenameExtension = ".png";
         }
 
@@ -460,7 +514,8 @@ public class ImageSynthesis : MonoBehaviour {
         string filenameExtension,
         int width,
         int height
-    ) {
+    )
+    {
         yield return new WaitForEndOfFrame();
         Save(filenameWithoutExtension, filenameExtension, width, height);
     }
@@ -470,8 +525,10 @@ public class ImageSynthesis : MonoBehaviour {
         string filenameExtension,
         int width,
         int height
-    ) {
-        foreach (var pass in capturePasses) {
+    )
+    {
+        foreach (var pass in capturePasses)
+        {
             Save(
                 pass.camera,
                 filenameWithoutExtension + pass.name + filenameExtension,
@@ -492,7 +549,8 @@ public class ImageSynthesis : MonoBehaviour {
         bool jpg = false,
         RenderTextureFormat format = RenderTextureFormat.Default,
         RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default
-    ) {
+    )
+    {
         var mainCamera = GetComponent<Camera>();
         var depth = 32;
         var readWrite = textureReadMode;
@@ -517,7 +575,8 @@ public class ImageSynthesis : MonoBehaviour {
                     readWrite,
                     antiAliasing
                 );
-        if (tex == null) {
+        if (tex == null)
+        {
             tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
         }
 
@@ -530,7 +589,8 @@ public class ImageSynthesis : MonoBehaviour {
 
         cam.Render();
 
-        if (needsRescale) {
+        if (needsRescale)
+        {
             // blit to rescale (see issue with Motion Vectors in @KNOWN ISSUES)
             RenderTexture.active = finalRT;
             Graphics.Blit(renderRT, finalRT);
@@ -548,9 +608,12 @@ public class ImageSynthesis : MonoBehaviour {
 
         // encode texture into PNG/JPG
         byte[] bytes;
-        if (jpg) {
+        if (jpg)
+        {
             bytes = tex.EncodeToJPG();
-        } else {
+        }
+        else
+        {
             bytes = tex.GetRawTextureData();
         }
 
@@ -573,7 +636,8 @@ public class ImageSynthesis : MonoBehaviour {
         int height,
         bool supportsAntialiasing,
         bool needsRescale
-    ) {
+    )
+    {
         byte[] bytes = Encode(cam, width, height, supportsAntialiasing, needsRescale);
         File.WriteAllBytes(filename, bytes);
     }
@@ -583,22 +647,27 @@ public class ImageSynthesis : MonoBehaviour {
     private int lastSelectedGOLayer = -1;
     private string lastSelectedGOTag = "unknown";
 
-    private bool DetectPotentialSceneChangeInEditor() {
+    private bool DetectPotentialSceneChangeInEditor()
+    {
         bool change = false;
         // there is no callback in Unity Editor to automatically detect changes in scene objects
         // as a workaround lets track selected objects and check, if properties that are
         // interesting for us (layer or tag) did not change since the last frame
-        if (UnityEditor.Selection.transforms.Length > 1) {
+        if (UnityEditor.Selection.transforms.Length > 1)
+        {
             // multiple objects are selected, all bets are off!
             // we have to assume these objects are being edited
             change = true;
             lastSelectedGO = null;
-        } else if (UnityEditor.Selection.activeGameObject) {
+        }
+        else if (UnityEditor.Selection.activeGameObject)
+        {
             var go = UnityEditor.Selection.activeGameObject;
             // check if layer or tag of a selected object have changed since the last frame
             var potentialChangeHappened =
                 lastSelectedGOLayer != go.layer || lastSelectedGOTag != go.tag;
-            if (go == lastSelectedGO && potentialChangeHappened) {
+            if (go == lastSelectedGO && potentialChangeHappened)
+            {
                 change = true;
             }
 

@@ -6,31 +6,38 @@ using UnityEditor;
 using UnityEngine;
 
 public class ResourceAssetReference<T>
-    where T : UnityEngine.Object {
+    where T : UnityEngine.Object
+{
     public readonly string Name;
     public readonly string ResourcePath;
     private T _asset;
 
-    public ResourceAssetReference(string resourcePath, string name) {
+    public ResourceAssetReference(string resourcePath, string name)
+    {
         this.Name = name;
         this.ResourcePath = resourcePath;
     }
 
-    public T Load() {
-        if (this._asset == null) {
+    public T Load()
+    {
+        if (this._asset == null)
+        {
             this._asset = Resources.Load<T>(ResourcePath);
         }
         return this._asset;
     }
 }
 
-public class ResourceAssetManager {
-    private class ResourceAsset {
+public class ResourceAssetManager
+{
+    private class ResourceAsset
+    {
         // must have empty constructor for JSON deserialization
         public ResourceAsset() { }
 
 #if UNITY_EDITOR
-        public ResourceAsset(string assetPath) {
+        public ResourceAsset(string assetPath)
+        {
             var asset = AssetDatabase.LoadMainAssetAtPath(assetPath);
             this.path = assetPath;
             this.labels = AssetDatabase.GetLabels(asset);
@@ -45,8 +52,10 @@ public class ResourceAssetManager {
         public string name;
     }
 
-    private class ResourceAssetCatalog {
-        public ResourceAssetCatalog() {
+    private class ResourceAssetCatalog
+    {
+        public ResourceAssetCatalog()
+        {
             this.assets = new List<ResourceAsset>();
             this.timestamp = DateTimeOffset.Now.ToUnixTimeSeconds();
         }
@@ -62,7 +71,8 @@ public class ResourceAssetManager {
     private Dictionary<string, List<ResourceAsset>> labelIndex =
         new Dictionary<string, List<ResourceAsset>>();
 
-    public ResourceAssetManager() {
+    public ResourceAssetManager()
+    {
 #if UNITY_EDITOR
         this.RefreshCatalog();
 #else
@@ -77,20 +87,24 @@ public class ResourceAssetManager {
 
 #if UNITY_EDITOR
 
-    private string[] findResourceGuids() {
+    private string[] findResourceGuids()
+    {
         return AssetDatabase.FindAssets("t:material", new[] { "Assets/Resources" });
     }
 
-    public void RefreshCatalog() {
+    public void RefreshCatalog()
+    {
         this.catalog = new ResourceAssetCatalog();
-        foreach (string guid in this.findResourceGuids()) {
+        foreach (string guid in this.findResourceGuids())
+        {
             // GUIDToAssetPath returns a relative path e.g "Assets/Resources/QuickMaterials/Blue.mat"
             var assetPath = AssetDatabase.GUIDToAssetPath(guid);
             // ignore FBX files with multiple sub-materials
             if (
                 assetPath.ToLower().EndsWith(".fbx")
                 && AssetDatabase.LoadAllAssetsAtPath(assetPath).Length > 1
-            ) {
+            )
+            {
                 continue;
             }
 
@@ -100,16 +114,21 @@ public class ResourceAssetManager {
         this.generateLabelIndex();
     }
 
-    public void BuildCatalog() {
+    public void BuildCatalog()
+    {
         this.RefreshCatalog();
         this.writeCatalog();
     }
 #endif
 
-    private void generateLabelIndex() {
-        foreach (var labeledAsset in this.catalog.assets) {
-            foreach (var label in labeledAsset.labels) {
-                if (!this.labelIndex.ContainsKey(label)) {
+    private void generateLabelIndex()
+    {
+        foreach (var labeledAsset in this.catalog.assets)
+        {
+            foreach (var label in labeledAsset.labels)
+            {
+                if (!this.labelIndex.ContainsKey(label))
+                {
                     this.labelIndex[label] = new List<ResourceAsset>();
                 }
                 this.labelIndex[label].Add(labeledAsset);
@@ -117,9 +136,11 @@ public class ResourceAssetManager {
         }
     }
 
-    private ResourceAssetCatalog readCatalog() {
+    private ResourceAssetCatalog readCatalog()
+    {
         string catalogResourcePath = relativePath(ResourcesPath, CatalogPath);
-        if (Path.HasExtension(catalogResourcePath)) {
+        if (Path.HasExtension(catalogResourcePath))
+        {
             string ext = Path.GetExtension(catalogResourcePath);
             catalogResourcePath = catalogResourcePath.Remove(
                 catalogResourcePath.Length - ext.Length,
@@ -128,7 +149,8 @@ public class ResourceAssetManager {
         }
         var jsonResource = Resources.Load<TextAsset>(catalogResourcePath);
 
-        if (jsonResource == null) {
+        if (jsonResource == null)
+        {
             return null;
         }
 
@@ -136,21 +158,25 @@ public class ResourceAssetManager {
     }
 
     // just handles case where relativeTo is the prefix of fullPath
-    private string relativePath(string relativeTo, string fullPath) {
+    private string relativePath(string relativeTo, string fullPath)
+    {
         return fullPath.Remove(0, relativeTo.Length);
     }
 
-    private void writeCatalog() {
+    private void writeCatalog()
+    {
         string json = serialize(this.catalog);
 
         // .tmp files are ignored by Unity under Assets/
         string tmpCatalogPath = CatalogPath + ".tmp";
-        if (File.Exists(tmpCatalogPath)) {
+        if (File.Exists(tmpCatalogPath))
+        {
             File.Delete(tmpCatalogPath);
         }
 
         File.WriteAllText(tmpCatalogPath, json);
-        if (File.Exists(CatalogPath)) {
+        if (File.Exists(CatalogPath))
+        {
             File.Delete(CatalogPath);
         }
         // Doing a delete + move to make the write atomic and avoid writing a possibly invalid JSON
@@ -159,12 +185,16 @@ public class ResourceAssetManager {
     }
 
     public List<ResourceAssetReference<T>> FindResourceAssetReferences<T>(string label)
-        where T : UnityEngine.Object {
+        where T : UnityEngine.Object
+    {
         string typeName = typeof(T).FullName;
         List<ResourceAssetReference<T>> assetRefs = new List<ResourceAssetReference<T>>();
-        if (this.labelIndex.ContainsKey(label)) {
-            foreach (var res in this.labelIndex[label]) {
-                if (res.assetType == typeName) {
+        if (this.labelIndex.ContainsKey(label))
+        {
+            foreach (var res in this.labelIndex[label])
+            {
+                if (res.assetType == typeName)
+                {
                     string resourcePath = relativePath("Assets/Resources/", res.path);
                     resourcePath = Path.Combine(
                         Path.GetDirectoryName(resourcePath),
@@ -179,17 +209,21 @@ public class ResourceAssetManager {
             }
 
             return assetRefs;
-        } else {
+        }
+        else
+        {
             return assetRefs;
         }
     }
 
-    private string serialize(ResourceAssetCatalog catalog) {
+    private string serialize(ResourceAssetCatalog catalog)
+    {
         var jsonResolver = new ShouldSerializeContractResolver();
         return Newtonsoft.Json.JsonConvert.SerializeObject(
             catalog,
             Newtonsoft.Json.Formatting.None,
-            new Newtonsoft.Json.JsonSerializerSettings() {
+            new Newtonsoft.Json.JsonSerializerSettings()
+            {
                 ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
                 ContractResolver = jsonResolver
             }

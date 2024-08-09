@@ -13,10 +13,14 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
 
-namespace UnityStandardAssets.Characters.FirstPerson {
-    public partial class KinovaArmAgentController : ArmAgentController {
-        public void AttachObjectToArmWithFixedJoint(string objectId) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+namespace UnityStandardAssets.Characters.FirstPerson
+{
+    public partial class KinovaArmAgentController : ArmAgentController
+    {
+        public void AttachObjectToArmWithFixedJoint(string objectId)
+        {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId))
+            {
                 errorMessage = $"Cannot find object with id {objectId}.";
                 actionFinishedEmit(false);
                 return;
@@ -26,7 +30,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(getArmImplementation().AttachObjectToArmWithFixedJoint(target));
         }
 
-        public void BreakFixedJoints() {
+        public void BreakFixedJoints()
+        {
             actionFinished(getArmImplementation().BreakFixedJoints());
         }
     }

@@ -3,7 +3,8 @@ using System.Collections;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class LightSwitch : MonoBehaviour {
+public class LightSwitch : MonoBehaviour
+{
     public SimObj ParentObj;
     public bool OnByDefault = true;
     public bool EditorOn = false;
@@ -16,43 +17,54 @@ public class LightSwitch : MonoBehaviour {
     Color groundColor;
     Color skyColor;
 
-    void OnEnable() {
+    void OnEnable()
+    {
         equatorColor = RenderSettings.ambientEquatorColor;
         groundColor = RenderSettings.ambientGroundColor;
         skyColor = RenderSettings.ambientSkyColor;
 
         ParentObj = gameObject.GetComponent<SimObj>();
-        if (ParentObj == null) {
+        if (ParentObj == null)
+        {
             ParentObj = gameObject.AddComponent<SimObj>();
         }
 
-        if (!Application.isPlaying) {
+        if (!Application.isPlaying)
+        {
             Animator a = ParentObj.gameObject.GetComponent<Animator>();
-            if (a == null) {
+            if (a == null)
+            {
                 a = ParentObj.gameObject.AddComponent<Animator>();
                 a.runtimeAnimatorController =
                     Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
             }
-        } else {
-            if (OnByDefault) {
+        }
+        else
+        {
+            if (OnByDefault)
+            {
                 ParentObj.Animator.SetBool("AnimState1", true);
             }
         }
     }
 
-    void Update() {
+    void Update()
+    {
         // print(SourceRenderers.Length);
 
         bool on = EditorOn;
-        if (Application.isPlaying) {
+        if (Application.isPlaying)
+        {
             on = ParentObj.Animator.GetBool("AnimState1");
         }
 
-        for (int i = 0; i < Lights.Length; i++) {
+        for (int i = 0; i < Lights.Length; i++)
+        {
             Lights[i].enabled = on;
         }
 
-        for (int i = 0; i < SourceRenderers.Length; i++) {
+        for (int i = 0; i < SourceRenderers.Length; i++)
+        {
             //  print(i);
             Material[] sharedMats = SourceRenderers[i].sharedMaterials;
             sharedMats[SourceMatIndexes[i]] = on ? OnMaterial : OffMaterial;

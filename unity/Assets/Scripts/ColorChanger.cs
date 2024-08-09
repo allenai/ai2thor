@@ -2,7 +2,8 @@
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class ColorChanger : MonoBehaviour {
+public class ColorChanger : MonoBehaviour
+{
     // These will eventually be turned into sets, such that they are
     // easily checkable at runtime.
 
@@ -11,7 +12,8 @@ public class ColorChanger : MonoBehaviour {
     Dictionary<string, HashSet<string>> materialGroupPaths;
     private ResourceAssetManager assetManager;
 
-    protected void cacheMaterials() {
+    protected void cacheMaterials()
+    {
         var objectMaterialLabels = new string[]
         {
             "AlarmClockMaterials",
@@ -82,18 +84,21 @@ public class ColorChanger : MonoBehaviour {
         this.assetManager = new ResourceAssetManager();
 
         objectMaterials = new Dictionary<string, List<ResourceAssetReference<Material>>>();
-        foreach (var label in objectMaterialLabels) {
+        foreach (var label in objectMaterialLabels)
+        {
             objectMaterials[label] = this.assetManager.FindResourceAssetReferences<Material>(label);
         }
 
         materialGroupPaths = new Dictionary<string, HashSet<string>>();
-        foreach (var label in materialGroupLabels) {
+        foreach (var label in materialGroupLabels)
+        {
             HashSet<string> paths = new HashSet<string>();
             foreach (
                 var resourceAssetRef in this.assetManager.FindResourceAssetReferences<Material>(
                     label
                 )
-            ) {
+            )
+            {
                 paths.Add(resourceAssetRef.ResourcePath);
             }
 
@@ -101,23 +106,28 @@ public class ColorChanger : MonoBehaviour {
         }
     }
 
-    private void storeOriginal(Material mat) {
-        if (!origMaterials.ContainsKey(mat)) {
+    private void storeOriginal(Material mat)
+    {
+        if (!origMaterials.ContainsKey(mat))
+        {
             origMaterials[mat] = new Material(mat);
         }
     }
 
-    private void swapMaterial(Material mat1, Material mat2) {
+    private void swapMaterial(Material mat1, Material mat2)
+    {
         storeOriginal(mat1);
         storeOriginal(mat2);
 
-        if (mat1.HasProperty("_MainTex") && mat2.HasProperty("_MainTex")) {
+        if (mat1.HasProperty("_MainTex") && mat2.HasProperty("_MainTex"))
+        {
             Texture tempTexture = mat1.mainTexture;
             mat1.mainTexture = mat2.mainTexture;
             mat2.mainTexture = tempTexture;
         }
 
-        if (mat1.HasProperty("_Color") && mat2.HasProperty("_Color")) {
+        if (mat1.HasProperty("_Color") && mat2.HasProperty("_Color"))
+        {
             Color tempColor = mat1.color;
             mat1.color = mat2.color;
             mat2.color = tempColor;
@@ -127,15 +137,20 @@ public class ColorChanger : MonoBehaviour {
     private void shuffleMaterials(
         HashSet<string> activeMaterialNames,
         List<ResourceAssetReference<Material>> materialGroup
-    ) {
-        for (int n = materialGroup.Count - 1; n >= 0; n--) {
+    )
+    {
+        for (int n = materialGroup.Count - 1; n >= 0; n--)
+        {
             int i = Random.Range(0, n + 1);
 
             ResourceAssetReference<Material> refA = materialGroup[n];
             ResourceAssetReference<Material> refB = materialGroup[i];
-            if (activeMaterialNames.Contains(refA.Name) || activeMaterialNames.Contains(refB.Name)) {
+            if (activeMaterialNames.Contains(refA.Name) || activeMaterialNames.Contains(refB.Name))
+            {
                 swapMaterial(refA.Load(), refB.Load());
-            } else {
+            }
+            else
+            {
                 // just swap the references if neither material is actively being used in the scene
                 materialGroup[n] = refB;
                 materialGroup[i] = refA;
@@ -150,16 +165,20 @@ public class ColorChanger : MonoBehaviour {
         bool useExternalMaterials,
         HashSet<string> inRoomTypes,
         HashSet<string> excludedMaterialNames = null
-    ) {
-        if (objectMaterials == null) {
+    )
+    {
+        if (objectMaterials == null)
+        {
             cacheMaterials();
         }
 
-        if (excludedMaterialNames == null) {
+        if (excludedMaterialNames == null)
+        {
             excludedMaterialNames = new HashSet<string>();
         }
 
-        Dictionary<string, string> roomTypeLabelMap = new Dictionary<string, string>() {
+        Dictionary<string, string> roomTypeLabelMap = new Dictionary<string, string>()
+        {
             ["kitchen"] = "RawKitchenMaterials",
             ["livingroom"] = "RawLivingRoomMaterials",
             ["bedroom"] = "RawBedroomMaterials",
@@ -174,9 +193,12 @@ public class ColorChanger : MonoBehaviour {
         // need to get loaded and shuffled, using this the shuffle step
         // can limit what materials actually get loaded through Resources.Load()
         HashSet<string> activeMaterialNames = new HashSet<string>();
-        foreach (var renderer in GameObject.FindObjectsOfType<Renderer>()) {
-            foreach (var mat in renderer.sharedMaterials) {
-                if (mat != null && mat.name != null && !excludedMaterialNames.Contains(mat.name)) {
+        foreach (var renderer in GameObject.FindObjectsOfType<Renderer>())
+        {
+            foreach (var mat in renderer.sharedMaterials)
+            {
+                if (mat != null && mat.name != null && !excludedMaterialNames.Contains(mat.name))
+                {
 #if UNITY_EDITOR
                     Debug.Log("Found material: " + mat.name);
 #endif
@@ -190,10 +212,12 @@ public class ColorChanger : MonoBehaviour {
                 string,
                 List<ResourceAssetReference<Material>>
             > materialGroup in objectMaterials
-        ) {
+        )
+        {
             List<ResourceAssetReference<Material>> validMaterials =
                 new List<ResourceAssetReference<Material>>();
-            foreach (ResourceAssetReference<Material> resourceAssetReference in materialGroup.Value) {
+            foreach (ResourceAssetReference<Material> resourceAssetReference in materialGroup.Value)
+            {
                 if (
                     useTrainMaterials
                         && materialGroupPaths["RawTrainMaterials"]
@@ -204,17 +228,23 @@ public class ColorChanger : MonoBehaviour {
                     || useTestMaterials
                         && materialGroupPaths["RawTestMaterials"]
                             .Contains(resourceAssetReference.ResourcePath)
-                ) {
-                    if (inRoomTypes == null) {
+                )
+                {
+                    if (inRoomTypes == null)
+                    {
                         validMaterials.Add(resourceAssetReference);
                         numTotalMaterials++;
-                    } else {
-                        foreach (string roomType in inRoomTypes) {
+                    }
+                    else
+                    {
+                        foreach (string roomType in inRoomTypes)
+                        {
                             string roomLabel = roomTypeLabelMap[roomType];
                             if (
                                 materialGroupPaths[roomLabel]
                                     .Contains(resourceAssetReference.ResourcePath)
-                            ) {
+                            )
+                            {
                                 validMaterials.Add(resourceAssetReference);
                                 numTotalMaterials++;
                                 break;
@@ -230,53 +260,69 @@ public class ColorChanger : MonoBehaviour {
         return numTotalMaterials;
     }
 
-    public void ResetMaterials() {
-        foreach (KeyValuePair<Material, Material> matPair in origMaterials) {
+    public void ResetMaterials()
+    {
+        foreach (KeyValuePair<Material, Material> matPair in origMaterials)
+        {
             Material mat = matPair.Key;
-            if (mat.HasProperty("_Color")) {
+            if (mat.HasProperty("_Color"))
+            {
                 mat.color = matPair.Value.color;
             }
-            if (mat.HasProperty("_MainTex")) {
+            if (mat.HasProperty("_MainTex"))
+            {
                 mat.mainTexture = matPair.Value.mainTexture;
             }
         }
     }
 
-    public void RandomizeColor() {
-        if (objectMaterials == null) {
+    public void RandomizeColor()
+    {
+        if (objectMaterials == null)
+        {
             cacheMaterials();
         }
 
-        foreach (var renderer in GameObject.FindObjectsOfType<Renderer>()) {
-            foreach (var mat in renderer.sharedMaterials) {
+        foreach (var renderer in GameObject.FindObjectsOfType<Renderer>())
+        {
+            foreach (var mat in renderer.sharedMaterials)
+            {
                 storeOriginal(mat);
-                if (mat.HasProperty("_Color")) {
+                if (mat.HasProperty("_Color"))
+                {
                     mat.color = Random.ColorHSV(0f, 1f, 0.5f, 1f, 0.5f, 1f);
                 }
             }
         }
     }
 
-    public void ResetColors() {
-        foreach (KeyValuePair<Material, Material> matPair in origMaterials) {
+    public void ResetColors()
+    {
+        foreach (KeyValuePair<Material, Material> matPair in origMaterials)
+        {
             Material mat = matPair.Key;
-            if (mat.HasProperty("_Color")) {
+            if (mat.HasProperty("_Color"))
+            {
                 mat.color = matPair.Value.color;
             }
         }
     }
 
-    public Dictionary<string, string[]> GetMaterials() {
+    public Dictionary<string, string[]> GetMaterials()
+    {
         Dictionary<string, string[]> orSomething = new Dictionary<string, string[]>();
 
-        if (objectMaterials == null) {
+        if (objectMaterials == null)
+        {
             cacheMaterials();
         }
 
-        foreach (KeyValuePair<string, List<ResourceAssetReference<Material>>> sm in objectMaterials) {
+        foreach (KeyValuePair<string, List<ResourceAssetReference<Material>>> sm in objectMaterials)
+        {
             List<string> materialNames = new List<string>();
 
-            foreach (ResourceAssetReference<Material> resourceAssetReference in sm.Value) {
+            foreach (ResourceAssetReference<Material> resourceAssetReference in sm.Value)
+            {
                 materialNames.Add(resourceAssetReference.Name);
             }
 

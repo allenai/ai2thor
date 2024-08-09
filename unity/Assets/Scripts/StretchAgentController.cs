@@ -8,8 +8,10 @@ using UnityEngine.AI;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UIElements;
 
-namespace UnityStandardAssets.Characters.FirstPerson {
-    public partial class StretchAgentController : ArmAgentController {
+namespace UnityStandardAssets.Characters.FirstPerson
+{
+    public partial class StretchAgentController : ArmAgentController
+    {
         public int gripperOpennessState = 0;
 
         //define default parameters for both main camera and secondary camera, specific to real-life stretch bot rig
@@ -36,7 +38,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         )
             : base(baseAgentComponent, agentManager) { }
 
-        public override void updateImageSynthesis(bool status) {
+        public override void updateImageSynthesis(bool status)
+        {
             base.updateImageSynthesis(status);
 
             // updateImageSynthesis is run in BaseFPSController's Initialize method after the
@@ -47,7 +50,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             agentManager.updateThirdPartyCameraImageSynthesis(status);
         }
 
-        public override ActionFinished InitializeBody(ServerAction initializeAction) {
+        public override ActionFinished InitializeBody(ServerAction initializeAction)
+        {
             VisibilityCapsule = StretchVisCap;
             m_CharacterController.center = new Vector3(0, -0.1821353f, -0.1092373f);
             m_CharacterController.radius = 0.1854628f;
@@ -75,7 +79,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 .GetComponent<Camera>();
             fp_camera_2.gameObject.SetActive(true);
             agentManager.registerAsThirdPartyCamera(fp_camera_2);
-            if (initializeAction.antiAliasing != null) {
+            if (initializeAction.antiAliasing != null)
+            {
                 agentManager.updateAntiAliasing(
                     postProcessLayer: fp_camera_2.gameObject.GetComponentInChildren<PostProcessLayer>(),
                     antiAliasing: initializeAction.antiAliasing
@@ -93,15 +98,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             fp_camera_2.fieldOfView = defaultSecondaryCameraFieldOfView;
 
             // limit camera from looking too far down/up
-            if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f)) {
+            if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f))
+            {
                 this.maxUpwardLookAngle = 25f;
-            } else {
+            }
+            else
+            {
                 this.maxUpwardLookAngle = initializeAction.maxUpwardLookAngle;
             }
 
-            if (Mathf.Approximately(initializeAction.maxDownwardLookAngle, 0.0f)) {
+            if (Mathf.Approximately(initializeAction.maxDownwardLookAngle, 0.0f))
+            {
                 this.maxDownwardLookAngle = 90f;
-            } else {
+            }
+            else
+            {
                 this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
             }
 
@@ -111,7 +122,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 out secondaryCameraParams
             );
 
-            if (setSecondaryParams.GetValueOrDefault()) {
+            if (setSecondaryParams.GetValueOrDefault())
+            {
                 CameraParameters.setCameraParameters(fp_camera_2, secondaryCameraParams);
             }
 
@@ -133,10 +145,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ActionFinished.Success;
         }
 
-        private ArmController getArmImplementation() {
+        private ArmController getArmImplementation()
+        {
             Stretch_Robot_Arm_Controller arm =
                 GetComponentInChildren<Stretch_Robot_Arm_Controller>();
-            if (arm == null) {
+            if (arm == null)
+            {
                 throw new InvalidOperationException(
                     "Agent does not have Stretch arm or is not enabled.\n"
                         + $"Make sure there is a '{typeof(Stretch_Robot_Arm_Controller).Name}' component as a child of this agent."
@@ -145,7 +159,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arm;
         }
 
-        protected override ArmController getArm() {
+        protected override ArmController getArm()
+        {
             return getArmImplementation();
         }
 
@@ -154,7 +169,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? rotation = null,
             bool worldRelative = false,
             bool forceAction = false
-        ) {
+        )
+        {
             Stretch_Robot_Arm_Controller arm =
                 getArmImplementation() as Stretch_Robot_Arm_Controller;
             GameObject posRotManip = arm.GetArmTarget();
@@ -164,31 +180,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float oldLocalRotationAngle = posRotManip.transform.localEulerAngles.y;
 
             // establish defaults in the absence of inputs
-            if (position == null) {
+            if (position == null)
+            {
                 position = new Vector3(0f, 0.1f, 0f);
             }
 
-            if (rotation == null) {
+            if (rotation == null)
+            {
                 rotation = -180f;
             }
 
             // teleport arm!
-            if (!worldRelative) {
+            if (!worldRelative)
+            {
                 posRotManip.transform.localPosition = (Vector3)position;
                 posRotManip.transform.localEulerAngles = new Vector3(0, (float)rotation % 360, 0);
-            } else {
+            }
+            else
+            {
                 posRotManip.transform.position = (Vector3)position;
                 posRotManip.transform.eulerAngles = new Vector3(0, (float)rotation % 360, 0);
             }
 
             bool success = false;
             arm.ContinuousUpdate(0f);
-            if ((!forceAction) && SArm.IsArmColliding()) {
+            if ((!forceAction) && SArm.IsArmColliding())
+            {
                 errorMessage = "collision detected at desired transform, cannot teleport";
                 posRotManip.transform.localPosition = oldLocalPosition;
                 posRotManip.transform.localEulerAngles = new Vector3(0, oldLocalRotationAngle, 0);
                 arm.ContinuousUpdate(0f);
-            } else {
+            }
+            else
+            {
                 success = true;
             }
             arm.resetPosRotManipulator();
@@ -200,7 +224,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? rotation = null,
             bool worldRelative = false,
             bool forceAction = false
-        ) {
+        )
+        {
             actionFinished(
                 teleportArm(
                     position: position,
@@ -231,8 +256,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectId,
             Vector3? position = null,
             bool returnToInitialPosition = false
-        ) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+        )
+        {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId))
+            {
                 errorMessage = $"Cannot find object with id {objectId}.";
                 return new ActionFinished() { success = false, toEmitState = true };
             }
@@ -249,7 +276,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 oldArmLocalEulerAngles = armTarget.transform.localEulerAngles;
             int oldGripperOpenState = gripperOpennessState;
 
-            if (position.HasValue) {
+            if (position.HasValue)
+            {
                 transform.position = position.Value;
                 Physics.SyncTransforms();
             }
@@ -277,7 +305,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool success = false;
             Vector3 pointOnObject = Vector3.zero;
 
-            foreach (Vector3 point in closePoints) {
+            foreach (Vector3 point in closePoints)
+            {
 #if UNITY_EDITOR
                 Debug.DrawLine(point, point + transform.up * 0.3f, Color.red, 20f);
 #endif
@@ -323,7 +352,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         rotation: armTarget.transform.eulerAngles.y,
                         worldRelative: true
                     )
-                ) {
+                )
+                {
 # if UNITY_EDITOR
                     Debug.Log("Agent arm is colliding after teleporting arm");
 # endif
@@ -331,7 +361,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 Physics.SyncTransforms();
-                if (isAgentCapsuleColliding(null)) {
+                if (isAgentCapsuleColliding(null))
+                {
 # if UNITY_EDITOR
                     Debug.Log("Agent capsule is colliding after teleporting arm");
 # endif
@@ -339,14 +370,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 bool touchingObject = false;
-                foreach (SimObjPhysics sop in arm.WhatObjectsAreInsideMagnetSphereAsSOP(false)) {
-                    if (sop.ObjectID == objectId) {
+                foreach (SimObjPhysics sop in arm.WhatObjectsAreInsideMagnetSphereAsSOP(false))
+                {
+                    if (sop.ObjectID == objectId)
+                    {
                         touchingObject = true;
                         break;
                     }
                 }
 
-                if (!touchingObject) {
+                if (!touchingObject)
+                {
 # if UNITY_EDITOR
                     Debug.Log("Agent is not touching object after teleporting arm");
 # endif
@@ -362,7 +396,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             Dictionary<string, Vector3> actionReturn = null;
-            if (success) {
+            if (success)
+            {
                 actionReturn = new Dictionary<string, Vector3>()
                 {
                     { "position", transform.position },
@@ -373,7 +408,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 };
             }
 
-            if (returnToInitialPosition) {
+            if (returnToInitialPosition)
+            {
                 teleportArm(
                     position: oldArmLocalPosition,
                     rotation: oldArmLocalEulerAngles.y,
@@ -386,7 +422,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Physics.SyncTransforms();
             }
 
-            return new ActionFinished() {
+            return new ActionFinished()
+            {
                 success = success,
                 actionReturn = actionReturn,
                 toEmitState = returnToInitialPosition
@@ -416,12 +453,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3[] positions = null,
             float maxDistance = 1f,
             int maxPoses = int.MaxValue // works like infinity
-        ) {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+        )
+        {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId))
+            {
                 errorMessage = $"Cannot find object with id {objectId}.";
                 return new ActionFinished() { success = false, toEmitState = true };
             }
-            if (maxPoses <= 0) {
+            if (maxPoses <= 0)
+            {
                 throw new ArgumentOutOfRangeException("maxPoses must be > 0.");
             }
 
@@ -430,7 +470,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 bboxSize = sop.AxisAlignedBoundingBox.size;
             float fudgeFactor = Mathf.Sqrt(bboxSize.x * bboxSize.x + bboxSize.z * bboxSize.z) / 2f;
 
-            if (positions == null) {
+            if (positions == null)
+            {
                 positions = getReachablePositions();
             }
 
@@ -444,14 +485,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 .ToList();
 
             List<object> poses = new List<object>();
-            foreach (Vector3 position in filteredPositions) {
+            foreach (Vector3 position in filteredPositions)
+            {
                 ActionFinished af = TryReachObject(
                     objectId: objectId,
                     position: position,
                     returnToInitialPosition: true
                 );
 
-                if (af.success) {
+                if (af.success)
+                {
                     poses.Add(af.actionReturn);
 # if UNITY_EDITOR
                     Debug.DrawLine(
@@ -463,7 +506,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 # endif
                 }
 
-                if (poses.Count >= maxPoses) {
+                if (poses.Count >= maxPoses)
+                {
                     break;
                 }
             }
@@ -481,9 +525,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float roll = 0f,
             float speed = 10f,
             bool returnToStart = true
-        ) {
+        )
+        {
             // pitch and roll are not supported for the stretch and so we throw an error
-            if (pitch != 0f || roll != 0f) {
+            if (pitch != 0f || roll != 0f)
+            {
                 throw new System.NotImplementedException(
                     "Pitch and roll are not supported for the stretch agent."
                 );
@@ -509,9 +555,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float roll = 0f,
             float speed = 10f,
             bool returnToStart = true
-        ) {
+        )
+        {
             // pitch and roll are not supported for the stretch and so we throw an error
-            if (pitch != 0f || roll != 0f) {
+            if (pitch != 0f || roll != 0f)
+            {
                 throw new System.NotImplementedException(
                     "Pitch and roll are not supported for the stretch agent."
                 );
@@ -524,14 +572,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Normalize target yaw to be bounded by [0, 360) (startingRotation is defaults to this)
             yaw %= 360;
-            if (yaw < 0) {
+            if (yaw < 0)
+            {
                 yaw += 360;
             }
 
             // Find shortest relativeRotation to feed into rotateWrist
             yaw -= startingRotation;
 
-            if (Mathf.Abs(yaw) > 180) {
+            if (Mathf.Abs(yaw) > 180)
+            {
                 yaw = (Mathf.Abs(yaw) - 360) * Mathf.Sign(yaw);
             }
 
@@ -545,45 +595,66 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        protected int gripperOpenFloatToState(float openness) {
-            if (-100 <= openness && openness < 0) {
+        protected int gripperOpenFloatToState(float openness)
+        {
+            if (-100 <= openness && openness < 0)
+            {
                 return 0;
-            } else if (0 <= openness && openness < 5) {
+            }
+            else if (0 <= openness && openness < 5)
+            {
                 return 1;
-            } else if (5 <= openness && openness < 15) {
+            }
+            else if (5 <= openness && openness < 15)
+            {
                 return 2;
-            } else if (15 <= openness && openness < 25) {
+            }
+            else if (15 <= openness && openness < 25)
+            {
                 return 3;
-            } else if (25 <= openness && openness < 35) {
+            }
+            else if (25 <= openness && openness < 35)
+            {
                 return 4;
-            } else if (35 <= openness && openness < 45) {
+            }
+            else if (35 <= openness && openness < 45)
+            {
                 return 5;
-            } else if (45 <= openness && openness <= 50) {
+            }
+            else if (45 <= openness && openness <= 50)
+            {
                 return 6;
-            } else {
+            }
+            else
+            {
                 throw new InvalidOperationException(
                     $"Invalid value for `openness`: '{openness}'. Value should be between -100 and 50"
                 );
             }
         }
 
-        public ActionFinished SetGripperOpenness(float? openness, int? openState = null) {
+        public ActionFinished SetGripperOpenness(float? openness, int? openState = null)
+        {
             setGripperOpenness(openness: openness, openState: openState);
             return ActionFinished.Success;
         }
 
         //moving this to a helper function so we can call it without sending back an ActionFinished call
-        public void setGripperOpenness(float? openness, int? openState = null) {
-            if (openness.HasValue == openState.HasValue) {
+        public void setGripperOpenness(float? openness, int? openState = null)
+        {
+            if (openness.HasValue == openState.HasValue)
+            {
                 throw new InvalidOperationException(
                     $"Only one of openness or openState should have a value"
                 );
             }
-            if (openness.HasValue) {
+            if (openness.HasValue)
+            {
                 openState = gripperOpenFloatToState(openness.Value);
             }
 
-            foreach (GameObject opennessState in GripperOpennessStates) {
+            foreach (GameObject opennessState in GripperOpennessStates)
+            {
                 opennessState.SetActive(false);
             }
 
@@ -613,14 +684,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //            actionFinished(true);
         //        }
 
-        public void RotateCameraMount(float degrees, bool secondary = false) {
+        public void RotateCameraMount(float degrees, bool secondary = false)
+        {
             var minDegree = -80.00001f;
             var maxDegree = 80.00001f;
-            if (degrees >= minDegree && degrees <= maxDegree) {
+            if (degrees >= minDegree && degrees <= maxDegree)
+            {
                 Camera cam;
-                if (secondary) {
+                if (secondary)
+                {
                     cam = agentManager.thirdPartyCameras[0];
-                } else {
+                }
+                else
+                {
                     cam = m_Camera;
                 }
                 AgentManager.OptionalVector3 localEulerAngles = new AgentManager.OptionalVector3(
@@ -630,29 +706,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
 
                 int agentId = -1;
-                for (int i = 0; i < agentManager.agents.Count; i++) {
-                    if (agentManager.agents[i] == this) {
+                for (int i = 0; i < agentManager.agents.Count; i++)
+                {
+                    if (agentManager.agents[i] == this)
+                    {
                         agentId = i;
                         break;
                     }
                 }
-                if (agentId != 0) {
+                if (agentId != 0)
+                {
                     errorMessage = "Only the primary agent can rotate the camera for now.";
                     actionFinished(false);
                     return;
                 }
 
-                if (secondary) {
+                if (secondary)
+                {
                     agentManager.UpdateThirdPartyCamera(
                         thirdPartyCameraId: 0,
                         rotation: localEulerAngles,
                         agentPositionRelativeCoordinates: true,
                         agentId: agentId
                     );
-                } else {
+                }
+                else
+                {
                     agentManager.UpdateMainCamera(rotation: localEulerAngles);
                 }
-            } else {
+            }
+            else
+            {
                 errorMessage =
                     $"Invalid value for `degrees`: '{degrees}'. Value should be between '{minDegree}' and '{maxDegree}'.";
                 actionFinished(false);

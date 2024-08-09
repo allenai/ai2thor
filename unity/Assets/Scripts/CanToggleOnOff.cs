@@ -4,7 +4,8 @@ using UnityEngine;
 
 // serialized class so it can show up in Inspector Window
 [System.Serializable]
-public class SwapObjList {
+public class SwapObjList
+{
     // reference to game object that needs to have materials changed
     [Header("Object That Needs Mat Swaps")]
     [SerializeField]
@@ -21,7 +22,8 @@ public class SwapObjList {
     public Material[] OffMaterials;
 }
 
-public class CanToggleOnOff : MonoBehaviour {
+public class CanToggleOnOff : MonoBehaviour
+{
     // the array of moving parts and lightsources will correspond with each other based on their
     // position in the array
 
@@ -64,7 +66,8 @@ public class CanToggleOnOff : MonoBehaviour {
 
     private bool isCurrentlyLerping = false;
 
-    protected enum MovementType {
+    protected enum MovementType
+    {
         Slide,
         Rotate
     };
@@ -92,43 +95,51 @@ public class CanToggleOnOff : MonoBehaviour {
     // another sim object, the stove knob.
     // stove knob: returns toggleable, returns istoggled
     // stove burner: only returns istoggled
-    public bool ReturnSelfControlled() {
+    public bool ReturnSelfControlled()
+    {
         return SelfControlled;
     }
 
     // returns references to all sim objects this object toggles the on/off state of. For example all stove knobs can
     // return which burner they control with this
-    public SimObjPhysics[] ReturnControlledSimObjects() {
+    public SimObjPhysics[] ReturnControlledSimObjects()
+    {
         return ControlledSimObjects;
     }
 
-    public List<SimObjType> ReturnMustBeClosedToTurnOn() {
+    public List<SimObjType> ReturnMustBeClosedToTurnOn()
+    {
         return MustBeClosedToTurnOn;
     }
 
-    public bool isTurnedOnOrOff() {
+    public bool isTurnedOnOrOff()
+    {
         return isOn;
     }
     // Helper functions for setting up scenes, only for use in Editor
 #if UNITY_EDITOR
-    public void SetMovementToSlide() {
+    public void SetMovementToSlide()
+    {
         movementType = MovementType.Slide;
     }
 
-    public void SetMovementToRotate() {
+    public void SetMovementToRotate()
+    {
         movementType = MovementType.Rotate;
     }
 #endif
 
     // Use this for initialization
-    void Start() {
+    void Start()
+    {
         //setLightSourcesNames();
 
 #if UNITY_EDITOR
         if (
             !this.GetComponent<SimObjPhysics>()
                 .DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff)
-        ) {
+        )
+        {
             Debug.LogError(
                 this.name + "is missing the CanToggleOnOff Secondary Property! Please set it!"
             );
@@ -147,28 +158,36 @@ public class CanToggleOnOff : MonoBehaviour {
     // }
 
     // Update is called once per frame
-    void Update() {
+    void Update()
+    {
         // // test if it can open without Agent Command - Debug Purposes
 #if UNITY_EDITOR
-        if (Input.GetKeyDown(KeyCode.Minus)) {
+        if (Input.GetKeyDown(KeyCode.Minus))
+        {
             Toggle();
         }
 #endif
     }
 
-    public void Toggle() {
+    public void Toggle()
+    {
         // if this object is controlled by another object, do nothing and report failure?
-        if (!SelfControlled) {
+        if (!SelfControlled)
+        {
             return;
         }
 
         isCurrentlyLerping = true;
         // check if there are moving parts
         // check if there are lights/materials etc to swap out
-        if (!isOn) {
-            if (MovingParts.Length > 0) {
-                for (int i = 0; i < MovingParts.Length; i++) {
-                    if (movementType == MovementType.Slide) {
+        if (!isOn)
+        {
+            if (MovingParts.Length > 0)
+            {
+                for (int i = 0; i < MovingParts.Length; i++)
+                {
+                    if (movementType == MovementType.Slide)
+                    {
                         StartCoroutine(
                             LerpPosition(
                                 movingParts: MovingParts,
@@ -179,7 +198,9 @@ public class CanToggleOnOff : MonoBehaviour {
                                 animationTime: animationTime
                             )
                         );
-                    } else if (movementType == MovementType.Rotate) {
+                    }
+                    else if (movementType == MovementType.Rotate)
+                    {
                         StartCoroutine(
                             LerpRotation(
                                 movingParts: MovingParts,
@@ -195,10 +216,15 @@ public class CanToggleOnOff : MonoBehaviour {
             }
 
             setisOn();
-        } else {
-            if (MovingParts.Length > 0) {
-                for (int i = 0; i < MovingParts.Length; i++) {
-                    if (movementType == MovementType.Slide) {
+        }
+        else
+        {
+            if (MovingParts.Length > 0)
+            {
+                for (int i = 0; i < MovingParts.Length; i++)
+                {
+                    if (movementType == MovementType.Slide)
+                    {
                         StartCoroutine(
                             LerpPosition(
                                 movingParts: MovingParts,
@@ -209,7 +235,9 @@ public class CanToggleOnOff : MonoBehaviour {
                                 animationTime: animationTime
                             )
                         );
-                    } else if (movementType == MovementType.Rotate) {
+                    }
+                    else if (movementType == MovementType.Rotate)
+                    {
                         StartCoroutine(
                             LerpRotation(
                                 movingParts: MovingParts,
@@ -230,31 +258,41 @@ public class CanToggleOnOff : MonoBehaviour {
     }
 
     // toggle isOn variable, swap Materials and enable/disable Light sources
-    private void setisOn() {
+    private void setisOn()
+    {
         // if isOn true, set it to false and also turn off all lights/deactivate materials
-        if (isOn) {
-            if (LightSources.Length > 0) {
-                for (int i = 0; i < LightSources.Length; i++) {
+        if (isOn)
+        {
+            if (LightSources.Length > 0)
+            {
+                for (int i = 0; i < LightSources.Length; i++)
+                {
                     LightSources[i].transform.gameObject.SetActive(false);
                 }
             }
 
-            if (effects.Length > 0) {
-                for (int i = 0; i < effects.Length; i++) {
+            if (effects.Length > 0)
+            {
+                for (int i = 0; i < effects.Length; i++)
+                {
                     effects[i].SetActive(false);
                 }
             }
 
-            if (MaterialSwapObjects.Length > 0) {
-                for (int i = 0; i < MaterialSwapObjects.Length; i++) {
+            if (MaterialSwapObjects.Length > 0)
+            {
+                for (int i = 0; i < MaterialSwapObjects.Length; i++)
+                {
                     MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
                         MaterialSwapObjects[i].OffMaterials;
                 }
             }
 
             // also set any objects this object controlls to the off state
-            if (ControlledSimObjects.Length > 0) {
-                foreach (SimObjPhysics sop in ControlledSimObjects) {
+            if (ControlledSimObjects.Length > 0)
+            {
+                foreach (SimObjPhysics sop in ControlledSimObjects)
+                {
                     sop.GetComponent<CanToggleOnOff>().isOn = false;
                 }
             }
@@ -262,29 +300,38 @@ public class CanToggleOnOff : MonoBehaviour {
             isOn = false;
         }
         // if isOn false, set to true and then turn ON all lights and activate material swaps
-        else {
-            if (LightSources.Length > 0) {
-                for (int i = 0; i < LightSources.Length; i++) {
+        else
+        {
+            if (LightSources.Length > 0)
+            {
+                for (int i = 0; i < LightSources.Length; i++)
+                {
                     LightSources[i].transform.gameObject.SetActive(true);
                 }
             }
 
-            if (effects.Length > 0) {
-                for (int i = 0; i < effects.Length; i++) {
+            if (effects.Length > 0)
+            {
+                for (int i = 0; i < effects.Length; i++)
+                {
                     effects[i].SetActive(true);
                 }
             }
 
-            if (MaterialSwapObjects.Length > 0) {
-                for (int i = 0; i < MaterialSwapObjects.Length; i++) {
+            if (MaterialSwapObjects.Length > 0)
+            {
+                for (int i = 0; i < MaterialSwapObjects.Length; i++)
+                {
                     MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
                         MaterialSwapObjects[i].OnMaterials;
                 }
             }
 
             // also set any objects this object controlls to the on state
-            if (ControlledSimObjects.Length > 0) {
-                foreach (SimObjPhysics sop in ControlledSimObjects) {
+            if (ControlledSimObjects.Length > 0)
+            {
+                foreach (SimObjPhysics sop in ControlledSimObjects)
+                {
                     sop.GetComponent<CanToggleOnOff>().isOn = true;
                 }
             }
@@ -300,9 +347,11 @@ public class CanToggleOnOff : MonoBehaviour {
         float initialOpenness,
         float desiredOpenness,
         float animationTime
-    ) {
+    )
+    {
         float elapsedTime = 0f;
-        while (elapsedTime < animationTime) {
+        while (elapsedTime < animationTime)
+        {
             elapsedTime += Time.fixedDeltaTime;
             float currentOpenness = Mathf.Clamp(
                 initialOpenness
@@ -310,7 +359,8 @@ public class CanToggleOnOff : MonoBehaviour {
                 Mathf.Min(initialOpenness, desiredOpenness),
                 Mathf.Max(initialOpenness, desiredOpenness)
             );
-            for (int i = 0; i < movingParts.Length; i++) {
+            for (int i = 0; i < movingParts.Length; i++)
+            {
                 movingParts[i].transform.localPosition = Vector3.Lerp(
                     offLocalPositions[i],
                     onLocalPositions[i],
@@ -328,9 +378,11 @@ public class CanToggleOnOff : MonoBehaviour {
         float initialOpenness,
         float desiredOpenness,
         float animationTime
-    ) {
+    )
+    {
         float elapsedTime = 0f;
-        while (elapsedTime < animationTime) {
+        while (elapsedTime < animationTime)
+        {
             elapsedTime += Time.fixedDeltaTime;
             float currentOpenness = Mathf.Clamp(
                 initialOpenness
@@ -338,7 +390,8 @@ public class CanToggleOnOff : MonoBehaviour {
                 Mathf.Min(initialOpenness, desiredOpenness),
                 Mathf.Max(initialOpenness, desiredOpenness)
             );
-            for (int i = 0; i < MovingParts.Length; i++) {
+            for (int i = 0; i < MovingParts.Length; i++)
+            {
                 MovingParts[i].transform.localRotation = Quaternion.Lerp(
                     Quaternion.Euler(offLocalRotations[i]),
                     Quaternion.Euler(onLocalRotations[i]),
@@ -349,10 +402,14 @@ public class CanToggleOnOff : MonoBehaviour {
         yield break;
     }
 
-    public bool GetIsCurrentlyLerping() {
-        if (this.isCurrentlyLerping) {
+    public bool GetIsCurrentlyLerping()
+    {
+        if (this.isCurrentlyLerping)
+        {
             return true;
-        } else {
+        }
+        else
+        {
             return false;
         }
     }
