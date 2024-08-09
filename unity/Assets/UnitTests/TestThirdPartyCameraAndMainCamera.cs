@@ -192,6 +192,49 @@ namespace Tests
         }
 
         [UnityTest]
+        public IEnumerator TestGetVisibleObjects()
+        {
+            Dictionary<string, object> action = new Dictionary<string, object>();
+
+            action["action"] = "Initialize";
+            action["fieldOfView"] = 90f;
+            action["snapToGrid"] = true;
+            yield return step(action);
+
+            action.Clear();
+
+            action["action"] = "AddThirdPartyCamera";
+            action["position"] = new Vector3(-0.67f, 1.315f, 0.46f);
+            action["rotation"] = new Vector3(0, 180, 0);
+            action["orthographic"] = true;
+            action["orthographicSize"] = 5;
+            action["parent"] = "world";
+            action["agentPositionRelativeCoordinates"] = false;
+            yield return step(action);
+
+            action.Clear();
+
+            action["action"] = "GetVisibleObjects";
+            action["thirdPartyCameraIndex"] = 0;
+            action["visibilityScheme"] = "Distance";
+            yield return step(action);
+
+            //Debug.Log($"action return: {actionReturn}");
+            List<string> visibleObjects = (List<string>) actionReturn;
+            
+            //check for expected object at first few elements
+            //also check for total count of visible objects to be the expected amount
+            foreach(string obj in visibleObjects)
+            {
+                Debug.Log(obj);
+            }
+
+            //test with objectId filter now
+
+
+        }
+
+        [UnityTest]
         public IEnumerator TestUpdateMainCamera()
         {
             Dictionary<string, object> action = new Dictionary<string, object>();
