@@ -678,7 +678,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 );
                             }
 #if UNITY_EDITOR
-                            Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+                            // Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
 #endif
                         }
                     }
@@ -6333,6 +6333,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string objectType,
             string objectId,
             Vector3 startPosition,
+            IEnumerable<Quaternion> startRotations,
+            float allowedError,
+            IEnumerable<int> navMeshIds = null,
+            bool sampleFromNavmesh = true
+        ) {
+            SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
+            var path = GetSimObjectNavMeshTargets(
+                sop,
+                startPosition,
+                startRotations,
+                allowedError,
+                navMeshIds: navMeshIds,
+                sampleFromNavmesh: sampleFromNavmesh
+            );
+            // VisualizePath(startPosition, path);
+            actionFinishedEmit(success: true, actionReturn: path);
+        }
+
+        private void getShortestPath(
+            string objectType,
+            string objectId,
+            Vector3 startPosition,
             Quaternion startRotation,
             float allowedError,
             IEnumerable<int> navMeshIds = null,
@@ -6365,6 +6387,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objectId: objectId,
                 startPosition: position,
                 startRotation: Quaternion.Euler(rotation),
+                allowedError: allowedError,
+                navMeshIds: navMeshIds,
+                sampleFromNavmesh: sampleFromNavmesh
+            );
+        }
+
+        public void GetShortestPath(
+            Vector3 position,
+            List<Vector3> rotations,
+            string objectType = null,
+            string objectId = null,
+            float allowedError = DefaultAllowedErrorInShortestPath,
+            IEnumerable<int> navMeshIds = null,
+            bool sampleFromNavmesh = true
+        ) {
+            getShortestPath(
+                objectType: objectType,
+                objectId: objectId,
+                startPosition: position,
+                startRotations: rotations.Select(r => Quaternion.Euler(r)),
                 allowedError: allowedError,
                 navMeshIds: navMeshIds,
                 sampleFromNavmesh: sampleFromNavmesh
@@ -6405,7 +6447,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objectType,
                 objectId,
                 position,
-                Quaternion.Euler(Vector3.zero),
+                Quaternion.identity,
                 allowedError,
                 navMeshIds,
                 sampleFromNavmesh: sampleFromNavmesh
@@ -6754,21 +6796,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 "Procedural3",
                 "Procedural0"
             );
+
+            var rotations = new List<float> { 0.0f, 90.0f, 180.0f, 270f }; //, 180.0f, 360f};
             int stepsTaken = 0;
             pos = Vector3.negativeInfinity;
             while (pointsQueue.Count != 0) {
                 stepsTaken += 1;
                 Vector3 p = pointsQueue.Dequeue();
+
                 if (!goodPoints.Contains(p)) {
+                    var preRotation = transform.rotation;
+                    // foreach (var rotation in rotations) {
                     goodPoints.Add(p);
                     transform.position = p;
                     var rot = transform.rotation;
+                    // transform.rotation = Quaternion.Euler(new Vector3(0.0f, rotation, 0.0f));
                     // make sure to rotate just the Camera, not the whole agent
                     m_Camera.transform.LookAt(targetSOP.transform, transform.up);
 
                     bool isVisible = IsInteractable(targetSOP);
 
-                    transform.rotation = rot;
+                    // transform.rotation = rot;
 
                     if (isVisible) {
                         pos = p;
@@ -6834,13 +6882,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (shouldEnqueue) {
                             pointsQueue.Enqueue(newPosition);
 #if UNITY_EDITOR
-                            Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+                            Debug.DrawLine(p, newPosition, Color.green, 100000f);
 #endif
 #if UNITY_EDITOR
-                            Debug.DrawLine(p, newPosition, Color.cyan, 10f);
+                            // Debug.DrawLine(p, newPosition, Color.cyan, 10f);
 #endif
                         }
                     }
+                    // }
+                    // transform.rotation = preRotation;
                 }
                 if (stepsTaken > Math.Floor(maxStepCount / (gridSize * gridSize))) {
                     throw new InvalidOperationException(
@@ -6855,6 +6905,43 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Debug.Log($"number of reachable positions found: {reachablePos.Length}");
 #endif
             return false;
+        }
+
+        private UnityEngine.AI.NavMeshPath GetSimObjectNavMeshTargets(
+            SimObjPhysics targetSOP,
+            Vector3 initialPosition,
+            IEnumerable<Quaternion> initialRotations,
+            float allowedError,
+            bool visualize = false,
+            IEnumerable<int> navMeshIds = null,
+            bool sampleFromNavmesh = true
+        ) {
+            var path = new UnityEngine.AI.NavMeshPath();
+            InvalidOperationException lastException = null;
+            foreach (var rotation in initialRotations) {
+                lastException = null;
+                try {
+                    path = GetSimObjectNavMeshTarget(
+                        targetSOP: targetSOP,
+                        initialPosition: initialPosition,
+                        initialRotation: rotation,
+                        allowedError: allowedError,
+                        visualize: visualize,
+                        navMeshIds: navMeshIds,
+                        sampleFromNavmesh: sampleFromNavmesh
+                    );
+                } catch (InvalidOperationException e) {
+                    lastException = e;
+                }
+
+                if (path.status == NavMeshPathStatus.PathComplete) {
+                    return path;
+                }
+            }
+            if (lastException != null) {
+                throw lastException;
+            }
+            return path;
         }
 
         private UnityEngine.AI.NavMeshPath GetSimObjectNavMeshTarget(
