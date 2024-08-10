@@ -3602,7 +3602,6 @@ def test_lazy_class_segmentation(event_with_segmentation):
 
 @pytest.mark.parametrize("event_with_segmentation", segmentation_events)
 def test_lazy_class_segmentation_missing(event_with_segmentation):
-
     with pytest.raises(KeyError):
         event_with_segmentation.class_masks["Stove"]
 

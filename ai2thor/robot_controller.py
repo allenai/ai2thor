@@ -83,7 +83,6 @@ class Controller(object):
         return self.last_event
 
     def step(self, action=None, **action_args):
-
         if type(action) is dict:
             action = copy.deepcopy(action)  # prevent changes from leaking
         else:

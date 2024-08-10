@@ -27,7 +27,6 @@ class VideoController(Controller):
         cam_fov=60,
         **controller_kwargs,
     ):
-
         self.saved_frames = []
         self.ceiling_off = False
         self.initial_cam_rot = cam_rot.copy()
