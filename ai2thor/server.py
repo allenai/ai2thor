@@ -28,10 +28,12 @@ class NumpyAwareEncoder(json.JSONEncoder):
 
 
 class LazyMask(Mapping):
+
     def __contains__(self, key: object) -> bool:
         return self.mask(cast(str, key)) is not None
 
     def __getitem__(self, key: str):
+
         m = self.mask(key)
 
         if m is None:
@@ -57,6 +59,7 @@ class LazyMask(Mapping):
 
 
 class LazyInstanceSegmentationMasks(LazyMask):
+
     def __init__(self, image_ids_data: bytes, metadata: dict):
         self._masks: Dict[str, np.ndarray] = {}
         self._loaded = False
@@ -210,6 +213,7 @@ class LazyClassSegmentationMasks(LazyMask):
 
 class LazyDetections2D(Mapping):
     def __init__(self, instance_masks: LazyInstanceSegmentationMasks):
+
         self.instance_masks = instance_masks
 
     def mask_bounding_box(self, mask: np.ndarray) -> Optional[Tuple[int, int, int, int]]:
@@ -235,6 +239,7 @@ class LazyDetections2D(Mapping):
 
 
 class LazyInstanceDetections2D(LazyDetections2D):
+
     def __init__(self, instance_masks: LazyInstanceSegmentationMasks):
         super().__init__(instance_masks)
         self._detections2d: Dict[str, Optional[Tuple[int, int, int, int]]] = {}
@@ -277,7 +282,9 @@ class LazyInstanceDetections2D(LazyDetections2D):
 
 
 class LazyClassDetections2D(LazyDetections2D):
+
     def __init__(self, instance_masks: LazyInstanceSegmentationMasks):
+
         super().__init__(instance_masks)
         self._loaded = False
         self._detections2d: Dict[str, Optional[Tuple[Tuple[int, int, int, int], ...]]] = {}
@@ -526,6 +533,7 @@ class Event:
         return [obj for obj in self.metadata["objects"] if obj["objectType"] == object_type]
 
     def process_colors_ids(self, image_ids_data):
+
         self.instance_masks = LazyInstanceSegmentationMasks(image_ids_data, self.metadata)
         self.class_masks = LazyClassSegmentationMasks(self.instance_masks)
         self.class_detections2D = LazyClassDetections2D(self.instance_masks)

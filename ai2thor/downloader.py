@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def download(url, sha256_digest, include_private_scenes=False):
+
     auth = None
     if include_private_scenes:
         auth = ai2thor.build.boto_auth()

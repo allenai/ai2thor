@@ -2,13 +2,10 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class CollisionEventResolver : MonoBehaviour
-{
-    protected void Start()
-    {
+public abstract class CollisionEventResolver : MonoBehaviour {
+    protected void Start() {
         var listener = this.transform.GetComponentInParent<CollisionListener>();
-        if (listener != null)
-        {
+        if (listener != null) {
             listener.setCollisionEventResolver(this);
         }
     }
@@ -20,28 +17,21 @@ public abstract class CollisionEventResolver : MonoBehaviour
 }
 
 // Class to track what was hit while arm was moving
-public class StaticCollision
-{
+public class StaticCollision {
     public GameObject gameObject;
 
     public SimObjPhysics simObjPhysics;
 
     // indicates if gameObject a simObject
-    public bool isSimObj
-    {
+    public bool isSimObj {
         get { return simObjPhysics != null; }
     }
 
-    public string name
-    {
-        get
-        {
-            if (this.isSimObj)
-            {
+    public string name {
+        get {
+            if (this.isSimObj) {
                 return this.simObjPhysics.name;
-            }
-            else
-            {
+            } else {
                 return this.gameObject.name;
             }
         }

@@ -14,14 +14,12 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 
-public static class UtilityFunctions
-{
+public static class UtilityFunctions {
     //store the max number of layers unity supports in its layer system. By default this is 32
     //and will likely not change but here it is just in case
     public const int maxUnityLayerCount = 32;
 
-    public static Bounds CreateEmptyBounds()
-    {
+    public static Bounds CreateEmptyBounds() {
         Bounds b = new Bounds();
         Vector3 inf = new Vector3(
             float.PositiveInfinity,
@@ -32,24 +30,20 @@ public static class UtilityFunctions
         return b;
     }
 
-    private static IEnumerable<int[]> Combinations(int m, int n)
-    {
+    private static IEnumerable<int[]> Combinations(int m, int n) {
         // Enumerate all possible m-size combinations of [0, 1, ..., n-1] array
         // in lexicographic order (first [0, 1, 2, ..., m-1]).
         // Taken from https://codereview.stackexchange.com/questions/194967/get-all-combinations-of-selecting-k-elements-from-an-n-sized-array
         int[] result = new int[m];
         Stack<int> stack = new Stack<int>(m);
         stack.Push(0);
-        while (stack.Count > 0)
-        {
+        while (stack.Count > 0) {
             int index = stack.Count - 1;
             int value = stack.Pop();
-            while (value < n)
-            {
+            while (value < n) {
                 result[index++] = value++;
                 stack.Push(value);
-                if (index != m)
-                {
+                if (index != m) {
                     continue;
                 }
 
@@ -60,24 +54,19 @@ public static class UtilityFunctions
         }
     }
 
-    public static IEnumerable<T[]> Combinations<T>(T[] array, int m)
-    {
+    public static IEnumerable<T[]> Combinations<T>(T[] array, int m) {
         // Taken from https://codereview.stackexchange.com/questions/194967/get-all-combinations-of-selecting-k-elements-from-an-n-sized-array
-        if (array.Length < m)
-        {
+        if (array.Length < m) {
             throw new ArgumentException(
                 "Array length can't be less than number of selected elements"
             );
         }
-        if (m < 1)
-        {
+        if (m < 1) {
             throw new ArgumentException("Number of selected elements can't be less than 1");
         }
         T[] result = new T[m];
-        foreach (int[] j in Combinations(m, array.Length))
-        {
-            for (int i = 0; i < m; i++)
-            {
+        foreach (int[] j in Combinations(m, array.Length)) {
+            for (int i = 0; i < m; i++) {
                 result[i] = array[j[i]];
             }
             yield return result;
@@ -89,8 +78,7 @@ public static class UtilityFunctions
         List<GameObject> ignoreGameObjects = null,
         float expandBy = 0.0f,
         bool useBoundingBoxInChecks = false
-    )
-    {
+    ) {
         return null
             != firstColliderObjectCollidingWith(
                 go: go,
@@ -105,18 +93,14 @@ public static class UtilityFunctions
         List<GameObject> ignoreGameObjects = null,
         float expandBy = 0.0f,
         bool useBoundingBoxInChecks = false
-    )
-    {
-        if (ignoreGameObjects == null)
-        {
+    ) {
+        if (ignoreGameObjects == null) {
             ignoreGameObjects = new List<GameObject>();
         }
         ignoreGameObjects.Add(go);
         HashSet<Collider> ignoreColliders = new HashSet<Collider>();
-        foreach (GameObject toIgnoreGo in ignoreGameObjects)
-        {
-            foreach (Collider c in toIgnoreGo.GetComponentsInChildren<Collider>())
-            {
+        foreach (GameObject toIgnoreGo in ignoreGameObjects) {
+            foreach (Collider c in toIgnoreGo.GetComponentsInChildren<Collider>()) {
                 ignoreColliders.Add(c);
             }
         }
@@ -129,10 +113,8 @@ public static class UtilityFunctions
             "Procedural3",
             "Procedural0"
         );
-        foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>())
-        {
-            if (cc.isTrigger)
-            {
+        foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
+            if (cc.isTrigger) {
                 continue;
             }
             foreach (
@@ -142,18 +124,14 @@ public static class UtilityFunctions
                     QueryTriggerInteraction.Ignore,
                     expandBy
                 )
-            )
-            {
-                if (!ignoreColliders.Contains(c))
-                {
+            ) {
+                if (!ignoreColliders.Contains(c)) {
                     return c;
                 }
             }
         }
-        foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>())
-        {
-            if (bc.isTrigger || ("BoundingBox" == bc.gameObject.name && (!useBoundingBoxInChecks)))
-            {
+        foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>()) {
+            if (bc.isTrigger || ("BoundingBox" == bc.gameObject.name && (!useBoundingBoxInChecks))) {
                 continue;
             }
             foreach (
@@ -163,18 +141,14 @@ public static class UtilityFunctions
                     QueryTriggerInteraction.Ignore,
                     expandBy
                 )
-            )
-            {
-                if (!ignoreColliders.Contains(c))
-                {
+            ) {
+                if (!ignoreColliders.Contains(c)) {
                     return c;
                 }
             }
         }
-        foreach (SphereCollider sc in go.GetComponentsInChildren<SphereCollider>())
-        {
-            if (sc.isTrigger)
-            {
+        foreach (SphereCollider sc in go.GetComponentsInChildren<SphereCollider>()) {
+            if (sc.isTrigger) {
                 continue;
             }
             foreach (
@@ -184,10 +158,8 @@ public static class UtilityFunctions
                     QueryTriggerInteraction.Ignore,
                     expandBy
                 )
-            )
-            {
-                if (!ignoreColliders.Contains(c))
-                {
+            ) {
+                if (!ignoreColliders.Contains(c)) {
                     return c;
                 }
             }
@@ -200,26 +172,21 @@ public static class UtilityFunctions
         List<GameObject> ignoreGameObjects = null,
         float expandBy = 0.0f,
         bool useBoundingBoxInChecks = false
-    )
-    {
-        if (ignoreGameObjects == null)
-        {
+    ) {
+        if (ignoreGameObjects == null) {
             ignoreGameObjects = new List<GameObject>();
         }
         ignoreGameObjects.Add(go);
         HashSet<Collider> ignoreColliders = new HashSet<Collider>();
-        foreach (GameObject toIgnoreGo in ignoreGameObjects)
-        {
-            foreach (Collider c in toIgnoreGo.GetComponentsInChildren<Collider>())
-            {
+        foreach (GameObject toIgnoreGo in ignoreGameObjects) {
+            foreach (Collider c in toIgnoreGo.GetComponentsInChildren<Collider>()) {
                 ignoreColliders.Add(c);
             }
         }
 
         HashSet<Collider> collidersSet = new HashSet<Collider>();
         int layerMask = LayerMask.GetMask("SimObjVisible", "Agent");
-        foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>())
-        {
+        foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
             foreach (
                 Collider c in PhysicsExtensions.OverlapCapsule(
                     cc,
@@ -227,18 +194,14 @@ public static class UtilityFunctions
                     QueryTriggerInteraction.Ignore,
                     expandBy
                 )
-            )
-            {
-                if (!ignoreColliders.Contains(c))
-                {
+            ) {
+                if (!ignoreColliders.Contains(c)) {
                     collidersSet.Add(c);
                 }
             }
         }
-        foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>())
-        {
-            if ("BoundingBox" == bc.gameObject.name && (!useBoundingBoxInChecks))
-            {
+        foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>()) {
+            if ("BoundingBox" == bc.gameObject.name && (!useBoundingBoxInChecks)) {
                 continue;
             }
             foreach (
@@ -248,16 +211,13 @@ public static class UtilityFunctions
                     QueryTriggerInteraction.Ignore,
                     expandBy
                 )
-            )
-            {
-                if (!ignoreColliders.Contains(c))
-                {
+            ) {
+                if (!ignoreColliders.Contains(c)) {
                     collidersSet.Add(c);
                 }
             }
         }
-        foreach (SphereCollider sc in go.GetComponentsInChildren<SphereCollider>())
-        {
+        foreach (SphereCollider sc in go.GetComponentsInChildren<SphereCollider>()) {
             foreach (
                 Collider c in PhysicsExtensions.OverlapSphere(
                     sc,
@@ -265,10 +225,8 @@ public static class UtilityFunctions
                     QueryTriggerInteraction.Ignore,
                     expandBy
                 )
-            )
-            {
-                if (!ignoreColliders.Contains(c))
-                {
+            ) {
+                if (!ignoreColliders.Contains(c)) {
                     collidersSet.Add(c);
                 }
             }
@@ -282,16 +240,13 @@ public static class UtilityFunctions
         float maxDistance = Mathf.Infinity,
         int layerMask = Physics.DefaultRaycastLayers,
         QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-    )
-    {
+    ) {
         HashSet<Transform> transformsToIgnore = new HashSet<Transform>();
-        foreach (Transform t in go.GetComponentsInChildren<Transform>())
-        {
+        foreach (Transform t in go.GetComponentsInChildren<Transform>()) {
             transformsToIgnore.Add(t);
         }
         List<RaycastHit> hits = new List<RaycastHit>();
-        foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>())
-        {
+        foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
             foreach (
                 RaycastHit h in PhysicsExtensions.CapsuleCastAll(
                     cc,
@@ -300,16 +255,13 @@ public static class UtilityFunctions
                     layerMask,
                     queryTriggerInteraction
                 )
-            )
-            {
-                if (!transformsToIgnore.Contains(h.transform))
-                {
+            ) {
+                if (!transformsToIgnore.Contains(h.transform)) {
                     hits.Add(h);
                 }
             }
         }
-        foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>())
-        {
+        foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>()) {
             foreach (
                 RaycastHit h in PhysicsExtensions.BoxCastAll(
                     bc,
@@ -318,16 +270,13 @@ public static class UtilityFunctions
                     layerMask,
                     queryTriggerInteraction
                 )
-            )
-            {
-                if (!transformsToIgnore.Contains(h.transform))
-                {
+            ) {
+                if (!transformsToIgnore.Contains(h.transform)) {
                     hits.Add(h);
                 }
             }
         }
-        foreach (SphereCollider sc in go.GetComponentsInChildren<SphereCollider>())
-        {
+        foreach (SphereCollider sc in go.GetComponentsInChildren<SphereCollider>()) {
             foreach (
                 RaycastHit h in PhysicsExtensions.SphereCastAll(
                     sc,
@@ -336,10 +285,8 @@ public static class UtilityFunctions
                     layerMask,
                     queryTriggerInteraction
                 )
-            )
-            {
-                if (!transformsToIgnore.Contains(h.transform))
-                {
+            ) {
+                if (!transformsToIgnore.Contains(h.transform)) {
                     hits.Add(h);
                 }
             }
@@ -350,11 +297,9 @@ public static class UtilityFunctions
     // get a copy of a specific component and apply it to another object at runtime
     // usage: var copy = myComp.GetCopyOf(someOtherComponent);
     public static T GetCopyOf<T>(this Component comp, T other)
-        where T : Component
-    {
+        where T : Component {
         Type type = comp.GetType();
-        if (type != other.GetType())
-        {
+        if (type != other.GetType()) {
             return null; // type mis-match
         }
 
@@ -365,20 +310,15 @@ public static class UtilityFunctions
             | BindingFlags.Default
             | BindingFlags.DeclaredOnly;
         PropertyInfo[] pinfos = type.GetProperties(flags);
-        foreach (var pinfo in pinfos)
-        {
-            if (pinfo.CanWrite)
-            {
-                try
-                {
+        foreach (var pinfo in pinfos) {
+            if (pinfo.CanWrite) {
+                try {
                     pinfo.SetValue(comp, pinfo.GetValue(other, null), null);
-                }
-                catch { } // In case of NotImplementedException being thrown. For some reason specifying that exception didn't seem to catch it, so I didn't catch anything specific.
+                } catch { } // In case of NotImplementedException being thrown. For some reason specifying that exception didn't seem to catch it, so I didn't catch anything specific.
             }
         }
         FieldInfo[] finfos = type.GetFields(flags);
-        foreach (var finfo in finfos)
-        {
+        foreach (var finfo in finfos) {
             finfo.SetValue(comp, finfo.GetValue(other));
         }
         return comp as T;
@@ -386,17 +326,14 @@ public static class UtilityFunctions
 
     // usage: Health myHealth = gameObject.AddComponent<Health>(enemy.health); or something like that
     public static T AddComponent<T>(this GameObject go, T toAdd)
-        where T : Component
-    {
+        where T : Component {
         return go.AddComponent<T>().GetCopyOf(toAdd) as T;
     }
 
     // Taken from https://answers.unity.com/questions/589983/using-mathfround-for-a-vector3.html
-    public static Vector3 Round(this Vector3 vector3, int decimalPlaces = 2)
-    {
+    public static Vector3 Round(this Vector3 vector3, int decimalPlaces = 2) {
         float multiplier = 1;
-        for (int i = 0; i < decimalPlaces; i++)
-        {
+        for (int i = 0; i < decimalPlaces; i++) {
             multiplier *= 10f;
         }
         return new Vector3(
@@ -406,8 +343,7 @@ public static class UtilityFunctions
         );
     }
 
-    public static Vector3[] CornerCoordinatesOfBoxColliderToWorld(BoxCollider b)
-    {
+    public static Vector3[] CornerCoordinatesOfBoxColliderToWorld(BoxCollider b) {
         Vector3[] corners = new Vector3[8];
 
         corners[0] = b.transform.TransformPoint(
@@ -439,16 +375,14 @@ public static class UtilityFunctions
         return corners;
     }
 
-    public static List<LightParameters> GetLightPropertiesOfScene()
-    {
+    public static List<LightParameters> GetLightPropertiesOfScene() {
         Debug.Log("we are inside GetLIghtPropertiesOfScene");
         var lightsInScene = UnityEngine.Object.FindObjectsOfType<Light>(true);
 
         List<LightParameters> allOfTheLights = new List<LightParameters>();
 
         //generate the LightParameters for all lights in the scene
-        foreach (Light hikari in lightsInScene)
-        {
+        foreach (Light hikari in lightsInScene) {
             LightParameters lp = new LightParameters();
 
             lp.id = hikari.transform.name;
@@ -462,14 +396,11 @@ public static class UtilityFunctions
             //culling mask stuff
             List<string> cullingMaskOff = new List<String>();
 
-            for (int i = 0; i < UtilityFunctions.maxUnityLayerCount; ++i)
-            {
+            for (int i = 0; i < UtilityFunctions.maxUnityLayerCount; ++i) {
                 //check what layers are off for this light's mask
-                if (((1 << i) & hikari.cullingMask) == 0)
-                {
+                if (((1 << i) & hikari.cullingMask) == 0) {
                     //check if this layer is actually being used (ie: has a name)
-                    if (LayerMask.LayerToName(i).Length != 0)
-                    {
+                    if (LayerMask.LayerToName(i).Length != 0) {
                         cullingMaskOff.Add(LayerMask.LayerToName(i));
                     }
                 }
@@ -486,13 +417,11 @@ public static class UtilityFunctions
             lp.range = hikari.range;
 
             //only do this if this is a spot light
-            if (hikari.type == LightType.Spot)
-            {
+            if (hikari.type == LightType.Spot) {
                 lp.spotAngle = hikari.spotAngle;
             }
 
-            lp.rgb = new SerializableColor()
-            {
+            lp.rgb = new SerializableColor() {
                 r = hikari.color.r,
                 g = hikari.color.g,
                 b = hikari.color.b,
@@ -500,8 +429,7 @@ public static class UtilityFunctions
             };
 
             //generate shadow params
-            ShadowParameters xemnas = new ShadowParameters()
-            {
+            ShadowParameters xemnas = new ShadowParameters() {
                 strength = hikari.shadowStrength,
                 type = Enum.GetName(typeof(LightShadows), hikari.shadows),
                 normalBias = hikari.shadowNormalBias,
@@ -520,8 +448,7 @@ public static class UtilityFunctions
 
             lp.enabled = hikari.enabled;
 
-            if (hikari.GetComponentInParent<SimObjPhysics>())
-            {
+            if (hikari.GetComponentInParent<SimObjPhysics>()) {
                 lp.parentSimObjId = hikari.GetComponentInParent<SimObjPhysics>().objectID;
                 lp.parentSimObjName = hikari.GetComponentInParent<SimObjPhysics>().transform.name;
             }
@@ -536,8 +463,7 @@ public static class UtilityFunctions
 
 #if UNITY_EDITOR
 
-    public static void debugGetLightPropertiesOfScene(List<LightParameters> lights)
-    {
+    public static void debugGetLightPropertiesOfScene(List<LightParameters> lights) {
         Debug.Log("we are inside debugGetLightProperties...");
 
         var file = "debugLightProperties.txt";
@@ -545,8 +471,7 @@ public static class UtilityFunctions
 
         create.WriteLine($"Total number of Lights in scene: {lights.Count()}");
 
-        foreach (LightParameters lp in lights)
-        {
+        foreach (LightParameters lp in lights) {
             create.WriteLine($"ID: {lp.id}");
 
             create.WriteLine($"Type: {lp.type}");
@@ -555,17 +480,13 @@ public static class UtilityFunctions
 
             create.WriteLine($"localPosition: {lp.localPosition}");
 
-            if (lp.cullingMaskOff.Length > 0)
-            {
+            if (lp.cullingMaskOff.Length > 0) {
                 create.WriteLine($"Culling Mask Off Layers:");
 
-                foreach (string s in lp.cullingMaskOff)
-                {
+                foreach (string s in lp.cullingMaskOff) {
                     create.WriteLine("     " + s);
                 }
-            }
-            else
-            {
+            } else {
                 create.WriteLine($"Culling Mask Off Layers: none");
             }
 
@@ -580,19 +501,15 @@ public static class UtilityFunctions
             create.WriteLine($"range: {lp.range}");
 
             //this should be 0 if not a spotlight
-            if (Mathf.Approximately(lp.spotAngle, 0.0f))
-            {
+            if (Mathf.Approximately(lp.spotAngle, 0.0f)) {
                 create.WriteLine("spotAngle: not a spot light!");
-            }
-            else
-            {
+            } else {
                 create.WriteLine($"spotAngle: {lp.spotAngle}");
             }
 
             create.WriteLine($"rgba: {lp.rgb.r} {lp.rgb.g} {lp.rgb.b} {lp.rgb.a}");
 
-            if (lp.shadow != null)
-            {
+            if (lp.shadow != null) {
                 create.WriteLine($"shadow params:");
                 create.WriteLine($"     shadow type: {lp.shadow.type}");
                 create.WriteLine($"     shadow strength: {lp.shadow.strength}");
@@ -600,9 +517,7 @@ public static class UtilityFunctions
                 create.WriteLine($"     shadow bias: {lp.shadow.bias}");
                 create.WriteLine($"     shadow nearPlane: {lp.shadow.nearPlane}");
                 create.WriteLine($"     shadow resolution: {lp.shadow.resolution}");
-            }
-            else
-            {
+            } else {
                 create.WriteLine($"shadow params NULL!!!");
             }
 
@@ -621,20 +536,16 @@ public static class UtilityFunctions
     }
 
     [MenuItem("SimObjectPhysics/Toggle Off PlaceableSurface Material")]
-    private static void ToggleOffPlaceableSurface()
-    {
-        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++)
-        {
+    private static void ToggleOffPlaceableSurface() {
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
                 SceneUtility.GetScenePathByBuildIndex(i),
                 OpenSceneMode.Single
             );
             var meshes = UnityEngine.Object.FindObjectsOfType<MeshRenderer>();
 
-            foreach (MeshRenderer m in meshes)
-            {
-                if (m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)")
-                {
+            foreach (MeshRenderer m in meshes) {
+                if (m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)") {
                     m.enabled = false;
                 }
             }
@@ -645,20 +556,16 @@ public static class UtilityFunctions
     }
 
     [MenuItem("SimObjectPhysics/Toggle On PlaceableSurface Material")]
-    private static void ToggleOnPlaceableSurface()
-    {
-        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++)
-        {
+    private static void ToggleOnPlaceableSurface() {
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
                 SceneUtility.GetScenePathByBuildIndex(i),
                 OpenSceneMode.Single
             );
             var meshes = UnityEngine.Object.FindObjectsOfType<MeshRenderer>();
 
-            foreach (MeshRenderer m in meshes)
-            {
-                if (m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)")
-                {
+            foreach (MeshRenderer m in meshes) {
+                if (m.sharedMaterial.ToString() == "Placeable_Surface_Mat (UnityEngine.Material)") {
                     m.enabled = true;
                 }
             }
@@ -669,10 +576,8 @@ public static class UtilityFunctions
     }
 
     [UnityEditor.MenuItem("AI2-THOR/Add GUID to Object Names")]
-    public static void AddGUIDToSimObjPhys()
-    {
-        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++)
-        {
+    public static void AddGUIDToSimObjPhys() {
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
                 SceneUtility.GetScenePathByBuildIndex(i),
                 OpenSceneMode.Single
@@ -682,26 +587,21 @@ public static class UtilityFunctions
             //explicitly track used Guids since we are only using the first 8 characters in the generated ID and want to be sure they are universally unique
             List<string> usedGuidsJustInCaseCauseIDunnoThisIsRandom = new List<string>();
 
-            foreach (SimObjPhysics sop in objects)
-            {
+            foreach (SimObjPhysics sop in objects) {
                 Guid g;
                 bool isThisNew = true;
                 string uid = "";
 
-                while (isThisNew)
-                {
+                while (isThisNew) {
                     g = Guid.NewGuid();
                     string first8 = g.ToString("N").Substring(0, 8);
 
                     //this guid is new and has not been used before
-                    if (!usedGuidsJustInCaseCauseIDunnoThisIsRandom.Contains(first8))
-                    {
+                    if (!usedGuidsJustInCaseCauseIDunnoThisIsRandom.Contains(first8)) {
                         usedGuidsJustInCaseCauseIDunnoThisIsRandom.Add(first8);
                         isThisNew = false;
                         uid = first8;
-                    }
-                    else
-                    {
+                    } else {
                         Debug.Log($"wow what are the odds that {first8} was generated again!?!?");
                     }
                 }
@@ -719,10 +619,8 @@ public static class UtilityFunctions
     //light naming convention: {PrefabName/scene}|{Light Type}|{instance}
     //Editor-only function used to set names of all light assets in scenes that have Lights in them prior to any additional lights being
     //dynamically spawned in by something like a Procedural action.
-    private static void NameAllSceneLightObjects()
-    {
-        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++)
-        {
+    private static void NameAllSceneLightObjects() {
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
                 SceneUtility.GetScenePathByBuildIndex(i),
                 OpenSceneMode.Single
@@ -734,18 +632,14 @@ public static class UtilityFunctions
             Dictionary<Light, LightType> sceneLights = new Dictionary<Light, LightType>();
             Dictionary<Light, LightType> simObjChildLights = new Dictionary<Light, LightType>();
 
-            foreach (Light l in lights)
-            {
-                if (!l.GetComponentInParent<SimObjPhysics>())
-                {
+            foreach (Light l in lights) {
+                if (!l.GetComponentInParent<SimObjPhysics>()) {
                     //one caveat here is that light switch objects do control specific "scene" lights
                     //because they are not children of the light switches, these referenced lights must be set up in editor first
                     //or at initialization in a Procedural scene. Check the <LightParameters> member <linkedObjectId> to see if some scene light
                     //is actually controlled by a light switch sim object.
                     sceneLights.Add(l, l.type);
-                }
-                else
-                {
+                } else {
                     simObjChildLights.Add(l, l.type);
                 }
             }
@@ -756,27 +650,19 @@ public static class UtilityFunctions
             int areaInstance = 0;
 
             //sort the scene lights into point, directional, or spot
-            foreach (KeyValuePair<Light, LightType> l in sceneLights)
-            {
+            foreach (KeyValuePair<Light, LightType> l in sceneLights) {
                 //Debug.Log(directionalInstance);
-                if (l.Value == LightType.Spot)
-                {
+                if (l.Value == LightType.Spot) {
                     l.Key.name = "scene|" + l.Value.ToString() + "|" + spotInstance.ToString();
                     spotInstance++;
-                }
-                else if (l.Value == LightType.Directional)
-                {
+                } else if (l.Value == LightType.Directional) {
                     l.Key.name =
                         "scene|" + l.Value.ToString() + "|" + directionalInstance.ToString();
                     directionalInstance++;
-                }
-                else if (l.Value == LightType.Point)
-                {
+                } else if (l.Value == LightType.Point) {
                     l.Key.name = "scene|" + l.Value.ToString() + "|" + pointInstance.ToString();
                     pointInstance++;
-                }
-                else if (l.Value == LightType.Area)
-                {
+                } else if (l.Value == LightType.Area) {
                     l.Key.name = "scene|" + l.Value.ToString() + "|" + areaInstance.ToString();
                     areaInstance++;
                 }
@@ -787,8 +673,7 @@ public static class UtilityFunctions
                 new Dictionary<KeyValuePair<Light, LightType>, SimObjPhysics>();
 
             //map each light/lightType pair to the sim object that they are associated with
-            foreach (KeyValuePair<Light, LightType> l in simObjChildLights)
-            {
+            foreach (KeyValuePair<Light, LightType> l in simObjChildLights) {
                 lightAndTypeToSimObjPhys.Add(l, l.Key.GetComponentInParent<SimObjPhysics>());
             }
 
@@ -807,17 +692,12 @@ public static class UtilityFunctions
                     KeyValuePair<Light, LightType>,
                     SimObjPhysics
                 > light in lightAndTypeToSimObjPhys
-            )
-            {
-                if (light.Key.Value == LightType.Spot)
-                {
-                    if (!simObjToSpotInstanceCountInThatSimObj.ContainsKey(light.Value))
-                    {
+            ) {
+                if (light.Key.Value == LightType.Spot) {
+                    if (!simObjToSpotInstanceCountInThatSimObj.ContainsKey(light.Value)) {
                         //this is the first instance of a Spot light found in this sim object
                         simObjToSpotInstanceCountInThatSimObj.Add(light.Value, 0);
-                    }
-                    else
-                    {
+                    } else {
                         //we have found another instance of this type of light in this previously found sim object before
                         simObjToSpotInstanceCountInThatSimObj[light.Value]++;
                     }
@@ -828,16 +708,11 @@ public static class UtilityFunctions
                         + light.Key.Value.ToString()
                         + "|"
                         + simObjToSpotInstanceCountInThatSimObj[light.Value].ToString();
-                }
-                else if (light.Key.Value == LightType.Directional)
-                {
-                    if (!simObjToDirectionalInstanceCountInThatSimObj.ContainsKey(light.Value))
-                    {
+                } else if (light.Key.Value == LightType.Directional) {
+                    if (!simObjToDirectionalInstanceCountInThatSimObj.ContainsKey(light.Value)) {
                         //this is the first instance of a Directional light found in this sim object (PROBS DONT PUT A DIRECTIONAL LIGHT IN A SIM OBJ PREFAB BUT YOU DO YOU I GUESS)
                         simObjToDirectionalInstanceCountInThatSimObj.Add(light.Value, 0);
-                    }
-                    else
-                    {
+                    } else {
                         //we have found another instance of this type of light in this previously found sim object before
                         simObjToDirectionalInstanceCountInThatSimObj[light.Value]++;
                     }
@@ -848,16 +723,11 @@ public static class UtilityFunctions
                         + light.Key.Value.ToString()
                         + "|"
                         + simObjToDirectionalInstanceCountInThatSimObj[light.Value].ToString();
-                }
-                else if (light.Key.Value == LightType.Point)
-                {
-                    if (!simObjToPointInstanceCountInThatSimObj.ContainsKey(light.Value))
-                    {
+                } else if (light.Key.Value == LightType.Point) {
+                    if (!simObjToPointInstanceCountInThatSimObj.ContainsKey(light.Value)) {
                         //this is the first instance of a Point light found in this sim object
                         simObjToPointInstanceCountInThatSimObj.Add(light.Value, 0);
-                    }
-                    else
-                    {
+                    } else {
                         //we have found another instance of a Point light in this previously found sim object before
                         simObjToPointInstanceCountInThatSimObj[light.Value]++;
                     }
@@ -869,15 +739,11 @@ public static class UtilityFunctions
                         + "|"
                         + simObjToPointInstanceCountInThatSimObj[light.Value].ToString();
                 }
-                //we currently don't really use area lights since they are baked only but this is here just in case
-                else if (light.Key.Value == LightType.Area)
-                {
-                    if (!simObjToAreaInstanceCountInThatSimObj.ContainsKey(light.Value))
-                    {
+                  //we currently don't really use area lights since they are baked only but this is here just in case
+                  else if (light.Key.Value == LightType.Area) {
+                    if (!simObjToAreaInstanceCountInThatSimObj.ContainsKey(light.Value)) {
                         simObjToAreaInstanceCountInThatSimObj.Add(light.Value, 0);
-                    }
-                    else
-                    {
+                    } else {
                         simObjToAreaInstanceCountInThatSimObj[light.Value]++;
                     }
 

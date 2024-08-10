@@ -4,19 +4,16 @@ using System.Collections;
 using UnityEngine;
 
 [Serializable]
-public class SimObjState
-{
+public class SimObjState {
     public GameObject Obj;
     public SimObjType Type;
 }
 
 [ExecuteInEditMode]
-public class Convertable : MonoBehaviour
-{
+public class Convertable : MonoBehaviour {
     public SimObjState[] States;
     public int DefaultState = 0;
-    public int CurrentState
-    {
+    public int CurrentState {
         get { return currentState; }
     }
 #if UNITY_EDITOR
@@ -26,57 +23,43 @@ public class Convertable : MonoBehaviour
     int currentState = -1;
     SimObj parentObj;
 
-    void OnEnable()
-    {
-        if (Application.isPlaying)
-        {
+    void OnEnable() {
+        if (Application.isPlaying) {
             currentState = DefaultState;
         }
     }
 
-    void Update()
-    {
-        if (parentObj == null)
-        {
+    void Update() {
+        if (parentObj == null) {
             parentObj = gameObject.GetComponent<SimObj>();
         }
 
         // anim state is 1-4
         int animState = -1;
-        if (Application.isPlaying)
-        {
+        if (Application.isPlaying) {
             animState = parentObj.Animator.GetInteger("AnimState1");
         }
 #if UNITY_EDITOR
-        else
-        {
+        else {
             animState = EditorState + 1;
         }
 #endif
-        if (animState > States.Length)
-        {
+        if (animState > States.Length) {
             animState = -1;
         }
 
         // stateIndex is 0-3
         int stateIndex = animState - 1;
-        if (currentState != stateIndex && stateIndex >= 0)
-        {
+        if (currentState != stateIndex && stateIndex >= 0) {
             currentState = stateIndex;
-            for (int i = 0; i < States.Length; i++)
-            {
-                if (i == currentState)
-                {
+            for (int i = 0; i < States.Length; i++) {
+                if (i == currentState) {
                     parentObj.Type = States[i].Type;
-                    if (States[i].Obj != null)
-                    {
+                    if (States[i].Obj != null) {
                         States[i].Obj.SetActive(true);
                     }
-                }
-                else
-                {
-                    if (States[i].Obj != null)
-                    {
+                } else {
+                    if (States[i].Obj != null) {
                         States[i].Obj.SetActive(false);
                     }
                 }

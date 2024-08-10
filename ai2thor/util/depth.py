@@ -35,6 +35,7 @@ def generate_noise_indices(img_size):
             corner = t
 
         for i, c in enumerate(corner):
+
             offset = 0
             i_offset = 0
             if j % 2 != 0:

@@ -16,6 +16,7 @@ class Request:
 
 
 class BasePlatform:
+
     enabled = True
 
     @classmethod
@@ -64,6 +65,7 @@ class Linux64(BaseLinuxPlatform):
 
     @classmethod
     def _select_x_display(cls, width, height):
+
         valid_displays = cls._valid_x_displays(width, height)
         if valid_displays:
             return valid_displays[0]
@@ -171,6 +173,7 @@ class OSXIntel64(BasePlatform):
 
     @classmethod
     def parse_plist(cls, base_dir, name):
+
         plist_path = os.path.join(base_dir, name + ".app", "Contents/Info.plist")
 
         with open(plist_path) as f:

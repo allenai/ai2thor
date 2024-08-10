@@ -103,6 +103,7 @@ class FakeQueue(object):
 
 
 def controller(**args):
+
     # delete display so the tests can run on Linux
     if "DISPLAY" in os.environ:
         del os.environ["DISPLAY"]
@@ -170,6 +171,7 @@ def test_linux_explicit_xdisplay(mocker):
 
 
 def test_linux_invalid_linux64_invalid_cr(mocker):
+
     mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
@@ -193,6 +195,7 @@ def test_linux_invalid_linux64_invalid_cr(mocker):
 
 
 def test_linux_invalid_linux64_valid_cr(mocker):
+
     mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
@@ -212,6 +215,7 @@ def test_linux_invalid_linux64_valid_cr(mocker):
 
 
 def test_linux_valid_linux64_valid_cloudrendering(mocker):
+
     mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
@@ -225,6 +229,7 @@ def test_linux_valid_linux64_valid_cloudrendering(mocker):
 
 
 def test_linux_valid_linux64_valid_cloudrendering_enabled_cr(mocker):
+
     mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
@@ -241,6 +246,7 @@ def test_linux_valid_linux64_valid_cloudrendering_enabled_cr(mocker):
 
 
 def test_linux_valid_linux64_invalid_cloudrendering(mocker):
+
     mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
@@ -257,6 +263,7 @@ def test_linux_valid_linux64_invalid_cloudrendering(mocker):
 
 
 def test_linux_missing_linux64(mocker):
+
     mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_cr_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)
@@ -271,6 +278,7 @@ def test_linux_missing_linux64(mocker):
 
 
 def test_linux_missing_cloudrendering(mocker):
+
     mocker.patch("ai2thor.controller.platform_system", fake_linux_system)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.exists", fake_linux64_exists)
     mocker.patch("ai2thor.controller.ai2thor.build.Build.download", noop_download)

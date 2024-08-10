@@ -9,6 +9,7 @@ import copy
 
 
 def test_multi_agent_train():
+
     s = ai2thor.fifo_server.FifoServer(width=300, height=300)
     s.send(dict(action="RotateRight"))
     c = FifoClient(s.server_pipe_path, s.client_pipe_path)
@@ -24,6 +25,7 @@ def test_multi_agent_train():
 
 
 def test_train_numpy_action():
+
     s = ai2thor.fifo_server.FifoServer(width=300, height=300)
     s.send(
         dict(
@@ -54,6 +56,7 @@ def generate_multi_agent_metadata_payload(metadata, sequence_id):
 
 
 def test_simple():
+
     s = ai2thor.fifo_server.FifoServer(width=300, height=300)
     s.send(dict(action="RotateRight"))
     c = FifoClient(s.server_pipe_path, s.client_pipe_path)

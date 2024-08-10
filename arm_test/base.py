@@ -114,6 +114,7 @@ def standard_pose():
 
 
 def execute_actions(actions, **kwargs):
+
     for a in actions:
         if a == {} or a == {"action": ""}:
             continue

@@ -3,27 +3,22 @@ using System.Collections;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class Door : MonoBehaviour
-{
+public class Door : MonoBehaviour {
     public SimObj ParentObj;
     public Vector3 OpenRotation;
     public Vector3 ClosedRotation;
     public Transform Pivot;
     public bool EditorOpen;
 
-    void OnEnable()
-    {
+    void OnEnable() {
         ParentObj = gameObject.GetComponent<SimObj>();
-        if (ParentObj == null)
-        {
+        if (ParentObj == null) {
             ParentObj = gameObject.AddComponent<SimObj>();
         }
 
-        if (!Application.isPlaying)
-        {
+        if (!Application.isPlaying) {
             Animator a = ParentObj.gameObject.GetComponent<Animator>();
-            if (a == null)
-            {
+            if (a == null) {
                 a = ParentObj.gameObject.AddComponent<Animator>();
                 a.runtimeAnimatorController =
                     Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
@@ -31,11 +26,9 @@ public class Door : MonoBehaviour
         }
     }
 
-    void Update()
-    {
+    void Update() {
         bool open = EditorOpen;
-        if (Application.isPlaying)
-        {
+        if (Application.isPlaying) {
             open = ParentObj.Animator.GetBool("AnimState1");
         }
         Pivot.localEulerAngles = open ? OpenRotation : ClosedRotation;

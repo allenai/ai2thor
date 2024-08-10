@@ -7,8 +7,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public static class SimUtil
-{
+public static class SimUtil {
     // how fast smooth-animated s / cabinets / etc animate
     public const float SmoothAnimationSpeed = 0.5f;
 
@@ -37,18 +36,13 @@ public static class SimUtil
 
     #region SimObj utility functions
 
-    public static SimObj[] GetAllVisibleSimObjs(Camera agentCamera, float maxDistance)
-    {
+    public static SimObj[] GetAllVisibleSimObjs(Camera agentCamera, float maxDistance) {
 #if UNITY_EDITOR
-        if (ShowObjectVisibility)
-        {
+        if (ShowObjectVisibility) {
             // set all objects to invisible before starting - THIS IS EXPENSIVE
-            if (SceneManager.Current != null)
-            {
-                foreach (SimObj obj in SceneManager.Current.ObjectsInScene)
-                {
-                    if (obj != null)
-                    {
+            if (SceneManager.Current != null) {
+                foreach (SimObj obj in SceneManager.Current.ObjectsInScene) {
+                    if (obj != null) {
                         obj.VisibleNow = false;
                     }
                 }
@@ -72,16 +66,13 @@ public static class SimUtil
             QueryTriggerInteraction.Collide
         );
         // go through them one by one and determine if they're actually simObjs
-        for (int i = 0; i < colliders.Length; i++)
-        {
+        for (int i = 0; i < colliders.Length; i++) {
             if (
                 colliders[i].CompareTag(SimUtil.SimObjTag)
                 || colliders[i].CompareTag(SimUtil.ReceptacleTag)
-            )
-            {
+            ) {
                 SimObj o = null;
-                if (GetSimObjFromCollider(colliders[i], out o))
-                {
+                if (GetSimObjFromCollider(colliders[i], out o)) {
                     // this may result in duplicates because of 'open' receptacles
                     // but using a hashset cancels that out
                     // don't worry about items contained in receptacles until visibility
@@ -91,10 +82,8 @@ public static class SimUtil
         }
         // now check to see if they're actually visible
         RaycastHit hit = new RaycastHit();
-        foreach (SimObj item in uniqueItems)
-        {
-            if (!CheckItemBounds(item, agentCameraPos))
-            {
+        foreach (SimObj item in uniqueItems) {
+            if (!CheckItemBounds(item, agentCameraPos)) {
                 // if the camera isn't in bounds, skip this item
                 continue;
             }
@@ -103,10 +92,8 @@ public static class SimUtil
 
             // if it's a receptacle
             // raycast against every pivot in the receptacle just to make sure we don't miss anything
-            if (item.IsReceptacle)
-            {
-                foreach (Transform pivot in item.Receptacle.Pivots)
-                {
+            if (item.IsReceptacle) {
+                foreach (Transform pivot in item.Receptacle.Pivots) {
                     canSeeItem = CheckPointVisibility(
                         item,
                         pivot.position,
@@ -118,17 +105,14 @@ public static class SimUtil
                         out hit
                     );
                     // if we can see it no need for more checks!
-                    if (canSeeItem)
-                    {
+                    if (canSeeItem) {
                         break;
                     }
                 }
             }
 
-            if (!canSeeItem)
-            {
-                for (int i = 0; i < VisibilityCheckSteps; i++)
-                {
+            if (!canSeeItem) {
+                for (int i = 0; i < VisibilityCheckSteps; i++) {
                     canSeeItem = CheckPointVisibility(
                         item,
                         Vector3.Lerp(
@@ -145,23 +129,20 @@ public static class SimUtil
                     );
 
                     // if we can see it no need for more checks!
-                    if (canSeeItem)
-                    {
+                    if (canSeeItem) {
                         break;
                     }
                 }
             }
 
-            if (canSeeItem)
-            {
+            if (canSeeItem) {
                 // if it's the same object, add it to the list
 #if UNITY_EDITOR
                 item.VisibleNow = ShowObjectVisibility & true;
 #endif
                 items.Add(item);
                 // now check to see if it's a receptacle interior
-                if (item.IsReceptacle && hit.collider.CompareTag(SimUtil.ReceptacleTag))
-                {
+                if (item.IsReceptacle && hit.collider.CompareTag(SimUtil.ReceptacleTag)) {
                     // if it is, add the items in the receptacle as well
                     items.AddRange(
                         GetVisibleItemsFromReceptacle(
@@ -186,8 +167,7 @@ public static class SimUtil
     }
 
     // checks whether a point is in view of the camera
-    public static bool CheckPointVisibility(Vector3 itemTargetPoint, Camera agentCamera)
-    {
+    public static bool CheckPointVisibility(Vector3 itemTargetPoint, Camera agentCamera) {
         Vector3 viewPoint = agentCamera.WorldToViewportPoint(itemTargetPoint);
         if (
             viewPoint.z > 0 // in front of camera
@@ -195,8 +175,7 @@ public static class SimUtil
             && viewPoint.x > ViewPointRangeLow // within x bounds
             && viewPoint.y < ViewPointRangeHigh
             && viewPoint.y > ViewPointRangeLow
-        )
-        { // within y bounds
+        ) { // within y bounds
             return true;
         }
         return false;
@@ -213,8 +192,7 @@ public static class SimUtil
         bool checkTrigger,
         float maxDistance,
         out RaycastHit hit
-    )
-    {
+    ) {
         hit = new RaycastHit();
         Vector3 viewPoint = agentCamera.WorldToViewportPoint(itemTargetPoint);
 
@@ -224,8 +202,7 @@ public static class SimUtil
             && viewPoint.x > ViewPointRangeLow // within x bounds
             && viewPoint.y < ViewPointRangeHigh
             && viewPoint.y > ViewPointRangeLow
-        )
-        { // within y bounds
+        ) { // within y bounds
             Vector3 itemDirection = Vector3.zero;
             // do a raycast in the direction of the item
             itemDirection = (itemTargetPoint - agentCameraPos).normalized;
@@ -259,14 +236,12 @@ public static class SimUtil
                             : QueryTriggerInteraction.Ignore
                     )
                 )
-            )
-            {
+            ) {
                 // check to see if we hit the item we're after
                 if (
                     hit.collider.attachedRigidbody != null
                     && hit.collider.attachedRigidbody.gameObject == item.gameObject
-                )
-                {
+                ) {
 #if UNITY_EDITOR
                     Debug.DrawLine(
                         agentCameraPos,
@@ -289,29 +264,23 @@ public static class SimUtil
     // if successful, object is placed into the world and activated
     // this only works on objects of SimObjManipulation type 'inventory'
     // if an object was spawned in a Receptacle, this function will also return false
-    public static bool PutItemBackInStartupPosition(SimObj item)
-    {
-        if (item == null)
-        {
+    public static bool PutItemBackInStartupPosition(SimObj item) {
+        if (item == null) {
             Debug.LogError("Item is null, not putting item back");
             return false;
         }
 
         bool result = false;
 
-        switch (item.Manipulation)
-        {
+        switch (item.Manipulation) {
             case SimObjManipType.Inventory:
-                if (item.StartupTransform != null)
-                {
+                if (item.StartupTransform != null) {
                     item.transform.position = item.StartupTransform.position;
                     item.transform.rotation = item.StartupTransform.rotation;
                     item.transform.localScale = item.StartupTransform.localScale;
                     item.gameObject.SetActive(true);
                     result = true;
-                }
-                else
-                {
+                } else {
                     Debug.LogWarning(
                         "Item had no startup transform. This probably means it was spawned in a receptacle."
                     );
@@ -327,8 +296,7 @@ public static class SimUtil
     // TAKES an item
     // removes it from any receptacles, then disables it entirely
     // this works whether the item is standalone or in a receptacle
-    public static void TakeItem(SimObj item)
-    {
+    public static void TakeItem(SimObj item) {
         // make item visible to raycasts
         // unparent in case it's in a receptacle
         item.VisibleToRaycasts = true;
@@ -342,11 +310,9 @@ public static class SimUtil
     }
 
     // checks whether the item
-    public static bool CheckItemBounds(SimObj item, Vector3 agentPosition)
-    {
+    public static bool CheckItemBounds(SimObj item, Vector3 agentPosition) {
         // if the item doesn't use custom bounds this is an automatic pass
-        if (!item.UseCustomBounds)
-        {
+        if (!item.UseCustomBounds) {
             return true;
         }
 
@@ -362,29 +328,23 @@ public static class SimUtil
 
     // searches for a SimObj item under a receptacle by ID
     // this does not TAKE the item, it just searches for it
-    public static bool FindItemFromReceptacleByID(string itemID, Receptacle r, out SimObj item)
-    {
+    public static bool FindItemFromReceptacleByID(string itemID, Receptacle r, out SimObj item) {
         item = null;
         // make sure we're not doing something insane
-        if (r == null)
-        {
+        if (r == null) {
             Debug.LogError("Receptacle was null, not searching for item");
             return false;
         }
 
-        if (!IsObjectIDValid(itemID))
-        {
+        if (!IsObjectIDValid(itemID)) {
             Debug.LogError("itemID " + itemID.ToString() + " is NOT valid, not searching for item");
             return false;
         }
         SimObj checkItem = null;
-        for (int i = 0; i < r.Pivots.Length; i++)
-        {
-            if (r.Pivots[i].childCount > 0)
-            {
+        for (int i = 0; i < r.Pivots.Length; i++) {
+            if (r.Pivots[i].childCount > 0) {
                 checkItem = r.Pivots[i].GetChild(0).GetComponent<SimObj>();
-                if (checkItem != null && checkItem.ObjectID == itemID)
-                {
+                if (checkItem != null && checkItem.ObjectID == itemID) {
                     // if the item under the pivot is a SimObj with the right id
                     // we've found what we're after
                     item = checkItem;
@@ -402,28 +362,22 @@ public static class SimUtil
         SimObjType itemType,
         Receptacle r,
         out SimObj item
-    )
-    {
+    ) {
         item = null;
         // make sure we're not doing something insane
-        if (r == null)
-        {
+        if (r == null) {
             Debug.LogError("Receptacle was null, not searching for item");
             return false;
         }
-        if (itemType == SimObjType.Undefined)
-        {
+        if (itemType == SimObjType.Undefined) {
             Debug.LogError("Can't search for type UNDEFINED, not searching for item");
             return false;
         }
         SimObj checkItem = null;
-        for (int i = 0; i < r.Pivots.Length; i++)
-        {
-            if (r.Pivots[i].childCount > 0)
-            {
+        for (int i = 0; i < r.Pivots.Length; i++) {
+            if (r.Pivots[i].childCount > 0) {
                 checkItem = r.Pivots[i].GetChild(0).GetComponent<SimObj>();
-                if (checkItem != null && checkItem.Type == itemType)
-                {
+                if (checkItem != null && checkItem.Type == itemType) {
                     // if the item under the pivot is a SimObj of the right type
                     // we've found what we're after
                     item = checkItem;
@@ -438,28 +392,23 @@ public static class SimUtil
     // adds the item to a receptacle
     // enabled the object, parents it under an empty pivot, then makes it invisible to raycasts
     // returns false if there are no available pivots in the receptacle
-    public static bool AddItemToVisibleReceptacle(SimObj item, Receptacle r, Camera camera)
-    {
+    public static bool AddItemToVisibleReceptacle(SimObj item, Receptacle r, Camera camera) {
         // make sure we're not doing something insane
-        if (item == null)
-        {
+        if (item == null) {
             Debug.LogError("Can't add null item to receptacle");
             return false;
         }
-        if (r == null)
-        {
+        if (r == null) {
             Debug.LogError("Receptacle was null, not adding item");
             return false;
         }
-        if (item.gameObject == r.gameObject)
-        {
+        if (item.gameObject == r.gameObject) {
             Debug.LogError("Receptacle and item were same object, can't add item to itself");
             return false;
         }
         // make sure there's room in the recepticle
         Transform emptyPivot = null;
-        if (!GetFirstEmptyVisibleReceptaclePivot(r, camera, out emptyPivot))
-        {
+        if (!GetFirstEmptyVisibleReceptaclePivot(r, camera, out emptyPivot)) {
             Debug.Log("No visible Pivots found");
             return false;
         }
@@ -469,28 +418,23 @@ public static class SimUtil
     // adds the item to a receptacle
     // enabled the object, parents it under an empty pivot, then makes it invisible to raycasts
     // returns false if there are no available pivots in the receptacle
-    public static bool AddItemToReceptacle(SimObj item, Receptacle r)
-    {
+    public static bool AddItemToReceptacle(SimObj item, Receptacle r) {
         // make sure we're not doing something insane
-        if (item == null)
-        {
+        if (item == null) {
             Debug.LogError("Can't add null item to receptacle");
             return false;
         }
-        if (r == null)
-        {
+        if (r == null) {
             Debug.LogError("Receptacle was null, not adding item");
             return false;
         }
-        if (item.gameObject == r.gameObject)
-        {
+        if (item.gameObject == r.gameObject) {
             Debug.LogError("Receptacle and item were same object, can't add item to itself");
             return false;
         }
         // make sure there's room in the recepticle
         Transform emptyPivot = null;
-        if (!GetFirstEmptyReceptaclePivot(r, out emptyPivot))
-        {
+        if (!GetFirstEmptyReceptaclePivot(r, out emptyPivot)) {
             // Debug.Log ("Receptacle is full");
             return false;
         }
@@ -500,16 +444,13 @@ public static class SimUtil
     // adds the item to a receptacle
     // enabled the object, parents it under an empty pivot, then makes it invisible to raycasts
     // returns false if there are no available pivots in the receptacle
-    public static bool AddItemToReceptaclePivot(SimObj item, Transform pivot)
-    {
-        if (item == null)
-        {
+    public static bool AddItemToReceptaclePivot(SimObj item, Transform pivot) {
+        if (item == null) {
             Debug.LogError("SimObj item was null in AddItemToReceptaclePivot, not adding");
             return false;
         }
 
-        if (pivot == null)
-        {
+        if (pivot == null) {
             Debug.LogError(
                 "Pivot was null when attempting to add item "
                     + item.name
@@ -535,13 +476,10 @@ public static class SimUtil
         return true;
     }
 
-    public static bool GetFirstEmptyReceptaclePivot(Receptacle r, out Transform emptyPivot)
-    {
+    public static bool GetFirstEmptyReceptaclePivot(Receptacle r, out Transform emptyPivot) {
         emptyPivot = null;
-        for (int i = 0; i < r.Pivots.Length; i++)
-        {
-            if (r.Pivots[i].childCount == 0)
-            {
+        for (int i = 0; i < r.Pivots.Length; i++) {
+            if (r.Pivots[i].childCount == 0) {
                 emptyPivot = r.Pivots[i];
                 break;
             }
@@ -553,18 +491,15 @@ public static class SimUtil
         Receptacle r,
         Camera camera,
         out Transform emptyPivot
-    )
-    {
+    ) {
         Plane[] planes = GeometryUtility.CalculateFrustumPlanes(camera);
 
         emptyPivot = null;
-        for (int i = 0; i < r.Pivots.Length; i++)
-        {
+        for (int i = 0; i < r.Pivots.Length; i++) {
             Transform t = r.Pivots[i];
             Bounds bounds = new Bounds(t.position, new Vector3(0.05f, 0.05f, 0.05f));
 
-            if (t.childCount == 0 && GeometryUtility.TestPlanesAABB(planes, bounds))
-            {
+            if (t.childCount == 0 && GeometryUtility.TestPlanesAABB(planes, bounds)) {
                 emptyPivot = r.Pivots[i];
                 break;
             }
@@ -573,11 +508,9 @@ public static class SimUtil
     }
 
     // tries to get a SimObj from a collider, returns false if none found
-    public static bool GetSimObjFromCollider(Collider c, out SimObj o)
-    {
+    public static bool GetSimObjFromCollider(Collider c, out SimObj o) {
         o = null;
-        if (c.attachedRigidbody == null)
-        {
+        if (c.attachedRigidbody == null) {
             // all sim objs must have a kinematic rigidbody
             return false;
         }
@@ -586,11 +519,9 @@ public static class SimUtil
     }
 
     // tries to get a receptacle from a collider, returns false if none found
-    public static bool GetReceptacleFromCollider(Collider c, out Receptacle r)
-    {
+    public static bool GetReceptacleFromCollider(Collider c, out Receptacle r) {
         r = null;
-        if (c.attachedRigidbody == null)
-        {
+        if (c.attachedRigidbody == null) {
             // all sim objs must have a kinematic rigidbody
             return false;
         }
@@ -600,13 +531,10 @@ public static class SimUtil
 
     // gets all SimObjs contained in a receptacle
     // this does not TAKE any of these items
-    public static SimObj[] GetItemsFromReceptacle(Receptacle r)
-    {
+    public static SimObj[] GetItemsFromReceptacle(Receptacle r) {
         List<SimObj> items = new List<SimObj>();
-        foreach (Transform t in r.Pivots)
-        {
-            if (t.childCount > 0)
-            {
+        foreach (Transform t in r.Pivots) {
+            if (t.childCount > 0) {
                 items.Add(t.GetChild(0).GetComponent<SimObj>());
             }
         }
@@ -620,24 +548,18 @@ public static class SimUtil
         Camera agentCamera,
         Vector3 agentCameraPos,
         float maxDistance
-    )
-    {
+    ) {
         List<SimObj> items = new List<SimObj>();
         // RaycastHit hit = new RaycastHit();
-        foreach (Transform t in r.Pivots)
-        {
-            if (t.childCount > 0)
-            {
+        foreach (Transform t in r.Pivots) {
+            if (t.childCount > 0) {
                 SimObj item = t.GetChild(0).GetComponent<SimObj>();
                 // check whether the item is visible (center point only)
                 // since it's inside a receptacle, it will be on the invisible layer
-                if (CheckPointVisibility(item.CenterPoint, agentCamera))
-                {
+                if (CheckPointVisibility(item.CenterPoint, agentCamera)) {
                     item.VisibleNow = true;
                     items.Add(item);
-                }
-                else
-                {
+                } else {
                     item.VisibleNow = false;
                 }
             }
@@ -645,8 +567,7 @@ public static class SimUtil
         return items.ToArray();
     }
 
-    public static bool IsObjectIDValid(string objectID)
-    {
+    public static bool IsObjectIDValid(string objectID) {
         return !string.IsNullOrEmpty(objectID);
     }
 
@@ -656,12 +577,9 @@ public static class SimUtil
 
 #if UNITY_EDITOR
     [UnityEditor.MenuItem("AI2-THOR/Set Up Base Objects")]
-    public static void SetUpBaseObjects()
-    {
-        foreach (GameObject go in UnityEditor.Selection.gameObjects)
-        {
-            if (go.transform.childCount > 0 && go.transform.GetChild(0).name == "Base")
-            {
+    public static void SetUpBaseObjects() {
+        foreach (GameObject go in UnityEditor.Selection.gameObjects) {
+            if (go.transform.childCount > 0 && go.transform.GetChild(0).name == "Base") {
                 continue;
             }
             GameObject newGo = new GameObject(go.name);
@@ -671,8 +589,7 @@ public static class SimUtil
             go.transform.parent = newGo.transform;
             go.name = "Base";
             BoxCollider bc = go.GetComponent<BoxCollider>();
-            if (bc == null)
-            {
+            if (bc == null) {
                 go.AddComponent<BoxCollider>();
             }
         }
@@ -684,8 +601,7 @@ public static class SimUtil
         string outputPath,
         UnityEditor.BuildTarget buildTarget,
         bool launchOnBuild
-    )
-    {
+    ) {
         Debug.Log("Building scene '" + scenePath + "' to '" + outputPath + "'");
         // set up the player correctly
         UnityEditor.PlayerSettings.companyName = "Allen Institute for Artificial Intelligence";
@@ -713,10 +629,8 @@ public static class SimUtil
     }
 
     [UnityEditor.MenuItem("AI2-THOR/RandomizeMaterials/Bin Materials")]
-    static void BinMaterials()
-    {
-        HashSet<Material> getMaterialsInScene()
-        {
+    static void BinMaterials() {
+        HashSet<Material> getMaterialsInScene() {
             HashSet<MeshRenderer> sceneMeshRenderers = new HashSet<MeshRenderer>();
             HashSet<Material> sceneMaterials = new HashSet<Material>();
 
@@ -729,8 +643,7 @@ public static class SimUtil
             );
 
             // Get all shared Materials from MeshRenderers
-            foreach (MeshRenderer meshRenderer in sceneMeshRenderers)
-            {
+            foreach (MeshRenderer meshRenderer in sceneMeshRenderers) {
                 sceneMaterials.UnionWith(meshRenderer.sharedMaterials);
             }
 
@@ -740,8 +653,7 @@ public static class SimUtil
         Dictionary<string, HashSet<Material>> materialMetadata = new Dictionary<
             string,
             HashSet<Material>
-        >()
-        {
+        >() {
             ["RawTrainMaterials"] = new HashSet<Material>(),
             ["RawValMaterials"] = new HashSet<Material>(),
             ["RawTestMaterials"] = new HashSet<Material>(),
@@ -753,17 +665,14 @@ public static class SimUtil
         };
 
         // iTHOR scenes
-        foreach (int sceneType in new int[] { 0, 200, 300, 400 })
-        {
-            for (int i = 1; i <= 30; i++)
-            {
+        foreach (int sceneType in new int[] { 0, 200, 300, 400 }) {
+            for (int i = 1; i <= 30; i++) {
                 string scenePath = $"Assets/Scenes/FloorPlan{sceneType + i}_physics.unity";
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
 
                 HashSet<Material> materials = getMaterialsInScene();
 
-                switch (sceneType)
-                {
+                switch (sceneType) {
                     case 0:
                         materialMetadata["RawKitchenMaterials"].UnionWith(materials);
                         break;
@@ -778,18 +687,13 @@ public static class SimUtil
                         break;
                 }
 
-                if (i <= 20)
-                {
+                if (i <= 20) {
                     // train scene
                     materialMetadata["RawTrainMaterials"].UnionWith(materials);
-                }
-                else if (i <= 25)
-                {
+                } else if (i <= 25) {
                     // val scene
                     materialMetadata["RawValMaterials"].UnionWith(materials);
-                }
-                else
-                {
+                } else {
                     // test scene
                     materialMetadata["RawTestMaterials"].UnionWith(materials);
                 }
@@ -797,10 +701,8 @@ public static class SimUtil
         }
 
         // RoboTHOR train
-        for (int i = 1; i <= 12; i++)
-        {
-            for (int j = 1; j <= 5; j++)
-            {
+        for (int i = 1; i <= 12; i++) {
+            for (int j = 1; j <= 5; j++) {
                 string scenePath = $"Assets/Scenes/FloorPlan_Train{i}_{j}.unity";
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
 
@@ -811,10 +713,8 @@ public static class SimUtil
         }
 
         // RoboTHOR val
-        for (int i = 1; i <= 3; i++)
-        {
-            for (int j = 1; j <= 5; j++)
-            {
+        for (int i = 1; i <= 3; i++) {
+            for (int j = 1; j <= 5; j++) {
                 string scenePath = $"Assets/Scenes/FloorPlan_Val{i}_{j}.unity";
                 UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
 
@@ -829,11 +729,9 @@ public static class SimUtil
         GameObject physicsSceneManager = UnityEditor.PrefabUtility.LoadPrefabContents(prefabPath);
         ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
 
-        foreach (KeyValuePair<string, HashSet<Material>> keyValuePair in materialMetadata)
-        {
+        foreach (KeyValuePair<string, HashSet<Material>> keyValuePair in materialMetadata) {
             string label = keyValuePair.Key;
-            foreach (Material mat in keyValuePair.Value)
-            {
+            foreach (Material mat in keyValuePair.Value) {
                 HashSet<string> labels = new HashSet<string>(AssetDatabase.GetLabels(mat));
                 labels.Add(label);
                 AssetDatabase.SetLabels(mat, labels.ToArray());
@@ -848,11 +746,9 @@ public static class SimUtil
     }
 
     [UnityEditor.MenuItem("AI2-THOR/Replace Generic Prefabs in All Scenes")]
-    static void ReplacePrefabsInAllScenes()
-    {
+    static void ReplacePrefabsInAllScenes() {
         UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
-        for (int i = 1; i <= 30; i++)
-        {
+        for (int i = 1; i <= 30; i++) {
             string scenePath = "Assets/Scenes/FloorPlan" + i.ToString() + ".unity";
             UnityEditor.EditorUtility.DisplayProgressBar(
                 "Replacing generics...",
@@ -860,12 +756,9 @@ public static class SimUtil
                 (1f / 30) * i
             );
             UnityEngine.SceneManagement.Scene openScene = new UnityEngine.SceneManagement.Scene();
-            try
-            {
+            try {
                 openScene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Debug.LogException(e);
                 continue;
             }
@@ -874,8 +767,7 @@ public static class SimUtil
             sm.ReplaceGenerics();
             // save the scene and close it
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(openScene);
-            if (UnityEditor.SceneManagement.EditorSceneManager.loadedSceneCount > 1)
-            {
+            if (UnityEditor.SceneManagement.EditorSceneManager.loadedSceneCount > 1) {
                 UnityEditor.SceneManagement.EditorSceneManager.CloseScene(openScene, true);
             }
         }
@@ -883,11 +775,9 @@ public static class SimUtil
     }
 
     [UnityEditor.MenuItem("AI2-THOR/Set SceneManager Scene Number")]
-    static void SetSceneManagerSceneNumber()
-    {
+    static void SetSceneManagerSceneNumber() {
         UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();
-        for (int i = 1; i <= 30; i++)
-        {
+        for (int i = 1; i <= 30; i++) {
             string scenePath = "Assets/Scenes/FloorPlan" + (i + 200).ToString() + ".unity";
             UnityEditor.EditorUtility.DisplayProgressBar(
                 "Setting scene numbers...",
@@ -895,12 +785,9 @@ public static class SimUtil
                 (1f / 30) * i
             );
             UnityEngine.SceneManagement.Scene openScene = new UnityEngine.SceneManagement.Scene();
-            try
-            {
+            try {
                 openScene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Debug.LogException(e);
                 continue;
             }
@@ -909,8 +796,7 @@ public static class SimUtil
             sm.SceneNumber = i;
             // save the scene and close it
             UnityEditor.SceneManagement.EditorSceneManager.SaveScene(openScene);
-            if (UnityEditor.SceneManagement.EditorSceneManager.loadedSceneCount > 1)
-            {
+            if (UnityEditor.SceneManagement.EditorSceneManager.loadedSceneCount > 1) {
                 UnityEditor.SceneManagement.EditorSceneManager.CloseScene(openScene, true);
             }
         }
@@ -918,16 +804,12 @@ public static class SimUtil
     }
 
     [UnityEditor.MenuItem("AI2-THOR/Set Pivot Scales to 1")]
-    static void SetPivotScalesToOne()
-    {
+    static void SetPivotScalesToOne() {
         Transform[] transforms = GameObject.FindObjectsOfType<Transform>();
-        foreach (Transform t in transforms)
-        {
-            if (t.name.Contains("Pivot"))
-            {
+        foreach (Transform t in transforms) {
+            if (t.name.Contains("Pivot")) {
                 GameObject prefabParent = null;
-                if (UnityEditor.EditorUtility.IsPersistent(t))
-                {
+                if (UnityEditor.EditorUtility.IsPersistent(t)) {
                     prefabParent =
                         UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(t.gameObject)
                         as GameObject;
@@ -935,14 +817,12 @@ public static class SimUtil
                 Transform pivot = t;
                 Transform tempParent = pivot.parent;
                 Transform child = null;
-                if (pivot.childCount > 0)
-                {
+                if (pivot.childCount > 0) {
                     child = pivot.GetChild(0);
                     child.parent = null;
                 }
                 pivot.parent = null;
-                if (pivot.localScale != Vector3.one)
-                {
+                if (pivot.localScale != Vector3.one) {
                     Debug.Log(
                         "Found pivot with non-uniform scale ("
                             + pivot.localScale.ToString()
@@ -951,13 +831,11 @@ public static class SimUtil
                     );
                 }
                 pivot.localScale = Vector3.one;
-                if (child != null)
-                {
+                if (child != null) {
                     child.parent = pivot;
                 }
                 pivot.parent = tempParent;
-                if (prefabParent != null)
-                {
+                if (prefabParent != null) {
                     Debug.Log("Reconnecting to " + prefabParent.name);
                     UnityEditor.PrefabUtility.RevertPrefabInstance(
                         t.gameObject,
@@ -972,8 +850,7 @@ public static class SimUtil
     }
 
     [UnityEditor.MenuItem("AI2-THOR/Add Pickupable Objects to Physics Scene Manager")]
-    static void AddPickupableObjectsToPhysicsSceneManager()
-    {
+    static void AddPickupableObjectsToPhysicsSceneManager() {
         PhysicsSceneManager physicsSceneManager =
             GameObject.FindObjectOfType<PhysicsSceneManager>();
 
@@ -982,16 +859,13 @@ public static class SimUtil
         if (
             physicsSceneManager.RequiredObjects.Count != 0
             || physicsSceneManager.SpawnedObjects.Count != 0
-        )
-        {
+        ) {
             physicsSceneManager.RequiredObjects.Clear();
             physicsSceneManager.RequiredObjects.Clear();
         }
 
-        foreach (SimObjPhysics simObj in simObjPhysicsArray)
-        {
-            if (simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
-            {
+        foreach (SimObjPhysics simObj in simObjPhysicsArray) {
+            if (simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
                 physicsSceneManager.RequiredObjects.Add(simObj.gameObject);
                 physicsSceneManager.SpawnedObjects.Add(simObj.gameObject);
             }

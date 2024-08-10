@@ -77,6 +77,7 @@ def nvidia_version():
 
 
 def generate_dockerfile(tag):
+
     driver_url = "http://us.download.nvidia.com/XFree86/Linux-x86_64/{version}/NVIDIA-Linux-x86_64-{version}.run".format(
         version=nvidia_version()
     )
@@ -126,6 +127,7 @@ def kill_container(container_id):
 
 
 def build_image():
+
     version = nvidia_version()
     image_name = "ai2thor/ai2thor-nvidia-%s:%s" % (version, COMMIT_ID)
 

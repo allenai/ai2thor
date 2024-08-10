@@ -93,6 +93,7 @@ def get_reachable_positions(controller):
 
 
 def execute_command(controller, command, action_dict_addition_by_action):
+
     base_position = get_current_arm_state(controller)
     change_height = MOVE_CONSTANT
     change_value = change_height

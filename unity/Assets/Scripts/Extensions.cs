@@ -10,13 +10,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
-public static class ExtensionMethods
-{
-    public static T DeepClone<T>(this T obj)
-    {
+public static class ExtensionMethods {
+    public static T DeepClone<T>(this T obj) {
         // Don't serialize a null object, simply return the default for that object
-        if (ReferenceEquals(obj, null))
-        {
+        if (ReferenceEquals(obj, null)) {
             return default;
         }
 
@@ -24,8 +21,7 @@ public static class ExtensionMethods
         // for example in default constructor some list property initialized with some values,
         // but in 'source' these items are cleaned -
         // without ObjectCreationHandling.Replace default constructor values will be added to result
-        var deserializeSettings = new JsonSerializerSettings
-        {
+        var deserializeSettings = new JsonSerializerSettings {
             ObjectCreationHandling = ObjectCreationHandling.Replace
         };
 
@@ -33,8 +29,7 @@ public static class ExtensionMethods
         var str = Newtonsoft.Json.JsonConvert.SerializeObject(
             obj,
             Newtonsoft.Json.Formatting.None,
-            new Newtonsoft.Json.JsonSerializerSettings()
-            {
+            new Newtonsoft.Json.JsonSerializerSettings() {
                 ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
                 ContractResolver = jsonResolver
             }
@@ -49,22 +44,17 @@ public static class ExtensionMethods
         this Dictionary<TKey, TValue> dictionary,
         TKey key,
         TValue defaultValue = default(TValue)
-    )
-    {
+    ) {
         TValue value;
         return dictionary.TryGetValue(key, out value) ? value : defaultValue;
     }
 
-    public static int AddCount<TKey>(this Dictionary<TKey, int> dictionary, TKey key, int count = 1)
-    {
+    public static int AddCount<TKey>(this Dictionary<TKey, int> dictionary, TKey key, int count = 1) {
         int value;
         dictionary.TryGetValue(key, out value);
-        if (dictionary.ContainsKey(key))
-        {
+        if (dictionary.ContainsKey(key)) {
             dictionary[key] = dictionary[key] + count;
-        }
-        else
-        {
+        } else {
             dictionary[key] = count;
         }
         return dictionary[key];
@@ -72,8 +62,7 @@ public static class ExtensionMethods
 
     public static IEnumerable<IEnumerable<T>> CartesianProduct<T>(
         this IEnumerable<IEnumerable<T>> sequences
-    )
-    {
+    ) {
         IEnumerable<IEnumerable<T>> emptyProduct = new[] { Enumerable.Empty<T>() };
         return sequences.Aggregate(
             emptyProduct,

@@ -451,6 +451,7 @@ class UnityActionBenchmarkRunner(BenchmarkConfig):
         return experiment_list
 
     def benchmark(self, action_map={}):
+
         env, controller_params = self.__init_env()
         experiment_list = self.__create_experiments()
         hostname = ""

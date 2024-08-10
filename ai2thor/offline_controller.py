@@ -18,6 +18,7 @@ MOVE_AHEAD_MAP = {
 
 class Controller(object):
     def __init__(self, base_dir, grid_size=0.25):
+
         self.grid_size = grid_size
         self.base_dir = base_dir
         if grid_size < 0.25:
@@ -152,6 +153,7 @@ class FrameCounter:
 
 
 def write_frame(event, base_dir, scene_name, frame_name):
+
     events_dir = "%s/%s/events" % (base_dir, scene_name)
     met_dir = "%s/%s/metadata" % (base_dir, scene_name)
     os.makedirs(met_dir, exist_ok=True)
@@ -165,6 +167,7 @@ def write_frame(event, base_dir, scene_name, frame_name):
 
 
 def look_up_down_write(controller, base_dir, fc, scene_name):
+
     fc.inc()
     write_frame(controller.step(action="LookUp"), base_dir, scene_name, fc.counter)
     fc.inc()

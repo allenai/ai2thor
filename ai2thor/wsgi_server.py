@@ -105,6 +105,7 @@ class MultipartFormParser(object):
         return None
 
     def __init__(self, data, boundary):
+
         self.form = {}
         self.files = {}
 
@@ -124,6 +125,7 @@ class MultipartFormParser(object):
 
             headers = {}
             for header in raw_headers.tobytes().decode("ascii").strip().split("\r\n"):
+
                 k, v = header.split(":")
                 headers[k.strip()] = v.strip()
 
@@ -147,6 +149,7 @@ class MultipartFormParser(object):
 
 
 class WsgiServer(ai2thor.server.Server):
+
     server_type = "WSGI"
 
     def __init__(
@@ -160,6 +163,7 @@ class WsgiServer(ai2thor.server.Server):
         width=300,
         height=300,
     ):
+
         app = Flask(
             __name__,
             template_folder=os.path.realpath(
@@ -200,6 +204,7 @@ class WsgiServer(ai2thor.server.Server):
 
         @app.route("/train", methods=["post"])
         def train():
+
             action_returns = []
 
             if request.headers["Content-Type"].split(";")[0] == "multipart/form-data":

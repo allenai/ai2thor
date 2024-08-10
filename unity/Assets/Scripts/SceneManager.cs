@@ -9,14 +9,10 @@ using UnityEditor;
 #endif
 
 [ExecuteInEditMode]
-public class SceneManager : MonoBehaviour
-{
-    public static SceneManager Current
-    {
-        get
-        {
-            if (current == null)
-            {
+public class SceneManager : MonoBehaviour {
+    public static SceneManager Current {
+        get {
+            if (current == null) {
                 current = GameObject.FindObjectOfType<SceneManager>();
             }
             return current;
@@ -54,13 +50,11 @@ public class SceneManager : MonoBehaviour
 
     public List<SimObj> ObjectsInScene = new List<SimObj>();
 
-    void OnEnable()
-    {
+    void OnEnable() {
         GatherSimObjsInScene();
 
 #if UNITY_EDITOR
-        if (!Application.isPlaying)
-        {
+        if (!Application.isPlaying) {
             SetUpParents();
             SetUpFPSController();
             SetUpNavigation();
@@ -72,8 +66,7 @@ public class SceneManager : MonoBehaviour
     }
 
     // generates a object ID for a sim object
-    public void AssignObjectID(SimObj obj)
-    {
+    public void AssignObjectID(SimObj obj) {
         // object ID is a string consisting of:
         //[SimObjType]_[X0.00]:[Y0.00]:[Z0.00]
         Vector3 pos = obj.transform.position;
@@ -83,24 +76,20 @@ public class SceneManager : MonoBehaviour
         obj.ObjectID = obj.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
     }
 
-    public void GatherSimObjsInScene()
-    {
+    public void GatherSimObjsInScene() {
         ObjectsInScene = new List<SimObj>();
         ObjectsInScene.AddRange(GameObject.FindObjectsOfType<SimObj>());
         ObjectsInScene.Sort((x, y) => (x.Type.ToString().CompareTo(y.Type.ToString())));
-        foreach (SimObj o in ObjectsInScene)
-        {
+        foreach (SimObj o in ObjectsInScene) {
             AssignObjectID(o);
         }
     }
 
 #if UNITY_EDITOR
     // returns an array of required types NOT found in scene
-    public SimObjType[] CheckSceneForRequiredTypes()
-    {
+    public SimObjType[] CheckSceneForRequiredTypes() {
         List<SimObjType> typesToCheck = null;
-        switch (LocalSceneType)
-        {
+        switch (LocalSceneType) {
             case SceneType.Kitchen:
             default:
                 typesToCheck = new List<SimObjType>(RequiredObjectTypes);
@@ -118,15 +107,13 @@ public class SceneManager : MonoBehaviour
                 typesToCheck = new List<SimObjType>(RequiredTypesBathroom);
                 break;
         }
-        foreach (SimObj obj in ObjectsInScene)
-        {
+        foreach (SimObj obj in ObjectsInScene) {
             typesToCheck.Remove(obj.Type);
         }
         return typesToCheck.ToArray();
     }
 
-    public void SetUpParents()
-    {
+    public void SetUpParents() {
         FindOrCreateParent(ref ObjectsParent, ObjectsParentName);
         FindOrCreateParent(ref ControlsParent, ControlsParentName);
         FindOrCreateParent(ref LightingParent, LightingParentName);
@@ -134,30 +121,22 @@ public class SceneManager : MonoBehaviour
         FindOrCreateParent(ref TargetsParent, TargetsParentName);
     }
 
-    public void AutoStructureNavigation()
-    {
+    public void AutoStructureNavigation() {
         Transform[] transforms = StructureParent.GetComponentsInChildren<Transform>();
         // take a wild guess that floor will be floor and ceiling will be ceiling
-        foreach (Transform t in transforms)
-        {
-            if (t.name.Contains("Ceiling"))
-            {
+        foreach (Transform t in transforms) {
+            if (t.name.Contains("Ceiling")) {
                 // set it to not walkable
                 GameObjectUtility.SetNavMeshArea(t.gameObject, PlacementManager.NavemeshNoneArea);
-            }
-            else if (t.name.Contains("Floor"))
-            {
+            } else if (t.name.Contains("Floor")) {
                 // set it to floor
                 GameObjectUtility.SetNavMeshArea(t.gameObject, PlacementManager.NavmeshFloorArea);
-            }
-            else
-            {
+            } else {
                 // if it's not already set to none (ie sittable objects) set it to 'shelves'
                 if (
                     GameObjectUtility.GetNavMeshArea(t.gameObject)
                     != PlacementManager.NavemeshNoneArea
-                )
-                {
+                ) {
                     GameObjectUtility.SetNavMeshArea(
                         t.gameObject,
                         PlacementManager.NavmeshShelfArea
@@ -171,18 +150,15 @@ public class SceneManager : MonoBehaviour
         }
     }
 
-    public void GatherObjectsUnderParents()
-    {
+    public void GatherObjectsUnderParents() {
         SetUpParents();
 
         // move everything under structure by default
         // then move things to other folders based on their tags or type
         SimObj[] simObjs = GameObject.FindObjectsOfType<SimObj>();
-        foreach (SimObj o in simObjs)
-        {
+        foreach (SimObj o in simObjs) {
             Receptacle r = o.transform.GetComponentInParent<Receptacle>();
-            if (r == null || r.gameObject == o.gameObject)
-            {
+            if (r == null || r.gameObject == o.gameObject) {
                 o.transform.parent = ObjectsParent;
             }
         }
@@ -190,8 +166,7 @@ public class SceneManager : MonoBehaviour
         GameObject[] rootObjects = UnityEngine
             .SceneManagement.SceneManager.GetActiveScene()
             .GetRootGameObjects();
-        foreach (GameObject rootObject in rootObjects)
-        {
+        foreach (GameObject rootObject in rootObjects) {
             // make sure it's not a parent
             if (
                 rootObject != gameObject
@@ -201,60 +176,49 @@ public class SceneManager : MonoBehaviour
                 && rootObject.transform != TargetsParent
                 && rootObject.transform != ControlsParent
                 && rootObject.name != FPSControllerPrefab.name
-            )
-            {
+            ) {
                 rootObject.transform.parent = StructureParent;
                 EditorUtility.SetDirty(rootObject);
             }
         }
 
         ReflectionProbe[] probes = GameObject.FindObjectsOfType<ReflectionProbe>();
-        foreach (ReflectionProbe p in probes)
-        {
+        foreach (ReflectionProbe p in probes) {
             p.transform.parent = LightingParent;
         }
         Light[] lights = GameObject.FindObjectsOfType<Light>();
-        foreach (Light l in lights)
-        {
+        foreach (Light l in lights) {
             // TODO specify whether to gather prefab lights
 
             // if it's NOT in a prefab, move it
-            if (PrefabUtility.GetCorrespondingObjectFromSource(l.gameObject) == null)
-            {
+            if (PrefabUtility.GetCorrespondingObjectFromSource(l.gameObject) == null) {
                 l.transform.parent = LightingParent;
             }
         }
         // tag all the structure colliders
         Collider[] cols = StructureParent.GetComponentsInChildren<Collider>();
-        foreach (Collider c in cols)
-        {
+        foreach (Collider c in cols) {
             c.tag = "Structure";
             c.gameObject.layer = SimUtil.RaycastVisibleLayer;
         }
         // set all structure transforms to static
         Transform[] transforms = StructureParent.GetComponentsInChildren<Transform>();
-        foreach (Transform tr in transforms)
-        {
+        foreach (Transform tr in transforms) {
             tr.gameObject.isStatic = true;
             GameObjectUtility.SetStaticEditorFlags(tr.gameObject, StaticEditorFlags.BatchingStatic);
         }
     }
 
-    public void ReplaceGenerics()
-    {
+    public void ReplaceGenerics() {
         SimObj[] simObjs = GameObject.FindObjectsOfType<SimObj>();
-        foreach (SimObj generic in simObjs)
-        {
-            foreach (SimObj platonic in PlatonicPrefabs)
-            {
-                if (generic.Type == platonic.Type)
-                {
+        foreach (SimObj generic in simObjs) {
+            foreach (SimObj platonic in PlatonicPrefabs) {
+                if (generic.Type == platonic.Type) {
                     // make sure one isn't a prefab of the other
                     GameObject prefab =
                         PrefabUtility.GetCorrespondingObjectFromSource(generic.gameObject)
                         as GameObject;
-                    if (prefab == null || prefab != platonic.gameObject)
-                    {
+                    if (prefab == null || prefab != platonic.gameObject) {
                         Debug.Log("Replacing " + generic.name + " with " + platonic.name);
                         // as long as it's not a prefab, swap it out with the prefab
                         GameObject newSimObj =
@@ -272,8 +236,7 @@ public class SceneManager : MonoBehaviour
         }
     }
 
-    public void SetUpLighting()
-    {
+    public void SetUpLighting() {
         // thanks for not exposing these props, Unity :P
         // this may break in later versions
         var getLightmapSettingsMethod = typeof(LightmapEditorSettings).GetMethod(
@@ -297,8 +260,7 @@ public class SceneManager : MonoBehaviour
         settingsObject.ApplyModifiedProperties();
     }
 
-    public void SetUpNavigation()
-    {
+    public void SetUpNavigation() {
         // thanks for not exposing these props, Unity :P
         // this may break in later versions
         SerializedObject settingsObject = new SerializedObject(
@@ -324,34 +286,26 @@ public class SceneManager : MonoBehaviour
         settingsObject.ApplyModifiedProperties();
     }
 
-    public void SetUpFPSController()
-    {
-        if (FPSControllerPrefab == null)
-        {
+    public void SetUpFPSController() {
+        if (FPSControllerPrefab == null) {
             Debug.LogError("FPS controller prefab is not set in Scene Manager.");
             return;
         }
         GameObject fpsObj = GameObject.Find(FPSControllerPrefab.name);
-        if (fpsObj == null)
-        {
+        if (fpsObj == null) {
             fpsObj = PrefabUtility.InstantiatePrefab(FPSControllerPrefab) as GameObject;
             fpsObj.name = FPSControllerPrefab.name;
-        }
-        else
-        {
+        } else {
             // re-attach to prefab
             GameObject prefabParent =
                 PrefabUtility.GetCorrespondingObjectFromSource(fpsObj) as GameObject;
-            if (prefabParent == null)
-            {
+            if (prefabParent == null) {
                 // if it's not attached to a prefab, delete and start over
                 Vector3 pos = fpsObj.transform.position;
                 GameObject.DestroyImmediate(fpsObj);
                 fpsObj = PrefabUtility.InstantiatePrefab(FPSControllerPrefab) as GameObject;
                 fpsObj.transform.position = pos;
-            }
-            else
-            {
+            } else {
                 PrefabUtility.RevertPrefabInstance(fpsObj, InteractionMode.AutomatedAction);
             }
         }
@@ -394,11 +348,9 @@ public class SceneManager : MonoBehaviour
         //}
     }
 
-    void FindOrCreateParent(ref Transform parentTransform, string parentName)
-    {
+    void FindOrCreateParent(ref Transform parentTransform, string parentName) {
         GameObject parentGo = GameObject.Find(parentName);
-        if (parentGo == null)
-        {
+        if (parentGo == null) {
             parentGo = new GameObject(parentName);
         }
         // set to root just in case
@@ -409,20 +361,17 @@ public class SceneManager : MonoBehaviour
 #endif
 }
 
-public enum SceneAnimationMode
-{
+public enum SceneAnimationMode {
     Instant,
     Smooth,
 }
 
-public enum ScenePhysicsMode
-{
+public enum ScenePhysicsMode {
     Static,
     Dynamic,
 }
 
-public enum SceneType
-{
+public enum SceneType {
     Kitchen,
     LivingRoom,
     Bathroom,

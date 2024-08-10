@@ -91,6 +91,7 @@ class InteractiveControllerPrompt(object):
         color_frame=False,
         metadata=False,
     ):
+
         if not sys.stdout.isatty():
             raise RuntimeError("controller.interact() must be run from a terminal")
 
@@ -197,6 +198,7 @@ class InteractiveControllerPrompt(object):
                 print(" ".join(command_info))
 
     def next_interact_command(self):
+
         current_buffer = ""
         while True:
             commands = self._interact_commands

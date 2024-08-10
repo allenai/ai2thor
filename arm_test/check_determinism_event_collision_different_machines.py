@@ -48,6 +48,7 @@ def get_reachable_positions(controller):
 
 
 def execute_command(controller, command, action_dict_addition):
+
     base_position = get_current_arm_state(controller)
     change_height = action_dict_addition["move_constant"]
     change_value = change_height
@@ -117,6 +118,7 @@ def execute_command(controller, command, action_dict_addition):
         action_details = {}
 
     if command in ["w", "z", "s", "a", "3", "4"]:
+
         controller.step(
             action="MoveMidLevelArm",
             position=dict(x=base_position["x"], y=base_position["y"], z=base_position["z"]),

@@ -5,8 +5,7 @@ using System.Linq;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public partial class Stretch_Robot_Arm_Controller : ArmController
-{
+public partial class Stretch_Robot_Arm_Controller : ArmController {
     [SerializeField]
     private Transform armBase,
         handCameraTransform,
@@ -25,84 +24,65 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
 
     private bool deadZoneCheck;
 
-    public override Transform pickupParent()
-    {
+    public override Transform pickupParent() {
         return magnetSphere.transform;
     }
 
-    public override Vector3 wristSpaceOffsetToWorldPos(Vector3 offset)
-    {
+    public override Vector3 wristSpaceOffsetToWorldPos(Vector3 offset) {
         return handCameraTransform.TransformPoint(offset)
             - handCameraTransform.position
             + WristToManipulator;
     }
 
-    public override Vector3 armBaseSpaceOffsetToWorldPos(Vector3 offset)
-    {
+    public override Vector3 armBaseSpaceOffsetToWorldPos(Vector3 offset) {
         return this.transform.TransformPoint(offset) - this.transform.position;
     }
 
-    public override Vector3 pointToWristSpace(Vector3 point)
-    {
+    public override Vector3 pointToWristSpace(Vector3 point) {
         return handCameraTransform.TransformPoint(point) + WristToManipulator;
     }
 
-    public override Vector3 pointToArmBaseSpace(Vector3 point)
-    {
+    public override Vector3 pointToArmBaseSpace(Vector3 point) {
         return armBase.transform.TransformPoint(point);
     }
 
-    public override void ContinuousUpdate(float fixedDeltaTime)
-    {
+    public override void ContinuousUpdate(float fixedDeltaTime) {
         solver.ManipulateStretchArm();
     }
 
-    private bool DeadZoneCheck()
-    {
-        if (deadZoneCheck)
-        {
+    private bool DeadZoneCheck() {
+        if (deadZoneCheck) {
             float currentYaw = armTarget.localRotation.eulerAngles.y;
             float cLimit = wristClockwiseLocalRotationLimit;
             float ccLimit = wristCounterClockwiseLocalRotationLimit;
 
             // Consolidate reachable euler-rotations (which are normally bounded by [0, 360)) into a continuous number line,
             // bounded instead by [continuousCounterClockwiseLocalRotationLimit, continuousClockwiseLocalRotationLimit + 360)
-            if (cLimit < ccLimit)
-            {
+            if (cLimit < ccLimit) {
                 cLimit += 360;
-                if (currentYaw < ccLimit)
-                {
+                if (currentYaw < ccLimit) {
                     currentYaw += 360;
                 }
             }
 
-            if (currentYaw < ccLimit || currentYaw > cLimit)
-            {
+            if (currentYaw < ccLimit || currentYaw > cLimit) {
                 return true;
-            }
-            else
-            {
+            } else {
                 return false;
             }
-        }
-        else
-        {
+        } else {
             return false;
         }
     }
 
-    public override bool ShouldHalt()
-    {
+    public override bool ShouldHalt() {
         return base.ShouldHalt() || DeadZoneCheck();
     }
 
-    public override string GetHaltMessage()
-    {
+    public override string GetHaltMessage() {
         var errorMessage = base.GetHaltMessage();
-        if (errorMessage == "")
-        {
-            if (DeadZoneCheck())
-            {
+        if (errorMessage == "") {
+            if (DeadZoneCheck()) {
                 errorMessage =
                     "Rotated up against Stretch arm wrist's dead-zone, could not reach target: '"
                     + armTarget.rotation
@@ -112,8 +92,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
         return errorMessage;
     }
 
-    public override GameObject GetArmTarget()
-    {
+    public override GameObject GetArmTarget() {
         return armTarget.gameObject;
     }
 
@@ -122,8 +101,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
     //     return ActionFinished.Success;
     //  }
 
-    void Start()
-    {
+    void Start() {
         this.collisionListener = this.GetComponentInParent<CollisionListener>();
         this.collisionListener.registerAllChildColliders();
 
@@ -137,10 +115,8 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
 
         // clean up arm colliders, removing triggers
         List<CapsuleCollider> cleanedCaps = new List<CapsuleCollider>();
-        foreach (CapsuleCollider c in armCaps)
-        {
-            if (!c.isTrigger)
-            {
+        foreach (CapsuleCollider c in armCaps) {
+            if (!c.isTrigger) {
                 cleanedCaps.Add(c);
             }
         }
@@ -148,10 +124,8 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
         ArmCapsuleColliders = cleanedCaps.ToArray();
 
         List<BoxCollider> cleanedBoxes = new List<BoxCollider>();
-        foreach (BoxCollider b in armBoxes)
-        {
-            if (!b.isTrigger)
-            {
+        foreach (BoxCollider b in armBoxes) {
+            if (!b.isTrigger) {
                 cleanedBoxes.Add(b);
             }
         }
@@ -162,10 +136,8 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
 
         // TODO: Currently explicitly ignoring all arm self collisions (for efficiency)!
         var colliders = this.GetComponentsInChildren<Collider>();
-        foreach (Collider c0 in colliders)
-        {
-            foreach (Collider c1 in colliders)
-            {
+        foreach (Collider c0 in colliders) {
+            foreach (Collider c1 in colliders) {
                 Physics.IgnoreCollision(c0, c1);
             }
         }
@@ -173,27 +145,21 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
         solver = this.gameObject.GetComponentInChildren<Stretch_Arm_Solver>();
 
         //call SetGripperOpenness logic in StretchAgentController here
-        ((StretchAgentController)PhysicsController).setGripperOpenness(
-            openness: null,
-            openState: 1
-        );
+        ((StretchAgentController)PhysicsController).setGripperOpenness(openness: null, openState: 1);
     }
 
-    public void resetPosRotManipulator()
-    {
+    public void resetPosRotManipulator() {
         Physics.SyncTransforms();
         armTarget.position = handCameraTransform.transform.position + WristToManipulator;
         ;
     }
 
-    protected override void lastStepCallback()
-    {
+    protected override void lastStepCallback() {
         resetPosRotManipulator();
         setDeadZoneCheck(false);
     }
 
-    public void setDeadZoneCheck(bool enabled)
-    {
+    public void setDeadZoneCheck(bool enabled) {
         deadZoneCheck = enabled;
     }
 
@@ -204,8 +170,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed = false,
         bool isRelativeRotation = true
-    )
-    {
+    ) {
         // float clockwiseLocalRotationLimit = 77.5f;
         // float counterClockwiseLocalRotationLimit = 102.5f;
         float currentContinuousRotation,
@@ -223,32 +188,24 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
         // targetContinuousRotation is the end-rotation state on the bounds number-range
         // (which allows acute and obtuse rotation end-states to be distinct)
         // targetRelativeRotation is simply the final relative-rotation
-        if (isRelativeRotation)
-        {
-            if (Mathf.Abs(rotation) <= 180)
-            {
+        if (isRelativeRotation) {
+            if (Mathf.Abs(rotation) <= 180) {
                 targetRotation = armTarget.transform.rotation * Quaternion.Euler(0, rotation, 0);
-            }
-            else
-            {
+            } else {
                 // Calculate target and secTargetRotation
                 targetRelativeRotation = rotation / 2;
                 targetRotation =
                     armTarget.transform.rotation * Quaternion.Euler(0, targetRelativeRotation, 0);
                 secTargetRotation = targetRotation * Quaternion.Euler(0, targetRelativeRotation, 0);
             }
-        }
-        else
-        {
+        } else {
             // Consolidate reachable euler-rotations (which are normally bounded by [0, 360)) into a continuous number line,
             // bounded instead by [continuousCounterClockwiseLocalRotationLimit, continuousClockwiseLocalRotationLimit + 360)
             if (
                 continuousClockwiseLocalRotationLimit < continuousCounterClockwiseLocalRotationLimit
-            )
-            {
+            ) {
                 continuousClockwiseLocalRotationLimit += 360;
-                if (currentContinuousRotation < continuousCounterClockwiseLocalRotationLimit)
-                {
+                if (currentContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
                     currentContinuousRotation += 360;
                 }
             }
@@ -259,25 +216,19 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
             if (
                 targetContinuousRotation > continuousCounterClockwiseLocalRotationLimit
                 && targetContinuousRotation < continuousClockwiseLocalRotationLimit
-            )
-            {
+            ) {
                 targetRotation = armTarget.transform.rotation * Quaternion.Euler(0, rotation, 0);
 
                 // if angle is NOT reachable, find how close it can get from that direction
-            }
-            else
-            {
+            } else {
                 float nonReflexAngularDistance,
                     reflexAngularDistance;
 
                 // Calculate proximity of non-reflex angle extreme to target
-                if (targetContinuousRotation < continuousCounterClockwiseLocalRotationLimit)
-                {
+                if (targetContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
                     nonReflexAngularDistance =
                         continuousCounterClockwiseLocalRotationLimit - targetContinuousRotation;
-                }
-                else
-                {
+                } else {
                     nonReflexAngularDistance =
                         targetContinuousRotation - continuousClockwiseLocalRotationLimit;
                 }
@@ -291,37 +242,28 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
                 if (
                     secTargetContinuousRotation > continuousCounterClockwiseLocalRotationLimit
                     && secTargetContinuousRotation < continuousClockwiseLocalRotationLimit
-                )
-                {
+                ) {
                     targetRotation =
                         armTarget.transform.rotation
                         * Quaternion.Euler(0, targetRelativeRotation, 0);
                     secTargetRotation =
                         targetRotation * Quaternion.Euler(0, targetRelativeRotation, 0);
-                }
-                else
-                {
+                } else {
                     // Calculate proximity of reflex angle extreme to target
-                    if (secTargetContinuousRotation < continuousCounterClockwiseLocalRotationLimit)
-                    {
+                    if (secTargetContinuousRotation < continuousCounterClockwiseLocalRotationLimit) {
                         reflexAngularDistance =
                             continuousCounterClockwiseLocalRotationLimit
                             - secTargetContinuousRotation;
-                    }
-                    else
-                    { // if (secTargetContinuousRotation > continuousClockwiseLocalRotationLimit) {
+                    } else { // if (secTargetContinuousRotation > continuousClockwiseLocalRotationLimit) {
                         reflexAngularDistance =
                             secTargetContinuousRotation - continuousClockwiseLocalRotationLimit;
                     }
 
                     // Calculate which distance gets wrist closer to target
-                    if (nonReflexAngularDistance <= reflexAngularDistance)
-                    {
+                    if (nonReflexAngularDistance <= reflexAngularDistance) {
                         targetRotation =
                             armTarget.transform.rotation * Quaternion.Euler(0, rotation, 0);
-                    }
-                    else
-                    {
+                    } else {
                         targetRotation =
                             armTarget.transform.rotation
                             * Quaternion.Euler(0, targetRelativeRotation, 0);
@@ -363,8 +305,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
         );
     }
 
-    public override ArmMetadata GenerateMetadata()
-    {
+    public override ArmMetadata GenerateMetadata() {
         ArmMetadata meta = new ArmMetadata();
         // meta.handTarget = armTarget.position;
         Transform joint = transform;
@@ -377,18 +318,12 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
         Quaternion currentRotation;
 
         // Assign joint metadata to remaining joints, which all have identical hierarchies
-        for (int i = 1; i <= 8; i++)
-        {
-            if (i == 1)
-            {
+        for (int i = 1; i <= 8; i++) {
+            if (i == 1) {
                 joint = joint.Find("stretch_robot_lift_jnt");
-            }
-            else if (i <= 6)
-            {
+            } else if (i <= 6) {
                 joint = joint.Find("stretch_robot_arm_" + (i - 1) + "_jnt");
-            }
-            else
-            {
+            } else {
                 joint = joint.Find("stretch_robot_wrist_" + (i - 6) + "_jnt");
             }
 
@@ -412,8 +347,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
             currentRotation = joint.rotation;
 
             // Check that world-relative rotation is angle-axis-notation-compatible
-            if (currentRotation != new Quaternion(0, 0, 0, -1))
-            {
+            if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                 jointMeta.rotation = new Vector4(
                     vectorRot.x,
@@ -421,9 +355,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
                     vectorRot.z,
                     ConvertAngleToZeroCentricRange(angleRot * Mathf.Sign(vectorRot.y))
                 );
-            }
-            else
-            {
+            } else {
                 jointMeta.rotation = new Vector4(1, 0, 0, 0);
             }
 
@@ -436,8 +368,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
             currentRotation = Quaternion.Inverse(armBase.rotation) * joint.rotation;
 
             // Check that root-relative rotation is angle-axis-notation-compatible
-            if (currentRotation != new Quaternion(0, 0, 0, -1))
-            {
+            if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                 currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                 jointMeta.rootRelativeRotation = new Vector4(
                     vectorRot.x,
@@ -445,9 +376,7 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
                     vectorRot.z,
                     ConvertAngleToZeroCentricRange(angleRot * Mathf.Sign(vectorRot.y))
                 );
-            }
-            else
-            {
+            } else {
                 jointMeta.rootRelativeRotation = new Vector4(1, 0, 0, 0);
             }
 
@@ -456,16 +385,14 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
             // }
 
             // PARENT-JOINT RELATIVE ROTATION
-            if (i != 1)
-            {
+            if (i != 1) {
                 parentJoint = joint.parent;
 
                 // Grab rotation of current joint's angler relative to parent joint's angler
                 currentRotation = Quaternion.Inverse(parentJoint.rotation) * joint.rotation;
 
                 // Check that parent-relative rotation is angle-axis-notation-compatible
-                if (currentRotation != new Quaternion(0, 0, 0, -1))
-                {
+                if (currentRotation != new Quaternion(0, 0, 0, -1)) {
                     currentRotation.ToAngleAxis(angle: out angleRot, axis: out vectorRot);
                     jointMeta.localRotation = new Vector4(
                         vectorRot.x,
@@ -473,14 +400,10 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
                         vectorRot.z,
                         ConvertAngleToZeroCentricRange(angleRot * Mathf.Sign(vectorRot.y))
                     );
-                }
-                else
-                {
+                } else {
                     jointMeta.localRotation = new Vector4(1, 0, 0, 0);
                 }
-            }
-            else
-            {
+            } else {
                 // Special case for stretch_robot_lift_jnt because it has no parent-joint
                 jointMeta.localRotation = jointMeta.rootRelativeRotation;
             }
@@ -494,10 +417,8 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
         // note this is different from objects intersecting the hand's sphere,
         // there could be a case where an object is inside the sphere but not picked up by the hand
         List<string> heldObjectIDs = new List<string>();
-        if (heldObjects != null)
-        {
-            foreach (SimObjPhysics sop in heldObjects.Keys)
-            {
+        if (heldObjects != null) {
+            foreach (SimObjPhysics sop in heldObjects.Keys) {
                 heldObjectIDs.Add(sop.objectID);
             }
         }
@@ -521,22 +442,18 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
         return meta;
     }
 
-    float ConvertAngleToZeroCentricRange(float degrees)
-    {
-        if (degrees < 0)
-        {
+    float ConvertAngleToZeroCentricRange(float degrees) {
+        if (degrees < 0) {
             degrees = (degrees % 360f) + 360f;
         }
-        if (degrees > 180f)
-        {
+        if (degrees > 180f) {
             degrees = (degrees % 360f) - 360f;
         }
         return degrees;
     }
 
 #if UNITY_EDITOR
-    public class GizmoDrawCapsule
-    {
+    public class GizmoDrawCapsule {
         public Vector3 p0;
         public Vector3 p1;
         public float radius;
@@ -544,12 +461,9 @@ public partial class Stretch_Robot_Arm_Controller : ArmController
 
     List<GizmoDrawCapsule> debugCapsules = new List<GizmoDrawCapsule>();
 
-    private void OnDrawGizmos()
-    {
-        if (debugCapsules.Count > 0)
-        {
-            foreach (GizmoDrawCapsule thing in debugCapsules)
-            {
+    private void OnDrawGizmos() {
+        if (debugCapsules.Count > 0) {
+            foreach (GizmoDrawCapsule thing in debugCapsules) {
                 Gizmos.DrawWireSphere(thing.p0, thing.radius);
                 Gizmos.DrawWireSphere(thing.p1, thing.radius);
             }

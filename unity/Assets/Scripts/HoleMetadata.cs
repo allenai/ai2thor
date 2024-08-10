@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class HoleMetadata : MonoBehaviour
-{
+public class HoleMetadata : MonoBehaviour {
     [DraggablePoint]
     public Vector3 Min;
 
@@ -12,8 +11,7 @@ public class HoleMetadata : MonoBehaviour
     public Vector3 Max;
     public Vector3 Margin;
 
-    void OnDrawGizmos()
-    {
+    void OnDrawGizmos() {
         // Box collider green
         //Gizmos.color = new Color(145.0f/255.0f, 245.0f/255.0f, 139/255.0f, 1.0f);
 
@@ -54,16 +52,14 @@ public class HoleMetadata : MonoBehaviour
             corners.Skip(4).ToList()
         };
 
-        foreach (var q in sides)
-        {
+        foreach (var q in sides) {
             foreach (
                 var (first, second) in q.Zip(
                         q.Skip(3).Concat(q.Take(3)),
                         (first, second) => (first, second)
                     )
                     .Concat(sides[0].Zip(sides[1], (first, second) => (first, second)))
-            )
-            {
+            ) {
                 Gizmos.DrawLine(first, second);
             }
         }

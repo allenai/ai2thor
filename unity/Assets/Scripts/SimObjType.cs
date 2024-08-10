@@ -5,8 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
-public enum SimObjManipType : int
-{ // We aren't using these manip types for the Physics Implementation, they are being replaced with the SimObjPrimaryProperty below
+public enum SimObjManipType : int { // We aren't using these manip types for the Physics Implementation, they are being replaced with the SimObjPrimaryProperty below
     Inventory = 0,
     Static = 1,
     Rearrangeable = 2,
@@ -104,8 +103,7 @@ public enum SimObjSecondaryProperty : int // EACH SimObjPhysics can have any num
 }
 
 [Serializable]
-public enum SimObjType : int
-{
+public enum SimObjType : int {
     // undefined is always the first value
     Undefined = 0,
 
@@ -282,8 +280,7 @@ public enum SimObjType : int
     Objaverse = 167
 }
 
-public static class ReceptacleRestrictions
-{
+public static class ReceptacleRestrictions {
     // these objects generate ObjectIDs based on their parent object to show that they are related. ie: "Bathtub|1|1|1|" has a child sim object BathtubBasin with the ID "Bathtub|1|1|1|BathtubBasin"
     // this is specifically used for objects that have distinct zones that should be individually interactable (outer part vs inner part) but share the same geometry, like a bathtub.
     // Objets like a Coffeetable with inset Drawers should NOT be on this list because those objects do not share geometry (table vs drawer)

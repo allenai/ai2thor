@@ -257,6 +257,7 @@ def test_third_party_camera_with_image_synthesis(fifo_controller):
 
 
 def test_rectangle_aspect(fifo_controller):
+
     fifo_controller.reset(TEST_SCENE, width=600, height=300)
     event = fifo_controller.step(dict(action="Initialize", gridSize=0.25))
     assert event.frame.shape == (300, 600, 3)
@@ -384,6 +385,7 @@ def test_lookdown(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_no_leak_params(controller):
+
     action = dict(action="RotateLook", rotation=0, horizon=0)
     e = controller.step(action)
     assert "sequenceId" not in action
@@ -402,6 +404,7 @@ def test_target_invocation_exception(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_lookup(controller):
+
     e = controller.step(dict(action="RotateLook", rotation=0, horizon=0))
     position = controller.last_event.metadata["agent"]["position"]
     horizon = controller.last_event.metadata["agent"]["cameraHorizon"]
@@ -416,6 +419,7 @@ def test_lookup(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_rotate_left(controller):
+
     e = controller.step(dict(action="RotateLook", rotation=0, horizon=0))
     position = controller.last_event.metadata["agent"]["position"]
     rotation = controller.last_event.metadata["agent"]["rotation"]
@@ -431,6 +435,7 @@ def test_rotate_left(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_simobj_filter(controller):
+
     objects = controller.last_event.metadata["objects"]
     unfiltered_object_ids = sorted([o["objectId"] for o in objects])
     filter_object_ids = sorted([o["objectId"] for o in objects[0:3]])
@@ -640,6 +645,7 @@ def test_update_third_party_camera(fifo_controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_rotate_look(controller):
+
     e = controller.step(dict(action="RotateLook", rotation=0, horizon=0))
     position = controller.last_event.metadata["agent"]["position"]
     rotation = controller.last_event.metadata["agent"]["rotation"]
@@ -654,6 +660,7 @@ def test_rotate_look(controller):
 
 @pytest.mark.parametrize("controller", fifo_wsgi)
 def test_rotate_right(controller):
+
     e = controller.step(dict(action="RotateLook", rotation=0, horizon=0))
     position = controller.last_event.metadata["agent"]["position"]
     rotation = controller.last_event.metadata["agent"]["rotation"]

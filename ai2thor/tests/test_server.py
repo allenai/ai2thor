@@ -75,6 +75,7 @@ def test_ping(client):
 
 
 def test_multi_agent_train():
+
     s = ai2thor.wsgi_server.WsgiServer(host="127.0.0.1")
     s.send(dict(action="RotateRight"))
     c = s.app.test_client()
@@ -88,6 +89,7 @@ def test_multi_agent_train():
 
 
 def test_train_numpy_action():
+
     s = ai2thor.wsgi_server.WsgiServer(host="127.0.0.1")
     s.send(
         dict(
@@ -116,6 +118,7 @@ def test_train_numpy_action():
 
 
 def test_train():
+
     s = ai2thor.wsgi_server.WsgiServer(host="127.0.0.1")
     s.send(dict(action="RotateRight"))
     c = s.app.test_client()
@@ -129,6 +132,7 @@ def test_train():
 
 
 def test_client_token_mismatch():
+
     s = ai2thor.wsgi_server.WsgiServer(host="127.0.0.1")
     s.send(dict(action="RotateRight"))
     s.client_token = "123456"
@@ -162,6 +166,7 @@ def test_non_multipart():
 
 
 def test_sequence_id_mismatch():
+
     s = ai2thor.wsgi_server.WsgiServer(host="127.0.0.1")
     s.send(dict(action="RotateRight"))
     c = s.app.test_client()
