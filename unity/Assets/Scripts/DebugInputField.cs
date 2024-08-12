@@ -2760,20 +2760,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             action["objectId"] = splitcommand[1];
                         }
 
-                    break;
-                }
+                        break;
+                    }
 
-                case "gvo":
-                {
-                    Dictionary<string, object> action = new Dictionary<string, object>()
-                    {
-                        ["action"] = "GetVisibleObjects",
-                        ["thirdPartyCameraIndex"] = 0,
-                    };
+                case "gvo": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "GetVisibleObjects",
+                            ["thirdPartyCameraIndex"] = 0,
+                        };
 
-                    CurrentActiveController().ProcessControlCommand(action);
-                    break;
-                }
+                        CurrentActiveController().ProcessControlCommand(action);
+                        break;
+                    }
 
                 case "putxy": {
                         Dictionary<string, object> action = new Dictionary<string, object>();

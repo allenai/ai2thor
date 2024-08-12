@@ -2677,11 +2677,9 @@ public class ServerAction {
         return (SimObjType)Enum.Parse(typeof(SimObjType), receptacleObjectType);
     }
 
-    public static VisibilityScheme GetVisibilitySchemeFromString(string visibilityScheme)
-    {
+    public static VisibilityScheme GetVisibilitySchemeFromString(string visibilityScheme) {
         VisibilityScheme result = VisibilityScheme.Distance;
-        try
-        {
+        try {
             result = (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme, true);
         }
         // including this pragma so the "ex variable declared but not used" warning stops yelling
@@ -2789,8 +2787,7 @@ public enum ServerActionErrorCode {
     UnhandledException
 }
 
-public enum VisibilityScheme
-{
+public enum VisibilityScheme {
     Collider, //deprecated, scheme is now Distance based only
     Distance
 }

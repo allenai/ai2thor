@@ -4537,8 +4537,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float maxDistance,
             out SimObjPhysics[] interactable,
             IEnumerable<SimObjPhysics> filterSimObjs = null
-        )
-        {
+        ) {
             return GetAllVisibleSimObjPhysicsDistance(
                 camera,
                 maxDistance,
@@ -4556,29 +4555,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float? maxDistance = null, //max distance from the camera origin to consider objects visible
             int? thirdPartyCameraId = null, //leave null to query main camera, otherwise pass in the index of the third party camera
             List<string> filterObjectIds = null //only return objects with these ids
-        ) 
-        {
+        ) {
             //if thirdPartyCameraId not specified, default to main camera
             Camera camera = m_Camera;
-            if (thirdPartyCameraId.HasValue)
-            {
+            if (thirdPartyCameraId.HasValue) {
                 camera = agentManager.thirdPartyCameras[thirdPartyCameraId.Value];
-                if (this.visibilityScheme != VisibilityScheme.Distance)
-                {
+                if (this.visibilityScheme != VisibilityScheme.Distance) {
                     throw new System.NotImplementedException(
                         $"Visibility scheme {this.visibilityScheme} is not implemented for third party cameras. Default visibility scheme should be 'Distance'."
                     );
-                }            
+                }
             }
 
             //only check visibility for objects with these ids otherwise check them all
             List<SimObjPhysics> filterSimObjs = null;
-            if (filterObjectIds != null)
-            {
-                foreach (string objectId in filterObjectIds)
-                {
-                    if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId))
-                    {
+            if (filterObjectIds != null) {
+                foreach (string objectId in filterObjectIds) {
+                    if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                         throw new ArgumentException(
                             $"Object with id {objectId} does not exist in scene."
                         );
@@ -4597,12 +4590,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 interactable: out interactable
             );
 
-// #if UNITY_EDITOR
-//             foreach (SimObjPhysics sop in visible)
-//             {
-//                 Debug.Log("Visible: " + sop.name);
-//             }
-// #endif
+            // #if UNITY_EDITOR
+            //             foreach (SimObjPhysics sop in visible)
+            //             {
+            //                 Debug.Log("Visible: " + sop.name);
+            //             }
+            // #endif
 
             actionFinishedEmit(true, visible.Select(sop => sop.ObjectID).ToList());
         }
@@ -4617,23 +4610,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string visibilityScheme = null,
             int? thirdPartyCameraIndex = null,
             List<string> objectIds = null
-        )
-        {
+        ) {
             Camera camera; //which camera are we checking visibility from?
-            if (thirdPartyCameraIndex.HasValue)
-            {
+            if (thirdPartyCameraIndex.HasValue) {
                 camera = agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value];
-                if (this.visibilityScheme != VisibilityScheme.Distance)
-                {
+                if (this.visibilityScheme != VisibilityScheme.Distance) {
                     throw new System.NotImplementedException(
                         $"Visibility scheme {this.visibilityScheme} is not implemented for third party cameras. Default visibility scheme should be 'Distance'."
                     );
                 }
             }
-
             //can also be used to query main camera
-            else
-            {
+            else {
                 camera = m_Camera;
             }
 
@@ -4725,8 +4713,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return visible.ToArray();
         }
 
-        protected virtual LayerMask GetVisibilityRaycastLayerMask(bool withSimObjInvisible = false)
-        {
+        protected virtual LayerMask GetVisibilityRaycastLayerMask(bool withSimObjInvisible = false) {
             string[] layers = new string[]
             {
                 "SimObjVisible",

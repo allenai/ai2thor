@@ -218,14 +218,13 @@ namespace Tests
             action["thirdPartyCameraId"] = 0;
             yield return step(action);
 
-            List<string> visibleObjects = (List<string>) actionReturn;
-            #if UNITY_EDITOR
-            foreach(string obj in visibleObjects)
+            List<string> visibleObjects = (List<string>)actionReturn;
+#if UNITY_EDITOR
+            foreach (string obj in visibleObjects)
             {
                 Debug.Log(obj);
-                
             }
-            #endif
+#endif
 
             //check for expected object at first few elements
             //also check for total count of visible objects to be the expected amount
@@ -241,14 +240,13 @@ namespace Tests
             yield return step(action);
 
             visibleObjects.Clear();
-            visibleObjects = (List<string>) actionReturn;
-            #if UNITY_EDITOR
-            foreach(string obj in visibleObjects)
+            visibleObjects = (List<string>)actionReturn;
+#if UNITY_EDITOR
+            foreach (string obj in visibleObjects)
             {
                 Debug.Log(obj);
-                
             }
-            #endif
+#endif
 
             Assert.AreEqual(visibleObjects.Count, 1);
             Assert.AreEqual(visibleObjects[0], "Apple|-00.47|+01.15|+00.48");
