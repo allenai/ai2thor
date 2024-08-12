@@ -12,11 +12,9 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using Random = UnityEngine.Random;
 
-namespace UnityStandardAssets.Characters.FirstPerson
-{
+namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
-    public class DebugFPSAgentController : MonoBehaviour
-    {
+    public class DebugFPSAgentController : MonoBehaviour {
         // for use with mouse/keyboard input
         [SerializeField]
         protected bool m_IsWalking;
@@ -67,8 +65,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         protected bool enableHighlightShader = true;
 
-        private void Start()
-        {
+        private void Start() {
             m_CharacterController = GetComponent<CharacterController>();
             m_Camera = Camera.main;
             m_MouseLook.Init(transform, m_Camera.transform);
@@ -94,8 +91,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             );
 
             // if this component is enabled, turn on the targeting reticle and target text
-            if (this.isActiveAndEnabled)
-            {
+            if (this.isActiveAndEnabled) {
                 Debug_Canvas.GetComponent<Canvas>().enabled = true;
                 Cursor.visible = false;
                 Cursor.lockState = CursorLockMode.Locked;
@@ -111,8 +107,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 #endif
         }
 
-        public Vector3 ScreenPointMoveHand(float yOffset)
-        {
+        public Vector3 ScreenPointMoveHand(float yOffset) {
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             // shoot a ray out based on mouse position
@@ -120,30 +115,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return hit.point + new Vector3(0, yOffset, 0);
         }
 
-        public void HideHUD()
-        {
-            if (InputMode_Text != null)
-            {
+        public void HideHUD() {
+            if (InputMode_Text != null) {
                 InputMode_Text.SetActive(false);
             }
-            if (InputFieldObj != null)
-            {
+            if (InputFieldObj != null) {
                 InputFieldObj.SetActive(false);
             }
             var background = GameObject.Find("DebugCanvasPhysics/InputModeText_Background");
-            if (background != null)
-            {
+            if (background != null) {
                 background.SetActive(false);
             }
         }
 
-        public void SetScroll2DEnabled(bool enabled)
-        {
+        public void SetScroll2DEnabled(bool enabled) {
             this.scroll2DEnabled = enabled;
         }
 
-        public void OnEnable()
-        {
+        public void OnEnable() {
             FPSEnabled = true;
             originalPhysicsAutosimulation = Physics.autoSimulation;
             Physics.autoSimulation = true;
@@ -152,8 +141,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
             InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
-            if (InputMode_Text)
-            {
+            if (InputMode_Text) {
                 InputMode_Text.GetComponent<Text>().text = "FPS Mode";
             }
 
@@ -162,18 +150,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Debug_Canvas.GetComponent<Canvas>().enabled = true;
         }
 
-        public void OnDisable()
-        {
+        public void OnDisable() {
             DisableMouseControl();
             //  if (InputFieldObj) {
             //     InputFieldObj.SetActive(true);
             //  }
         }
 
-        public void EnableMouseControl()
-        {
-            if (InputMode_Text)
-            {
+        public void EnableMouseControl() {
+            if (InputMode_Text) {
                 InputMode_Text.GetComponent<Text>().text = "FPS Mode (mouse free)";
             }
             FPSEnabled = true;
@@ -183,10 +168,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Physics.autoSimulation = true;
         }
 
-        public void DisableMouseControl()
-        {
-            if (InputMode_Text)
-            {
+        public void DisableMouseControl() {
+            if (InputMode_Text) {
                 InputMode_Text.GetComponent<Text>().text = "FPS Mode";
             }
             FPSEnabled = false;
@@ -195,20 +178,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Physics.autoSimulation = originalPhysicsAutosimulation;
         }
 
-        private void DebugKeyboardControls()
-        {
-            if (InputFieldObj != null)
-            {
+        private void DebugKeyboardControls() {
+            if (InputFieldObj != null) {
                 InputField inField = InputFieldObj.GetComponentInChildren<InputField>();
-                if (inField != null)
-                {
-                    if (inField.isFocused)
-                    {
+                if (inField != null) {
+                    if (inField.isFocused) {
                         highlightController.ThrowEnabled = false;
                         return;
-                    }
-                    else
-                    {
+                    } else {
                         highlightController.ThrowEnabled = true;
                     }
                 }
@@ -216,16 +193,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             // swap between text input and not
 #if !UNITY_WEBGL
-            if (Input.GetKeyDown(KeyCode.BackQuote) || Input.GetKeyDown(KeyCode.Escape))
-            {
+            if (Input.GetKeyDown(KeyCode.BackQuote) || Input.GetKeyDown(KeyCode.Escape)) {
                 // Switch to Text Mode
-                if (FPSEnabled)
-                {
+                if (FPSEnabled) {
                     DisableMouseControl();
                     return;
-                }
-                else
-                {
+                } else {
                     EnableMouseControl();
                     return;
                 }
@@ -233,13 +206,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 #endif
 
             // 1D Scroll for hand movement
-            if (!scroll2DEnabled && this.PhysicsController.WhatAmIHolding() != null)
-            {
+            if (!scroll2DEnabled && this.PhysicsController.WhatAmIHolding() != null) {
                 var scrollAmount = Input.GetAxis("Mouse ScrollWheel");
 
                 var eps = 1e-6;
-                if (Mathf.Abs(scrollAmount) > eps)
-                {
+                if (Mathf.Abs(scrollAmount) > eps) {
                     // webGL action
                     var action = new Dictionary<string, object>()
                     {
@@ -251,8 +222,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        private void Update()
-        {
+        private void Update() {
             highlightController.UpdateHighlightedObject(
                 new Vector3(Screen.width / 2, Screen.height / 2)
             );
@@ -262,27 +232,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             ///////////////////////////////////////////////////////////////////////////
             // we are not in focus mode, so use WASD and mouse to move around
-            if (FPSEnabled)
-            {
+            if (FPSEnabled) {
                 FPSInput();
-                if (Cursor.visible == false)
-                {
+                if (Cursor.visible == false) {
                     // accept input to update view based on mouse input
                     MouseRotateView();
                 }
             }
         }
 
-        public void OnGUI()
-        {
-            if (Event.current.type == EventType.ScrollWheel && scroll2DEnabled)
-            {
-                if (this.PhysicsController.WhatAmIHolding() != null)
-                {
+        public void OnGUI() {
+            if (Event.current.type == EventType.ScrollWheel && scroll2DEnabled) {
+                if (this.PhysicsController.WhatAmIHolding() != null) {
                     var scrollAmount = Event.current.delta;
                     var eps = 1e-6;
-                    if (Mathf.Abs(scrollAmount.x) > eps || Mathf.Abs(scrollAmount.y) > eps)
-                    {
+                    if (Mathf.Abs(scrollAmount.x) > eps || Mathf.Abs(scrollAmount.y) > eps) {
                         // Actioned called through webGL, using dynamic not supported by IL2CPP
                         var action = new Dictionary<string, object>()
                         {
@@ -297,8 +261,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        private void GetInput(out float speed)
-        {
+        private void GetInput(out float speed) {
             // Read input
             float horizontal = CrossPlatformInputManager.GetAxis("Horizontal");
             float vertical = CrossPlatformInputManager.GetAxis("Vertical");
@@ -315,24 +278,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_Input = new Vector2(horizontal, vertical);
 
             // normalize input if it exceeds 1 in combined length:
-            if (m_Input.sqrMagnitude > 1)
-            {
+            if (m_Input.sqrMagnitude > 1) {
                 m_Input.Normalize();
             }
         }
 
-        public MouseLook GetMouseLook()
-        {
+        public MouseLook GetMouseLook() {
             return m_MouseLook;
         }
 
-        private void MouseRotateView()
-        {
+        private void MouseRotateView() {
             m_MouseLook.LookRotation(transform, m_Camera.transform);
         }
 
-        private void FPSInput()
-        {
+        private void FPSInput() {
             // take WASD input and do magic, turning it into movement!
             float speed;
             GetInput(out speed);
@@ -359,8 +318,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.deltaTime;
 
             // added this check so that move is not called if/when the Character Controller's capsule is disabled. Right now the capsule is being disabled when open/close animations are in progress so yeah there's that
-            if (m_CharacterController.enabled == true)
-            {
+            if (m_CharacterController.enabled == true) {
                 m_CharacterController.Move(m_MoveDir * Time.deltaTime);
             }
         }

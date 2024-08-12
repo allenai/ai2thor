@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ChangeLighting : MonoBehaviour
-{
+public class ChangeLighting : MonoBehaviour {
     // 9 elements right now
     public GameObject[] Lights;
 
@@ -13,10 +12,8 @@ public class ChangeLighting : MonoBehaviour
     // Update is called once per frame
     void Update() { }
 
-    public void SetLights(int lightset)
-    {
-        foreach (GameObject go in Lights)
-        {
+    public void SetLights(int lightset) {
+        foreach (GameObject go in Lights) {
             go.SetActive(false);
         }
 

@@ -5,8 +5,7 @@ using System.Linq;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
-{
+public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous {
     [SerializeField]
     public Transform FinalJoint;
 
@@ -41,8 +40,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
 
     protected bool ignoreHeldObjectToAgentCollisions = false;
 
-    protected virtual bool validArmTargetPosition(Vector3 targetWorldPosition)
-    {
+    protected virtual bool validArmTargetPosition(Vector3 targetWorldPosition) {
         return true;
     }
 
@@ -58,8 +56,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
 
     public abstract void ContinuousUpdate(float fixedDeltaTime);
 
-    public virtual ActionFinished FinishContinuousMove(BaseFPSAgentController controller)
-    {
+    public virtual ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
         bool actionSuccess = !this.ShouldHalt();
         string errorMessage = this.GetHaltMessage();
 
@@ -79,28 +76,23 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
     public abstract GameObject GetArmTarget();
     public abstract ArmMetadata GenerateMetadata();
 
-    public virtual bool ShouldHalt()
-    {
+    public virtual bool ShouldHalt() {
         return collisionListener.ShouldHalt();
     }
 
-    public Vector3 MagnetSphereWorldCenter()
-    {
+    public Vector3 MagnetSphereWorldCenter() {
         return magnetSphere.transform.TransformPoint(magnetSphere.center);
     }
 
-    public virtual string GetHaltMessage()
-    {
+    public virtual string GetHaltMessage() {
         var staticCollisions = collisionListener?.StaticCollisions().ToList();
 
         // decide if we want to return to original property or last known property before collision
-        if (staticCollisions.Count > 0)
-        {
+        if (staticCollisions.Count > 0) {
             var sc = staticCollisions[0];
 
             // if we hit a sim object
-            if (sc.isSimObj)
-            {
+            if (sc.isSimObj) {
                 return "Collided with static/kinematic sim object: '"
                     + sc.simObjPhysics.name
                     + "', could not reach target: '"
@@ -109,8 +101,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
             }
 
             // if we hit a structural object that isn't a sim object but still has static collision
-            if (!sc.isSimObj)
-            {
+            if (!sc.isSimObj) {
                 return "Collided with static structure in scene: '"
                     + sc.gameObject.name
                     + "', could not reach target: '"
@@ -123,23 +114,19 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
 
     // public virtual ActionFinished FinishContinuousMove(
 
-    public bool IsArmColliding()
-    {
+    public bool IsArmColliding() {
         HashSet<Collider> colliders = this.currentArmCollisions();
         return colliders.Count > 0;
     }
 
-    public IEnumerator withLastStepCallback(IEnumerator steps)
-    {
-        while (steps.MoveNext())
-        {
+    public IEnumerator withLastStepCallback(IEnumerator steps) {
+        while (steps.MoveNext()) {
             yield return steps.Current;
         }
         lastStepCallback();
     }
 
-    public HashSet<Collider> currentArmCollisions()
-    {
+    public HashSet<Collider> currentArmCollisions() {
         HashSet<Collider> colliders = new HashSet<Collider>();
 
         // add the AgentCapsule to the ArmCapsuleColliders for the capsule collider check
@@ -149,10 +136,8 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
         capsules.Add(agentCapsuleCollider);
 
         // create overlap box/capsule for each collider and check the result I guess
-        foreach (CapsuleCollider c in capsules)
-        {
-            if (c.isTrigger || !c.gameObject.active)
-            {
+        foreach (CapsuleCollider c in capsules) {
+            if (c.isTrigger || !c.gameObject.active) {
                 continue;
             }
 
@@ -162,8 +147,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
             // direction of CapsuleCollider's orientation in local space
             Vector3 dir = new Vector3();
 
-            switch (c.direction)
-            {
+            switch (c.direction) {
                 // x just in case
                 case 0:
                     // get world space direction of this capsule's local right vector
@@ -220,17 +204,14 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
                 ),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
-            foreach (Collider col in cols)
-            {
+            foreach (Collider col in cols) {
                 colliders.Add(col);
             }
         }
 
         // also check if the couple of box colliders are colliding
-        foreach (BoxCollider b in ArmBoxColliders)
-        {
-            if (b.isTrigger || !b.gameObject.active)
-            {
+        foreach (BoxCollider b in ArmBoxColliders) {
+            if (b.isTrigger || !b.gameObject.active) {
                 continue;
             }
             Collider[] cols = Physics.OverlapBox(
@@ -246,8 +227,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
                 ),
                 queryTriggerInteraction: QueryTriggerInteraction.Ignore
             );
-            foreach (Collider col in cols)
-            {
+            foreach (Collider col in cols) {
                 colliders.Add(col);
             }
         }
@@ -262,11 +242,9 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
         bool returnToStart,
         string coordinateSpace,
         bool restrictTargetPosition
-    )
-    {
+    ) {
         Vector3 offsetWorldPos;
-        switch (coordinateSpace)
-        {
+        switch (coordinateSpace) {
             case "world":
                 // world space, can be used to move directly toward positions
                 // returned by sim objects
@@ -302,8 +280,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
         bool returnToStart,
         string coordinateSpace,
         bool restrictTargetPosition
-    )
-    {
+    ) {
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
 
@@ -311,8 +288,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
 
         // Move arm based on hand space or arm origin space
         Vector3 targetWorldPos;
-        switch (coordinateSpace)
-        {
+        switch (coordinateSpace) {
             case "world":
                 // world space, can be used to move directly toward positions
                 // returned by sim objects
@@ -330,8 +306,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
                 throw new ArgumentException("Invalid coordinateSpace: " + coordinateSpace);
         }
 
-        if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos))
-        {
+        if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos)) {
             throw new InvalidOperationException(
                 $"Invalid target: Position '{target}' in space '{coordinateSpace}' is behind shoulder."
             );
@@ -358,8 +333,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed,
         bool normalizedY
-    )
-    {
+    ) {
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
 
@@ -370,13 +344,11 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
             maxY;
         getCapsuleMinMaxY(controller, out minY, out maxY);
 
-        if (normalizedY)
-        {
+        if (normalizedY) {
             height = (maxY - minY) * height + minY;
         }
 
-        if (height < minY || height > maxY)
-        {
+        if (height < minY || height > maxY) {
             throw new ArgumentOutOfRangeException(
                 $"height={height} value must be in [{minY}, {maxY}]."
             );
@@ -401,8 +373,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
         PhysicsRemoteFPSAgentController controller,
         out float minY,
         out float maxY
-    )
-    {
+    ) {
         CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
         Vector3 capsuleWorldCenter = cc.transform.TransformPoint(cc.center);
 
@@ -416,8 +387,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
         float unitsPerSecond,
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed
-    )
-    {
+    ) {
         // clearing out colliders here since OnTriggerExit is not consistently called in Editor
         collisionListener.Reset();
 
@@ -445,8 +415,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
         float degreesPerSecond,
         float fixedDeltaTime,
         bool returnToStartPositionIfFailed
-    )
-    {
+    ) {
         collisionListener.Reset();
         return withLastStepCallback(
             ContinuousMovement.rotate(
@@ -461,20 +430,17 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
         );
     }
 
-    public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphereAsSOP(bool onlyPickupable)
-    {
+    public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphereAsSOP(bool onlyPickupable) {
         //Debug.Log("calling WhatObjectsAreInsideMagnetSphereAsSOP");
         return magnetSphereComp.CurrentlyContainedSimObjects(onlyPickupable: onlyPickupable);
     }
 
     public IEnumerator ReturnObjectsInMagnetAfterPhysicsUpdate(
         PhysicsRemoteFPSAgentController controller
-    )
-    {
+    ) {
         yield return new WaitForFixedUpdate();
         List<string> listOfSOP = new List<string>();
-        foreach (SimObjPhysics sop in this.WhatObjectsAreInsideMagnetSphereAsSOP(false))
-        {
+        foreach (SimObjPhysics sop in this.WhatObjectsAreInsideMagnetSphereAsSOP(false)) {
             listOfSOP.Add(sop.ObjectID);
         }
         Debug.Log("objs: " + string.Join(", ", listOfSOP));
@@ -485,18 +451,15 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
         GameObject go,
         Vector3 currentScale,
         Dictionary<GameObject, Vector3> gameObjectToScale = null
-    )
-    {
-        if (gameObjectToScale == null)
-        {
+    ) {
+        if (gameObjectToScale == null) {
             gameObjectToScale = new Dictionary<GameObject, Vector3>();
         }
 
         currentScale = Vector3.Scale(currentScale, go.transform.localScale);
         gameObjectToScale[go] = currentScale;
 
-        foreach (Transform child in go.transform)
-        {
+        foreach (Transform child in go.transform) {
             getGameObjectToMultipliedScale(
                 go: child.gameObject,
                 currentScale: currentScale,
@@ -507,19 +470,15 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
         return gameObjectToScale;
     }
 
-    public virtual IEnumerator PickupObject(List<string> objectIds)
-    {
+    public virtual IEnumerator PickupObject(List<string> objectIds) {
         // var at = this.transform.InverseTransformPoint(armTarget.position) - new Vector3(0, 0, originToShoulderLength);
         // Debug.Log("Pickup " + at.magnitude);
         bool pickedUp = false;
 
         // grab all sim objects that are currently colliding with magnet sphere
-        foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP(onlyPickupable: true))
-        {
-            if (objectIds != null)
-            {
-                if (!objectIds.Contains(sop.objectID))
-                {
+        foreach (SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP(onlyPickupable: true)) {
+            if (objectIds != null) {
+                if (!objectIds.Contains(sop.objectID)) {
                     continue;
                 }
             }
@@ -535,8 +494,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
             rb.detectCollisions = false; // Disable detecting of collisions
 
-            if (sop.IsOpenable)
-            {
+            if (sop.IsOpenable) {
                 CanOpen_Object coj = sop.gameObject.GetComponent<CanOpen_Object>();
 
                 // if an openable object receives OnTriggerEnter events
@@ -549,8 +507,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
             // and parent them to the correct joint
             HashSet<Collider> cols = new HashSet<Collider>();
 
-            foreach (Collider c in sop.MyColliders)
-            {
+            foreach (Collider c in sop.MyColliders) {
                 // One set of colliders are used to check collisions
                 // with kinematic objects
                 Collider clone = Instantiate(
@@ -587,20 +544,15 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
             Debug.Log(
                 $"------- ignoreHeldObjectToAgentCollisions {ignoreHeldObjectToAgentCollisions}"
             );
-            if (ignoreHeldObjectToAgentCollisions)
-            {
-                foreach (Collider c0 in colliders)
-                {
-                    foreach (Collider c1 in cols)
-                    {
+            if (ignoreHeldObjectToAgentCollisions) {
+                foreach (Collider c0 in colliders) {
+                    foreach (Collider c1 in cols) {
                         Physics.IgnoreCollision(c0, c1);
                     }
                 }
             }
-            foreach (Collider c0 in cols)
-            {
-                foreach (Collider c1 in cols)
-                {
+            foreach (Collider c0 in cols) {
+                foreach (Collider c1 in cols) {
                     Physics.IgnoreCollision(c0, c1);
                 }
             }
@@ -610,8 +562,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
         }
 
         var errorMessage = "";
-        if (!pickedUp)
-        {
+        if (!pickedUp) {
             errorMessage = (
                 objectIds != null
                     ? "No objects (specified by objectId) were valid to be picked up by the arm"
@@ -624,18 +575,15 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
         yield return new ActionFinished() { success = pickedUp, errorMessage = errorMessage };
     }
 
-    public virtual IEnumerator DropObject()
-    {
+    public virtual IEnumerator DropObject() {
         // grab all sim objects that are currently colliding with magnet sphere
-        foreach (KeyValuePair<SimObjPhysics, HashSet<Collider>> sop in heldObjects)
-        {
+        foreach (KeyValuePair<SimObjPhysics, HashSet<Collider>> sop in heldObjects) {
             Rigidbody rb = sop.Key.GetComponent<Rigidbody>();
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             rb.isKinematic = false;
 
             // delete cloned colliders
-            foreach (Collider c in sop.Value)
-            {
+            foreach (Collider c in sop.Value) {
                 Destroy(c.gameObject);
             }
 
@@ -646,20 +594,16 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
             //     c.enabled = true;
             // }
 
-            if (sop.Key.IsOpenable)
-            {
+            if (sop.Key.IsOpenable) {
                 CanOpen_Object coj = sop.Key.gameObject.GetComponent<CanOpen_Object>();
                 coj.triggerEnabled = true;
             }
 
             GameObject topObject = GameObject.Find("Objects");
 
-            if (topObject != null)
-            {
+            if (topObject != null) {
                 sop.Key.transform.parent = topObject.transform;
-            }
-            else
-            {
+            } else {
                 sop.Key.transform.parent = null;
             }
 
@@ -672,8 +616,7 @@ public abstract class ArmController : MonoBehaviour, Arm, MovableContinuous
         yield return ActionFinished.Success;
     }
 
-    public void SetHandSphereRadius(float radius)
-    {
+    public void SetHandSphereRadius(float radius) {
         // Magnet.transform.localScale = new Vector3(radius, radius, radius);
         magnetSphere.radius = radius;
         MagnetRenderer.transform.localScale = new Vector3(2 * radius, 2 * radius, 2 * radius);

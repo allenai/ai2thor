@@ -3,8 +3,7 @@ using System.Collections;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class Laptop : MonoBehaviour
-{
+public class Laptop : MonoBehaviour {
     public SimObj SimObjParent;
     public Transform[] PivotTransforms;
     public Renderer[] ScreenRenderers;
@@ -25,32 +24,24 @@ public class Laptop : MonoBehaviour
 
     bool displayedError;
 
-    void OnEnable()
-    {
+    void OnEnable() {
         Television = GameObject.FindObjectOfType<Television>();
     }
 
-    void Update()
-    {
-        if (Television != null)
-        {
+    void Update() {
+        if (Television != null) {
             Television.SyncedScreenMat = OnScreenMat;
         }
 
         Vector3 rot = ClosedRot;
         Material mat = OffScreenMat;
 
-        if (!Application.isPlaying)
-        {
+        if (!Application.isPlaying) {
             rot = EditorOpen ? OpenRot : ClosedRot;
             mat = EditorOn ? OnScreenMat : OffScreenMat;
-        }
-        else
-        {
-            if (SimObjParent == null || OffScreenMat == null || OnScreenMat == null)
-            {
-                if (!displayedError)
-                {
+        } else {
+            if (SimObjParent == null || OffScreenMat == null || OnScreenMat == null) {
+                if (!displayedError) {
                     Debug.LogError("Component null in latop " + name);
                     displayedError = true;
                 }
@@ -62,8 +53,7 @@ public class Laptop : MonoBehaviour
             // 2 - Open, Off
             // 3 - Closed, On
 
-            switch (animState)
-            {
+            switch (animState) {
                 case 1:
                 default:
                     rot = ClosedRot;
@@ -82,8 +72,7 @@ public class Laptop : MonoBehaviour
             }
         }
 
-        for (int i = 0; i < ScreenRenderers.Length; i++)
-        {
+        for (int i = 0; i < ScreenRenderers.Length; i++) {
             Material[] sharedMats = ScreenRenderers[i].sharedMaterials;
             sharedMats[ScreenMatIndexes[i]] = mat;
             ScreenRenderers[i].sharedMaterials = sharedMats;

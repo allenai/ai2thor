@@ -17,23 +17,19 @@ using UnityEngine.AI;
   the UnityResolver and we want our output to match the json output for Vector3.
 
 */
-namespace MessagePack.Resolvers
-{
+namespace MessagePack.Resolvers {
     public class NavMeshPathFormatter
-        : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.AI.NavMeshPath>
-    {
+        : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.AI.NavMeshPath> {
         public void Serialize(
             ref MessagePackWriter writer,
             global::UnityEngine.AI.NavMeshPath value,
             global::MessagePack.MessagePackSerializerOptions options
-        )
-        {
+        ) {
             writer.WriteMapHeader(2);
             writer.Write("corners");
             writer.WriteArrayHeader(value.corners.Length);
             Vector3Formatter f = new Vector3Formatter();
-            foreach (Vector3 c in value.corners)
-            {
+            foreach (Vector3 c in value.corners) {
                 f.Serialize(ref writer, c, options);
             }
             writer.Write("status");
@@ -43,8 +39,7 @@ namespace MessagePack.Resolvers
         public global::UnityEngine.AI.NavMeshPath Deserialize(
             ref MessagePackReader reader,
             global::MessagePack.MessagePackSerializerOptions options
-        )
-        {
+        ) {
             throw new System.NotImplementedException();
         }
     }
@@ -53,8 +48,7 @@ namespace MessagePack.Resolvers
     // base type, such as the case for droneAgent and droneObjectMetadata.  This is purely for performance (on msgpack's part)
     // The following two formatters examine the types of the values to be serialized and use the appropriate formatter.
     public class ObjectMetadataFormatter
-        : global::MessagePack.Formatters.IMessagePackFormatter<ObjectMetadata[]>
-    {
+        : global::MessagePack.Formatters.IMessagePackFormatter<ObjectMetadata[]> {
         private IMessagePackFormatter<ObjectMetadata[]> formatter =
             DynamicGenericResolver.Instance.GetFormatter<ObjectMetadata[]>();
         private IMessagePackFormatter<DroneObjectMetadata> droneFormatter =
@@ -64,23 +58,17 @@ namespace MessagePack.Resolvers
             ref MessagePackWriter writer,
             ObjectMetadata[] value,
             global::MessagePack.MessagePackSerializerOptions options
-        )
-        {
-            if (value == null)
-            {
+        ) {
+            if (value == null) {
                 writer.WriteNil();
                 return;
             }
-            if (value.Length > 0 && value[0].GetType() == typeof(DroneObjectMetadata))
-            {
+            if (value.Length > 0 && value[0].GetType() == typeof(DroneObjectMetadata)) {
                 writer.WriteArrayHeader(value.Length);
-                foreach (var v in value)
-                {
+                foreach (var v in value) {
                     droneFormatter.Serialize(ref writer, (DroneObjectMetadata)v, options);
                 }
-            }
-            else
-            {
+            } else {
                 formatter.Serialize(ref writer, value, options);
             }
         }
@@ -88,21 +76,18 @@ namespace MessagePack.Resolvers
         public ObjectMetadata[] Deserialize(
             ref MessagePackReader reader,
             global::MessagePack.MessagePackSerializerOptions options
-        )
-        {
+        ) {
             throw new System.NotImplementedException();
         }
     }
 
     public class Vector4Formatter
-        : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.Vector4>
-    {
+        : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.Vector4> {
         public void Serialize(
             ref MessagePackWriter writer,
             global::UnityEngine.Vector4 value,
             global::MessagePack.MessagePackSerializerOptions options
-        )
-        {
+        ) {
             writer.WriteMapHeader(4);
             writer.Write("x");
             writer.Write(value.x);
@@ -117,10 +102,8 @@ namespace MessagePack.Resolvers
         public global::UnityEngine.Vector4 Deserialize(
             ref MessagePackReader reader,
             global::MessagePack.MessagePackSerializerOptions options
-        )
-        {
-            if (reader.TryReadNil())
-            {
+        ) {
+            if (reader.TryReadNil()) {
                 throw new InvalidOperationException("Cannot deserialize a nil value to a Vector3.");
             }
 
@@ -130,12 +113,10 @@ namespace MessagePack.Resolvers
                 z = 0,
                 w = 0;
 
-            for (int i = 0; i < mapLength; i++)
-            {
+            for (int i = 0; i < mapLength; i++) {
                 string property = reader.ReadString();
 
-                switch (property)
-                {
+                switch (property) {
                     case "x":
                         x = reader.ReadSingle();
                         break;
@@ -159,8 +140,7 @@ namespace MessagePack.Resolvers
     }
 
     public class AgentMetadataFormatter
-        : global::MessagePack.Formatters.IMessagePackFormatter<AgentMetadata>
-    {
+        : global::MessagePack.Formatters.IMessagePackFormatter<AgentMetadata> {
         private IMessagePackFormatter<AgentMetadata> formatter =
             DynamicObjectResolver.Instance.GetFormatter<AgentMetadata>();
         private IMessagePackFormatter<DroneAgentMetadata> droneFormatter =
@@ -170,20 +150,15 @@ namespace MessagePack.Resolvers
             ref MessagePackWriter writer,
             AgentMetadata value,
             global::MessagePack.MessagePackSerializerOptions options
-        )
-        {
-            if (value == null)
-            {
+        ) {
+            if (value == null) {
                 writer.WriteNil();
                 return;
             }
             Type type = value.GetType();
-            if (type == typeof(DroneAgentMetadata))
-            {
+            if (type == typeof(DroneAgentMetadata)) {
                 droneFormatter.Serialize(ref writer, (DroneAgentMetadata)value, options);
-            }
-            else
-            {
+            } else {
                 formatter.Serialize(ref writer, value, options);
             }
         }
@@ -191,21 +166,18 @@ namespace MessagePack.Resolvers
         public AgentMetadata Deserialize(
             ref MessagePackReader reader,
             global::MessagePack.MessagePackSerializerOptions options
-        )
-        {
+        ) {
             throw new System.NotImplementedException();
         }
     }
 
     public class Vector3Formatter
-        : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.Vector3>
-    {
+        : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.Vector3> {
         public void Serialize(
             ref MessagePackWriter writer,
             global::UnityEngine.Vector3 value,
             global::MessagePack.MessagePackSerializerOptions options
-        )
-        {
+        ) {
             writer.WriteMapHeader(3);
             writer.Write("x");
             writer.Write(value.x);
@@ -218,10 +190,8 @@ namespace MessagePack.Resolvers
         public global::UnityEngine.Vector3 Deserialize(
             ref MessagePackReader reader,
             global::MessagePack.MessagePackSerializerOptions options
-        )
-        {
-            if (reader.TryReadNil())
-            {
+        ) {
+            if (reader.TryReadNil()) {
                 throw new InvalidOperationException("Cannot deserialize a nil value to a Vector3.");
             }
 
@@ -230,12 +200,10 @@ namespace MessagePack.Resolvers
                 y = 0,
                 z = 0;
 
-            for (int i = 0; i < mapLength; i++)
-            {
+            for (int i = 0; i < mapLength; i++) {
                 string property = reader.ReadString();
 
-                switch (property)
-                {
+                switch (property) {
                     case "x":
                         x = reader.ReadSingle();
                         break;
@@ -255,8 +223,7 @@ namespace MessagePack.Resolvers
         }
     }
 
-    public class ThorContractlessStandardResolver : IFormatterResolver
-    {
+    public class ThorContractlessStandardResolver : IFormatterResolver {
         public static readonly MessagePackSerializerOptions Options;
         public static readonly ThorContractlessStandardResolver Instance;
 
@@ -273,27 +240,22 @@ namespace MessagePack.Resolvers
 #endif
         };
 
-        static ThorContractlessStandardResolver()
-        {
+        static ThorContractlessStandardResolver() {
             Instance = new ThorContractlessStandardResolver();
             Options = MessagePackSerializerOptions.Standard.WithResolver(Instance);
         }
 
         private ThorContractlessStandardResolver() { }
 
-        public IMessagePackFormatter<T> GetFormatter<T>()
-        {
+        public IMessagePackFormatter<T> GetFormatter<T>() {
             return FormatterCache<T>.Formatter;
         }
 
-        private static class FormatterCache<T>
-        {
+        private static class FormatterCache<T> {
             public static readonly IMessagePackFormatter<T> Formatter;
 
-            static FormatterCache()
-            {
-                if (typeof(T) == typeof(object))
-                {
+            static FormatterCache() {
+                if (typeof(T) == typeof(object)) {
                     // final fallback
 #if !ENABLE_IL2CPP
                     Formatter =
@@ -301,14 +263,10 @@ namespace MessagePack.Resolvers
 #else
                     Formatter = PrimitiveObjectResolver.Instance.GetFormatter<T>();
 #endif
-                }
-                else
-                {
-                    foreach (IFormatterResolver item in Resolvers)
-                    {
+                } else {
+                    foreach (IFormatterResolver item in Resolvers) {
                         IMessagePackFormatter<T> f = item.GetFormatter<T>();
-                        if (f != null)
-                        {
+                        if (f != null) {
                             Formatter = f;
                             return;
                         }
@@ -319,19 +277,16 @@ namespace MessagePack.Resolvers
     }
 }
 
-public class ThorUnityResolver : IFormatterResolver
-{
+public class ThorUnityResolver : IFormatterResolver {
     public static readonly ThorUnityResolver Instance = new ThorUnityResolver();
 
     private ThorUnityResolver() { }
 
-    public IMessagePackFormatter<T> GetFormatter<T>()
-    {
+    public IMessagePackFormatter<T> GetFormatter<T>() {
         return FormatterCache<T>.Formatter;
     }
 
-    private static class FormatterCache<T>
-    {
+    private static class FormatterCache<T> {
         public static readonly IMessagePackFormatter<T> Formatter;
         private static readonly Dictionary<Type, object> FormatterMap = new Dictionary<
             Type,
@@ -346,16 +301,13 @@ public class ThorUnityResolver : IFormatterResolver
             { typeof(ObjectMetadata[]), new ObjectMetadataFormatter() }
         };
 
-        static FormatterCache()
-        {
+        static FormatterCache() {
             Formatter = (IMessagePackFormatter<T>)GetFormatter(typeof(T));
         }
 
-        static object GetFormatter(Type t)
-        {
+        static object GetFormatter(Type t) {
             object formatter;
-            if (FormatterMap.TryGetValue(t, out formatter))
-            {
+            if (FormatterMap.TryGetValue(t, out formatter)) {
                 return formatter;
             }
 

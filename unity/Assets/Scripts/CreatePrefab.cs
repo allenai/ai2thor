@@ -4,14 +4,11 @@ using UnityEngine;
 using System.Collections;
 using UnityEditor;
 
-public class CreatePrefab : MonoBehaviour
-{
+public class CreatePrefab : MonoBehaviour {
     [MenuItem("Extras/Create Prefab From Selection")]
-    static void DoCreatePrefab()
-    {
+    static void DoCreatePrefab() {
         Transform[] transforms = Selection.transforms;
-        foreach (Transform t in transforms)
-        {
+        foreach (Transform t in transforms) {
             PrefabUtility.SaveAsPrefabAsset(
                 t.gameObject,
                 "Assets/Prefabs/" + t.gameObject.name + ".prefab"

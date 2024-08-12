@@ -2,8 +2,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class Fridge : MonoBehaviour
-{
+public class Fridge : MonoBehaviour {
     public SimObj ParentObj;
 
     public Transform[] Doors;
@@ -17,39 +16,32 @@ public class Fridge : MonoBehaviour
     Vector3 drawerTargetPosition;
     float distanceToTarget;
 
-    void Awake()
-    {
+    void Awake() {
         ParentObj = gameObject.GetComponent<SimObj>();
     }
 
-    void Update()
-    {
+    void Update() {
         bool open = false;
-        if (!ParentObj.IsAnimated)
-        {
+        if (!ParentObj.IsAnimated) {
             return;
         }
 
         open = ParentObj.Animator.GetBool("AnimState1");
 
-        switch (SceneManager.Current.AnimationMode)
-        {
+        switch (SceneManager.Current.AnimationMode) {
             case SceneAnimationMode.Instant:
             default:
-                for (int i = 0; i < Doors.Length; i++)
-                {
+                for (int i = 0; i < Doors.Length; i++) {
                     Doors[i].localEulerAngles = open ? OpenRotations[i] : ClosedRotations[i];
                 }
-                for (int i = 0; i < Drawers.Length; i++)
-                {
+                for (int i = 0; i < Drawers.Length; i++) {
                     Drawers[i].localPosition = open ? OpenPositions[i] : ClosedPositions[i];
                 }
                 break;
 
             case SceneAnimationMode.Smooth:
                 distanceToTarget = 0f;
-                for (int i = 0; i < Doors.Length; i++)
-                {
+                for (int i = 0; i < Doors.Length; i++) {
                     doorTargetRotation = open ? OpenRotations[i] : ClosedRotations[i];
                     Quaternion doorStartRotation = Doors[i].rotation;
                     Doors[i].localEulerAngles = doorTargetRotation;
@@ -64,8 +56,7 @@ public class Fridge : MonoBehaviour
                         Vector3.Distance(Doors[i].localEulerAngles, doorTargetRotation)
                     );
                 }
-                for (int i = 0; i < Drawers.Length; i++)
-                {
+                for (int i = 0; i < Drawers.Length; i++) {
                     drawerTargetPosition = open ? OpenPositions[i] : ClosedPositions[i];
                     Drawers[i].localPosition = Vector3.Lerp(
                         Drawers[i].localPosition,
@@ -78,8 +69,7 @@ public class Fridge : MonoBehaviour
                     );
                 }
 
-                if (distanceToTarget >= 360f)
-                {
+                if (distanceToTarget >= 360f) {
                     distanceToTarget -= 360f;
                 }
 
