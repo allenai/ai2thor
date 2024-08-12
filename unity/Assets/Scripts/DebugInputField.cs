@@ -2926,14 +2926,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     Dictionary<string, object> action = new Dictionary<string, object>()
                     {
                         ["action"] = "AddThirdPartyCamera",
-                        ["position"] = new Vector3(1, 1, 1),
-                        ["rotation"] = new Vector3(10, 20, 30),
-                        ["parent"] = "agent",
-                        ["agentPositionRelativeCoordinates"] = true
+                        ["position"] = new Vector3(-0.67f, 1.315f, 0.46f),
+                        ["rotation"] = new Vector3(0, 180, 0),
+                        ["parent"] = "world",
+                        ["agentPositionRelativeCoordinates"] = false
                     };
 
                     CurrentActiveController()
                         .ProcessControlCommand(new DynamicServerAction(action), AManager);
+                    break;
+                }
+
+                case "gvo":
+                {
+                    Dictionary<string, object> action = new Dictionary<string, object>()
+                    {
+                        ["action"] = "GetVisibleObjects",
+                        ["thirdPartyCameraIndex"] = 0,
+                    };
+
+                    CurrentActiveController().ProcessControlCommand(action);
                     break;
                 }
 

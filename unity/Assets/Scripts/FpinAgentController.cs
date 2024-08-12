@@ -66,7 +66,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public float maxVisibleDistance = 1.5f;
         public float visibilityDistance;
         public float TimeToWaitForObjectsToComeToRest = 10.0f;
-        public string visibilityScheme = VisibilityScheme.Collider.ToString();
+        public string visibilityScheme = VisibilityScheme.Distance.ToString();
     }
 
     public class FpinAgentController : PhysicsRemoteFPSAgentController

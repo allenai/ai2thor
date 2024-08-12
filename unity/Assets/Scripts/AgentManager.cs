@@ -2944,7 +2944,7 @@ public class ServerAction
     // default time for objects to wait before returning actionFinished() if an action put them in motion
     public float TimeToWaitForObjectsToComeToRest = 10.0f;
     public float scale;
-    public string visibilityScheme = VisibilityScheme.Collider.ToString();
+    public string visibilityScheme = VisibilityScheme.Distance.ToString();
     public bool fastActionEmit = true;
 
     // this allows us to chain the dispatch between two separate
@@ -2997,7 +2997,7 @@ public class ServerAction
 
     public static VisibilityScheme GetVisibilitySchemeFromString(string visibilityScheme)
     {
-        VisibilityScheme result = VisibilityScheme.Collider;
+        VisibilityScheme result = VisibilityScheme.Distance;
         try
         {
             result = (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme, true);
@@ -3122,7 +3122,7 @@ public enum ServerActionErrorCode
 
 public enum VisibilityScheme
 {
-    Collider,
+    Collider, //deprecated, scheme is now Distance based only
     Distance
 }
 

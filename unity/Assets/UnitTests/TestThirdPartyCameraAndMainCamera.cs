@@ -192,7 +192,7 @@ namespace Tests
         }
 
         [UnityTest]
-        public IEnumerator TestGetVisibleObjects()
+        public IEnumerator TestGetVisibleObjectsFromCamera()
         {
             Dictionary<string, object> action = new Dictionary<string, object>();
 
@@ -214,24 +214,44 @@ namespace Tests
 
             action.Clear();
 
-            action["action"] = "GetVisibleObjects";
-            action["thirdPartyCameraIndex"] = 0;
-            action["visibilityScheme"] = "Distance";
+            action["action"] = "GetVisibleObjectsFromCamera";
+            action["thirdPartyCameraId"] = 0;
             yield return step(action);
 
-            //Debug.Log($"action return: {actionReturn}");
             List<string> visibleObjects = (List<string>) actionReturn;
-            
-            //check for expected object at first few elements
-            //also check for total count of visible objects to be the expected amount
+            #if UNITY_EDITOR
             foreach(string obj in visibleObjects)
             {
                 Debug.Log(obj);
+                
             }
+            #endif
+
+            //check for expected object at first few elements
+            //also check for total count of visible objects to be the expected amount
+            Assert.AreEqual(visibleObjects.Count, 16);
+            Assert.AreEqual(visibleObjects[0], "Apple|-00.47|+01.15|+00.48");
 
             //test with objectId filter now
+            action.Clear();
 
+            action["action"] = "GetVisibleObjectsFromCamera";
+            action["thirdPartyCameraId"] = 0;
+            action["filterObjectIds"] = new List<string> { "Apple|-00.47|+01.15|+00.48" };
+            yield return step(action);
 
+            visibleObjects.Clear();
+            visibleObjects = (List<string>) actionReturn;
+            #if UNITY_EDITOR
+            foreach(string obj in visibleObjects)
+            {
+                Debug.Log(obj);
+                
+            }
+            #endif
+
+            Assert.AreEqual(visibleObjects.Count, 1);
+            Assert.AreEqual(visibleObjects[0], "Apple|-00.47|+01.15|+00.48");
         }
 
         [UnityTest]

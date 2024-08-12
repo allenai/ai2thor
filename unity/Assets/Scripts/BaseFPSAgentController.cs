@@ -220,7 +220,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         // outbound object filter
         private SimObjPhysics[] simObjFilter = null;
-        protected VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
+        protected VisibilityScheme visibilityScheme = VisibilityScheme.Distance;
         protected HashSet<Collider> collidersDisabledForVisbilityCheck = new HashSet<Collider>();
 
         private Dictionary<int, Dictionary<string, object>> originalLightingValues = null;
@@ -5178,24 +5178,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             SimObjPhysics[] interactable;
 
-            if (this.visibilityScheme == VisibilityScheme.Collider)
-            {
-                return GetAllVisibleSimObjPhysicsCollider(
-                    camera,
-                    maxDistance,
-                    filterSimObjs,
-                    out interactable
-                );
-            }
-            else
-            {
-                return GetAllVisibleSimObjPhysicsDistance(
-                    camera,
-                    maxDistance,
-                    filterSimObjs,
-                    out interactable
-                );
-            }
+            return GetAllVisibleSimObjPhysicsDistance(
+                camera,
+                maxDistance,
+                filterSimObjs,
+                out interactable
+            );
         }
 
         protected SimObjPhysics[] GetAllVisibleSimObjPhysics(
@@ -5205,61 +5193,79 @@ namespace UnityStandardAssets.Characters.FirstPerson
             IEnumerable<SimObjPhysics> filterSimObjs = null
         )
         {
-            if (this.visibilityScheme == VisibilityScheme.Collider)
-            {
-                return GetAllVisibleSimObjPhysicsCollider(
-                    camera,
-                    maxDistance,
-                    filterSimObjs,
-                    out interactable
-                );
-            }
-            else
-            {
-                return GetAllVisibleSimObjPhysicsDistance(
-                    camera,
-                    maxDistance,
-                    filterSimObjs,
-                    out interactable
-                );
-            }
+            return GetAllVisibleSimObjPhysicsDistance(
+                camera,
+                maxDistance,
+                filterSimObjs,
+                out interactable
+            );
         }
 
-        protected VisibilityScheme getVisibilityScheme(string visibilityScheme = null)
+        //return a list of visible sim objects from a specific camera
+        // maxDistance defaults to whatever initialized by agent's maxVisibleDistance
+        // thirdPartyCameraId defaults to use main camera
+        // filterObjectIds defaults to null, which means all objects are considered
+        // note: visible objects are returned but this does not guarantee the objects are interactable (ex: something behind glass)
+        public void GetVisibleObjectsFromCamera(
+            float? maxDistance = null, //max distance from the camera origin to consider objects visible
+            int? thirdPartyCameraId = null, //leave null to query main camera, otherwise pass in the index of the third party camera
+            List<string> filterObjectIds = null //only return objects with these ids
+        ) 
         {
-            VisibilityScheme visSchemeEnum;
-            if (visibilityScheme != null)
+            //if thirdPartyCameraId not specified, default to main camera
+            Camera camera = m_Camera;
+            if (thirdPartyCameraId.HasValue)
             {
-                visibilityScheme = visibilityScheme.ToLower();
-
-                if (
-                    visibilityScheme
-                    == Enum.GetName(typeof(VisibilityScheme), VisibilityScheme.Collider).ToLower()
-                )
-                {
-                    visSchemeEnum = VisibilityScheme.Collider;
-                }
-                else if (
-                    visibilityScheme
-                    == Enum.GetName(typeof(VisibilityScheme), VisibilityScheme.Distance).ToLower()
-                )
-                {
-                    visSchemeEnum = VisibilityScheme.Distance;
-                }
-                else
+                camera = agentManager.thirdPartyCameras[thirdPartyCameraId.Value];
+                if (this.visibilityScheme != VisibilityScheme.Distance)
                 {
                     throw new System.NotImplementedException(
-                        $"Visibility scheme {visibilityScheme} is not implemented. Must be 'distance' or 'collider'."
+                        $"Visibility scheme {this.visibilityScheme} is not implemented for third party cameras. Default visibility scheme should be 'Distance'."
                     );
-                }
+                }            
             }
-            else
+
+            //only check visibility for objects with these ids otherwise check them all
+            List<SimObjPhysics> filterSimObjs = null;
+            if (filterObjectIds != null)
             {
-                visSchemeEnum = this.visibilityScheme;
+                foreach (string objectId in filterObjectIds)
+                {
+                    if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId))
+                    {
+                        throw new ArgumentException(
+                            $"Object with id {objectId} does not exist in scene."
+                        );
+                    }
+                }
+                filterSimObjs = filterObjectIds
+                    .Select(objectId => physicsSceneManager.ObjectIdToSimObjPhysics[objectId])
+                    .ToList();
             }
-            return visSchemeEnum;
+
+            SimObjPhysics[] interactable;
+            SimObjPhysics[] visible = GetAllVisibleSimObjPhysicsDistance(
+                camera: camera,
+                maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance),
+                filterSimObjs: filterSimObjs,
+                interactable: out interactable
+            );
+
+// #if UNITY_EDITOR
+//             foreach (SimObjPhysics sop in visible)
+//             {
+//                 Debug.Log("Visible: " + sop.name);
+//             }
+// #endif
+
+            actionFinishedEmit(true, visible.Select(sop => sop.ObjectID).ToList());
         }
 
+        //old version of GetVisibleSimObjectsFromCamera
+        [ObsoleteAttribute(
+            message: "This action is deprecated. Call GetVisibleObjectsFromCamera instead.",
+            error: false
+        )]
         public void GetVisibleObjects(
             float? maxDistance = null,
             string visibilityScheme = null,
@@ -5267,19 +5273,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
             List<string> objectIds = null
         )
         {
-            VisibilityScheme visSchemeEnum = getVisibilityScheme(visibilityScheme);
-
-            Camera camera;
+            Camera camera; //which camera are we checking visibility from?
             if (thirdPartyCameraIndex.HasValue)
             {
                 camera = agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value];
-                if (visSchemeEnum != VisibilityScheme.Distance)
+                if (this.visibilityScheme != VisibilityScheme.Distance)
                 {
                     throw new System.NotImplementedException(
-                        $"Visibility scheme {visSchemeEnum} is not implemented for third party cameras. Must be 'distance'."
+                        $"Visibility scheme {this.visibilityScheme} is not implemented for third party cameras. Default visibility scheme should be 'Distance'."
                     );
                 }
             }
+
+            //can also be used to query main camera
             else
             {
                 camera = m_Camera;
@@ -5304,30 +5310,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             SimObjPhysics[] interactable;
             SimObjPhysics[] visible;
-            if (visSchemeEnum == VisibilityScheme.Collider)
-            {
-                visible = GetAllVisibleSimObjPhysicsCollider(
-                    camera: camera,
-                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
-                    filterSimObjs: filterSimObjs,
-                    interactable: out interactable
-                );
-            }
-            else if (visSchemeEnum == VisibilityScheme.Distance)
-            {
-                visible = GetAllVisibleSimObjPhysicsDistance(
-                    camera: camera,
-                    maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
-                    filterSimObjs: filterSimObjs,
-                    interactable: out interactable
-                );
-            }
-            else
-            {
-                throw new System.NotImplementedException(
-                    $"Visibility scheme {visSchemeEnum} is not implemented. Must be 'distance' or 'collider'."
-                );
-            }
+
+            visible = GetAllVisibleSimObjPhysicsDistance(
+                camera: camera,
+                maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
+                filterSimObjs: filterSimObjs,
+                interactable: out interactable
+            );
+
 #if UNITY_EDITOR
             foreach (SimObjPhysics sop in visible)
             {
@@ -5360,23 +5350,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             actionFinishedEmit(true, annotations);
-        }
-
-        [ObsoleteAttribute(
-            message: "This action is deprecated. Call GetVisibleObjects instead.",
-            error: false
-        )]
-        public void ObjectsVisibleFromThirdPartyCamera(
-            int thirdPartyCameraIndex,
-            float? maxDistance = null,
-            string visibilityScheme = null
-        )
-        {
-            GetVisibleObjects(
-                maxDistance: maxDistance,
-                visibilityScheme: visibilityScheme,
-                thirdPartyCameraIndex: thirdPartyCameraIndex
-            );
         }
 
         // this is a faster version of the visibility check, but is not entirely
@@ -5415,222 +5388,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             interactable = interactableItems.ToArray();
             return visible.ToArray();
-        }
-
-        private SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(
-            Camera camera,
-            float maxDistance,
-            IEnumerable<SimObjPhysics> filterSimObjs,
-            out SimObjPhysics[] interactable
-        )
-        {
-            HashSet<SimObjPhysics> currentlyVisibleItems = new HashSet<SimObjPhysics>();
-            HashSet<SimObjPhysics> interactableItems = new HashSet<SimObjPhysics>();
-
-#if UNITY_EDITOR
-            foreach (
-                KeyValuePair<
-                    string,
-                    SimObjPhysics
-                > pair in physicsSceneManager.ObjectIdToSimObjPhysics
-            )
-            {
-                // Set all objects to not be visible
-                pair.Value.debugIsVisible = false;
-                pair.Value.debugIsInteractable = false;
-            }
-#endif
-
-            HashSet<SimObjPhysics> filter = null;
-            if (filterSimObjs != null)
-            {
-                filter = new HashSet<SimObjPhysics>(filterSimObjs);
-                if (filter.Count == 0)
-                {
-                    interactable = interactableItems.ToArray();
-                    return currentlyVisibleItems.ToArray();
-                }
-            }
-
-            Vector3 agentCameraPos = camera.transform.position;
-
-            // get all sim objects in range around us that have colliders in layer 8 (visible), ignoring objects in the SimObjInvisible layer
-            // this will make it so the receptacle trigger boxes don't occlude the objects within them.
-            CapsuleCollider agentCapsuleCollider = GetComponent<CapsuleCollider>();
-            Vector3 point0,
-                point1;
-            float radius;
-            agentCapsuleCollider.ToWorldSpaceCapsule(out point0, out point1, out radius);
-            if (point0.y <= point1.y)
-            {
-                point1.y += maxDistance;
-            }
-            else
-            {
-                point0.y += maxDistance;
-            }
-
-            // Turn off the colliders corresponding to this agent
-            // and any invisible agents.
-            updateAllAgentCollidersForVisibilityCheck(false);
-
-            HashSet<(SimObjPhysics, bool)> sopAndIncInvisibleTuples =
-                new HashSet<(SimObjPhysics, bool)>();
-
-            // Find all nearby colliders corresponding to visible components and grab
-            // their corresponding SimObjPhysics component
-            Collider[] collidersInView = Physics.OverlapCapsule(
-                point0,
-                point1,
-                maxDistance,
-                LayerMask.GetMask(
-                    "SimObjVisible",
-                    "Procedural1",
-                    "Procedural2",
-                    "Procedural3",
-                    "Procedural0"
-                ),
-                QueryTriggerInteraction.Collide
-            );
-            if (collidersInView != null)
-            {
-                foreach (Collider c in collidersInView)
-                {
-                    SimObjPhysics sop = ancestorSimObjPhysics(c.gameObject);
-                    if (sop != null)
-                    {
-                        sopAndIncInvisibleTuples.Add((sop, false));
-                    }
-                }
-            }
-
-            // Check against anything in the invisible layers that we actually want to have occlude things in this round.
-            // normally receptacle trigger boxes must be ignored from the visibility check otherwise objects inside them will be occluded, but
-            // this additional check will allow us to see inside of receptacle objects like cabinets/fridges by checking for that interior
-            // receptacle trigger box. Oh boy!
-            Collider[] invisibleCollidersInView = Physics.OverlapCapsule(
-                point0,
-                point1,
-                maxDistance,
-                LayerMask.GetMask("SimObjInvisible"),
-                QueryTriggerInteraction.Collide
-            );
-            if (invisibleCollidersInView != null)
-            {
-                foreach (Collider c in invisibleCollidersInView)
-                {
-                    if (c.tag == "Receptacle")
-                    {
-                        SimObjPhysics sop = c.GetComponentInParent<SimObjPhysics>();
-                        if (sop != null)
-                        {
-                            sopAndIncInvisibleTuples.Add((sop, true));
-                        }
-                    }
-                }
-            }
-
-            // We have to explicitly add the items held by the arm as their
-            // rigidbodies are set to not detect collisions
-            if (Arm != null && Arm.gameObject.activeSelf)
-            {
-                foreach (SimObjPhysics sop in Arm.heldObjects.Keys)
-                {
-                    sopAndIncInvisibleTuples.Add((sop, false));
-                }
-            }
-            else if (SArm != null && SArm.gameObject.activeSelf)
-            {
-                foreach (SimObjPhysics sop in SArm.heldObjects.Keys)
-                {
-                    sopAndIncInvisibleTuples.Add((sop, false));
-                }
-            }
-
-            if (sopAndIncInvisibleTuples.Count != 0)
-            {
-                foreach ((SimObjPhysics, bool) sopAndIncInvisible in sopAndIncInvisibleTuples)
-                {
-                    SimObjPhysics sop = sopAndIncInvisible.Item1;
-                    bool includeInvisible = sopAndIncInvisible.Item2;
-
-                    // now we have a reference to our sim object
-                    if (sop != null && (filter == null || filter.Contains(sop)))
-                    {
-                        // check against all visibility points, accumulate count. If at least one point is visible, set object to visible
-                        if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0)
-                        {
-                            Transform[] visPoints = sop.VisibilityPoints;
-                            VisibilityCheck visCheck = new VisibilityCheck();
-
-                            foreach (Transform point in visPoints)
-                            {
-                                // if this particular point is in view...
-                                // if we see at least one vis point, the object is "visible"
-                                visCheck |= CheckIfVisibilityPointInViewport(
-                                    sop,
-                                    point,
-                                    camera,
-                                    includeInvisible
-                                );
-                                if (visCheck.visible && visCheck.interactable)
-                                {
-#if !UNITY_EDITOR
-                                    // If we're in the unity editor then don't break on finding a visible
-                                    // point as we want to draw lines to each visible point.
-                                    break;
-#endif
-                                }
-                            }
-
-#if UNITY_EDITOR
-                            sop.debugIsVisible = visCheck.visible;
-                            sop.debugIsInteractable = visCheck.interactable;
-#endif
-                            if (visCheck.visible && !currentlyVisibleItems.Contains(sop))
-                            {
-                                currentlyVisibleItems.Add(sop);
-                            }
-
-                            if (visCheck.interactable && !interactableItems.Contains(sop))
-                            {
-                                interactableItems.Add(sop);
-                            }
-                        }
-                        else
-                        {
-                            Debug.Log(
-                                "Error! Set at least 1 visibility point on SimObjPhysics "
-                                    + sop
-                                    + "."
-                            );
-                        }
-                    }
-                }
-            }
-
-            // Turn back on the colliders corresponding to this agent and invisible agents.
-            updateAllAgentCollidersForVisibilityCheck(true);
-
-            // populate array of visible items in order by distance
-            List<SimObjPhysics> currentlyVisibleItemsToList = currentlyVisibleItems.ToList();
-            List<SimObjPhysics> interactableItemsToList = interactableItems.ToList();
-
-            interactableItemsToList.Sort(
-                (x, y) =>
-                    Vector3
-                        .Distance(x.transform.position, agentCameraPos)
-                        .CompareTo(Vector3.Distance(y.transform.position, agentCameraPos))
-            );
-            currentlyVisibleItemsToList.Sort(
-                (x, y) =>
-                    Vector3
-                        .Distance(x.transform.position, agentCameraPos)
-                        .CompareTo(Vector3.Distance(y.transform.position, agentCameraPos))
-            );
-
-            interactable = interactableItemsToList.ToArray();
-            return currentlyVisibleItemsToList.ToArray();
         }
 
         protected virtual LayerMask GetVisibilityRaycastLayerMask(bool withSimObjInvisible = false)
