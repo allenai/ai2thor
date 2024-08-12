@@ -2,20 +2,16 @@
 
 using UnityEngine;
 
-public static class StandardShaderUtils
-{
-    public enum BlendMode
-    {
+public static class StandardShaderUtils {
+    public enum BlendMode {
         Opaque,
         Cutout,
         Fade,
         Transparent
     }
 
-    public static void ChangeRenderMode(Material standardShaderMaterial, BlendMode blendMode)
-    {
-        switch (blendMode)
-        {
+    public static void ChangeRenderMode(Material standardShaderMaterial, BlendMode blendMode) {
+        switch (blendMode) {
             case BlendMode.Opaque:
                 standardShaderMaterial.SetInt(
                     "_SrcBlend",

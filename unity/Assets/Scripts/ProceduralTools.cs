@@ -1778,8 +1778,7 @@ namespace Thor.Procedural {
                 var cam = GameObject.Find("FirstPersonCharacter").GetComponent<Camera>();
                 cam.clearFlags = CameraClearFlags.SolidColor;
                 cam.backgroundColor = flatColor;
-            }
-            else {
+            } else {
                 RenderSettings.skybox = materialDb.getAsset(house.proceduralParameters.skyboxId);
             }
             DynamicGI.UpdateEnvironment();

@@ -3,26 +3,21 @@ using System.Collections;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class Bathtub : MonoBehaviour
-{
+public class Bathtub : MonoBehaviour {
     public SimObj ParentObj;
     public bool EditorFilled = false;
     public GameObject FilledObject;
 
-    void OnEnable()
-    {
+    void OnEnable() {
         ParentObj = gameObject.GetComponent<SimObj>();
-        if (ParentObj == null)
-        {
+        if (ParentObj == null) {
             ParentObj = gameObject.AddComponent<SimObj>();
         }
         ParentObj.Type = SimObjType.Bathtub;
 
-        if (!Application.isPlaying)
-        {
+        if (!Application.isPlaying) {
             Animator a = ParentObj.gameObject.GetComponent<Animator>();
-            if (a == null)
-            {
+            if (a == null) {
                 a = ParentObj.gameObject.AddComponent<Animator>();
                 a.runtimeAnimatorController =
                     Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
@@ -30,16 +25,13 @@ public class Bathtub : MonoBehaviour
         }
     }
 
-    void Update()
-    {
+    void Update() {
         bool filled = EditorFilled;
-        if (Application.isPlaying)
-        {
+        if (Application.isPlaying) {
             filled = ParentObj.Animator.GetBool("AnimState1");
         }
 
-        if (FilledObject == null)
-        {
+        if (FilledObject == null) {
             Debug.LogError("Filled object is null in bathtub");
             return;
         }

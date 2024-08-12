@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RoomProperties : MonoBehaviour
-{
+public class RoomProperties : MonoBehaviour {
     // TODO make an enum once we have a final set of room types
     //public enum RoomType {}
     public string RoomType;

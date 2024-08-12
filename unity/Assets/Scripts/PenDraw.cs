@@ -2,8 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PenDraw : MonoBehaviour
-{
+public class PenDraw : MonoBehaviour {
     public GameObject penDecal;
     public GameObject raycastOrigin;
 
@@ -15,10 +14,8 @@ public class PenDraw : MonoBehaviour
     // Update is called once per frame
     void Update() { }
 
-    void OnTriggerStay(Collider other)
-    {
-        if (other.CompareTag("DecalSpawnPlane") && shouldSpawn)
-        {
+    void OnTriggerStay(Collider other) {
+        if (other.CompareTag("DecalSpawnPlane") && shouldSpawn) {
             RaycastHit hit;
             //check if we hit the spawn plane below the pencil
             if (
@@ -29,18 +26,15 @@ public class PenDraw : MonoBehaviour
                     Mathf.Infinity,
                     LayerMask.GetMask("Default")
                 )
-            )
-            {
+            ) {
                 //Debug.DrawRay(hit.point, Vector3.up * 10, Color.red);
 
                 //check if we hit another pen mark, if so don't place anything because its too close
-                if (hit.collider.tag == "Pen")
-                {
+                if (hit.collider.tag == "Pen") {
                     return;
                 }
                 //ok so if its not a pen mark, that means we hit a dirt mark which means we can spawn on the table
-                else
-                {
+                else {
                     if (
                         Physics.Raycast(
                             raycastOrigin.transform.position,
@@ -49,14 +43,11 @@ public class PenDraw : MonoBehaviour
                             Mathf.Infinity,
                             LayerMask.GetMask("SimObjVisible")
                         )
-                    )
-                    {
+                    ) {
                         Object.Instantiate(penDecal, hit.point, Quaternion.Euler(-90, 0, 0));
                     }
                 }
-            }
-            else
-            {
+            } else {
                 if (
                     Physics.Raycast(
                         raycastOrigin.transform.position,
@@ -65,8 +56,7 @@ public class PenDraw : MonoBehaviour
                         Mathf.Infinity,
                         LayerMask.GetMask("SimObjVisible")
                     )
-                )
-                {
+                ) {
                     Object.Instantiate(penDecal, hit.point, Quaternion.Euler(-90, 0, 0));
                 }
             }

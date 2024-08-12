@@ -4,8 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public class DroneObjectLauncher : MonoBehaviour
-{
+public class DroneObjectLauncher : MonoBehaviour {
     [SerializeField]
     public GameObject[] prefabsToLaunch;
 
@@ -18,34 +17,28 @@ public class DroneObjectLauncher : MonoBehaviour
     // Update is called once per frame
     void Update() { }
 
-    public bool HasLaunch(SimObjPhysics obj)
-    {
+    public bool HasLaunch(SimObjPhysics obj) {
         return launch_object.Contains(obj);
     }
 
-    public GameObject GetGameObject(string objectType, bool randomize, int variation)
-    {
+    public GameObject GetGameObject(string objectType, bool randomize, int variation) {
         List<GameObject> candidates = new List<GameObject>();
 
         SimObjType target = (SimObjType)Enum.Parse(typeof(SimObjType), objectType);
         // Debug.Log(target);
-        foreach (GameObject go in prefabsToLaunch)
-        {
+        foreach (GameObject go in prefabsToLaunch) {
             // Debug.Log(go.GetComponent<SimObjPhysics>().Type);
             // does a prefab of objectType exist in the current array of prefabs to spawn?
-            if (go.GetComponent<SimObjPhysics>().Type == target)
-            {
+            if (go.GetComponent<SimObjPhysics>().Type == target) {
                 candidates.Add(go);
             }
         }
 
         // Figure out which variation to use, if no variation use first candidate found
-        if (randomize)
-        {
+        if (randomize) {
             variation = UnityEngine.Random.Range(1, candidates.Count);
         }
-        if (variation != 0)
-        {
+        if (variation != 0) {
             variation -= 1;
         }
 
@@ -58,8 +51,7 @@ public class DroneObjectLauncher : MonoBehaviour
         Vector3 direction,
         string objectName,
         bool randomize
-    )
-    {
+    ) {
         GameObject toLaunch = GetGameObject(objectName, randomize, 0);
         GameObject fireaway = Instantiate(
             toLaunch,

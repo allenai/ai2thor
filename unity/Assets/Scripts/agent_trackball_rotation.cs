@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class agent_trackball_rotation : MonoBehaviour
-{
+public class agent_trackball_rotation : MonoBehaviour {
     float ballPositionToRotationRatio = 3 * Mathf.PI / 1200; // Circumference over 360 euler degrees
     float changeInPosition; // How far agent has moved
     Vector3 currentPosition; // Ball's current position
@@ -26,8 +25,7 @@ public class agent_trackball_rotation : MonoBehaviour
         prevLookDirection = gameObject.transform.parent.transform.rotation.eulerAngles.y;
     }
 
-    void Update()
-    {
+    void Update() {
         currentPosition = new Vector3(
             gameObject.transform.position.x,
             0,
@@ -46,9 +44,8 @@ public class agent_trackball_rotation : MonoBehaviour
                 .eulerAngles; // Ball's rotation values
             gameObject.transform.Rotate(rotationVector, Space.World); // Rotate ball
             prevPosition = currentPosition; // Record position to compare against next frame
-        }
-        else // If agent is still
-        {
+        } else // If agent is still
+          {
             lookRotation = currentLookDirection - prevLookDirection; // How far agent has rotated between frames
 
             if (lookRotation != 0) // If agent has rotated

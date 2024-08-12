@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ObjectSpecificReceptacle : MonoBehaviour
-{
+public class ObjectSpecificReceptacle : MonoBehaviour {
     [Header("Only objects of these Types can be placed on this Receptacle")]
     public SimObjType[] SpecificTypes;
 
@@ -13,14 +12,11 @@ public class ObjectSpecificReceptacle : MonoBehaviour
     [Header("Is this Receptacle already holding a valid object?")]
     public bool full = false;
 
-    public bool HasSpecificType(SimObjType check)
-    {
+    public bool HasSpecificType(SimObjType check) {
         bool result = false;
 
-        foreach (SimObjType sot in SpecificTypes)
-        {
-            if (sot == check)
-            {
+        foreach (SimObjType sot in SpecificTypes) {
+            if (sot == check) {
                 result = true;
             }
         }
@@ -28,14 +24,11 @@ public class ObjectSpecificReceptacle : MonoBehaviour
         return result;
     }
 
-    public bool isFull()
-    {
+    public bool isFull() {
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
 
-        foreach (GameObject rtb in sop.ReceptacleTriggerBoxes)
-        {
-            if (rtb.GetComponent<Contains>().isOccupied())
-            {
+        foreach (GameObject rtb in sop.ReceptacleTriggerBoxes) {
+            if (rtb.GetComponent<Contains>().isOccupied()) {
                 full = true;
                 return true;
             }
@@ -46,8 +39,7 @@ public class ObjectSpecificReceptacle : MonoBehaviour
     }
 
     // Use this for initialization
-    void Start()
-    {
+    void Start() {
 #if UNITY_EDITOR
         if (
             !gameObject
@@ -55,8 +47,7 @@ public class ObjectSpecificReceptacle : MonoBehaviour
                 .DoesThisObjectHaveThisSecondaryProperty(
                     SimObjSecondaryProperty.ObjectSpecificReceptacle
                 )
-        )
-        {
+        ) {
             Debug.LogError(
                 this.name + " is missing the Secondary Property ObjectSpecificReceptacle!"
             );

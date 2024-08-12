@@ -2,19 +2,16 @@
 using System.Collections;
 using UnityEngine;
 
-public class Toaster : MonoBehaviour
-{
+public class Toaster : MonoBehaviour {
     // private ObjectSpecificReceptacle osr;
     // private CanToggleOnOff onOff;
 
-    void Start()
-    {
+    void Start() {
         // osr = gameObject.GetComponent<ObjectSpecificReceptacle>();
         // onOff = gameObject.GetComponent<CanToggleOnOff>();
     }
 
-    void Update()
-    {
+    void Update() {
         // Note: Moved This call to the HeatZone that is turned on when the toaster is turned on
 
 

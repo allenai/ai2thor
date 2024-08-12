@@ -15,11 +15,9 @@ using UnityEditor.SceneManagement;
 using UnityEditor;
 #endif
 
-namespace Thor.Procedural
-{
+namespace Thor.Procedural {
     [Serializable]
-    public class HouseTemplate
-    {
+    public class HouseTemplate {
         public string id;
         public string layout;
         public HouseMetadata metadata;
@@ -32,8 +30,7 @@ namespace Thor.Procedural
     }
 
     [Serializable]
-    public class RoomTemplate
-    {
+    public class RoomTemplate {
         public PolygonWall wallTemplate;
         public RoomHierarchy floorTemplate;
 
@@ -41,13 +38,11 @@ namespace Thor.Procedural
         public float wallHeight = 2.0f;
     }
 
-    public static class Templates
-    {
+    public static class Templates {
         public static ProceduralHouse createHouseFromTemplate(
             HouseTemplate houseTemplate,
             int outsideBoundaryId = 0
-        )
-        {
+        ) {
             var layout = houseTemplate.layout;
             var objects = houseTemplate.objectsLayouts;
 
@@ -55,8 +50,7 @@ namespace Thor.Procedural
                 l.Split('\n')
                     .Select(x =>
                         x.Split(' ')
-                            .Select(i =>
-                            {
+                            .Select(i => {
                                 int res;
                                 var isInt = int.TryParse(i, out res);
                                 return (res, isInt);
@@ -86,8 +80,7 @@ namespace Thor.Procedural
             IEnumerable<KeyValuePair<string, WallRectangularHole>> holePairs =
                 new List<KeyValuePair<string, WallRectangularHole>>();
 
-            if (houseTemplate.doors != null)
-            {
+            if (houseTemplate.doors != null) {
                 holePairs = holePairs.Concat(
                     houseTemplate.doors.Select(d => new KeyValuePair<string, WallRectangularHole>(
                         d.Key,
@@ -95,8 +88,7 @@ namespace Thor.Procedural
                     ))
                 );
             }
-            if (houseTemplate.windows != null)
-            {
+            if (houseTemplate.windows != null) {
                 holePairs = holePairs.Concat(
                     houseTemplate.windows.Select(d => new KeyValuePair<string, WallRectangularHole>(
                         d.Key,
@@ -118,8 +110,7 @@ namespace Thor.Procedural
                     (row, column + 1)
                 };
 
-            if (layoutIntArray.Select(r => r.Length).Distinct().Count() > 1)
-            {
+            if (layoutIntArray.Select(r => r.Length).Distinct().Count() > 1) {
                 throw new ArgumentException("Invalid layout all rows must be the same size");
             }
 
@@ -135,12 +126,10 @@ namespace Thor.Procedural
                         objectLayer.SelectMany(
                             (objectRow, row) =>
                                 objectRow.Select(
-                                    (id, column) =>
-                                    {
+                                    (id, column) => {
                                         // ignore no door ones
                                         var isHole = holeTemplates.Keys.Contains(id);
-                                        if (isHole)
-                                        {
+                                        if (isHole) {
                                             var neighborIndices = new List<(int row, int column)>()
                                             {
                                                 (row, column)
@@ -165,8 +154,7 @@ namespace Thor.Procedural
                                             var neighborFunctions = neighborIndices
                                                 .Take(2)
                                                 .Select((index, i) => (index, i))
-                                                .Where(v =>
-                                                {
+                                                .Where(v => {
                                                     return ProceduralTools.withinArrayBoundary(
                                                             v.index,
                                                             rows,
@@ -180,8 +168,7 @@ namespace Thor.Procedural
                                                 .Select(tup => nf[tup.i]);
 
                                             var twoHeaded = false;
-                                            if (neighborFunctions.Count() > 1)
-                                            {
+                                            if (neighborFunctions.Count() > 1) {
                                                 var cornerLeftTopNeighbor = (
                                                     row: row - 1,
                                                     column: column - 1
@@ -195,8 +182,7 @@ namespace Thor.Procedural
                                                     && objectArray[layer][
                                                         cornerLeftTopNeighbor.row
                                                     ][cornerLeftTopNeighbor.column] == id
-                                                )
-                                                {
+                                                ) {
                                                     neighborFunctions = new List<
                                                         Func<(int, int), (int, int)>
                                                     >()
@@ -204,16 +190,13 @@ namespace Thor.Procedural
                                                         ((int row, int col) c) =>
                                                             (c.row - 1, c.col - 1)
                                                     };
-                                                }
-                                                else
-                                                {
+                                                } else {
                                                     twoHeaded = true;
                                                 }
                                             }
 
                                             var doorStarts = neighborFunctions
-                                                .Select(f =>
-                                                {
+                                                .Select(f => {
                                                     var minIndex = (row, column);
                                                     var prevMinIndex = minIndex;
                                                     while (
@@ -225,8 +208,7 @@ namespace Thor.Procedural
                                                         && objectArray[layer][minIndex.row][
                                                             minIndex.column
                                                         ] == id
-                                                    )
-                                                    {
+                                                    ) {
                                                         prevMinIndex = minIndex;
                                                         minIndex = f(minIndex);
                                                     }
@@ -234,18 +216,15 @@ namespace Thor.Procedural
                                                 })
                                                 .ToList();
 
-                                            foreach (var doorStartIndex in doorStarts)
-                                            {
+                                            foreach (var doorStartIndex in doorStarts) {
                                                 (string, int, (int, int)) key = (
                                                     id,
                                                     layer,
                                                     doorStartIndex
                                                 );
-                                                if (doorDict.ContainsKey(key))
-                                                {
+                                                if (doorDict.ContainsKey(key)) {
                                                     var connected = holeContinuation;
-                                                    if (!twoHeaded)
-                                                    {
+                                                    if (!twoHeaded) {
                                                         var k = holeContinuation.SelectMany(c =>
                                                             doorDict[(id, layer, c)]
                                                         );
@@ -254,9 +233,7 @@ namespace Thor.Procedural
                                                     doorDict[key] = new HashSet<(int, int)>(
                                                         doorDict[key].Union(connected)
                                                     );
-                                                }
-                                                else
-                                                {
+                                                } else {
                                                     doorDict[key] = new HashSet<(int, int)>(
                                                         holeContinuation
                                                     );
@@ -283,8 +260,7 @@ namespace Thor.Procedural
                 new Dictionary<((double, double), (double, double)), string>();
             var roomsWithWalls = roomIds
                 .Where(id => id != outsideBoundaryId)
-                .Select(intId =>
-                {
+                .Select(intId => {
                     var id = intId.ToString();
                     RoomTemplate template;
                     var inDict = houseTemplate.rooms.TryGetValue(id, out template);
@@ -308,12 +284,9 @@ namespace Thor.Procedural
                         room.ceilings == null
                         || room.ceilings.Count < 1
                         || room.ceilings[0].material == null
-                    )
-                    {
+                    ) {
                         ceilingMat = houseTemplate.proceduralParameters.ceilingMaterial;
-                    }
-                    else
-                    {
+                    } else {
                         ceilingMat = room.ceilings[0].material;
                     }
                     room.ceilings =
@@ -328,8 +301,7 @@ namespace Thor.Procedural
 
                     var walls = walls2D
                         .Select(
-                            (w, i) =>
-                            {
+                            (w, i) => {
                                 var wallCopy = template.wallTemplate.DeepClone();
                                 wallCopy.id = wallToId(i, room.id, template.wallTemplate.id);
                                 wallCopy.polygon = new List<Vector3>()
@@ -378,8 +350,7 @@ namespace Thor.Procedural
 
             var holes = doorDict
                 .SelectMany(
-                    (d, i) =>
-                    {
+                    (d, i) => {
                         var holeTemplateId = d.Key.id;
                         var holeStart = d.Key.index; // d.Value.Min();
                         var holeEnd = d.Value.Max();
@@ -388,24 +359,17 @@ namespace Thor.Procedural
 
                         var isDoor = hole is Data.Door;
                         var isWindow = hole is Data.Window;
-                        if (inDict)
-                        {
-                            if (isDoor)
-                            {
+                        if (inDict) {
+                            if (isDoor) {
                                 hole = (hole as Data.Door).DeepClone();
-                            }
-                            else if (isWindow)
-                            {
+                            } else if (isWindow) {
                                 hole = (hole as Data.Window).DeepClone();
                             }
-                        }
-                        else
-                        {
+                        } else {
                             hole = getDefaultHoleTemplate();
                         }
 
-                        if (hole == null)
-                        {
+                        if (hole == null) {
                             return new List<WallRectangularHole>() { };
                         }
 
@@ -421,8 +385,7 @@ namespace Thor.Procedural
                             !string.IsNullOrEmpty(hole.room0)
                             && isInt
                             && room0ArrayValue == room1Id
-                        )
-                        {
+                        ) {
                             var tmp = room0Id;
                             room0Id = room1Id;
                             room1Id = tmp;
@@ -437,8 +400,7 @@ namespace Thor.Procedural
                             column: holeEnd.column - holeStart.column
                         );
 
-                        if (doorDir.row > 1 || doorDir.column > 1)
-                        {
+                        if (doorDir.row > 1 || doorDir.column > 1) {
                             throw new ArgumentException(" invalid door thickness with id " + d.Key);
                         }
 
@@ -473,8 +435,7 @@ namespace Thor.Procedural
                             column: holeStart.column + holeAdjustOffset.column
                         );
 
-                        var wall0 = room0Walls2D.Find(x =>
-                        {
+                        var wall0 = room0Walls2D.Find(x => {
                             var xDiff = Math.Abs(holeStartCoords.row - x.Item1.row);
                             var zDiff = Math.Abs(holeStartCoords.column - x.Item1.column);
 
@@ -498,8 +459,7 @@ namespace Thor.Procedural
                                 && Math.Abs(dot) < 1e-4;
                         });
 
-                        var wall1 = room1Walls2D.Find(x =>
-                        {
+                        var wall1 = room1Walls2D.Find(x => {
                             var xDiff = Math.Abs(holeStartCoords.row - x.Item1.row);
                             var zDiff = Math.Abs(holeStartCoords.column - x.Item1.column);
 
@@ -532,8 +492,7 @@ namespace Thor.Procedural
                         if (
                             string.IsNullOrEmpty(hole.assetId)
                             || !assetMap.ContainsKey(hole.assetId)
-                        )
-                        {
+                        ) {
                             return new List<WallRectangularHole>() { };
                         }
 
@@ -541,8 +500,7 @@ namespace Thor.Procedural
 
                         Debug.Log("---- Hole offset null? " + (hole == null));
 
-                        if (holeOffset == null)
-                        {
+                        if (holeOffset == null) {
                             return new List<WallRectangularHole>() { };
                         }
 
@@ -588,15 +546,13 @@ namespace Thor.Procedural
             var strRoomIds = new HashSet<string>(roomIds.Select(x => x.ToString()));
             var houseObjects = objectCoordinates
                 .Where(item => !doorIds.Contains(item.id) && !strRoomIds.Contains(item.id))
-                .SelectMany(item =>
-                {
+                .SelectMany(item => {
                     var coord = item.Item3;
                     var result = new List<HouseObject>();
 
                     var template = houseTemplate.objects.GetValueOrDefault(item.id, null);
 
-                    if (template != null)
-                    {
+                    if (template != null) {
                         var obj = template.DeepClone();
 
                         var count = objectIdCounter.AddCount(item.id);
@@ -605,8 +561,7 @@ namespace Thor.Procedural
                         var floorTemplate = houseTemplate.rooms[roomId.ToString()];
                         obj.room = roomIntToId(roomId, floorTemplate.floorTemplate);
 
-                        if (string.IsNullOrEmpty(obj.assetId) || !assetMap.ContainsKey(obj.assetId))
-                        {
+                        if (string.IsNullOrEmpty(obj.assetId) || !assetMap.ContainsKey(obj.assetId)) {
                             return result;
                         }
 
@@ -625,14 +580,12 @@ namespace Thor.Procedural
                             ) + centerOffset; // - new Vector3(centerOffset.x, -centerOffset.y, centerOffset.z);
                         obj.rotation =
                             obj.rotation == null
-                                ? new FlexibleRotation()
-                                {
+                                ? new FlexibleRotation() {
                                     axis = new Vector3(0.0f, 1.0f, 0.0f),
                                     degrees = 0
                                 }
                                 : obj.rotation;
-                        if (asset != null)
-                        {
+                        if (asset != null) {
                             result.Add(obj);
                         }
                     }
@@ -640,13 +593,11 @@ namespace Thor.Procedural
                     return result;
                 });
 
-            HouseMetadata metadata = new HouseMetadata
-            {
+            HouseMetadata metadata = new HouseMetadata {
                 schema = ProceduralTools.CURRENT_HOUSE_SCHEMA
             };
 
-            return new ProceduralHouse()
-            {
+            return new ProceduralHouse() {
                 metadata = new HouseMetadata() { schema = houseTemplate.metadata.schema },
                 proceduralParameters = houseTemplate.proceduralParameters.DeepClone(),
                 id = !string.IsNullOrEmpty(houseTemplate.id) ? houseTemplate.id : houseId(),
@@ -658,43 +609,34 @@ namespace Thor.Procedural
             };
         }
 
-        public static RoomTemplate getDefaultRoomTemplate()
-        {
-            return new RoomTemplate()
-            {
-                wallTemplate = new PolygonWall()
-                {
+        public static RoomTemplate getDefaultRoomTemplate() {
+            return new RoomTemplate() {
+                wallTemplate = new PolygonWall() {
                     polygon = new List<Vector3>() { new Vector3(0.0f, 3.0f, 0.0f) }
                 },
                 floorTemplate = new RoomHierarchy() { }
             };
         }
 
-        public static WallRectangularHole getDefaultHoleTemplate()
-        {
+        public static WallRectangularHole getDefaultHoleTemplate() {
             return new Data.Door();
         }
 
         public static Dictionary<
             (int, int),
             List<((int row, int col), (int row, int col))>
-        > findWalls(int[][] floorplan)
-        {
+        > findWalls(int[][] floorplan) {
             var walls =
                 new DefaultDictionary<(int, int), List<((int row, int col), (int row, int col))>>();
-            for (var row = 0; row < floorplan.Length - 1; row++)
-            {
-                for (var col = 0; col < floorplan[row].Length - 1; col++)
-                {
+            for (var row = 0; row < floorplan.Length - 1; row++) {
+                for (var col = 0; col < floorplan[row].Length - 1; col++) {
                     var a = floorplan[row][col];
                     var b = floorplan[row][col + 1];
-                    if (a != b)
-                    {
+                    if (a != b) {
                         walls[(Math.Min(a, b), Math.Max(a, b))].Add(((row - 1, col), (row, col)));
                     }
                     b = floorplan[row + 1][col];
-                    if (a != b)
-                    {
+                    if (a != b) {
                         walls[(Math.Min(a, b), Math.Max(a, b))].Add(((row, col - 1), (row, col)));
                     }
                 }
@@ -708,43 +650,33 @@ namespace Thor.Procedural
             HashSet<((int row, int col), (int row, int col))>
         > consolidateWalls(
             Dictionary<(int, int), List<((int row, int col), (int row, int col))>> walls
-        )
-        {
+        ) {
             var output =
                 new Dictionary<(int, int), HashSet<((int row, int col), (int row, int col))>>();
-            foreach (var item in walls)
-            {
+            foreach (var item in walls) {
                 var wallGroupId = item.Key;
                 var wallPairs = item.Value;
                 var wallMap = new Dictionary<(int, int), HashSet<(int, int)>>();
 
-                foreach (var wall in wallPairs)
-                {
-                    if (!wallMap.ContainsKey(wall.Item1))
-                    {
+                foreach (var wall in wallPairs) {
+                    if (!wallMap.ContainsKey(wall.Item1)) {
                         wallMap[wall.Item1] = new HashSet<(int, int)>();
                     }
                     wallMap[wall.Item1].Add(wall.Item2);
                 }
                 var didUpdate = true;
-                while (didUpdate)
-                {
+                while (didUpdate) {
                     didUpdate = false;
                     var wallMapCopy = wallMap.Keys.ToDictionary(_ => _, _ => wallMap[_]);
-                    foreach (var w1_1 in wallMapCopy.Keys)
-                    {
-                        if (!wallMap.ContainsKey(w1_1))
-                        {
+                    foreach (var w1_1 in wallMapCopy.Keys) {
+                        if (!wallMap.ContainsKey(w1_1)) {
                             continue;
                         }
                         var breakLoop = false;
-                        foreach (var w1_2 in wallMap[w1_1])
-                        {
-                            if (wallMap.ContainsKey(w1_2))
-                            {
+                        foreach (var w1_2 in wallMap[w1_1]) {
+                            if (wallMap.ContainsKey(w1_2)) {
                                 var w2_1 = w1_2;
-                                foreach (var w2_2 in wallMap[w2_1])
-                                {
+                                foreach (var w2_2 in wallMap[w2_1]) {
                                     if (
                                         (
                                             w1_1.Item1 == w1_2.Item1
@@ -756,14 +688,12 @@ namespace Thor.Procedural
                                             && w1_2.Item2 == w2_1.Item2
                                             && w2_1.Item2 == w2_2.Item2
                                         )
-                                    )
-                                    {
+                                    ) {
                                         wallMap[w2_1].Remove(w2_2);
                                         if (
                                             wallMap.ContainsKey(w2_1)
                                             && (wallMap[w2_1] == null || wallMap[w2_1].Count == 0)
-                                        )
-                                        {
+                                        ) {
                                             wallMap.Remove(w2_1);
                                         }
                                         wallMap[w1_1].Remove(w2_1);
@@ -773,23 +703,19 @@ namespace Thor.Procedural
                                         break;
                                     }
                                 }
-                                if (breakLoop)
-                                {
+                                if (breakLoop) {
                                     break;
                                 }
                             }
-                            if (breakLoop)
-                            {
+                            if (breakLoop) {
                                 break;
                             }
                         }
                     }
                 }
                 output[wallGroupId] = new HashSet<((int row, int col), (int row, int col))>();
-                foreach (var w1 in wallMap.Keys)
-                {
-                    foreach (var w2 in wallMap[w1])
-                    {
+                foreach (var w1 in wallMap.Keys) {
+                    foreach (var w2 in wallMap[w1]) {
                         output[wallGroupId].Add((w1, w2));
                     }
                 }
@@ -808,8 +734,7 @@ namespace Thor.Procedural
             > boundaryGroups,
             float scale,
             int precision
-        )
-        {
+        ) {
             return boundaryGroups.ToDictionary(
                 bg => bg.Key,
                 bg => new HashSet<((double, double), (double, double))>(
@@ -831,8 +756,7 @@ namespace Thor.Procedural
 
         private static List<((double row, double col), (double row, double col))> getWallLoop(
             List<((double row, double col), (double row, double col))> walls
-        )
-        {
+        ) {
             var remainingWalls = new HashSet<((double row, double col), (double row, double col))>(
                 walls
             );
@@ -841,28 +765,22 @@ namespace Thor.Procedural
                 walls[0]
             };
             remainingWalls.Remove(walls[0]);
-            while (remainingWalls.Count > 0)
-            {
+            while (remainingWalls.Count > 0) {
                 var didBreak = false;
-                foreach (var wall in remainingWalls)
-                {
-                    if (output.Last().Item2 == wall.Item1)
-                    {
+                foreach (var wall in remainingWalls) {
+                    if (output.Last().Item2 == wall.Item1) {
                         output.Add(wall);
                         remainingWalls.Remove(wall);
                         didBreak = true;
                         break;
-                    }
-                    else if (output.Last().Item2 == wall.Item2)
-                    {
+                    } else if (output.Last().Item2 == wall.Item2) {
                         output.Add((wall.Item2, wall.Item1));
                         remainingWalls.Remove(wall);
                         didBreak = true;
                         break;
                     }
                 }
-                if (!didBreak)
-                {
+                if (!didBreak) {
                     throw new ArgumentException($"No connecting wall for {output.Last()}!");
                 }
             }
@@ -878,26 +796,21 @@ namespace Thor.Procedural
                 HashSet<((double row, double col), (double row, double col))>
             > boundaryGroups,
             IEnumerable<int> roomIds
-        )
-        {
+        ) {
             var output =
                 new Dictionary<int, List<((double row, double col), (double row, double col))>>();
-            foreach (var roomId in roomIds)
-            {
+            foreach (var roomId in roomIds) {
                 var roomWals = new List<((double row, double col), (double row, double col))>();
-                foreach (var k in boundaryGroups.Keys.Where(k => TupleContains(k, roomId)))
-                {
+                foreach (var k in boundaryGroups.Keys.Where(k => TupleContains(k, roomId))) {
                     roomWals.AddRange(boundaryGroups[k]);
                 }
                 var wallLoop = getWallLoop(roomWals);
                 var edgeSum = 0.0;
-                foreach (((double x0, double z0), (double x1, double z1)) in wallLoop)
-                {
+                foreach (((double x0, double z0), (double x1, double z1)) in wallLoop) {
                     var dist = x0 * z1 - x1 * z0;
                     edgeSum += dist;
                 }
-                if (edgeSum > 0)
-                {
+                if (edgeSum > 0) {
                     wallLoop = wallLoop
                         .Reverse<((double row, double col), (double row, double col))>()
                         .Select(p => (p.Item2, p.Item1))
@@ -908,13 +821,11 @@ namespace Thor.Procedural
             return output;
         }
 
-        public static string roomIntToId(int id, RoomHierarchy room)
-        {
+        public static string roomIntToId(int id, RoomHierarchy room) {
             return $"{room.id}{id}";
         }
 
-        public static string houseId()
-        {
+        public static string houseId() {
             return "house";
         }
 
@@ -922,35 +833,28 @@ namespace Thor.Procedural
             string holeTemplateId,
             int count = 0,
             string idPrefix = ""
-        )
-        {
+        ) {
             var name = string.IsNullOrEmpty(idPrefix) ? holeTemplateId : idPrefix;
             return count == 0 ? $"{name}" : $"{name}_{count}";
             // return $"{wallId}{holeId}{index}";
         }
 
-        public static string wallToId(int wallIndexInRoom, string roomId, string wallIdPrefix = "")
-        {
+        public static string wallToId(int wallIndexInRoom, string roomId, string wallIdPrefix = "") {
             return $"{roomId}_{wallIdPrefix}{wallIndexInRoom}";
         }
 
-        public static string objectToId(string objectId, int count = 0, string idPrefix = "")
-        {
+        public static string objectToId(string objectId, int count = 0, string idPrefix = "") {
             var name = string.IsNullOrEmpty(idPrefix) ? objectId : idPrefix;
             return count == 0 ? $"{name}" : $"{name}_{count}";
             // return count == 0 && string.IsNullOrEmpty(idPrefix) ? $"{objectId}" : $"{objectId}_{idPrefix}{count}";
         }
 
         public class DefaultDictionary<TKey, TValue> : Dictionary<TKey, TValue>
-            where TValue : new()
-        {
-            public new TValue this[TKey key]
-            {
-                get
-                {
+            where TValue : new() {
+            public new TValue this[TKey key] {
+                get {
                     TValue val;
-                    if (!TryGetValue(key, out val))
-                    {
+                    if (!TryGetValue(key, out val)) {
                         val = new TValue();
                         Add(key, val);
                     }
@@ -960,26 +864,20 @@ namespace Thor.Procedural
             }
         }
 
-        public class CustomHashSetEqualityComparer<T> : IEqualityComparer<HashSet<T>>
-        {
-            public bool Equals(HashSet<T> x, HashSet<T> y)
-            {
-                if (ReferenceEquals(x, null))
-                {
+        public class CustomHashSetEqualityComparer<T> : IEqualityComparer<HashSet<T>> {
+            public bool Equals(HashSet<T> x, HashSet<T> y) {
+                if (ReferenceEquals(x, null)) {
                     return false;
                 }
 
                 return x.SetEquals(y);
             }
 
-            public int GetHashCode(HashSet<T> set)
-            {
+            public int GetHashCode(HashSet<T> set) {
                 int hashCode = 0;
 
-                if (set != null)
-                {
-                    foreach (T t in set)
-                    {
+                if (set != null) {
+                    foreach (T t in set) {
                         hashCode = hashCode ^ (set.Comparer.GetHashCode(t) & 0x7FFFFFFF);
                     }
                 }
@@ -987,8 +885,7 @@ namespace Thor.Procedural
             }
         }
 
-        private static bool TupleContains((int, int) t, int id)
-        {
+        private static bool TupleContains((int, int) t, int id) {
             return t.Item1 == id || t.Item2 == id;
         }
     }

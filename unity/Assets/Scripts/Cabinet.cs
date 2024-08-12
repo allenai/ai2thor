@@ -2,8 +2,7 @@
 using System.Collections;
 using UnityEngine;
 
-public enum CabinetOpenStyle
-{
+public enum CabinetOpenStyle {
     SingleDoorLeft,
     SingleDoorRight,
     DoubleDoors,
@@ -11,8 +10,7 @@ public enum CabinetOpenStyle
 }
 
 [ExecuteInEditMode]
-public class Cabinet : MonoBehaviour
-{
+public class Cabinet : MonoBehaviour {
     public bool Animate = false;
     public bool Open;
     public SimObj ParentObj;
@@ -68,14 +66,11 @@ public class Cabinet : MonoBehaviour
     // bool lastOpen = false;
     float animatingDistance;
 
-    public void OnEnable()
-    {
+    public void OnEnable() {
         ParentObj.Manipulation = SimObjManipType.StaticNoPlacement;
-        if (!Application.isPlaying)
-        {
+        if (!Application.isPlaying) {
             Animator a = ParentObj.gameObject.GetComponent<Animator>();
-            if (a == null)
-            {
+            if (a == null) {
                 a = ParentObj.gameObject.AddComponent<Animator>();
                 a.runtimeAnimatorController =
                     Resources.Load("ToggleableAnimController") as RuntimeAnimatorController;
@@ -83,47 +78,39 @@ public class Cabinet : MonoBehaviour
         }
     }
 
-    public void Update()
-    {
+    public void Update() {
         bool open = Open;
-        if (Application.isPlaying)
-        {
+        if (Application.isPlaying) {
             // get whether we're open from our animation state
-            if (!ParentObj.IsAnimated)
-            {
+            if (!ParentObj.IsAnimated) {
                 return;
             }
             open = ParentObj.Animator.GetBool("AnimState1");
         }
 
-        if (!Application.isPlaying && !Animate)
-        {
+        if (!Application.isPlaying && !Animate) {
             return;
         }
 
-        switch (SceneManager.Current.AnimationMode)
-        {
+        switch (SceneManager.Current.AnimationMode) {
             case SceneAnimationMode.Instant:
             default:
                 UpdateAnimationInstant(open);
                 break;
 
             case SceneAnimationMode.Smooth:
-                if (Application.isPlaying)
-                {
+                if (Application.isPlaying) {
                     UpdateAnimationSmooth(open);
                 }
                 break;
         }
     }
 
-    void UpdateAnimationSmooth(bool open)
-    {
+    void UpdateAnimationSmooth(bool open) {
         Quaternion rightDoorStartRotation = Quaternion.identity;
         Quaternion leftDoorStartRotation = Quaternion.identity;
 
-        switch (OpenStyle)
-        {
+        switch (OpenStyle) {
             case CabinetOpenStyle.DoubleDoors:
                 rightDoorStartRotation = RightDoor.rotation;
                 leftDoorStartRotation = LeftDoor.rotation;
@@ -203,28 +190,22 @@ public class Cabinet : MonoBehaviour
                 break;
         }
 
-        if (animatingDistance >= 360f)
-        {
+        if (animatingDistance >= 360f) {
             animatingDistance -= 360f;
         }
 
         ParentObj.IsAnimating = (animatingDistance > 0.0025f);
     }
 
-    void UpdateAnimationInstant(bool open)
-    {
-        if (VisCollider)
-        {
+    void UpdateAnimationInstant(bool open) {
+        if (VisCollider) {
             VisCollider.gameObject.SetActive(open);
-        }
-        else
-        {
+        } else {
             // this handles Cabinets
             ParentObj.Receptacle.VisibilityCollider.gameObject.SetActive(open);
         }
 
-        switch (OpenStyle)
-        {
+        switch (OpenStyle) {
             case CabinetOpenStyle.DoubleDoors:
                 RightDoor.transform.localEulerAngles = open ? OpenAngleRight : ClosedAngleRight;
                 LeftDoor.transform.localEulerAngles = open ? OpenAngleLeft : ClosedAngleLeft;

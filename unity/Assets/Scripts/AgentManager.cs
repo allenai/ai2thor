@@ -30,8 +30,7 @@ using UnityEditor;
 using UnityEngine.CloudRendering;
 #endif
 
-public class AgentManager : MonoBehaviour, ActionInvokable
-{
+public class AgentManager : MonoBehaviour, ActionInvokable {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
     protected int frameCounter;
     protected bool serverSideScreenshot;
@@ -70,8 +69,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
     public PhysicsSceneManager physicsSceneManager { get; private set; }
     private FifoServer.Client fifoClient = null;
 
-    private enum serverTypes
-    {
+    private enum serverTypes {
         WSGI,
         FIFO
     };
@@ -103,12 +101,9 @@ public class AgentManager : MonoBehaviour, ActionInvokable
     public string agentMode;
 
     public Bounds sceneBounds = UtilityFunctions.CreateEmptyBounds();
-    public Bounds SceneBounds
-    {
-        get
-        {
-            if (sceneBounds.min.x == float.PositiveInfinity)
-            {
+    public Bounds SceneBounds {
+        get {
+            if (sceneBounds.min.x == float.PositiveInfinity) {
                 ResetSceneBounds();
             }
             return sceneBounds;
@@ -116,8 +111,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         set { sceneBounds = value; }
     }
 
-    void Awake()
-    {
+    void Awake() {
         tex = new Texture2D(
             UnityEngine.Screen.width,
             UnityEngine.Screen.height,
@@ -145,18 +139,15 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                 typeof(serverTypes),
                 LoadStringVariable(serverTypes.WSGI.ToString(), "SERVER_TYPE").ToUpper()
             );
-        if (serverType == serverTypes.FIFO)
-        {
+        if (serverType == serverTypes.FIFO) {
             string serverPipePath = LoadStringVariable(null, "FIFO_SERVER_PIPE_PATH");
             string clientPipePath = LoadStringVariable(null, "FIFO_CLIENT_PIPE_PATH");
 
             // TODO: Create dir if not exists
-            if (string.IsNullOrEmpty(serverPipePath))
-            {
+            if (string.IsNullOrEmpty(serverPipePath)) {
                 serverPipePath = "fifo_pipe/server.pipe";
             }
-            if (string.IsNullOrEmpty(clientPipePath))
-            {
+            if (string.IsNullOrEmpty(clientPipePath)) {
                 clientPipePath = "fifo_pipe/client.pipe";
             }
 
@@ -165,8 +156,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             this.fifoClient = FifoServer.Client.GetInstance(serverPipePath, clientPipePath);
         }
 #if UNITY_EDITOR
-        if (serverType == serverTypes.WSGI)
-        {
+        if (serverType == serverTypes.WSGI) {
             serverSideScreenshot = true;
             print("---ServerSideScreenshot enabled");
         }
@@ -183,8 +173,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         actionDuration = LoadIntVariable(actionDuration, prefix + "ACTION_LENGTH");
     }
 
-    void Start()
-    {
+    void Start() {
         // default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
         initializePrimaryAgent();
         // primaryAgent.stand
@@ -216,55 +205,37 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         StartCoroutine(EmitFrame());
     }
 
-    public void Complete(ActionFinished result)
-    {
+    public void Complete(ActionFinished result) {
         this.activeAgent().Complete(result);
     }
 
-    private void initializePrimaryAgent()
-    {
-        if (this.PrimaryAgent == null)
-        {
+    private void initializePrimaryAgent() {
+        if (this.PrimaryAgent == null) {
             SetUpPhysicsController();
         }
     }
 
-    public void Initialize(ServerAction action)
-    {
+    public void Initialize(ServerAction action) {
         this.agentMode = action.agentMode.ToLower();
         // first parse agentMode and agentControllerType
         //"default" agentMode can use either default or "stochastic" agentControllerType
         //"locobot" agentMode can use either default or "stochastic" agentControllerType
         //"drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
-        if (action.agentMode.ToLower() == "default")
-        {
+        if (action.agentMode.ToLower() == "default") {
             SetUpPhysicsController();
-        }
-        else if (action.agentMode.ToLower() == "locobot")
-        {
+        } else if (action.agentMode.ToLower() == "locobot") {
             // LocobotController is a subclass of Stochastic which just the agentMode (VisibilityCapsule) changed
             SetUpLocobotController(action);
-        }
-        else if (action.agentMode.ToLower() == "drone")
-        {
+        } else if (action.agentMode.ToLower() == "drone") {
             SetUpDroneController(action);
-        }
-        else if (agentMode == "stretch" || agentMode == "arm" || agentMode == "stretchab")
-        {
-            if (agentMode == "stretch")
-            {
+        } else if (agentMode == "stretch" || agentMode == "arm" || agentMode == "stretchab") {
+            if (agentMode == "stretch") {
                 SetUpStretchController(action);
-            }
-            else if (agentMode == "arm")
-            {
+            } else if (agentMode == "arm") {
                 SetUpArmController(true);
-            }
-            else if (agentMode == "stretchab")
-            {
+            } else if (agentMode == "stretchab") {
                 SetUpStretchABController(action);
-            }
-            else
-            {
+            } else {
                 // Should not be possible but being very defensive.
                 throw new ArgumentException($"Invalid agentMode {action.agentMode}");
             }
@@ -276,9 +247,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             // }
 
             physicsSceneManager.MakeAllObjectsMoveable();
-        }
-        else if (agentMode == "fpin")
-        {
+        } else if (agentMode == "fpin") {
             SetUpFpinController(action);
 
             // TODO refactor initialization funtionality
@@ -313,8 +282,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             Debug.Log(
                 $"BackwardsCompatibleInitialize of AgentController. lastActionSuccess: {actionFinished.success}, errorMessage: {actionFinished.errorMessage} actionReturn: {actionFinished.actionReturn}, agentState: {primaryAgent.agentState}"
             );
-            if (!actionFinished.success)
-            {
+            if (!actionFinished.success) {
                 primaryAgent.actionFinished(
                     false,
                     $"Error running 'BackwardsCompatibleInitialize' failed with error: {actionFinished.errorMessage}"
@@ -323,23 +291,17 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             }
             // if (actiongF)
             // actionFinished.
-        }
-        else
-        {
+        } else {
             var error = $"Invalid agentMode {action.agentMode}";
             Debug.Log(error);
             primaryAgent.actionFinished(success: false, errorMessage: error);
             return;
         }
 
-        if (action.massThreshold.HasValue)
-        {
-            if (action.massThreshold.Value > 0.0)
-            {
+        if (action.massThreshold.HasValue) {
+            if (action.massThreshold.Value > 0.0) {
                 SetUpMassThreshold(action.massThreshold.Value);
-            }
-            else
-            {
+            } else {
                 var error =
                     $"massThreshold must have nonzero value - invalid value: {action.massThreshold.Value}";
                 Debug.Log(error);
@@ -361,8 +323,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             $"Initialize of AgentController. lastActionSuccess: {primaryAgent.lastActionSuccess}, errorMessage: {primaryAgent.errorMessage}, actionReturn: {primaryAgent.actionReturn}, agentState: {primaryAgent.agentState}"
         );
         Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
-        if (action.targetFrameRate > 0)
-        {
+        if (action.targetFrameRate > 0) {
             Application.targetFrameRate = action.targetFrameRate;
         }
 
@@ -386,8 +347,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         Physics.autoSimulation = action.autoSimulation;
         Physics.autoSyncTransforms = Physics.autoSimulation;
 
-        if (action.alwaysReturnVisibleRange)
-        {
+        if (action.alwaysReturnVisibleRange) {
             ((PhysicsRemoteFPSAgentController)primaryAgent).alwaysReturnVisibleRange =
                 action.alwaysReturnVisibleRange;
         }
@@ -395,19 +355,15 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         //if multi agent requested, add duplicates of primary agent now
         addAgents(action);
         this.agents[0].m_Camera.depth = 9999;
-        if (action.startAgentsRotatedBy != 0f)
-        {
+        if (action.startAgentsRotatedBy != 0f) {
             RotateAgentsByRotatingUniverse(action.startAgentsRotatedBy);
-        }
-        else
-        {
+        } else {
             ResetSceneBounds();
         }
         this.agentManagerState = AgentState.ActionComplete;
     }
 
-    private void SetUpLocobotController(ServerAction action)
-    {
+    private void SetUpLocobotController(ServerAction action) {
         this.agents.Clear();
         // force snapToGrid to be false since we are stochastic
         action.snapToGrid = false;
@@ -415,8 +371,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         primaryAgent = createAgentType(typeof(LocobotFPSAgentController), baseAgentComponent);
     }
 
-    private void SetUpDroneController(ServerAction action)
-    {
+    private void SetUpDroneController(ServerAction action) {
         this.agents.Clear();
         // force snapToGrid to be false
         action.snapToGrid = false;
@@ -424,8 +379,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         primaryAgent = createAgentType(typeof(DroneFPSAgentController), baseAgentComponent);
     }
 
-    private void SetUpStretchController(ServerAction action)
-    {
+    private void SetUpStretchController(ServerAction action) {
         this.agents.Clear();
         // force snapToGrid to be false
         action.snapToGrid = false;
@@ -434,8 +388,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         baseAgentComponent.StretchBodyColliders.SetActive(true);
     }
 
-    private void SetUpStretchABController(ServerAction action)
-    {
+    private void SetUpStretchABController(ServerAction action) {
         this.agents.Clear();
         // force snapToGrid to be false
         action.snapToGrid = false;
@@ -445,15 +398,13 @@ public class AgentManager : MonoBehaviour, ActionInvokable
 
     // note: this doesn't take a ServerAction because we don't have to force the snpToGrid bool
     // to be false like in other controller types.
-    public void SetUpPhysicsController()
-    {
+    public void SetUpPhysicsController() {
         this.agents.Clear();
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(PhysicsRemoteFPSAgentController), baseAgentComponent);
     }
 
-    public void SetUpFpinController(ServerAction action)
-    {
+    public void SetUpFpinController(ServerAction action) {
         Debug.Log("inside SetUpFpinController");
         this.agents.Clear();
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
@@ -463,8 +414,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
     private BaseFPSAgentController createAgentType(
         Type agentType,
         BaseAgentComponent agentComponent
-    )
-    {
+    ) {
         BaseFPSAgentController agent =
             Activator.CreateInstance(agentType, new object[] { agentComponent, this })
             as BaseFPSAgentController;
@@ -472,8 +422,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         return agent;
     }
 
-    private void SetUpArmController(bool midLevelArm)
-    {
+    private void SetUpArmController(bool midLevelArm) {
         this.agents.Clear();
         BaseAgentComponent baseAgentComponent = GameObject.FindObjectOfType<BaseAgentComponent>();
         primaryAgent = createAgentType(typeof(KinovaArmAgentController), baseAgentComponent);
@@ -486,23 +435,19 @@ public class AgentManager : MonoBehaviour, ActionInvokable
     // on initialization of agentMode = "arm" and agentControllerType = "mid-level"
     // if mass threshold should be used to prevent arm from knocking over objects that
     // are too big (table, sofa, shelf, etc) use this
-    private void SetUpMassThreshold(float massThreshold)
-    {
+    private void SetUpMassThreshold(float massThreshold) {
         CollisionListener.useMassThreshold = true;
         CollisionListener.massThreshold = massThreshold;
         primaryAgent.MakeObjectsStaticKinematicMassThreshold();
     }
 
     // return reference to primary agent in case we need a reference to the primary
-    public BaseFPSAgentController PrimaryAgent
-    {
+    public BaseFPSAgentController PrimaryAgent {
         get => this.primaryAgent;
     }
 
-    private void addAgents(ServerAction action)
-    {
-        if (action.agentCount > 1)
-        {
+    private void addAgents(ServerAction action) {
+        if (action.agentCount > 1) {
             // note: for procedural scenes, adding multiple agents in will need to be done differently as currently
             // initializing additional agents assumes the scene is already setup, and Houses initialize the
             // primary agent floating in space, then generates the house, then teleports the primary agent.
@@ -512,8 +457,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                 UnityEngine
                     .SceneManagement.SceneManager.GetActiveScene()
                     .name.StartsWith("Procedural")
-            )
-            {
+            ) {
                 throw new NotImplementedException(
                     $"Procedural scenes only support a single agent currently."
                 );
@@ -526,46 +470,38 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                 i < action.agentCount
                     && this.agents.Count < Math.Min(agentColors.Length, action.agentCount);
                 i++
-            )
-            {
+            ) {
                 action.x = reachablePositions[i + 4].x;
                 action.y = reachablePositions[i + 4].y;
                 action.z = reachablePositions[i + 4].z;
                 addAgent(action);
                 Physics.SyncTransforms(); // must do this so that when we CapsuleCast we see the most recently added agent
             }
-            for (int i = 1; i < this.agents.Count; i++)
-            {
+            for (int i = 1; i < this.agents.Count; i++) {
                 this.agents[i].m_Camera.depth = 1;
             }
         }
     }
 
-    public void ResetSceneBounds()
-    {
+    public void ResetSceneBounds() {
         // Recording initially disabled renderers and scene bounds
         sceneBounds = UtilityFunctions.CreateEmptyBounds();
-        foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>())
-        {
-            if (r.enabled)
-            {
+        foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
+            if (r.enabled) {
                 sceneBounds.Encapsulate(r.bounds);
             }
         }
     }
 
-    public void RotateAgentsByRotatingUniverse(float rotation)
-    {
+    public void RotateAgentsByRotatingUniverse(float rotation) {
         List<Quaternion> startAgentRots = new List<Quaternion>();
 
-        foreach (BaseFPSAgentController agent in this.agents)
-        {
+        foreach (BaseFPSAgentController agent in this.agents) {
             startAgentRots.Add(agent.transform.rotation);
         }
 
         GameObject superObject = GameObject.Find("SuperTopLevel");
-        if (superObject == null)
-        {
+        if (superObject == null) {
             superObject = new GameObject("SuperTopLevel");
         }
 
@@ -576,28 +512,24 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             GameObject go in UnityEngine
                 .SceneManagement.SceneManager.GetActiveScene()
                 .GetRootGameObjects()
-        )
-        {
+        ) {
             topLevelObjects.Add(go);
             go.transform.SetParent(superObject.transform);
         }
 
         superObject.transform.rotation = Quaternion.Euler(0f, rotation, 0f);
-        foreach (GameObject go in topLevelObjects)
-        {
+        foreach (GameObject go in topLevelObjects) {
             go.transform.SetParent(null);
         }
 
-        for (int i = 0; i < this.agents.Count; i++)
-        {
+        for (int i = 0; i < this.agents.Count; i++) {
             agents[i].transform.rotation = startAgentRots[i];
         }
 
         ResetSceneBounds();
     }
 
-    public void registerAsThirdPartyCamera(Camera camera)
-    {
+    public void registerAsThirdPartyCamera(Camera camera) {
         this.thirdPartyCameras.Add(camera);
 #if PLATFORM_CLOUD_RENDERING
         camera.targetTexture = createRenderTexture(
@@ -613,30 +545,23 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         float defaultVal = 90f,
         float min = 0f,
         float max = 180f
-    )
-    {
+    ) {
         return (fov <= min || fov > max) ? defaultVal : fov;
     }
 
-    public void updateImageSynthesis(bool status)
-    {
-        foreach (var agent in this.agents)
-        {
+    public void updateImageSynthesis(bool status) {
+        foreach (var agent in this.agents) {
             agent.updateImageSynthesis(status);
         }
     }
 
-    public void updateThirdPartyCameraImageSynthesis(bool status)
-    {
-        if (status)
-        {
-            foreach (var camera in this.thirdPartyCameras)
-            {
+    public void updateThirdPartyCameraImageSynthesis(bool status) {
+        if (status) {
+            foreach (var camera in this.thirdPartyCameras) {
                 GameObject gameObject = camera.gameObject;
                 var imageSynthesis =
                     gameObject.GetComponentInChildren<ImageSynthesis>() as ImageSynthesis;
-                if (imageSynthesis == null)
-                {
+                if (imageSynthesis == null) {
                     gameObject.AddComponent(typeof(ImageSynthesis));
                 }
                 imageSynthesis =
@@ -660,10 +585,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         bool agentPositionRelativeCoordinates = false,
         string parent = null,
         int agentId = 0
-    )
-    {
-        if (orthographic != true && orthographicSize != null)
-        {
+    ) {
+        if (orthographic != true && orthographicSize != null) {
             throw new InvalidOperationException(
                 $"orthographicSize(: {orthographicSize}) can only be set when orthographic=True.\n"
                     + "Otherwise, we use assume perspective camera setting."
@@ -671,8 +594,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             );
         }
 
-        if (parent != null && parent != "agent" && parent != "world")
-        {
+        if (parent != null && parent != "agent" && parent != "world") {
             throw new InvalidOperationException(
                 $"parent: {parent} must be one of: null, agent, or world."
             );
@@ -680,47 +602,35 @@ public class AgentManager : MonoBehaviour, ActionInvokable
 
         var agent = this.agents[agentId];
 
-        if (agentPositionRelativeCoordinates)
-        {
+        if (agentPositionRelativeCoordinates) {
             Transform oldParent = camera.transform.parent;
             camera.transform.SetParent(agent.transform);
             camera.transform.localScale = Vector3.one; // Previous comment suggested that these local scale changes are necessary after reparenting
 
-            if (position.HasValue)
-            {
+            if (position.HasValue) {
                 camera.transform.localPosition = position.Value;
             }
-            if (rotation.HasValue)
-            {
+            if (rotation.HasValue) {
                 camera.transform.localEulerAngles = rotation.Value;
             }
             camera.transform.SetParent(oldParent);
             camera.transform.localScale = Vector3.one;
-        }
-        else
-        {
-            if (position.HasValue)
-            {
+        } else {
+            if (position.HasValue) {
                 camera.gameObject.transform.position = position.Value;
             }
-            if (rotation.HasValue)
-            {
+            if (rotation.HasValue) {
                 camera.gameObject.transform.eulerAngles = rotation.Value;
             }
         }
 
-        if (parent == "agent")
-        {
+        if (parent == "agent") {
             camera.transform.SetParent(agent.transform);
             camera.transform.localScale = Vector3.one;
-        }
-        else if (parent == "world")
-        {
+        } else if (parent == "world") {
             camera.transform.SetParent(null);
             camera.transform.localScale = Vector3.one;
-        }
-        else if (parent != null)
-        {
+        } else if (parent != null) {
             throw new InvalidOperationException(
                 $"parent: {parent} must be one of: null, agent, or world."
             );
@@ -728,11 +638,9 @@ public class AgentManager : MonoBehaviour, ActionInvokable
 
         // updates the camera's perspective
         camera.fieldOfView = fieldOfView;
-        if (orthographic != null)
-        {
+        if (orthographic != null) {
             camera.orthographic = (bool)orthographic;
-            if (orthographic == true && orthographicSize != null)
-            {
+            if (orthographic == true && orthographicSize != null) {
                 camera.orthographicSize = (float)orthographicSize;
             }
         }
@@ -740,42 +648,32 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         //updates camera near and far clipping planes
         //default to near and far clipping planes of agent camera, which are currently
         //static values and are not exposed in anything like Initialize
-        if (nearClippingPlane != null)
-        {
+        if (nearClippingPlane != null) {
             camera.nearClipPlane = (float)nearClippingPlane;
         }
         //default to primary agent's near clip plane value
-        else
-        {
+        else {
             camera.nearClipPlane = this.primaryAgent.m_Camera.nearClipPlane;
         }
 
-        if (farClippingPlane != null)
-        {
+        if (farClippingPlane != null) {
             camera.farClipPlane = (float)farClippingPlane;
         }
         //default to primary agent's far clip plane value
-        else
-        {
+        else {
             camera.farClipPlane = this.primaryAgent.m_Camera.farClipPlane;
         }
 
         // supports a solid color skybox, which work well with videos and images (i.e., white/black/orange/blue backgrounds)
-        if (skyboxColor == "default")
-        {
+        if (skyboxColor == "default") {
             camera.clearFlags = CameraClearFlags.Skybox;
-        }
-        else if (skyboxColor != null)
-        {
+        } else if (skyboxColor != null) {
             Color color;
             bool successfullyParsed = ColorUtility.TryParseHtmlString(skyboxColor, out color);
-            if (successfullyParsed)
-            {
+            if (successfullyParsed) {
                 camera.clearFlags = CameraClearFlags.SolidColor;
                 camera.backgroundColor = color;
-            }
-            else
-            {
+            } else {
                 throw new ArgumentException(
                     $"Invalid skyboxColor: {skyboxColor}! Cannot be parsed as an HTML color."
                 );
@@ -783,8 +681,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         }
 
         // Anti-aliasing
-        if (antiAliasing != null)
-        {
+        if (antiAliasing != null) {
             updateAntiAliasing(
                 postProcessLayer: camera.gameObject.GetComponentInChildren<PostProcessLayer>(),
                 antiAliasing: antiAliasing
@@ -792,36 +689,28 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         }
 
         ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis>();
-        if (imageSynthesis != null && imageSynthesis.enabled)
-        {
+        if (imageSynthesis != null && imageSynthesis.enabled) {
             imageSynthesis.OnCameraChange();
         }
 
         this.activeAgent().actionFinished(success: true);
     }
 
-    private void assertFovInBounds(float fov)
-    {
-        if (fov <= MIN_FOV || fov >= MAX_FOV)
-        {
+    private void assertFovInBounds(float fov) {
+        if (fov <= MIN_FOV || fov >= MAX_FOV) {
             throw new ArgumentOutOfRangeException(
                 $"fieldOfView: {fov} must be in {MIN_FOV} < fieldOfView > {MIN_FOV}."
             );
         }
     }
 
-    public void updateAntiAliasing(PostProcessLayer postProcessLayer, string antiAliasing)
-    {
+    public void updateAntiAliasing(PostProcessLayer postProcessLayer, string antiAliasing) {
         antiAliasing = antiAliasing.ToLower();
-        if (antiAliasing == "none")
-        {
+        if (antiAliasing == "none") {
             postProcessLayer.enabled = false;
-        }
-        else
-        {
+        } else {
             postProcessLayer.enabled = true;
-            switch (antiAliasing)
-            {
+            switch (antiAliasing) {
                 case "fxaa":
                     postProcessLayer.antialiasingMode = PostProcessLayer
                         .Antialiasing
@@ -859,8 +748,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         bool agentPositionRelativeCoordinates = false,
         string parent = "world",
         int agentId = 0
-    )
-    {
+    ) {
         // adds error if fieldOfView is out of bounds
         assertFovInBounds(fov: fieldOfView);
 
@@ -877,8 +765,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             || renderInstanceSegmentation
             || renderNormalsImage
             || renderFlowImage
-        )
-        {
+        ) {
             gameObject.AddComponent(typeof(ImageSynthesis));
         }
 
@@ -908,10 +795,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable
     }
 
     // helper that can be used when converting Dictionary<string, float> to a Vector3.
-    private Vector3 parseOptionalVector3(OptionalVector3 optionalVector3, Vector3 defaultsOnNull)
-    {
-        if (optionalVector3 == null)
-        {
+    private Vector3 parseOptionalVector3(OptionalVector3 optionalVector3, Vector3 defaultsOnNull) {
+        if (optionalVector3 == null) {
             return defaultsOnNull;
         }
         return new Vector3(
@@ -922,14 +807,12 @@ public class AgentManager : MonoBehaviour, ActionInvokable
     }
 
     // Here, we don't want some dimensions set. For instance, set x, but not y.
-    public class OptionalVector3
-    {
+    public class OptionalVector3 {
         public float? x = null;
         public float? y = null;
         public float? z = null;
 
-        public OptionalVector3(float? x = null, float? y = null, float? z = null)
-        {
+        public OptionalVector3(float? x = null, float? y = null, float? z = null) {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -949,11 +832,9 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         float? farClippingPlane = null,
         string antiAliasing = null,
         int agentId = 0
-    )
-    {
+    ) {
         // adds error if fieldOfView is out of bounds
-        if (fieldOfView != null)
-        {
+        if (fieldOfView != null) {
             assertFovInBounds(fov: (float)fieldOfView);
         }
 
@@ -1006,17 +887,14 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         bool agentPositionRelativeCoordinates = false,
         string parent = null,
         int agentId = 0
-    )
-    {
+    ) {
         // adds error if fieldOfView is out of bounds
-        if (fieldOfView != null)
-        {
+        if (fieldOfView != null) {
             assertFovInBounds(fov: (float)fieldOfView);
         }
 
         // count is out of bounds
-        if (thirdPartyCameraId >= thirdPartyCameras.Count || thirdPartyCameraId < 0)
-        {
+        if (thirdPartyCameraId >= thirdPartyCameras.Count || thirdPartyCameraId < 0) {
             throw new ArgumentOutOfRangeException(
                 $"thirdPartyCameraId: {thirdPartyCameraId} (int: default=0) must in 0 <= thirdPartyCameraId < len(thirdPartyCameras)={thirdPartyCameras.Count}."
             );
@@ -1026,14 +904,11 @@ public class AgentManager : MonoBehaviour, ActionInvokable
 
         Vector3 oldPosition;
         Vector3 oldRotation;
-        if (agentPositionRelativeCoordinates)
-        {
+        if (agentPositionRelativeCoordinates) {
             // keeps positions/rotations at default values, if unspecified.
             oldPosition = thirdPartyCamera.transform.localPosition;
             oldRotation = thirdPartyCamera.transform.localEulerAngles;
-        }
-        else
-        {
+        } else {
             // keeps positions/rotations at default values, if unspecified.
             oldPosition = thirdPartyCamera.transform.position;
             oldRotation = thirdPartyCamera.transform.eulerAngles;
@@ -1064,8 +939,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         );
     }
 
-    private void addAgent(ServerAction action)
-    {
+    private void addAgent(ServerAction action) {
         Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
         BaseAgentComponent componentClone = UnityEngine.Object.Instantiate(
             primaryAgent.baseAgentComponent
@@ -1086,8 +960,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         agent.ProcessControlCommand(action.dynamicServerAction);
     }
 
-    private Vector3 agentStartPosition(BaseFPSAgentController agent)
-    {
+    private Vector3 agentStartPosition(BaseFPSAgentController agent) {
         Transform t = agent.transform;
         Vector3[] castDirections = new Vector3[]
         {
@@ -1104,99 +977,78 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         CharacterController charContr = agent.m_CharacterController;
         Vector3 p1 = t.position + charContr.center + Vector3.up * -charContr.height * 0.5f;
         Vector3 p2 = p1 + Vector3.up * charContr.height;
-        foreach (Vector3 d in castDirections)
-        {
-            if (Physics.CapsuleCast(p1, p2, charContr.radius, d, out hit))
-            {
-                if (hit.distance > maxHit.distance)
-                {
+        foreach (Vector3 d in castDirections) {
+            if (Physics.CapsuleCast(p1, p2, charContr.radius, d, out hit)) {
+                if (hit.distance > maxHit.distance) {
                     maxHit = hit;
                     maxDirection = d;
                 }
             }
         }
 
-        if (maxHit.distance > (charContr.radius * 5))
-        {
+        if (maxHit.distance > (charContr.radius * 5)) {
             return t.position + (maxDirection * (charContr.radius * 4));
         }
 
         return Vector3.zero;
     }
 
-    public void UpdateAgentColor(BaseFPSAgentController agent, Color color)
-    {
+    public void UpdateAgentColor(BaseFPSAgentController agent, Color color) {
         foreach (
             MeshRenderer r in agent.gameObject.GetComponentsInChildren<MeshRenderer>()
                 as MeshRenderer[]
-        )
-        {
-            foreach (Material m in r.materials)
-            {
-                if (m.name.Contains("Agent_Color_Mat"))
-                {
+        ) {
+            foreach (Material m in r.materials) {
+                if (m.name.Contains("Agent_Color_Mat")) {
                     m.color = color;
                 }
             }
         }
     }
 
-    public IEnumerator ResetCoroutine(ServerAction response)
-    {
+    public IEnumerator ResetCoroutine(ServerAction response) {
         // Setting all the agents invisible here is silly but necessary
         // as otherwise the FirstPersonCharacterCull.cs script will
         // try to disable renderers that are invalid (but not null)
         // as the scene they existed in has changed.
-        for (int i = 0; i < agents.Count; i++)
-        {
+        for (int i = 0; i < agents.Count; i++) {
             Destroy(agents[i].baseAgentComponent);
         }
         yield return null;
 
-        if (string.IsNullOrEmpty(response.sceneName))
-        {
+        if (string.IsNullOrEmpty(response.sceneName)) {
             UnityEngine.SceneManagement.SceneManager.LoadScene(
                 UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
             );
-        }
-        else
-        {
+        } else {
             UnityEngine.SceneManagement.SceneManager.LoadScene(response.sceneName);
         }
     }
 
-    public void resetMaterials()
-    {
+    public void resetMaterials() {
         ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
         colorChangeComponent.ResetMaterials();
         doResetMaterials = false;
         doResetColors = false;
     }
 
-    public void resetColors()
-    {
+    public void resetColors() {
         ColorChanger colorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
         colorChangeComponent.ResetColors();
         doResetColors = false;
     }
 
-    public void Reset(ServerAction response)
-    {
-        if (doResetMaterials)
-        {
+    public void Reset(ServerAction response) {
+        if (doResetMaterials) {
             resetMaterials();
-        }
-        else if (doResetColors)
-        {
+        } else if (doResetColors) {
             resetColors();
         }
         StartCoroutine(ResetCoroutine(response));
     }
 
-    public bool SwitchScene(string sceneName)
-    {
-        if (!string.IsNullOrEmpty(sceneName))
-        {
+    public bool SwitchScene(string sceneName) {
+        if (!string.IsNullOrEmpty(sceneName)) {
             UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
             return true;
         }
@@ -1206,8 +1058,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
     // Decide whether agent has stopped actions
     // And if we need to capture a new frame
 
-    private void Update()
-    {
+    private void Update() {
         physicsSceneManager.isSceneAtRest = true; // assume the scene is at rest by default
     }
 
@@ -1215,33 +1066,26 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         List<KeyValuePair<string, byte[]>> payload,
         string key,
         Camera camera
-    )
-    {
+    ) {
         RenderTexture tt = camera.targetTexture;
         RenderTexture.active = tt;
         camera.Render();
         AsyncGPUReadback.Request(
             tt,
             0,
-            (request) =>
-            {
-                if (!request.hasError)
-                {
+            (request) => {
+                if (!request.hasError) {
                     var data = request.GetData<byte>().ToArray();
                     payload.Add(new KeyValuePair<string, byte[]>(key, data));
-                }
-                else
-                {
+                } else {
                     Debug.Log("Request error: " + request.hasError);
                 }
             }
         );
     }
 
-    private byte[] captureScreen()
-    {
-        if (tex.height != UnityEngine.Screen.height || tex.width != UnityEngine.Screen.width)
-        {
+    private byte[] captureScreen() {
+        if (tex.height != UnityEngine.Screen.height || tex.width != UnityEngine.Screen.width) {
             tex = new Texture2D(
                 UnityEngine.Screen.width,
                 UnityEngine.Screen.height,
@@ -1255,8 +1099,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         return tex.GetRawTextureData();
     }
 
-    private void addThirdPartyCameraImage(List<KeyValuePair<string, byte[]>> payload, Camera camera)
-    {
+    private void addThirdPartyCameraImage(List<KeyValuePair<string, byte[]>> payload, Camera camera) {
 #if PLATFORM_CLOUD_RENDERING
         captureScreenAsync(payload, "image-thirdParty-camera", camera);
 #else
@@ -1266,16 +1109,13 @@ public class AgentManager : MonoBehaviour, ActionInvokable
 #endif
     }
 
-    private void addImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent)
-    {
-        if (this.renderImage)
-        {
+    private void addImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent) {
+        if (this.renderImage) {
 #if PLATFORM_CLOUD_RENDERING
             captureScreenAsync(payload, "image", agent.m_Camera);
 #else
             // XXX may not need this since we call render in captureScreenAsync
-            if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0)
-            {
+            if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
                 RenderTexture.active = agent.m_Camera.activeTexture;
                 agent.m_Camera.Render();
             }
@@ -1284,35 +1124,27 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         }
     }
 
-    private void resetImageSynthesis(Camera camera)
-    {
+    private void resetImageSynthesis(Camera camera) {
         ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis>();
-        if (imageSynthesis != null && imageSynthesis.enabled)
-        {
+        if (imageSynthesis != null && imageSynthesis.enabled) {
             imageSynthesis.OnCameraChange();
             imageSynthesis.OnSceneChange();
         }
     }
 
-    private void resetAllImageSynthesis()
-    {
-        foreach (var agent in this.agents)
-        {
+    private void resetAllImageSynthesis() {
+        foreach (var agent in this.agents) {
             resetImageSynthesis(agent.m_Camera);
         }
 
-        foreach (var camera in this.thirdPartyCameras)
-        {
+        foreach (var camera in this.thirdPartyCameras) {
             resetImageSynthesis(camera);
         }
     }
 
-    public IEnumerator WaitOnResolutionChange(int width, int height)
-    {
-        for (int i = 0; i < 30; i++)
-        {
-            if (UnityEngine.Screen.width == width && UnityEngine.Screen.height == height)
-            {
+    public IEnumerator WaitOnResolutionChange(int width, int height) {
+        for (int i = 0; i < 30; i++) {
+            if (UnityEngine.Screen.width == width && UnityEngine.Screen.height == height) {
                 break;
             }
             yield return null;
@@ -1320,8 +1152,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         }
 
         bool success = true;
-        if (Screen.width != width || Screen.height != height)
-        {
+        if (Screen.width != width || Screen.height != height) {
             success = false;
             this.primaryAgent.errorMessage = (
                 $"Screen resolution change failed, requested ({width}, {height}), actual ({Screen.width}, {Screen.height})."
@@ -1333,13 +1164,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         this.primaryAgent.actionFinished(success);
     }
 
-    public void ChangeQuality(string quality)
-    {
+    public void ChangeQuality(string quality) {
         string[] names = QualitySettings.names;
-        for (int i = 0; i < names.Length; i++)
-        {
-            if (names[i] == quality)
-            {
+        for (int i = 0; i < names.Length; i++) {
+            if (names[i] == quality) {
                 QualitySettings.SetQualityLevel(i, true);
                 break;
             }
@@ -1348,8 +1176,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         this.primaryAgent.actionFinished(true);
     }
 
-    public void ChangeResolution(int x, int y)
-    {
+    public void ChangeResolution(int x, int y) {
         Screen.SetResolution(width: x, height: y, false);
         Debug.Log(
             "current screen resolution pre change: " + Screen.width + " height" + Screen.height
@@ -1378,13 +1205,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         List<KeyValuePair<string, byte[]>> payload,
         BaseFPSAgentController agent,
         ref MetadataWrapper metadata
-    )
-    {
-        if (this.renderInstanceSegmentation || this.renderSemanticSegmentation)
-        {
+    ) {
+        if (this.renderInstanceSegmentation || this.renderSemanticSegmentation) {
             Debug.Log($"imageSynthesis null {agent.ImageSynthesis == null}");
-            if (!agent.ImageSynthesis.hasCapturePass("_id"))
-            {
+            if (!agent.ImageSynthesis.hasCapturePass("_id")) {
                 Debug.LogError(
                     "Object Image not available in imagesynthesis - returning empty image"
                 );
@@ -1393,8 +1217,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             payload.Add(new KeyValuePair<string, byte[]>("image_ids", bytes));
 
             List<ColorId> colors = new List<ColorId>();
-            foreach (Color key in agent.ImageSynthesis.colorIds.Keys)
-            {
+            foreach (Color key in agent.ImageSynthesis.colorIds.Keys) {
                 ColorId cid = new ColorId();
                 cid.color = new ushort[]
                 {
@@ -1416,12 +1239,9 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         bool flag,
         string captureName,
         string fieldName
-    )
-    {
-        if (flag)
-        {
-            if (!synth.hasCapturePass(captureName))
-            {
+    ) {
+        if (flag) {
+            if (!synth.hasCapturePass(captureName)) {
                 Debug.LogError(captureName + " not available - sending empty image");
             }
             byte[] bytes = synth.Encode(captureName);
@@ -1431,14 +1251,12 @@ public class AgentManager : MonoBehaviour, ActionInvokable
 
     // Used for benchmarking only the server-side
     // no call is made to the Python side
-    private IEnumerator EmitFrameNoClient()
-    {
+    private IEnumerator EmitFrameNoClient() {
         frameCounter += 1;
 
         bool shouldRender = this.renderImage;
 
-        if (shouldRender)
-        {
+        if (shouldRender) {
             // we should only read the screen buffer after rendering is complete
             yield return new WaitForEndOfFrame();
             // must wait an additional frame when in synchronous mode otherwise the frame lags
@@ -1456,19 +1274,16 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         List<KeyValuePair<string, byte[]>> renderPayload,
         bool shouldRender,
         bool shouldRenderImageSynthesis
-    )
-    {
+    ) {
         multiMeta.agents = new MetadataWrapper[this.agents.Count];
         multiMeta.activeAgentId = this.activeAgentId;
         multiMeta.sequenceId = this.currentSequenceId;
 
         RenderTexture currentTexture = null;
 
-        if (shouldRender)
-        {
+        if (shouldRender) {
             currentTexture = RenderTexture.active;
-            for (int i = 0; i < this.thirdPartyCameras.Count; i++)
-            {
+            for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
                 ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
                 Camera camera = thirdPartyCameras.ToArray()[i];
                 cMetadata.thirdPartyCameraId = i;
@@ -1478,8 +1293,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
 
                 //agent relative third party camera metadata here
                 //if the camera is a child of the base agent, then return local space values
-                if (camera.GetComponentInParent<BaseAgentComponent>())
-                {
+                if (camera.GetComponentInParent<BaseAgentComponent>()) {
                     cMetadata.agentPositionRelativeThirdPartyCameraPosition = camera
                         .gameObject
                         .transform
@@ -1488,9 +1302,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                         .gameObject
                         .transform
                         .localEulerAngles;
-                }
-                else
-                {
+                } else {
                     //if this third party camera is not a child of the agent, then the agent relative coordinates
                     //are the same as the world coordinates so
                     cMetadata.agentPositionRelativeThirdPartyCameraPosition = camera
@@ -1507,8 +1319,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
 
                 cameraMetadata[i] = cMetadata;
                 addThirdPartyCameraImage(renderPayload, camera);
-                if (shouldRenderImageSynthesis)
-                {
+                if (shouldRenderImageSynthesis) {
                     ImageSynthesis imageSynthesis =
                         camera.gameObject.GetComponentInChildren<ImageSynthesis>()
                         as ImageSynthesis;
@@ -1550,8 +1361,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                 }
             }
         }
-        for (int i = 0; i < this.agents.Count; i++)
-        {
+        for (int i = 0; i < this.agents.Count; i++) {
             BaseFPSAgentController agent = this.agents[i];
             MetadataWrapper metadata = agent.generateMetadataWrapper();
             // This value may never change, but the purpose is to provide a way
@@ -1562,11 +1372,9 @@ public class AgentManager : MonoBehaviour, ActionInvokable
 
             // we don't need to render the agent's camera for the first agent
 
-            if (shouldRender)
-            {
+            if (shouldRender) {
                 addImage(renderPayload, agent);
-                if (shouldRenderImageSynthesis)
-                {
+                if (shouldRenderImageSynthesis) {
                     addImageSynthesisImage(
                         renderPayload,
                         agent.imageSynthesis,
@@ -1603,33 +1411,27 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             multiMeta.agents[i] = metadata;
         }
 
-        if (shouldRender)
-        {
+        if (shouldRender) {
             RenderTexture.active = currentTexture;
         }
     }
 
-    private string serializeMetadataJson(MultiAgentMetadata multiMeta)
-    {
+    private string serializeMetadataJson(MultiAgentMetadata multiMeta) {
         var jsonResolver = new ShouldSerializeContractResolver();
         return Newtonsoft.Json.JsonConvert.SerializeObject(
             multiMeta,
             Newtonsoft.Json.Formatting.None,
-            new Newtonsoft.Json.JsonSerializerSettings()
-            {
+            new Newtonsoft.Json.JsonSerializerSettings() {
                 ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
                 ContractResolver = jsonResolver
             }
         );
     }
 
-    private bool canEmit()
-    {
+    private bool canEmit() {
         bool emit = true;
-        foreach (BaseFPSAgentController agent in this.agents)
-        {
-            if (agent.agentState != AgentState.Emit)
-            {
+        foreach (BaseFPSAgentController agent in this.agents) {
+            if (agent.agentState != AgentState.Emit) {
                 emit = false;
                 break;
             }
@@ -1639,8 +1441,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             || this.agentManagerState == AgentState.Error;
     }
 
-    private RenderTexture createRenderTexture(int width, int height)
-    {
+    private RenderTexture createRenderTexture(int width, int height) {
         RenderTexture rt = new RenderTexture(
             width: width,
             height: height,
@@ -1648,36 +1449,27 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             GraphicsFormat.R8G8B8A8_UNorm
         );
         rt.antiAliasing = 4;
-        if (rt.Create())
-        {
+        if (rt.Create()) {
             Debug.Log(" created render texture with width= " + width + " height=" + height);
             return rt;
-        }
-        else
-        {
+        } else {
             // throw exception ?
             Debug.LogError("Could not create a renderTexture");
             return null;
         }
     }
 
-    public IEnumerator EmitFrame()
-    {
-        while (true)
-        {
+    public IEnumerator EmitFrame() {
+        while (true) {
             bool shouldRender = this.renderImage && serverSideScreenshot;
 
             bool shouldRenderImageSynthesis = shouldRender && this.renderImageSynthesis;
-            if (renderImageSynthesisChanged)
-            {
-                foreach (BaseFPSAgentController agent in this.agents)
-                {
+            if (renderImageSynthesisChanged) {
+                foreach (BaseFPSAgentController agent in this.agents) {
                     foreach (
                         ImageSynthesis ims in agent.gameObject.GetComponentsInChildren<ImageSynthesis>()
-                    )
-                    {
-                        if (ims.enabled)
-                        {
+                    ) {
+                        if (ims.enabled) {
                             ims.updateCameraStatuses(this.renderImageSynthesis);
                         }
                     }
@@ -1688,21 +1480,17 @@ public class AgentManager : MonoBehaviour, ActionInvokable
 
             frameCounter += 1;
 
-            if (this.agentManagerState == AgentState.ActionComplete)
-            {
+            if (this.agentManagerState == AgentState.ActionComplete) {
                 this.agentManagerState = AgentState.Emit;
             }
 
-            foreach (BaseFPSAgentController agent in this.agents)
-            {
-                if (agent.agentState == AgentState.ActionComplete)
-                {
+            foreach (BaseFPSAgentController agent in this.agents) {
+                if (agent.agentState == AgentState.ActionComplete) {
                     agent.agentState = AgentState.Emit;
                 }
             }
 
-            if (!this.canEmit())
-            {
+            if (!this.canEmit()) {
                 continue;
             }
             MultiAgentMetadata multiMeta = new MultiAgentMetadata();
@@ -1732,19 +1520,16 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             // creation failure
             // Not running code below loses compatibility with python controlled editor
 #if !UNITY_WEBGL
-            if (serverType == serverTypes.WSGI)
-            {
+            if (serverType == serverTypes.WSGI) {
                 WWWForm form = new WWWForm();
                 form.AddField("metadata", serializeMetadataJson(multiMeta));
                 AsyncGPUReadback.WaitAllRequests();
-                foreach (var item in renderPayload)
-                {
+                foreach (var item in renderPayload) {
                     form.AddBinaryData(item.Key, item.Value);
                 }
                 form.AddField("token", robosimsClientToken);
 
-                if (this.sock == null)
-                {
+                if (this.sock == null) {
                     // Debug.Log("connecting to host: " + robosimsHost);
                     IPAddress host = IPAddress.Parse(robosimsHost);
                     IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
@@ -1753,12 +1538,9 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                         SocketType.Stream,
                         ProtocolType.Tcp
                     );
-                    try
-                    {
+                    try {
                         this.sock.Connect(hostep);
-                    }
-                    catch (SocketException e)
-                    {
+                    } catch (SocketException e) {
                         var msg = e.ToString();
                         Debug.Log("Socket exception: " + msg);
                         // TODO: change how payload creation is run in editor, it keeps creating the payload every
@@ -1773,8 +1555,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                     }
                 }
 
-                if (this.sock != null && this.sock.Connected)
-                {
+                if (this.sock != null && this.sock.Connected) {
                     byte[] rawData = form.data;
 
                     string request =
@@ -1783,8 +1564,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                         + rawData.Length.ToString()
                         + "\r\n";
 
-                    foreach (KeyValuePair<string, string> entry in form.headers)
-                    {
+                    foreach (KeyValuePair<string, string> entry in form.headers) {
                         request += entry.Key + ": " + entry.Value + "\r\n";
                     }
                     request += "\r\n";
@@ -1804,16 +1584,14 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                     int contentLength = 0;
 
                     // read header
-                    while (true)
-                    {
+                    while (true) {
                         int received = this.sock.Receive(
                             headerBuffer,
                             bytesReceived,
                             headerBuffer.Length - bytesReceived,
                             SocketFlags.None
                         );
-                        if (received == 0)
-                        {
+                        if (received == 0) {
                             Debug.LogError(
                                 "0 bytes received attempting to read header - connection closed"
                             );
@@ -1824,8 +1602,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                         ;
                         string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
                         int offset = headerMsg.IndexOf("\r\n\r\n");
-                        if (offset > 0)
-                        {
+                        if (offset > 0) {
                             contentLength = parseContentLength(headerMsg.Substring(0, offset));
                             bodyBuffer = new byte[contentLength];
                             bodyBytesReceived = bytesReceived - (offset + 4);
@@ -1835,8 +1612,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                     }
 
                     // read body
-                    while (bodyBytesReceived < contentLength)
-                    {
+                    while (bodyBytesReceived < contentLength) {
                         // check for 0 bytes received
                         int received = this.sock.Receive(
                             bodyBuffer,
@@ -1844,8 +1620,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                             bodyBuffer.Length - bodyBytesReceived,
                             SocketFlags.None
                         );
-                        if (received == 0)
-                        {
+                        if (received == 0) {
                             Debug.LogError(
                                 "0 bytes received attempting to read body - connection closed"
                             );
@@ -1859,9 +1634,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                     string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
                     ProcessControlCommand(msg);
                 }
-            }
-            else if (serverType == serverTypes.FIFO)
-            {
+            } else if (serverType == serverTypes.FIFO) {
                 byte[] msgPackMetadata =
                     MessagePack.MessagePackSerializer.Serialize<MultiAgentMetadata>(
                         multiMeta,
@@ -1880,8 +1653,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                     )
                     .Wait(2000);
                 Debug.Log("ReachedTimeout " + !completed);
-                if (!completed)
-                {
+                if (!completed) {
                     Debug.Log(
                         "FIFO Timeout Reached. Start FIFO server first if remote control is needed."
                     );
@@ -1895,16 +1667,14 @@ public class AgentManager : MonoBehaviour, ActionInvokable
 #endif
 
                 AsyncGPUReadback.WaitAllRequests();
-                foreach (var item in renderPayload)
-                {
+                foreach (var item in renderPayload) {
                     this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
                 }
                 this.fifoClient.SendEOM();
                 string msg = this.fifoClient.ReceiveMessage();
                 ProcessControlCommand(msg);
 
-                while (canEmit() && this.fastActionEmit)
-                {
+                while (canEmit() && this.fastActionEmit) {
                     MetadataPatch patch = this.activeAgent().generateMetadataPatch();
                     patch.agentId = this.activeAgentId;
                     msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(
@@ -1938,8 +1708,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
     }
 
     // Uniform entry point for both the test runner and the python server for step dispatch calls
-    public void ProcessControlCommand(DynamicServerAction controlCommand)
-    {
+    public void ProcessControlCommand(DynamicServerAction controlCommand) {
         this.renderInstanceSegmentation = this.initializedInstanceSeg;
 
         this.currentSequenceId = controlCommand.sequenceId;
@@ -1955,21 +1724,17 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         if (
             agentManagerState == AgentState.Error
             && !errorAllowedActions.Contains(controlCommand.action)
-        )
-        {
+        ) {
             var activeAgent = this.activeAgent();
             activeAgent.errorMessage =
                 $"Critical Error. No more actions can be run before calling 'reset'. Action that caused error: '{activeAgent.lastAction}'";
             return;
         }
 
-        if (agentManagerActions.Contains(controlCommand.action))
-        {
+        if (agentManagerActions.Contains(controlCommand.action)) {
             // let's look in this class for the action
             this.activeAgent().ProcessControlCommand(controlCommand: controlCommand, target: this);
-        }
-        else
-        {
+        } else {
             // we only allow renderInstanceSegmentation to be flipped on
             // on a per step() basis, since by default the param is null
             // so we don't know if a request is meant to turn the param off
@@ -1978,8 +1743,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
             // was initialized to be true, but any particular step() may not set it
             // so we don't want to disable it inadvertently
 
-            if (controlCommand.renderInstanceSegmentation)
-            {
+            if (controlCommand.renderInstanceSegmentation) {
                 this.renderInstanceSegmentation = true;
             }
 
@@ -1988,8 +1752,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable
                 || this.renderSemanticSegmentation
                 || this.renderInstanceSegmentation
                 || this.renderNormalsImage
-            )
-            {
+            ) {
                 updateImageSynthesis(true);
                 updateThirdPartyCameraImageSynthesis(true);
             }
@@ -1999,30 +1762,24 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         }
     }
 
-    public BaseFPSAgentController GetActiveAgent()
-    {
+    public BaseFPSAgentController GetActiveAgent() {
         return this.agents[activeAgentId];
     }
 
-    public int GetActiveAgentId()
-    {
+    public int GetActiveAgentId() {
         return this.activeAgentId;
     }
 
-    public int GetThirdPartyCameraCount()
-    {
+    public int GetThirdPartyCameraCount() {
         return this.thirdPartyCameras.Count;
     }
 
-    private int parseContentLength(string header)
-    {
+    private int parseContentLength(string header) {
         // Debug.Log("got header: " + header);
         string[] fields = header.Split(new char[] { '\r', '\n' });
-        foreach (string field in fields)
-        {
+        foreach (string field in fields) {
             string[] elements = field.Split(new char[] { ':' });
-            if (elements[0].ToLower() == "content-length")
-            {
+            if (elements[0].ToLower() == "content-length") {
                 return Int32.Parse(elements[1].Trim());
             }
         }
@@ -2030,56 +1787,48 @@ public class AgentManager : MonoBehaviour, ActionInvokable
         return 0;
     }
 
-    private BaseFPSAgentController activeAgent()
-    {
+    private BaseFPSAgentController activeAgent() {
         return this.agents[activeAgentId];
     }
 
-    private void ProcessControlCommand(string msg)
-    {
+    private void ProcessControlCommand(string msg) {
         DynamicServerAction controlCommand = new DynamicServerAction(jsonMessage: msg);
         this.ProcessControlCommand(controlCommand);
     }
 
     // Extra helper functions
-    protected string LoadStringVariable(string variable, string name)
-    {
+    protected string LoadStringVariable(string variable, string name) {
         string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
         string envVarValue = Environment.GetEnvironmentVariable(envVarName);
         return envVarValue == null ? variable : envVarValue;
     }
 
-    protected int LoadIntVariable(int variable, string name)
-    {
+    protected int LoadIntVariable(int variable, string name) {
         string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
         string envVarValue = Environment.GetEnvironmentVariable(envVarName);
         return envVarValue == null ? variable : int.Parse(envVarValue);
     }
 
-    protected float LoadFloatVariable(float variable, string name)
-    {
+    protected float LoadFloatVariable(float variable, string name) {
         string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
         string envVarValue = Environment.GetEnvironmentVariable(envVarName);
         return envVarValue == null ? variable : float.Parse(envVarValue);
     }
 
-    protected bool LoadBoolVariable(bool variable, string name)
-    {
+    protected bool LoadBoolVariable(bool variable, string name) {
         string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
         string envVarValue = Environment.GetEnvironmentVariable(envVarName);
         return envVarValue == null ? variable : bool.Parse(envVarValue);
     }
 
-    public void SetCriticalErrorState()
-    {
+    public void SetCriticalErrorState() {
         this.agentManagerState = AgentState.Error;
     }
 }
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class MultiAgentMetadata
-{
+public class MultiAgentMetadata {
     public MetadataWrapper[] agents;
     public ThirdPartyCameraMetadata[] thirdPartyCameras;
     public int activeAgentId;
@@ -2088,8 +1837,7 @@ public class MultiAgentMetadata
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class ThirdPartyCameraMetadata
-{
+public class ThirdPartyCameraMetadata {
     public int thirdPartyCameraId;
     public Vector3 position;
     public Vector3 rotation;
@@ -2103,8 +1851,7 @@ public class ThirdPartyCameraMetadata
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class MetadataPatch
-{
+public class MetadataPatch {
     public string lastAction;
     public string errorMessage;
     public string errorCode;
@@ -2117,8 +1864,7 @@ public class MetadataPatch
 // overlap between ObjectMetadata and AgentMetadata
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class AgentMetadata
-{
+public class AgentMetadata {
     public string name;
     public Vector3 position;
     public Vector3 rotation;
@@ -2139,8 +1885,7 @@ public class AgentMetadata
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class DroneAgentMetadata : AgentMetadata
-{
+public class DroneAgentMetadata : AgentMetadata {
     // why is the launcher position even attached to the agent's metadata
     // and not the generic metdata?
     public Vector3 launcherPosition;
@@ -2149,8 +1894,7 @@ public class DroneAgentMetadata : AgentMetadata
 // additional metadata for drone objects (only use with Drone controller)
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class DroneObjectMetadata : ObjectMetadata
-{
+public class DroneObjectMetadata : ObjectMetadata {
     // Drone Related Metadata
     public int numSimObjHits;
     public int numFloorHits;
@@ -2164,8 +1908,7 @@ public class DroneObjectMetadata : ObjectMetadata
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class ObjectMetadata
-{
+public class ObjectMetadata {
     public string name;
     public Vector3 position;
     public Vector3 rotation;
@@ -2299,8 +2042,7 @@ public class ObjectMetadata
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class MinimalObjectMetadata
-{
+public class MinimalObjectMetadata {
     public string name;
 
     // what type of object is this?
@@ -2317,8 +2059,7 @@ public class MinimalObjectMetadata
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class SceneBounds
-{
+public class SceneBounds {
     // 8 corners of the world axis aligned box that bounds a sim object
     // 8 rows - 8 corners, one per row
     // 3 columns - x, y, z of each corner respectively
@@ -2335,8 +2076,7 @@ public class SceneBounds
 // if an object is rotated, the dimensions of this box are subject to change
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class AxisAlignedBoundingBox
-{
+public class AxisAlignedBoundingBox {
     // 8 corners of the world axis aligned box that bounds a sim object
     // 8 rows - 8 corners, one per row
     // 3 columns - x, y, z of each corner respectively
@@ -2353,8 +2093,7 @@ public class AxisAlignedBoundingBox
 // if an object is rotated, this object oriented box will not change dimensions
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class ObjectOrientedBoundingBox
-{
+public class ObjectOrientedBoundingBox {
     // probably return these from the BoundingBox component of the object for now?
     // this means that it will only work for Pickupable objects at the moment
     public float[][] cornerPoints;
@@ -2362,32 +2101,28 @@ public class ObjectOrientedBoundingBox
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class InventoryObject
-{
+public class InventoryObject {
     public string objectId;
     public string objectType;
 }
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class ColorId
-{
+public class ColorId {
     public ushort[] color;
     public string name;
 }
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class ColorBounds
-{
+public class ColorBounds {
     public ushort[] color;
     public int[] bounds;
 }
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class HandMetadata
-{
+public class HandMetadata {
     public Vector3 position;
     public Vector3 rotation;
     public Vector3 localPosition;
@@ -2396,8 +2131,7 @@ public class HandMetadata
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class JointMetadata
-{
+public class JointMetadata {
     public string name;
     public Vector3 position;
     public Vector3 rootRelativePosition;
@@ -2410,8 +2144,7 @@ public class JointMetadata
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class ArmMetadata
-{
+public class ArmMetadata {
     // public Vector3 handTarget;
     // joints 1 to 4, joint 4 is the wrist and joint 1 is the base that never moves
     public JointMetadata[] joints;
@@ -2436,8 +2169,7 @@ public class ArmMetadata
     public float handSphereRadius;
 }
 
-public class ArticulationArmMetadata
-{
+public class ArticulationArmMetadata {
     //additional metadata for each joint in the articulated arm (currently base, extend joint, and wrist)
     public ArticulationJointMetadata[] joints;
 
@@ -2458,8 +2190,7 @@ public class ArticulationArmMetadata
 }
 
 //this should include the arm base, the extend joint, and wrist joint for now
-public class ArticulationJointMetadata
-{
+public class ArticulationJointMetadata {
     //string name of this joint
     public string name;
 
@@ -2491,21 +2222,18 @@ public class ArticulationJointMetadata
 }
 
 [Serializable]
-public class ObjectTypeCount
-{
+public class ObjectTypeCount {
     public string objectType; // specify object by type in scene
     public int count; // the total count of objects of type objectType that we will try to make exist in the scene
 }
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class ObjectPose
-{
+public class ObjectPose {
     public ObjectPose()
         : this("", new Vector3(), new Vector3()) { }
 
-    public ObjectPose(string objectName, Vector3 position, Vector3 rotation)
-    {
+    public ObjectPose(string objectName, Vector3 position, Vector3 rotation) {
         this.objectName = objectName;
         this.position = position;
         this.rotation = rotation;
@@ -2522,8 +2250,7 @@ public class ObjectPose
 // also used to randomly do this ie: randomly slice all objects of type apple, randomly slice all objects that have sliceable property
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class SetObjectStates
-{
+public class SetObjectStates {
     public string objectType = null; // valid strings are any Object Type listed in documentation (ie: AlarmClock, Apple, etc)
     public string stateChange = null; // valid strings are: openable, toggleable, breakable, canFillWithLiquid, dirtyable, cookable, sliceable, canBeUsedUp
     public bool isOpen;
@@ -2538,8 +2265,7 @@ public class SetObjectStates
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public struct MetadataWrapper
-{
+public struct MetadataWrapper {
     public ObjectMetadata[] objects;
     public bool isSceneAtRest; // set true if all objects in the scene are at rest (or very very close to 0 velocity)
     public AgentMetadata agent;
@@ -2593,8 +2319,7 @@ Wraps the JObject created by JSON.net and used by the ActionDispatcher
 to dispatch to the appropriate action based on the passed in params.
 The properties(agentId, sequenceId, action) exist to encapsulate the key names.
 */
-public class DynamicServerAction
-{
+public class DynamicServerAction {
     // These parameters are allowed to exist as both parameters to an Action and as global
     // paramaters.  This also excludes them from the InvalidArgument logic used in the ActionDispatcher
     public static readonly IReadOnlyCollection<string> AllowedExtraneousParameters =
@@ -2617,47 +2342,37 @@ public class DynamicServerAction
 
     public JObject jObject { get; private set; }
 
-    public int agentId
-    {
+    public int agentId {
         get { return this.GetValue("agentId", 0); }
     }
 
-    public int sequenceId
-    {
+    public int sequenceId {
         get { return (int)this.GetValue("sequenceId", 0); }
     }
 
-    public string action
-    {
+    public string action {
         get { return this.jObject["action"].ToString(); }
     }
 
-    public PhysicsSimulationParams physicsSimulationParams
-    {
-        get
-        {
+    public PhysicsSimulationParams physicsSimulationParams {
+        get {
             return this.jObject[physicsSimulationParamsVariable]
                 ?.ToObject<PhysicsSimulationParams>();
         }
     }
 
-    public bool HasAgentInitializationParams()
-    {
+    public bool HasAgentInitializationParams() {
         return this.ContainsKey(agentInitializationParamsVariable);
     }
 
-    public DynamicServerAction agentInitializationParams
-    {
-        get
-        {
+    public DynamicServerAction agentInitializationParams {
+        get {
             var dict = this.jObject[agentInitializationParamsVariable]
                 ?.ToObject<Dictionary<string, object>>();
             dict ??= new Dictionary<string, object>();
-            foreach (var extraneousParam in AllowedExtraneousParameters)
-            {
+            foreach (var extraneousParam in AllowedExtraneousParameters) {
                 var parmaValue = this.GetValue(extraneousParam);
-                if (parmaValue != null)
-                {
+                if (parmaValue != null) {
                     dict.Add(
                         extraneousParam,
                         this.GetValue(extraneousParam) //?.ToObject<object>()
@@ -2668,93 +2383,73 @@ public class DynamicServerAction
         }
     }
 
-    public int GetValue(string name, int defaultValue)
-    {
-        if (this.ContainsKey(name))
-        {
+    public int GetValue(string name, int defaultValue) {
+        if (this.ContainsKey(name)) {
             return (int)this.GetValue(name);
-        }
-        else
-        {
+        } else {
             return defaultValue;
         }
     }
 
-    public bool GetValue(string name, bool defaultValue)
-    {
-        if (this.ContainsKey(name))
-        {
+    public bool GetValue(string name, bool defaultValue) {
+        if (this.ContainsKey(name)) {
             return (bool)this.GetValue(name);
-        }
-        else
-        {
+        } else {
             return defaultValue;
         }
     }
 
-    public JToken GetValue(string name)
-    {
+    public JToken GetValue(string name) {
         return this.jObject.GetValue(name);
     }
 
-    public bool ContainsKey(string name)
-    {
+    public bool ContainsKey(string name) {
         return this.jObject.ContainsKey(name);
     }
 
-    public bool renderInstanceSegmentation
-    {
+    public bool renderInstanceSegmentation {
         get { return this.GetValue("renderInstanceSegmentation", false); }
     }
 
-    public bool renderImage
-    {
+    public bool renderImage {
         get { return this.GetValue("renderImage", true); }
     }
 
-    public bool renderImageSynthesis
-    {
+    public bool renderImageSynthesis {
         get { return this.GetValue("renderImageSynthesis", true); }
     }
 
-    public DynamicServerAction(Dictionary<string, object> action)
-    {
+    public DynamicServerAction(Dictionary<string, object> action) {
         var jsonResolver = new ShouldSerializeContractResolver();
         this.jObject = JObject.FromObject(
             action,
-            new Newtonsoft.Json.JsonSerializer()
-            {
+            new Newtonsoft.Json.JsonSerializer() {
                 ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
                 ContractResolver = jsonResolver
             }
         );
     }
 
-    public DynamicServerAction(JObject action)
-    {
+    public DynamicServerAction(JObject action) {
         this.jObject = action;
     }
 
-    public DynamicServerAction(string jsonMessage)
-    {
+    public DynamicServerAction(string jsonMessage) {
         this.jObject = Newtonsoft.Json.JsonConvert.DeserializeObject<JObject>(jsonMessage);
     }
 
-    public System.Object ToObject(Type objectType)
-    {
+    public System.Object ToObject(Type objectType) {
         return this.jObject.ToObject(objectType);
     }
 
-    public T ToObject<T>()
-    {
+    public T ToObject<T>() {
         return this.jObject.ToObject<T>();
     }
 
     // this is primarily used when detecting invalid arguments
     // if Initialize is ever changed we should refactor this since renderInstanceSegmentation is a
     // valid argument for Initialize as well as a global parameter
-    public IEnumerable<string> ArgumentKeys()
-    {
+    public IEnumerable<string> ArgumentKeys() {
         return this
             .jObject.Properties()
             .Select(p => p.Name)
@@ -2762,8 +2457,7 @@ public class DynamicServerAction
             .ToList();
     }
 
-    public IEnumerable<string> ArgumentKeysWithPhysicsSimulationProperies()
-    {
+    public IEnumerable<string> ArgumentKeysWithPhysicsSimulationProperies() {
         return this
             .jObject.Properties()
             .Select(p => p.Name)
@@ -2775,55 +2469,45 @@ public class DynamicServerAction
             .ToList();
     }
 
-    public IEnumerable<string> Keys()
-    {
+    public IEnumerable<string> Keys() {
         return this.jObject.Properties().Select(p => p.Name).ToList();
     }
 
-    public int Count()
-    {
+    public int Count() {
         return this.jObject.Count;
     }
 
-    public void AddPhysicsSimulationParams(PhysicsSimulationParams physicsSimulationParams)
-    {
+    public void AddPhysicsSimulationParams(PhysicsSimulationParams physicsSimulationParams) {
         var token = JToken.FromObject(physicsSimulationParams);
         this.jObject.Add(new JProperty(physicsSimulationParamsVariable, token));
     }
 }
 
 [Serializable]
-public class CameraParameters
-{
+public class CameraParameters {
     public float? fieldOfView;
     public Vector3? localEulerAngles;
     public float? nearPlane;
     public float? farPlane;
 
-    public static void setCameraParameters(Camera camera, CameraParameters parameters)
-    {
-        if (parameters.fieldOfView.HasValue)
-        {
+    public static void setCameraParameters(Camera camera, CameraParameters parameters) {
+        if (parameters.fieldOfView.HasValue) {
             camera.fieldOfView = parameters.fieldOfView.Value;
         }
-        if (parameters.nearPlane.HasValue)
-        {
+        if (parameters.nearPlane.HasValue) {
             camera.nearClipPlane = parameters.nearPlane.Value;
         }
-        if (parameters.farPlane.HasValue)
-        {
+        if (parameters.farPlane.HasValue) {
             camera.farClipPlane = parameters.farPlane.Value;
         }
-        if (parameters.localEulerAngles.HasValue)
-        {
+        if (parameters.localEulerAngles.HasValue) {
             camera.transform.localEulerAngles = parameters.localEulerAngles.Value;
         }
     }
 }
 
 [Serializable]
-public class ServerAction
-{
+public class ServerAction {
     public string action;
     public int agentCount = 1;
     public string quality;
@@ -2986,26 +2670,21 @@ public class ServerAction
 
     public Dictionary<string, CameraParameters> thirdPartyCameraParameters;
 
-    public SimObjType ReceptableSimObjType()
-    {
-        if (string.IsNullOrEmpty(receptacleObjectType))
-        {
+    public SimObjType ReceptableSimObjType() {
+        if (string.IsNullOrEmpty(receptacleObjectType)) {
             return SimObjType.Undefined;
         }
         return (SimObjType)Enum.Parse(typeof(SimObjType), receptacleObjectType);
     }
 
-    public static VisibilityScheme GetVisibilitySchemeFromString(string visibilityScheme)
-    {
+    public static VisibilityScheme GetVisibilitySchemeFromString(string visibilityScheme) {
         VisibilityScheme result = VisibilityScheme.Collider;
-        try
-        {
+        try {
             result = (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme, true);
         }
         // including this pragma so the "ex variable declared but not used" warning stops yelling
 #pragma warning disable 0168
-        catch (ArgumentException ex)
-        {
+        catch (ArgumentException ex) {
 #pragma warning restore 0168
             Debug.LogError(
                 "Error parsing visibilityScheme: '" + visibilityScheme + "' defaulting to Collider"
@@ -3015,15 +2694,12 @@ public class ServerAction
         return result;
     }
 
-    public VisibilityScheme GetVisibilityScheme()
-    {
+    public VisibilityScheme GetVisibilityScheme() {
         return GetVisibilitySchemeFromString(this.visibilityScheme);
     }
 
-    public SimObjType GetSimObjType()
-    {
-        if (string.IsNullOrEmpty(objectType))
-        {
+    public SimObjType GetSimObjType() {
+        if (string.IsNullOrEmpty(objectType)) {
             return SimObjType.Undefined;
         }
         return (SimObjType)Enum.Parse(typeof(SimObjType), objectType);
@@ -3031,29 +2707,25 @@ public class ServerAction
 
     // allows this to be passed in as a dynamic which we then
     // cast back to itself
-    public ServerAction ToObject<T>()
-    {
+    public ServerAction ToObject<T>() {
         return this;
     }
 
-    public ServerAction ToObject(Type t)
-    {
+    public ServerAction ToObject(Type t) {
         return this;
     }
 }
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class InitializeReturn
-{
+public class InitializeReturn {
     public float cameraNearPlane;
     public float cameraFarPlane;
 }
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class Geometry3D
-{
+public class Geometry3D {
     public Vector3[] vertices;
     public int[] triangleIndices;
     public Vector2[] uvs;
@@ -3062,8 +2734,7 @@ public class Geometry3D
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class ObjectSphereBounds
-{
+public class ObjectSphereBounds {
     public string id;
     public Vector3 worldSpaceCenter;
     public float radius;
@@ -3071,8 +2742,7 @@ public class ObjectSphereBounds
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class CapsuleData
-{
+public class CapsuleData {
     public Transform transform;
     public float radius;
 
@@ -3081,8 +2751,7 @@ public class CapsuleData
     public Vector3 center;
 }
 
-public class DebugSphere
-{
+public class DebugSphere {
     public Vector3 worldSpaceCenter;
     public float radius;
     public Color color;
@@ -3090,16 +2759,14 @@ public class DebugSphere
 
 [Serializable]
 [MessagePackObject(keyAsPropertyName: true)]
-public class Waypoint
-{
+public class Waypoint {
     public Vector3 position;
     public SerializableColor color;
     public float radius = 0.2f;
     public string text = "";
 }
 
-public enum ServerActionErrorCode
-{
+public enum ServerActionErrorCode {
     Undefined,
     ReceptacleNotVisible,
     ReceptacleNotOpen,
@@ -3120,14 +2787,12 @@ public enum ServerActionErrorCode
     UnhandledException
 }
 
-public enum VisibilityScheme
-{
+public enum VisibilityScheme {
     Collider,
     Distance
 }
 
-public enum Temperature
-{
+public enum Temperature {
     RoomTemp,
     Hot,
     Cold
@@ -3136,8 +2801,7 @@ public enum Temperature
 // Salient materials are only for pickupable and moveable objects,
 // for now static only objects do not report material back since we have to assign them manually
 // They are the materials that make up an object (ie: cell phone - metal, glass).
-public enum SalientObjectMaterial
-{
+public enum SalientObjectMaterial {
     Metal,
     Wood,
     Plastic,
@@ -3156,28 +2820,24 @@ public enum SalientObjectMaterial
 };
 
 [Serializable]
-public class ControllerInitialization
-{
+public class ControllerInitialization {
     public Dictionary<string, TypedVariable> variableInitializations;
 }
 
 [Serializable]
-public class TypedVariable
-{
+public class TypedVariable {
     public string type;
     public object value;
 }
 
-public class ShouldSerializeContractResolver : DefaultContractResolver
-{
+public class ShouldSerializeContractResolver : DefaultContractResolver {
     public static readonly ShouldSerializeContractResolver Instance =
         new ShouldSerializeContractResolver();
 
     protected override JsonProperty CreateProperty(
         MemberInfo member,
         MemberSerialization memberSerialization
-    )
-    {
+    ) {
         JsonProperty property = base.CreateProperty(member, memberSerialization);
 
         // exclude these properties to make serialization match JsonUtility
@@ -3188,30 +2848,24 @@ public class ShouldSerializeContractResolver : DefaultContractResolver
                 || property.PropertyName == "magnitude"
                 || property.PropertyName == "normalized"
             )
-        )
-        {
-            property.ShouldSerialize = instance =>
-            {
+        ) {
+            property.ShouldSerialize = instance => {
                 return false;
             };
             return property;
-        }
-        else
-        {
+        } else {
             return base.CreateProperty(member, memberSerialization);
         }
     }
 }
 
-public enum DepthFormat
-{
+public enum DepthFormat {
     Normalized,
     Meters,
     Millimeters
 }
 
-public enum AgentState
-{
+public enum AgentState {
     Processing,
     ActionComplete,
     PendingFixedUpdate,

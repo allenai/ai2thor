@@ -2,8 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Stretch_Arm_Solver : MonoBehaviour
-{
+public class Stretch_Arm_Solver : MonoBehaviour {
     public Transform armRoot,
         armTarget;
     Transform arm1,
@@ -21,14 +20,12 @@ public class Stretch_Arm_Solver : MonoBehaviour
         frontArmExtensionLimit = 0.516f;
 
 #if UNITY_EDITOR
-    void Update()
-    {
+    void Update() {
         ManipulateStretchArm();
     }
 #endif
 
-    public void ManipulateStretchArm()
-    {
+    public void ManipulateStretchArm() {
         arm1 = armRoot.GetChild(0);
         arm2 = arm1.GetChild(0);
         arm3 = arm2.GetChild(0);

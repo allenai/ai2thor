@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlaneGizmo : MonoBehaviour
-{
+public class PlaneGizmo : MonoBehaviour {
     // Start is called before the first frame update
     void Start() { }
 
-    void OnDrawGizmos()
-    {
+    void OnDrawGizmos() {
         //  Gizmos.color = Color.yellow;
 
         Gizmos.color = new Color(1, 0.92f, 0.016f, 1f);

@@ -6,8 +6,7 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
 // this script manages the spawning/placing of sim objects in the scene
-public class InstantiatePrefabTest : MonoBehaviour
-{
+public class InstantiatePrefabTest : MonoBehaviour {
     public GameObject[] prefabs = null;
     private int spawnCount = 0;
 
@@ -24,19 +23,15 @@ public class InstantiatePrefabTest : MonoBehaviour
 
     // spawn an object from the Array of prefabs. Used to spawn from a specific set of Prefabs
     // used for Hide and Seek stuff
-    public SimObjPhysics Spawn(string prefabType, string objectId, Vector3 position)
-    {
+    public SimObjPhysics Spawn(string prefabType, string objectId, Vector3 position) {
         GameObject topObject = GameObject.Find("Objects");
 
-        foreach (GameObject prefab in prefabs)
-        {
-            if (prefab.name.Contains(prefabType))
-            {
+        foreach (GameObject prefab in prefabs) {
+            if (prefab.name.Contains(prefabType)) {
                 GameObject go = Instantiate(prefab, position, Quaternion.identity) as GameObject;
                 go.transform.SetParent(topObject.transform);
                 SimObjPhysics so = go.GetComponentInChildren<SimObjPhysics>();
-                if (so == null)
-                {
+                if (so == null) {
                     go.AddComponent<SimObjPhysics>();
                     so = go.GetComponentInChildren<SimObjPhysics>();
                 }
@@ -56,8 +51,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         Vector3 position,
         Vector3 rotation,
         bool spawningInHand
-    )
-    {
+    ) {
         return SpawnObject(
             objectType,
             randomize,
@@ -69,26 +63,21 @@ public class InstantiatePrefabTest : MonoBehaviour
         );
     }
 
-    public Bounds BoundsOfObject(string objectType, int variation)
-    {
+    public Bounds BoundsOfObject(string objectType, int variation) {
         // GameObject topObject = GameObject.Find("Objects");
         List<GameObject> candidates = new List<GameObject>();
-        foreach (GameObject go in prefabs)
-        {
+        foreach (GameObject go in prefabs) {
             if (
                 go.GetComponent<SimObjPhysics>().Type
                 == (SimObjType)Enum.Parse(typeof(SimObjType), objectType)
-            )
-            {
+            ) {
                 candidates.Add(go);
             }
         }
 
         Bounds objBounds = UtilityFunctions.CreateEmptyBounds();
-        foreach (Renderer r in candidates[variation - 1].GetComponentsInChildren<Renderer>())
-        {
-            if (r.enabled)
-            {
+        foreach (Renderer r in candidates[variation - 1].GetComponentsInChildren<Renderer>()) {
+            if (r.enabled) {
                 objBounds.Encapsulate(r.bounds);
             }
         }
@@ -113,20 +102,17 @@ public class InstantiatePrefabTest : MonoBehaviour
         Vector3 rotation,
         bool spawningInHand,
         bool ignoreChecks
-    )
-    {
+    ) {
         GameObject topObject = GameObject.Find("Objects");
 
         List<GameObject> candidates = new List<GameObject>();
 
-        foreach (GameObject go in prefabs)
-        {
+        foreach (GameObject go in prefabs) {
             // does a prefab of objectType exist in the current array of prefabs to spawn?
             if (
                 go.GetComponent<SimObjPhysics>().Type
                 == (SimObjType)Enum.Parse(typeof(SimObjType), objectType)
-            )
-            {
+            ) {
                 candidates.Add(go);
             }
         }
@@ -135,12 +121,10 @@ public class InstantiatePrefabTest : MonoBehaviour
         SimObjPhysics simObj = null;
 
         // Figure out which variation to use, if no variation use first candidate found
-        if (randomize)
-        {
+        if (randomize) {
             variation = UnityEngine.Random.Range(1, candidates.Count);
         }
-        if (variation != 0)
-        {
+        if (variation != 0) {
             variation -= 1;
         }
 
@@ -154,11 +138,9 @@ public class InstantiatePrefabTest : MonoBehaviour
                 quat,
                 spawningInHand
             )
-        )
-        {
+        ) {
             GameObject prefab = Instantiate(candidates[variation], position, quat) as GameObject;
-            if (!ignoreChecks)
-            {
+            if (!ignoreChecks) {
                 if (
                     UtilityFunctions.isObjectColliding(
                         prefab,
@@ -167,8 +149,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                             select agent.gameObject
                         )
                     )
-                )
-                {
+                ) {
                     Debug.Log(
                         "On spawning object the area was not clear despite CheckSpawnArea saying it was."
                     );
@@ -179,15 +160,12 @@ public class InstantiatePrefabTest : MonoBehaviour
             prefab.transform.SetParent(topObject.transform);
             simObj = prefab.GetComponent<SimObjPhysics>();
             spawnCount++;
-        }
-        else
-        {
+        } else {
             return null;
         }
 
         // ok make sure we did actually spawn something now, and give it an Id number
-        if (simObj)
-        {
+        if (simObj) {
             simObj.objectID = objectType + "|" + spawnCount.ToString();
             return simObj;
         }
@@ -206,10 +184,8 @@ public class InstantiatePrefabTest : MonoBehaviour
         int maxPlacementAttempts,
         int degreeIncrement,
         bool AlwaysPlaceUpright
-    )
-    {
-        if (rsps == null)
-        {
+    ) {
+        if (rsps == null) {
 #if UNITY_EDITOR
             Debug.Log(
                 "Null list of points to check, please pass in populated list of <ReceptacleSpawnPoint>?"
@@ -217,39 +193,33 @@ public class InstantiatePrefabTest : MonoBehaviour
 #endif
             return false; // uh, there was nothing in the List for some reason, so failed to spawn
         }
-        if (rsps.Count == 0)
-        {
+        if (rsps.Count == 0) {
             return false;
         }
 
         List<ReceptacleSpawnPoint> goodRsps = new List<ReceptacleSpawnPoint>();
 
         // only add spawn points to try if the point's parent is not an object specific receptacle, that is handled in RandomSpawnRequiredSceneObjects
-        foreach (ReceptacleSpawnPoint p in rsps)
-        {
+        foreach (ReceptacleSpawnPoint p in rsps) {
             if (
                 !p
                     .ParentSimObjPhys.GetComponent<SimObjPhysics>()
                     .DoesThisObjectHaveThisSecondaryProperty(
                         SimObjSecondaryProperty.ObjectSpecificReceptacle
                     )
-            )
-            {
+            ) {
                 goodRsps.Add(p);
             }
         }
 
         // try a number of spawnpoints in this specific receptacle up to the maxPlacementAttempts
         int tries = 0;
-        foreach (ReceptacleSpawnPoint p in goodRsps)
-        {
-            if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
-            {
+        foreach (ReceptacleSpawnPoint p in goodRsps) {
+            if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright)) {
                 return true;
             }
             tries += 1;
-            if (maxPlacementAttempts > 0 && tries > maxPlacementAttempts)
-            {
+            if (maxPlacementAttempts > 0 && tries > maxPlacementAttempts) {
                 break;
             }
         }
@@ -268,10 +238,8 @@ public class InstantiatePrefabTest : MonoBehaviour
         int maxPlacementAttempts,
         int degreeIncrement,
         bool AlwaysPlaceUpright
-    )
-    {
-        if (rsps == null)
-        {
+    ) {
+        if (rsps == null) {
 #if UNITY_EDITOR
             Debug.Log(
                 "Null list of points to check, please pass in populated list of <ReceptacleSpawnPoint>?"
@@ -280,45 +248,38 @@ public class InstantiatePrefabTest : MonoBehaviour
             return false; // uh, there was nothing in the List for some reason, so failed to spawn
         }
 
-        if (rsps.Count == 0)
-        {
+        if (rsps.Count == 0) {
             return false;
         }
 
         List<ReceptacleSpawnPoint> goodRsps = new List<ReceptacleSpawnPoint>();
-        foreach (ReceptacleSpawnPoint p in rsps)
-        {
+        foreach (ReceptacleSpawnPoint p in rsps) {
             if (
                 !p
                     .ParentSimObjPhys.GetComponent<SimObjPhysics>()
                     .DoesThisObjectHaveThisSecondaryProperty(
                         SimObjSecondaryProperty.ObjectSpecificReceptacle
                     )
-            )
-            {
+            ) {
                 goodRsps.Add(p);
             }
         }
 
         int tries = 0;
-        foreach (ReceptacleSpawnPoint p in goodRsps)
-        {
+        foreach (ReceptacleSpawnPoint p in goodRsps) {
             // if this is an Object Specific Receptacle, stop this check right now! I mean it!
             // Placing objects in/on an Object Specific Receptacle uses different logic to place the
             // object at the Attachemnet point rather than in the spawn area, so stop this right now!
 
-            if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
-            {
+            if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright)) {
                 // check to make sure the placed object is within the viewport
-                if (agent.objectIsOnScreen(sop))
-                {
+                if (agent.objectIsOnScreen(sop)) {
                     return true;
                 }
             }
 
             tries += 1;
-            if (maxPlacementAttempts > 0 && tries > maxPlacementAttempts)
-            {
+            if (maxPlacementAttempts > 0 && tries > maxPlacementAttempts) {
                 break;
             }
         }
@@ -328,13 +289,11 @@ public class InstantiatePrefabTest : MonoBehaviour
     }
 
     // use this to keep track of a Rotation and Distance for use in PlaceObject
-    public class RotationAndDistanceValues
-    {
+    public class RotationAndDistanceValues {
         public float distance;
         public Quaternion rotation;
 
-        public RotationAndDistanceValues(float d, Quaternion r)
-        {
+        public RotationAndDistanceValues(float d, Quaternion r) {
             distance = d;
             rotation = r;
         }
@@ -346,10 +305,8 @@ public class InstantiatePrefabTest : MonoBehaviour
         bool PlaceStationary,
         int degreeIncrement,
         bool AlwaysPlaceUpright
-    )
-    {
-        if (rsp.ParentSimObjPhys == sop)
-        {
+    ) {
+        if (rsp.ParentSimObjPhys == sop) {
 #if UNITY_EDITOR
             Debug.Log("Can't place object inside itself!");
 #endif
@@ -379,12 +336,10 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         // get rotations and distance values for 360/increment number of rotations around just the Y axis
         // we want to check all of these first so that the object is prioritized to be placed "upright"
-        for (int i = 0; i < HowManyRotationsToCheck; i++)
-        {
+        for (int i = 0; i < HowManyRotationsToCheck; i++) {
             oabb.enabled = true;
 
-            if (i > 0)
-            {
+            if (i > 0) {
                 sop.transform.Rotate(new Vector3(0, degreeIncrement, 0), Space.Self);
                 // ToCheck[i].rotation = sop.transform.rotation;
 
@@ -403,9 +358,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                         sop.transform.rotation
                     )
                 );
-            }
-            else
-            {
+            } else {
                 // no rotate change just yet, check the first position
 
                 Vector3 Offset = oabb.ClosestPoint(
@@ -429,22 +382,18 @@ public class InstantiatePrefabTest : MonoBehaviour
         }
 
         // continue to check rotations about the X and Z axes if the object doesn't have to be placed upright
-        if (!AlwaysPlaceUpright)
-        {
+        if (!AlwaysPlaceUpright) {
             // ok now try if the X and Z local axis are rotated if it'll fit
             // these values can cause the object to be placed at crazy angles, so we'll check these last
-            for (int i = 0; i < HowManyRotationsToCheck; i++)
-            {
+            for (int i = 0; i < HowManyRotationsToCheck; i++) {
                 oabb.enabled = true;
 
-                if (i > 0)
-                {
+                if (i > 0) {
                     sop.transform.Rotate(new Vector3(0, degreeIncrement, 0), Space.Self);
                     Quaternion oldRotation = sop.transform.rotation;
 
                     // now add more points by rotating the x axis at this current y rotation
-                    for (int j = 0; j < HowManyRotationsToCheck; j++)
-                    {
+                    for (int j = 0; j < HowManyRotationsToCheck; j++) {
                         sop.transform.Rotate(new Vector3(degreeIncrement, 0, 0), Space.Self);
 
                         Vector3 Offset = oabb.ClosestPoint(
@@ -467,8 +416,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                     sop.transform.rotation = oldRotation;
 
                     // now add EVEN more points by rotating the z axis at this current y rotation
-                    for (int j = 0; j < HowManyRotationsToCheck; j++)
-                    {
+                    for (int j = 0; j < HowManyRotationsToCheck; j++) {
                         sop.transform.Rotate(new Vector3(0, 0, degreeIncrement), Space.Self);
 
                         Vector3 Offset = oabb.ClosestPoint(
@@ -495,8 +443,7 @@ public class InstantiatePrefabTest : MonoBehaviour
             }
         }
 
-        foreach (RotationAndDistanceValues quat in ToCheck)
-        {
+        foreach (RotationAndDistanceValues quat in ToCheck) {
             // if spawn area is clear, spawn it and return true that we spawned it
             if (
                 CheckSpawnArea(
@@ -505,16 +452,14 @@ public class InstantiatePrefabTest : MonoBehaviour
                     quat.rotation,
                     false
                 )
-            )
-            {
+            ) {
                 // translate position of the target sim object to the rsp.Point and offset in local y up
                 sop.transform.position =
                     rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset); // rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
                 sop.transform.rotation = quat.rotation;
 
                 //ensure transforms are synced
-                if (!Physics.autoSyncTransforms)
-                {
+                if (!Physics.autoSyncTransforms) {
                     Physics.SyncTransforms();
                 }
 
@@ -524,14 +469,12 @@ public class InstantiatePrefabTest : MonoBehaviour
                 // Check the ReceptacleBox's Sim Object component to see what Type it is. Then check to
                 // see if the type is the kind where the Object placed must be completely contained or just the bottom 4 corners contained
                 int HowManyCornersToCheck = 0;
-                if (ReceptacleRestrictions.OnReceptacles.Contains(rsp.ParentSimObjPhys.ObjType))
-                {
+                if (ReceptacleRestrictions.OnReceptacles.Contains(rsp.ParentSimObjPhys.ObjType)) {
                     // check that only the bottom 4 corners are in bounds
                     HowManyCornersToCheck = 4;
                 }
 
-                if (ReceptacleRestrictions.InReceptacles.Contains(rsp.ParentSimObjPhys.ObjType))
-                {
+                if (ReceptacleRestrictions.InReceptacles.Contains(rsp.ParentSimObjPhys.ObjType)) {
                     // check that all 8 corners are within bounds
                     HowManyCornersToCheck = 8;
                 }
@@ -540,8 +483,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                     ReceptacleRestrictions.InReceptaclesThatOnlyCheckBottomFourCorners.Contains(
                         rsp.ParentSimObjPhys.ObjType
                     )
-                )
-                {
+                ) {
                     // only check bottom 4 corners even though the action is PlaceIn
                     HowManyCornersToCheck = 4;
                 }
@@ -553,8 +495,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                 // now check the corner count for either the 4 lowest corners, or all 8 corners depending on Corner Count
                 // attmpt to sort corners so that first four corners are the corners closest to the spawn point we are checking against
                 SpawnCorners.Sort(
-                    delegate(Vector3 p1, Vector3 p2)
-                    {
+                    delegate (Vector3 p1, Vector3 p2) {
                         // sort by making a plane where rsp.point is, find the four corners closest to that point
                         // return rspPlane.GetDistanceToPoint(p1).CompareTo(rspPlane.GetDistanceToPoint(p2));
                         //^ this ended up not working because if something is placed at an angle this no longer makes sense...
@@ -572,17 +513,14 @@ public class InstantiatePrefabTest : MonoBehaviour
                 // originally this looped up to i < HowManyCornersToCheck, but if we just check all the corners, regardless of
                 // sort order, it seems to bypass the issue above of how to sort the corners to find the "bottom" 4 corners, so uh
                 // i guess this might just work without fancy sorting to determine the bottom 4 corners... especially since the "bottom corners" starts to lose meaning as objects are rotated
-                for (int i = 0; i < 8; i++)
-                {
-                    if (rsp.Script.CheckIfPointIsInsideReceptacleTriggerBox(SpawnCorners[i]))
-                    {
+                for (int i = 0; i < 8; i++) {
+                    if (rsp.Script.CheckIfPointIsInsideReceptacleTriggerBox(SpawnCorners[i])) {
                         CornerCount++;
                     }
                 }
 
                 // if not enough corners are inside the receptacle, abort
-                if (CornerCount < HowManyCornersToCheck)
-                {
+                if (CornerCount < HowManyCornersToCheck) {
                     sop.transform.rotation = originalRot;
                     sop.transform.position = originalPos;
                     return false;
@@ -590,10 +528,8 @@ public class InstantiatePrefabTest : MonoBehaviour
 
                 // one final check, make sure all corners of object are "above" the receptacle box in question, so we
                 // dont spawn stuff half on a table and it falls over
-                foreach (Vector3 v in SpawnCorners)
-                {
-                    if (!rsp.Script.CheckIfPointIsAboveReceptacleTriggerBox(v))
-                    {
+                foreach (Vector3 v in SpawnCorners) {
+                    if (!rsp.Script.CheckIfPointIsAboveReceptacleTriggerBox(v)) {
                         sop.transform.rotation = originalRot;
                         sop.transform.position = originalPos;
                         return false;
@@ -602,14 +538,12 @@ public class InstantiatePrefabTest : MonoBehaviour
 
                 // set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)
                 // if false, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
-                if (PlaceStationary)
-                {
+                if (PlaceStationary) {
                     // if the target receptacle is a pickupable receptacle, set it to kinematic true as will since we are placing stationary
                     if (
                         rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.CanPickup
                         || rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.Moveable
-                    )
-                    {
+                    ) {
                         rsp.ParentSimObjPhys.GetComponent<Rigidbody>().isKinematic = true;
                     }
 
@@ -627,14 +561,12 @@ public class InstantiatePrefabTest : MonoBehaviour
                         sop.DoesThisObjectHaveThisSecondaryProperty(
                             SimObjSecondaryProperty.Receptacle
                         )
-                    )
-                    {
+                    ) {
                         sop.DropContainedObjectsStationary(); // use stationary version so that colliders are turned back on, but kinematics remain true
                     }
                 }
                 // place stationary false, let physics drop everything too
-                else
-                {
+                else {
                     // if not placing stationary, put all objects under Objects game object
                     GameObject topObject = GameObject.Find("Objects");
                     // parent to the Objects transform
@@ -648,8 +580,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                         sop.DoesThisObjectHaveThisSecondaryProperty(
                             SimObjSecondaryProperty.Receptacle
                         )
-                    )
-                    {
+                    ) {
                         sop.DropContainedObjects(
                             reparentContainedObjects: true,
                             forceKinematic: false
@@ -678,15 +609,13 @@ public class InstantiatePrefabTest : MonoBehaviour
         Vector3 position,
         Quaternion rotation,
         bool spawningInHand
-    )
-    {
+    ) {
         int layermask;
 
         // first do a check to see if the area is clear
 
         // if spawning in the agent's hand, ignore collisions with the Agent
-        if (spawningInHand)
-        {
+        if (spawningInHand) {
             layermask = LayerMask.GetMask(
                 "SimObjVisible",
                 "Procedural1",
@@ -694,9 +623,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                 "Procedural3",
                 "Procedural0"
             );
-        }
-        else
-        {
+        } else {
             // oh we are spawning it somewhere in the environment, we do need to make sure not to spawn inside the agent or the environment
             layermask = LayerMask.GetMask(
                 "SimObjVisible",
@@ -711,19 +638,16 @@ public class InstantiatePrefabTest : MonoBehaviour
         // get list of all active colliders of sim object, then toggle them off for now
         // disable all colliders of the object being placed
         List<Collider> colsToDisable = new List<Collider>();
-        foreach (Collider g in simObj.MyColliders)
-        {
+        foreach (Collider g in simObj.MyColliders) {
             // only track this collider if it's enabled by default
             // some objects, like houseplants, might have colliders in their simObj.MyColliders that are disabled
-            if (g.enabled)
-            {
+            if (g.enabled) {
                 colsToDisable.Add(g);
             }
         }
 
         // disable collision before moving to check the spawn area
-        foreach (Collider c in colsToDisable)
-        {
+        foreach (Collider c in colsToDisable) {
             c.enabled = false;
         }
 
@@ -808,8 +732,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         simObj.transform.rotation = originalRot;
 
         // re-enable the collision after returning in place
-        foreach (Collider c in colsToDisable)
-        {
+        foreach (Collider c in colsToDisable) {
             c.enabled = true;
         }
 
@@ -823,17 +746,12 @@ public class InstantiatePrefabTest : MonoBehaviour
         );
 
         // if a collider was hit, then the space is not clear to spawn
-        if (hitColliders.Length > 0)
-        {
+        if (hitColliders.Length > 0) {
             // filter out any AgentTriggerBoxes because those should be ignored now
-            foreach (Collider c in hitColliders)
-            {
-                if (c.isTrigger && c.GetComponentInParent<BaseAgentComponent>())
-                {
+            foreach (Collider c in hitColliders) {
+                if (c.isTrigger && c.GetComponentInParent<BaseAgentComponent>()) {
                     continue;
-                }
-                else
-                {
+                } else {
                     return c;
                 }
             }
@@ -848,8 +766,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         Vector3 position,
         Quaternion rotation,
         bool spawningInHand
-    )
-    {
+    ) {
         var hitColliders = ColliderHitByObjectInSpawnArea(
             simObj,
             position,
@@ -861,11 +778,9 @@ public class InstantiatePrefabTest : MonoBehaviour
     }
 
 #if UNITY_EDITOR
-    void OnDrawGizmos()
-    {
+    void OnDrawGizmos() {
         Gizmos.color = Color.red;
-        if (m_Started)
-        {
+        if (m_Started) {
             Matrix4x4 cubeTransform = Matrix4x4.TRS(gizmopos, gizmoquaternion, gizmoscale);
             Matrix4x4 oldGizmosMatrix = Gizmos.matrix;
 
@@ -876,13 +791,10 @@ public class InstantiatePrefabTest : MonoBehaviour
             Gizmos.matrix = oldGizmosMatrix;
         }
 
-        if (SpawnCorners != null)
-        {
+        if (SpawnCorners != null) {
             int count = 0;
-            foreach (Vector3 point in SpawnCorners)
-            {
-                if (count > 3)
-                {
+            foreach (Vector3 point in SpawnCorners) {
+                if (count > 3) {
                     Gizmos.color = Color.cyan;
                 }
 

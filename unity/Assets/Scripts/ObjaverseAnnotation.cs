@@ -1,17 +1,14 @@
 using System;
 using UnityEngine;
 
-namespace Thor.Objaverse
-{
-    public enum Dataset
-    {
+namespace Thor.Objaverse {
+    public enum Dataset {
         Objaverse1_0,
         ObjaversePlus,
         ObjaverseXL
     }
 
-    public class ObjaverseAnnotation : MonoBehaviour
-    {
+    public class ObjaverseAnnotation : MonoBehaviour {
         [SerializeField]
         public string ObjectCategory;
 

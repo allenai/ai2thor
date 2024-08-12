@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FK_IK_Solver : MonoBehaviour
-{
+public class FK_IK_Solver : MonoBehaviour {
     public bool isIKDriven;
     public Transform armRoot,
         armShoulder,
@@ -43,8 +42,7 @@ public class FK_IK_Solver : MonoBehaviour
         elbowPosition;
 
     // this must be Awake vs Start since when the Arm is activated, Start() will not have been called
-    void Awake()
-    {
+    void Awake() {
         bone1Length = (armShoulder.position - armRoot.position).magnitude;
         bone2Length = (armElbow.position - armShoulder.position).magnitude;
         bone3Length = (armWrist.position - armElbow.position).magnitude;
@@ -53,17 +51,14 @@ public class FK_IK_Solver : MonoBehaviour
 
 #if UNITY_EDITOR
     // Uncomment this when testing in Unity
-    void Update()
-    {
+    void Update() {
         ManipulateArm();
     }
 #endif
 
-    public void ManipulateArm()
-    {
+    public void ManipulateArm() {
         // Check if arm is driven by IK or FK
-        if (isIKDriven == true)
-        {
+        if (isIKDriven == true) {
             // Adjust pole position
             IKPole.parent.position = IKTarget.position;
             IKPole.parent.forward = IKTarget.position - armShoulder.position;
@@ -72,8 +67,7 @@ public class FK_IK_Solver : MonoBehaviour
             if (
                 (IKTarget.position - armShoulder.position).sqrMagnitude
                 < Mathf.Pow(bone2Length + bone3Length - 1e-5f, 2)
-            )
-            {
+            ) {
                 // Define variables to optimize logic
                 p1x = armShoulder.position.x;
                 p1y = armShoulder.position.y;
@@ -142,17 +136,13 @@ public class FK_IK_Solver : MonoBehaviour
                 armElbow.position = elbowPosition;
                 armWrist.position = IKTarget.position;
                 armWrist.rotation = IKTarget.rotation;
-            }
-            else
-            {
+            } else {
                 Vector3 armDirectionVector = (IKTarget.position - armShoulder.position).normalized;
                 armElbow.position = armShoulder.position + armDirectionVector * bone1Length;
                 armWrist.position = armElbow.position + armDirectionVector * bone2Length;
                 armWrist.rotation = IKTarget.rotation;
             }
-        }
-        else
-        {
+        } else {
             armRoot.position = FKRootTarget.position;
             armRoot.rotation = FKRootTarget.rotation;
             armShoulder.position = FKShoulderTarget.position;
@@ -172,8 +162,7 @@ public class FK_IK_Solver : MonoBehaviour
         AlignToJointNormal(armWrist.GetChild(0), armElbow, armWrist, armHand, true);
     }
 
-    float FindParameter(float p0x, float p0y, float p0z, float a, float b, float c, float d)
-    {
+    float FindParameter(float p0x, float p0y, float p0z, float a, float b, float c, float d) {
         float parameter =
             (d - a * p0x - b * p0y - c * p0z)
             / (Mathf.Pow(a, 2) + Mathf.Pow(b, 2) + Mathf.Pow(c, 2));
@@ -186,8 +175,7 @@ public class FK_IK_Solver : MonoBehaviour
         Transform mid,
         Transform tip,
         bool isMidJointAngled
-    )
-    {
+    ) {
         Vector3 bone1 = mid.position - root.position;
         Vector3 bone2 = tip.position - mid.position;
         Vector3 jointNormal = Vector3.Cross(bone1, bone2);
@@ -195,13 +183,10 @@ public class FK_IK_Solver : MonoBehaviour
 
         Transform positionAlignedJoint;
 
-        if (isMidJointAngled == true)
-        {
+        if (isMidJointAngled == true) {
             positionAlignedJoint = tip;
             jointTangent = Vector3.Cross(bone2, jointNormal);
-        }
-        else
-        {
+        } else {
             positionAlignedJoint = mid;
             jointTangent = Vector3.Cross(bone1, jointNormal);
         }
