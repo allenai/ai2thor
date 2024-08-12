@@ -3785,6 +3785,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success, errorMessage);
         }
 
+        public void FirstColliderObjectCollidingWith(string objectId) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
+                return;
+            }
+            Collider collidingWith = UtilityFunctions.firstColliderObjectCollidingWith(
+                go: physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject,
+                ignoreGameObjects: null,
+                expandBy: 0.0f,
+                useBoundingBoxInChecks: false
+            );
+
+            string collidingWithId = null;
+            if (collidingWith != null) {
+                SimObjPhysics otherSop = ancestorSimObjPhysics(collidingWith.gameObject);
+                if (otherSop != null) {
+                    collidingWithId = otherSop.ObjectID;
+                } else {
+                    collidingWithId = collidingWith.gameObject.name;
+                }
+            }
+#if UNITY_EDITOR
+            Debug.Log(collidingWithId);
+#endif
+            actionFinishedEmit(true, actionReturn: collidingWithId);
+        }
+
         // pass in a Vector3, presumably from GetReachablePositions, and try to place a sim object flush on a surface below that point
         // unlike PlaceHeldObject or InitialRandomSpawn, this won't be limited by a Receptacle, but only limited by collision
         public void PlaceObjectAtPoint(

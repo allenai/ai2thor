@@ -443,6 +443,63 @@ public static class PhysicsExtensions {
         );
     }
 
+    public static IEnumerable<Collider> OverlapConvex(
+        MeshCollider meshCollider,
+        LayerMask layerMask,
+        QueryTriggerInteraction queryTriggerInteraction,
+        float expandBy = 0f,
+        HashSet<Collider> ignoreColliders = null
+    ) {
+        if (ignoreColliders == null) {
+            ignoreColliders = new HashSet<Collider>();
+        }
+
+        // Get the bounds of the mesh collider
+        Bounds bounds = meshCollider.bounds;
+        if (expandBy > 0f) {
+            bounds.Expand(expandBy * 2); // Expand in all directions
+        }
+
+        // Use OverlapBox to get candidate colliders
+        Collider[] candidateColliders = Physics.OverlapBox(
+            bounds.center,
+            bounds.extents,
+            meshCollider.transform.rotation,
+            layerMask,
+            queryTriggerInteraction
+        );
+
+        // Check each candidate collider for actual collision
+        foreach (Collider candidateCollider in candidateColliders) {
+            if (candidateCollider == meshCollider) {
+                continue; // Skip self-collision
+            }
+
+            if (ignoreColliders.Contains(candidateCollider)) {
+                continue; // Skip ignored colliders
+            }
+
+            Vector3 direction;
+            float distance;
+
+            // Use ComputePenetration to check for actual collision
+            if (
+                Physics.ComputePenetration(
+                    meshCollider,
+                    meshCollider.transform.position,
+                    meshCollider.transform.rotation,
+                    candidateCollider,
+                    candidateCollider.transform.position,
+                    candidateCollider.transform.rotation,
+                    out direction,
+                    out distance
+                )
+            ) {
+                yield return candidateCollider;
+            }
+        }
+    }
+
     public static void ToWorldSpaceCapsule(
         this CapsuleCollider capsule,
         out Vector3 point0,

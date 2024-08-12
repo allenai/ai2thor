@@ -114,7 +114,7 @@ public static class UtilityFunctions {
             "Procedural0"
         );
         foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
-            if (cc.isTrigger) {
+            if (cc.isTrigger || !cc.enabled) {
                 continue;
             }
             foreach (
@@ -131,8 +131,11 @@ public static class UtilityFunctions {
             }
         }
         foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>()) {
-            if (bc.isTrigger || ("BoundingBox" == bc.gameObject.name && (!useBoundingBoxInChecks))) {
-                continue;
+            if ("BoundingBox" != bc.gameObject.name || !useBoundingBoxInChecks) {
+                // If we're useBoundingBoxInChecks in we want to ignore the below checks
+                if (bc.isTrigger || !bc.enabled) {
+                    continue;
+                }
             }
             foreach (
                 Collider c in PhysicsExtensions.OverlapBox(
@@ -148,7 +151,7 @@ public static class UtilityFunctions {
             }
         }
         foreach (SphereCollider sc in go.GetComponentsInChildren<SphereCollider>()) {
-            if (sc.isTrigger) {
+            if (sc.isTrigger || !sc.enabled) {
                 continue;
             }
             foreach (
@@ -164,6 +167,26 @@ public static class UtilityFunctions {
                 }
             }
         }
+
+        foreach (MeshCollider mc in go.GetComponentsInChildren<MeshCollider>()) {
+            if (mc.isTrigger || (!mc.convex) || (!mc.enabled)) {
+                continue;
+            }
+            foreach (
+                Collider c in PhysicsExtensions.OverlapConvex(
+                    mc,
+                    layerMask,
+                    QueryTriggerInteraction.Ignore,
+                    expandBy,
+                    ignoreColliders
+                )
+            ) {
+                if (!ignoreColliders.Contains(c)) {
+                    return c;
+                }
+            }
+        }
+
         return null;
     }
 
