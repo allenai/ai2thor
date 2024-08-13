@@ -7960,6 +7960,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return new ActionFinished(success: true, actionReturn: assetData);
         }
 
+        public class UnityLoadableAsset {
+            public string id;
+            public string dir;
+            public string extension = ".msgpack.gz";
+
+            public ObjectAnnotations annotations = null;
+        }
+
+        public ActionFinished CreateRuntimeAssets(
+            List<UnityLoadableAsset> assets,
+            string dir = null
+        ) {
+            foreach (var asset in assets) {
+                var actionFinished = CreateRuntimeAsset(
+                    id: asset.id,
+                    dir: dir ?? asset.dir,
+                    extension: asset.extension,
+                    annotations: asset.annotations
+                );
+                if (!actionFinished.success) {
+                    return actionFinished;
+                }
+            }
+            return ActionFinished.Success;
+        }
+
         public void GetStreamingAssetsPath() {
             actionFinished(success: true, actionReturn: Application.streamingAssetsPath);
         }
