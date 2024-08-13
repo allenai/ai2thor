@@ -1,3 +1,4 @@
+import glob
 import os
 import signal
 import sys
@@ -66,9 +67,7 @@ def add_files(zipf, start_dir, exclude_ext=()):
                 continue
 
             arcname = os.path.relpath(fn, start_dir)
-            if arcname.split("/")[0].endswith(
-                "_BackUpThisFolder_ButDontShipItWithYourGame"
-            ):
+            if arcname.split("/")[0].endswith("_BackUpThisFolder_ButDontShipItWithYourGame"):
                 # print("skipping %s" % arcname)
                 continue
             # print("adding %s" % arcname)
@@ -105,19 +104,17 @@ def push_build(build_archive_name, zip_data, include_private_scenes):
             ChecksumSHA256=b64encode(sha.digest()).decode("ascii"),
         )
         logger.info("pushing sha256 %s" % (sha256_key,))
-        s3.Object(bucket, sha256_key).put(
-            Body=sha.hexdigest(), ACL=acl, ContentType="text/plain"
-        )
+        s3.Object(bucket, sha256_key).put(Body=sha.hexdigest(), ACL=acl, ContentType="text/plain")
     except botocore.exceptions.ClientError:
-        logger.error("caught error uploading archive %s: %s" % (build_archive_name, traceback.format_exc()))
+        logger.error(
+            "caught error uploading archive %s: %s" % (build_archive_name, traceback.format_exc())
+        )
 
     logger.info("pushed build %s to %s" % (bucket, build_archive_name))
 
 
 def _webgl_local_build_path(prefix, source_dir="builds"):
-    return os.path.join(
-        os.getcwd(), "unity/{}/thor-{}-WebGL/".format(source_dir, prefix)
-    )
+    return os.path.join(os.getcwd(), "unity/{}/thor-{}-WebGL/".format(source_dir, prefix))
 
 
 def _unity_version():
@@ -134,18 +131,10 @@ def _unity_playback_engines_path():
     standalone_path = None
 
     if sys.platform.startswith("darwin"):
-        unity_hub_path = (
-            "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(
-                unity_version
-            )
-        )
+        unity_hub_path = "/Applications/Unity/Hub/Editor/{}/PlaybackEngines".format(unity_version)
         # /Applications/Unity/2019.4.20f1/Unity.app/Contents/MacOS
 
-        standalone_path = (
-            "/Applications/Unity/{}/PlaybackEngines".format(
-                unity_version
-            )
-        )
+        standalone_path = "/Applications/Unity/{}/PlaybackEngines".format(unity_version)
     elif "win" in sys.platform:
         raise ValueError("Windows not supported yet, verify PlaybackEnginesPath")
         unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Data/PlaybackEngines".format(
@@ -165,22 +154,19 @@ def _unity_playback_engines_path():
 
     return unity_path
 
+
 def _unity_path():
     unity_version = _unity_version()
     standalone_path = None
 
     if sys.platform.startswith("darwin"):
-        unity_hub_path = (
-            "/Applications/Unity/Hub/Editor/{}/Unity.app/Contents/MacOS/Unity".format(
-                unity_version
-            )
+        unity_hub_path = "/Applications/Unity/Hub/Editor/{}/Unity.app/Contents/MacOS/Unity".format(
+            unity_version
         )
         # /Applications/Unity/2019.4.20f1/Unity.app/Contents/MacOS
 
-        standalone_path = (
-            "/Applications/Unity/{}/Unity.app/Contents/MacOS/Unity".format(
-                unity_version
-            )
+        standalone_path = "/Applications/Unity/{}/Unity.app/Contents/MacOS/Unity".format(
+            unity_version
         )
         # standalone_path = (
         #     "/Applications/Unity-{}/Unity.app/Contents/MacOS/Unity".format(
@@ -188,9 +174,7 @@ def _unity_path():
         #     )
         # )
     elif "win" in sys.platform:
-        unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Unity.exe".format(
-            unity_version
-        )
+        unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Unity.exe".format(unity_version)
         # TODO: Verify windows unity standalone path
         standalone_path = "C:/PROGRA~1/{}/Editor/Unity.exe".format(unity_version)
     elif sys.platform.startswith("linux"):
@@ -247,9 +231,7 @@ def _build(
 
         elapsed = time.time() - start
         if elapsed > timeout:
-            logger.error(
-                f"Timeout occurred when running command:\n{command}\nKilling the process."
-            )
+            logger.error(f"Timeout occurred when running command:\n{command}\nKilling the process.")
             os.kill(process.pid, signal.SIGKILL)
             os.waitpid(-1, os.WNOHANG)
             return False
@@ -315,9 +297,7 @@ def class_dataset_images_for_scene(scene_name):
     for o in event.metadata["objects"]:
         if o["receptacle"] and o["receptacleObjectIds"] and o["openable"]:
             print("opening %s" % o["objectId"])
-            env.step(
-                dict(action="OpenObject", objectId=o["objectId"], forceAction=True)
-            )
+            env.step(dict(action="OpenObject", objectId=o["objectId"], forceAction=True))
 
     event = env.step(dict(action="GetReachablePositions", gridSize=0.25))
 
@@ -336,9 +316,7 @@ def class_dataset_images_for_scene(scene_name):
                 )
             )
             exclude_colors.update(
-                set(
-                    map(tuple, np.unique(event.instance_segmentation_frame[-1], axis=0))
-                )
+                set(map(tuple, np.unique(event.instance_segmentation_frame[-1], axis=0)))
             )
             exclude_colors.update(
                 set(
@@ -415,9 +393,7 @@ def class_dataset_images_for_scene(scene_name):
     for o in event.metadata["objects"]:
         if o["receptacle"] and o["receptacleObjectIds"] and o["openable"]:
             print("opening %s" % o["objectId"])
-            env.step(
-                dict(action="OpenObject", objectId=o["objectId"], forceAction=True)
-            )
+            env.step(dict(action="OpenObject", objectId=o["objectId"], forceAction=True))
 
     for vol in visible_object_locations:
         point = vol["point"]
@@ -461,9 +437,7 @@ def class_dataset_images_for_scene(scene_name):
             # print("start x %s start_y %s end_x %s end y %s" % (start_x, start_y, end_x, end_y))
             print("storing %s " % object_id)
             img = event.cv2img[start_y:end_y, start_x:end_x, :]
-            dst = cv2.resize(
-                img, (target_size, target_size), interpolation=cv2.INTER_LANCZOS4
-            )
+            dst = cv2.resize(img, (target_size, target_size), interpolation=cv2.INTER_LANCZOS4)
 
             object_type = object_id.split("|")[0].lower()
             target_dir = os.path.join("images", scene_name, object_type)
@@ -512,14 +486,14 @@ def local_build_test(context, prefix="local", arch="OSXIntel64"):
 
 
 @task(iterable=["scenes"])
-def local_build(
-    context, prefix="local", arch="OSXIntel64", scenes=None, scripts_only=False
-):
+def local_build(context, prefix="local", arch="OSXIntel64", scenes=None, scripts_only=False):
     import ai2thor.controller
 
     build = ai2thor.build.Build(arch, prefix, False)
     env = dict()
-    if os.path.isdir("unity/Assets/Private/Scenes") or os.path.isdir("Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets/Scenes"):
+    if os.path.isdir("unity/Assets/Private/Scenes") or os.path.isdir(
+        "Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets/Scenes"
+    ):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
 
     build_dir = os.path.join("builds", build.name)
@@ -527,9 +501,7 @@ def local_build(
         env["BUILD_SCRIPTS_ONLY"] = "true"
 
     if scenes:
-        env["BUILD_SCENES"] = ",".join(
-            map(ai2thor.controller.Controller.normalize_scene, scenes)
-        )
+        env["BUILD_SCENES"] = ",".join(map(ai2thor.controller.Controller.normalize_scene, scenes))
 
     if _build("unity", arch, build_dir, build.name, env=env):
         print("Build Successful")
@@ -671,9 +643,7 @@ def generate_quality_settings(ctx):
         def let_through(self, node):
             return self.construct_mapping(node)
 
-    YamlUnity3dTag.add_constructor(
-        "tag:unity3d.com,2011:47", YamlUnity3dTag.let_through
-    )
+    YamlUnity3dTag.add_constructor("tag:unity3d.com,2011:47", YamlUnity3dTag.let_through)
 
     qs = yaml.load(
         open("unity/ProjectSettings/QualitySettings.asset").read(),
@@ -694,20 +664,14 @@ def generate_quality_settings(ctx):
 
 
 def git_commit_comment():
-    comment = (
-        subprocess.check_output("git log -n 1 --format=%B", shell=True)
-        .decode("utf8")
-        .strip()
-    )
+    comment = subprocess.check_output("git log -n 1 --format=%B", shell=True).decode("utf8").strip()
 
     return comment
 
 
 def git_commit_id():
     commit_id = (
-        subprocess.check_output("git log -n 1 --format=%H", shell=True)
-        .decode("ascii")
-        .strip()
+        subprocess.check_output("git log -n 1 --format=%H", shell=True).decode("ascii").strip()
     )
 
     return commit_id
@@ -731,9 +695,9 @@ def push_pip_commit(context):
         pip_name = os.path.basename(g)
         logger.info("pushing pip file %s" % g)
         with open(g, "rb") as f:
-            s3.Object(
-                ai2thor.build.PYPI_S3_BUCKET, os.path.join("ai2thor", pip_name)
-            ).put(Body=f, ACL=acl)
+            s3.Object(ai2thor.build.PYPI_S3_BUCKET, os.path.join("ai2thor", pip_name)).put(
+                Body=f, ACL=acl
+            )
 
 
 @task
@@ -809,11 +773,7 @@ def build_pip(context, version):
     if (
         (next_maj == current_maj + 1)
         or (next_maj == current_maj and next_min == current_min + 1)
-        or (
-            next_maj == current_maj
-            and next_min == current_min
-            and next_sub >= current_sub + 1
-        )
+        or (next_maj == current_maj and next_min == current_min and next_sub >= current_sub + 1)
     ):
         if os.path.isdir("dist"):
             shutil.rmtree("dist")
@@ -830,9 +790,7 @@ def build_pip(context, version):
             fi.write("__version__ = '%s'\n" % (version))
 
         subprocess.check_call("python setup.py clean --all", shell=True)
-        subprocess.check_call(
-            "python setup.py sdist bdist_wheel --universal", shell=True
-        )
+        subprocess.check_call("python setup.py sdist bdist_wheel --universal", shell=True)
 
     else:
         raise Exception(
@@ -872,9 +830,7 @@ def build_log_push(build_info, include_private_scenes):
         bucket = ai2thor.build.PRIVATE_S3_BUCKET
         acl = "private"
 
-    s3.Object(bucket, build_log_key).put(
-        Body=build_log, ACL=acl, ContentType="text/plain"
-    )
+    s3.Object(bucket, build_log_key).put(Body=build_log, ACL=acl, ContentType="text/plain")
 
 
 def archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes):
@@ -907,6 +863,7 @@ def pre_test(context):
         os.path.join("unity", "builds", c.build_name() + ".app"),
         "unity/builds/%s" % c.build_name(),
     )
+
 
 import scripts.update_private
 
@@ -963,9 +920,10 @@ def link_build_cache(root_dir, arch, branch):
         os.makedirs(os.path.dirname(branch_cache_dir), exist_ok=True)
 
         # -c uses MacOS clonefile
-        subprocess.check_call(
-            "cp -a -c %s %s" % (main_cache_dir, branch_cache_dir), shell=True
-        )
+        if sys.platform.startswith("darwin"):
+            subprocess.check_call("cp -a -c %s %s" % (main_cache_dir, branch_cache_dir), shell=True)
+        else:
+            subprocess.check_call("cp -a %s %s" % (main_cache_dir, branch_cache_dir), shell=True)
         logger.info("copying main cache complete for %s" % encoded_branch)
 
     branch_library_cache_dir = os.path.join(branch_cache_dir, "Library")
@@ -1066,9 +1024,7 @@ def ci_merge_push_pytest_results(context, commit_id):
         s3_obj.bucket_name,
         s3_obj.key,
     )
-    logger.info(
-        "ci_merge_push_pytest_results pytest before url check code change logging works"
-    )
+    logger.info("ci_merge_push_pytest_results pytest before url check code change logging works")
     logger.info("pytest url %s" % s3_pytest_url)
     logger.info("s3 obj is valid: {}".format(s3_obj))
 
@@ -1097,9 +1053,7 @@ def ci_pytest(branch, commit_id):
 
     start_time = time.time()
 
-    proc = subprocess.run(
-        "pytest", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
+    proc = subprocess.run("pytest", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     result = dict(
         success=proc.returncode == 0,
@@ -1114,16 +1068,17 @@ def ci_pytest(branch, commit_id):
         f"finished pytest for {branch} {commit_id} in {time.time() - start_time:.2f} seconds"
     )
 
-# Type hints break build server's invoke version 
+
+# Type hints break build server's invoke version
 @task
 def ci_build(
     context,
-    commit_id = None, # Optional[str] 
-    branch = None, # Optional[str] 
-    skip_pip = False, # bool
-    novelty_thor_scenes = False,
-    skip_delete_tmp_dir = False, # bool
-    cloudrendering_first = False
+    commit_id=None,  # Optional[str]
+    branch=None,  # Optional[str]
+    skip_pip=False,  # bool
+    novelty_thor_scenes=False,
+    skip_delete_tmp_dir=False,  # bool
+    cloudrendering_first=False,
 ):
     assert (commit_id is None) == (
         branch is None
@@ -1139,12 +1094,11 @@ def ci_build(
     if is_travis_build:
         # a deploy key is used on the build server and an .ssh/config entry has been added
         # to point to the deploy key caclled ai2thor-private-github
-        private_url =  "git@ai2thor-private-github:allenai/ai2thor-private.git"
+        private_url = "git@ai2thor-private-github:allenai/ai2thor-private.git"
         novelty_thor_url = "git@ai2thor-objaverse-github:allenai/ai2thor-objaverse.git"
     else:
         private_url = "https://github.com/allenai/ai2thor-private"
-        novelty_thor_url ="https://github.com/allenai/ai2thor-objaverse"
-        
+        novelty_thor_url = "https://github.com/allenai/ai2thor-objaverse"
 
     private_repos = [
         scripts.update_private.Repo(
@@ -1162,17 +1116,17 @@ def ci_build(
 
     if novelty_thor_scenes:
         logger.info("Including a NoveltyThor scenes and making it a private build")
-        private_repos.append(
-            novelty_thor_repo
-        )
+        private_repos.append(novelty_thor_repo)
     else:
         # Needs to be here so we overwrite any existing NoveltyTHOR repo
         private_repos.append(
             scripts.update_private.Repo(
                 url=novelty_thor_url,
-                target_dir=os.path.join(base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"),
+                target_dir=os.path.join(
+                    base_dir, "unity", "Assets", "Resources", "ai2thor-objaverse"
+                ),
                 delete_before_checkout=is_travis_build,
-                commit_id="066485f29d7021ac732bed57758dea4b9d481c40", # Initial commit, empty repo.
+                commit_id="066485f29d7021ac732bed57758dea4b9d481c40",  # Initial commit, empty repo.
             )
         )
 
@@ -1189,12 +1143,15 @@ def ci_build(
                     "tag": None,
                     "id": None,
                 }
-            novelty_thor_add_branches = ["new_cam_adjust"]
+
+            novelty_thor_add_branches = [
+                "new_cam_adjust",
+                "stretch_with_many_cameras",
+                "stretch_with_many_cameras_no_down_gopro_roll",
+            ]
             if is_travis_build and build and build["branch"] in novelty_thor_add_branches:
                 novelty_thor_scenes = True
-                private_repos.append(
-                    novelty_thor_repo
-                )
+                private_repos.append(novelty_thor_repo)
 
             skip_branches = ["vids", "video", "erick/cloudrendering", "it_vr"]
             if build and build["branch"] not in skip_branches:
@@ -1203,17 +1160,13 @@ def ci_build(
                 logger.info(f"pending build for {build['branch']} {build['commit_id']}")
                 clean(private_repos=private_repos)
                 subprocess.check_call("git fetch", shell=True)
-                subprocess.check_call(
-                    "git checkout %s --" % build["branch"], shell=True
-                )
+                subprocess.check_call("git checkout %s --" % build["branch"], shell=True)
                 logger.info(f" After checkout")
-                subprocess.check_call(
-                    "git checkout -qf %s" % build["commit_id"], shell=True
-                )
+                subprocess.check_call("git checkout -qf %s" % build["commit_id"], shell=True)
 
                 private_scene_options = [novelty_thor_scenes]
 
-                build_archs = ["OSXIntel64"] #, "Linux64"]
+                build_archs = ["OSXIntel64"]  # , "Linux64"]
 
                 # CloudRendering only supported with 2020.3.25
                 # should change this in the future to automatically install
@@ -1227,9 +1180,7 @@ def ci_build(
                 has_any_build_failed = False
                 for include_private_scenes in private_scene_options:
                     for arch in build_archs:
-                        logger.info(
-                            f"processing {arch} {build['branch']} {build['commit_id']}"
-                        )
+                        logger.info(f"processing {arch} {build['branch']} {build['commit_id']}")
                         temp_dir = arch_temp_dirs[arch] = os.path.join(
                             os.environ["HOME"],
                             "tmp/unity-%s-%s-%s-%s"
@@ -1256,22 +1207,19 @@ def ci_build(
                             releases_dir=rdir,
                         )
                         if commit_build.exists():
-                            logger.info(
-                                f"found build for commit {build['commit_id']} {arch}"
-                            )
+                            logger.info(f"found build for commit {build['commit_id']} {arch}")
                             # download the build so that we can run the tests
                             if sys.platform.startswith("darwin"):
                                 if arch == "OSXIntel64":
                                     commit_build.download()
                             else:
-                                if arch == "CloudRendering":
+                                if arch in ["CloudRendering", "OSXIntel64"]:
+                                    # In Linux the OSX build cache is used for Unity Tests as cloud rendering fails
                                     commit_build.download()
                         else:
                             # this is done here so that when a tag build request arrives and the commit_id has already
                             # been built, we avoid bootstrapping the cache since we short circuited on the line above
-                            link_build_cache(
-                                root_dir=temp_dir, arch=arch, branch=build["branch"]
-                            )
+                            link_build_cache(root_dir=temp_dir, arch=arch, branch=build["branch"])
 
                             build_success = ci_build_arch(
                                 root_dir=temp_dir,
@@ -1279,13 +1227,11 @@ def ci_build(
                                 commit_id=build["commit_id"],
                                 include_private_scenes=include_private_scenes,
                                 immediately_fail_and_push_log=has_any_build_failed,
-                                timeout=60 * 60
+                                timeout=60 * 60,
                                 # Don't bother trying another build if one has already failed
                             )
 
-                            has_any_build_failed = (
-                                has_any_build_failed or not build_success
-                            )
+                            has_any_build_failed = has_any_build_failed or not build_success
                             if build_success:
                                 logger.info(
                                     f"Build success detected for {arch} {build['commit_id']}"
@@ -1297,9 +1243,7 @@ def ci_build(
                 # the project and we can run the unit tests
                 # waiting for all builds to complete before starting tests
                 for arch in build_archs:
-                    lock_file_path = os.path.join(
-                        arch_temp_dirs[arch], "unity/Temp/UnityLockfile"
-                    )
+                    lock_file_path = os.path.join(arch_temp_dirs[arch], "unity/Temp/UnityLockfile")
                     if os.path.isfile(lock_file_path):
                         logger.info(f"attempting to lock {lock_file_path}")
                         lock_file = os.open(lock_file_path, os.O_RDWR)
@@ -1314,15 +1258,25 @@ def ci_build(
                 if build["tag"] is None:
                     # its possible that the cache doesn't get linked if the builds
                     # succeeded during an earlier run
+
+                    pytest_platform = (
+                        "OSXIntel64" if sys.platform.startswith("darwin") else "CloudRendering"
+                    )
+                    # Weirdly even in Linux you can run utf tests using OSX build cache, but not CloudRendering
+                    utf_test_platform = "OSXIntel64"
+
                     link_build_cache(
-                        arch_temp_dirs["OSXIntel64"], "OSXIntel64", build["branch"]
+                        arch_temp_dirs[utf_test_platform], utf_test_platform, build["branch"]
                     )
 
                     # link builds directory so pytest can run
                     logger.info("current directory pre-symlink %s" % os.getcwd())
                     os.symlink(
-                        os.path.join(arch_temp_dirs["OSXIntel64"], "unity/builds"),
+                        os.path.join(arch_temp_dirs[pytest_platform], "unity/builds"),
                         "unity/builds",
+                    )
+                    print(
+                        f"Symlink from `unity/builds` to `{os.path.join(arch_temp_dirs[pytest_platform], 'unity/builds')}`"
                     )
                     os.makedirs("tmp", exist_ok=True)
                     # using threading here instead of multiprocessing since we must use the start_method of spawn, which
@@ -1332,7 +1286,7 @@ def ci_build(
                         args=(
                             build["branch"],
                             build["commit_id"],
-                            arch_temp_dirs["OSXIntel64"],
+                            arch_temp_dirs[utf_test_platform],
                         ),
                     )
                     utf_proc.start()
@@ -1354,8 +1308,7 @@ def ci_build(
                 for p in procs:
                     if p:
                         logger.info(
-                            "joining proc %s for %s %s"
-                            % (p, build["branch"], build["commit_id"])
+                            "joining proc %s for %s %s" % (p, build["branch"], build["commit_id"])
                         )
                         p.join()
 
@@ -1375,17 +1328,13 @@ def ci_build(
                 if is_travis_build:
                     for i in range(12):
                         b = travis_build(build["id"])
-                        logger.info(
-                            "build state for %s: %s" % (build["id"], b["state"])
-                        )
+                        logger.info("build state for %s: %s" % (build["id"], b["state"]))
 
                         if b["state"] != "started":
                             break
                         time.sleep(10)
 
-                logger.info(
-                    "build complete %s %s" % (build["branch"], build["commit_id"])
-                )
+                logger.info("build complete %s %s" % (build["branch"], build["commit_id"]))
 
             fcntl.flock(lock_f, fcntl.LOCK_UN)
 
@@ -1412,13 +1361,9 @@ def install_cloudrendering_engine(context, force=False):
     if os.path.isdir(full_dir):
         if force:
             shutil.rmtree(full_dir)
-            logger.info(
-                "CloudRendering engine already installed - removing due to force"
-            )
+            logger.info("CloudRendering engine already installed - removing due to force")
         else:
-            logger.info(
-                "skipping installation - CloudRendering engine already installed"
-            )
+            logger.info("skipping installation - CloudRendering engine already installed")
             return
 
     print("packages/CloudRendering-%s.zip" % _unity_version())
@@ -1441,30 +1386,32 @@ def ci_build_webgl(context, commit_id):
     arch = "WebGL"
     set_gi_cache_folder(arch)
     link_build_cache(os.getcwd(), arch, branch)
-    webgl_build_deploy_demo(
-        context, verbose=True, content_addressable=False, force=True
-    )
+    webgl_build_deploy_demo(context, verbose=True, content_addressable=False, force=True)
     logger.info("finished webgl build deploy %s %s" % (branch, commit_id))
     update_webgl_autodeploy_commit_id(commit_id)
 
 
 def set_gi_cache_folder(arch):
     gi_cache_folder = os.path.join(os.environ["HOME"], "GICache/%s" % arch)
-    plist_path = os.path.join(
-        os.environ["HOME"], "Library/Preferences/com.unity3d.UnityEditor5.x.plist"
-    )
-    # done to avoid race conditions when modifying GICache from more than one build
-    subprocess.check_call(
-        "plutil -replace GICacheEnableCustomPath -bool TRUE %s" % plist_path, shell=True
-    )
-    subprocess.check_call(
-        "plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path),
-        shell=True,
-    )
-    subprocess.check_call(
-        "plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,),
-        shell=True,
-    )
+
+    if sys.platform.startswith("darwin"):
+        plist_path = os.path.join(
+            os.environ["HOME"], "Library/Preferences/com.unity3d.UnityEditor5.x.plist"
+        )
+        # done to avoid race conditions when modifying GICache from more than one build
+        subprocess.check_call(
+            "plutil -replace GICacheEnableCustomPath -bool TRUE %s" % plist_path, shell=True
+        )
+        subprocess.check_call(
+            "plutil -replace GICacheFolder -string '%s' %s" % (gi_cache_folder, plist_path),
+            shell=True,
+        )
+        subprocess.check_call(
+            "plutil -replace GICacheMaximumSizeGB -integer 100 %s" % (plist_path,),
+            shell=True,
+        )
+    else:
+        logger.warn("Unchanged GI Cache directory. Only supported in OSX.")
 
 
 def ci_build_arch(
@@ -1533,6 +1480,7 @@ def ci_build_arch(
     finally:
         os.chdir(start_wd)
 
+
 @task
 def poll_ci_build(context):
     import requests
@@ -1542,9 +1490,7 @@ def poll_ci_build(context):
     start_datetime = datetime.datetime.utcnow()
 
     hours_before_timeout = 2
-    print(
-        f"WAITING FOR BUILDS TO COMPLETE ({hours_before_timeout} hours before timeout)"
-    )
+    print(f"WAITING FOR BUILDS TO COMPLETE ({hours_before_timeout} hours before timeout)")
     start_time = time.time()
     last_emit_time = 0
     for i in range(360 * hours_before_timeout):
@@ -1596,9 +1542,7 @@ def poll_ci_build(context):
                 f"\nBuild DOES NOT exist for arch {plat}, expected log url: {commit_build.log_url}"
             )
         else:
-            print(
-                f"\nBuild DOES exist for arch {plat}, log url: {commit_build.log_url}"
-            )
+            print(f"\nBuild DOES exist for arch {plat}, log url: {commit_build.log_url}")
 
     if any_failures:
         print(f"\nERROR: BUILD FAILURES DETECTED")
@@ -1656,9 +1600,7 @@ def build(context, local=False):
             if include_private_scenes:
                 env["INCLUDE_PRIVATE_SCENES"] = "true"
             unity_path = "unity"
-            build_name = ai2thor.build.build_name(
-                plat.name(), version, include_private_scenes
-            )
+            build_name = ai2thor.build.build_name(plat.name(), version, include_private_scenes)
             build_dir = os.path.join("builds", build_name)
             build_path = build_dir + ".zip"
             build_info = builds[plat.name()] = {}
@@ -1813,9 +1755,7 @@ def get_depth(
             save_image_per_frame=True,
         )
     else:
-        env = ai2thor.controller.Controller(
-            width=600, height=600, local_build=local_build
-        )
+        env = ai2thor.controller.Controller(width=600, height=600, local_build=local_build)
 
     if scene is not None:
         env.reset(scene)
@@ -1837,9 +1777,7 @@ def get_depth(
     from ai2thor.interact import InteractiveControllerPrompt
 
     if scene is not None:
-        teleport_arg = dict(
-            action="TeleportFull", y=0.9010001, rotation=dict(x=0, y=rotation, z=0)
-        )
+        teleport_arg = dict(action="TeleportFull", y=0.9010001, rotation=dict(x=0, y=rotation, z=0))
         if teleport is not None:
             teleport = [float(pos) for pos in teleport.split(",")]
 
@@ -1895,9 +1833,7 @@ def get_depth(
 
 
 @task
-def inspect_depth(
-    ctx, directory, all=False, indices=None, jet=False, under_score=False
-):
+def inspect_depth(ctx, directory, all=False, indices=None, jet=False, under_score=False):
     import numpy as np
     import cv2
     import glob
@@ -1939,15 +1875,11 @@ def inspect_depth(
             mn = np.min(raw_depth)
             mx = np.max(raw_depth)
             print("min depth value: {}, max depth: {}".format(mn, mx))
-            norm = (((raw_depth - mn).astype(np.float32) / (mx - mn)) * 255.0).astype(
-                np.uint8
-            )
+            norm = (((raw_depth - mn).astype(np.float32) / (mx - mn)) * 255.0).astype(np.uint8)
 
             img = cv2.applyColorMap(norm, cv2.COLORMAP_JET)
         else:
-            grayscale = (
-                255.0 / raw_depth.max() * (raw_depth - raw_depth.min())
-            ).astype(np.uint8)
+            grayscale = (255.0 / raw_depth.max() * (raw_depth - raw_depth.min())).astype(np.uint8)
             print("max {} min {}".format(raw_depth.max(), raw_depth.min()))
             img = grayscale
 
@@ -1966,9 +1898,7 @@ def inspect_depth(
 
 
 @task
-def real_2_sim(
-    ctx, source_dir, index, scene, output_dir, rotation=0, local_build=False, jet=False
-):
+def real_2_sim(ctx, source_dir, index, scene, output_dir, rotation=0, local_build=False, jet=False):
     import cv2
     from ai2thor.util.transforms import transform_real_2_sim
 
@@ -2056,9 +1986,7 @@ def noise_depth(ctx, directory, show=False):
         indices_top_left = np.where(labels == labels[0][0])
         indices_top_right = np.where(labels == labels[0][img_size[1] - 1])
         indices_bottom_left = np.where(labels == labels[img_size[0] - 1][0])
-        indices_bottom_right = np.where(
-            labels == labels[img_size[0] - 1][img_size[1] - 1]
-        )
+        indices_bottom_right = np.where(labels == labels[img_size[0] - 1][img_size[1] - 1])
 
         indices = [
             indices_top_left,
@@ -2135,10 +2063,7 @@ def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
                     )
                 )
 
-            if (
-                visibility_object_id is None
-                and obj["objectType"] in visibility_object_types
-            ):
+            if visibility_object_id is None and obj["objectType"] in visibility_object_types:
                 visibility_object_id = obj["objectId"]
 
         if visibility_object_id is None:
@@ -2168,9 +2093,7 @@ def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
                             )
                         )
 
-                        replace_success = controller.last_event.metadata[
-                            "lastActionSuccess"
-                        ]
+                        replace_success = controller.last_event.metadata["lastActionSuccess"]
 
                         if replace_success:
                             if (
@@ -2198,9 +2121,7 @@ def list_objects_with_metadata(bucket):
     continuation_token = None
     while True:
         if continuation_token:
-            objects = s3c.list_objects_v2(
-                Bucket=bucket, ContinuationToken=continuation_token
-            )
+            objects = s3c.list_objects_v2(Bucket=bucket, ContinuationToken=continuation_token)
         else:
             objects = s3c.list_objects_v2(Bucket=bucket)
 
@@ -2271,11 +2192,7 @@ def webgl_deploy(
             if ext in content_encoding:
                 kwargs["ContentEncoding"] = content_encoding[ext]
 
-            if (
-                not force
-                and key in current_objects
-                and etag == current_objects[key]["ETag"]
-            ):
+            if not force and key in current_objects and etag == current_objects[key]["ETag"]:
                 if verbose:
                     print("ETag match - skipping %s" % key)
                 return
@@ -2351,9 +2268,7 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
         content_addressable=content_addressable,
     )
 
-    webgl_deploy(
-        ctx, source_dir="builds/demo", target_dir="demo", verbose=verbose, force=force
-    )
+    webgl_deploy(ctx, source_dir="builds/demo", target_dir="demo", verbose=verbose, force=force)
 
     if verbose:
         print("Deployed selected scenes to bucket's 'demo' directory")
@@ -2363,13 +2278,9 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
     living_rooms = [f"FloorPlan{200 + i}_physics" for i in range(1, 31)]
     bedrooms = [f"FloorPlan{300 + i}_physics" for i in range(1, 31)]
     bathrooms = [f"FloorPlan{400 + i}_physics" for i in range(1, 31)]
-    robothor_train = [
-        f"FloorPlan_Train{i}_{j}" for i in range(1, 13) for j in range(1, 6)
-    ]
+    robothor_train = [f"FloorPlan_Train{i}_{j}" for i in range(1, 13) for j in range(1, 6)]
     robothor_val = [f"FloorPlan_Val{i}_{j}" for i in range(1, 4) for j in range(1, 6)]
-    scenes = (
-        kitchens + living_rooms + bedrooms + bathrooms + robothor_train + robothor_val
-    )
+    scenes = kitchens + living_rooms + bedrooms + bathrooms + robothor_train + robothor_val
 
     webgl_build(
         ctx,
@@ -2425,9 +2336,7 @@ def webgl_deploy_all(ctx, verbose=False, individual_rooms=False):
                 build_dir = "builds/{}".format(target_s3_dir)
 
                 webgl_build(ctx, scenes=floorPlanName, directory=build_dir)
-                webgl_deploy(
-                    ctx, source_dir=build_dir, target_dir=target_s3_dir, verbose=verbose
-                )
+                webgl_deploy(ctx, source_dir=build_dir, target_dir=target_s3_dir, verbose=verbose)
 
         else:
             webgl_build(ctx, room_ranges=range_str, directory=build_dir)
@@ -2459,10 +2368,7 @@ def webgl_s3_deploy(
     if all:
         flatten = lambda l: [item for sublist in l for item in sublist]
         room_numbers = flatten(
-            [
-                [i for i in range(room_range[0], room_range[1])]
-                for key, room_range in rooms.items()
-            ]
+            [[i for i in range(room_range[0], room_range[1])] for key, room_range in rooms.items()]
         )
     else:
         room_numbers = [s.strip() for s in scenes.split(",")]
@@ -2477,9 +2383,7 @@ def webgl_s3_deploy(
         target_s3_dir = "{}/{}".format(target_dir, floor_plan_name)
         build_dir = "builds/{}".format(target_s3_dir)
 
-        webgl_build(
-            ctx, scenes=floor_plan_name, directory=build_dir, crowdsource_build=True
-        )
+        webgl_build(ctx, scenes=floor_plan_name, directory=build_dir, crowdsource_build=True)
         if verbose:
             print("Deploying room '{}'...".format(floor_plan_name))
         if not deploy_skip:
@@ -2513,9 +2417,7 @@ def webgl_site_deploy(
         shutil.rmtree(output_dir)
     # os.mkdir(output_dir)
 
-    ignore_func = lambda d, files: [
-        f for f in files if isfile(join(d, f)) and f.endswith(".meta")
-    ]
+    ignore_func = lambda d, files: [f for f in files if isfile(join(d, f)) and f.endswith(".meta")]
 
     if unity_build_dir != "":
         shutil.copytree(unity_build_dir, output_dir, ignore=ignore_func)
@@ -2542,9 +2444,7 @@ def mock_client_request(context):
     import requests
     import cv2
 
-    r = requests.post(
-        "http://127.0.0.1:9200/step", json=dict(action="MoveAhead", sequenceId=1)
-    )
+    r = requests.post("http://127.0.0.1:9200/step", json=dict(action="MoveAhead", sequenceId=1))
     payload = msgpack.unpackb(r.content, raw=False)
     metadata = payload["metadata"]["agents"][0]
     image = np.frombuffer(payload["frames"][0], dtype=np.uint8).reshape(
@@ -2660,9 +2560,7 @@ def create_robothor_dataset(
         print("Getting points in scene: '{}'...: ".format(scene))
         controller.reset(scene)
         event = controller.step(
-            dict(
-                action="ObjectTypeToObjectIds", objectType=object_type.replace(" ", "")
-            )
+            dict(action="ObjectTypeToObjectIds", objectType=object_type.replace(" ", ""))
         )
         object_ids = event.metadata["actionReturn"]
 
@@ -2673,13 +2571,11 @@ def create_robothor_dataset(
         objects_types_in_scene.add(object_type)
         object_id = object_ids[0]
 
-        event_reachable = controller.step(
-            dict(action="GetReachablePositions", gridSize=0.25)
-        )
+        event_reachable = controller.step(dict(action="GetReachablePositions", gridSize=0.25))
 
-        target_position = controller.step(
-            action="GetObjectPosition", objectId=object_id
-        ).metadata["actionReturn"]
+        target_position = controller.step(action="GetObjectPosition", objectId=object_id).metadata[
+            "actionReturn"
+        ]
 
         reachable_positions = event_reachable.metadata["actionReturn"]
 
@@ -2700,8 +2596,7 @@ def create_robothor_dataset(
                         [
                             p
                             for p in point_set
-                            if sqr_dist(p, selected)
-                            <= minimum_distance * minimum_distance
+                            if sqr_dist(p, selected) <= minimum_distance * minimum_distance
                         ]
                     )
                     point_set = point_set.difference(remove_set)
@@ -2828,8 +2723,7 @@ def create_robothor_dataset(
         objects = []
         for objectType in targets:
             if filter_file is None or (
-                objectType in scene_object_filter
-                and scene in scene_object_filter[objectType]
+                objectType in scene_object_filter and scene in scene_object_filter[objectType]
             ):
                 dataset[scene][objectType] = []
                 obj = get_points(controller, objectType, scene)
@@ -2838,9 +2732,7 @@ def create_robothor_dataset(
 
         dataset_flat = dataset_flat + objects
         if intermediate_directory != ".":
-            with open(
-                os.path.join(intermediate_directory, "{}.json".format(scene)), "w"
-            ) as f:
+            with open(os.path.join(intermediate_directory, "{}.json".format(scene)), "w") as f:
                 json.dump(objects, f, indent=4)
 
     with open(os.path.join(intermediate_directory, output), "w") as f:
@@ -2891,9 +2783,7 @@ def shortest_path_to_object(
         agentMode="bot",
         visibilityDistance=visibility_distance,
     )
-    path = metrics.get_shortest_path_to_object_type(
-        controller, object, p, {"x": 0, "y": 0, "z": 0}
-    )
+    path = metrics.get_shortest_path_to_object_type(controller, object, p, {"x": 0, "y": 0, "z": 0})
     minimum_path_length = metrics.path_distance(path)
 
     print("Path: {}".format(path))
@@ -2980,9 +2870,7 @@ def filter_dataset(ctx, filename, output_filename, ids=False):
 
 
 @task
-def fix_dataset_object_types(
-    ctx, input_file, output_file, editor_mode=False, local_build=False
-):
+def fix_dataset_object_types(ctx, input_file, output_file, editor_mode=False, local_build=False):
     import ai2thor.controller
 
     with open(input_file, "r") as f:
@@ -3028,9 +2916,7 @@ def fix_dataset_object_types(
 
 
 @task
-def test_dataset(
-    ctx, filename, scenes=None, objects=None, editor_mode=False, local_build=False
-):
+def test_dataset(ctx, filename, scenes=None, objects=None, editor_mode=False, local_build=False):
     import ai2thor.controller
     import ai2thor.util.metrics as metrics
 
@@ -3060,9 +2946,7 @@ def test_dataset(
         if objects is not None:
             object_set = set(objects.split(","))
             print("Filtering {}".format(object_set))
-            filtered_dataset = [
-                d for d in filtered_dataset if d["object_type"] in object_set
-            ]
+            filtered_dataset = [d for d in filtered_dataset if d["object_type"] in object_set]
         current_scene = None
         current_object = None
         point_counter = 0
@@ -3150,9 +3034,7 @@ def visualize_shortest_paths(
             dataset_filtered = [d for d in dataset if d["scene"] in scene_f_set]
         if object_types is not None:
             object_f_set = set(object_types.split(","))
-            dataset_filtered = [
-                d for d in dataset_filtered if d["object_type"] in object_f_set
-            ]
+            dataset_filtered = [d for d in dataset_filtered if d["object_type"] in object_f_set]
         print("Running for {} points...".format(len(dataset_filtered)))
 
         index = 0
@@ -3166,8 +3048,7 @@ def visualize_shortest_paths(
             previous_index = index
             controller.reset(current_scene)
             while (
-                current_scene == datapoint["scene"]
-                and current_object == datapoint["object_type"]
+                current_scene == datapoint["scene"] and current_object == datapoint["object_type"]
             ):
                 index += 1
                 if index > len(dataset_filtered) - 1:
@@ -3181,9 +3062,7 @@ def visualize_shortest_paths(
 
             failed[key] = []
 
-            print(
-                "Points for '{}' in scene '{}'...".format(current_object, current_scene)
-            )
+            print("Points for '{}' in scene '{}'...".format(current_object, current_scene))
             evt = controller.step(
                 action="AddThirdPartyCamera",
                 rotation=dict(x=90, y=0, z=0),
@@ -3194,9 +3073,7 @@ def visualize_shortest_paths(
 
             sc = dataset_filtered[previous_index]["scene"]
             obj_type = dataset_filtered[previous_index]["object_type"]
-            positions = [
-                d["initial_position"] for d in dataset_filtered[previous_index:index]
-            ]
+            positions = [d["initial_position"] for d in dataset_filtered[previous_index:index]]
             # print("{} : {} : {}".format(sc, obj_type, positions))
             evt = controller.step(
                 action="VisualizeShortestPaths",
@@ -3295,9 +3172,7 @@ def fill_in_dataset(
         for datapoint in filter_dataset:
             missing_datapoints_by_scene[datapoint["scene"]].append(datapoint)
 
-        partial_dataset_filenames = sorted(
-            glob.glob("{}/FloorPlan_*.png".format(dataset_dir))
-        )
+        partial_dataset_filenames = sorted(glob.glob("{}/FloorPlan_*.png".format(dataset_dir)))
         print("Datas")
 
         difficulty_order_map = {"easy": 0, "medium": 1, "hard": 2}
@@ -3310,12 +3185,8 @@ def fill_in_dataset(
         final_dataset = []
         for scene in scenes:
             for object_type in targets:
-                arr = [
-                    p for p in partial_dataset[scene] if p["object_type"] == object_type
-                ] + [
-                    p
-                    for p in missing_datapoints_by_scene[scene]
-                    if p["object_type"] == object_type
+                arr = [p for p in partial_dataset[scene] if p["object_type"] == object_type] + [
+                    p for p in missing_datapoints_by_scene[scene] if p["object_type"] == object_type
                 ]
                 final_dataset = final_dataset + sorted(
                     arr,
@@ -3377,10 +3248,7 @@ def resort_dataset(ctx, dataset_path, output_path, editor_mode=False, local_buil
     new_dataset = []
     while index < len(dataset):
         previous_index = index
-        while (
-            current_scene == datapoint["scene"]
-            and current_object == datapoint["object_type"]
-        ):
+        while current_scene == datapoint["scene"] and current_object == datapoint["object_type"]:
             index += 1
             if index > len(dataset) - 1:
                 break
@@ -3538,9 +3406,7 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
 
 
 @task
-def get_physics_determinism(
-    ctx, scene="FloorPlan1_physics", agent_mode="arm", n=100, samples=100
-):
+def get_physics_determinism(ctx, scene="FloorPlan1_physics", agent_mode="arm", n=100, samples=100):
     import ai2thor.controller
     import random
 
@@ -3587,11 +3453,7 @@ def get_physics_determinism(
             controller, num_trials, ObjectPositionVarianceAverage()
         ):
             act(controller, actions, n)
-        print(
-            " actions: '{}', object_position_variance_average: {} ".format(
-                action_name, metric
-            )
-        )
+        print(" actions: '{}', object_position_variance_average: {} ".format(action_name, metric))
 
 
 @task
@@ -3630,8 +3492,7 @@ def generate_pypi_index(context):
 
 def ci_test_utf(branch, commit_id, base_dir):
     logger.info(
-        "running Unity Test framework testRunner for %s %s %s"
-        % (branch, commit_id, base_dir)
+        "running Unity Test framework testRunner for %s %s %s" % (branch, commit_id, base_dir)
     )
 
     results_path, results_logfile = test_utf(base_dir)
@@ -3669,18 +3530,56 @@ def format(context):
 
 @task
 def format_cs(context):
-    install_dotnet_format(context)
+    # assert tool in ["format", "csharpier"]
+    install_dotnet_tool(context, tool="dotnet-format")
+    install_dotnet_tool(context, tool="csharpier")
 
-    # the following message will get emitted, this can safely be ignored
-    # "Warnings were encountered while loading the workspace. Set the verbosity option to the 'diagnostic' level to log warnings"
+    # First run csharpier as it handles long lines correctly
+    print("Running csharpier on whole project")
     subprocess.check_call(
-        ".dotnet/dotnet tool run dotnet-format unity/AI2-THOR-Base.csproj -w -s",
+        ".dotnet/dotnet tool run dotnet-csharpier unity",
         shell=True,
     )
 
+    # If you want to run on all csproj, all but AI2-THOR-Base are external packages so no need to
+    # cs_projs = glob.glob("unity/*.csproj")
+    cs_projs = ["unity/AI2-THOR-Base.csproj"]
+    for proj in cs_projs:
+        if any(
+            k in proj
+            for k in [
+                "UnityStandardAssets",
+                "MagicMirror",
+                "I360Render",
+                "MessagePack",
+                "MIConvexHull",
+                "Priority",
+                "Plugins",
+            ]
+        ):
+            continue
+
+        # Now run dotnet-format as it allows more configuration options (e.g. curly brace with no new line).
+        # The following message will get emitted, this can safely be ignored
+        # "Warnings were encountered while loading the workspace. Set the verbosity option to the 'diagnostic' level to log warnings"
+
+        print(f"\nRunning dotnet-format on {proj}")
+        subprocess.check_call(
+            f".dotnet/dotnet tool run dotnet-format {proj} -w -s --verbosity diagnostic",
+            shell=True,
+        )
+
+        # For some reason if you don't run this twice because of using csharpier some files
+        # remain with formating errors i.e. DebugInputField.cs (with whitespace changes)
+        print(f"\nRunning dotnet-format again on {proj}")
+        subprocess.check_call(
+            f".dotnet/dotnet tool run dotnet-format {proj} -w -s --verbosity diagnostic",
+            shell=True,
+        )
+
 
 @task
-def install_dotnet_format(context, force=False):
+def install_dotnet_tool(context, tool: str, force=False):
     install_dotnet(context)
 
     base_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
@@ -3692,12 +3591,17 @@ def install_dotnet_format(context, force=False):
         tools = json.loads(f.read())
 
     # we may want to specify a version here in the future
-    if not force and "dotnet-format" in tools.get("tools", {}):
+    if not force and tool in tools.get("tools", {}):
         # dotnet-format already installed
         return
 
-    command = os.path.join(base_dir, ".dotnet/dotnet") + " tool install dotnet-format"
+    command = os.path.join(base_dir, ".dotnet/dotnet") + f" tool install {tool}"
     subprocess.check_call(command, shell=True)
+
+
+@task
+def install_dotnet_format(context, force=False):
+    install_dotnet_tool(context, tool="dotnet-format", force=force)
 
 
 @task
@@ -3730,24 +3634,18 @@ def format_py(context):
     except ImportError:
         raise Exception("black not installed - run pip install black")
 
-    subprocess.check_call(
-        "black -v -t py38 --exclude unity/ --exclude .git/ .", shell=True
-    )
+    subprocess.check_call("black -v -t py38 --exclude unity/ --exclude .git/ .", shell=True)
 
 
 @task
-def install_unity_hub(
-    context, target_dir=os.path.join(os.path.expanduser("~"), "local/bin")
-):
+def install_unity_hub(context, target_dir=os.path.join(os.path.expanduser("~"), "local/bin")):
     import stat
     import requests
 
     if not sys.platform.startswith("linux"):
         raise Exception("Installation only support for Linux")
 
-    res = requests.get(
-        "https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage"
-    )
+    res = requests.get("https://public-cdn.cloud.unity3d.com/hub/prod/UnityHub.AppImage")
     res.raise_for_status()
     os.makedirs(target_dir, exist_ok=True)
 
@@ -3775,9 +3673,7 @@ def install_unity_editor(context, version=None, changeset=None):
 
     unity_hub_path = None
     if sys.platform.startswith("linux"):
-        unity_hub_path = os.path.join(
-            os.path.expanduser("~"), "local/bin/UnityHub.AppImage"
-        )
+        unity_hub_path = os.path.join(os.path.expanduser("~"), "local/bin/UnityHub.AppImage")
     elif sys.platform.startswith("darwin"):
         unity_hub_path = "/Applications/Unity\ Hub.app/Contents/MacOS/Unity\ Hub --"
     else:
@@ -3817,24 +3713,17 @@ def generate_unity_alf(context):
     # with manual activation https://docs.unity3d.com/Manual/ManualActivationGuide.html
 
     alf_path = "Unity_v%s.alf" % _unity_version()
-    subprocess.run(
-        "%s -batchmode -createManualActivationFile" % _unity_path(), shell=True
-    )
+    subprocess.run("%s -batchmode -createManualActivationFile" % _unity_path(), shell=True)
     assert os.path.isfile(alf_path), "ALF not found at %s" % alf_path
 
-    print(
-        "ALF created at %s. Activate license at: https://license.unity3d.com/manual"
-        % alf_path
-    )
+    print("ALF created at %s. Activate license at: https://license.unity3d.com/manual" % alf_path)
 
 
 @task
 def activate_unity_license(context, ulf_path):
     assert os.path.isfile(ulf_path), "License file '%s' not found" % ulf_path
 
-    subprocess.run(
-        '%s -batchmode -manualLicenseFile "%s"' % (_unity_path(), ulf_path), shell=True
-    )
+    subprocess.run('%s -batchmode -manualLicenseFile "%s"' % (_unity_path(), ulf_path), shell=True)
 
 
 def test_utf(base_dir=None):
@@ -3851,9 +3740,11 @@ def test_utf(base_dir=None):
     test_results_path = os.path.join(project_path, "utf_testResults-%s.xml" % commit_id)
     logfile_path = os.path.join(base_dir, "thor-testResults-%s.log" % commit_id)
 
-    command = (
-        "%s -runTests -testResults %s -logFile %s -testPlatform PlayMode -projectpath %s "
-        % (_unity_path(), test_results_path, logfile_path, project_path)
+    command = "%s -runTests -testResults %s -logFile %s -testPlatform PlayMode -projectpath %s " % (
+        _unity_path(),
+        test_results_path,
+        logfile_path,
+        project_path,
     )
 
     subprocess.call(command, shell=True, cwd=base_dir)
@@ -3912,9 +3803,7 @@ def test_testresults_exist():
         test_record_data = "    pass"
         if test_records:
             test_record_data = "\n".join(test_records)
-        encoded_class_name = re.sub(
-            r"[^a-zA-Z0-9_]", "_", re.sub("_", "__", class_name)
-        )
+        encoded_class_name = re.sub(r"[^a-zA-Z0-9_]", "_", re.sub("_", "__", class_name))
         class_data.append(
             f"""
 class {encoded_class_name}:
@@ -4117,9 +4006,7 @@ def test_render(ctx, editor_mode=False, local_build=False):
 
     if img is not None:
         print(f"img r {img[0][0][0]} g {img[0][0][1]} b {img[0][0][2]}")
-        print(
-            f"evt frame r {evt.cv2img[0][0][0]} g {evt.cv2img[0][0][1]} b {evt.cv2img[0][0][2]}"
-        )
+        print(f"evt frame r {evt.cv2img[0][0][0]} g {evt.cv2img[0][0][1]} b {evt.cv2img[0][0][2]}")
 
         cv2.namedWindow("image")
 
@@ -4222,9 +4109,7 @@ def create_json(ctx, file_path, output=None):
                     "empty": wall["empty"] if "empty" in wall else False,
                     "polygon": wall_to_poly(wall),
                 }
-                for (wall, wall_indx) in zip(
-                    room["walls"], range(0, len(room["walls"]))
-                )
+                for (wall, wall_indx) in zip(room["walls"], range(0, len(room["walls"])))
             ]
             for (room, room_i) in zip(obj["rooms"], range(len(obj["rooms"])))
         ]
@@ -4405,8 +4290,7 @@ def plot(
     benchmarks = [load_benchmark_filename(filename) for filename in benchmark_filenames]
 
     benchmark_titles = [
-        get_benchmark_title(b, "")
-        for (i, b) in zip(range(0, len(benchmarks)), benchmarks)
+        get_benchmark_title(b, "") for (i, b) in zip(range(0, len(benchmarks)), benchmarks)
     ]
 
     if plot_titles is not None:
@@ -4432,10 +4316,7 @@ def plot(
         )
         all_data = reduce(
             list.__add__,
-            [
-                [(x, [y[action] for y in b]) for action in all_data[0][1][0]]
-                for (x, b) in all_data
-            ],
+            [[(x, [y[action] for y in b]) for action in all_data[0][1][0]] for (x, b) in all_data],
         )
 
     keys = [k for (k, y) in all_data]
@@ -4612,9 +4493,7 @@ def run_benchmark_from_s3_config(ctx):
 
     client = boto3.client("s3")
 
-    response = client.list_objects_v2(
-        Bucket=BENCHMARKING_S3_BUCKET, Prefix="benchmark_jobs/"
-    )
+    response = client.list_objects_v2(Bucket=BENCHMARKING_S3_BUCKET, Prefix="benchmark_jobs/")
 
     s3 = boto3.resource("s3", region_name="us-west-2")
     benchmark_runs = []
@@ -4632,9 +4511,7 @@ def run_benchmark_from_s3_config(ctx):
                             BENCHMARKING_S3_BUCKET,
                             f"procedural_houses/{procedural_house}",
                         )
-                        house_json = json.loads(
-                            house_obj.get()["Body"].read().decode("utf-8")
-                        )
+                        house_json = json.loads(house_obj.get()["Body"].read().decode("utf-8"))
                         if "id" not in house_json:
                             house_json["id"] = procedural_house.split(".")[0]
                         procedural_houses_transformed.append(house_json)
@@ -4643,7 +4520,6 @@ def run_benchmark_from_s3_config(ctx):
             benchmark_run_config["procedural_houses"] = procedural_houses_transformed
             benchmark_run_config["config_name"] = os.path.basename(key)
             # benchmark_run_config['verbose'] = True
-
             action_groups = copy.deepcopy(benchmark_run_config["action_groups"])
             del benchmark_run_config["action_groups"]
             benchmark_runs.append(
@@ -4681,12 +4557,13 @@ def run_benchmark_from_s3_config(ctx):
 
 @task
 def run_benchmark_from_local_config(
-    ctx, config_path, 
-    house_from_s3=False, 
+    ctx,
+    config_path,
+    house_from_s3=False,
     houses_path="./unity/Assets/Resources/rooms",
     output="out.json",
     local_build=False,
-    arch=None
+    arch=None,
 ):
     import copy
     from ai2thor.benchmarking import BENCHMARKING_S3_BUCKET, UnityActionBenchmarkRunner
@@ -4694,9 +4571,7 @@ def run_benchmark_from_local_config(
     if house_from_s3:
         client = boto3.client("s3")
 
-        response = client.list_objects_v2(
-            Bucket=BENCHMARKING_S3_BUCKET, Prefix="benchmark_jobs/"
-        )
+        response = client.list_objects_v2(Bucket=BENCHMARKING_S3_BUCKET, Prefix="benchmark_jobs/")
         s3 = boto3.resource("s3", region_name="us-west-2")
     benchmark_runs = []
     key = config_path
@@ -4723,9 +4598,7 @@ def run_benchmark_from_local_config(
                             BENCHMARKING_S3_BUCKET,
                             f"procedural_houses/{procedural_house}",
                         )
-                        house_json = json.loads(
-                            house_obj.get()["Body"].read().decode("utf-8")
-                        )
+                        house_json = json.loads(house_obj.get()["Body"].read().decode("utf-8"))
                         if "id" not in house_json:
                             house_json["id"] = procedural_house.split(".")[0]
                         procedural_houses_transformed.append(house_json)
@@ -4740,15 +4613,12 @@ def run_benchmark_from_local_config(
             benchmark_run_config["init_params"]["commit_id"] = None
             benchmark_run_config["init_params"]["local_build"] = True
             del benchmark_run_config["init_params"]["platform"]
-        
-        
+
         # benchmark_run_config['verbose'] = True
 
         action_groups = copy.deepcopy(benchmark_run_config["action_groups"])
         del benchmark_run_config["action_groups"]
-        benchmark_runs.append(
-            (UnityActionBenchmarkRunner(**benchmark_run_config), action_groups)
-        )
+        benchmark_runs.append((UnityActionBenchmarkRunner(**benchmark_run_config), action_groups))
     benchmark_results = []
     for benchmark_runner, action_group in benchmark_runs:
         benchmark_result = benchmark_runner.benchmark(action_group)
@@ -4786,16 +4656,12 @@ def add_daily_benchmark_config(ctx, benchmark_config_filename):
     # validate(benchmark_config, schema=benchmarking_config_schema)
     try:
         logger.info(f"Pushing benchmark config '{benchmark_config_basename}'")
-        s3.Object(
-            BENCHMARKING_S3_BUCKET, f"benchmark_jobs/{benchmark_config_basename}"
-        ).put(
+        s3.Object(BENCHMARKING_S3_BUCKET, f"benchmark_jobs/{benchmark_config_basename}").put(
             Body=json.dumps(benchmark_config, indent=4),
             ContentType="application/json",
         )
     except botocore.exceptions.ClientError as e:
-        logger.error(
-            f"Caught error uploading archive '{benchmark_config_basename}': {e}"
-        )
+        logger.error(f"Caught error uploading archive '{benchmark_config_basename}': {e}")
 
 
 @task
@@ -4865,7 +4731,10 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     from objathor.asset_conversion.util import view_asset_in_thor
 
     hook_runner = ProceduralAssetHookRunner(
-        asset_directory=asset_dir, asset_symlink=True, verbose=True, load_file_in_unity=True
+        asset_directory=asset_dir,
+        asset_symlink=True,
+        verbose=True,
+        load_file_in_unity=True,
     )
     controller = ai2thor.controller.Controller(
         # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",
@@ -4880,15 +4749,15 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
         visibilityScheme="Distance",
         action_hook_runner=hook_runner,
     )
-    
-    #TODO bug why skybox is not changing? from just procedural pipeline
+
+    # TODO bug why skybox is not changing? from just procedural pipeline
     evt = controller.step(
-        action="SetSkybox", 
+        action="SetSkybox",
         color={
             "r": 0,
             "g": 0,
             "b": 0,
-        }
+        },
     )
 
     angle_increment = 45
@@ -4901,7 +4770,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
         output_dir="./output-test",
         rotations=rotations,
         house_path=house_path,
-        skybox_color=(0, 0, 0)
+        skybox_color=(0, 0, 0),
     )
 
     # with open(house_path, "r") as f:
@@ -4921,21 +4790,19 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     #     ]
     # evt = controller.step(action="CreateHouse", house=house)
 
-   
     # print(
     #     f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
     # )
     # print(f'Error: {evt.metadata["errorMessage"]}')
 
     # evt = controller.step(
-    #     action="SetSkybox", 
+    #     action="SetSkybox",
     #     color={
     #         "r": 0,
     #         "g": 0,
     #         "b": 0,
     #     }
     # )
-
 
     # evt = controller.step(dict(action="LookAtObjectCenter", objectId=instance_id))
 
@@ -4945,10 +4812,9 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
     # print(f'Error: {evt.metadata["errorMessage"]}')
     # input()
 
+
 @task
-def procedural_asset_cache_test(
-    ctx, asset_dir, house_path, asset_ids="", cache_limit=1
-):
+def procedural_asset_cache_test(ctx, asset_dir, house_path, asset_ids="", cache_limit=1):
     import json
     import ai2thor.controller
     from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
@@ -4995,28 +4861,20 @@ def procedural_asset_cache_test(
 
     evt = controller.step(action="CreateHouse", house=house)
 
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
-    )
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
 
-    evt = controller.step(
-        dict(action="LookAtObjectCenter", objectId=f"{instance_id}_0")
-    )
+    evt = controller.step(dict(action="LookAtObjectCenter", objectId=f"{instance_id}_0"))
 
     # while True:
     #     pass
 
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
-    )
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
 
     evt = controller.step(action="GetLRUCacheKeys")
 
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
-    )
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
     print(f'return {evt.metadata["actionReturn"]}')
 
@@ -5044,16 +4902,12 @@ def procedural_asset_cache_test(
 
     evt = controller.step(action="CreateHouse", house=house)
 
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
-    )
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
 
     controller.reset()
     evt = controller.step(action="GetLRUCacheKeys")
 
-    print(
-        f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}"
-    )
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
     print(f'return {evt.metadata["actionReturn"]}')

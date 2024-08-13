@@ -7,7 +7,8 @@ from typing import Optional
 private_dir = ""
 private_repo_url = ""
 
-class Repo():
+
+class Repo:
     def __init__(
         self,
         url: str,
@@ -24,7 +25,7 @@ class Repo():
         self.commit_id = commit_id
         self.branch = branch
         self.delete_before_checkout = delete_before_checkout
-    
+
     def current_branch(self):
         git_dir = os.path.join(self.base_dir, ".git")
         return (
@@ -61,6 +62,7 @@ class Repo():
 
         os.chdir(cwd)
 
+
 """
 Script that maintains the Private directory checkout - intended to be run 
 immediately after switching branches in the parent ai2thor project
@@ -73,9 +75,7 @@ if __name__ == "__main__":
     private_dir = sys.argv[1]
     private_repo_url = sys.argv[2]
     if not os.path.isdir(private_dir) and os.path.exists(private_dir):
-        raise Exception(
-            f"Private directory {private_dir} is not a directory - please remove"
-        )
+        raise Exception(f"Private directory {private_dir} is not a directory - please remove")
     else:
-        repo = Repo(url = private_repo_url, target_dir = private_dir, delete_before_checkout=True)
+        repo = Repo(url=private_repo_url, target_dir=private_dir, delete_before_checkout=True)
         repo.checkout_branch()
