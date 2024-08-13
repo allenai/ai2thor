@@ -6917,147 +6917,150 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             navMeshAgent.enabled = true;
 
             navmeshSurfaces =
-                navmeshSurfaces ?? GameObject.FindObjectsOfType<NavMeshSurfaceExtended>();
+                navmeshSurfaces
+                ?? GameObject.FindObjectsOfType<NavMeshSurfaceExtended>(includeInactive: true);
 
-            var activeNavMesh = ProceduralTools.activateOnlyNavmeshSurface(
-                navmeshSurfaces,
-                navMeshId
-            );
-            // var yPos = activeNavMesh.buildSettings.agentHeight / 2.0f;
-
-            var pathStartPosition = new Vector3(start.x, start.y, start.z);
-            var pathTargetPosition = new Vector3(target.x, start.y, target.z);
-
-            if (sampleFromNavmesh) {
-                float floorY = Math.Min(
-                    getFloorY(start.x, start.y, start.z),
-                    getFloorY(target.x, target.y, target.z)
-                );
-                Vector3 startPositionWithFloorY = new Vector3(start.x, floorY, start.z);
-                Debug.Log($"----- Navmesh floorY {floorY.ToString("F6")}");
-                Vector3 targetPositionWithFloorY = new Vector3(target.x, floorY, target.z);
-
-                NavMeshHit startHit;
-                // startPosition.y = 0.167557f;
-                bool startWasHit = UnityEngine.AI.NavMesh.SamplePosition(
-                    startPositionWithFloorY,
-                    out startHit,
-                    Math.Max(0.2f, allowedError),
-                    UnityEngine.AI.NavMesh.AllAreas
+            try {
+                var activeNavMesh = ProceduralTools.activateOnlyNavmeshSurface(
+                    navmeshSurfaces,
+                    navMeshId
                 );
 
-                NavMeshHit targetHit;
-                bool targetWasHit = UnityEngine.AI.NavMesh.SamplePosition(
-                    targetPositionWithFloorY,
-                    out targetHit,
-                    Math.Max(0.2f, allowedError),
-                    UnityEngine.AI.NavMesh.AllAreas
-                );
+                var pathStartPosition = new Vector3(start.x, start.y, start.z);
+                var pathTargetPosition = new Vector3(target.x, start.y, target.z);
 
-                pathStartPosition = startHit.position;
-                pathTargetPosition = targetHit.position;
+                if (sampleFromNavmesh) {
+                    float floorY = Math.Min(
+                        getFloorY(start.x, start.y, start.z),
+                        getFloorY(target.x, target.y, target.z)
+                    );
+                    Vector3 startPositionWithFloorY = new Vector3(start.x, floorY, start.z);
+                    Debug.Log($"----- Navmesh floorY {floorY.ToString("F6")}");
+                    Vector3 targetPositionWithFloorY = new Vector3(target.x, floorY, target.z);
 
-                if (!startWasHit || !targetWasHit) {
-                    this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                    if (!startWasHit) {
-                        throw new InvalidOperationException(
-                            $"No point on NavMesh near startPosition {startPositionWithFloorY}."
-                        );
+                    NavMeshHit startHit;
+                    // startPosition.y = 0.167557f;
+                    bool startWasHit = UnityEngine.AI.NavMesh.SamplePosition(
+                        startPositionWithFloorY,
+                        out startHit,
+                        Math.Max(0.2f, allowedError),
+                        UnityEngine.AI.NavMesh.AllAreas
+                    );
+
+                    NavMeshHit targetHit;
+                    bool targetWasHit = UnityEngine.AI.NavMesh.SamplePosition(
+                        targetPositionWithFloorY,
+                        out targetHit,
+                        Math.Max(0.2f, allowedError),
+                        UnityEngine.AI.NavMesh.AllAreas
+                    );
+
+                    pathStartPosition = startHit.position;
+                    pathTargetPosition = targetHit.position;
+
+                    if (!startWasHit || !targetWasHit) {
+                        this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                        if (!startWasHit) {
+                            throw new InvalidOperationException(
+                                $"No point on NavMesh near startPosition {startPositionWithFloorY}."
+                            );
+                        }
+                        if (!targetWasHit) {
+                            throw new InvalidOperationException(
+                                $"No point on NavMesh near targetPosition {targetPositionWithFloorY}."
+                            );
+                        }
                     }
-                    if (!targetWasHit) {
+
+                    float startOffset = Vector3.Distance(
+                        pathStartPosition,
+                        new Vector3(
+                            startPositionWithFloorY.x,
+                            startHit.position.y,
+                            startPositionWithFloorY.z
+                        )
+                    );
+                    float targetOffset = Vector3.Distance(
+                        pathTargetPosition,
+                        new Vector3(
+                            targetPositionWithFloorY.x,
+                            targetHit.position.y,
+                            targetPositionWithFloorY.z
+                        )
+                    );
+                    if (startOffset > allowedError && targetOffset > allowedError) {
+                        this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
+                        var extraDebug = !string.IsNullOrEmpty(debugTargetObjectId)
+                            ? $" For objectId: '{debugTargetObjectId}'"
+                            : "";
                         throw new InvalidOperationException(
-                            $"No point on NavMesh near targetPosition {targetPositionWithFloorY}."
+                            $"Closest point on NavMesh was too far from the agent: "
+                                + $" (startPosition={startPositionWithFloorY.ToString("F3")},"
+                                + $" closest navmesh position {pathStartPosition.ToString("F3")}) and"
+                                + $" (targetPosition={targetPositionWithFloorY.ToString("F3")},"
+                                + $" closest navmesh position {pathTargetPosition.ToString("F3")})."
+                                + $"{extraDebug}"
                         );
                     }
                 }
 
-                float startOffset = Vector3.Distance(
+#if UNITY_EDITOR
+                Debug.Log(
+                    $"Attempting to find path from {pathStartPosition.ToString("F6")} to {pathTargetPosition.ToString("F6")}."
+                );
+                Debug.Log(
+                    $"NavmeshAgent start position {navMeshAgent.transform.position.ToString("F6")}"
+                );
+#endif
+
+                var prevPosition = this.transform.position;
+                var prevId = navMeshAgent.agentTypeID;
+                this.transform.position = pathStartPosition;
+                // navMeshAgent.radius = 2.0f;
+                Physics.SyncTransforms();
+                // navMeshAgent.agentTypeID =
+
+                // Useless more of unity's broken APIS for runtime >:(
+                // NavMeshQueryFilter queryFilter = new NavMeshQueryFilter() {
+                //     agentTypeID = queryAgentId,
+                //     areaMask = navMesh.layerMask
+                // };
+                bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
                     pathStartPosition,
-                    new Vector3(
-                        startPositionWithFloorY.x,
-                        startHit.position.y,
-                        startPositionWithFloorY.z
-                    )
-                );
-                float targetOffset = Vector3.Distance(
                     pathTargetPosition,
-                    new Vector3(
-                        targetPositionWithFloorY.x,
-                        targetHit.position.y,
-                        targetPositionWithFloorY.z
-                    )
+                    UnityEngine.AI.NavMesh.AllAreas,
+                    path
                 );
-                if (startOffset > allowedError && targetOffset > allowedError) {
-                    this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
+
+#if UNITY_EDITOR
+                Debug.Log(
+                    $"-----Navmesh  Pathsuccess {pathSuccess} path status: {path.status} corner lenght {path.corners.Count()} corners: {string.Join(", ", path.corners.Select(c => c.ToString("F6")))}"
+                );
+#endif
+
+                this.transform.position = prevPosition;
+                // bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
+                //     startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
+                // );
+                if (path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                     var extraDebug = !string.IsNullOrEmpty(debugTargetObjectId)
                         ? $" For objectId: '{debugTargetObjectId}'"
                         : "";
+                    this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
                     throw new InvalidOperationException(
-                        $"Closest point on NavMesh was too far from the agent: "
-                            + $" (startPosition={startPositionWithFloorY.ToString("F3")},"
-                            + $" closest navmesh position {pathStartPosition.ToString("F3")}) and"
-                            + $" (targetPosition={targetPositionWithFloorY.ToString("F3")},"
-                            + $" closest navmesh position {pathTargetPosition.ToString("F3")})."
+                        $"Could not find path between {pathStartPosition.ToString("F6")}"
+                            + $" and {pathTargetPosition.ToString("F6")} using the NavMesh."
                             + $"{extraDebug}"
                     );
                 }
-            }
-
 #if UNITY_EDITOR
-            Debug.Log(
-                $"Attempting to find path from {pathStartPosition.ToString("F6")} to {pathTargetPosition.ToString("F6")}."
-            );
-            Debug.Log(
-                $"NavmeshAgent start position {navMeshAgent.transform.position.ToString("F6")}"
-            );
+                VisualizePath(pathStartPosition, path);
 #endif
-
-            var prevPosition = this.transform.position;
-            var prevId = navMeshAgent.agentTypeID;
-            this.transform.position = pathStartPosition;
-            // navMeshAgent.radius = 2.0f;
-            Physics.SyncTransforms();
-            // navMeshAgent.agentTypeID =
-
-            // Useless more of unity's broken APIS for runtime >:(
-            // NavMeshQueryFilter queryFilter = new NavMeshQueryFilter() {
-            //     agentTypeID = queryAgentId,
-            //     areaMask = navMesh.layerMask
-            // };
-            bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
-                pathStartPosition,
-                pathTargetPosition,
-                UnityEngine.AI.NavMesh.AllAreas,
-                path
-            );
-
-#if UNITY_EDITOR
-            Debug.Log(
-                $"-----Navmesh  Pathsuccess {pathSuccess} path status: {path.status} corner lenght {path.corners.Count()} corners: {string.Join(", ", path.corners.Select(c => c.ToString("F6")))}"
-            );
-#endif
-
-            ProceduralTools.activateAllNavmeshSurfaces(navmeshSurfaces);
-
-            this.transform.position = prevPosition;
-            // bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(
-            //     startHit.position, targetHit.position, UnityEngine.AI.NavMesh.AllAreas, path
-            // );
-            if (path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                var extraDebug = !string.IsNullOrEmpty(debugTargetObjectId)
-                    ? $" For objectId: '{debugTargetObjectId}'"
-                    : "";
                 this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
-                throw new InvalidOperationException(
-                    $"Could not find path between {pathStartPosition.ToString("F6")}"
-                        + $" and {pathTargetPosition.ToString("F6")} using the NavMesh."
-                        + $"{extraDebug}"
-                );
+            } finally {
+                // Always make sure we reenable the navmeshes.
+                ProceduralTools.activateAllNavmeshSurfaces(navmeshSurfaces);
             }
-#if UNITY_EDITOR
-            VisualizePath(pathStartPosition, path);
-#endif
-            this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>().enabled = false;
         }
 
         private void randomizeSmoothness(string objectId) {
@@ -7759,6 +7762,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // Debug.Log($"root is null? {parent == null} -  {parent}");
             return new ActionFinished(success: true, actionReturn: assetData);
+        }
+
+        public class UnityLoadableAsset {
+            public string id;
+            public string dir;
+            public string extension = ".msgpack.gz";
+
+            public ObjectAnnotations annotations = null;
+        }
+
+        public ActionFinished CreateRuntimeAssets(
+            List<UnityLoadableAsset> assets,
+            string dir = null
+        ) {
+            foreach (var asset in assets) {
+                var actionFinished = CreateRuntimeAsset(
+                    id: asset.id,
+                    dir: dir ?? asset.dir,
+                    extension: asset.extension,
+                    annotations: asset.annotations
+                );
+                if (!actionFinished.success) {
+                    return actionFinished;
+                }
+            }
+            return ActionFinished.Success;
         }
 
         public void GetStreamingAssetsPath() {
