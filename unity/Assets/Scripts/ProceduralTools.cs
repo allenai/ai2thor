@@ -1947,6 +1947,8 @@ namespace Thor.Procedural {
             IEnumerable<NavMeshSurfaceExtended> navmeshSurfaces,
             int? navMeshId = null
         ) {
+            activateAllNavmeshSurfaces(navmeshSurfaces);
+
 #if UNITY_EDITOR
             Debug.Log(
                 $"-----Navmesh  Query {navMeshId} navmesh count: {navmeshSurfaces.Count()} extended active count: {NavMeshSurfaceExtended.activeSurfaces.Count} navmesh active count: {NavMeshSurface.activeSurfaces.Count}"
@@ -2003,8 +2005,10 @@ namespace Thor.Procedural {
         }
 
         public static NavMeshSurfaceExtended getNavMeshSurfaceForAgentId(int agentId) {
-            return NavMeshSurface.activeSurfaces.Find(s => s.agentTypeID == agentId)
-                as NavMeshSurfaceExtended;
+            return Array.Find(
+                    GameObject.FindObjectsOfType<NavMeshSurfaceExtended>(includeInactive: true),
+                    s => s.agentTypeID == agentId
+                ) as NavMeshSurfaceExtended;
         }
 
         public static NavMeshBuildSettings navMeshConfigToBuildSettings(
