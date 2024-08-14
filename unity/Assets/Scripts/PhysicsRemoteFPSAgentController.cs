@@ -6145,7 +6145,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     )
                                     : agentManager.UpdateMainCamera(fieldOfView: fieldOfView)
                             )
-                            .Where(actionFinish => actionFinish.success)
                             .Aggregate(
                                 ActionFinished.Success,
                                 (aggregateActionFinished, singleActionFinish) =>
