@@ -6115,7 +6115,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ChangeFOV(float fieldOfView, string camera = "") {
             if (fieldOfView > 0 && fieldOfView < 180) {
                 if (string.IsNullOrEmpty(camera)) {
-                    m_Camera.fieldOfView = fieldOfView;
+                    agentManager.UpdateMainCamera(
+                        fieldOfView: fieldOfView
+                    );
                     actionFinished(true);
                 } else {
                     var cameraTuples = new List<(Camera camera, bool isThirdPartyCamera, int id)>()
@@ -6143,7 +6145,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     fieldOfView: fieldOfView
                                 );
                             } else {
-                                tuple.camera.fieldOfView = fieldOfView;
+                                agentManager.UpdateMainCamera(
+                                    fieldOfView: fieldOfView
+                                );
                             }
                         }
                         actionFinished(true);
