@@ -571,7 +571,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         }
     }
 
-    private void updateCameraProperties(
+    private ActionFinished updateCameraProperties(
         Camera camera,
         Vector3? position,
         Vector3? rotation,
@@ -693,7 +693,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             imageSynthesis.OnCameraChange();
         }
 
-        this.activeAgent().actionFinished(success: true);
+        return ActionFinished.Success;
     }
 
     private void assertFovInBounds(float fov) {
@@ -821,7 +821,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
     //allows repositioning and changing of values of agent's primary camera
     //note this does not support changing the main camera of multiple agents beyond the primary for now
-    public void UpdateMainCamera(
+    public ActionFinished UpdateMainCamera(
         OptionalVector3 position = null,
         OptionalVector3 rotation = null,
         float? fieldOfView = null,
@@ -855,7 +855,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             optionalVector3: rotation,
             defaultsOnNull: oldRotation
         );
-        updateCameraProperties(
+        return updateCameraProperties(
             camera: agentMainCam,
             position: targetPosition,
             rotation: targetRotation,
@@ -873,7 +873,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     }
 
     // Updates third party cameras, including secondary camera of stretch agent
-    public void UpdateThirdPartyCamera(
+    public ActionFinished UpdateThirdPartyCamera(
         int thirdPartyCameraId = 0,
         OptionalVector3 position = null,
         OptionalVector3 rotation = null,
@@ -922,7 +922,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             optionalVector3: rotation,
             defaultsOnNull: oldRotation
         );
-        updateCameraProperties(
+        return updateCameraProperties(
             camera: thirdPartyCamera,
             position: targetPosition,
             rotation: targetRotation,

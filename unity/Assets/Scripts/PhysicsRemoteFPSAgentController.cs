@@ -6112,13 +6112,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void ChangeFOV(float fieldOfView, string camera = "") {
+        public ActionFinished ChangeFOV(float fieldOfView, string camera = "") {
             if (fieldOfView > 0 && fieldOfView < 180) {
                 if (string.IsNullOrEmpty(camera)) {
-                    agentManager.UpdateMainCamera(
-                        fieldOfView: fieldOfView
-                    );
-                    actionFinished(true);
+                    agentManager.UpdateMainCamera(fieldOfView: fieldOfView);
+                    return ActionFinished.Success;
                 } else {
                     var cameraTuples = new List<(Camera camera, bool isThirdPartyCamera, int id)>()
                     {
@@ -6136,28 +6134,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (matches.Count() == 0) {
                         errorMessage =
                             $"Camera '{camera}' is not present in the agent, make sure the agent was initialized correctly or camera was added via 'AddThirdPartyCamera'.";
-                        actionFinished(false);
+                        return ActionFinished.Fail;
                     } else {
-                        foreach (var tuple in matches) {
-                            if (tuple.isThirdPartyCamera) {
-                                agentManager.UpdateThirdPartyCamera(
-                                    tuple.id,
-                                    fieldOfView: fieldOfView
-                                );
-                            } else {
-                                agentManager.UpdateMainCamera(
-                                    fieldOfView: fieldOfView
-                                );
-                            }
-                        }
-                        actionFinished(true);
+                        return matches
+                            .Select(tuple =>
+                                tuple.isThirdPartyCamera
+                                    ? agentManager.UpdateThirdPartyCamera(
+                                        tuple.id,
+                                        fieldOfView: fieldOfView
+                                    )
+                                    : agentManager.UpdateMainCamera(fieldOfView: fieldOfView)
+                            )
+                            .Where(actionFinish => actionFinish.success)
+                            .Aggregate(
+                                ActionFinished.Success,
+                                (aggregateActionFinished, singleActionFinish) =>
+                                    new ActionFinished(
+                                        success: aggregateActionFinished.success
+                                            && singleActionFinish.success,
+                                        errorMessage: $"{aggregateActionFinished.errorMessage}\n{singleActionFinish}"
+                                    )
+                            );
                     }
                 }
-            } else {
-                errorMessage = "fov must be in (0, 180) noninclusive.";
-                Debug.Log(errorMessage);
-                actionFinished(false);
             }
+            errorMessage = "fov must be in (0, 180) noninclusive.";
+            Debug.Log(errorMessage);
+            return new ActionFinished(success: false, errorMessage: errorMessage);
         }
 
         // in case you want to change the timescale
