@@ -6151,7 +6151,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     new ActionFinished(
                                         success: aggregateActionFinished.success
                                             && singleActionFinish.success,
-                                        errorMessage: $"{aggregateActionFinished.errorMessage}\n{singleActionFinish}"
+                                        errorMessage: $"{aggregateActionFinished.errorMessage}\n{singleActionFinish.errorMessage}"
                                     )
                             );
                     }
