@@ -353,7 +353,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         }
 
         //deprecation check for visibilityScheme
-        if(action.visibilityScheme != VisibilityScheme.Distance.ToString()) {
+        if (action.visibilityScheme != VisibilityScheme.Distance.ToString()) {
             throw new ArgumentException(
                 $"Invalid visibilityScheme {action.visibilityScheme}. Must be 'Distance'."
             );
@@ -2694,7 +2694,9 @@ public class ServerAction {
         catch (ArgumentException ex) {
 #pragma warning restore 0168
             Debug.LogError(
-                "Error parsing visibilityScheme: '" + visibilityScheme + "' defaulting to Distance Based"
+                "Error parsing visibilityScheme: '"
+                    + visibilityScheme
+                    + "' defaulting to Distance Based"
             );
         }
 
