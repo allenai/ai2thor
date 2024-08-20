@@ -899,15 +899,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 };
             } else {
-                return new ActionFinished() {
+                return new ActionFinished()
+                {
                     // TODO: change to a proper class once metadata return is defined
-                    actionReturn = new Dictionary<string, object>()
+                    actionReturn: new Dictionary<string, object>()
                     {
                         { "BoxBounds", this.BoxBounds },
                         { "cameraNearPlane", m_Camera.nearClipPlane },
                         { "cameraFarPlane", m_Camera.farClipPlane }
                     }
-                };
+                );
             }
         }
 
