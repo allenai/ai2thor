@@ -621,6 +621,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+                case "initpinnobody2": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "fpin";
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
+
+                        action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<
+                            string,
+                            object
+                        >()
+                        {
+                        { "originOffsetX", 0.2f },
+                        { "originOffsetZ", 0.4f },
+                        { "colliderScaleRatio", new Vector3(0.8f, 1.2f, 0.5f) },
+                        { "useVisibleColliderBase", true },
+                        { "useAbsoluteSize", true }
+                    };
+                        AManager.Initialize((new DynamicServerAction(action)).ToObject<ServerAction>());
+
+                        break;
+                    }
 
                 //fpin using stretch bot as source mesh
                 case "initpins": {
@@ -3163,18 +3187,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action.x = 0.3f;
                         action.z = 0.3f;
                         CurrentActiveController().ProcessControlCommand(action);
-                        break;
-                    }
-
-                case "fov": {
-                        Dictionary<string, object> comm = new Dictionary<string, object>();
-                        comm["action"] = "ChangeFOV";
-                        comm["fieldOfView"] = float.Parse(splitcommand[1]);
-                        if (splitcommand.Length > 2) {
-                            comm["camera"] = splitcommand[2];
-                        }
-
-                        CurrentActiveController().ProcessControlCommand(comm);
                         break;
                     }
                 case "teles": {

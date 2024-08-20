@@ -6112,54 +6112,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        [ObsoleteAttribute(
+            message: "This action is deprecated. Use `UpdateMainCamera` or `UpdateThirdPartyCamera` instead.",
+            error: true
+        )]
         public ActionFinished ChangeFOV(float fieldOfView, string camera = "") {
-            if (fieldOfView > 0 && fieldOfView < 180) {
-                if (string.IsNullOrEmpty(camera)) {
-                    agentManager.UpdateMainCamera(fieldOfView: fieldOfView);
-                    return ActionFinished.Success;
-                } else {
-                    var cameraTuples = new List<(Camera camera, bool isThirdPartyCamera, int id)>()
-                    {
-                        (camera: m_Camera, isThirdPartyCamera: false, id: -1)
-                    }.Concat(
-                        this.agentManager.thirdPartyCameras.Select(
-                            (c, i) => (camera: c, isThirdPartyCamera: true, id: i)
-                        )
-                    );
-                    var matches = cameraTuples;
-                    if (camera != "*") {
-                        matches = cameraTuples.Where(t => t.camera.name == camera);
-                    }
-                    // Debug.Log($"Camera matches: {matches.Count()} {string.Join(", ", matches.Select(m => m.camera.name))}");
-                    if (matches.Count() == 0) {
-                        errorMessage =
-                            $"Camera '{camera}' is not present in the agent, make sure the agent was initialized correctly or camera was added via 'AddThirdPartyCamera'.";
-                        return ActionFinished.Fail;
-                    } else {
-                        return matches
-                            .Select(tuple =>
-                                tuple.isThirdPartyCamera
-                                    ? agentManager.UpdateThirdPartyCamera(
-                                        tuple.id,
-                                        fieldOfView: fieldOfView
-                                    )
-                                    : agentManager.UpdateMainCamera(fieldOfView: fieldOfView)
-                            )
-                            .Aggregate(
-                                ActionFinished.Success,
-                                (aggregateActionFinished, singleActionFinish) =>
-                                    new ActionFinished(
-                                        success: aggregateActionFinished.success
-                                            && singleActionFinish.success,
-                                        errorMessage: $"{aggregateActionFinished.errorMessage}\n{singleActionFinish.errorMessage}"
-                                    )
-                            );
-                    }
-                }
-            }
-            errorMessage = "fov must be in (0, 180) noninclusive.";
-            Debug.Log(errorMessage);
-            return new ActionFinished(success: false, errorMessage: errorMessage);
+            throw new InvalidOperationException(
+                "This action is deprecated. Use `UpdateMainCamera` or `UpdateThirdPartyCamera` instead."
+            );
         }
 
         // in case you want to change the timescale
