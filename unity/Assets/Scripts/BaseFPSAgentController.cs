@@ -4560,11 +4560,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Camera camera = m_Camera;
             if (thirdPartyCameraId.HasValue) {
                 camera = agentManager.thirdPartyCameras[thirdPartyCameraId.Value];
-                if (this.visibilityScheme != VisibilityScheme.Distance) {
-                    throw new System.NotImplementedException(
-                        $"Visibility scheme {this.visibilityScheme} is not implemented for third party cameras. Default visibility scheme should be 'Distance'."
-                    );
-                }
+            }
+
+            if (this.visibilityScheme != VisibilityScheme.Distance) {
+                throw new System.NotImplementedException(
+                    $"Visibility scheme {this.visibilityScheme} is not compatible. Visibility scheme should be 'Distance'."
+                );
             }
 
             //only check visibility for objects with these ids otherwise check them all
@@ -4614,15 +4615,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Camera camera; //which camera are we checking visibility from?
             if (thirdPartyCameraIndex.HasValue) {
                 camera = agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value];
-                if (this.visibilityScheme != VisibilityScheme.Distance) {
-                    throw new System.NotImplementedException(
-                        $"Visibility scheme {this.visibilityScheme} is not implemented for third party cameras. Default visibility scheme should be 'Distance'."
-                    );
-                }
             }
             //can also be used to query main camera
             else {
                 camera = m_Camera;
+            }
+
+            if (this.visibilityScheme != VisibilityScheme.Distance) {
+                throw new System.NotImplementedException(
+                    $"Visibility scheme {this.visibilityScheme} is not compatible. Visibility scheme should be 'Distance'."
+                );
             }
 
             List<SimObjPhysics> filterSimObjs = null;

@@ -352,6 +352,13 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 action.alwaysReturnVisibleRange;
         }
 
+        //deprecation check for visibilityScheme
+        if(action.visibilityScheme != VisibilityScheme.Distance.ToString()) {
+            throw new ArgumentException(
+                $"Invalid visibilityScheme {action.visibilityScheme}. Must be 'Distance'."
+            );
+        }
+
         //if multi agent requested, add duplicates of primary agent now
         addAgents(action);
         this.agents[0].m_Camera.depth = 9999;
@@ -2687,7 +2694,7 @@ public class ServerAction {
         catch (ArgumentException ex) {
 #pragma warning restore 0168
             Debug.LogError(
-                "Error parsing visibilityScheme: '" + visibilityScheme + "' defaulting to Collider"
+                "Error parsing visibilityScheme: '" + visibilityScheme + "' defaulting to Distance Based"
             );
         }
 
