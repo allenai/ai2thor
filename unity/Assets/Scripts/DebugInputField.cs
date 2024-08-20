@@ -1108,6 +1108,35 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+
+                case "ldtoggle": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "ToggleLensDistortion";
+                    if (splitcommand.Length > 1) {
+                        action["state"] = bool.Parse(splitcommand[1]);
+                    }
+
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
+                case "ssc": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "SetUpSecondaryCamera";
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+                case "dsc": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    action["action"] = "DisableSecondaryCamera";
+                    CurrentActiveController().ProcessControlCommand(action);
+                    break;
+                }
+
+
                 case "rpanm": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
