@@ -885,6 +885,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // we had a body asset used, so actionFinished returns info related to that
             if (bodyAsset != null) {
                 return new ActionFinished(spawnAssetActionFinished) {
+                    success = true,
                     // TODO: change to a proper class once metadata return is defined
                     actionReturn = new Dictionary<string, object>()
                     {
@@ -899,8 +900,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 };
             } else {
-                return new ActionFinished()
-                {
+                return new ActionFinished(
+                    success: true,
                     // TODO: change to a proper class once metadata return is defined
                     actionReturn: new Dictionary<string, object>()
                     {
