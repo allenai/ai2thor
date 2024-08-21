@@ -11,10 +11,8 @@ using UnityEngine.AI;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UIElements;
 
-namespace UnityStandardAssets.Characters.FirstPerson
-{
-    public class BoxBounds
-    {
+namespace UnityStandardAssets.Characters.FirstPerson {
+    public class BoxBounds {
         public Vector3 worldCenter;
         public Vector3 agentRelativeCenter;
         public Vector3 size;
@@ -22,8 +20,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class LoadInUnityProceduralAsset
-    {
+    public class LoadInUnityProceduralAsset {
         public string id;
         public string dir;
         public string extension = ".msgpack.gz";
@@ -33,8 +30,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 #nullable enable
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class BodyAsset
-    {
+    public class BodyAsset {
         public string? assetId = null;
         public LoadInUnityProceduralAsset? dynamicAsset = null;
         public ProceduralAsset? asset = null;
@@ -44,8 +40,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
-    public class BackwardsCompatibleInitializeParams
-    {
+    public class BackwardsCompatibleInitializeParams {
         //  Make what parameters it uses explicit
         public float maxUpwardLookAngle = 0.0f;
         public float maxDownwardLookAngle = 0.0f;
@@ -66,11 +61,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public float maxVisibleDistance = 1.5f;
         public float visibilityDistance;
         public float TimeToWaitForObjectsToComeToRest = 10.0f;
-        public string visibilityScheme = VisibilityScheme.Collider.ToString();
+        public string visibilityScheme = VisibilityScheme.Distance.ToString();
     }
 
-    public class FpinAgentController : PhysicsRemoteFPSAgentController
-    {
+    public class FpinAgentController : PhysicsRemoteFPSAgentController {
         private static readonly Vector3 agentSpawnOffset = new Vector3(100.0f, 100.0f, 100.0f);
         private FpinMovableContinuous fpinMovable;
         public BoxCollider spawnedBoxCollider = null;
@@ -79,12 +73,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private Transform topMeshTransform = null;
         private Bounds? agentBounds = null;
         public BoxBounds boxBounds = null;
-        public BoxBounds BoxBounds
-        {
-            get
-            {
-                if (spawnedBoxCollider != null)
-                {
+        public BoxBounds BoxBounds {
+            get {
+                if (spawnedBoxCollider != null) {
                     BoxBounds currentBounds = new BoxBounds();
 
                     currentBounds.worldCenter = spawnedBoxCollider.transform.TransformPoint(
@@ -100,9 +91,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     // Debug.Log($"world center: {boxBounds.worldCenter}");
                     // Debug.Log($"size: {boxBounds.size}");
                     // Debug.Log($"agentRelativeCenter: {boxBounds.agentRelativeCenter}");
-                }
-                else
-                {
+                } else {
                     // Debug.Log("why is it nullll");
                     return null;
                 }
@@ -117,8 +106,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public FpinAgentController(BaseAgentComponent baseAgentComponent, AgentManager agentManager)
             : base(baseAgentComponent, agentManager) { }
 
-        public void Start()
-        {
+        public void Start() {
             //put stuff we need here when we need it maybe
         }
 
@@ -129,8 +117,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float moveMagnitude,
             int layerMask,
             CapsuleData cachedCapsule
-        )
-        {
+        ) {
             Vector3 startPositionBoxCenter =
                 startPosition
                 + this.transform.TransformDirection(this.boxBounds.agentRelativeCenter);
@@ -148,16 +135,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         //since the size returned by the box collider only reflects its size in local space DISREGARDING ANY TRANSFORM SCALES
         //IN ITS PARENTS OR ITSELF here we go
-        public Vector3 GetTrueSizeOfBoxCollider(BoxCollider collider)
-        {
+        public Vector3 GetTrueSizeOfBoxCollider(BoxCollider collider) {
             Vector3 trueSize = collider.size;
 
             // get the transform of the collider itself
             Transform currentTransform = collider.transform;
 
             // Apply the scale from the collider's transform and all parent transforms
-            while (currentTransform != null)
-            {
+            while (currentTransform != null) {
                 trueSize.x *= currentTransform.localScale.x;
                 trueSize.y *= currentTransform.localScale.y;
                 trueSize.z *= currentTransform.localScale.z;
@@ -170,29 +155,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //override so we can access to fpin specific stuff
-        public override MetadataWrapper generateMetadataWrapper()
-        {
+        public override MetadataWrapper generateMetadataWrapper() {
             //get all the usual stuff from base agent's implementation
             MetadataWrapper metaWrap = base.generateMetadataWrapper();
 
             //here's the fpin specific stuff
-            if (boxBounds != null)
-            {
+            if (boxBounds != null) {
                 //get from BoxBounds as box world center will update as agent moves so we can't cache it
                 metaWrap.agent.fpinColliderSize = BoxBounds.size;
                 metaWrap.agent.fpinColliderWorldCenter = BoxBounds.worldCenter;
                 metaWrap.agent.fpinColliderAgentRelativeCenter = BoxBounds.agentRelativeCenter;
-            }
-            else
-            {
+            } else {
                 metaWrap.agent.fpinColliderSize = new Vector3(0, 0, 0);
             }
 
             return metaWrap;
         }
 
-        public List<Vector3> SamplePointsOnNavMesh(int sampleCount, float maxDistance)
-        {
+        public List<Vector3> SamplePointsOnNavMesh(int sampleCount, float maxDistance) {
             float minX = agentManager.SceneBounds.min.x;
             float minZ = agentManager.SceneBounds.min.z;
             float maxX = agentManager.SceneBounds.max.x;
@@ -203,10 +183,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             int n = (int)Mathf.Ceil(Mathf.Sqrt(sampleCount));
 
             List<Vector3> initPoints = new List<Vector3>();
-            for (int i = 0; i < n; i++)
-            {
-                for (int j = 0; j < n; j++)
-                {
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
                     initPoints.Add(
                         new Vector3(
                             Mathf.Lerp(minX, maxX, (i + 0.5f) / n),
@@ -219,17 +197,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             initPoints.Shuffle_();
 
             List<Vector3> pointsOnMesh = new List<Vector3>();
-            for (int i = 0; i < initPoints.Count; i++)
-            {
-                if (pointsOnMesh.Count >= sampleCount)
-                {
+            for (int i = 0; i < initPoints.Count; i++) {
+                if (pointsOnMesh.Count >= sampleCount) {
                     break;
                 }
 
                 NavMeshHit hit;
                 Vector3 randomPoint = initPoints[i];
-                if (NavMesh.SamplePosition(randomPoint, out hit, maxDistance, NavMesh.AllAreas))
-                {
+                if (NavMesh.SamplePosition(randomPoint, out hit, maxDistance, NavMesh.AllAreas)) {
 # if UNITY_EDITOR
                     Debug.DrawLine(
                         hit.position,
@@ -247,17 +222,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return pointsOnMesh;
         }
 
-        public void RandomlyPlaceAgentOnNavMesh(int n = 200, float maxDistance = 0.1f)
-        {
+        public void RandomlyPlaceAgentOnNavMesh(int n = 200, float maxDistance = 0.1f) {
             List<Vector3> pointsOnMesh = SamplePointsOnNavMesh(n, maxDistance: maxDistance);
-            if (pointsOnMesh.Count == 0)
-            {
+            if (pointsOnMesh.Count == 0) {
                 throw new InvalidOperationException("No points on the navmesh");
             }
 
             Bounds b = UtilityFunctions.CreateEmptyBounds();
-            foreach (Collider c in GetComponentsInChildren<Collider>())
-            {
+            foreach (Collider c in GetComponentsInChildren<Collider>()) {
                 b.Encapsulate(c.bounds);
             }
 
@@ -266,10 +238,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //Debug.Log($"yOffset is: {yOffset}");
 
             bool success = false;
-            foreach (Vector3 point in pointsOnMesh)
-            {
-                try
-                {
+            foreach (Vector3 point in pointsOnMesh) {
+                try {
                     //Debug.Log($"what is the point we are trying from the pointsOnMesh? {point:F8}");
                     teleportFull(
                         position: point + new Vector3(0, yOffset, 0),
@@ -279,9 +249,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     );
                     success = true;
                     break;
-                }
-                catch (InvalidOperationException)
-                {
+                } catch (InvalidOperationException) {
                     continue;
                 }
             }
@@ -296,8 +264,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Bounds agentBounds,
             bool useVisibleColliderBase = false,
             bool spawnCollidersWithoutMesh = false
-        )
-        {
+        ) {
             //create colliders based on the agent bounds
             var col = new GameObject("fpinCollider", typeof(BoxCollider));
             col.layer = LayerMask.NameToLayer("Agent");
@@ -332,27 +299,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         //helper function to remove the currently generated agent box collider
         //make sure to follow this up with a subsequent generation so BoxBounds isn't left null
-        public void destroyAgentBoxCollider()
-        {
+        public void destroyAgentBoxCollider() {
             GameObject visibleBox = GameObject.Find("VisibleBox");
-            if (spawnedBoxCollider != null)
-            {
+            if (spawnedBoxCollider != null) {
                 UnityEngine.Object.DestroyImmediate(spawnedBoxCollider.transform.gameObject);
                 spawnedBoxCollider = null;
             }
-            if (spawnedTriggerBoxCollider != null)
-            {
+            if (spawnedTriggerBoxCollider != null) {
                 UnityEngine.Object.DestroyImmediate(spawnedTriggerBoxCollider.transform.gameObject);
                 spawnedTriggerBoxCollider = null;
             }
-            if (visibleBox != null)
-            {
+            if (visibleBox != null) {
                 UnityEngine.Object.DestroyImmediate(visibleBox);
             }
 #if UNITY_EDITOR
             GameObject visualizedBoxCollider = GameObject.Find("VisualizedBoxCollider");
-            if (visualizedBoxCollider != null)
-            {
+            if (visualizedBoxCollider != null) {
                 UnityEngine.Object.DestroyImmediate(visualizedBoxCollider);
             }
 #endif
@@ -368,36 +330,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Transform sourceTransform,
             Transform targetTransform,
             bool isTopMost = true
-        )
-        {
+        ) {
             Transform thisTransform = null;
-            foreach (Transform child in sourceTransform)
-            {
+            foreach (Transform child in sourceTransform) {
                 GameObject copiedChild = null;
                 // Check if the child has a MeshFilter component
                 MeshFilter meshFilter = child.GetComponent<MeshFilter>();
-                if (meshFilter != null)
-                {
+                if (meshFilter != null) {
                     copiedChild = CopyMeshToTarget(child, targetTransform);
                 }
 
                 // Process children only if necessary (i.e., they contain MeshFilters)
-                if (HasMeshInChildrenOrSelf(child))
-                {
+                if (HasMeshInChildrenOrSelf(child)) {
                     Transform parentForChildren =
                         (copiedChild != null)
                             ? copiedChild.transform
                             : CreateContainerForHierarchy(child, targetTransform).transform;
                     CopyMeshChildrenRecursive(child, parentForChildren, false);
-                    if (isTopMost)
-                    {
+                    if (isTopMost) {
                         thisTransform = parentForChildren;
                     }
                 }
             }
 
-            if (isTopMost)
-            {
+            if (isTopMost) {
                 // Set up intermediate object for scaling the mesh in agent-space (since the top-level mesh could be rotated, potentially introducing a complex matrix of scales)
                 GameObject agentScaleObject = new GameObject("AgentScaleObject");
                 agentScaleObject.transform.position = thisTransform.position;
@@ -409,8 +365,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return null;
         }
 
-        private GameObject CopyMeshToTarget(Transform child, Transform targetParent)
-        {
+        private GameObject CopyMeshToTarget(Transform child, Transform targetParent) {
             // Create a new GameObject and copy components
             GameObject copiedChild = new GameObject(child.name);
             copiedChild.transform.SetParent(targetParent);
@@ -420,8 +375,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             copiedMeshFilter.mesh = meshFilter.mesh;
 
             MeshRenderer sourceMeshRenderer = child.GetComponent<MeshRenderer>();
-            if (sourceMeshRenderer != null)
-            {
+            if (sourceMeshRenderer != null) {
                 MeshRenderer copiedMeshRenderer = copiedChild.AddComponent<MeshRenderer>();
                 copiedMeshRenderer.sharedMaterials = sourceMeshRenderer.sharedMaterials;
             }
@@ -433,26 +387,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return copiedChild;
         }
 
-        private bool HasMeshInChildrenOrSelf(Transform transform)
-        {
-            foreach (Transform child in transform)
-            {
-                if (child.GetComponent<MeshFilter>() != null || HasMeshInChildrenOrSelf(child))
-                {
+        private bool HasMeshInChildrenOrSelf(Transform transform) {
+            foreach (Transform child in transform) {
+                if (child.GetComponent<MeshFilter>() != null || HasMeshInChildrenOrSelf(child)) {
                     return true;
                 }
             }
 
-            if (transform.GetComponent<MeshFilter>() != null)
-            {
+            if (transform.GetComponent<MeshFilter>() != null) {
                 return true;
             }
 
             return false;
         }
 
-        private GameObject CreateContainerForHierarchy(Transform child, Transform targetParent)
-        {
+        private GameObject CreateContainerForHierarchy(Transform child, Transform targetParent) {
             GameObject container = new GameObject(child.name + "_Container");
             container.transform.SetParent(targetParent);
             container.transform.localPosition = child.localPosition;
@@ -464,26 +413,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private HashSet<Vector3> TransformedMeshRendererVertices(
             MeshRenderer mr,
             bool returnFirstVertexOnly = false
-        )
-        {
+        ) {
             MeshFilter mf = mr.gameObject.GetComponent<MeshFilter>();
             Matrix4x4 localToWorld = mr.transform.localToWorldMatrix;
             HashSet<Vector3> vertices = new HashSet<Vector3>(mf.sharedMesh.vertices);
             HashSet<Vector3> transformedVertices = new HashSet<Vector3>();
-            foreach (Vector3 vertex in vertices)
-            {
+            foreach (Vector3 vertex in vertices) {
                 transformedVertices.Add(localToWorld.MultiplyPoint3x4(vertex));
             }
             return transformedVertices;
         }
 
-        public ActionFinished GetBoxBounds()
-        {
+        public ActionFinished GetBoxBounds() {
             return new ActionFinished() { success = true, actionReturn = this.BoxBounds };
         }
 
-        public Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles)
-        {
+        public Vector3 RotatePointAroundPivot(Vector3 point, Vector3 pivot, Vector3 angles) {
             // Move the point to the pivot's origin
             Vector3 dir = point - pivot;
             // Rotate it
@@ -495,31 +440,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public ActionFinished BackwardsCompatibleInitialize(
             BackwardsCompatibleInitializeParams args
-        )
-        {
+        ) {
             Debug.Log("RUNNING BackCompatInitialize from FpinAgentController.cs");
             // limit camera from looking too far down/up
             //default max are 30 up and 60 down, different agent types may overwrite this
-            if (Mathf.Approximately(args.maxUpwardLookAngle, 0.0f))
-            {
+            if (Mathf.Approximately(args.maxUpwardLookAngle, 0.0f)) {
                 this.maxUpwardLookAngle = 30f;
-            }
-            else
-            {
+            } else {
                 this.maxUpwardLookAngle = args.maxUpwardLookAngle;
             }
 
-            if (Mathf.Approximately(args.maxDownwardLookAngle, 0.0f))
-            {
+            if (Mathf.Approximately(args.maxDownwardLookAngle, 0.0f)) {
                 this.maxDownwardLookAngle = 60f;
-            }
-            else
-            {
+            } else {
                 this.maxDownwardLookAngle = args.maxDownwardLookAngle;
             }
 
-            if (args.antiAliasing != null)
-            {
+            if (args.antiAliasing != null) {
                 agentManager.updateAntiAliasing(
                     postProcessLayer: m_Camera.gameObject.GetComponentInChildren<PostProcessLayer>(),
                     antiAliasing: args.antiAliasing
@@ -527,77 +464,62 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             // m_Camera.GetComponent<FirstPersonCharacterCull>().SwitchRenderersToHide(this.VisibilityCapsule);
 
-            if (args.gridSize == 0)
-            {
+            if (args.gridSize == 0) {
                 args.gridSize = 0.25f;
             }
 
             // note: this overrides the default FOV values set in InitializeBody()
-            if (args.fieldOfView > 0 && args.fieldOfView < 180)
-            {
+            if (args.fieldOfView > 0 && args.fieldOfView < 180) {
                 m_Camera.fieldOfView = args.fieldOfView;
-            }
-            else if (args.fieldOfView < 0 || args.fieldOfView >= 180)
-            {
+            } else if (args.fieldOfView < 0 || args.fieldOfView >= 180) {
                 errorMessage = "fov must be set to (0, 180) noninclusive.";
                 Debug.Log(errorMessage);
                 return new ActionFinished(success: false, errorMessage: errorMessage);
             }
 
-            if (args.cameraNearPlane > 0)
-            {
+            if (args.cameraNearPlane > 0) {
                 m_Camera.nearClipPlane = args.cameraNearPlane;
             }
 
-            if (args.cameraFarPlane > 0)
-            {
+            if (args.cameraFarPlane > 0) {
                 m_Camera.farClipPlane = args.cameraFarPlane;
             }
 
-            if (args.timeScale > 0)
-            {
-                if (Time.timeScale != args.timeScale)
-                {
+            if (args.timeScale > 0) {
+                if (Time.timeScale != args.timeScale) {
                     Time.timeScale = args.timeScale;
                 }
-            }
-            else
-            {
+            } else {
                 errorMessage = "Time scale must be > 0";
                 Debug.Log(errorMessage);
                 return new ActionFinished(success: false, errorMessage: errorMessage);
             }
 
-            if (args.rotateStepDegrees <= 0.0)
-            {
+            if (args.rotateStepDegrees <= 0.0) {
                 errorMessage = "rotateStepDegrees must be a non-zero, non-negative float";
                 Debug.Log(errorMessage);
                 return new ActionFinished(success: false, errorMessage: errorMessage);
             }
 
             // default is 90 defined in the ServerAction class, specify whatever you want the default to be
-            if (args.rotateStepDegrees > 0.0)
-            {
+            if (args.rotateStepDegrees > 0.0) {
                 this.rotateStepDegrees = args.rotateStepDegrees;
             }
 
-            if (args.snapToGrid && !ValidRotateStepDegreesWithSnapToGrid(args.rotateStepDegrees))
-            {
+            if (args.snapToGrid && !ValidRotateStepDegreesWithSnapToGrid(args.rotateStepDegrees)) {
                 errorMessage =
                     $"Invalid values 'rotateStepDegrees': ${args.rotateStepDegrees} and 'snapToGrid':${args.snapToGrid}. 'snapToGrid': 'True' is not supported when 'rotateStepDegrees' is different from grid rotation steps of 0, 90, 180, 270 or 360.";
                 Debug.Log(errorMessage);
                 return new ActionFinished(success: false, errorMessage: errorMessage);
             }
 
-            if (args.maxDownwardLookAngle < 0)
-            {
+            if (args.maxDownwardLookAngle < 0) {
                 errorMessage = "maxDownwardLookAngle must be a non-negative float";
                 Debug.Log(errorMessage);
                 return new ActionFinished(success: false, errorMessage: errorMessage);
             }
 
-            if (args.maxUpwardLookAngle < 0)
-            {
+            if (args.maxUpwardLookAngle < 0) {
                 errorMessage = "maxUpwardLookAngle must be a non-negative float";
                 Debug.Log(errorMessage);
                 return new ActionFinished(success: false, errorMessage: errorMessage);
@@ -610,21 +532,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 || args.renderSemanticSegmentation
                 || args.renderInstanceSegmentation
                 || args.renderNormalsImage
-            )
-            {
+            ) {
                 this.updateImageSynthesis(true);
             }
 
-            if (args.visibilityDistance > 0.0f)
-            {
+            if (args.visibilityDistance > 0.0f) {
                 this.maxVisibleDistance = args.visibilityDistance;
             }
 
             var navmeshAgent = this.GetComponentInChildren<UnityEngine.AI.NavMeshAgent>();
             var collider = this.GetComponent<CapsuleCollider>();
 
-            if (collider != null && navmeshAgent != null)
-            {
+            if (collider != null && navmeshAgent != null) {
                 navmeshAgent.radius = collider.radius;
                 navmeshAgent.height = collider.height;
                 navmeshAgent.transform.localPosition = new Vector3(
@@ -636,14 +555,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             // navmeshAgent.radius =
 
-            if (args.gridSize <= 0 || args.gridSize > 5)
-            {
+            if (args.gridSize <= 0 || args.gridSize > 5) {
                 errorMessage = "grid size must be in the range (0,5]";
                 Debug.Log(errorMessage);
                 return new ActionFinished(success: false, errorMessage: errorMessage);
-            }
-            else
-            {
+            } else {
                 gridSize = args.gridSize;
 
                 // Don't know what this was for
@@ -666,8 +582,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             return new ActionFinished(
                 success: true,
-                actionReturn: new InitializeReturn
-                {
+                actionReturn: new InitializeReturn {
                     cameraNearPlane = m_Camera.nearClipPlane,
                     cameraFarPlane = m_Camera.farClipPlane
                 }
@@ -682,8 +597,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Vector3? colliderScaleRatio = null,
             bool useAbsoluteSize = false,
             bool useVisibleColliderBase = false
-        )
-        {
+        ) {
             this.visibilityScheme = VisibilityScheme.Distance;
             var actionFinished = this.InitializeBody(
                 bodyAsset: bodyAsset,
@@ -705,16 +619,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Vector3? colliderScaleRatio = null,
             bool useAbsoluteSize = false,
             bool useVisibleColliderBase = false
-        )
-        {
+        ) {
             // if using no source body mesh, we default to using absolute size via the colliderScaleRatio
             // since a non absolute size doesn't make sense if we have no default mesh size to base the scale
             // ratio on
             Vector3 meshScaleRatio = colliderScaleRatio.GetValueOrDefault(Vector3.one);
 
             bool noMesh = false;
-            if (bodyAsset == null)
-            {
+            if (bodyAsset == null) {
                 useAbsoluteSize = true;
                 noMesh = true;
             }
@@ -729,21 +641,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //remove any old copied meshes or generated colliders from previous fpin agent now
             destroyAgentBoxCollider();
-            if (fpinVisibilityCapsule != null)
-            {
+            if (fpinVisibilityCapsule != null) {
                 UnityEngine.Object.DestroyImmediate(fpinVisibilityCapsule);
             }
 
             var spawnAssetActionFinished = new ActionFinished();
 
             Bounds meshBoundsWorld = new Bounds(this.transform.position, Vector3.zero);
-            if (bodyAsset != null)
-            {
+            if (bodyAsset != null) {
                 //spawn in a default mesh in an out-of-the-way location (currently 200,200,200) to base the new bounds on
                 spawnAssetActionFinished = spawnBodyAsset(bodyAsset, out GameObject spawnedMesh);
                 // Return early if spawn failed
-                if (!spawnAssetActionFinished.success)
-                {
+                if (!spawnAssetActionFinished.success) {
                     return spawnAssetActionFinished;
                 }
 
@@ -759,18 +668,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // so we'll take the bounds-center of the first meshRenderer
                 MeshRenderer[] meshRenderers =
                     topMeshTransform.gameObject.GetComponentsInChildren<MeshRenderer>();
-                foreach (MeshRenderer mr in meshRenderers)
-                {
+                foreach (MeshRenderer mr in meshRenderers) {
                     // No need to run TransformedMeshRendererVertices if the meshRenderer's GameObject isn't rotated
-                    if (mr.transform.eulerAngles.magnitude < 1e-4f)
-                    {
+                    if (mr.transform.eulerAngles.magnitude < 1e-4f) {
                         meshBoundsWorld.Encapsulate(mr.bounds);
-                    }
-                    else
-                    {
+                    } else {
                         HashSet<Vector3> vertices = TransformedMeshRendererVertices(mr);
-                        foreach (Vector3 vertex in vertices)
-                        {
+                        foreach (Vector3 vertex in vertices) {
                             meshBoundsWorld.Encapsulate(vertex);
                         }
                     }
@@ -781,17 +685,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 topMeshTransform.position = meshBoundsWorld.center;
                 topMeshTransform.GetChild(0).position = currentTopMeshTransformChildPos;
 
-                if (useAbsoluteSize)
-                {
+                if (useAbsoluteSize) {
                     topMeshTransform.localScale = new Vector3(
                         meshScaleRatio.x / meshBoundsWorld.size.x,
                         meshScaleRatio.y / meshBoundsWorld.size.y,
                         meshScaleRatio.z / meshBoundsWorld.size.z
                     );
                     meshBoundsWorld.size = meshScaleRatio;
-                }
-                else
-                {
+                } else {
                     topMeshTransform.localScale = meshScaleRatio;
                     meshBoundsWorld.size = new Vector3(
                         meshScaleRatio.x * meshBoundsWorld.size.x,
@@ -810,18 +711,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     this.transform.position + Vector3.up * meshBoundsWorld.extents.y;
 
                 // remove the spawned mesh cause we are done with it
-                foreach (var sop in spawnedMesh.GetComponentsInChildren<SimObjPhysics>())
-                {
+                foreach (var sop in spawnedMesh.GetComponentsInChildren<SimObjPhysics>()) {
                     agentManager.physicsSceneManager.RemoveFromObjectsInScene(sop);
                 }
 
-                if (spawnedMesh.activeInHierarchy)
-                {
+                if (spawnedMesh.activeInHierarchy) {
                     UnityEngine.Object.DestroyImmediate(spawnedMesh);
                 }
-            }
-            else
-            {
+            } else {
                 meshBoundsWorld = new Bounds(
                     this.transform.position + (Vector3.up * meshScaleRatio.y / 2),
                     meshScaleRatio
@@ -836,8 +733,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // set reference to the meshes so the base agent and fpin agent are happy
             VisibilityCapsule = fpinVisibilityCapsule = viscap;
 
-            if (topMeshTransform != null)
-            {
+            if (topMeshTransform != null) {
                 topMeshTransform.SetParent(viscap.transform);
             }
 
@@ -853,8 +749,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             );
 
             // spawn the visible collider base if we need to
-            if (useVisibleColliderBase)
-            {
+            if (useVisibleColliderBase) {
                 GameObject visibleBase = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 visibleBase.name = "visibleBase";
                 visibleBase.GetComponent<BoxCollider>().enabled = false;
@@ -966,8 +861,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     originalRotation,
                     checkBoxLayerMask
                 )
-            )
-            {
+            ) {
                 this.transform.position = originalPosition;
                 this.transform.rotation = originalRotation;
                 string error =
@@ -989,10 +883,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             fpinMovable = new FpinMovableContinuous(this.GetComponentInParent<CollisionListener>());
 
             // we had a body asset used, so actionFinished returns info related to that
-            if (bodyAsset != null)
-            {
-                return new ActionFinished(spawnAssetActionFinished)
-                {
+            if (bodyAsset != null) {
+                return new ActionFinished(spawnAssetActionFinished) {
                     success = true,
                     // TODO: change to a proper class once metadata return is defined
                     actionReturn = new Dictionary<string, object>()
@@ -1007,9 +899,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         { "cameraFarPlane", m_Camera.farClipPlane }
                     }
                 };
-            }
-            else
-            {
+            } else {
                 return new ActionFinished(
                     success: true,
                     // TODO: change to a proper class once metadata return is defined
@@ -1023,18 +913,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        private ActionFinished spawnBodyAsset(BodyAsset bodyAsset, out GameObject spawnedMesh)
-        {
-            if (bodyAsset == null)
-            {
+        private ActionFinished spawnBodyAsset(BodyAsset bodyAsset, out GameObject spawnedMesh) {
+            if (bodyAsset == null) {
                 throw new ArgumentNullException("bodyAsset is null");
-            }
-            else if (
-                bodyAsset.assetId == null
-                && bodyAsset.dynamicAsset == null
-                && bodyAsset.asset == null
-            )
-            {
+            } else if (
+                  bodyAsset.assetId == null
+                  && bodyAsset.dynamicAsset == null
+                  && bodyAsset.asset == null
+              ) {
                 throw new ArgumentNullException(
                     "`bodyAsset.assetId`, `bodyAsset.dynamicAsset` or `bodyAsset.asset` must be provided all are null."
                 );
@@ -1048,8 +934,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (
                 (bodyAsset.dynamicAsset != null || bodyAsset.asset != null)
                 && bodyAsset.assetId == null
-            )
-            {
+            ) {
                 var id =
                     bodyAsset.dynamicAsset != null
                         ? bodyAsset.dynamicAsset.id
@@ -1057,24 +942,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 var assetMap = ProceduralTools.getAssetMap();
                 // Check if asset is in AssetDatabase already
-                if (assetMap.ContainsKey(id))
-                {
+                if (assetMap.ContainsKey(id)) {
                     Debug.Log("------- Already contains key");
                     bodyAsset.assetId = id;
                 }
             }
 
-            if (bodyAsset.assetId != null)
-            {
+            if (bodyAsset.assetId != null) {
                 actionFinished = SpawnAsset(
                     bodyAsset.assetId,
                     "agentMesh",
                     new Vector3(200f, 200f, 200f)
                 );
                 spawnedMesh = GameObject.Find("agentMesh");
-            }
-            else if (bodyAsset.dynamicAsset != null)
-            {
+            } else if (bodyAsset.dynamicAsset != null) {
                 actionFinished = this.CreateRuntimeAsset(
                     id: bodyAsset.dynamicAsset.id,
                     dir: bodyAsset.dynamicAsset.dir,
@@ -1083,9 +964,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     serializable: true
                 );
                 spawnedMesh = GameObject.Find("mesh");
-            }
-            else if (bodyAsset.asset != null)
-            {
+            } else if (bodyAsset.asset != null) {
                 bodyAsset.asset.serializable = true;
                 actionFinished = this.CreateRuntimeAsset(asset: bodyAsset.asset);
             }
@@ -1093,8 +972,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (
                 bodyAsset.assetId == null
                 && (bodyAsset.dynamicAsset != null || bodyAsset.asset != null)
-            )
-            {
+            ) {
                 var id =
                     bodyAsset.dynamicAsset != null
                         ? bodyAsset.dynamicAsset.id
@@ -1102,8 +980,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.Log(
                     $"-- checks {bodyAsset.assetId == null} {bodyAsset.dynamicAsset != null} {bodyAsset.asset != null} "
                 );
-                if (!actionFinished.success || actionFinished.actionReturn == null)
-                {
+                if (!actionFinished.success || actionFinished.actionReturn == null) {
                     return new ActionFinished(
                         success: false,
                         errorMessage: $"Could not create asset `{bodyAsset.dynamicAsset}` error: {actionFinished.errorMessage}"
@@ -1116,8 +993,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return actionFinished;
         }
 
-        protected override LayerMask GetVisibilityRaycastLayerMask(bool withSimObjInvisible = false)
-        {
+        protected override LayerMask GetVisibilityRaycastLayerMask(bool withSimObjInvisible = false) {
             // No agent because camera can be in the path of colliders
             string[] layers = new string[]
             {
@@ -1127,8 +1003,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 "Procedural3",
                 "Procedural0" //, "Agent"
             };
-            if (withSimObjInvisible)
-            {
+            if (withSimObjInvisible) {
                 layers = layers.Append("SimObjInvisible").ToArray();
             }
             return LayerMask.GetMask(layers);
@@ -1141,8 +1016,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float? horizon = null,
             bool? standing = null,
             bool forceAction = false
-        )
-        {
+        ) {
             teleportFull(
                 position: position,
                 rotation: rotation,
@@ -1156,8 +1030,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Vector3? rotation,
             float? horizon,
             bool forceAction
-        )
-        {
+        ) {
             //Debug.Log($"what even is the position passed in at the start? {position:F8}");
             if (
                 rotation.HasValue
@@ -1165,8 +1038,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     !Mathf.Approximately(rotation.Value.x, 0f)
                     || !Mathf.Approximately(rotation.Value.z, 0f)
                 )
-            )
-            {
+            ) {
                 throw new ArgumentOutOfRangeException(
                     "No agents currently can change in pitch or roll. So, you must set rotation(x=0, y=yaw, z=0)."
                         + $" You gave {rotation.Value.ToString("F6")}."
@@ -1178,8 +1050,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 !forceAction
                 && horizon.HasValue
                 && (horizon.Value > maxDownwardLookAngle || horizon.Value < -maxUpwardLookAngle)
-            )
-            {
+            ) {
                 throw new ArgumentOutOfRangeException(
                     $"Each horizon must be in [{-maxUpwardLookAngle}:{maxDownwardLookAngle}]. You gave {horizon}."
                 );
@@ -1189,15 +1060,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 !forceAction
                 && position.HasValue
                 && !agentManager.SceneBounds.Contains(position.Value)
-            )
-            {
+            ) {
                 throw new ArgumentOutOfRangeException(
                     $"Teleport position {position.Value.ToString("F6")} out of scene bounds! Ignore this by setting forceAction=true."
                 );
             }
 
-            if (!forceAction && position.HasValue && !isPositionOnGrid(position.Value))
-            {
+            if (!forceAction && position.HasValue && !isPositionOnGrid(position.Value)) {
                 throw new ArgumentOutOfRangeException(
                     $"Teleport position {position.Value.ToString("F6")} is not on the grid of size {gridSize}."
                 );
@@ -1226,15 +1095,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 targetPosition: position.GetValueOrDefault(transform.position)
             );
 
-            if (!forceAction)
-            {
+            if (!forceAction) {
                 if (
                     isAgentCapsuleColliding(
                         collidersToIgnore: collidersToIgnoreDuringMovement,
                         includeErrorMessage: true
                     )
-                )
-                {
+                ) {
                     transform.position = oldPosition;
                     transform.rotation = oldRotation;
                     autoSyncTransforms();
@@ -1248,8 +1115,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         collidersToIgnore: collidersToIgnoreDuringMovement,
                         includeErrorMessage: true
                     )
-                )
-                {
+                ) {
                     transform.position = oldPosition;
                     transform.rotation = oldRotation;
                     autoSyncTransforms();
@@ -1261,11 +1127,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(success: true);
         }
 
-        protected override void assertTeleportedNearGround(Vector3? targetPosition)
-        {
+        protected override void assertTeleportedNearGround(Vector3? targetPosition) {
             // position should not change if it's null.
-            if (targetPosition == null)
-            {
+            if (targetPosition == null) {
                 return;
             }
 
@@ -1280,8 +1144,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             autoSyncTransforms();
 
             // perhaps like y=2 was specified, with an agent's standing height of 0.9
-            if (Mathf.Abs(transform.position.y - pos.y) > 1.0f)
-            {
+            if (Mathf.Abs(transform.position.y - pos.y) > 1.0f) {
                 throw new InvalidOperationException(
                     "After teleporting and adjusting agent position to floor, there was too large a change."
                         + " This may be due to the target teleport coordinates causing the agent to fall through the floor."
@@ -1295,10 +1158,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float ahead = 0,
             float right = 0,
             float speed = 1
-        )
-        {
-            if (ahead == 0 && right == 0)
-            {
+        ) {
+            if (ahead == 0 && right == 0) {
                 throw new ArgumentException("Must specify ahead or right!");
             }
             Vector3 direction = new Vector3(x: right, y: 0, z: ahead);
@@ -1326,8 +1187,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float? moveMagnitude = null,
             float speed = 1,
             bool returnToStart = true
-        )
-        {
+        ) {
             return MoveAgent(
                 ahead: moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
@@ -1339,8 +1199,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float? moveMagnitude = null,
             float speed = 1,
             bool returnToStart = true
-        )
-        {
+        ) {
             return MoveAgent(
                 ahead: -moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
@@ -1352,8 +1211,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float? moveMagnitude = null,
             float speed = 1,
             bool returnToStart = true
-        )
-        {
+        ) {
             return MoveAgent(
                 right: moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
@@ -1365,8 +1223,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float? moveMagnitude = null,
             float speed = 1,
             bool returnToStart = true
-        )
-        {
+        ) {
             return MoveAgent(
                 right: -moveMagnitude.GetValueOrDefault(gridSize),
                 speed: speed,
@@ -1378,8 +1235,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float? degrees = null,
             float speed = 1.0f,
             bool returnToStart = true
-        )
-        {
+        ) {
             return RotateAgent(
                 degrees: degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
@@ -1391,8 +1247,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float? degrees = null,
             float speed = 1.0f,
             bool returnToStart = true
-        )
-        {
+        ) {
             return RotateAgent(
                 degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
                 speed: speed,
@@ -1404,8 +1259,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float degrees,
             float speed = 1.0f,
             bool returnToStart = true
-        )
-        {
+        ) {
             CollisionListener collisionListener = fpinMovable.collisionListener;
             collisionListener.Reset();
 
