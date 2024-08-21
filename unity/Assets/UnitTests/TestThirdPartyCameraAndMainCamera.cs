@@ -192,6 +192,93 @@ namespace Tests
         }
 
         [UnityTest]
+        public IEnumerator TestGetVisibleObjectsFromCamera()
+        {
+            Dictionary<string, object> action = new Dictionary<string, object>();
+
+            action["action"] = "Initialize";
+            action["fieldOfView"] = 90f;
+            action["snapToGrid"] = true;
+            yield return step(action);
+
+            action.Clear();
+
+            action["action"] = "AddThirdPartyCamera";
+            action["position"] = new Vector3(-0.67f, 1.315f, 0.46f);
+            action["rotation"] = new Vector3(0, 180, 0);
+            action["orthographic"] = true;
+            action["orthographicSize"] = 5;
+            action["parent"] = "world";
+            action["agentPositionRelativeCoordinates"] = false;
+            yield return step(action);
+
+            action.Clear();
+
+            //testing third party camera return
+            action["action"] = "GetVisibleObjectsFromCamera";
+            action["thirdPartyCameraId"] = 0;
+            yield return step(action);
+
+            List<string> visibleObjects = (List<string>)actionReturn;
+#if UNITY_EDITOR
+            foreach (string obj in visibleObjects)
+            {
+                Debug.Log(obj);
+            }
+#endif
+
+            //check for expected object at first few elements
+            //also check for total count of visible objects to be the expected amount
+            Assert.AreEqual(visibleObjects.Count, 16);
+            Assert.AreEqual(visibleObjects[0], "Apple|-00.47|+01.15|+00.48");
+
+            //test with objectId filter now
+            action.Clear();
+
+            action["action"] = "GetVisibleObjectsFromCamera";
+            action["thirdPartyCameraId"] = 0;
+            action["filterObjectIds"] = new List<string> { "Apple|-00.47|+01.15|+00.48" };
+            yield return step(action);
+
+            visibleObjects.Clear();
+            visibleObjects = (List<string>)actionReturn;
+
+#if UNITY_EDITOR
+            Debug.Log($"Checking Visible Objects from ThirdPartyCamera Index 0");
+            Debug.Log($"Total Visible Objects: {visibleObjects.Count}");
+            foreach (string obj in visibleObjects)
+            {
+                Debug.Log(obj);
+            }
+#endif
+
+            Assert.AreEqual(visibleObjects.Count, 1);
+            Assert.AreEqual(visibleObjects[0], "Apple|-00.47|+01.15|+00.48");
+
+            //Test main camera return
+            action.Clear();
+
+            action["action"] = "GetVisibleObjectsFromCamera";
+            action["thirdPartyCameraId"] = null; //null ID queries main camera instead
+            yield return step(action);
+
+            visibleObjects.Clear();
+            visibleObjects = (List<string>)actionReturn;
+
+#if UNITY_EDITOR
+            Debug.Log($"Checking Visible Objects from Main Camera");
+            Debug.Log($"Total Visible Objects: {visibleObjects.Count}");
+            foreach (string obj in visibleObjects)
+            {
+                Debug.Log(obj);
+            }
+#endif
+
+            Assert.AreEqual(visibleObjects.Count, 4);
+            Assert.AreEqual(visibleObjects[0], "Cabinet|-01.85|+02.02|+00.38");
+        }
+
+        [UnityTest]
         public IEnumerator TestUpdateMainCamera()
         {
             Dictionary<string, object> action = new Dictionary<string, object>();

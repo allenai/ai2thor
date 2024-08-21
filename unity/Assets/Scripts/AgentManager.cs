@@ -352,6 +352,13 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 action.alwaysReturnVisibleRange;
         }
 
+        //deprecation check for visibilityScheme
+        if (action.visibilityScheme != VisibilityScheme.Distance.ToString()) {
+            throw new ArgumentException(
+                $"Invalid visibilityScheme {action.visibilityScheme}. Must be 'Distance'."
+            );
+        }
+
         //if multi agent requested, add duplicates of primary agent now
         addAgents(action);
         this.agents[0].m_Camera.depth = 9999;
@@ -2628,7 +2635,7 @@ public class ServerAction {
     // default time for objects to wait before returning actionFinished() if an action put them in motion
     public float TimeToWaitForObjectsToComeToRest = 10.0f;
     public float scale;
-    public string visibilityScheme = VisibilityScheme.Collider.ToString();
+    public string visibilityScheme = VisibilityScheme.Distance.ToString();
     public bool fastActionEmit = true;
 
     // this allows us to chain the dispatch between two separate
@@ -2678,7 +2685,7 @@ public class ServerAction {
     }
 
     public static VisibilityScheme GetVisibilitySchemeFromString(string visibilityScheme) {
-        VisibilityScheme result = VisibilityScheme.Collider;
+        VisibilityScheme result = VisibilityScheme.Distance;
         try {
             result = (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme, true);
         }
@@ -2687,7 +2694,9 @@ public class ServerAction {
         catch (ArgumentException ex) {
 #pragma warning restore 0168
             Debug.LogError(
-                "Error parsing visibilityScheme: '" + visibilityScheme + "' defaulting to Collider"
+                "Error parsing visibilityScheme: '"
+                    + visibilityScheme
+                    + "' defaulting to Distance Based"
             );
         }
 
@@ -2788,7 +2797,7 @@ public enum ServerActionErrorCode {
 }
 
 public enum VisibilityScheme {
-    Collider,
+    Collider, //deprecated, scheme is now Distance based only
     Distance
 }
 
