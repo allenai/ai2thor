@@ -4562,12 +4562,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 camera = agentManager.thirdPartyCameras[thirdPartyCameraId.Value];
             }
 
-            if (this.visibilityScheme != VisibilityScheme.Distance) {
-                throw new System.NotImplementedException(
-                    $"Visibility scheme {this.visibilityScheme} is not compatible. Visibility scheme should be 'Distance'."
-                );
-            }
-
             //only check visibility for objects with these ids otherwise check them all
             List<SimObjPhysics> filterSimObjs = null;
             if (filterObjectIds != null) {
@@ -4608,7 +4602,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         )]
         public void GetVisibleObjects(
             float? maxDistance = null,
-            string visibilityScheme = null,
             int? thirdPartyCameraIndex = null,
             List<string> objectIds = null
         ) {
@@ -4619,12 +4612,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //can also be used to query main camera
             else {
                 camera = m_Camera;
-            }
-
-            if (this.visibilityScheme != VisibilityScheme.Distance) {
-                throw new System.NotImplementedException(
-                    $"Visibility scheme {this.visibilityScheme} is not compatible. Visibility scheme should be 'Distance'."
-                );
             }
 
             List<SimObjPhysics> filterSimObjs = null;
@@ -4646,7 +4633,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             visible = GetAllVisibleSimObjPhysicsDistance(
                 camera: camera,
-                maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance), // lgtm [cs/dereferenced-value-may-be-null]
+                maxDistance: maxDistance.GetValueOrDefault(this.maxVisibleDistance),
                 filterSimObjs: filterSimObjs,
                 interactable: out interactable
             );

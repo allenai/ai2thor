@@ -214,6 +214,7 @@ namespace Tests
 
             action.Clear();
 
+            //testing third party camera return
             action["action"] = "GetVisibleObjectsFromCamera";
             action["thirdPartyCameraId"] = 0;
             yield return step(action);
@@ -241,7 +242,10 @@ namespace Tests
 
             visibleObjects.Clear();
             visibleObjects = (List<string>)actionReturn;
+
 #if UNITY_EDITOR
+            Debug.Log($"Checking Visible Objects from ThirdPartyCamera Index 0");
+            Debug.Log($"Total Visible Objects: {visibleObjects.Count}");
             foreach (string obj in visibleObjects)
             {
                 Debug.Log(obj);
@@ -250,6 +254,28 @@ namespace Tests
 
             Assert.AreEqual(visibleObjects.Count, 1);
             Assert.AreEqual(visibleObjects[0], "Apple|-00.47|+01.15|+00.48");
+
+            //Test main camera return
+            action.Clear();
+
+            action["action"] = "GetVisibleObjectsFromCamera";
+            action["thirdPartyCameraId"] = null; //null ID queries main camera instead
+            yield return step(action);
+
+            visibleObjects.Clear();
+            visibleObjects = (List<string>)actionReturn;
+
+#if UNITY_EDITOR
+            Debug.Log($"Checking Visible Objects from Main Camera");
+            Debug.Log($"Total Visible Objects: {visibleObjects.Count}");
+            foreach (string obj in visibleObjects)
+            {
+                Debug.Log(obj);
+            }
+#endif
+
+            Assert.AreEqual(visibleObjects.Count, 4);
+            Assert.AreEqual(visibleObjects[0], "Cabinet|-01.85|+02.02|+00.38");
         }
 
         [UnityTest]
