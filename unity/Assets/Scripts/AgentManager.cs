@@ -785,9 +785,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         );
 #endif
 
-        //assign post process layer component's layermask to the correct profile
-        camera.GetComponent<PostProcessLayer>().volumeLayer = LayerMask.GetMask("PrimaryPPProfile");
-
+        //default to no post processing needed on third party cameras
+        camera.GetComponent<PostProcessLayer>().enabled = false;
 
         thirdPartyCameras.Add(camera);
         updateCameraProperties(

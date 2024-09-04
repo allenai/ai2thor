@@ -83,7 +83,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cc.center = m_CharacterController.center;
             cc.radius = m_CharacterController.radius;
             cc.height = m_CharacterController.height;
-            m_Camera.GetComponent<PostProcessLayer>().enabled = true;
+            
+            //no color correction needed for stretch bot at the moment
+            m_Camera.GetComponent<PostProcessLayer>().enabled = false;
 
             // set camera stand/crouch local positions for Tall mode
             // standingLocalCameraPosition = m_Camera.transform.localPosition;
