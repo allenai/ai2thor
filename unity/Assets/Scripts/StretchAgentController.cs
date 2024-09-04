@@ -49,22 +49,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         );
         private Vector3 defaultSecondaryCameraLocalRotation = new Vector3(50f, 90f, 0);
         private float defaultSecondaryCameraFieldOfView = 59f;
-        private Vector3[] defaultGoProCameraLocalPositions = new Vector3[]
-        {
-            new Vector3(-0.1299001f, 0.5560812f, 0.02734984f),
-            new Vector3(0.04f, 0.5560812f, 0f),
-            new Vector3(-0.1675288f, 0.5560812f, -0.03782497f),
-            new Vector3(-0.1376f, 0.4340732f, 0.006196275f)
-        };
-        private Vector3[] defaultGoProCameraLocalEulerAngles = new Vector3[]
-        {
-            new Vector3(20f, 0f, 0f),
-            new Vector3(30f, 120f, 0f),
-            new Vector3(20f, -120f, 0f),
-            new Vector3(90f, 0f, 0f)
-        };
-
-        private float defaultGoProCameraFieldOfView = 69f;
         protected bool applyActionNoise = true;
         protected float movementGaussianMu = 0.001f;
         protected float movementGaussianSigma = 0.005f;
@@ -99,61 +83,60 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cc.center = m_CharacterController.center;
             cc.radius = m_CharacterController.radius;
             cc.height = m_CharacterController.height;
-            m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
             // set camera stand/crouch local positions for Tall mode
-            standingLocalCameraPosition = m_Camera.transform.localPosition;
-            crouchingLocalCameraPosition = m_Camera.transform.localPosition;
+            // standingLocalCameraPosition = m_Camera.transform.localPosition;
+            // crouchingLocalCameraPosition = m_Camera.transform.localPosition;
 
-            var secondaryCameraName = "SecondaryCamera";
+            // var secondaryCameraName = "SecondaryCamera";
 
-            // activate arm-camera
-            Camera fp_camera_2 = m_CharacterController
-                .transform.Find(secondaryCameraName)
-                .GetComponent<Camera>();
-            fp_camera_2.gameObject.SetActive(true);
-            agentManager.registerAsThirdPartyCamera(fp_camera_2);
-            if (initializeAction.antiAliasing != null) {
-                agentManager.updateAntiAliasing(
-                    postProcessLayer: fp_camera_2.gameObject.GetComponentInChildren<PostProcessLayer>(),
-                    antiAliasing: initializeAction.antiAliasing
-                );
-            }
+            // // activate arm-camera
+            // Camera fp_camera_2 = m_CharacterController
+            //     .transform.Find(secondaryCameraName)
+            //     .GetComponent<Camera>();
+            // fp_camera_2.gameObject.SetActive(true);
+            // agentManager.registerAsThirdPartyCamera(fp_camera_2);
+            // if (initializeAction.antiAliasing != null) {
+            //     agentManager.updateAntiAliasing(
+            //         postProcessLayer: fp_camera_2.gameObject.GetComponentInChildren<PostProcessLayer>(),
+            //         antiAliasing: initializeAction.antiAliasing
+            //     );
+            // }
 
-            // activate GoPro cameras
-            Transform goProCameraGroup = m_CharacterController.transform.Find("GoProCameras");
-            goProCameraGroup.gameObject.SetActive(true);
+            // // activate GoPro cameras
+            // Transform goProCameraGroup = m_CharacterController.transform.Find("GoProCameras");
+            // goProCameraGroup.gameObject.SetActive(true);
 
-            Camera[] goProCameras = new Camera[goProCameraGroup.childCount];
+            // Camera[] goProCameras = new Camera[goProCameraGroup.childCount];
 
-            // Assign each pre-existing camera to goProCameras array, and set up their codified parameters
-            for (int i = 0; i < goProCameras.Length; i++) {
-                goProCameras[i] = goProCameraGroup.GetChild(i).GetComponent<Camera>();
+            // // Assign each pre-existing camera to goProCameras array, and set up their codified parameters
+            // for (int i = 0; i < goProCameras.Length; i++) {
+            //     goProCameras[i] = goProCameraGroup.GetChild(i).GetComponent<Camera>();
 
-                goProCameras[i].transform.localPosition = defaultGoProCameraLocalPositions[i];
-                goProCameras[i].transform.localEulerAngles = defaultGoProCameraLocalEulerAngles[i];
-                goProCameras[i].fieldOfView = defaultGoProCameraFieldOfView;
+            //     goProCameras[i].transform.localPosition = defaultGoProCameraLocalPositions[i];
+            //     goProCameras[i].transform.localEulerAngles = defaultGoProCameraLocalEulerAngles[i];
+            //     goProCameras[i].fieldOfView = defaultGoProCameraFieldOfView;
 
-                agentManager.registerAsThirdPartyCamera(goProCameras[i]);
-                if (initializeAction.antiAliasing != null) {
-                    agentManager.updateAntiAliasing(
-                        postProcessLayer: goProCameras[i]
-                            .gameObject.GetComponentInChildren<PostProcessLayer>(),
-                        antiAliasing: initializeAction.antiAliasing
-                    );
-                }
-            }
+            //     agentManager.registerAsThirdPartyCamera(goProCameras[i]);
+            //     if (initializeAction.antiAliasing != null) {
+            //         agentManager.updateAntiAliasing(
+            //             postProcessLayer: goProCameras[i]
+            //                 .gameObject.GetComponentInChildren<PostProcessLayer>(),
+            //             antiAliasing: initializeAction.antiAliasing
+            //         );
+            //     }
+            // }
 
             // set up primary camera parameters for stretch specific parameters
             m_Camera.transform.localPosition = defaultMainCameraLocalPosition;
             m_Camera.transform.localEulerAngles = defaultMainCameraLocalRotation;
             m_Camera.fieldOfView = defaultMainCameraFieldOfView;
 
-            // set up secondary camera paremeters for stretch bot
-            fp_camera_2.transform.localPosition = defaultSecondaryCameraLocalPosition;
-            fp_camera_2.transform.localEulerAngles = defaultSecondaryCameraLocalRotation;
-            fp_camera_2.fieldOfView = defaultSecondaryCameraFieldOfView;
+            // // set up secondary camera paremeters for stretch bot
+            // fp_camera_2.transform.localPosition = defaultSecondaryCameraLocalPosition;
+            // fp_camera_2.transform.localEulerAngles = defaultSecondaryCameraLocalRotation;
+            // fp_camera_2.fieldOfView = defaultSecondaryCameraFieldOfView;
 
             // limit camera from looking too far down/up
             if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f)) {
@@ -168,15 +151,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
             }
 
-            var secondaryCameraParams = new CameraParameters();
-            var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(
-                secondaryCameraName,
-                out secondaryCameraParams
-            );
-
-            if (setSecondaryParams.GetValueOrDefault()) {
-                CameraParameters.setCameraParameters(fp_camera_2, secondaryCameraParams);
-            }
+            // var secondaryCameraParams = new CameraParameters();
+            // var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(
+            //     secondaryCameraName,
+            //     out secondaryCameraParams
+            // );
 
             // enable stretch arm component
             Debug.Log("initializing stretch arm");
@@ -720,66 +699,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     $"Invalid value for `degrees`: '{degrees}'. Value should be between '{minDegree}' and '{maxDegree}'.";
                 actionFinished(false);
             }
-        }
-
-        public void SetUpSecondaryCamera(ServerAction initializeAction) {
-            if (agentManager.thirdPartyCameras.Count == 0) {
-                var secondaryCameraName = "SecondaryCamera";
-
-                // activate arm-camera
-                Camera fp_camera_2 = m_CharacterController
-                    .transform.Find(secondaryCameraName)
-                    .GetComponent<Camera>();
-                fp_camera_2.gameObject.SetActive(true);
-                agentManager.registerAsThirdPartyCamera(fp_camera_2);
-                if (initializeAction.antiAliasing != null) {
-                    agentManager.updateAntiAliasing(
-                        postProcessLayer: fp_camera_2.gameObject.GetComponentInChildren<PostProcessLayer>(),
-                        antiAliasing: initializeAction.antiAliasing
-                    );
-                }
-
-                // set up secondary camera paremeters for stretch bot
-                fp_camera_2.transform.localPosition = defaultSecondaryCameraLocalPosition;
-                fp_camera_2.transform.localEulerAngles = defaultSecondaryCameraLocalRotation;
-                fp_camera_2.fieldOfView = defaultSecondaryCameraFieldOfView;
-
-                // limit camera from looking too far down/up
-                if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f)) {
-                    this.maxUpwardLookAngle = 25f;
-                } else {
-                    this.maxUpwardLookAngle = initializeAction.maxUpwardLookAngle;
-                }
-
-                if (Mathf.Approximately(initializeAction.maxDownwardLookAngle, 0.0f)) {
-                    this.maxDownwardLookAngle = 90f;
-                } else {
-                    this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
-                }
-
-                var secondaryCameraParams = new CameraParameters();
-                var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(
-                    secondaryCameraName,
-                    out secondaryCameraParams
-                );
-
-                if (setSecondaryParams.GetValueOrDefault()) {
-                    CameraParameters.setCameraParameters(fp_camera_2, secondaryCameraParams);
-                }
-            }
-            actionFinished(true);
-        }
-
-        public void DisableSecondaryCamera() {
-            if (agentManager.thirdPartyCameras.Count > 0) {
-                var secondaryCameraName = "SecondaryCamera";
-                Camera fp_camera_2 = m_CharacterController
-                    .transform.Find(secondaryCameraName)
-                    .GetComponent<Camera>();
-                fp_camera_2.gameObject.SetActive(false);
-                agentManager.thirdPartyCameras.Remove(fp_camera_2);
-            }
-            actionFinished(true);
         }
 
         public void ToggleLensDistortion(bool state) {

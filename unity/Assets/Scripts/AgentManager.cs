@@ -634,9 +634,11 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         if (parent == "agent") {
             camera.transform.SetParent(agent.transform);
             camera.transform.localScale = Vector3.one;
+            camera.transform.gameObject.layer = LayerMask.NameToLayer("Agent");
         } else if (parent == "world") {
             camera.transform.SetParent(null);
             camera.transform.localScale = Vector3.one;
+            camera.transform.gameObject.layer = LayerMask.NameToLayer("Default");
         } else if (parent != null) {
             throw new InvalidOperationException(
                 $"parent: {parent} must be one of: null, agent, or world."
@@ -782,6 +784,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             this.primaryAgent.m_Camera.targetTexture.height
         );
 #endif
+
+        //assign post process layer component's layermask to the correct profile
+        camera.GetComponent<PostProcessLayer>().volumeLayer = LayerMask.GetMask("PrimaryPPProfile");
+
 
         thirdPartyCameras.Add(camera);
         updateCameraProperties(
