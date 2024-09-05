@@ -2629,6 +2629,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             metaMessage.cameraPosition = m_Camera.transform.position;
             metaMessage.cameraRotation = m_Camera.transform.eulerAngles;
+            metaMessage.worldRelativeCameraPosition = metaMessage.cameraPosition;
+            metaMessage.worldRelativeCameraRotation = metaMessage.cameraRotation;
 
             //we need to transform these relative to the agent position
             //main camera's local space coordinates need to be translated to world space first
