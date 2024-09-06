@@ -1161,6 +1161,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length > 1) {
                             action["objectId"] = splitcommand[1];
                         }
+                        action["grasp"] = true;
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
