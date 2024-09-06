@@ -2636,13 +2636,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //main camera's local space coordinates need to be translated to world space first
             var worldSpaceCameraPosition = m_Camera.transform.position;
             //now convert camera position to agent relative local space
-            metaMessage.agentPositionRelativeCameraPosition = transform.InverseTransformPoint(worldSpaceCameraPosition);
+            metaMessage.agentPositionRelativeCameraPosition = transform.InverseTransformPoint(
+                worldSpaceCameraPosition
+            );
             //Debug.Log($"agentRelativeCameraPosition: {metaMessage.agentPositionRelativeCameraPosition}");
 
             //ok to get local euler angles we need to do... some shenanigans lets go
             var worldSpaceCameraRotationAsQuaternion = m_Camera.transform.rotation;
-            var localSpaceCameraRotationAsQuaternion = Quaternion.Inverse(transform.rotation) * worldSpaceCameraRotationAsQuaternion;
-            metaMessage.agentPositionRelativeCameraRotation = localSpaceCameraRotationAsQuaternion.eulerAngles;
+            var localSpaceCameraRotationAsQuaternion =
+                Quaternion.Inverse(transform.rotation) * worldSpaceCameraRotationAsQuaternion;
+            metaMessage.agentPositionRelativeCameraRotation =
+                localSpaceCameraRotationAsQuaternion.eulerAngles;
             //Debug.Log($"agentRelativeCameraRotation: {metaMessage.agentPositionRelativeCameraRotation}");
 
             metaMessage.cameraOrthSize = cameraOrthSize;

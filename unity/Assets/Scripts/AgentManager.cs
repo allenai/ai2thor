@@ -1307,15 +1307,18 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
                 //this may be the same info as the agentPositionRelative values since ThirdPartyCameras often are children of the agent
                 //but in cases where a third party camera is attached to an arm joint or the like, this can be useful
-                if(camera.transform.parent != null) {
+                if (camera.transform.parent != null) {
                     cMetadata.parentObjectName = camera.transform.parent.name;
 
-                    cMetadata.parentPositionRelativeThirdPartyCameraPosition = camera.transform.parent.InverseTransformPoint(camera.transform.position);
-                
-                    //get third party camera rotation as quaternion in world space
-                    var parentSpaceCameraRotationAsQuaternion = Quaternion.Inverse(camera.transform.parent.rotation) * worldSpaceCameraRotationAsQuaternion;
-                    cMetadata.parentPositionRelativeThirdPartyCameraRotation = parentSpaceCameraRotationAsQuaternion.eulerAngles;
+                    cMetadata.parentPositionRelativeThirdPartyCameraPosition =
+                        camera.transform.parent.InverseTransformPoint(camera.transform.position);
 
+                    //get third party camera rotation as quaternion in world space
+                    var parentSpaceCameraRotationAsQuaternion =
+                        Quaternion.Inverse(camera.transform.parent.rotation)
+                        * worldSpaceCameraRotationAsQuaternion;
+                    cMetadata.parentPositionRelativeThirdPartyCameraRotation =
+                        parentSpaceCameraRotationAsQuaternion.eulerAngles;
                 } else {
                     cMetadata.parentObjectName = "";
                     cMetadata.parentPositionRelativeThirdPartyCameraPosition = null;
@@ -1326,12 +1329,15 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 if (camera.GetComponentInParent<BaseAgentComponent>() != null) {
                     GameObject agent = camera.GetComponentInParent<BaseAgentComponent>().gameObject;
 
-                    cMetadata.agentPositionRelativeThirdPartyCameraPosition = agent.transform.InverseTransformPoint(camera.gameObject.transform.position);
+                    cMetadata.agentPositionRelativeThirdPartyCameraPosition =
+                        agent.transform.InverseTransformPoint(camera.gameObject.transform.position);
 
                     //get third party camera rotation as quaternion in world space
-                    var agentSpaceCameraRotationAsQuaternion = Quaternion.Inverse(agent.transform.rotation) * worldSpaceCameraRotationAsQuaternion;
-                    cMetadata.agentPositionRelativeThirdPartyCameraRotation = agentSpaceCameraRotationAsQuaternion.eulerAngles;
-
+                    var agentSpaceCameraRotationAsQuaternion =
+                        Quaternion.Inverse(agent.transform.rotation)
+                        * worldSpaceCameraRotationAsQuaternion;
+                    cMetadata.agentPositionRelativeThirdPartyCameraRotation =
+                        agentSpaceCameraRotationAsQuaternion.eulerAngles;
                 } else {
                     //if this third party camera is not a child of the agent, we don't need agent-relative coordinates
                     cMetadata.agentPositionRelativeThirdPartyCameraPosition = null;
@@ -1872,6 +1878,7 @@ public class ThirdPartyCameraMetadata {
     //if the third party camera is a child of the agent
     public Vector3? agentPositionRelativeThirdPartyCameraPosition;
     public Vector3? agentPositionRelativeThirdPartyCameraRotation;
+
     //return the local space coordinates if this third party camera has a parent object, this may be the same as agentPositionRelative depending on how things are parented
     public Vector3? parentPositionRelativeThirdPartyCameraPosition;
     public Vector3? parentPositionRelativeThirdPartyCameraRotation;
