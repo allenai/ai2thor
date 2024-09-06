@@ -312,5 +312,185 @@ namespace Tests
             result = Mathf.Approximately(camera.transform.localEulerAngles.z, 0.0f);
             Assert.AreEqual(result, true);
         }
+
+        //test main camera metadata
+        [UnityTest]
+        public IEnumerator TestMainCameraMetadataReturn() 
+        {
+            bool result = false;
+            Dictionary<string, object> action = new Dictionary<string, object>();
+
+            action["action"] = "Initialize";
+            action["fieldOfView"] = 90f;
+            action["snapToGrid"] = true;
+            yield return step(action);
+
+            action.Clear();
+
+            MetadataWrapper metadata = getLastActionMetadata();
+
+            result = Mathf.Approximately(metadata.worldRelativeCameraPosition.x, -1.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.worldRelativeCameraPosition.y, 1.5759990000f);
+            Assert.AreEqual(result, true);
+            result= Mathf.Approximately(metadata.worldRelativeCameraPosition.z, 1.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.worldRelativeCameraRotation.x, 0.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.worldRelativeCameraRotation.y, 270.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.worldRelativeCameraRotation.z, 0.0000000000f);
+            Assert.AreEqual(result, true);
+
+            result = Mathf.Approximately(metadata.agentPositionRelativeCameraPosition.x, 0.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.agentPositionRelativeCameraPosition.y, 0.6750000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.agentPositionRelativeCameraPosition.z, 0.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.agentPositionRelativeCameraRotation.x, 0.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.agentPositionRelativeCameraRotation.y, 0.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.agentPositionRelativeCameraRotation.z, 0.0000000000f);
+            Assert.AreEqual(result, true);
+
+            action["action"] = "UpdateMainCamera";
+            action["position"] = new Vector3(0.5f, 0.5f, 0.5f);
+            action["rotation"] = new Vector3(30f, 10f, 12f);
+            yield return step(action);
+
+            metadata = getLastActionMetadata();
+
+            result = Mathf.Approximately(metadata.worldRelativeCameraPosition.x, -1.5000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.worldRelativeCameraPosition.y, 1.4009990000f);
+            Assert.AreEqual(result, true);
+            result= Mathf.Approximately(metadata.worldRelativeCameraPosition.z, 1.5000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.worldRelativeCameraRotation.x, 30.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.worldRelativeCameraRotation.y, 280.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.worldRelativeCameraRotation.z, 12.0000000000f);
+            Assert.AreEqual(result, true);
+
+            result = Mathf.Approximately(metadata.agentPositionRelativeCameraPosition.x, 0.5000001000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.agentPositionRelativeCameraPosition.y, 0.4999999000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.agentPositionRelativeCameraPosition.z, 0.5000002000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.agentPositionRelativeCameraRotation.x, 30.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.agentPositionRelativeCameraRotation.y, 10.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.agentPositionRelativeCameraRotation.z, 12.0000000000f);
+            Assert.AreEqual(result, true);
+        }
+
+        //test third party camera metadata
+        [UnityTest]
+        public IEnumerator TestThirdPartyCameraMetadataReturn() 
+        {
+            bool result = false;
+
+            Dictionary<string, object> action = new Dictionary<string, object>();
+
+            action["action"] = "Initialize";
+            action["fieldOfView"] = 90f;
+            action["snapToGrid"] = true;
+            yield return step(action);
+
+            action.Clear();
+
+            action["action"] = "AddThirdPartyCamera";
+            action["position"] = new Vector3(3, 2, 1);
+            action["rotation"] = new Vector3(10, 20, 30);
+            action["parent"] = "world";
+            yield return step(action);
+
+            MetadataWrapper metadata = getLastActionMetadata();
+
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraPosition.x, 3.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraPosition.y, 2.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraPosition.z, 1.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraRotation.x, 10.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraRotation.y, 20.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraRotation.z, 30.0000000000f);
+            Assert.AreEqual(result, true);
+            Assert.AreEqual(metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraPosition, null);
+            Assert.AreEqual(metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraRotation, null);
+            Assert.AreEqual(metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraPosition, null);
+            Assert.AreEqual(metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraRotation, null);
+            Assert.AreEqual(metadata.thirdPartyCameras[0].parentObjectName, "");
+
+            action.Clear();
+
+            //use update third party camera to change camera to be attached to agent
+            action["action"] = "UpdateThirdPartyCamera";
+            action["thirdPartyCameraId"] = 0;
+            action["position"] = new Vector3(1, 2, 3);
+            action["rotation"] = new Vector3(20, 20, 20);
+            action["parent"] = "agent";
+            action["agentPositionRelativeCoordinates"] = true;
+            yield return step(action);
+
+            metadata = getLastActionMetadata();
+
+            // //world relative
+            // Debug.Log($"world relative camera pos: {metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraPosition:F10}");
+            // Debug.Log($"world relative camera rot: {metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraRotation:F10}");
+            // //agent relative
+            // Debug.Log($"agent relative camera pos: {metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraPosition:F10}");
+            // Debug.Log($"agent relative camera rot: {metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraRotation:F10}");
+            // //parent relative
+            // Debug.Log($"parent relative camera rot: {metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraPosition:F10}");
+            // Debug.Log($"parent relative camera rot: {metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraRotation:F10}");
+            // Debug.Log($"parent object name: {metadata.thirdPartyCameras[0].parentObjectName}");
+
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraPosition.x, -4.0000010000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraPosition.y, 2.9009990000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraPosition.z, 2.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraRotation.x, 20.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraRotation.y, 290.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraRotation.z, 20.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraPosition.Value.x, 1.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraPosition.Value.y, 2.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraPosition.Value.z, 3.0000020000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraRotation.Value.x, 20.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraRotation.Value.y, 20.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraRotation.Value.z, 20.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraPosition.Value.x, 1.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraPosition.Value.y, 2.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraPosition.Value.z, 3.0000020000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraRotation.Value.x, 20.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraRotation.Value.y, 20.0000000000f);
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraRotation.Value.z, 20.0000000000f);
+            Assert.AreEqual(result, true);
+            Assert.AreEqual(metadata.thirdPartyCameras[0].parentObjectName, "FPSController");
+        }
     }
 }

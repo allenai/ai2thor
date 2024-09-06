@@ -1296,15 +1296,15 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 cMetadata.thirdPartyCameraId = i;
 
                 //to be depracated at some point, will be replaced by more descriptive worldRelativeThirdPartyCamera....
-                cMetadata.position = camera.gameObject.transform.position;
-                cMetadata.rotation = camera.gameObject.transform.eulerAngles;
+                cMetadata.position = camera.transform.position;
+                cMetadata.rotation = camera.transform.eulerAngles;
                 //currently redundant data as it is the same as metadata.position/rotation, but more descriptive naming convention
-                cMetadata.worldRelativeThirdPartyCameraPosition = cMetadata.position;
-                cMetadata.worldRelativeThirdPartyCameraPosition = cMetadata.rotation;
+                cMetadata.worldRelativeThirdPartyCameraPosition = camera.transform.position;
+                cMetadata.worldRelativeThirdPartyCameraRotation = camera.transform.eulerAngles;
 
                 //grab this for parent or agent relative stuff
                 var worldSpaceCameraRotationAsQuaternion = camera.transform.rotation;
-                
+
                 //this may be the same info as the agentPositionRelative values since ThirdPartyCameras often are children of the agent
                 //but in cases where a third party camera is attached to an arm joint or the like, this can be useful
                 if(camera.transform.parent != null) {
