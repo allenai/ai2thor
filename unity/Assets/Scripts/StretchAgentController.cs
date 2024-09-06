@@ -658,5 +658,143 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
             }
         }
+
+        public void PlaceObjectIntoGripper(string objectId, bool grasp = true) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = $"Cannot find object with id {objectId}.";
+                actionFinishedEmit(false);
+                return;
+            }
+
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+
+            if (sop.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
+                errorMessage =
+                    $"Cannot place object with id {objectId} into gripper because it is not pickupable.";
+                actionFinishedEmit(false);
+                return;
+            }
+
+            Vector3 oldPos = sop.transform.position;
+            Quaternion oldRot = sop.transform.rotation;
+
+            // move object to gripper
+            ArmMetadata armMeta = this.getArm().GenerateMetadata();
+
+            if (armMeta.heldObjects.Count > 0) {
+                errorMessage =
+                    $"Cannot place object with id {objectId} into gripper because the gripper is already holding an object {armMeta.heldObjects[0]}.";
+                actionFinishedEmit(false);
+                return;
+            }
+            if (
+                armMeta.touchedNotHeldObjects.Count > 0
+                && (
+                    armMeta.touchedNotHeldObjects.Count > 1
+                    || armMeta.touchedNotHeldObjects[0] != objectId
+                )
+            ) {
+                errorMessage =
+                    $"Cannot place object with id {objectId} into gripper because the gripper is already touching an object (touching: {String.Join(", ", armMeta.touchedNotHeldObjects)}";
+                actionFinishedEmit(false);
+                return;
+            }
+
+            Vector3 handSphereCenter = armMeta.handSphereCenter;
+
+            Vector3 dirVec = handSphereCenter - armMeta.joints[armMeta.joints.Length - 1].position;
+            dirVec.y = 0f;
+
+            // Loop over visibilty points, for each attempt to place the object with the vis point in the
+            // center of the magnet sphere with the rest of the object rotated such that it is facing
+            // in the direction of dirVec.
+            bool success = false;
+            foreach (Transform t in sop.VisibilityPoints) {
+                sop.transform.rotation = Quaternion.identity;
+                Physics.SyncTransforms();
+
+                Vector3 vpPos = t.position;
+                Vector3 curObjPosToVpDir = vpPos - sop.transform.position;
+                curObjPosToVpDir.y = 0f;
+
+                Quaternion rotToUse = Quaternion.FromToRotation(curObjPosToVpDir, -dirVec);
+
+# if UNITY_EDITOR
+                Debug.Log("\nINFO");
+                Debug.Log("rotToUse: " + rotToUse.eulerAngles);
+                Debug.Log("vpPos: " + vpPos);
+                Debug.Log("curObjPosToVpDir: " + curObjPosToVpDir);
+                Debug.Log("handSphereCenter: " + handSphereCenter);
+                Debug.Log("sop.transform.position: " + sop.transform.position);
+# endif
+
+                sop.transform.rotation = rotToUse;
+
+                Physics.SyncTransforms();
+
+                vpPos = t.position;
+                curObjPosToVpDir = vpPos - sop.transform.position;
+
+                sop.transform.position = sop.transform.position + (handSphereCenter - vpPos);
+
+                Physics.SyncTransforms();
+
+                Collider c = UtilityFunctions.firstColliderObjectCollidingWith(
+                    go: sop.gameObject
+                );
+                if (c != null) {
+                    SimObjPhysics collisionSop = ancestorSimObjPhysics(c.gameObject);
+                    errorMessage =
+                        "Object is colliding with "
+                        + (collisionSop != null ? collisionSop.ObjectID : c.gameObject.name);
+# if UNITY_EDITOR
+                    Debug.Log(errorMessage);
+# endif
+                    continue;
+                } else {
+                    errorMessage = "";
+                    success = true;
+                    break;
+                }
+            }
+
+            if (success && grasp) {
+# if UNITY_EDITOR
+                Debug.Log("Attempting pickup.");
+# endif
+                ContinuousMovement.unrollSimulatePhysics(
+                    this.PickupObject(new List<string> { objectId }),
+                    fixedDeltaTime: PhysicsSceneManager.fixedDeltaTime
+                );
+
+                success = false;
+                foreach (
+                    KeyValuePair<
+                        SimObjPhysics,
+                        HashSet<Collider>
+                    > heldKeyPair in this.getArm().heldObjects
+                ) {
+                    if (heldKeyPair.Key.ObjectID == objectId) {
+                        success = true;
+                        break;
+                    }
+                }
+
+                if (!success) {
+                    errorMessage =
+                        $"Cannot place object with id {objectId} into gripper because of an error during grasping.";
+                }
+            }
+
+            if (!success) {
+                sop.transform.position = oldPos;
+                sop.transform.rotation = oldRot;
+
+                actionFinishedEmit(false);
+                return;
+            }
+
+            actionFinished(true);
+        }
     }
 }
