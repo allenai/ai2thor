@@ -1295,7 +1295,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 Camera camera = thirdPartyCameras.ToArray()[i];
                 cMetadata.thirdPartyCameraId = i;
 
-                //to be depracated at some point, will be replaced by more descriptive worldRelativeThirdPartyCamera....
+                //to be deprecated at some point, will be replaced by more descriptive worldRelativeThirdPartyCamera....
                 cMetadata.position = camera.transform.position;
                 cMetadata.rotation = camera.transform.eulerAngles;
                 //currently redundant data as it is the same as metadata.position/rotation, but more descriptive naming convention
@@ -1313,7 +1313,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     cMetadata.parentPositionRelativeThirdPartyCameraPosition =
                         camera.transform.parent.InverseTransformPoint(camera.transform.position);
 
-                    //get third party camera rotation as quaternion in world space
+                    //get third party camera rotation as quaternion in parent space
                     var parentSpaceCameraRotationAsQuaternion =
                         Quaternion.Inverse(camera.transform.parent.rotation)
                         * worldSpaceCameraRotationAsQuaternion;
@@ -1325,23 +1325,22 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     cMetadata.parentPositionRelativeThirdPartyCameraRotation = null;
                 }
 
-                //if this camera is part of the agent's heirarchy at all, get agent relative info
+                //if this camera is part of the agent's hierarchy at all, get agent relative info
                 if (camera.GetComponentInParent<BaseAgentComponent>() != null) {
                     GameObject agent = camera.GetComponentInParent<BaseAgentComponent>().gameObject;
 
                     cMetadata.agentPositionRelativeThirdPartyCameraPosition =
                         agent.transform.InverseTransformPoint(camera.gameObject.transform.position);
 
-                    //get third party camera rotation as quaternion in world space
                     var agentSpaceCameraRotationAsQuaternion =
                         Quaternion.Inverse(agent.transform.rotation)
                         * worldSpaceCameraRotationAsQuaternion;
-                    cMetadata.agentPositionRelativeThirdPartyCameraRotation =
+                    cMetadata.agentRotationRelativeThirdPartyCameraRotation =
                         agentSpaceCameraRotationAsQuaternion.eulerAngles;
                 } else {
                     //if this third party camera is not a child of the agent, we don't need agent-relative coordinates
                     cMetadata.agentPositionRelativeThirdPartyCameraPosition = null;
-                    cMetadata.agentPositionRelativeThirdPartyCameraRotation = null;
+                    cMetadata.agentRotationRelativeThirdPartyCameraRotation = null;
                 }
 
                 cMetadata.fieldOfView = camera.fieldOfView;
@@ -1877,12 +1876,12 @@ public class ThirdPartyCameraMetadata {
     //note these should only be returned with values
     //if the third party camera is a child of the agent
     public Vector3? agentPositionRelativeThirdPartyCameraPosition;
-    public Vector3? agentPositionRelativeThirdPartyCameraRotation;
+    public Vector3? agentRotationRelativeThirdPartyCameraRotation;
 
     //return the local space coordinates if this third party camera has a parent object, this may be the same as agentPositionRelative depending on how things are parented
     public Vector3? parentPositionRelativeThirdPartyCameraPosition;
     public Vector3? parentPositionRelativeThirdPartyCameraRotation;
-    public string parentObjectName; //if this third party camera is in a heirarchy, return the name of the parent object
+    public string parentObjectName; //if this third party camera is in a hierarchy, return the name of the parent object
 }
 
 [Serializable]
@@ -2314,7 +2313,7 @@ public struct MetadataWrapper {
     public Vector3 worldRelativeCameraPosition;
     public Vector3 worldRelativeCameraRotation;
     public Vector3 agentPositionRelativeCameraPosition;
-    public Vector3 agentPositionRelativeCameraRotation;
+    public Vector3 agentRotationRelativeCameraRotation;
     public float cameraOrthSize;
     public ThirdPartyCameraMetadata[] thirdPartyCameras;
     public bool collided;

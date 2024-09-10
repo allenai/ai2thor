@@ -358,17 +358,17 @@ namespace Tests
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.agentPositionRelativeCameraRotation.x,
+                metadata.agentRotationRelativeCameraRotation.x,
                 0.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.agentPositionRelativeCameraRotation.y,
+                metadata.agentRotationRelativeCameraRotation.y,
                 0.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.agentPositionRelativeCameraRotation.z,
+                metadata.agentRotationRelativeCameraRotation.z,
                 0.0000000000f
             );
             Assert.AreEqual(result, true);
@@ -409,17 +409,17 @@ namespace Tests
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.agentPositionRelativeCameraRotation.x,
+                metadata.agentRotationRelativeCameraRotation.x,
                 30.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.agentPositionRelativeCameraRotation.y,
+                metadata.agentRotationRelativeCameraRotation.y,
                 10.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.agentPositionRelativeCameraRotation.z,
+                metadata.agentRotationRelativeCameraRotation.z,
                 12.0000000000f
             );
             Assert.AreEqual(result, true);
@@ -483,7 +483,7 @@ namespace Tests
                 null
             );
             Assert.AreEqual(
-                metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraRotation,
+                metadata.thirdPartyCameras[0].agentRotationRelativeThirdPartyCameraRotation,
                 null
             );
             Assert.AreEqual(
@@ -514,7 +514,7 @@ namespace Tests
             // Debug.Log($"world relative camera rot: {metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraRotation:F10}");
             // //agent relative
             // Debug.Log($"agent relative camera pos: {metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraPosition:F10}");
-            // Debug.Log($"agent relative camera rot: {metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraRotation:F10}");
+            // Debug.Log($"agent relative camera rot: {metadata.thirdPartyCameras[0].agentRotationRelativeThirdPartyCameraRotation:F10}");
             // //parent relative
             // Debug.Log($"parent relative camera rot: {metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraPosition:F10}");
             // Debug.Log($"parent relative camera rot: {metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraRotation:F10}");
@@ -566,17 +566,17 @@ namespace Tests
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraRotation.Value.x,
+                metadata.thirdPartyCameras[0].agentRotationRelativeThirdPartyCameraRotation.Value.x,
                 20.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraRotation.Value.y,
+                metadata.thirdPartyCameras[0].agentRotationRelativeThirdPartyCameraRotation.Value.y,
                 20.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraRotation.Value.z,
+                metadata.thirdPartyCameras[0].agentRotationRelativeThirdPartyCameraRotation.Value.z,
                 20.0000000000f
             );
             Assert.AreEqual(result, true);
