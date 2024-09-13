@@ -624,10 +624,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             camera.transform.localScale = Vector3.one;
         } else {
             if (position.HasValue) {
-                camera.gameObject.transform.position = position.Value;
+                camera.transform.position = position.Value;
             }
             if (rotation.HasValue) {
-                camera.gameObject.transform.eulerAngles = rotation.Value;
+                camera.transform.eulerAngles = rotation.Value;
             }
         }
 
@@ -1311,14 +1311,11 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     cMetadata.parentObjectName = camera.transform.parent.name;
 
                     cMetadata.parentPositionRelativeThirdPartyCameraPosition =
-                        camera.transform.parent.InverseTransformPoint(camera.transform.position);
+                        camera.transform.localPosition;
 
                     //get third party camera rotation as quaternion in parent space
-                    var parentSpaceCameraRotationAsQuaternion =
-                        Quaternion.Inverse(camera.transform.parent.rotation)
-                        * worldSpaceCameraRotationAsQuaternion;
                     cMetadata.parentPositionRelativeThirdPartyCameraRotation =
-                        parentSpaceCameraRotationAsQuaternion.eulerAngles;
+                        camera.transform.localEulerAngles;
                 } else {
                     cMetadata.parentObjectName = "";
                     cMetadata.parentPositionRelativeThirdPartyCameraPosition = null;
@@ -1330,7 +1327,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     GameObject agent = camera.GetComponentInParent<BaseAgentComponent>().gameObject;
 
                     cMetadata.agentPositionRelativeThirdPartyCameraPosition =
-                        agent.transform.InverseTransformPoint(camera.gameObject.transform.position);
+                        agent.transform.InverseTransformPoint(camera.transform.position);
 
                     var agentSpaceCameraRotationAsQuaternion =
                         Quaternion.Inverse(agent.transform.rotation)
