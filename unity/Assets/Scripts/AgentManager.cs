@@ -1469,6 +1469,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     public IEnumerator EmitFrame() {
         while (true) {
             bool shouldRender = this.renderImage && serverSideScreenshot;
+            shouldRender= true;
 
             bool shouldRenderImageSynthesis = shouldRender && this.renderImageSynthesis;
             if (renderImageSynthesisChanged) {
