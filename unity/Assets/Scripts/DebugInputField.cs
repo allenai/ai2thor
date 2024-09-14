@@ -1161,6 +1161,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (splitcommand.Length > 1) {
                             action["objectId"] = splitcommand[1];
                         }
+                        action["grasp"] = true;
 
                         CurrentActiveController().ProcessControlCommand(action);
                         break;
@@ -2675,6 +2676,117 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             .ProcessControlCommand(new DynamicServerAction(action), AManager);
                         break;
                     }
+
+                case "gopro1": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateMainCamera",
+                            ["position"] = new Vector3(-0.1211464f, 0.5569605f, 0.03721716f),
+                            ["rotation"] = new Vector3(20.0f, 0.0f, 0.0f),
+                            ["agentId"] = 0,
+                        };
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+
+                case "gopro2": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "AddThirdPartyCamera",
+                            ["position"] = new Vector3(0.02888859f, 0.5569366f, 0.00249755f),
+                            ["rotation"] = new Vector3(20.0f, 120.0f, 0.0f),
+                            ["parent"] = "agent",
+                            ["agentPositionRelativeCoordinates"] = true
+                        };
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+
+                case "gopro3": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "AddThirdPartyCamera",
+                            ["position"] = new Vector3(-0.1492754f, 0.5569338f, -0.1046665f),
+                            ["rotation"] = new Vector3(20.0f, -120.0f, 0.0f),
+                            ["parent"] = "agent",
+                            ["agentPositionRelativeCoordinates"] = true
+                        };
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+
+                case "gopro4": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "AddThirdPartyCamera",
+                            ["position"] = new Vector3(-0.08022631f, 0.40808f, -0.00178992f),
+                            ["rotation"] = new Vector3(90.0f, 0.0f, 0.0f),
+                            ["parent"] = "agent",
+                            ["agentPositionRelativeCoordinates"] = true
+                        };
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+                
+                case "gopromm1": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateMainCamera",
+                            ["position"] = new Vector3(-0.1211464f, 0.561659f, 0.03892733f),
+                            ["rotation"] = new Vector3(20.0f, 0.0f, 0.0f),
+                            ["agentId"] = 0,
+                        };
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+
+                case "gopromm2": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "AddThirdPartyCamera",
+                            ["position"] = new Vector3(0.03036952f, 0.5616351f, 0.001642581f),
+                            ["rotation"] = new Vector3(20.0f, 120.0f, 0.0f),
+                            ["parent"] = "agent",
+                            ["agentPositionRelativeCoordinates"] = true
+                        };
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+
+                case "gopromm3": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "AddThirdPartyCamera",
+                            ["position"] = new Vector3(-0.1507564f, 0.5616323f, -0.1055215f),
+                            ["rotation"] = new Vector3(20.0f, -120.0f, 0.0f),
+                            ["parent"] = "agent",
+                            ["agentPositionRelativeCoordinates"] = true
+                        };
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+
+                case "gopromm4": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "AddThirdPartyCamera",
+                            ["position"] = new Vector3(-0.08022631f, 0.40808f, 0.003210075f),
+                            ["rotation"] = new Vector3(90.0f, 0.0f, 0.0f),
+                            ["parent"] = "agent",
+                            ["agentPositionRelativeCoordinates"] = true
+                        };
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+                
 
                 case "utpc": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
