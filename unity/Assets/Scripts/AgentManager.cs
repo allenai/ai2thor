@@ -1310,34 +1310,34 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 if (camera.transform.parent != null) {
                     cMetadata.parentObjectName = camera.transform.parent.name;
 
-                    cMetadata.parentPositionRelativeThirdPartyCameraPosition =
+                    cMetadata.parentRelativeThirdPartyCameraPosition =
                         camera.transform.localPosition;
 
                     //get third party camera rotation as quaternion in parent space
-                    cMetadata.parentPositionRelativeThirdPartyCameraRotation =
+                    cMetadata.parentRelativeThirdPartyCameraRotation =
                         camera.transform.localEulerAngles;
                 } else {
                     cMetadata.parentObjectName = "";
-                    cMetadata.parentPositionRelativeThirdPartyCameraPosition = null;
-                    cMetadata.parentPositionRelativeThirdPartyCameraRotation = null;
+                    cMetadata.parentRelativeThirdPartyCameraPosition = null;
+                    cMetadata.parentRelativeThirdPartyCameraRotation = null;
                 }
 
                 //if this camera is part of the agent's hierarchy at all, get agent relative info
                 if (camera.GetComponentInParent<BaseAgentComponent>() != null) {
                     GameObject agent = camera.GetComponentInParent<BaseAgentComponent>().gameObject;
 
-                    cMetadata.agentPositionRelativeThirdPartyCameraPosition =
+                    cMetadata.agentRelativeThirdPartyCameraPosition =
                         agent.transform.InverseTransformPoint(camera.transform.position);
 
                     var agentSpaceCameraRotationAsQuaternion =
                         Quaternion.Inverse(agent.transform.rotation)
                         * worldSpaceCameraRotationAsQuaternion;
-                    cMetadata.agentRotationRelativeThirdPartyCameraRotation =
+                    cMetadata.agentRelativeThirdPartyCameraRotation =
                         agentSpaceCameraRotationAsQuaternion.eulerAngles;
                 } else {
                     //if this third party camera is not a child of the agent, we don't need agent-relative coordinates
-                    cMetadata.agentPositionRelativeThirdPartyCameraPosition = null;
-                    cMetadata.agentRotationRelativeThirdPartyCameraRotation = null;
+                    cMetadata.agentRelativeThirdPartyCameraPosition = null;
+                    cMetadata.agentRelativeThirdPartyCameraRotation = null;
                 }
 
                 cMetadata.fieldOfView = camera.fieldOfView;
@@ -1872,12 +1872,12 @@ public class ThirdPartyCameraMetadata {
 
     //note these should only be returned with values
     //if the third party camera is a child of the agent
-    public Vector3? agentPositionRelativeThirdPartyCameraPosition;
-    public Vector3? agentRotationRelativeThirdPartyCameraRotation;
+    public Vector3? agentRelativeThirdPartyCameraPosition;
+    public Vector3? agentRelativeThirdPartyCameraRotation;
 
     //return the local space coordinates if this third party camera has a parent object, this may be the same as agentPositionRelative depending on how things are parented
-    public Vector3? parentPositionRelativeThirdPartyCameraPosition;
-    public Vector3? parentPositionRelativeThirdPartyCameraRotation;
+    public Vector3? parentRelativeThirdPartyCameraPosition;
+    public Vector3? parentRelativeThirdPartyCameraRotation;
     public string parentObjectName; //if this third party camera is in a hierarchy, return the name of the parent object
 }
 

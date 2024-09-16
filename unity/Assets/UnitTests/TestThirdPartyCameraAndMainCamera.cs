@@ -479,19 +479,19 @@ namespace Tests
             );
             Assert.AreEqual(result, true);
             Assert.AreEqual(
-                metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraPosition,
+                metadata.thirdPartyCameras[0].agentRelativeThirdPartyCameraPosition,
                 null
             );
             Assert.AreEqual(
-                metadata.thirdPartyCameras[0].agentRotationRelativeThirdPartyCameraRotation,
+                metadata.thirdPartyCameras[0].agentRelativeThirdPartyCameraRotation,
                 null
             );
             Assert.AreEqual(
-                metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraPosition,
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraPosition,
                 null
             );
             Assert.AreEqual(
-                metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraRotation,
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraRotation,
                 null
             );
             Assert.AreEqual(metadata.thirdPartyCameras[0].parentObjectName, "");
@@ -513,11 +513,11 @@ namespace Tests
             // Debug.Log($"world relative camera pos: {metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraPosition:F10}");
             // Debug.Log($"world relative camera rot: {metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraRotation:F10}");
             // //agent relative
-            // Debug.Log($"agent relative camera pos: {metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraPosition:F10}");
-            // Debug.Log($"agent relative camera rot: {metadata.thirdPartyCameras[0].agentRotationRelativeThirdPartyCameraRotation:F10}");
+            // Debug.Log($"agent relative camera pos: {metadata.thirdPartyCameras[0].agentRelativeThirdPartyCameraPosition:F10}");
+            // Debug.Log($"agent relative camera rot: {metadata.thirdPartyCameras[0].agentRelativeThirdPartyCameraRotation:F10}");
             // //parent relative
-            // Debug.Log($"parent relative camera rot: {metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraPosition:F10}");
-            // Debug.Log($"parent relative camera rot: {metadata.thirdPartyCameras[0].parentPositionRelativeThirdPartyCameraRotation:F10}");
+            // Debug.Log($"parent relative camera rot: {metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraPosition:F10}");
+            // Debug.Log($"parent relative camera rot: {metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraRotation:F10}");
             // Debug.Log($"parent object name: {metadata.thirdPartyCameras[0].parentObjectName}");
 
             result = Mathf.Approximately(
@@ -551,39 +551,39 @@ namespace Tests
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraPosition.Value.x,
+                metadata.thirdPartyCameras[0].agentRelativeThirdPartyCameraPosition.Value.x,
                 1.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraPosition.Value.y,
+                metadata.thirdPartyCameras[0].agentRelativeThirdPartyCameraPosition.Value.y,
                 2.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.thirdPartyCameras[0].agentPositionRelativeThirdPartyCameraPosition.Value.z,
+                metadata.thirdPartyCameras[0].agentRelativeThirdPartyCameraPosition.Value.z,
                 3.0000020000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.thirdPartyCameras[0].agentRotationRelativeThirdPartyCameraRotation.Value.x,
+                metadata.thirdPartyCameras[0].agentRelativeThirdPartyCameraRotation.Value.x,
                 20.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.thirdPartyCameras[0].agentRotationRelativeThirdPartyCameraRotation.Value.y,
+                metadata.thirdPartyCameras[0].agentRelativeThirdPartyCameraRotation.Value.y,
                 20.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.thirdPartyCameras[0].agentRotationRelativeThirdPartyCameraRotation.Value.z,
+                metadata.thirdPartyCameras[0].agentRelativeThirdPartyCameraRotation.Value.z,
                 20.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
                 metadata
                     .thirdPartyCameras[0]
-                    .parentPositionRelativeThirdPartyCameraPosition
+                    .parentRelativeThirdPartyCameraPosition
                     .Value
                     .x,
                 1.0000000000f
@@ -592,7 +592,7 @@ namespace Tests
             result = Mathf.Approximately(
                 metadata
                     .thirdPartyCameras[0]
-                    .parentPositionRelativeThirdPartyCameraPosition
+                    .parentRelativeThirdPartyCameraPosition
                     .Value
                     .y,
                 2.0000000000f
@@ -601,7 +601,7 @@ namespace Tests
             result = Mathf.Approximately(
                 metadata
                     .thirdPartyCameras[0]
-                    .parentPositionRelativeThirdPartyCameraPosition
+                    .parentRelativeThirdPartyCameraPosition
                     .Value
                     .z,
                 3.0000020000f
@@ -610,7 +610,7 @@ namespace Tests
             result = Mathf.Approximately(
                 metadata
                     .thirdPartyCameras[0]
-                    .parentPositionRelativeThirdPartyCameraRotation
+                    .parentRelativeThirdPartyCameraRotation
                     .Value
                     .x,
                 20.0000000000f
@@ -619,7 +619,7 @@ namespace Tests
             result = Mathf.Approximately(
                 metadata
                     .thirdPartyCameras[0]
-                    .parentPositionRelativeThirdPartyCameraRotation
+                    .parentRelativeThirdPartyCameraRotation
                     .Value
                     .y,
                 20.0000000000f
@@ -628,7 +628,7 @@ namespace Tests
             result = Mathf.Approximately(
                 metadata
                     .thirdPartyCameras[0]
-                    .parentPositionRelativeThirdPartyCameraRotation
+                    .parentRelativeThirdPartyCameraRotation
                     .Value
                     .z,
                 20.0000000000f
