@@ -6,8 +6,6 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-using Thor.Rendering;
-
 // @TODO:
 // . support custom color wheels in optical flow via lookup textures
 // . support custom depth encoding
@@ -272,7 +270,7 @@ public class ImageSynthesis : MonoBehaviour {
 
     public void OnEnable() {
 
-        RenderCapture s;
+        // RenderCapture s;
         // This initialization code MUST live in OnEnable and not Start as we instantiate ThirdPartyCameras
         // programatically in other functions and need them to be initialized immediately.
         if (!initialized) {
