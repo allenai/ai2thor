@@ -92,7 +92,7 @@
                  // depth01 = pow(LinearEyeDepth(depth01), _DepthLevel);
                  float depth01 = (Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))));
                 //  (LinearEyeDepth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv)))) / (_ProjectionParams.z - _ProjectionParams.y);
-                //  return fixed4(depth01, depth01, depth01, depth01);
+                 return fixed4(depth01, depth01, depth01, depth01);
                 // return fixed4(o.uv.x, 0, o.uv.y, 1.0);
                 // _ScreenParams.x 
 

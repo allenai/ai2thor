@@ -2677,6 +2677,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                case "sdp": {
+                    Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "SetDistortionShaderParams",
+                            ["zoomPercent"] = 0.84f,
+                            ["k1"] = 0.1f,
+                            ["k2"] = 0.01f,
+                            ["k3"] = -0.2f,
+                            ["k4"] = 0.0,
+                            ["strength"] = 1.0
+                        };
+                    this.AManager.ProcessControlCommand(new DynamicServerAction(action));
+                    break;
+                }
+
                 case "gopro1": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "UpdateMainCamera",

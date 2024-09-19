@@ -204,6 +204,8 @@ public class ImageSynthesis : MonoBehaviour {
             needsRescale = true
         }, // (see issue with Motion Vectors in @KNOWN ISSUES)
 
+        new CapturePass() { name = "_distortion" }
+
         // new CapturePass() { name = "_position" },
     };
 
@@ -245,7 +247,7 @@ public class ImageSynthesis : MonoBehaviour {
     private Shader opticalFlowShader;
     private Shader depthShader;
 
-    private Shader screenCopyShader;
+    private Shader distortionShader;
 
     // public Shader positionShader;
 
@@ -259,7 +261,7 @@ public class ImageSynthesis : MonoBehaviour {
     private Material opticalFlowMaterial;
     public Material depthMaterial;
 
-    private Material screenCopyMaterial;
+    public Material distortionMaterial;
 
     private RenderTexture renderTexture;
     System.Security.Cryptography.MD5 md5;
@@ -299,14 +301,14 @@ public class ImageSynthesis : MonoBehaviour {
                 depthShader = Shader.Find("Hidden/Depth");
 
 #endif
-            if (!screenCopyShader) {
-                screenCopyShader = Shader.Find("Hidden/ScreenCopy");
+            if (!distortionShader) {
+                distortionShader = Shader.Find("Hidden/BarrelDistortion");
             }
 
             // if (!positionShader)
             //	positionShader = Shader.Find("Hidden/World");
 
-            opticalFlowSensitivity = 40.0f;
+            opticalFlowSensitivity = 50.0f;
 
             // use real camera to capture final image
             capturePasses[0].camera = GetComponent<Camera>();
@@ -484,8 +486,8 @@ public class ImageSynthesis : MonoBehaviour {
 
         // screenCopyMaterial = new Material(screenCopyShader);
 
-        if (!screenCopyMaterial || screenCopyMaterial.shader != screenCopyShader) {
-            screenCopyMaterial = new Material(screenCopyShader);
+        if (!distortionMaterial || distortionMaterial.shader != distortionShader) {
+            distortionMaterial = new Material(distortionShader);
         }
 
         // capturePasses [1].camera.farClipPlane = 100;
@@ -524,6 +526,10 @@ public class ImageSynthesis : MonoBehaviour {
             // screenCopyMaterial: screenCopyMaterial,
             DepthTextureMode.Depth | DepthTextureMode.MotionVectors
         );
+
+         SetupCameraWithPostShader2(renderTexture, capturePasses[6].camera, distortionMaterial,
+        //  screenCopyMaterial: screenCopyMaterial,
+          DepthTextureMode.Depth);
 
 #if UNITY_EDITOR
         for (int i = 0; i < capturePasses.Length; i++) {

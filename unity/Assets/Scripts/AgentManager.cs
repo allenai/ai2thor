@@ -51,6 +51,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     private bool initializedInstanceSeg;
     private bool renderNormalsImage;
     private bool renderFlowImage;
+    private bool renderDistortionImage;
     private Socket sock = null;
 
     [SerializeField]
@@ -88,7 +89,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         "UpdateThirdPartyCamera",
         "ChangeResolution",
         "CoordinateFromRaycastThirdPartyCamera",
-        "ChangeQuality"
+        "ChangeQuality",
+        "SetDistortionShaderParams"
     };
     public HashSet<string> errorAllowedActions = new HashSet<string> { "Reset" };
 
@@ -334,6 +336,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         this.renderInstanceSegmentation = this.initializedInstanceSeg =
             action.renderInstanceSegmentation;
         this.renderFlowImage = action.renderFlowImage;
+        this.renderDistortionImage = action.renderDistortionImage;
         this.fastActionEmit = action.fastActionEmit;
 
         PhysicsSceneManager.SetDefaultSimulationParams(action.defaultPhysicsSimulationParams);
@@ -774,6 +777,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             || renderInstanceSegmentation
             || renderNormalsImage
             || renderFlowImage
+            || renderDistortionImage
         ) {
             gameObject.AddComponent(typeof(ImageSynthesis));
         }
@@ -1837,6 +1841,22 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     public void SetCriticalErrorState() {
         this.agentManagerState = AgentState.Error;
     }
+
+    public ActionFinished SetDistortionShaderParams(float zoomPercent, float k1, float k2, float k3, float k4, float strength = 1.0f) {
+
+        if (this.primaryAgent.imageSynthesis == null) {
+            return new ActionFinished(success: false, errorMessage: "No imageSynthesis, make sure you pass 'renderDistortionImage = true' to the agent constructor.");
+        }
+        var material = this.primaryAgent.imageSynthesis.distortionMaterial;
+        material.SetFloat("_ZoomPercent", zoomPercent);
+        material.SetFloat("_k1", k1);
+        material.SetFloat("_k2", k2);
+        material.SetFloat("_k3", k3);
+        material.SetFloat("_k4", k4);
+        material.SetFloat("_LensDistortionStrength", strength);
+        return ActionFinished.Success;
+       
+    }
 }
 
 [Serializable]
@@ -2589,6 +2609,7 @@ public class ServerAction {
     public bool renderInstanceSegmentation;
     public bool renderNormalsImage;
     public bool renderFlowImage;
+    public bool renderDistortionImage;
     public float cameraY = 0.675f;
     public bool placeStationary = true; // when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
 
