@@ -448,6 +448,7 @@ namespace Tests
 
             MetadataWrapper metadata = getLastActionMetadata();
 
+            // World Relative Position
             result = Mathf.Approximately(
                 metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraPosition.x,
                 3.0000000000f
@@ -463,6 +464,7 @@ namespace Tests
                 1.0000000000f
             );
             Assert.AreEqual(result, true);
+            // World Relative Rotation
             result = Mathf.Approximately(
                 metadata.thirdPartyCameras[0].worldRelativeThirdPartyCameraRotation.x,
                 10.0000000000f
@@ -478,6 +480,7 @@ namespace Tests
                 30.0000000000f
             );
             Assert.AreEqual(result, true);
+            //Agent Relative Position
             Assert.AreEqual(
                 metadata.thirdPartyCameras[0].agentRelativeThirdPartyCameraPosition,
                 null
@@ -486,16 +489,39 @@ namespace Tests
                 metadata.thirdPartyCameras[0].agentRelativeThirdPartyCameraRotation,
                 null
             );
-            Assert.AreEqual(
-                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraPosition,
-                null
+            //Parent Relative Position
+            result = Mathf.Approximately(
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraPosition.x,
+                3.0000000000f
             );
-            Assert.AreEqual(
-                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraRotation,
-                null
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraPosition.y,
+                2.0000000000f
             );
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraPosition.z,
+                1.0000000000f
+            );
+            Assert.AreEqual(result, true);
+            //Parent Relative Rotation
+            result = Mathf.Approximately(
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraRotation.x,
+                10.0000000000f
+            );
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraRotation.y,
+                20.0000000000f
+            );
+            Assert.AreEqual(result, true);
+            result = Mathf.Approximately(
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraRotation.z,
+                30.0000000000f
+            );
+            Assert.AreEqual(result, true);         
             Assert.AreEqual(metadata.thirdPartyCameras[0].parentObjectName, "");
-
             action.Clear();
 
             //use update third party camera to change camera to be attached to agent
@@ -584,7 +610,6 @@ namespace Tests
                 metadata
                     .thirdPartyCameras[0]
                     .parentRelativeThirdPartyCameraPosition
-                    .Value
                     .x,
                 1.0000000000f
             );
@@ -593,7 +618,6 @@ namespace Tests
                 metadata
                     .thirdPartyCameras[0]
                     .parentRelativeThirdPartyCameraPosition
-                    .Value
                     .y,
                 2.0000000000f
             );
@@ -602,7 +626,6 @@ namespace Tests
                 metadata
                     .thirdPartyCameras[0]
                     .parentRelativeThirdPartyCameraPosition
-                    .Value
                     .z,
                 3.0000020000f
             );
@@ -611,7 +634,6 @@ namespace Tests
                 metadata
                     .thirdPartyCameras[0]
                     .parentRelativeThirdPartyCameraRotation
-                    .Value
                     .x,
                 20.0000000000f
             );
@@ -620,7 +642,6 @@ namespace Tests
                 metadata
                     .thirdPartyCameras[0]
                     .parentRelativeThirdPartyCameraRotation
-                    .Value
                     .y,
                 20.0000000000f
             );
@@ -629,7 +650,6 @@ namespace Tests
                 metadata
                     .thirdPartyCameras[0]
                     .parentRelativeThirdPartyCameraRotation
-                    .Value
                     .z,
                 20.0000000000f
             );

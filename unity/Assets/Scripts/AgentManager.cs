@@ -1317,9 +1317,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     cMetadata.parentRelativeThirdPartyCameraRotation =
                         camera.transform.localEulerAngles;
                 } else {
+                    //if not parented, default position and rotation to world coordinate space
                     cMetadata.parentObjectName = "";
-                    cMetadata.parentRelativeThirdPartyCameraPosition = null;
-                    cMetadata.parentRelativeThirdPartyCameraRotation = null;
+                    cMetadata.parentRelativeThirdPartyCameraPosition = camera.transform.position;
+                    cMetadata.parentRelativeThirdPartyCameraRotation = camera.transform.rotation.eulerAngles;
                 }
 
                 //if this camera is part of the agent's hierarchy at all, get agent relative info
@@ -1336,6 +1337,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                         agentSpaceCameraRotationAsQuaternion.eulerAngles;
                 } else {
                     //if this third party camera is not a child of the agent, we don't need agent-relative coordinates
+                    //Note: We don't default this to world space because in the case of a multi-agent scenario, the agent 
+                    //to be relative to is ambiguous and UHHHHH
                     cMetadata.agentRelativeThirdPartyCameraPosition = null;
                     cMetadata.agentRelativeThirdPartyCameraRotation = null;
                 }
@@ -1876,8 +1879,8 @@ public class ThirdPartyCameraMetadata {
     public Vector3? agentRelativeThirdPartyCameraRotation;
 
     //return the local space coordinates if this third party camera has a parent object, this may be the same as agentPositionRelative depending on how things are parented
-    public Vector3? parentRelativeThirdPartyCameraPosition;
-    public Vector3? parentRelativeThirdPartyCameraRotation;
+    public Vector3 parentRelativeThirdPartyCameraPosition;
+    public Vector3 parentRelativeThirdPartyCameraRotation;
     public string parentObjectName; //if this third party camera is in a hierarchy, return the name of the parent object
 }
 
