@@ -1374,6 +1374,20 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                         "_flow",
                         "image_thirdParty_flow"
                     ); // XXX fix this in a bit
+                    addImageSynthesisImage(
+                        renderPayload,
+                        imageSynthesis,
+                        this.renderSemanticSegmentation,
+                        "_distortion",
+                        "image_thirdParty_distortion"
+                    );
+                    addImageSynthesisImage(
+                        renderPayload,
+                        imageSynthesis,
+                        this.renderDistortionImage,
+                        "_distortion",
+                        "image_thirdParty_distortion"
+                    );
                 }
             }
         }
@@ -1419,6 +1433,13 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                         this.renderFlowImage,
                         "_flow",
                         "image_flow"
+                    );
+                    addImageSynthesisImage(
+                        renderPayload,
+                        agent.imageSynthesis,
+                        this.renderDistortionImage,
+                        "_distortion",
+                        "image_distortion"
                     );
                 }
                 metadata.thirdPartyCameras = cameraMetadata;
