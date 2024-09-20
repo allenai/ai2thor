@@ -2627,8 +2627,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             metaMessage.screenWidth = Screen.width;
             metaMessage.screenHeight = Screen.height;
 
-            metaMessage.cameraPosition = m_Camera.transform.position;
-            metaMessage.cameraRotation = m_Camera.transform.eulerAngles;
+            metaMessage.cameraPosition = m_Camera.transform.position; //to be deprecated
+            metaMessage.cameraRotation = m_Camera.transform.eulerAngles; //to be deprecated
+            metaMessage.worldRelativeCameraPosition = m_Camera.transform.position;
+            metaMessage.worldRelativeCameraRotation = m_Camera.transform.eulerAngles;
 
             //we need to transform these relative to the agent position
             //main camera's local space coordinates need to be translated to world space first
@@ -2643,9 +2645,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var worldSpaceCameraRotationAsQuaternion = m_Camera.transform.rotation;
             var localSpaceCameraRotationAsQuaternion =
                 Quaternion.Inverse(transform.rotation) * worldSpaceCameraRotationAsQuaternion;
-            metaMessage.agentPositionRelativeCameraRotation =
+            metaMessage.agentRotationRelativeCameraRotation =
                 localSpaceCameraRotationAsQuaternion.eulerAngles;
-            //Debug.Log($"agentRelativeCameraRotation: {metaMessage.agentPositionRelativeCameraRotation}");
+            //Debug.Log($"agentRelativeCameraRotation: {metaMessage.agentRotationRelativeCameraRotation}");
 
             metaMessage.cameraOrthSize = cameraOrthSize;
             cameraOrthSize = -1f;
