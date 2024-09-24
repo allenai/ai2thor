@@ -266,6 +266,86 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
+        public override void Teleport(
+            Vector3? position = null,
+            Vector3? rotation = null,
+            float? horizon = null,
+            bool? standing = null,
+            bool forceAction = false
+        ) {
+            //non-high level agents cannot set standing
+            if(standing != null) {
+                errorMessage = "Cannot set standing for stretch agent";
+                actionFinishedEmit(success:false, actionReturn:null, errorMessage:errorMessage);
+                return;
+            }
+
+            TeleportFull(
+                position: position,
+                rotation: rotation,
+                horizon: horizon,
+                standing: standing,
+                forceAction: forceAction
+            );
+        }
+
+        public override void TeleportFull(
+            Vector3? position = null, 
+            Vector3? rotation = null, 
+            float? horizon = null, 
+            bool? standing = null, 
+            bool forceAction = false
+        ) {
+            //non-high level agents cannot set standing
+            if(standing != null) {
+                errorMessage = "Cannot set standing for stretch agent";
+                actionFinishedEmit(success:false, actionReturn:null, errorMessage:errorMessage);
+                return;
+            }
+            
+            //cache old values in case there is a failure
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            Quaternion oldCameraRotation = m_Camera.transform.localRotation;
+
+            try {
+                base.teleportFull(
+                    position: position,
+                    rotation: rotation,
+                    horizon: horizon,
+                    forceAction: forceAction
+                );
+                
+                // add arm value cases
+                if (!forceAction) {
+                    if (isHandObjectColliding(ignoreAgent: true)) {
+                        throw new InvalidOperationException(
+                            "Cannot teleport due to hand object collision."
+                        );
+                    }
+                    if (Arm != null && Arm.IsArmColliding()) {
+                        throw new InvalidOperationException(
+                            "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull fails in this position."
+                        );
+                    } else if (SArm != null && SArm.IsArmColliding()) {
+                        throw new InvalidOperationException(
+                            "Stretch Arm is actively clipping with some geometry in the environment. TeleportFull fails in this position."
+                        );
+                    }
+                    base.assertTeleportedNearGround(targetPosition: position);
+                }
+
+            } catch (InvalidOperationException e) {
+                transform.position = oldPosition;
+                transform.rotation = oldRotation;
+                m_Camera.transform.localRotation = oldCameraRotation;
+
+                throw new InvalidOperationException(e.Message);
+            }
+
+            actionFinished(success: true);
+        }
+
         /*
         Rotates the wrist (in a relative fashion) given some input
         pitch, yaw, and roll offsets. Easiest to see how this works by

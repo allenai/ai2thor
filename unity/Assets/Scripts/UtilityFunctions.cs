@@ -484,6 +484,13 @@ public static class UtilityFunctions {
         return allOfTheLights;
     }
 
+    public static bool ArePositionsApproximatelyEqual(Vector3 position1, Vector3 position2) {
+        // Compare each component (x, y, z) of the two positions to see if they are approximately equal via the epsilon value
+        return Mathf.Abs(position1.x - position2.x) < Vector3.kEpsilon
+            && Mathf.Abs(position1.y - position2.y) < Vector3.kEpsilon
+            && Mathf.Abs(position1.z - position2.z) < Vector3.kEpsilon;
+    }
+
 #if UNITY_EDITOR
 
     public static void debugGetLightPropertiesOfScene(List<LightParameters> lights) {

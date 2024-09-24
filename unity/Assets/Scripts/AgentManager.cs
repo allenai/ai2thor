@@ -320,7 +320,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 : action.dynamicServerAction.agentInitializationParams
         );
         Debug.Log(
-            $"Initialize of AgentController. lastActionSuccess: {primaryAgent.lastActionSuccess}, errorMessage: {primaryAgent.errorMessage}, actionReturn: {primaryAgent.actionReturn}, agentState: {primaryAgent.agentState}"
+            $"Initialize of AgentController.lastAction: {primaryAgent.lastAction} lastActionSuccess: {primaryAgent.lastActionSuccess}, errorMessage: {primaryAgent.errorMessage}, actionReturn: {primaryAgent.actionReturn}, agentState: {primaryAgent.agentState}"
         );
         Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         if (action.targetFrameRate > 0) {

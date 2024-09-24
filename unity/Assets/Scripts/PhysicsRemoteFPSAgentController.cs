@@ -174,6 +174,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public bool isStanding() {
+
+            //default to not standing if this isn't literally the PhysicsRemoteFPSAgentController
+            //this means the metadat for isStanding should always be false for all derived classes
+            if (this.GetType() != typeof(PhysicsRemoteFPSAgentController))
+            {
+                return false;
+            }
+
+            if(UtilityFunctions.ArePositionsApproximatelyEqual(m_Camera.transform.localPosition, standingLocalCameraPosition) != true &&
+             UtilityFunctions.ArePositionsApproximatelyEqual(m_Camera.transform.localPosition, crouchingLocalCameraPosition) != true) {
+                throw new InvalidOperationException(
+                    $"Camera position is not equal to standing or crouching position. camera local position: {m_Camera.transform.localPosition}, standing local position: {standingLocalCameraPosition}, crouching local position: {crouchingLocalCameraPosition}"
+                );
+            }
+
             return (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude
                 < 0.1f;
         }
@@ -1625,23 +1640,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////////// TELEPORT FULL //////////////
         ///////////////////////////////////////////
 
-        // [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)]
-        // public void TeleportFull(
-        //     float x, float y, float z,
-        //     float rotation,
-        //     float horizon,
-        //     bool standing,
-        //     bool forceAction = false
-        // ) {
-        //     TeleportFull(
-        //         position: new Vector3(x, y, z),
-        //         rotation: new Vector3(0, rotation, 0),
-        //         horizon: horizon,
-        //         standing: standing,
-        //         forceAction: forceAction
-        //     );
-        // }
-
         [ObsoleteAttribute(
             message: "This action is deprecated. Call TeleportFull(position, ...) instead.",
             error: false
@@ -1664,24 +1662,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        // keep undocumented until float: rotation is added to Stochastic
-        // public void TeleportFull(
-        //     Vector3 position,
-        //     float rotation,
-        //     float horizon,
-        //     bool standing,
-        //     bool forceAction = false
-        // ) {
-        //     TeleportFull(
-        //         position: position,
-        //         rotation: new Vector3(0, rotation, 0),
-        //         horizon: horizon,
-        //         standing: standing,
-        //         forceAction: forceAction
-        //     );
-        // }
-
-        // has to consider both the arm and standing
         public virtual void TeleportFull(
             Vector3? position,
             Vector3? rotation,
@@ -1763,23 +1743,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //////////////// TELEPORT /////////////////
         ///////////////////////////////////////////
 
-        // [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)]
-        // public void Teleport(
-        //     float x, float y, float z,
-        //     float? rotation = null,
-        //     float? horizon = null,
-        //     bool? standing = null,
-        //     bool forceAction = false
-        // ) {
-        //     Teleport(
-        //         position: new Vector3(x, y, z),
-        //         rotation: rotation,
-        //         horizon: horizon,
-        //         standing: standing,
-        //         forceAction: forceAction
-        //     );
-        // }
-
         [ObsoleteAttribute(
             message: "This action is deprecated. Call Teleport(position, ...) instead.",
             error: false
@@ -1802,25 +1765,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        // keep undocumented until float: rotation is added to Stochastic
-        // DO NOT add float: rotation to base.
-        // public void Teleport(
-        //     Vector3? position = null,
-        //     float? rotation = null,
-        //     float? horizon = null,
-        //     bool? standing = null,
-        //     bool forceAction = false
-        // ) {
-        //     Teleport(
-        //         position: position,
-        //         rotation: rotation == null ? m_Camera.transform.localEulerAngles : new Vector3(0, (float) rotation, 0),
-        //         horizon: horizon,
-        //         standing: standing,
-        //         forceAction: forceAction
-        //     );
-        // }
-
-        public void Teleport(
+        //keeping 'Teleport' for backwards compatibility
+        public virtual void Teleport(
             Vector3? position = null,
             Vector3? rotation = null,
             float? horizon = null,
@@ -1828,10 +1774,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceAction = false
         ) {
             TeleportFull(
-                position: position == null ? transform.position : (Vector3)position,
-                rotation: rotation == null ? transform.eulerAngles : (Vector3)rotation,
-                horizon: horizon == null ? m_Camera.transform.localEulerAngles.x : (float)horizon,
-                standing: standing == null ? isStanding() : (bool)standing,
+                position: position,
+                rotation: rotation,
+                horizon: horizon,
+                standing: standing,
                 forceAction: forceAction
             );
         }
