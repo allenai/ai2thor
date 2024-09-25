@@ -274,9 +274,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceAction = false
         ) {
             //non-high level agents cannot set standing
-            if(standing != null) {
+            if (standing != null) {
                 errorMessage = "Cannot set standing for arm/stretch agent";
-                actionFinishedEmit(success:false, actionReturn:null, errorMessage:errorMessage);
+                actionFinishedEmit(success: false, actionReturn: null, errorMessage: errorMessage);
                 return;
             }
 
@@ -290,19 +290,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override void TeleportFull(
-            Vector3? position = null, 
-            Vector3? rotation = null, 
-            float? horizon = null, 
-            bool? standing = null, 
+            Vector3? position = null,
+            Vector3? rotation = null,
+            float? horizon = null,
+            bool? standing = null,
             bool forceAction = false
         ) {
             //non-high level agents cannot set standing
-            if(standing != null) {
+            if (standing != null) {
                 errorMessage = "Cannot set standing for arm/stretch agent";
-                actionFinishedEmit(success:false, actionReturn:null, errorMessage:errorMessage);
+                actionFinishedEmit(success: false, actionReturn: null, errorMessage: errorMessage);
                 return;
             }
-            
+
             //cache old values in case there is a failure
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
@@ -315,7 +315,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     horizon: horizon,
                     forceAction: forceAction
                 );
-                
+
                 // add arm value cases
                 if (!forceAction) {
                     if (Arm != null && Arm.IsArmColliding()) {
@@ -329,7 +329,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                     base.assertTeleportedNearGround(targetPosition: position);
                 }
-
             } catch (InvalidOperationException e) {
                 transform.position = oldPosition;
                 transform.rotation = oldRotation;

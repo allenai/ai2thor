@@ -268,7 +268,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (wasStanding == true) {
                         action.action = "Crouch";
                         PhysicsController.ProcessControlCommand(action);
-                    } else if(wasStanding == false) {
+                    } else if (wasStanding == false) {
                         action.action = "Stand";
                         PhysicsController.ProcessControlCommand(action);
                     }

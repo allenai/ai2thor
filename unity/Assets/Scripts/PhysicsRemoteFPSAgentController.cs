@@ -174,27 +174,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public bool? isStanding() {
-
             //default to not standing if this isn't literally the PhysicsRemoteFPSAgentController
             //this means the metadat for isStanding should always be false for all derived classes
-            if (this.GetType() != typeof(PhysicsRemoteFPSAgentController))
-            {
+            if (this.GetType() != typeof(PhysicsRemoteFPSAgentController)) {
                 return null;
             }
 
             //if camera is in neither the standing or crouching predetermined locations, return null
-            if(UtilityFunctions.ArePositionsApproximatelyEqual(m_Camera.transform.localPosition, standingLocalCameraPosition) == true) {
+            if (
+                UtilityFunctions.ArePositionsApproximatelyEqual(
+                    m_Camera.transform.localPosition,
+                    standingLocalCameraPosition
+                ) == true
+            ) {
                 return true;
-            } 
-             
-            else if(UtilityFunctions.ArePositionsApproximatelyEqual(m_Camera.transform.localPosition, crouchingLocalCameraPosition) == true) {
+            } else if (
+                  UtilityFunctions.ArePositionsApproximatelyEqual(
+                      m_Camera.transform.localPosition,
+                      crouchingLocalCameraPosition
+                  ) == true
+              ) {
                 return false;
-            }
-
-            else {
+            } else {
                 return null;
             }
-
         }
 
         public override MetadataWrapper generateMetadataWrapper() {
@@ -2343,7 +2346,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 bool? standState = isStanding();
                 if (standState == true) {
                     dir = new Vector3(0.0f, -1f, 0.0f);
-                } else if (standState == false){
+                } else if (standState == false) {
                     dir = new Vector3(0.0f, 1f, 0.0f);
                 }
 
@@ -6374,7 +6377,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (wasStanding == true) {
                 stand();
-            } else if(wasStanding == false){
+            } else if (wasStanding == false) {
                 crouch();
             }
             transform.position = oldPosition;
@@ -6638,7 +6641,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // restore old agent pose
             if (wasStanding == true) {
                 stand();
-            } else if(wasStanding == false) {
+            } else if (wasStanding == false) {
                 crouch();
             }
             SetTransform(

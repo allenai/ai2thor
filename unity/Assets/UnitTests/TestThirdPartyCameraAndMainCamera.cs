@@ -524,7 +524,7 @@ namespace Tests
                 metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraRotation.z,
                 30.0000000000f
             );
-            Assert.AreEqual(result, true);         
+            Assert.AreEqual(result, true);
             Assert.AreEqual(metadata.thirdPartyCameras[0].parentObjectName, "");
             action.Clear();
 
@@ -611,50 +611,32 @@ namespace Tests
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata
-                    .thirdPartyCameras[0]
-                    .parentRelativeThirdPartyCameraPosition
-                    .x,
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraPosition.x,
                 1.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata
-                    .thirdPartyCameras[0]
-                    .parentRelativeThirdPartyCameraPosition
-                    .y,
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraPosition.y,
                 2.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata
-                    .thirdPartyCameras[0]
-                    .parentRelativeThirdPartyCameraPosition
-                    .z,
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraPosition.z,
                 3.0000020000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata
-                    .thirdPartyCameras[0]
-                    .parentRelativeThirdPartyCameraRotation
-                    .x,
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraRotation.x,
                 20.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata
-                    .thirdPartyCameras[0]
-                    .parentRelativeThirdPartyCameraRotation
-                    .y,
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraRotation.y,
                 20.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata
-                    .thirdPartyCameras[0]
-                    .parentRelativeThirdPartyCameraRotation
-                    .z,
+                metadata.thirdPartyCameras[0].parentRelativeThirdPartyCameraRotation.z,
                 20.0000000000f
             );
             Assert.AreEqual(result, true);
