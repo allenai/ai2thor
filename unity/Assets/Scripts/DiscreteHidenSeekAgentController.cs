@@ -264,10 +264,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ) && PhysicsController.ReadyForCommand
                 ) {
                     ServerAction action = new ServerAction();
-                    if (this.PhysicsController.isStanding()) {
+                    bool? wasStanding = this.PhysicsController.isStanding();
+                    if (wasStanding == true) {
                         action.action = "Crouch";
                         PhysicsController.ProcessControlCommand(action);
-                    } else {
+                    } else if(wasStanding == false) {
                         action.action = "Stand";
                         PhysicsController.ProcessControlCommand(action);
                     }

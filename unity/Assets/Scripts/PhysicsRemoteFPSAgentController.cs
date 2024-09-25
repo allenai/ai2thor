@@ -173,24 +173,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        public bool isStanding() {
+        public bool? isStanding() {
 
             //default to not standing if this isn't literally the PhysicsRemoteFPSAgentController
             //this means the metadat for isStanding should always be false for all derived classes
             if (this.GetType() != typeof(PhysicsRemoteFPSAgentController))
             {
+                return null;
+            }
+
+            //if camera is in neither the standing or crouching predetermined locations, return null
+            if(UtilityFunctions.ArePositionsApproximatelyEqual(m_Camera.transform.localPosition, standingLocalCameraPosition) == true) {
+                return true;
+            } 
+             
+            else if(UtilityFunctions.ArePositionsApproximatelyEqual(m_Camera.transform.localPosition, crouchingLocalCameraPosition) == true) {
                 return false;
             }
 
-            if(UtilityFunctions.ArePositionsApproximatelyEqual(m_Camera.transform.localPosition, standingLocalCameraPosition) != true &&
-             UtilityFunctions.ArePositionsApproximatelyEqual(m_Camera.transform.localPosition, crouchingLocalCameraPosition) != true) {
-                throw new InvalidOperationException(
-                    $"Camera position is not equal to standing or crouching position. camera local position: {m_Camera.transform.localPosition}, standing local position: {standingLocalCameraPosition}, crouching local position: {crouchingLocalCameraPosition}"
-                );
+            else {
+                return null;
             }
 
-            return (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude
-                < 0.1f;
         }
 
         public override MetadataWrapper generateMetadataWrapper() {
@@ -1671,7 +1675,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             Debug.Log($"------- Teleport Full physicsFPS type {this.GetType()}");
             // cache old values in case there's a failure
-            bool wasStanding = isStanding();
+            bool? wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
             Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
@@ -1720,9 +1724,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     base.assertTeleportedNearGround(targetPosition: position);
                 }
             } catch (InvalidOperationException e) {
-                if (wasStanding) {
+                if (wasStanding == true) {
                     stand();
-                } else {
+                } else if (wasStanding == false) {
                     crouch();
                 }
                 if (ItemInHand != null) {
@@ -2345,9 +2349,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else {
                 Vector3 dir = new Vector3();
 
-                if (isStanding()) {
+                bool? standState = isStanding();
+                if (standState == true) {
                     dir = new Vector3(0.0f, -1f, 0.0f);
-                } else {
+                } else if (standState == false){
                     dir = new Vector3(0.0f, 1f, 0.0f);
                 }
 
@@ -6026,7 +6031,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void Crouch() {
-            if (!isStanding()) {
+            if (isStanding() == false) {
                 errorMessage = "Already crouching.";
                 actionFinished(false);
             } else if (!CheckIfItemBlocksAgentStandOrCrouch()) {
@@ -6038,7 +6043,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void Stand() {
-            if (isStanding()) {
+            if (isStanding() == true) {
                 errorMessage = "Already standing.";
                 actionFinished(false);
             } else if (!CheckIfItemBlocksAgentStandOrCrouch()) {
@@ -6240,7 +6245,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 positions = getReachablePositions();
             }
 
-            bool wasStanding = isStanding();
+            bool? wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
             if (ItemInHand != null) {
@@ -6331,7 +6336,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected HashSet<SimObjPhysics> getAllItemsVisibleFromPositions(Vector3[] positions) {
-            bool wasStanding = isStanding();
+            bool? wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
             if (ItemInHand != null) {
@@ -6376,9 +6381,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 go.SetActive(true);
             }
 
-            if (wasStanding) {
+            if (wasStanding == true) {
                 stand();
-            } else {
+            } else if(wasStanding == false){
                 crouch();
             }
             transform.position = oldPosition;
@@ -6532,7 +6537,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // save current agent pose
-            bool wasStanding = isStanding();
+            bool? wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
             Vector3 oldHorizon = m_Camera.transform.localEulerAngles;
@@ -6640,9 +6645,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // restore old agent pose
-            if (wasStanding) {
+            if (wasStanding == true) {
                 stand();
-            } else {
+            } else if(wasStanding == false) {
                 crouch();
             }
             SetTransform(
