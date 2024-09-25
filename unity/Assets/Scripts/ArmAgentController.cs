@@ -275,7 +275,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             //non-high level agents cannot set standing
             if(standing != null) {
-                errorMessage = "Cannot set standing for stretch agent";
+                errorMessage = "Cannot set standing for arm/stretch agent";
                 actionFinishedEmit(success:false, actionReturn:null, errorMessage:errorMessage);
                 return;
             }
@@ -298,7 +298,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             //non-high level agents cannot set standing
             if(standing != null) {
-                errorMessage = "Cannot set standing for stretch agent";
+                errorMessage = "Cannot set standing for arm/stretch agent";
                 actionFinishedEmit(success:false, actionReturn:null, errorMessage:errorMessage);
                 return;
             }
@@ -318,11 +318,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 
                 // add arm value cases
                 if (!forceAction) {
-                    if (isHandObjectColliding(ignoreAgent: true)) {
-                        throw new InvalidOperationException(
-                            "Cannot teleport due to hand object collision."
-                        );
-                    }
                     if (Arm != null && Arm.IsArmColliding()) {
                         throw new InvalidOperationException(
                             "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull fails in this position."
