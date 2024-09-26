@@ -1418,7 +1418,7 @@ def test_teleport_stretch(controller):
     agent = "stretch"
 
     event = controller.reset(agentMode=agent)
-    assert event.metadata["agent"]["isStanding"] is False, agent + " cannot stand!"
+    assert event.metadata["agent"]["isStanding"] is None, agent + " cannot stand so this should be None/null!"
 
     # Only degrees of freedom on the locobot
     for action in ["Teleport", "TeleportFull"]:
