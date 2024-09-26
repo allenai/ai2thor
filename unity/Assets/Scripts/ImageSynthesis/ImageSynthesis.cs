@@ -1,9 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Rendering;
+
+using Thor.Rendering;
 
 // @TODO:
 // . support custom color wheels in optical flow via lookup textures
@@ -16,6 +19,171 @@ using UnityEngine.Rendering;
 // . Motion Vectors can produce incorrect results in Unity 5.5.f3 when
 //      1) during the first rendering frame
 //      2) rendering several cameras with different aspect ratios - vectors do stretch to the sides of the screen
+
+// namespace Thor.Rendering {
+
+//     public abstract class Capture {
+//         public string name;
+//         public bool supportsAntialiasing;
+//         public bool needsRescale;
+//         public Camera camera;
+
+//         public RenderTargetIdentifier GetRenderTarget() {
+//             return 0;
+//         }
+
+//         private Texture2D tex;
+
+//     public byte[] Encode(
+//         Camera cam,
+//         int width,
+//         int height,
+//         bool supportsAntialiasing,
+//         bool needsRescale,
+//         bool jpg = false,
+//         RenderTextureFormat format = RenderTextureFormat.Default,
+//         RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default
+//     ) {
+
+//         Debug.Log($"--------Encode");
+//         // var mainCamera = GetComponent<Camera>();
+//         var mainCamera = cam;
+//         var depth = 32;
+//         var readWrite = textureReadMode;
+//         var antiAliasing = (supportsAntialiasing) ? Mathf.Max(1, QualitySettings.antiAliasing) : 1;
+
+//         var finalRT = RenderTexture.GetTemporary(
+//             width,
+//             height,
+//             depth,
+//             format,
+//             readWrite,
+//             antiAliasing
+//         );
+//         var renderRT =
+//             (!needsRescale)
+//                 ? finalRT
+//                 : RenderTexture.GetTemporary(
+//                     mainCamera.pixelWidth,
+//                     mainCamera.pixelHeight,
+//                     depth,
+//                     format,
+//                     readWrite,
+//                     antiAliasing
+//                 );
+//         if (tex == null) {
+//             tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+//         }
+
+//         var prevActiveRT = RenderTexture.active;
+//         var prevCameraRT = cam.targetTexture;
+        
+
+//         // Debug.Log($"prevActiveRT {prevActiveRT} prevCameraRT {prevCameraRT} renderRT {renderRT} mainCam target {capturePasses[0].camera.targetTexture} active {capturePasses[0].camera.activeTexture}");
+
+//         // render to offscreen texture (readonly from CPU side)
+//         RenderTexture.active = renderRT;
+//         cam.targetTexture = renderRT;
+
+//         cam.Render();
+
+//         // if (needsRescale) {
+//         //     // blit to rescale (see issue with Motion Vectors in @KNOWN ISSUES)
+//         //     RenderTexture.active = finalRT;
+//         //     Graphics.Blit(renderRT, finalRT);
+//         //     RenderTexture.ReleaseTemporary(renderRT);
+//         // }
+
+//         // read offsreen texture contents into the CPU readable texture
+//         float startTime = Time.realtimeSinceStartup;
+
+//         tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+//         // tex.Apply();
+//         // Debug.Log("imageSynth encode time" + (Time.realtimeSinceStartup - startTime));
+
+//         startTime = Time.realtimeSinceStartup;
+
+//         // encode texture into PNG/JPG
+//         byte[] bytes;
+//         if (jpg) {
+//             bytes = tex.EncodeToJPG();
+//         } else {
+//             bytes = tex.GetRawTextureData();
+//         }
+
+//         // Debug.Log("imageSynth format time" + (Time.realtimeSinceStartup - startTime));
+
+
+//         // restore state and cleanup
+//         cam.targetTexture = prevCameraRT;
+//         RenderTexture.active = prevActiveRT;
+
+//         // UnityEngine.Object.Destroy(tex);
+//         RenderTexture.ReleaseTemporary(finalRT);
+//         return bytes;
+//         // byte[] bytes = null;
+//         // return bytes;
+//     }
+//     }
+
+//     // copies camera texture
+//     public class DefaultPass : Capture {
+
+//     }
+
+//      public class PostProcessingPass : Capture {
+
+//      }
+
+//      public class ImageSynthesisNew : MonoBehaviour {
+
+//         private Dictionary<string, Capture> capturePassDict;
+//         private Capture[] capturePasses;
+
+//         public byte[] Encode(
+//             string passName,
+//             RenderTextureFormat format = RenderTextureFormat.Default,
+//             RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default,
+//             int width = -1,
+//             int height = -1,
+//             bool jpg = false
+//         ) {
+//             // Must be called after end of Frame
+
+//             if (width <= 0) {
+//                 width = Screen.width;
+//             }
+//             if (height <= 0) {
+//                 height = Screen.height;
+//             }
+//             Capture capture; 
+//             bool exists = capturePassDict.TryGetValue(passName, out capture);
+
+//             if (!exists) {
+//                 throw new ArgumentException($"Capture pass with name '{capture}' does not exist make sure to add it with...");
+//             }
+
+//             foreach (var pass in capturePasses) {
+//                 if (pass.name == passName) {
+//                     return pass.Encode(
+//                         pass.camera,
+//                         width,
+//                         height,
+//                         pass.supportsAntialiasing,
+//                         pass.needsRescale,
+//                         jpg,
+//                         format,
+//                         textureReadMode
+//                     );
+//                 }
+//             }
+
+//             return (new byte[0]);
+//         }
+
+//      }
+
+// }
 
 [RequireComponent(typeof(Camera))]
 public class ImageSynthesis : MonoBehaviour {
@@ -35,6 +203,8 @@ public class ImageSynthesis : MonoBehaviour {
             supportsAntialiasing = false,
             needsRescale = true
         }, // (see issue with Motion Vectors in @KNOWN ISSUES)
+
+        new CapturePass() { name = "_distortion" }
 
         // new CapturePass() { name = "_position" },
     };
@@ -77,6 +247,8 @@ public class ImageSynthesis : MonoBehaviour {
     private Shader opticalFlowShader;
     private Shader depthShader;
 
+    private Shader distortionShader;
+
     // public Shader positionShader;
 
     public Dictionary<Color, string> colorIds;
@@ -87,7 +259,11 @@ public class ImageSynthesis : MonoBehaviour {
 
     // cached materials
     private Material opticalFlowMaterial;
-    private Material depthMaterial;
+    public Material depthMaterial;
+
+    public Material distortionMaterial;
+
+    private RenderTexture renderTexture;
     System.Security.Cryptography.MD5 md5;
 
     public bool sentColorCorrespondence;
@@ -95,6 +271,8 @@ public class ImageSynthesis : MonoBehaviour {
     public Texture2D tex;
 
     public void OnEnable() {
+
+        RenderCapture s;
         // This initialization code MUST live in OnEnable and not Start as we instantiate ThirdPartyCameras
         // programatically in other functions and need them to be initialized immediately.
         if (!initialized) {
@@ -123,6 +301,9 @@ public class ImageSynthesis : MonoBehaviour {
                 depthShader = Shader.Find("Hidden/Depth");
 
 #endif
+            if (!distortionShader) {
+                distortionShader = Shader.Find("Hidden/BarrelDistortion");
+            }
 
             // if (!positionShader)
             //	positionShader = Shader.Find("Hidden/World");
@@ -217,8 +398,40 @@ public class ImageSynthesis : MonoBehaviour {
     ) {
         var cb = new CommandBuffer();
         cb.Blit(null, BuiltinRenderTextureType.CurrentActive, material);
-        cam.AddCommandBuffer(CameraEvent.AfterEverything, cb);
+        cam.AddCommandBuffer(CameraEvent.AfterImageEffects, cb);
         cam.depthTextureMode = depthTextureMode;
+    }
+
+    private static void SetupCameraWithPostShader2(
+        // Texture source,
+        RenderTexture renderTexture,
+        Camera cam,
+        Material material,
+        // Material screenCopyMaterial,
+        DepthTextureMode depthTextureMode = DepthTextureMode.None
+    ) {
+        var cb = new CommandBuffer();
+        // cb.Blit(BuiltinRenderTextureType.CurrentActive, BuiltinRenderTextureType.CameraTarget, material);
+        // cam.AddCommandBuffer(CameraEvent.AfterImageEffects, cb);
+
+        
+        // int screenCopyID = Shader.PropertyToID("_ScreenCopyTexture");
+        // cb.GetTemporaryRT()
+        // cb.GetTemporaryRT(screenCopyID, -1, -1, 0, FilterMode.Bilinear);
+        // cb.Blit(BuiltinRenderTextureType.CameraTarget, screenCopyID);
+        // Copy from tmp source to RT.
+
+        int screenCopyID = Shader.PropertyToID("_MainTex");
+        cb.GetTemporaryRT(screenCopyID, -1, -1, 0, FilterMode.Bilinear);
+        cb.Blit(BuiltinRenderTextureType.CurrentActive, screenCopyID);
+        cb.Blit(screenCopyID, BuiltinRenderTextureType.CameraTarget, material);
+        
+        cb.ReleaseTemporaryRT(screenCopyID);
+
+        cam.AddCommandBuffer(CameraEvent.BeforeImageEffects, cb);
+        // cb.GetTemporaryRT()
+        cam.depthTextureMode = depthTextureMode;
+        // cam.targetTexture = renderTexture;
     }
 
     enum ReplacelementModes {
@@ -271,9 +484,25 @@ public class ImageSynthesis : MonoBehaviour {
             depthMaterial = new Material(depthShader);
         }
 
+        // screenCopyMaterial = new Material(screenCopyShader);
+
+        if (!distortionMaterial || distortionMaterial.shader != distortionShader) {
+            distortionMaterial = new Material(distortionShader);
+        }
+
         // capturePasses [1].camera.farClipPlane = 100;
         // SetupCameraWithReplacementShader(capturePasses[1].camera, uberReplacementShader, ReplacelementModes.DepthMultichannel);
-        SetupCameraWithPostShader(capturePasses[1].camera, depthMaterial, DepthTextureMode.Depth);
+
+        if (renderTexture != null && renderTexture.IsCreated())
+        {
+            renderTexture.Release();
+        }
+      
+        renderTexture = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+
+        SetupCameraWithPostShader2(renderTexture, capturePasses[1].camera, depthMaterial,
+        //  screenCopyMaterial: screenCopyMaterial,
+          DepthTextureMode.Depth);
 
         SetupCameraWithReplacementShader(
             capturePasses[2].camera,
@@ -290,11 +519,17 @@ public class ImageSynthesis : MonoBehaviour {
             uberReplacementShader,
             ReplacelementModes.Normals
         );
-        SetupCameraWithPostShader(
+        SetupCameraWithPostShader2(
+            renderTexture,
             capturePasses[5].camera,
             opticalFlowMaterial,
+            // screenCopyMaterial: screenCopyMaterial,
             DepthTextureMode.Depth | DepthTextureMode.MotionVectors
         );
+
+         SetupCameraWithPostShader2(renderTexture, capturePasses[6].camera, distortionMaterial,
+        //  screenCopyMaterial: screenCopyMaterial,
+          DepthTextureMode.Depth);
 
 #if UNITY_EDITOR
         for (int i = 0; i < capturePasses.Length; i++) {
@@ -493,6 +728,8 @@ public class ImageSynthesis : MonoBehaviour {
         RenderTextureFormat format = RenderTextureFormat.Default,
         RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default
     ) {
+
+        Debug.Log($"--------Encode");
         var mainCamera = GetComponent<Camera>();
         var depth = 32;
         var readWrite = textureReadMode;
@@ -523,6 +760,9 @@ public class ImageSynthesis : MonoBehaviour {
 
         var prevActiveRT = RenderTexture.active;
         var prevCameraRT = cam.targetTexture;
+        
+
+        Debug.Log($"prevActiveRT {prevActiveRT} prevCameraRT {prevCameraRT} renderRT {renderRT} mainCam target {capturePasses[0].camera.targetTexture} active {capturePasses[0].camera.activeTexture}");
 
         // render to offscreen texture (readonly from CPU side)
         RenderTexture.active = renderRT;
@@ -530,12 +770,12 @@ public class ImageSynthesis : MonoBehaviour {
 
         cam.Render();
 
-        if (needsRescale) {
-            // blit to rescale (see issue with Motion Vectors in @KNOWN ISSUES)
-            RenderTexture.active = finalRT;
-            Graphics.Blit(renderRT, finalRT);
-            RenderTexture.ReleaseTemporary(renderRT);
-        }
+        // if (needsRescale) {
+        //     // blit to rescale (see issue with Motion Vectors in @KNOWN ISSUES)
+        //     RenderTexture.active = finalRT;
+        //     Graphics.Blit(renderRT, finalRT);
+        //     RenderTexture.ReleaseTemporary(renderRT);
+        // }
 
         // read offsreen texture contents into the CPU readable texture
         float startTime = Time.realtimeSinceStartup;

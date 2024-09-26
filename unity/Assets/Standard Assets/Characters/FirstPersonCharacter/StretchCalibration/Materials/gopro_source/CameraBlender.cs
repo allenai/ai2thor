@@ -3,6 +3,7 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class CameraBlender : MonoBehaviour
 {
+    public bool ControlFromComponent = true;
     public Camera camera1;
     public Camera camera2;
     public Camera blendedCamera;
@@ -34,7 +35,7 @@ public class CameraBlender : MonoBehaviour
 
     void Update()
     {
-        if (blendMaterial != null)
+        if (blendMaterial != null && ControlFromComponent)
         {
             blendMaterial.SetFloat("_BlendAmount", blendAmount / 100f);
         }
