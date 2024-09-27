@@ -300,7 +300,7 @@ public class ImageSynthesis : MonoBehaviour {
 
 #endif
             if (!distortionShader) {
-                distortionShader = Shader.Find("Hidden/BarrelDistortion");
+                distortionShader = Shader.Find("Custom/BarrelDistortion");
             }
 
             // if (!positionShader)

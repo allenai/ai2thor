@@ -1,6 +1,6 @@
 // latest
 
-Shader "Hidden/BarrelDistortion" {
+Shader "Custom/BarrelDistortion" {
      Properties
      {
          [MainTexture] _MainTex ("Base (RGB)", 2D) = "white" {}
@@ -15,7 +15,7 @@ Shader "Hidden/BarrelDistortion" {
           _k3 ("K3 polynomial dist coeff", Range (-18.0, 18.0))  = 0.0
           _k4 ("K4 polynomial dist coeff", Range (-18.0, 18.0))  = 0.0
 
-          _DistortionIntensityX ("Distort Strength X", Range (0.0, 6.0)) = 1.0
+         _DistortionIntensityX ("Distort Strength X", Range (0.0, 6.0)) = 1.0
          _DistortionIntensityY ("Distort Strength Y", Range (0.0, 6.0)) = 1.0
           
          

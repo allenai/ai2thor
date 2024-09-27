@@ -1377,13 +1377,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     addImageSynthesisImage(
                         renderPayload,
                         imageSynthesis,
-                        this.renderSemanticSegmentation,
-                        "_distortion",
-                        "image_thirdParty_distortion"
-                    );
-                    addImageSynthesisImage(
-                        renderPayload,
-                        imageSynthesis,
                         this.renderDistortionImage,
                         "_distortion",
                         "image_thirdParty_distortion"
@@ -1863,7 +1856,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         this.agentManagerState = AgentState.Error;
     }
 
-    public ActionFinished SetDistortionShaderParams(float zoomPercent, float k1, float k2, float k3, float k4, float strength = 1.0f) {
+    public ActionFinished SetDistortionShaderParams(float zoomPercent, float k1, float k2, float k3, float k4, float strength = 1.0f, float intensityX = 1.0f, float intensityY = 1.0f) {
 
         if (this.primaryAgent.imageSynthesis == null) {
             return new ActionFinished(success: false, errorMessage: "No imageSynthesis, make sure you pass 'renderDistortionImage = true' to the agent constructor.");
@@ -1874,6 +1867,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         material.SetFloat("_k2", k2);
         material.SetFloat("_k3", k3);
         material.SetFloat("_k4", k4);
+        material.SetFloat("_DistortionIntensityX", intensityX);
+        material.SetFloat("_DistortionIntensityY", intensityY);
         material.SetFloat("_LensDistortionStrength", strength);
         return ActionFinished.Success;
        

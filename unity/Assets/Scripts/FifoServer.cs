@@ -23,12 +23,14 @@ namespace FifoServer {
             { "image_classes", FieldType.ClassesImage },
             { "image_flow", FieldType.FlowsImage },
             { "image_ids", FieldType.IDsImage },
+            { "image_distortion", FieldType.DistortionImage },
             { "image-thirdParty-camera", FieldType.ThirdPartyCameraImage },
             { "image_thirdParty_depth", FieldType.ThirdPartyDepth },
             { "image_thirdParty_normals", FieldType.ThirdPartyNormals },
             { "image_thirdParty_classes", FieldType.ThirdPartyClasses },
             { "image_thirdParty_image_ids", FieldType.ThirdPartyImageIds },
-            { "image_thirdParty_flow", FieldType.ThirdPartyFlow }
+            { "image_thirdParty_flow", FieldType.ThirdPartyFlow },
+            { "image_thirdParty_distortion", FieldType.ThirdPartyDistortion },
         };
 
         public static int UnpackNetworkBytes(byte[] data, int offset = 0) {
@@ -142,6 +144,10 @@ namespace FifoServer {
         ThirdPartyImageIds = 0x0e,
         ThirdPartyClasses = 0x0f,
         ThirdPartyFlow = 0x10,
+
+        DistortionImage = 0x11,
+        ThirdPartyDistortion = 0x12,
+
         EndOfMessage = 0xff
     }
 }

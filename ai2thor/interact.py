@@ -224,10 +224,11 @@ class InteractiveControllerPrompt(object):
         image_dir,
         suffix,
         image_per_frame=False,
+        color_frame=False,
         semantic_segmentation_frame=False,
         instance_segmentation_frame=False,
         depth_frame=False,
-        color_frame=False,
+        distortion_frame=False,
         metadata=False,
     ):
         def save_image(name, image, flip_br=False):
@@ -270,6 +271,13 @@ class InteractiveControllerPrompt(object):
                 lambda event: event.semantic_segmentation_frame,
                 array_to_image,
                 save_image,
+            ),
+            (
+                "distortion",
+                semantic_segmentation_frame,
+                lambda event: event.distortion_frame,
+                array_to_image,
+                lambda x, y: save_image(x, y, flip_br=True),
             ),
             (
                 "depth",

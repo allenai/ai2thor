@@ -42,6 +42,8 @@ class FieldType(IntEnum):
     THIRD_PARTY_IMAGE_IDS = 14
     THIRD_PARTY_CLASSES = 15
     THIRD_PARTY_FLOW = 16
+    DISTORTION_IMAGE = 17,
+    THIRD_PARTY_DISTORTION=18,
     END_OF_MESSAGE = 255
 
 
@@ -83,6 +85,7 @@ class FifoServer(ai2thor.server.Server):
         # allows us to map the enum to form field names
         # for backwards compatibility
         # this can be removed when the wsgi server is removed
+        # TODO make more generic cod ewise, one new value you have to modify 3 different arrays
         self.form_field_map = {
             FieldType.RGB_IMAGE: "image",
             FieldType.DEPTH_IMAGE: "image_depth",
@@ -90,12 +93,14 @@ class FifoServer(ai2thor.server.Server):
             FieldType.IDS_IMAGE: "image_ids",
             FieldType.NORMALS_IMAGE: "image_normals",
             FieldType.FLOWS_IMAGE: "image_flow",
+            FieldType.DISTORTION_IMAGE: "image_distortion",
             FieldType.THIRD_PARTY_IMAGE: "image-thirdParty-camera",
             FieldType.THIRD_PARTY_DEPTH: "image_thirdParty_depth",
             FieldType.THIRD_PARTY_NORMALS: "image_thirdParty_normals",
             FieldType.THIRD_PARTY_IMAGE_IDS: "image_thirdParty_image_ids",
             FieldType.THIRD_PARTY_CLASSES: "image_thirdParty_classes",
             FieldType.THIRD_PARTY_FLOW: "image_thirdParty_flow",
+            FieldType.THIRD_PARTY_DISTORTION: "image_thirdParty_distortion",
         }
 
         self.image_fields = {
@@ -111,6 +116,8 @@ class FifoServer(ai2thor.server.Server):
             FieldType.THIRD_PARTY_IMAGE_IDS,
             FieldType.THIRD_PARTY_CLASSES,
             FieldType.THIRD_PARTY_FLOW,
+            FieldType.DISTORTION_IMAGE,
+            FieldType.THIRD_PARTY_DISTORTION
         }
 
         self.eom_header = self._create_header(FieldType.END_OF_MESSAGE, b"")
