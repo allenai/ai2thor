@@ -88,7 +88,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         "UpdateThirdPartyCamera",
         "ChangeResolution",
         "CoordinateFromRaycastThirdPartyCamera",
-        "ChangeQuality"
+        "ChangeQuality",
+        "ToggleAgentMainCameraMeshTracking"
     };
     public HashSet<string> errorAllowedActions = new HashSet<string> { "Reset" };
 
@@ -824,6 +825,28 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             this.y = y;
             this.z = z;
         }
+    }
+
+    //toggles off any meshes on the agent that are tracking the position/rotation of the main camera
+    //this allows us to call things like UpdateMainCamera without parts of the agent body mesh moving
+    public void ToggleAgentMainCameraMeshTracking(bool toggleOff = true, int agentId = 0) {
+        //which agent are we talking about?
+        //default to agent 0
+        var agent = this.agents[agentId];
+
+        List<SyncTransform> st = UtilityFunctions.FindAllComponentsInChildren<SyncTransform>(agent.transform);
+
+        if(st.Count > 0) {
+            foreach (SyncTransform s in st) {
+                s.enabled = !toggleOff;
+            }
+        } else {
+            throw new InvalidOperationException(
+                $"Agent {agentId} does not have any SyncTransform components to toggle."
+            );
+        }
+
+        agent.actionFinishedEmit(success:true);
     }
 
     //allows repositioning and changing of values of agent's primary camera
