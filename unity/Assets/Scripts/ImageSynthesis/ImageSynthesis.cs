@@ -273,6 +273,7 @@ public class ImageSynthesis : MonoBehaviour {
         // RenderCapture s;
         // This initialization code MUST live in OnEnable and not Start as we instantiate ThirdPartyCameras
         // programatically in other functions and need them to be initialized immediately.
+        Debug.Log("OnEnable image synth");
         if (!initialized) {
             // XXXXXXXXXXX************
             // Remember, adding any new Shaders requires them to be included in Project Settings->Graphics->Always Included Shaders
@@ -316,6 +317,7 @@ public class ImageSynthesis : MonoBehaviour {
             md5 = System.Security.Cryptography.MD5.Create();
 
             OnCameraChange();
+             Debug.Log("OnEnable image synth scenechange");
             OnSceneChange();
         }
         initialized = true;

@@ -1222,6 +1222,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         BaseFPSAgentController agent,
         ref MetadataWrapper metadata
     ) {
+        Debug.Log("Add object image enter");
         if (this.renderInstanceSegmentation || this.renderSemanticSegmentation) {
             Debug.Log($"imageSynthesis null {agent.ImageSynthesis == null}");
             if (!agent.ImageSynthesis.hasCapturePass("_id")) {
@@ -1233,6 +1234,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             payload.Add(new KeyValuePair<string, byte[]>("image_ids", bytes));
 
             List<ColorId> colors = new List<ColorId>();
+            Debug.Log($"Add object image befor color keys is null {agent.ImageSynthesis.colorIds == null}?");
             foreach (Color key in agent.ImageSynthesis.colorIds.Keys) {
                 ColorId cid = new ColorId();
                 cid.color = new ushort[]

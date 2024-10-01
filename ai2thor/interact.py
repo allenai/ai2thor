@@ -274,7 +274,7 @@ class InteractiveControllerPrompt(object):
             ),
             (
                 "distortion",
-                semantic_segmentation_frame,
+                distortion_frame,
                 lambda event: event.distortion_frame,
                 array_to_image,
                 lambda x, y: save_image(x, y, flip_br=True),
@@ -308,19 +308,20 @@ class InteractiveControllerPrompt(object):
         ]
 
         for frame_filename, condition, frame_func, transform, save in frame_writes:
-            frame = frame_func(event)
-            if frame is not None and condition:
-                frame = transform(frame)
-                image_name = os.path.join(
-                    image_dir,
-                    "{}{}".format(frame_filename, "{}".format(suffix) if image_per_frame else ""),
-                )
-                print("Image {}, {}".format(image_name, image_dir))
-                save(image_name, frame)
-
-            elif condition:
-                print(
-                    "No frame '{}' present, call initialize with the right parameters".format(
-                        frame_filename
+            if condition:
+                frame = frame_func(event)
+                if frame is not None:
+                    frame = frame_func(event)
+                    frame = transform(frame)
+                    image_name = os.path.join(
+                        image_dir,
+                        "{}{}".format(frame_filename, "{}".format(suffix) if image_per_frame else ""),
                     )
-                )
+                    print("Image {}, {}".format(image_name, image_dir))
+                    save(image_name, frame)
+                else:
+                    print(
+                        "No frame '{}' present, call initialize with the right parameters".format(
+                            frame_filename
+                        )
+                    )
