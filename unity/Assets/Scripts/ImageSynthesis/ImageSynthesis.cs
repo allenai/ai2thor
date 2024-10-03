@@ -781,7 +781,7 @@ public class ImageSynthesis : MonoBehaviour {
         float startTime = Time.realtimeSinceStartup;
 
         tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
-        tex.Apply();
+        // tex.Apply();
         // Debug.Log("imageSynth encode time" + (Time.realtimeSinceStartup - startTime));
 
         startTime = Time.realtimeSinceStartup;
