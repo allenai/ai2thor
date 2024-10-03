@@ -6,7 +6,7 @@ import os
 from ai2thor.interact import InteractiveControllerPrompt
 
 
-def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, local_build=False, commit_id=None, fov=120, distortion=False, image_dir=None):
+def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, local_build=False, commit_id=None, fov=120, distortion=False, image_dir=None, width=300, height=300):
     if image_dir is not None:
         os.makedirs(image_dir, exist_ok=True)
     if not run_in_editor:
@@ -33,8 +33,8 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
         platform=platform,
         scene=scene_name,
         gridSize=0.25,
-        width=300,
-        height=300,
+        width=width,
+        height=height,
         visibilityScheme="Distance",
         renderDepthImage=True,
         renderDistortionImage=distortion,
@@ -135,6 +135,18 @@ if __name__ == "__main__":
         default="FloorPlan227_physics",
     )
 
+    parser.add_argument(
+        "--width",
+        type=str,
+        default=300,
+    )
+
+    parser.add_argument(
+        "--height",
+        type=str,
+        default=300,
+    )
+
     parser.add_argument("--local_build", action="store_true", help="Uses the local build.")
 
     parser.add_argument("--editor", action="store_true", help="Runs in editor.")
@@ -160,5 +172,7 @@ if __name__ == "__main__":
         platform=args.platform,
         fov=float(args.fov),
         distortion=args.distortion,
-        image_dir=args.output
+        image_dir=args.output,
+        width=float(args.width),
+        height=float(args.height)
     )  # platform="CloudRendering")
