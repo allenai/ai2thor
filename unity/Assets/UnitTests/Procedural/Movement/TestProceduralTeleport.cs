@@ -174,9 +174,7 @@ namespace Tests
                     { "action", "TeleportFull" },
                     { "position", new Vector3(3f, 0.91f, 1.0f) }, //adjusting Y value to be within the error (0.05) of the floor.
                     { "rotation", new Vector3(0f, 180f, 0f) },
-                    // {"forceAction", true},
                     { "horizon", -20f },
-                    { "standing", true }
                 }
             );
 
