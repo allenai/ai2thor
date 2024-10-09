@@ -182,7 +182,7 @@ public class Build
         }
 
         return scenes;
-        return scenes.Where(x => x.Contains("FloorPlan1_") || x.Contains("Procedural") || x.Contains("ProceduralAB") || x.Contains("Calibration_Room")).ToList();
+        // return scenes.Where(x => x.Contains("FloorPlan1_") || x.Contains("FloorPlan28_") || x.Contains("Procedural") || x.Contains("ProceduralAB") || x.Contains("Calibration_Room")).ToList();
         // uncomment for faster builds for testing
         return scenes; //.Where(x => x.Contains("Procedural.unity") || x.Contains("Procedural.unity")).ToList(); //.Where(x => x.Contains("FloorPlan1_") || x.Contains("Procedural")).ToList();
     }
