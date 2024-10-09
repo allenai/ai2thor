@@ -399,8 +399,8 @@ class Controller(object):
         server_timeout: Optional[float] = 100.0,
         server_start_timeout: float = 300.0,
         # objaverse_asset_ids=[], TODO add and implement when objaverse.load_thor_objects is available
-        action_hook_runner=None,
-        metadata_hook: Optional[MetadataHook] = None,
+        before_action_callback=None,
+        metadata_callback: Optional[MetadataHook] = None,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -443,18 +443,28 @@ class Controller(object):
             )
         )
 
-        self.action_hook_runner = action_hook_runner
-        self.action_hooks = (
+        if "action_hook_runner" in unity_initialization_parameters:
+            raise ValueError(
+                f"Deprecated argument 'action_hook_runner'. Use 'before_action_callback' instead."
+            )
+
+        if "metadata_hook" in unity_initialization_parameters:
+            raise ValueError(
+                f"Deprecated argument 'metadata_hook'. Use 'metadata_callback' instead."
+            )
+
+        self.before_action_callback = before_action_callback
+        self.action_callbacks = (
             {
                 func
-                for func in dir(action_hook_runner)
-                if callable(getattr(action_hook_runner, func)) and not func.startswith("__")
+                for func in dir(before_action_callback)
+                if callable(getattr(before_action_callback, func)) and not func.startswith("__")
             }
-            if self.action_hook_runner is not None
+            if self.before_action_callback is not None
             else None
         )
 
-        self.metadata_hook = metadata_hook
+        self.metadata_callback = metadata_callback
 
         if self.gpu_device is not None:
             # numbers.Integral works for numpy.int32/64 and Python int
@@ -971,11 +981,11 @@ class Controller(object):
 
         return events
 
-    def run_action_hook(self, action):
-        if self.action_hooks is not None and action["action"] in self.action_hooks:
+    def run_before_action_callback(self, action):
+        if self.action_callbacks is not None and action["action"] in self.action_callbacks:
             try:
                 # print(f"action hooks: {self.action_hooks}")
-                method = getattr(self.action_hook_runner, action["action"])
+                method = getattr(self.before_action_callback, action["action"])
                 event = method(action, self)
                 if isinstance(event, list):
                     self.last_event = event[-1]
@@ -984,18 +994,18 @@ class Controller(object):
             except AttributeError:
                 traceback.print_stack()
                 raise NotImplementedError(
-                    "Action Hook Runner `{}` does not implement method `{}`,"
+                    "Action Callback `{}` does not implement method `{}`,"
                     " actions hooks are meant to run before an action, make sure that `action_hook_runner`"
                     " passed to the controller implements a method for the desired action.".format(
-                        self.action_hook_runner.__class__.__name__, action["action"]
+                        self.before_action_callback.__class__.__name__, action["action"]
                     )
                 )
             return True
         return False
 
     def run_metadata_hook(self, metadata: MetadataWrapper) -> bool:
-        if self.metadata_hook is not None:
-            out = self.metadata_hook(metadata=metadata, controller=self)
+        if self.metadata_callback is not None:
+            out = self.metadata_callback(metadata=metadata, controller=self)
             assert (
                 out is None
             ), "`metadata_hook` must return `None` and change the metadata in place."
@@ -1043,7 +1053,7 @@ class Controller(object):
                 # not deleting to allow for older builds to continue to work
                 # del action[old]
 
-        self.run_action_hook(action)
+        self.run_before_action_callback(action)
 
         self.server.send(action)
         try:

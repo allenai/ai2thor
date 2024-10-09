@@ -22,6 +22,8 @@ from objathor.asset_conversion.util import (
     load_existing_thor_asset_file,
 )
 
+from objathor.dataset import load_assets_path, DatasetSaveConfig
+
 logger = logging.getLogger(__name__)
 
 EXTENSIONS_LOADABLE_IN_UNITY = {
@@ -248,7 +250,7 @@ def create_assets_if_not_exist(
     #         return evt
 
 
-class ProceduralAssetHookRunner:
+class ProceduralAssetActionCallback:
     def __init__(
         self,
         asset_directory,
@@ -268,6 +270,7 @@ class ProceduralAssetHookRunner:
         self.target_dir = target_dir
         self.extension = extension
         self.verbose = verbose
+        self.last_asset_id_set = set()
 
     def Initialize(self, action, controller):
         if self.asset_limit > 0:
@@ -278,6 +281,10 @@ class ProceduralAssetHookRunner:
     def CreateHouse(self, action, controller):
         house = action["house"]
         asset_ids = get_all_asset_ids_recursively(house["objects"], [])
+        asset_ids_set = set(asset_ids)
+        if not asset_ids_set.issubset(self.last_asset_id_set):
+            controller.step(action="DeleteLRUFromProceduralCache", assetLimit=0)
+            self.last_asset_id_set = set(asset_ids)
         return create_assets_if_not_exist(
             controller=controller,
             asset_ids=asset_ids,
@@ -320,27 +327,49 @@ class ProceduralAssetHookRunner:
         )
 
 
-class ObjaverseAssetHookRunner(object):
-    def __init__(self):
-        import objaverse
-
-        self.objaverse_uid_set = set(objaverse.load_uids())
+class DownloadObjaverseActionCallback(object):
+    def __init__(
+        self,
+        asset_dataset_version,
+        asset_download_path,
+        target_dir="processed_models",
+        asset_symlink=True,
+        load_file_in_unity=False,
+        stop_if_fail=False,
+        asset_limit=-1,
+        extension=None,
+        verbose=True,
+    ):
+        self.asset_download_path = asset_download_path
+        self.asset_symlink = asset_symlink
+        self.stop_if_fail = stop_if_fail
+        self.asset_limit = asset_limit
+        self.load_file_in_unity = load_file_in_unity
+        self.target_dir = target_dir
+        self.extension = extension
+        self.verbose = verbose
+        self.last_asset_id_set = set()
+        dsc = DatasetSaveConfig(
+            VERSION=asset_dataset_version,
+            BASE_PATH=asset_download_path,
+        )
+        self.asset_path = load_assets_path(dsc)
 
     def CreateHouse(self, action, controller):
-        raise NotImplemented("Not yet implemented.")
-
         house = action["house"]
-        asset_ids = list(set(obj["assetId"] for obj in house["objects"]))
-        evt = controller.step(action="AssetsInDatabase", assetIds=asset_ids)
-        asset_in_db = evt.metadata["actionReturn"]
-        assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if in_db]
-        not_created_set = set(assets_not_created)
-        not_objeverse_not_created = not_created_set.difference(self.objaverse_uid_set)
-        if len(not_created_set):
-            raise ValueError(
-                f"Invalid asset ids are not in THOR AssetDatabase or part of objeverse: {not_objeverse_not_created}"
-            )
-
-        # TODO when transformed assets are in objaverse download them and create them
-        # objaverse.load_thor_objects
-        # create_assets()
+        asset_ids = get_all_asset_ids_recursively(house["objects"], [])
+        asset_ids_set = set(asset_ids)
+        if not asset_ids_set.issubset(self.last_asset_id_set):
+            controller.step(action="DeleteLRUFromProceduralCache", assetLimit=0)
+            self.last_asset_id_set = set(asset_ids)
+        return create_assets_if_not_exist(
+            controller=controller,
+            asset_ids=asset_ids,
+            asset_directory=self.asset_path,
+            copy_to_dir=os.path.join(controller._build.base_dir, self.target_dir),
+            asset_symlink=self.asset_symlink,
+            stop_if_fail=self.stop_if_fail,
+            load_file_in_unity=self.load_file_in_unity,
+            extension=self.extension,
+            verbose=self.verbose,
+        )
