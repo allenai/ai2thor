@@ -6058,47 +6058,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ChangeFOV(float fieldOfView, string camera = "") {
-            if (fieldOfView > 0 && fieldOfView < 180) {
-                if (string.IsNullOrEmpty(camera)) {
-                    m_Camera.fieldOfView = fieldOfView;
-                    actionFinished(true);
-                } else {
-                    var cameraTuples = new List<(Camera camera, bool isThirdPartyCamera, int id)>()
-                    {
-                        (camera: m_Camera, isThirdPartyCamera: false, id: -1)
-                    }.Concat(
-                        this.agentManager.thirdPartyCameras.Select(
-                            (c, i) => (camera: c, isThirdPartyCamera: true, id: i)
-                        )
-                    );
-                    var matches = cameraTuples;
-                    if (camera != "*") {
-                        matches = cameraTuples.Where(t => t.camera.name == camera);
-                    }
-                    // Debug.Log($"Camera matches: {matches.Count()} {string.Join(", ", matches.Select(m => m.camera.name))}");
-                    if (matches.Count() == 0) {
-                        errorMessage =
-                            $"Camera '{camera}' is not present in the agent, make sure the agent was initialized correctly or camera was added via 'AddThirdPartyCamera'.";
-                        actionFinished(false);
-                    } else {
-                        foreach (var tuple in matches) {
-                            if (tuple.isThirdPartyCamera) {
-                                agentManager.UpdateThirdPartyCamera(
-                                    tuple.id,
-                                    fieldOfView: fieldOfView
-                                );
-                            } else {
-                                tuple.camera.fieldOfView = fieldOfView;
-                            }
-                        }
-                        actionFinished(true);
-                    }
-                }
-            } else {
-                errorMessage = "fov must be in (0, 180) noninclusive.";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-            }
+            throw new InvalidOperationException(
+                "This action is deprecated. Use `UpdateMainCamera` or `UpdateThirdPartyCamera` instead."
+            );
         }
 
         // in case you want to change the timescale
