@@ -12,8 +12,8 @@ Shader "Custom/BarrelDistortion" {
 
           _k1 ("K1 polynomial dist coeff", Range (-8.0, 8.0))  = -0.126
           _k2 ("K2 polynomial dist coeff", Range (-8.0, 8.0))  = 0.004
-          _k3 ("K3 polynomial dist coeff", Range (-25.0, 25.0))  = 0.0
-          _k4 ("K4 polynomial dist coeff", Range (-25.0, 25.0))  = 0.0
+          _k3 ("K3 polynomial dist coeff", Range (-18.0, 18.0))  = 0.0
+          _k4 ("K4 polynomial dist coeff", Range (-18.0, 18.0))  = 0.0
 
          _DistortionIntensityX ("Distort Strength X", Range (0.0, 6.0)) = 1.0
          _DistortionIntensityY ("Distort Strength Y", Range (0.0, 6.0)) = 1.0
@@ -29,10 +29,9 @@ Shader "Custom/BarrelDistortion" {
 
               #pragma vertex vert
              #pragma fragment frag
-             #pragma target 3.0 
              #include "UnityCG.cginc"
 
-            uniform sampler2D _MainTex;
+              uniform sampler2D _MainTex;
              uniform sampler2D _CameraDepthTexture;
              uniform half4 _MainTex_TexelSize;
 
@@ -50,8 +49,6 @@ Shader "Custom/BarrelDistortion" {
              uniform float _k3;
              uniform float _k4;
 
-            //  uniform float4 _ScreenParams;
-
              
             //  uniform float4 _ScreenParams;
             //  uniform float4 _ProjectionParams;
@@ -66,14 +63,12 @@ Shader "Custom/BarrelDistortion" {
              {
                  float4 pos : SV_POSITION;
                  half2 uv : TEXCOORD0;
-                //  float2 clipPos : UNITY_VPOS_TYPE;
              };
 
 
               output vert(input i)
              {
                  output o;
-                //  o.screenPos = i.pos;
                  o.pos = UnityObjectToClipPos(i.pos);
                 //  o.uv = i.uv;
                  o.uv = MultiplyUV(UNITY_MATRIX_TEXTURE0, i.uv);
@@ -91,13 +86,9 @@ Shader "Custom/BarrelDistortion" {
 
               fixed4 frag(output o) : COLOR
              {
-
-                // return float4(o.screenPos.x, 0.0, o.screenPos.y, 1.0);
                 float effect = _LensDistortionStrength;
                 float2 distortionStrengthXY = float2(_DistortionIntensityX, _DistortionIntensityY);
                 float zoom_offset = (1.0 - _ZoomPercent) / 2.0;
-
-                float3x3 k = cam_intrinsics(_fov_y, _ScreenParams.y, _ScreenParams.x);
 
                 float2 centered_uv = o.uv - float2(0.5, 0.5);
                 centered_uv = o.uv*2.0 -  float2(1.0, 1.0);
@@ -144,14 +135,12 @@ Shader "Custom/BarrelDistortion" {
                 // for xydistortion
                 // float2 uvDistorted = distort_uv*2.0 + float2(0.5, 0.5);
 
-            
-
             fixed4 col = tex2D(_MainTex, uvDistorted);
             // Handle out of bound uv
             if (uvDistorted.x < 0 || uvDistorted.x > 1 || uvDistorted.y < 0 || uvDistorted.y > 1) {
                 return _OutOfBoundColour;//uv out of bound so display out of bound color
             } else {
-                return col
+                return col;
             }
 
             // FOR atan radius cutoff
