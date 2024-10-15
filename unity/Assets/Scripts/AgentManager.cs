@@ -1856,20 +1856,24 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         this.agentManagerState = AgentState.Error;
     }
 
-    public ActionFinished SetDistortionShaderParams(float zoomPercent, float k1, float k2, float k3, float k4, float strength = 1.0f, float intensityX = 1.0f, float intensityY = 1.0f) {
-
-        if (this.primaryAgent.imageSynthesis == null) {
+    public ActionFinished SetDistortionShaderParams(bool mainCamera = true, IEnumerable<int> thidPartyCameraIndices = null, float zoomPercent = 1.0f, float k1 = 0.0f, float k2 = 0.0f, float k3 = 0.0f, float k4 = 0.0f, float strength = 1.0f, float intensityX = 1.0f, float intensityY = 1.0f) {
+        
+        IEnumerable<ImageSynthesis> imageSynths = mainCamera ? new List<ImageSynthesis>() {this.primaryAgent.imageSynthesis} : new List<ImageSynthesis>();
+        imageSynths = thidPartyCameraIndices != null ? imageSynths.Concat(this.thirdPartyCameras.Where((cam, i) => thidPartyCameraIndices.Contains(i)).Select(cam => cam.GetComponent<ImageSynthesis>())) : imageSynths;
+        if (imageSynths.Any(x => x == null)) {
             return new ActionFinished(success: false, errorMessage: "No imageSynthesis, make sure you pass 'renderDistortionImage = true' to the agent constructor.");
         }
-        var material = this.primaryAgent.imageSynthesis.distortionMaterial;
-        material.SetFloat("_ZoomPercent", zoomPercent);
-        material.SetFloat("_k1", k1);
-        material.SetFloat("_k2", k2);
-        material.SetFloat("_k3", k3);
-        material.SetFloat("_k4", k4);
-        material.SetFloat("_DistortionIntensityX", intensityX);
-        material.SetFloat("_DistortionIntensityY", intensityY);
-        material.SetFloat("_LensDistortionStrength", strength);
+        foreach (var imageSynthesis in imageSynths) {
+            var material = imageSynthesis.distortionMaterial;
+            material.SetFloat("_ZoomPercent", zoomPercent);
+            material.SetFloat("_k1", k1);
+            material.SetFloat("_k2", k2);
+            material.SetFloat("_k3", k3);
+            material.SetFloat("_k4", k4);
+            material.SetFloat("_DistortionIntensityX", intensityX);
+            material.SetFloat("_DistortionIntensityY", intensityY);
+            material.SetFloat("_LensDistortionStrength", strength);
+        }
         return ActionFinished.Success;
        
     }

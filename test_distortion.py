@@ -68,16 +68,38 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
         )
         print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
         print(f'Error: {evt.metadata["errorMessage"]}')
+
+    
+    addThirdPartyCam = {'action': 'AddThirdPartyCamera', 'agentPositionRelativeCoordinates': True, 'fieldOfView': 139, 'parent': 'agent', 'position': {'x': 0.04, 'y': 0.5560812, 'z': 0.0}, 'rotation': {'x': 30.0, 'y': 120.0, 'z': 0.0}}
+
+    evt = controller.step(**addThirdPartyCam)
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
+    print(f'Error: {evt.metadata["errorMessage"]}')
+
     if distortion:
+        # Good parameters too, for previous frame
+        # controller.step(
+        #     action="SetDistortionShaderParams",
+        #     zoomPercent=0.46,
+        #     k1=1.09,
+        #     k2=1.92,
+        #     k3=3.1,
+        #     k4=1.8,
+        #     intensityX=0.9,
+        #     intensityY=0.97
+        # )
+
         controller.step(
             action="SetDistortionShaderParams",
-            zoomPercent=0.46,
-            k1=1.09,
-            k2=1.92,
-            k3=3.1,
-            k4=1.8,
-            intensityX=0.9,
-            intensityY=0.97
+            mainCamera=True,
+            thidPartyCameraIndices=[0],
+            zoomPercent=0.54,
+            k1=0.5,
+            k2=4.5,
+            k3=-13.1,
+            k4=14.1,
+            intensityX=0.91,
+            intensityY=0.93
         )
 
     xpos = dict(x=0.0, y=0.900992214679718, z=0.0786)
@@ -93,19 +115,40 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
     # controller.step(
     #     {"action": "RotateCameraMount", "degrees": 13, "secondary": False}
     # )
+    cam_param = {
+        "position": {"x": -0.1211464, "y": 0.561659, "z": 0.03892733},
+        "rotation": {"x": 20.0, "y": 0.0, "z": 0.0},
+        "fov": 120,
+        "index": "main",
+    }
     cam_pos = {"x": -0.1211464, "y": 0.561659, "z": 0.03892733}
     cam_rot = {"x": 13.0, "y": 0.0, "z": 0.0}
     event = controller.step(
         action="UpdateMainCamera",
-        position=cam_pos,
-        rotation=cam_rot,
-        fieldOfView=120,
+        position=cam_param["position"],
+        rotation=cam_param["rotation"],
+        fieldOfView=cam_param["fov"],
         agentId=0,
     )
 
-    InteractiveControllerPrompt.write_image(controller.last_event, image_dir, "", semantic_segmentation_frame=True, depth_frame=True, color_frame=True, distortion_frame=distortion)
+    print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
+    print(f'Error: {evt.metadata["errorMessage"]}')
+
+    InteractiveControllerPrompt.write_image(controller.last_event, image_dir, "", semantic_segmentation_frame=True, depth_frame=True, color_frame=True, third_party_camera_frames=True, distortion_frame=distortion)
     # input()
 
+# def reset_agent_embodiment(self, controller, main_camera_params, vertical_fov):
+#     position = main_camera_params["position"].copy()
+#     rotation = main_camera_params["rotation"].copy()
+#     fov = vertical_fov
+
+#     event = controller.step(
+#         action="UpdateMainCamera",
+#         position=position,
+#         rotation=rotation,
+#         fieldOfView=fov,
+#         agentId=0,
+#     )
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

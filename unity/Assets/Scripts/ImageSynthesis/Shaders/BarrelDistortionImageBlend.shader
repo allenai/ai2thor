@@ -20,6 +20,12 @@ Shader "Custom/BarrelDistortion" {
           
          
          _OutOfBoundColour ("Outline Color", Color) = (0.0, 0.0, 0.0, 1.0)
+
+         _fov_y ("Vertical Fov", Range (-360.0, 360.0)) = 0.0
+
+         _Virtual_To_Real_Blend ("Blend From Virtual To Real", Range (0.0, 1.0)) = 0.0
+
+         _RealImage ("Real Image To Bleand", 2D) = "white" {}
      }
      SubShader
      {
@@ -33,6 +39,7 @@ Shader "Custom/BarrelDistortion" {
              #include "UnityCG.cginc"
 
             uniform sampler2D _MainTex;
+            uniform sampler2D _RealImage;
              uniform sampler2D _CameraDepthTexture;
              uniform half4 _MainTex_TexelSize;
 
@@ -49,6 +56,10 @@ Shader "Custom/BarrelDistortion" {
              uniform float _k2;
              uniform float _k3;
              uniform float _k4;
+
+             uniform float _fov_y;
+
+             uniform float _Virtual_To_Real_Blend;
 
             //  uniform float4 _ScreenParams;
 
@@ -87,6 +98,16 @@ Shader "Custom/BarrelDistortion" {
                 //     o.uv.y = 1 - o.uv.y;
 
                   return o;
+             }
+
+             float3x3 cam_intrinsics(float fov_y, float frame_height, float frame_width) {
+                float focal_length = 0.5 * frame_height / tan((UNITY_PI / 180.0) *(fov_y / 2));
+                float f_x = focal_length;
+                float f_y = f_x;
+
+                float c_x = frame_width / 2;
+                float c_y = frame_height / 2;
+                return float3x3(float3(f_x, 0, c_x), float3(0, f_y, c_y), float3(0, 0, 1));
              }
 
               fixed4 frag(output o) : COLOR
@@ -151,7 +172,7 @@ Shader "Custom/BarrelDistortion" {
             if (uvDistorted.x < 0 || uvDistorted.x > 1 || uvDistorted.y < 0 || uvDistorted.y > 1) {
                 return _OutOfBoundColour;//uv out of bound so display out of bound color
             } else {
-                return col
+                return lerp(col, tex2D(_RealImage, o.uv), _Virtual_To_Real_Blend);
             }
 
             // FOR atan radius cutoff

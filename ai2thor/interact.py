@@ -229,6 +229,7 @@ class InteractiveControllerPrompt(object):
         instance_segmentation_frame=False,
         depth_frame=False,
         distortion_frame=False,
+        third_party_camera_frames=False,
         metadata=False,
     ):
         def save_image(name, image, flip_br=False):
@@ -297,6 +298,22 @@ class InteractiveControllerPrompt(object):
                     name.strip(".png").strip("./") if image_dir == "." else name.strip(".png"),
                     x.astype(np.float32),
                 ),
+            ),
+            (
+                "third_party_camera_frames",
+                third_party_camera_frames,
+                lambda event: event.third_party_camera_frames,
+                lambda x: x,
+                lambda name, images: [save_image(name, image, flip_br=True) for  (i, image) in zip(range(len(images)), images)]
+                   
+            ),
+            (
+                "third_party_distortion_frames",
+                third_party_camera_frames and distortion_frame,
+                lambda event: event.third_party_distortion_frames,
+                lambda x: x,
+                lambda name, images: [save_image(name, image, flip_br=True) for  (i, image) in zip(range(len(images)), images)]
+                   
             ),
             (
                 "metadata",

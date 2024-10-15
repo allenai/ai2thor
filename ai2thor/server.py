@@ -459,6 +459,7 @@ class Event:
         self.third_party_instance_masks = []
         self.third_party_class_masks = []
         self.third_party_camera_frames = []
+        self.third_party_distortion_frames = []
         self.third_party_semantic_segmentation_frames = []
         self.third_party_instance_segmentation_frames = []
         self.third_party_depth_frames = []

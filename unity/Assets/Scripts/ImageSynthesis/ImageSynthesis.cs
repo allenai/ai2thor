@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -489,6 +490,22 @@ public class ImageSynthesis : MonoBehaviour {
         if (!distortionMaterial || distortionMaterial.shader != distortionShader) {
             distortionMaterial = new Material(distortionShader);
         }
+        var distortionPass = capturePasses.First(x => x.name == "_distortion");
+
+        distortionMaterial.SetFloat("_fov_y", distortionPass.camera.fieldOfView);
+
+        Texture2D realTex = null;
+        byte[] fileData;
+        var filePath =  Application.dataPath + "/real_camera/" + "frame_1.png";
+
+        if (File.Exists(filePath)) 	{
+            fileData = File.ReadAllBytes(filePath);
+            realTex = new Texture2D(2, 2);
+            realTex.LoadImage(fileData); //..this will auto-resize the texture dimensions.
+
+             distortionMaterial.SetTexture("_RealImage", realTex);
+        }
+
 
         // capturePasses [1].camera.farClipPlane = 100;
         // SetupCameraWithReplacementShader(capturePasses[1].camera, uberReplacementShader, ReplacelementModes.DepthMultichannel);
