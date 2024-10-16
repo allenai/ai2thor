@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using Thor.Rendering;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 // @TODO:
 // . support custom color wheels in optical flow via lookup textures
@@ -76,7 +78,7 @@ using UnityEngine.Rendering;
 
 //         var prevActiveRT = RenderTexture.active;
 //         var prevCameraRT = cam.targetTexture;
-        
+
 
 //         // Debug.Log($"prevActiveRT {prevActiveRT} prevCameraRT {prevCameraRT} renderRT {renderRT} mainCam target {capturePasses[0].camera.targetTexture} active {capturePasses[0].camera.activeTexture}");
 
@@ -192,7 +194,7 @@ public class ImageSynthesis : MonoBehaviour {
     private CapturePass[] capturePasses = new CapturePass[]
     {
         new CapturePass() { name = "_img" },
-        new CapturePass() { name = "_depth" },
+        new CapturePass() { name = "_depth" , noCamera = true},
         new CapturePass() { name = "_id", supportsAntialiasing = false },
         new CapturePass() { name = "_class", supportsAntialiasing = false },
         new CapturePass() { name = "_normals" },
@@ -203,7 +205,7 @@ public class ImageSynthesis : MonoBehaviour {
             needsRescale = true
         }, // (see issue with Motion Vectors in @KNOWN ISSUES)
 
-        new CapturePass() { name = "_distortion" }
+        new CapturePass() { name = "_distortion", noCamera=true }
 
         // new CapturePass() { name = "_position" },
     };
@@ -214,11 +216,17 @@ public class ImageSynthesis : MonoBehaviour {
         public bool supportsAntialiasing;
         public bool needsRescale;
 
+        public bool noCamera;
+
+        public RenderTexture renderTexture; 
+
         public CapturePass(string name_) {
             name = name_;
             supportsAntialiasing = true;
             needsRescale = false;
             camera = null;
+            noCamera = false;
+            renderTexture = null;
         }
 
         // impl
@@ -311,9 +319,16 @@ public class ImageSynthesis : MonoBehaviour {
             opticalFlowSensitivity = 50.0f;
 
             // use real camera to capture final image
+            var mainCamera = GetComponent<Camera>();
             capturePasses[0].camera = GetComponent<Camera>();
             for (int q = 1; q < capturePasses.Length; q++) {
-                capturePasses[q].camera = CreateHiddenCamera(capturePasses[q].name);
+                if (!capturePasses[q].noCamera) {
+                    capturePasses[q].camera = CreateHiddenCamera(capturePasses[q].name);
+                }
+                else {
+                    capturePasses[q].camera = mainCamera;
+
+                }
             }
             md5 = System.Security.Cryptography.MD5.Create();
 
@@ -403,6 +418,42 @@ public class ImageSynthesis : MonoBehaviour {
         cam.depthTextureMode = depthTextureMode;
     }
 
+    private static void SetupCameraWithPostShaders(
+        // Texture source,
+        RenderTexture renderTexture,
+        Camera cam,
+        IEnumerable<(Material, CapturePass)> materials,
+        // Material screenCopyMaterial,
+        DepthTextureMode depthTextureMode = DepthTextureMode.None
+    ) {
+        var cb = new CommandBuffer();
+        // cb.Blit(BuiltinRenderTextureType.CurrentActive, BuiltinRenderTextureType.CameraTarget, material);
+        // cam.AddCommandBuffer(CameraEvent.AfterImageEffects, cb);
+
+        
+        // int screenCopyID = Shader.PropertyToID("_ScreenCopyTexture");
+        // cb.GetTemporaryRT()
+        // cb.GetTemporaryRT(screenCopyID, -1, -1, 0, FilterMode.Bilinear);
+        // cb.Blit(BuiltinRenderTextureType.CameraTarget, screenCopyID);
+        // Copy from tmp source to RT.
+
+        // int screenCopyID = Shader.PropertyToID("_MainTex");
+        // cb.GetTemporaryRT(screenCopyID, -1, -1, 0, FilterMode.Bilinear);
+        // cb.Blit(BuiltinRenderTextureType.CurrentActive, screenCopyID);
+
+        foreach (var (mat, pass) in materials) {
+            cb.Blit(BuiltinRenderTextureType.CameraTarget, pass.renderTexture, mat);
+        }
+        
+        
+        // cb.ReleaseTemporaryRT(screenCopyID);
+
+        cam.AddCommandBuffer(CameraEvent.BeforeImageEffects, cb);
+        // cb.GetTemporaryRT()
+        cam.depthTextureMode = depthTextureMode;
+        // cam.targetTexture = renderTexture;
+    }
+
     private static void SetupCameraWithPostShader2(
         // Texture source,
         RenderTexture renderTexture,
@@ -425,6 +476,7 @@ public class ImageSynthesis : MonoBehaviour {
         int screenCopyID = Shader.PropertyToID("_MainTex");
         cb.GetTemporaryRT(screenCopyID, -1, -1, 0, FilterMode.Bilinear);
         cb.Blit(BuiltinRenderTextureType.CurrentActive, screenCopyID);
+        // Debug.Log("----------- SetupCameraWithPostShader2 " + material);
         cb.Blit(screenCopyID, BuiltinRenderTextureType.CameraTarget, material);
         
         cb.ReleaseTemporaryRT(screenCopyID);
@@ -457,12 +509,13 @@ public class ImageSynthesis : MonoBehaviour {
         // mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
 
         foreach (var pass in capturePasses) {
-            if (pass.camera == mainCamera) {
+            pass.camera.RemoveAllCommandBuffers();
+            if (pass.camera == mainCamera) {            
                 continue;
             }
 
             // cleanup capturing camera
-            pass.camera.RemoveAllCommandBuffers();
+            // pass.camera.RemoveAllCommandBuffers();
 
             // copy all "main" camera parameters into capturing camera
             pass.camera.CopyFrom(mainCamera);
@@ -514,12 +567,22 @@ public class ImageSynthesis : MonoBehaviour {
         {
             renderTexture.Release();
         }
+
+        for (int i = 0; i < capturePasses.Length; i++) { 
+            if (capturePasses[i].noCamera) {
+                if (capturePasses[i].renderTexture != null && capturePasses[i].renderTexture.IsCreated()) {
+                    capturePasses[i].renderTexture.Release();
+                    
+                }
+                capturePasses[i].renderTexture = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+            }
+        }
       
         renderTexture = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
 
-        SetupCameraWithPostShader2(renderTexture, capturePasses[1].camera, depthMaterial,
-        //  screenCopyMaterial: screenCopyMaterial,
-          DepthTextureMode.Depth);
+        // SetupCameraWithPostShader2(renderTexture, capturePasses[1].camera, depthMaterial,
+        // //  screenCopyMaterial: screenCopyMaterial,
+        //   DepthTextureMode.Depth);
 
         SetupCameraWithReplacementShader(
             capturePasses[2].camera,
@@ -536,17 +599,30 @@ public class ImageSynthesis : MonoBehaviour {
             uberReplacementShader,
             ReplacelementModes.Normals
         );
-        SetupCameraWithPostShader2(
+        // SetupCameraWithPostShader2(
+        //     renderTexture,
+        //     capturePasses[5].camera,
+        //     opticalFlowMaterial,
+        //     // screenCopyMaterial: screenCopyMaterial,
+        //     DepthTextureMode.Depth | DepthTextureMode.MotionVectors
+        // );
+
+        //  SetupCameraWithPostShader2(renderTexture, capturePasses[6].camera, distortionMaterial,
+        // //  screenCopyMaterial: screenCopyMaterial,
+        //   DepthTextureMode.Depth);
+
+        SetupCameraWithPostShaders(
             renderTexture,
-            capturePasses[5].camera,
-            opticalFlowMaterial,
-            // screenCopyMaterial: screenCopyMaterial,
+            capturePasses[0].camera, // main camera
+            new List<(Material, CapturePass)>() {
+                (depthMaterial, capturePasses[1]),
+                // opticalFlowMaterial // unused so disabling 
+                (distortionMaterial, capturePasses[6])
+            },
             DepthTextureMode.Depth | DepthTextureMode.MotionVectors
         );
 
-         SetupCameraWithPostShader2(renderTexture, capturePasses[6].camera, distortionMaterial,
-        //  screenCopyMaterial: screenCopyMaterial,
-          DepthTextureMode.Depth);
+        
 
 #if UNITY_EDITOR
         for (int i = 0; i < capturePasses.Length; i++) {
@@ -671,6 +747,7 @@ public class ImageSynthesis : MonoBehaviour {
         foreach (var pass in capturePasses) {
             if (pass.name == passName) {
                 return Encode(
+                    pass,
                     pass.camera,
                     width,
                     height,
@@ -725,6 +802,7 @@ public class ImageSynthesis : MonoBehaviour {
     ) {
         foreach (var pass in capturePasses) {
             Save(
+                pass,
                 pass.camera,
                 filenameWithoutExtension + pass.name + filenameExtension,
                 width,
@@ -736,6 +814,7 @@ public class ImageSynthesis : MonoBehaviour {
     }
 
     private byte[] Encode(
+        CapturePass pass,
         Camera cam,
         int width,
         int height,
@@ -746,46 +825,57 @@ public class ImageSynthesis : MonoBehaviour {
         RenderTextureReadWrite textureReadMode = RenderTextureReadWrite.Default
     ) {
 
-        Debug.Log($"--------Encode");
-        var mainCamera = GetComponent<Camera>();
-        var depth = 32;
-        var readWrite = textureReadMode;
-        var antiAliasing = (supportsAntialiasing) ? Mathf.Max(1, QualitySettings.antiAliasing) : 1;
-
-        var finalRT = RenderTexture.GetTemporary(
-            width,
-            height,
-            depth,
-            format,
-            readWrite,
-            antiAliasing
-        );
-        var renderRT =
-            (!needsRescale)
-                ? finalRT
-                : RenderTexture.GetTemporary(
-                    mainCamera.pixelWidth,
-                    mainCamera.pixelHeight,
-                    depth,
-                    format,
-                    readWrite,
-                    antiAliasing
-                );
-        if (tex == null) {
-            tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
-        }
-
         var prevActiveRT = RenderTexture.active;
         var prevCameraRT = cam.targetTexture;
+        RenderTexture finalRT = null;
+        if (tex == null) {
+                tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            }
+        // Debug.Log($"--------Encode for pass {pass.name} camera {cam.gameObject.name} useRenderTexture {pass.noCamera}");
+        if (!pass.noCamera) {
+
         
+            
+            var mainCamera = GetComponent<Camera>();
+            var depth = 32;
+            var readWrite = textureReadMode;
+            var antiAliasing = (supportsAntialiasing) ? Mathf.Max(1, QualitySettings.antiAliasing) : 1;
 
-        Debug.Log($"prevActiveRT {prevActiveRT} prevCameraRT {prevCameraRT} renderRT {renderRT} mainCam target {capturePasses[0].camera.targetTexture} active {capturePasses[0].camera.activeTexture}");
+            finalRT = RenderTexture.GetTemporary(
+                width,
+                height,
+                depth,
+                format,
+                readWrite,
+                antiAliasing
+            );
+            var renderRT =
+                (!needsRescale)
+                    ? finalRT
+                    : RenderTexture.GetTemporary(
+                        mainCamera.pixelWidth,
+                        mainCamera.pixelHeight,
+                        depth,
+                        format,
+                        readWrite,
+                        antiAliasing
+                    );
+            
 
-        // render to offscreen texture (readonly from CPU side)
-        RenderTexture.active = renderRT;
-        cam.targetTexture = renderRT;
+        
+            
 
-        cam.Render();
+            // Debug.Log($"prevActiveRT {prevActiveRT} prevCameraRT {prevCameraRT} renderRT {renderRT} mainCam target {capturePasses[0].camera.targetTexture} active {capturePasses[0].camera.activeTexture}");
+
+            // render to offscreen texture (readonly from CPU side)
+            RenderTexture.active = renderRT;
+            cam.targetTexture = renderRT;
+
+            cam.Render();
+        }
+        else {
+            RenderTexture.active = pass.renderTexture;
+        }
 
         // if (needsRescale) {
         //     // blit to rescale (see issue with Motion Vectors in @KNOWN ISSUES)
@@ -797,7 +887,17 @@ public class ImageSynthesis : MonoBehaviour {
         // read offsreen texture contents into the CPU readable texture
         float startTime = Time.realtimeSinceStartup;
 
-        tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+        // if (pass.noCamera) {
+        //     // pass.renderTexture.re
+        //     Debug.Log($"------- Reading render texture for {pass.name} rt {pass.renderTexture} null {pass.renderTexture== null} ");
+        //     // Graphics.CopyTexture(pass.renderTexture, 0, 0, 0, tex.width, tex.widt, 1, currenttexture, 0, 0, 0, 0);
+        //     Graphics.CopyTexture(pass.renderTexture, tex);
+        // }
+        // else {
+            // Debug.Log($"------- ReadPixels");
+            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+        // }
+        
         // tex.Apply();
         // Debug.Log("imageSynth encode time" + (Time.realtimeSinceStartup - startTime));
 
@@ -819,11 +919,14 @@ public class ImageSynthesis : MonoBehaviour {
         RenderTexture.active = prevActiveRT;
 
         // UnityEngine.Object.Destroy(tex);
-        RenderTexture.ReleaseTemporary(finalRT);
+        if (finalRT != null) {
+            RenderTexture.ReleaseTemporary(finalRT);
+        }
         return bytes;
     }
 
     private void Save(
+        CapturePass pass,
         Camera cam,
         string filename,
         int width,
@@ -831,7 +934,7 @@ public class ImageSynthesis : MonoBehaviour {
         bool supportsAntialiasing,
         bool needsRescale
     ) {
-        byte[] bytes = Encode(cam, width, height, supportsAntialiasing, needsRescale);
+        byte[] bytes = Encode(pass, cam, width, height, supportsAntialiasing, needsRescale);
         File.WriteAllBytes(filename, bytes);
     }
 
