@@ -60,10 +60,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera.GetComponent<PostProcessVolume>().enabled = true;
             m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
-            // set camera stand/crouch local positions for Tall mode
-            standingLocalCameraPosition = m_Camera.transform.localPosition;
-            crouchingLocalCameraPosition = m_Camera.transform.localPosition;
-
             // set up main camera parameters
             m_Camera.fieldOfView = 65f;
 
@@ -114,6 +110,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (setSecondaryParams.GetValueOrDefault()) {
                 CameraParameters.setCameraParameters(fp_camera_2, secondaryCameraParams);
             }
+
+            // set camera stand/crouch local positions for stretch mode even though they arent used
+            standingLocalCameraPosition = m_Camera.transform.localPosition;
+            crouchingLocalCameraPosition = m_Camera.transform.localPosition;
 
             // enable stretch arm component
             Debug.Log("initializing stretch arm");

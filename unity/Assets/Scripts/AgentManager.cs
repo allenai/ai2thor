@@ -320,7 +320,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 : action.dynamicServerAction.agentInitializationParams
         );
         Debug.Log(
-            $"Initialize of AgentController. lastActionSuccess: {primaryAgent.lastActionSuccess}, errorMessage: {primaryAgent.errorMessage}, actionReturn: {primaryAgent.actionReturn}, agentState: {primaryAgent.agentState}"
+            $"Initialize of AgentController.lastAction: {primaryAgent.lastAction} lastActionSuccess: {primaryAgent.lastActionSuccess}, errorMessage: {primaryAgent.errorMessage}, actionReturn: {primaryAgent.actionReturn}, agentState: {primaryAgent.agentState}"
         );
         Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         if (action.targetFrameRate > 0) {
@@ -1310,17 +1310,22 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 if (camera.transform.parent != null) {
                     cMetadata.parentObjectName = camera.transform.parent.name;
 
-                    cMetadata.parentRelativeThirdPartyCameraPosition =
-                        camera.transform.localPosition;
+                    cMetadata.parentRelativeThirdPartyCameraPosition = camera
+                        .transform
+                        .localPosition;
 
                     //get third party camera rotation as quaternion in parent space
-                    cMetadata.parentRelativeThirdPartyCameraRotation =
-                        camera.transform.localEulerAngles;
+                    cMetadata.parentRelativeThirdPartyCameraRotation = camera
+                        .transform
+                        .localEulerAngles;
                 } else {
                     //if not parented, default position and rotation to world coordinate space
                     cMetadata.parentObjectName = "";
                     cMetadata.parentRelativeThirdPartyCameraPosition = camera.transform.position;
-                    cMetadata.parentRelativeThirdPartyCameraRotation = camera.transform.rotation.eulerAngles;
+                    cMetadata.parentRelativeThirdPartyCameraRotation = camera
+                        .transform
+                        .rotation
+                        .eulerAngles;
                 }
 
                 //if this camera is part of the agent's hierarchy at all, get agent relative info
@@ -1337,7 +1342,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                         agentSpaceCameraRotationAsQuaternion.eulerAngles;
                 } else {
                     //if this third party camera is not a child of the agent, we don't need agent-relative coordinates
-                    //Note: We don't default this to world space because in the case of a multi-agent scenario, the agent 
+                    //Note: We don't default this to world space because in the case of a multi-agent scenario, the agent
                     //to be relative to is ambiguous and UHHHHH
                     cMetadata.agentRelativeThirdPartyCameraPosition = null;
                     cMetadata.agentRelativeThirdPartyCameraRotation = null;

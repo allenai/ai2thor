@@ -1418,16 +1418,17 @@ def test_teleport_stretch(controller):
     agent = "stretch"
 
     event = controller.reset(agentMode=agent)
-    assert event.metadata["agent"]["isStanding"] is False, agent + " cannot stand!"
+    assert event.metadata["agent"]["isStanding"] is None, (
+        agent + " cannot stand so this should be None/null!"
+    )
 
-    # Only degrees of freedom on the locobot
     for action in ["Teleport", "TeleportFull"]:
         event = controller.step(
             action=action,
             position=dict(x=-1.5, y=0.9, z=-1.5),
             rotation=dict(x=0, y=90, z=0),
             horizon=30,
-            standing=True,
+            standing=None,
         )
 
         print(f"Error Message: {event.metadata['errorMessage']}")
