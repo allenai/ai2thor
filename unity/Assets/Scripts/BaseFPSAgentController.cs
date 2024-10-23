@@ -512,6 +512,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected virtual void resumePhysics() { }
 
+        public ActionFinished ActivateAniMode(string textureNameInResources = "Misc/ani") {
+            Texture2D newTexture = Resources.Load<Texture2D>(textureNameInResources);
+
+            if (newTexture != null) {
+                // Get all renderers in the scene
+                Renderer[] allRenderers = UnityEngine.Object.FindObjectsOfType<Renderer>();
+
+                // Iterate over all renderers
+                foreach (Renderer rend in allRenderers) {
+                    // Get the materials of the renderer
+                    Material[] materials = rend.materials;
+
+                    // Iterate over each material and assign the new texture
+                    foreach (Material mat in materials) {
+                        if (mat.HasProperty("_MainTex")) // Check if the material has a texture property
+                        {
+                            mat.SetTexture("_MainTex", newTexture);
+                        }
+                    }
+                }
+            } else {
+                errorMessage = "Texture not found in Resources: " + textureNameInResources;
+                return new ActionFinished { success = false, actionReturn = errorMessage };
+            }
+
+            return new ActionFinished { success = true, actionReturn = "Ani Mode is Go. This is not a drill. Remember your training!" };
+        }
+
         protected virtual CapsuleData GetAgentCapsule() {
             var cc = GetComponent<CapsuleCollider>();
             return new CapsuleData {

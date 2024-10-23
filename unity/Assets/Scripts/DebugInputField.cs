@@ -2113,6 +2113,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         );
                     break;
 
+                case "activateanimode":
+                    CurrentActiveController()
+                        .ProcessControlCommand(
+                            new Dictionary<string, object>() { ["action"] = "ActivateAniMode" }
+                        );
+                    break;
+
                 case "light": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "RandomizeLighting",
