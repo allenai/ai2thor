@@ -60,8 +60,9 @@ public class DownloadThorAssets : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //Directory.CreateDirectory(Path.Combine(savePath, "Textures"));
-
+        // TODO: this is not creating a directory. but it must be created for materials/textures to be properly saved
+        //Directory.CreateDirectory(Path.Combine(savePath, "Textures")); 
+        
         // get all assets and export obj
         GatherGameObjectsFromPrefabsAndSave(assetPath, applyBoundingBox, saveSubMeshes, saveSubMeshTransform);
         //GatherGameObjectsFromPrefabsAndSave(doorAssetPath, false, true);
@@ -111,7 +112,7 @@ public class DownloadThorAssets : MonoBehaviour
                         matdict.Add("metallic", m.GetFloat("_Metallic").ToString());  // shininess ? _GlossyReflectons (Glossy Reflections) or _Metallic
                         //matdict.Add("reflection", m.GetFloat("_GlossyReflectons").ToString());  // shininess ? _GlossyReflectons (Glossy Reflections) or _Metallic
                         matdict.Add("albedo_rgba", m.color.r.ToString() + " " + m.color.g.ToString() + " " + m.color.b.ToString() + " " + m.color.a.ToString());
-                        Debug.Log(m.color.r.ToString() + " " + m.color.g.ToString() + " " + m.color.b.ToString() + " " + m.color.a.ToString());
+                        //Debug.Log(m.color.r.ToString() + " " + m.color.g.ToString() + " " + m.color.b.ToString() + " " + m.color.a.ToString());
 
                         Mat2Texture.Add(m.name, matdict);
                         Debug.Log("Adding " + m.name);
@@ -207,10 +208,18 @@ public class DownloadThorAssets : MonoBehaviour
         Debug.Log("saving mesh1" + center.ToString());
 
         SaveMeshes(relativeExportPath, meshFilters, center, applyBoundingBox, saveSubMeshes, saveSubMeshTransform);
+        if(saveSubMeshes)
+        {
+            // also save combined mesh
+            SaveMeshes(relativeExportPath, meshFilters, center, applyBoundingBox, !saveSubMeshes, false);
+        }
+
         Debug.Log("saving mesh2");
 
         if (!skipMaterialExport)
         {
+            Debug.Log("saving material");
+
             SaveMaterials(relativeExportPath);
             allMaterials.Clear();
         }
@@ -225,6 +234,8 @@ public class DownloadThorAssets : MonoBehaviour
         StringBuilder sbMaterials = new StringBuilder();
         foreach (KeyValuePair<string, Material> entry in allMaterials)
         {
+            Debug.Log("saving material 1");
+
             sbMaterials.Append(MaterialToString(entry.Value));
             sbMaterials.AppendLine();
         }
@@ -243,7 +254,6 @@ public class DownloadThorAssets : MonoBehaviour
         StringBuilder sb = new StringBuilder();
         sb.AppendLine("mtllib " + baseFileName + ".mtl");
         int lastIndex = 0;
-    
 
         Dictionary<string, Dictionary<string, string>> mesh_transforms = new Dictionary<string, Dictionary<string, string>>();
         mesh_transforms["bbox_center"] = new Dictionary<string, string>();
@@ -350,7 +360,7 @@ public class DownloadThorAssets : MonoBehaviour
                     v = MultiplyVec3s(v, mf.gameObject.transform.lossyScale);
                 }
                 
-                if (!saveSubMeshes) //true) //applyRotation)
+                if (!applyBoundingBox) //true) //applyRotation)
                 {
   
                     v = RotateAroundPoint(v, Vector3.zero, mf.gameObject.transform.rotation);
@@ -358,7 +368,7 @@ public class DownloadThorAssets : MonoBehaviour
 
                 }
 
-                if (!saveSubMeshes) //true) //applyPosition)
+                if (!applyBoundingBox) //true) //applyPosition)
                 {
                     v += mf.gameObject.transform.position;
                     //v += mf.gameObject.transform.localPosition;
@@ -443,8 +453,9 @@ public class DownloadThorAssets : MonoBehaviour
             if(saveSubMeshes)
             {
                 //write to disk
-                Debug.Log("writing to disk: " + Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + "_" + i.ToString() + ".obj")));
-                System.IO.File.WriteAllText( Path.Combine(savePath,  Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + "_" + i.ToString() + ".obj")), sb.ToString());
+                Directory.CreateDirectory(Path.Combine(savePath, Path.GetDirectoryName(relativeExportPath), baseFileName));
+                Debug.Log("writing to disk: " + Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName, baseFileName + "_" + i.ToString() + ".obj")));
+                System.IO.File.WriteAllText( Path.Combine(savePath,  Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName, baseFileName + "_" + i.ToString() + ".obj")), sb.ToString());
                 Debug.Log("Write to disk done");
             }
 
@@ -455,7 +466,7 @@ public class DownloadThorAssets : MonoBehaviour
         if (skipMeshExport)
             return;
 
-        if(!saveSubMeshes)
+        if(true) //!saveSubMeshes)
         {
             //write to disk
             Debug.Log("writing to disk: " + Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".obj")));
