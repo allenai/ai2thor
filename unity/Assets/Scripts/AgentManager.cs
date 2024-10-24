@@ -1785,6 +1785,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 || this.renderNormalsImage
             ) {
                 updateImageSynthesis(true);
+                // Call with flags
                 updateThirdPartyCameraImageSynthesis(true);
             }
 

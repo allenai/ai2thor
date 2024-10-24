@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
-// using Thor.Rendering;
+using Thor.Rendering;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
@@ -277,7 +277,69 @@ public class ImageSynthesis : MonoBehaviour {
 
     public Texture2D tex;
 
+    private Dictionary<string, ICapturePass> availablePasses;
+
+    private Dictionary<string, ICapturePass> activePasses;
+
     public void OnEnable() {
+
+
+        // ICapturePass[] passes = new ICapturePass[] {
+            
+        // };
+
+     
+
+        //   new CapturePass() { name = "_img" },
+        // new CapturePass() { name =  , noCamera = true},
+        // new CapturePass() { name = "_id", supportsAntialiasing = false },
+        // new CapturePass() { name = "_class", supportsAntialiasing = false },
+        // new CapturePass() { name = "_normals" },
+        // new CapturePass()
+        // {
+        //     name = "_flow",
+        //     supportsAntialiasing = false,
+        //     needsRescale = true
+        // }, // (see issue with Motion Vectors in @KNOWN ISSUES)
+
+        // new CapturePass() { name = "_distortion", noCamera=true }
+
+        // var camera = GetComponent<Camera>();
+        // var antiAliasLevel = 1;
+        // var mainPass = new MultiCapture("_img", camera, new List<RenderToTexture>() {});
+        // var dPass = new RenderToTexture(
+        //     name: "_depth", camera: camera, antiAliasLevel: antiAliasLevel, shaderName: "Hidden/DepthBW"
+        // );
+
+        // var distPass = new RenderToTexture(
+        //     name: "_distortion", camera: camera, antiAliasLevel: antiAliasLevel, shaderName: "Custom/BarrelDistortion"
+        // );
+
+        // var idPass = new ReplacementShaderCapture(
+        //     name: "_id", cameraParent: this.transform, replacementMode: ReplacelementMode.ObjectId, antiAliasLevel: antiAliasLevel, shaderName: "Hidden/UberReplacement"
+        // );
+
+        // var classPass = new ReplacementShaderCapture(
+        //     name: "_class", cameraParent: this.transform, replacementMode: ReplacelementMode.CatergoryId, antiAliasLevel: antiAliasLevel, shaderName: "Hidden/UberReplacement"
+        // );
+
+    //     private static void SetupCameraWithReplacementShader(
+    //     Camera cam,
+    //     Shader shader,
+    //     ReplacelementModes mode,
+    //     Color clearColor
+    // ) {
+    //     var cb = new CommandBuffer();
+    //     cb.SetGlobalFloat("_OutputMode", (int)mode); // @TODO: CommandBuffer is missing SetGlobalInt() method
+    //     cam.renderingPath = RenderingPath.Forward;
+    //     cam.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, cb);
+    //     cam.AddCommandBuffer(CameraEvent.BeforeFinalPass, cb);
+    //     cam.SetReplacementShader(shader, "");
+    //     cam.backgroundColor = clearColor;
+    //     cam.clearFlags = CameraClearFlags.SolidColor;
+    // }
+
+
 
         // RenderCapture s;
         // This initialization code MUST live in OnEnable and not Start as we instantiate ThirdPartyCameras
@@ -574,7 +636,11 @@ public class ImageSynthesis : MonoBehaviour {
                     capturePasses[i].renderTexture.Release();
                     
                 }
-                capturePasses[i].renderTexture = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+                var format = RenderTextureFormat.ARGB32;
+                // if (capturePasses[i].name == "_depth") {
+                //     format = RenderTextureFormat.Depth;
+                // }
+                capturePasses[i].renderTexture = new RenderTexture(Screen.width, Screen.height, 24, format, RenderTextureReadWrite.Default);
             }
         }
       
