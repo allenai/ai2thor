@@ -12,9 +12,10 @@ public class DownloadThorAssets : MonoBehaviour
     public string assetPath = "Assets/Physics/SimObjsPhysics";
     public string materialPath = "Assets/Resources/QuickMaterials";
     //public string doorAssetPath = "Assets/Physics/SimObjsPhysics/ManipulaTHOR Objects/Doorways/Prefabs";
-    public bool applyBoundingBox = false;
+    bool applyBoundingBox = false; // TODO: should always false
     public bool saveSubMeshes = true;
     public bool saveSubMeshTransform = true;
+    public bool saveCombinedSubmeshes = false;
 
     Dictionary<string, Material> allMaterials = new Dictionary<string, Material>();
     Dictionary<string, Dictionary<string, string>> Mat2Texture = new Dictionary<string, Dictionary<string, string>>();
@@ -207,12 +208,12 @@ public class DownloadThorAssets : MonoBehaviour
     
         Debug.Log("saving mesh1" + center.ToString());
 
-        SaveMeshes(relativeExportPath, meshFilters, center, applyBoundingBox, saveSubMeshes, saveSubMeshTransform);
-        if(saveSubMeshes)
+        //SaveMeshes(relativeExportPath, meshFilters, center, applyBoundingBox, saveSubMeshes, saveSubMeshTransform, false);    
+        if(saveCombinedSubmeshes)
         {
-            // also save combined mesh
-            SaveMeshes(relativeExportPath, meshFilters, center, applyBoundingBox, !saveSubMeshes, false);
+            SaveMeshes(relativeExportPath, meshFilters, center, applyBoundingBox, saveSubMeshes, saveSubMeshTransform, saveCombinedSubmeshes);
         }
+    
 
         Debug.Log("saving mesh2");
 
@@ -245,7 +246,7 @@ public class DownloadThorAssets : MonoBehaviour
         print("material saved");
     }
 
-    void SaveMeshes(string relativeExportPath, MeshFilter[] meshFilters, Vector3 center, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false)
+    void SaveMeshes(string relativeExportPath, MeshFilter[] meshFilters, Vector3 center, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false, bool saveCombinedSubmeshes=false)
     {
         Debug.Log("saving mesh");
 
@@ -260,7 +261,7 @@ public class DownloadThorAssets : MonoBehaviour
         mesh_transforms["bbox_center"]["position"] = center.ToString("0.00000");
         for(int i = 0; i < meshFilters.Length; i++)
         {
-            if(saveSubMeshes)
+            if(!saveCombinedSubmeshes & saveSubMeshes)
             {
                 sb = new StringBuilder();
                 sb.AppendLine("mtllib " + baseFileName + ".mtl");
@@ -283,7 +284,6 @@ public class DownloadThorAssets : MonoBehaviour
             mesh_transforms[meshName + "_" +i.ToString()] = new Dictionary<string, string>();
             //mesh_transforms[meshName + "_" +i.ToString()]["position"] = mf.gameObject.transform.localPosition.ToString("0.00000");
             //mesh_transforms[meshName + "_" +i.ToString()]["rotation"] = mf.gameObject.transform.localEulerAngles.ToString("0.00000");
-
             Transform parent = mf.gameObject.transform.parent;
             if(parent == null)
             {
@@ -307,8 +307,14 @@ public class DownloadThorAssets : MonoBehaviour
                     //mesh_transforms[meshName + "_" +i.ToString()]["localparentRotation"] = mf.gameObject.transform.parent.localRotation.ToString("0.00000");//localEulerAngles.ToString("0.00000");
                     Vector3 grandParentLocalPosition = mf.gameObject.transform.parent.transform.parent.InverseTransformPoint(mf.gameObject.transform.position);
                     Quaternion grandParentLocalRotation = Quaternion.Inverse(mf.gameObject.transform.parent.transform.parent.rotation) * mf.gameObject.transform.rotation;
-                    mesh_transforms[meshName + "_" +i.ToString()]["localPosition"] = grandParentLocalPosition.ToString("0.00000"); // geom
-                    mesh_transforms[meshName + "_" +i.ToString()]["localRotation"] = grandParentLocalRotation.ToString("0.00000");// geom
+                    Vector3 grandParentLocalScale = mf.gameObject.transform.parent.transform.localScale;
+                    grandParentLocalScale.x *= mf.gameObject.transform.localScale.x;
+                    grandParentLocalScale.y *= mf.gameObject.transform.localScale.y;
+                    grandParentLocalScale.z *= mf.gameObject.transform.localScale.z;
+
+                    mesh_transforms[meshName + "_" +i.ToString()]["localPosition"] = grandParentLocalPosition.ToString("0.0000000"); // geom
+                    mesh_transforms[meshName + "_" +i.ToString()]["localRotation"] = grandParentLocalRotation.ToString("0.0000000");// geom
+                    mesh_transforms[meshName + "_" +i.ToString()]["scale"] = grandParentLocalScale.ToString("0.0000000");
                 }
                 else
                 {
@@ -316,8 +322,10 @@ public class DownloadThorAssets : MonoBehaviour
                     mesh_transforms[meshName + "_" +i.ToString()]["parentName"] =  mf.gameObject.transform.parent.name;
                     //mesh_transforms[meshName + "_" +i.ToString()]["localparentPosition"] = mf.gameObject.transform.parent.localPosition.ToString("0.00000"); // body
                     //mesh_transforms[meshName + "_" +i.ToString()]["localparentRotation"] = mf.gameObject.transform.parent.localRotation.ToString("0.00000");//localEulerAngles.ToString("0.00000");
-                    mesh_transforms[meshName + "_" +i.ToString()]["localPosition"] = mf.gameObject.transform.localPosition.ToString("0.00000"); // geom
-                    mesh_transforms[meshName + "_" +i.ToString()]["localRotation"] = mf.gameObject.transform.localRotation.ToString("0.00000");// geom
+                    mesh_transforms[meshName + "_" +i.ToString()]["localPosition"] = mf.gameObject.transform.localPosition.ToString("0.0000000"); // geom
+                    mesh_transforms[meshName + "_" +i.ToString()]["localRotation"] = mf.gameObject.transform.localRotation.ToString("0.0000000");// geom
+                    mesh_transforms[meshName + "_" +i.ToString()]["scale"] = mf.gameObject.transform.localScale.ToString("0.0000000");
+
                 }
                     
             }
@@ -373,12 +381,12 @@ public class DownloadThorAssets : MonoBehaviour
             foreach (Vector3 vx in msh.vertices)
             {
                 Vector3 v = vx;
-                if (true) //applyScale)
+                if (false) // TODO: if true, must apply it too all children object
                 {
                     v = MultiplyVec3s(v, mf.gameObject.transform.lossyScale);
                 }
                 
-                if (!applyBoundingBox) //true) //applyRotation)
+                if (!saveSubMeshes) //true) //applyRotation)
                 {
   
                     v = RotateAroundPoint(v, Vector3.zero, mf.gameObject.transform.rotation);
@@ -386,13 +394,13 @@ public class DownloadThorAssets : MonoBehaviour
 
                 }
 
-                if (!applyBoundingBox) //true) //applyPosition)
+                if (!saveSubMeshes) //true) //applyPosition)
                 {
                     v += mf.gameObject.transform.position;
                     //v += mf.gameObject.transform.localPosition;
                 }
 
-                if (applyBoundingBox) //true)// move to bouning box center
+                if (false) //applyBoundingBox) //true)// move to bouning box center
                     v -= center;                
 
                 v.x *= -1;
@@ -403,7 +411,7 @@ public class DownloadThorAssets : MonoBehaviour
             {
                 Vector3 v = vx;
                 
-                if (true) //applyScale)
+                if (false) //applyScale)
                 {
                     v = MultiplyVec3s(v, mf.gameObject.transform.lossyScale.normalized);
                 }
@@ -418,7 +426,7 @@ public class DownloadThorAssets : MonoBehaviour
                     //v += mf.gameObject.transform.localPosition;
                 }
 
-                if (applyBoundingBox) //true)// move to bouning box center
+                if (false) //true)// move to bouning box center
                     v -= center;    
 
                 v.x *= -1;
@@ -468,7 +476,7 @@ public class DownloadThorAssets : MonoBehaviour
                 }
             }
 
-            if(saveSubMeshes)
+            if(saveSubMeshes & !saveCombinedSubmeshes)
             {
                 //write to disk
                 Directory.CreateDirectory(Path.Combine(savePath, Path.GetDirectoryName(relativeExportPath), baseFileName));
@@ -493,7 +501,7 @@ public class DownloadThorAssets : MonoBehaviour
             print("mesh saved");
         }
 
-        if (saveSubMeshes & saveSubMeshTransform)  
+        if (saveSubMeshTransform)  
         {
             string json = JsonUtility.ToJson(new SerializableDictionary(mesh_transforms), true);
             File.WriteAllText(Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".json")), json);
