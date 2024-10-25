@@ -61,9 +61,6 @@ public class DownloadThorAssets : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        // TODO: this is not creating a directory. but it must be created for materials/textures to be properly saved
-        //Directory.CreateDirectory(Path.Combine(savePath, "Textures")); 
-        
         // get all assets and export obj
         GatherGameObjectsFromPrefabsAndSave(assetPath, applyBoundingBox, saveSubMeshes, saveSubMeshTransform);
         //GatherGameObjectsFromPrefabsAndSave(doorAssetPath, false, true);
@@ -151,6 +148,8 @@ public class DownloadThorAssets : MonoBehaviour
             return;
         }
 
+        Directory.CreateDirectory(Path.Combine(savePath, "Textures")); 
+        
         string[] prefabFiles = Directory.GetFiles(directoryPath, "*.prefab", SearchOption.AllDirectories);
 
 
@@ -170,6 +169,7 @@ public class DownloadThorAssets : MonoBehaviour
             if (prefab != null)
             {
                 GameObject instantiatedPrefab = Instantiate(prefab);
+                //instantiatedPrefab.name = prefab.name;
                 SaveEachAsset(instantiatedPrefab, relativePrefabPath, applyBoundingBox, saveSubMeshes, saveSubMeshTransform);
                 Destroy(instantiatedPrefab);
             }
@@ -280,37 +280,46 @@ public class DownloadThorAssets : MonoBehaviour
             }
 
             
-
+            /// ---- THIS LOGIC DID NOT WORK FOR  DRESSER .. .did work for Fridge but not for Dresser 217 for example
             mesh_transforms[meshName + "_" +i.ToString()] = new Dictionary<string, string>();
-            //mesh_transforms[meshName + "_" +i.ToString()]["position"] = mf.gameObject.transform.localPosition.ToString("0.00000");
-            //mesh_transforms[meshName + "_" +i.ToString()]["rotation"] = mf.gameObject.transform.localEulerAngles.ToString("0.00000");
-            Transform parent = mf.gameObject.transform.parent;
-            if(parent == null)
+            mesh_transforms[meshName + "_" +i.ToString()]["name"] = mf.gameObject.transform.name;
+
+            Transform _parent = mf.gameObject.transform.parent;
+            if(_parent == null)
             {
-                mesh_transforms[meshName + "_" +i.ToString()]["name"] = mf.gameObject.transform.name;
-                mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = "root";
-                //mesh_transforms[meshName + "_" +i.ToString()]["localparentPosition"] = mf.gameObject.transform.localPosition.ToString("0.00000"); // body
-                //mesh_transforms[meshName + "_" +i.ToString()]["localparentRotation"] = mf.gameObject.transform.localRotation.ToString("0.00000");//localEulerAngles.ToString("0.00000");
+                mesh_transforms[meshName + "_" +i.ToString()]["parentName"] =  mf.gameObject.transform.root.name; //"root";
             }
             else
             {
                 // only get the name of the parent that has mesh 
-                MeshFilter parent_meshFilters = mf.gameObject.transform.parent.GetComponent<MeshFilter>();
-                if(parent_meshFilters == null & mf.gameObject.transform.parent.transform.parent != null){ 
-                    // grand parent
-                    Debug.Log("parent" + mf.gameObject.transform.parent);
-                    Debug.Log("parent" + mf.gameObject.transform.parent.name);
-                    Debug.Log("grand parent" + mf.gameObject.transform.parent.transform.parent.name);
-                    mesh_transforms[meshName + "_" +i.ToString()]["name"] =  mf.gameObject.transform.parent.name; // mf.gameObject.transform.parent.name;
-                    mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = mf.gameObject.transform.parent.transform.parent.name;
-                    //mesh_transforms[meshName + "_" +i.ToString()]["localparentPosition"] = mf.gameObject.transform.parent.localPosition.ToString("0.00000"); // body
-                    //mesh_transforms[meshName + "_" +i.ToString()]["localparentRotation"] = mf.gameObject.transform.parent.localRotation.ToString("0.00000");//localEulerAngles.ToString("0.00000");
-                    Vector3 grandParentLocalPosition = mf.gameObject.transform.parent.transform.parent.InverseTransformPoint(mf.gameObject.transform.position);
-                    Quaternion grandParentLocalRotation = Quaternion.Inverse(mf.gameObject.transform.parent.transform.parent.rotation) * mf.gameObject.transform.rotation;
-                    Vector3 grandParentLocalScale = mf.gameObject.transform.parent.transform.localScale;
-                    grandParentLocalScale.x *= mf.gameObject.transform.localScale.x;
-                    grandParentLocalScale.y *= mf.gameObject.transform.localScale.y;
-                    grandParentLocalScale.z *= mf.gameObject.transform.localScale.z;
+                MeshFilter parent_meshFilters = _parent.gameObject.GetComponentInParent<MeshFilter>(); // mf.gameObject.GetComponentInParent<MeshFilter>();
+
+                if(parent_meshFilters != null)
+                {
+                    string parent_name = parent_meshFilters.gameObject.transform.name;
+                    mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = parent_name;
+                    Vector3 grandParentLocalPosition = parent_meshFilters.gameObject.transform.InverseTransformPoint(mf.gameObject.transform.position);
+                    Quaternion grandParentLocalRotation = Quaternion.Inverse(parent_meshFilters.gameObject.transform.rotation) * mf.gameObject.transform.rotation;
+                    Vector3 grandParentLocalScale = parent_meshFilters.gameObject.transform.localScale;
+                    
+                    // should apply scale for every intermeidate parent
+                    Vector3 scale = mf.gameObject.transform.localScale;
+                    Transform parent = mf.gameObject.transform.parent;
+                    Debug.Log("parent name1: " + parent.name);
+                    Debug.Log("parent name2: " + parent_name);
+                    while(parent.name != parent_name)
+                    {
+                        Debug.Log("parent name: " + parent.name);
+                        scale.x *= parent.localScale.x;
+                        scale.y *= parent.localScale.y;
+                        scale.z *= parent.localScale.z;
+                        parent = parent.parent;
+                        if (parent == null) // tho this should never happen!
+                            break;
+                    }
+                    scale.x *= parent_meshFilters.gameObject.transform.localScale.x;
+                    scale.y *= parent_meshFilters.gameObject.transform.localScale.y;
+                    scale.z *= parent_meshFilters.gameObject.transform.localScale.z;
 
                     mesh_transforms[meshName + "_" +i.ToString()]["localPosition"] = grandParentLocalPosition.ToString("0.0000000"); // geom
                     mesh_transforms[meshName + "_" +i.ToString()]["localRotation"] = grandParentLocalRotation.ToString("0.0000000");// geom
@@ -318,10 +327,7 @@ public class DownloadThorAssets : MonoBehaviour
                 }
                 else
                 {
-                    mesh_transforms[meshName + "_" +i.ToString()]["name"] =  mf.gameObject.transform.name; // mf.gameObject.transform.parent.name;
-                    mesh_transforms[meshName + "_" +i.ToString()]["parentName"] =  mf.gameObject.transform.parent.name;
-                    //mesh_transforms[meshName + "_" +i.ToString()]["localparentPosition"] = mf.gameObject.transform.parent.localPosition.ToString("0.00000"); // body
-                    //mesh_transforms[meshName + "_" +i.ToString()]["localparentRotation"] = mf.gameObject.transform.parent.localRotation.ToString("0.00000");//localEulerAngles.ToString("0.00000");
+                    mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = mf.gameObject.transform.root.name; //"root";
                     mesh_transforms[meshName + "_" +i.ToString()]["localPosition"] = mf.gameObject.transform.localPosition.ToString("0.0000000"); // geom
                     mesh_transforms[meshName + "_" +i.ToString()]["localRotation"] = mf.gameObject.transform.localRotation.ToString("0.0000000");// geom
                     mesh_transforms[meshName + "_" +i.ToString()]["scale"] = mf.gameObject.transform.localScale.ToString("0.0000000");
@@ -507,7 +513,7 @@ public class DownloadThorAssets : MonoBehaviour
             File.WriteAllText(Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".json")), json);
             Debug.Log("Saving mesh transform dictionary.");
         }    
-        
+         
     }
 
     Vector3 RotateAroundPoint(Vector3 point, Vector3 pivot, Quaternion angle)
