@@ -1386,7 +1386,8 @@ namespace Thor.Procedural {
             if (!validateHouseObjects(getAssetMap(), house.objects, missingIds)) {
                 throw new ArgumentException(
                     $"Object ids '{string.Join(", ", missingIds)}' not present in asset database."
-                        + $" If it is a procedural asset make sure you call 'CreateAsset' before 'CreateHouse'"
+                        + $" If it is a procedural asset make sure you call 'CreateAsset' before 'CreateHouse'."
+                        + $"See https://ai2thor.allenai.org/ithor/documentation/objects/procedural-assets"
                 );
             }
 

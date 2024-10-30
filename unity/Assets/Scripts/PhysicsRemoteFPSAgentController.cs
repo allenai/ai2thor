@@ -173,9 +173,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        public bool isStanding() {
-            return (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude
-                < 0.1f;
+        public bool? isStanding() {
+            //default to not standing if this isn't literally the PhysicsRemoteFPSAgentController
+            //this means the metadat for isStanding should always be false for all derived classes
+            if (this.GetType() != typeof(PhysicsRemoteFPSAgentController)) {
+                return null;
+            }
+
+            //if camera is in neither the standing or crouching predetermined locations, return null
+            if (
+                UtilityFunctions.ArePositionsApproximatelyEqual(
+                    m_Camera.transform.localPosition,
+                    standingLocalCameraPosition
+                ) == true
+            ) {
+                return true;
+            } else if (
+                  UtilityFunctions.ArePositionsApproximatelyEqual(
+                      m_Camera.transform.localPosition,
+                      crouchingLocalCameraPosition
+                  ) == true
+              ) {
+                return false;
+            } else {
+                return null;
+            }
         }
 
         public override MetadataWrapper generateMetadataWrapper() {
@@ -1625,23 +1647,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ////////////// TELEPORT FULL //////////////
         ///////////////////////////////////////////
 
-        // [ObsoleteAttribute(message: "This action is deprecated. Call TeleportFull(position, ...) instead.", error: false)]
-        // public void TeleportFull(
-        //     float x, float y, float z,
-        //     float rotation,
-        //     float horizon,
-        //     bool standing,
-        //     bool forceAction = false
-        // ) {
-        //     TeleportFull(
-        //         position: new Vector3(x, y, z),
-        //         rotation: new Vector3(0, rotation, 0),
-        //         horizon: horizon,
-        //         standing: standing,
-        //         forceAction: forceAction
-        //     );
-        // }
-
         [ObsoleteAttribute(
             message: "This action is deprecated. Call TeleportFull(position, ...) instead.",
             error: false
@@ -1664,24 +1669,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        // keep undocumented until float: rotation is added to Stochastic
-        // public void TeleportFull(
-        //     Vector3 position,
-        //     float rotation,
-        //     float horizon,
-        //     bool standing,
-        //     bool forceAction = false
-        // ) {
-        //     TeleportFull(
-        //         position: position,
-        //         rotation: new Vector3(0, rotation, 0),
-        //         horizon: horizon,
-        //         standing: standing,
-        //         forceAction: forceAction
-        //     );
-        // }
-
-        // has to consider both the arm and standing
         public virtual void TeleportFull(
             Vector3? position,
             Vector3? rotation,
@@ -1691,7 +1678,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ) {
             Debug.Log($"------- Teleport Full physicsFPS type {this.GetType()}");
             // cache old values in case there's a failure
-            bool wasStanding = isStanding();
+            bool? wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
             Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
@@ -1728,21 +1715,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             "Cannot teleport due to hand object collision."
                         );
                     }
-                    if (Arm != null && Arm.IsArmColliding()) {
-                        throw new InvalidOperationException(
-                            "Mid Level Arm is actively clipping with some geometry in the environment. TeleportFull fails in this position."
-                        );
-                    } else if (SArm != null && SArm.IsArmColliding()) {
-                        throw new InvalidOperationException(
-                            "Stretch Arm is actively clipping with some geometry in the environment. TeleportFull fails in this position."
-                        );
-                    }
                     base.assertTeleportedNearGround(targetPosition: position);
                 }
             } catch (InvalidOperationException e) {
-                if (wasStanding) {
+                if (wasStanding == true) {
                     stand();
-                } else {
+                } else if (wasStanding == false) {
                     crouch();
                 }
                 if (ItemInHand != null) {
@@ -1762,23 +1740,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////////////////////////////////////
         //////////////// TELEPORT /////////////////
         ///////////////////////////////////////////
-
-        // [ObsoleteAttribute(message: "This action is deprecated. Call Teleport(position, ...) instead.", error: false)]
-        // public void Teleport(
-        //     float x, float y, float z,
-        //     float? rotation = null,
-        //     float? horizon = null,
-        //     bool? standing = null,
-        //     bool forceAction = false
-        // ) {
-        //     Teleport(
-        //         position: new Vector3(x, y, z),
-        //         rotation: rotation,
-        //         horizon: horizon,
-        //         standing: standing,
-        //         forceAction: forceAction
-        //     );
-        // }
 
         [ObsoleteAttribute(
             message: "This action is deprecated. Call Teleport(position, ...) instead.",
@@ -1802,25 +1763,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        // keep undocumented until float: rotation is added to Stochastic
-        // DO NOT add float: rotation to base.
-        // public void Teleport(
-        //     Vector3? position = null,
-        //     float? rotation = null,
-        //     float? horizon = null,
-        //     bool? standing = null,
-        //     bool forceAction = false
-        // ) {
-        //     Teleport(
-        //         position: position,
-        //         rotation: rotation == null ? m_Camera.transform.localEulerAngles : new Vector3(0, (float) rotation, 0),
-        //         horizon: horizon,
-        //         standing: standing,
-        //         forceAction: forceAction
-        //     );
-        // }
-
-        public void Teleport(
+        //keeping 'Teleport' for backwards compatibility
+        public virtual void Teleport(
             Vector3? position = null,
             Vector3? rotation = null,
             float? horizon = null,
@@ -1828,10 +1772,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool forceAction = false
         ) {
             TeleportFull(
-                position: position == null ? transform.position : (Vector3)position,
-                rotation: rotation == null ? transform.eulerAngles : (Vector3)rotation,
-                horizon: horizon == null ? m_Camera.transform.localEulerAngles.x : (float)horizon,
-                standing: standing == null ? isStanding() : (bool)standing,
+                position: position,
+                rotation: rotation,
+                horizon: horizon,
+                standing: standing,
                 forceAction: forceAction
             );
         }
@@ -2399,9 +2343,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else {
                 Vector3 dir = new Vector3();
 
-                if (isStanding()) {
+                bool? standState = isStanding();
+                if (standState == true) {
                     dir = new Vector3(0.0f, -1f, 0.0f);
-                } else {
+                } else if (standState == false) {
                     dir = new Vector3(0.0f, 1f, 0.0f);
                 }
 
@@ -6080,7 +6025,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void Crouch() {
-            if (!isStanding()) {
+            if (isStanding() == false) {
                 errorMessage = "Already crouching.";
                 actionFinished(false);
             } else if (!CheckIfItemBlocksAgentStandOrCrouch()) {
@@ -6092,7 +6037,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void Stand() {
-            if (isStanding()) {
+            if (isStanding() == true) {
                 errorMessage = "Already standing.";
                 actionFinished(false);
             } else if (!CheckIfItemBlocksAgentStandOrCrouch()) {
@@ -6113,47 +6058,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ChangeFOV(float fieldOfView, string camera = "") {
-            if (fieldOfView > 0 && fieldOfView < 180) {
-                if (string.IsNullOrEmpty(camera)) {
-                    m_Camera.fieldOfView = fieldOfView;
-                    actionFinished(true);
-                } else {
-                    var cameraTuples = new List<(Camera camera, bool isThirdPartyCamera, int id)>()
-                    {
-                        (camera: m_Camera, isThirdPartyCamera: false, id: -1)
-                    }.Concat(
-                        this.agentManager.thirdPartyCameras.Select(
-                            (c, i) => (camera: c, isThirdPartyCamera: true, id: i)
-                        )
-                    );
-                    var matches = cameraTuples;
-                    if (camera != "*") {
-                        matches = cameraTuples.Where(t => t.camera.name == camera);
-                    }
-                    // Debug.Log($"Camera matches: {matches.Count()} {string.Join(", ", matches.Select(m => m.camera.name))}");
-                    if (matches.Count() == 0) {
-                        errorMessage =
-                            $"Camera '{camera}' is not present in the agent, make sure the agent was initialized correctly or camera was added via 'AddThirdPartyCamera'.";
-                        actionFinished(false);
-                    } else {
-                        foreach (var tuple in matches) {
-                            if (tuple.isThirdPartyCamera) {
-                                agentManager.UpdateThirdPartyCamera(
-                                    tuple.id,
-                                    fieldOfView: fieldOfView
-                                );
-                            } else {
-                                tuple.camera.fieldOfView = fieldOfView;
-                            }
-                        }
-                        actionFinished(true);
-                    }
-                }
-            } else {
-                errorMessage = "fov must be in (0, 180) noninclusive.";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-            }
+            throw new InvalidOperationException(
+                "This action is deprecated. Use `UpdateMainCamera` or `UpdateThirdPartyCamera` instead."
+            );
         }
 
         // in case you want to change the timescale
@@ -6294,7 +6201,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 positions = getReachablePositions();
             }
 
-            bool wasStanding = isStanding();
+            bool? wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
             if (ItemInHand != null) {
@@ -6385,7 +6292,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected HashSet<SimObjPhysics> getAllItemsVisibleFromPositions(Vector3[] positions) {
-            bool wasStanding = isStanding();
+            bool? wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
             if (ItemInHand != null) {
@@ -6430,9 +6337,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 go.SetActive(true);
             }
 
-            if (wasStanding) {
+            if (wasStanding == true) {
                 stand();
-            } else {
+            } else if (wasStanding == false) {
                 crouch();
             }
             transform.position = oldPosition;
@@ -6586,7 +6493,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // save current agent pose
-            bool wasStanding = isStanding();
+            bool? wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
             Vector3 oldHorizon = m_Camera.transform.localEulerAngles;
@@ -6694,9 +6601,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // restore old agent pose
-            if (wasStanding) {
+            if (wasStanding == true) {
                 stand();
-            } else {
+            } else if (wasStanding == false) {
                 crouch();
             }
             SetTransform(

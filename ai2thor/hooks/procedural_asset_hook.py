@@ -258,7 +258,7 @@ def create_assets_if_not_exist(
     #         return evt
 
 
-class ProceduralAssetHookRunner:
+class ProceduralAssetActionCallback:
     def __init__(
         self,
         asset_directory: str,
@@ -278,6 +278,7 @@ class ProceduralAssetHookRunner:
         self.target_dir = target_dir
         self.extension = extension
         self.verbose = verbose
+        self.last_asset_id_set = set()
 
     def Initialize(self, action, controller):
         if self.asset_limit > 0:
@@ -288,6 +289,10 @@ class ProceduralAssetHookRunner:
     def CreateHouse(self, action, controller):
         house = action["house"]
         asset_ids = get_all_asset_ids_recursively(house["objects"], [])
+        asset_ids_set = set(asset_ids)
+        if not asset_ids_set.issubset(self.last_asset_id_set):
+            controller.step(action="DeleteLRUFromProceduralCache", assetLimit=0)
+            self.last_asset_id_set = set(asset_ids)
         return create_assets_if_not_exist(
             controller=controller,
             asset_ids=asset_ids,
@@ -329,6 +334,53 @@ class ProceduralAssetHookRunner:
             verbose=self.verbose,
         )
 
+
+class DownloadObjaverseActionCallback(object):
+    def __init__(
+        self,
+        asset_dataset_version,
+        asset_download_path,
+        target_dir="processed_models",
+        asset_symlink=True,
+        load_file_in_unity=False,
+        stop_if_fail=False,
+        asset_limit=-1,
+        extension=None,
+        verbose=True,
+    ):
+        self.asset_download_path = asset_download_path
+        self.asset_symlink = asset_symlink
+        self.stop_if_fail = stop_if_fail
+        self.asset_limit = asset_limit
+        self.load_file_in_unity = load_file_in_unity
+        self.target_dir = target_dir
+        self.extension = extension
+        self.verbose = verbose
+        self.last_asset_id_set = set()
+        dsc = DatasetSaveConfig(
+            VERSION=asset_dataset_version,
+            BASE_PATH=asset_download_path,
+        )
+        self.asset_path = load_assets_path(dsc)
+
+    def CreateHouse(self, action, controller):
+        house = action["house"]
+        asset_ids = get_all_asset_ids_recursively(house["objects"], [])
+        asset_ids_set = set(asset_ids)
+        if not asset_ids_set.issubset(self.last_asset_id_set):
+            controller.step(action="DeleteLRUFromProceduralCache", assetLimit=0)
+            self.last_asset_id_set = set(asset_ids)
+        return create_assets_if_not_exist(
+            controller=controller,
+            asset_ids=asset_ids,
+            asset_directory=self.asset_path,
+            copy_to_dir=os.path.join(controller._build.base_dir, self.target_dir),
+            asset_symlink=self.asset_symlink,
+            stop_if_fail=self.stop_if_fail,
+            load_file_in_unity=self.load_file_in_unity,
+            extension=self.extension,
+            verbose=self.verbose,
+        )
 
 def download_with_progress_bar(save_path: str, url: str, verbose: bool = False):
     os.makedirs(os.path.dirname(save_path), exist_ok=True)

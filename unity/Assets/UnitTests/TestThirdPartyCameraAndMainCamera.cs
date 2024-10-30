@@ -329,6 +329,8 @@ namespace Tests
 
             MetadataWrapper metadata = getLastActionMetadata();
 
+            Debug.Log($"what was standing: {metadata.agent.isStanding}");
+
             result = Mathf.Approximately(metadata.worldRelativeCameraPosition.x, -1.0000000000f);
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(metadata.worldRelativeCameraPosition.y, 1.5759990000f);
@@ -379,6 +381,8 @@ namespace Tests
             yield return step(action);
 
             metadata = getLastActionMetadata();
+
+            Debug.Log($"what was standing after UpdateMainCamera: {metadata.agent.isStanding}");
 
             result = Mathf.Approximately(metadata.worldRelativeCameraPosition.x, -1.5000000000f);
             Assert.AreEqual(result, true);
