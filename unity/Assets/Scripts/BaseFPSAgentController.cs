@@ -3,11 +3,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
@@ -22,6 +22,7 @@ using UnityEngine.Rendering.PostProcessing;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
+using Diagnostics = System.Diagnostics;
 using Random = UnityEngine.Random;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
@@ -7602,7 +7603,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public ActionFinished CreateRuntimeAsset(ProceduralAsset asset) {
+        public ActionFinished CreateRuntimeAsset(ProceduralAsset asset, bool returnObject = false) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb.ContainsAssetKey(asset.name)) {
                 return new ActionFinished(
@@ -7627,27 +7628,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 annotations: asset.annotations,
                 receptacleCandidate: asset.receptacleCandidate,
                 yRotOffset: asset.yRotOffset,
+                returnObject: returnObject,
                 serializable: asset.serializable,
                 parentTexturesDir: asset.parentTexturesDir
             );
             return new ActionFinished { success = true, actionReturn = assetData };
         }
 
-        public ActionFinished CreateRuntimeAsset(
+        private static async Task<ProceduralAsset> LoadAssetAsync(
             string id,
             string dir,
             string extension = ".msgpack.gz",
             ObjectAnnotations annotations = null,
             bool serializable = false
         ) {
-            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
-            if (assetDb.ContainsAssetKey(id)) {
-                return new ActionFinished(
-                    success: false,
-                    errorMessage: $"'{id}' already exists in ProceduralAssetDatabase, trying to create procedural object twice, call `SpawnAsset` instead.",
-                    toEmitState: true
-                );
-            }
             var validDirs = new List<string>()
             {
                 Application.persistentDataPath,
@@ -7663,20 +7657,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             extension = !extension.StartsWith(".") ? $".{extension}" : extension;
             extension = extension.Trim();
             if (!supportedExtensions.Contains(extension)) {
-                return new ActionFinished(
-                    success: false,
-                    errorMessage: $"Unsupported extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}",
-                    actionReturn: null
+                throw new ArgumentException(
+                    $"Unsupported extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}"
                 );
             }
             var filename = $"{id}{extension}";
             var filepath = Path.GetFullPath(Path.Combine(dir, id, filename));
             if (!File.Exists(filepath)) {
-                return new ActionFinished(
-                    success: false,
-                    actionReturn: null,
-                    errorMessage: $"Asset fiile '{filepath}' does not exist."
-                );
+                throw new FileNotFoundException($"Asset file '{filepath}' does not exist.");
             }
 
             // to support different
@@ -7716,43 +7704,46 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ObjectCreationHandling = ObjectCreationHandling.Replace
                 };
                 var json = reader.ReadToEnd();
-                // procAsset = Newtonsoft.Json.JsonConvert.DeserializeObject<ProceduralAsset>(reader.ReadToEnd(), serializer);
                 procAsset = JsonConvert.DeserializeObject<ProceduralAsset>(json);
             } else {
-                return new ActionFinished(
-                    success: false,
-                    errorMessage: $"Unexpected error with extension `{extension}`, filepath: `{filepath}`, compression stages: {string.Join(".", presentStages)}. Only supported: {string.Join(", ", supportedExtensions)}",
-                    actionReturn: null
+                throw new ArgumentException(
+                    $"Unexpected error with extension `{extension}`, filepath: `{filepath}`, compression stages: {string.Join(".", presentStages)}. Only supported: {string.Join(", ", supportedExtensions)}"
                 );
             }
 
             procAsset.parentTexturesDir = Path.Combine(dir, id);
 
-            var assetData = ProceduralTools.CreateAsset(
-                procAsset.vertices,
-                procAsset.normals,
-                procAsset.name,
-                procAsset.triangles,
-                procAsset.uvs,
-                procAsset.albedoTexturePath,
-                procAsset.metallicSmoothnessTexturePath,
-                procAsset.normalTexturePath,
-                procAsset.emissionTexturePath,
-                procAsset.colliders,
-                procAsset.physicalProperties,
-                procAsset.visibilityPoints,
-                procAsset.annotations ?? annotations,
-                procAsset.receptacleCandidate,
-                procAsset.yRotOffset,
-                returnObject: true,
-                serializable: serializable,
-                parent: null,
-                addAnotationComponent: false,
-                parentTexturesDir: procAsset.parentTexturesDir
-            );
+            return procAsset;
+        }
+
+        public ActionFinished CreateRuntimeAsset(
+            string id,
+            string dir,
+            string extension = ".msgpack.gz",
+            ObjectAnnotations annotations = null,
+            bool serializable = false
+        ) {
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDb.ContainsAssetKey(id)) {
+                return new ActionFinished(
+                    success: false,
+                    errorMessage: $"'{id}' already exists in ProceduralAssetDatabase, trying to create procedural object twice, call `SpawnAsset` instead.",
+                    toEmitState: true
+                );
+            }
+
+            var procAsset = LoadAssetAsync(
+                id: id,
+                dir: dir,
+                extension: extension,
+                annotations: annotations,
+                serializable: serializable
+            ).Result;
+            procAsset.serializable = serializable;
+            procAsset.annotations = procAsset.annotations ?? annotations;
 
             // Debug.Log($"root is null? {parent == null} -  {parent}");
-            return new ActionFinished(success: true, actionReturn: assetData);
+            return CreateRuntimeAsset(asset: procAsset, returnObject: true);
         }
 
         public class UnityLoadableAsset {
@@ -7767,18 +7758,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<UnityLoadableAsset> assets,
             string dir = null
         ) {
-            foreach (var asset in assets) {
-                var actionFinished = CreateRuntimeAsset(
-                    id: asset.id,
-                    dir: dir ?? asset.dir,
-                    extension: asset.extension,
-                    annotations: asset.annotations
+            try {
+#if UNITY_EDITOR
+                Diagnostics.Stopwatch stopWatch = new Diagnostics.Stopwatch();
+                stopWatch.Start();
+#endif
+                // Load assets in parallel
+                var loadTasks = assets
+                    .Select(asset =>
+                        LoadAssetAsync(
+                            id: asset.id,
+                            dir: dir ?? asset.dir,
+                            extension: asset.extension,
+                            annotations: asset.annotations
+                        )
+                    )
+                    .ToList();
+                Task.WhenAll(loadTasks).Wait();
+
+                var loadedAssets = loadTasks.Select(t => t.Result).ToList();
+
+#if UNITY_EDITOR
+                stopWatch.Stop();
+                Debug.Log(
+                    $"LoadAssetAsync took {stopWatch.ElapsedMilliseconds} ms, per asset time {stopWatch.ElapsedMilliseconds / assets.Count} ms"
                 );
-                if (!actionFinished.success) {
-                    return actionFinished;
+                stopWatch.Restart();
+#endif
+                // Create assets serially
+                foreach (var (asset, procAsset) in assets.Zip(loadedAssets, (a, p) => (a, p))) {
+                    var actionFinished = CreateRuntimeAsset(asset: procAsset);
+                    if (!actionFinished.success) {
+                        return actionFinished;
+                    }
                 }
+#if UNITY_EDITOR
+                stopWatch.Stop();
+                Debug.Log(
+                    $"CreateRuntimeAsset loop took {stopWatch.ElapsedMilliseconds} ms, per asset time {stopWatch.ElapsedMilliseconds / assets.Count} ms"
+                );
+#endif
+
+                return ActionFinished.Success;
+            } catch (Exception ex) {
+                return new ActionFinished(success: false, errorMessage: ex.Message);
             }
-            return ActionFinished.Success;
         }
 
         public void GetStreamingAssetsPath() {
