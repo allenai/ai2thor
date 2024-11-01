@@ -386,6 +386,7 @@ class DownloadObjaverseActionCallback(object):
             verbose=self.verbose,
         )
 
+
 def download_with_progress_bar(save_path: str, url: str, verbose: bool = False):
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
