@@ -2801,6 +2801,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                //allows us to toggle of any meshes tracking the positiong and rotation of the main camera
+                case "tamcmt": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ToggleAgentMainCameraMeshTracking";
+                        action["toggleOff"] = true;
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);                        
+                        break;
+                    }
+
                 // put an object down with stationary false
                 case "putf": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
