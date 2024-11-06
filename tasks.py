@@ -4724,10 +4724,10 @@ def test_create_prefab(ctx, json_path):
 
 
 @task
-def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
+def procedural_asset_callback_test(ctx, asset_dir, house_path, asset_id=""):
     import json
     import ai2thor.controller
-    from ai2thor.hooks.procedural_asset_hook import ProceduralAssetActionCallback
+    from ai2thor.hooks.procedural_asset_callback import ProceduralAssetActionCallback
     from objathor.asset_conversion.util import view_asset_in_thor
 
     hook_runner = ProceduralAssetActionCallback(
@@ -4817,7 +4817,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
 def procedural_asset_cache_test(ctx, asset_dir, house_path, asset_ids="", cache_limit=1):
     import json
     import ai2thor.controller
-    from ai2thor.hooks.procedural_asset_hook import ProceduralAssetActionCallback
+    from ai2thor.hooks.procedural_asset_callback import ProceduralAssetActionCallback
 
     hook_runner = ProceduralAssetActionCallback(
         asset_directory=asset_dir, asset_symlink=True, verbose=True, asset_limit=1
