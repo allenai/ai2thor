@@ -4,8 +4,12 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Experimental.Rendering;
+using System.Security.Cryptography;
 
 // // @TODO:
 // // . support custom color wheels in optical flow via lookup textures
@@ -35,11 +39,36 @@ namespace Thor.Rendering {
         Normals = 4,
         Flow = 5,
     };
+
+    // public class PassName {
+    //     const string Image = "_img",
+    //     Depth = "_depth"
+    // }
+
+    public class CaptureConfig {
+        public string name;
+
+        public int antiAliasLevel = 1;
+
+        public string shaderName;
+
+        public ReplacelementMode replacementMode;
+
+        public int? toDisplay = 0;
+
+        public bool cloudRendering;
+        
+        
+    }
     
     public interface ICapturePass {
-        public RenderTargetIdentifier GetRenderTarget();
+        public RenderTexture GetRenderTexture();
         public void AddToCommandBuffer(CommandBuffer commandBuffer);
         public string GetName();
+        public void OnInitialize(Camera mainCamera);
+        public void OnCameraChange(Camera mainCamera);
+        public bool IsInitialized();
+        public byte[] GetBytes(bool jpg = false);
     }
 
 
@@ -76,20 +105,41 @@ namespace Thor.Rendering {
 
         private Texture2D tex;
         private RenderTexture renderTexture;
+
         public Material material;
         protected Shader shader;
 
         protected CommandBuffer cb;
+        protected bool cloudRendering;
 
-        public RenderToTexture(string name, Camera camera, int antiAliasLevel = 1, string shaderName = null) {
-            this.camera = camera;
-            this.antiAliasLevel = antiAliasLevel;
-            this.shaderName = shaderName;
-            this.name = name;
+        protected int? toDisplayId;
+
+        private bool initialized;
+        
+        private TextureFormat readTextureFormat;
+
+        
+
+        // private Texture2D readTexture;
+
+        public bool IsInitialized() {
+            return initialized;
         }
 
-        public virtual RenderTargetIdentifier GetRenderTarget() {
-            return new RenderTargetIdentifier(renderTexture);
+        public RenderToTexture(CaptureConfig config, Camera camera) {
+            this.camera = camera;
+            this.antiAliasLevel = config.antiAliasLevel;
+            this.shaderName = config.shaderName;
+            this.name = config.name;
+            this.cloudRendering = config.cloudRendering;
+            this.toDisplayId = config.toDisplay;
+
+            // TODO. if config.toDisplay is present then render to display buffer and copy to render texture 
+            // for debugging purposes
+        }
+
+        public virtual RenderTexture GetRenderTexture() {
+            return renderTexture;
         }
 
         public virtual string GetName() {
@@ -97,6 +147,7 @@ namespace Thor.Rendering {
         }
        
         public virtual void AddToCommandBuffer(CommandBuffer commandBuffer) {
+            Debug.Log("-------- AddToCommandBuffer " + name);
             
             // int screenCopyID = Shader.PropertyToID("_MainTex");
             // cb.GetTemporaryRT(screenCopyID, -1, -1, 0, FilterMode.Bilinear);
@@ -107,6 +158,14 @@ namespace Thor.Rendering {
             // else {
             //     cb.Blit(screenCopyID, BuiltinRenderTextureType.CameraTarget);
             // }
+            //  cb.SetRenderTarget(RenderTargetIdentifier);
+             // cb.Blit(this.GetRenderTarget(), RenderTexture.active);
+
+            Debug.Log("------- command buffer set for " + this.name);
+            // cb.SetRenderTarget(new RenderTargetIdentifier(null as Texture));
+            //this.camera.targetTexture = null;
+
+            //  cb.Blit(this.GetRenderTarget(), BuiltinRenderTextureType.CurrentActive);
             
             // cb.ReleaseTemporaryRT(screenCopyID);
 
@@ -127,6 +186,8 @@ namespace Thor.Rendering {
 
             // this.camera.AddCommandBuffer(CameraEvent.BeforeImageEffects, cb);
             // this.camera.depthTextureMode = DepthTextureMode.Depth;
+
+            // this.camera.AddCommandBuffer(CameraEvent.AfterImageEffects, cb);
         }
 
 
@@ -142,7 +203,38 @@ namespace Thor.Rendering {
         //     RenderTextureFormat.ARGB32
         // );
 
-        var rt = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+        // TODO: add rescaling here
+        if (this.renderTexture != null && this.renderTexture.IsCreated())
+        {
+            this.renderTexture.Release();
+        }
+        
+       
+        RenderTexture rt = null;
+       
+         
+        if (cloudRendering) {
+            // Why 0 for depth here ?
+            rt = new RenderTexture(Screen.width, Screen.height, 0, GraphicsFormat.R8G8B8A8_UNorm);
+            // TODO: if 0 then RGB24? if not RGB32?
+            readTextureFormat = TextureFormat.RGBA32;
+            
+        //     RenderTexture rt = new RenderTexture(
+        //     width: width,
+        //     height: height,
+        //     depth: 0,
+        //     GraphicsFormat.R8G8B8A8_UNorm
+        // );
+        }
+        else {
+            rt = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+            readTextureFormat = TextureFormat.RGBA32; 
+        }
+
+         if (this.tex == null) {
+            Debug.Log($"------------ texture format  {Enum.GetName(typeof(TextureFormat), readTextureFormat)} val {readTextureFormat}");
+            tex = new Texture2D(Screen.width, Screen.height, readTextureFormat, false);
+        }
         rt.antiAliasing = antiAliasLevel;
         if (rt.Create()) {
             Debug.Log("Created Render Texture with width= " + width + " height=" + height);
@@ -155,38 +247,48 @@ namespace Thor.Rendering {
     }
 
         public virtual void OnInitialize(Camera mainCamera) {
-            // if (!shader && !string.IsNullOrEmpty(shaderName)) {
-            //     shader = Shader.Find(shaderName);
-            // }
-            
-            // if (!material || material.shader != shader) {
-            //     material = new Material(material);
-            // }
-            // OnInitialize();
-            // OnCameraChange(camera);
-        }
 
-        public virtual void Initialize(Camera mainCamera) {
+            Debug.Log("++++ initialize called for " + this.name);
             if (!shader && !string.IsNullOrEmpty(shaderName)) {
+
+                Debug.Log("---- loading shader " + shaderName);
                 shader = Shader.Find(shaderName);
             }
             
-            if (!material || material.shader != shader) {
-                material = new Material(material);
+            if (shader && (!material || material.shader != shader)) {
+                material = new Material(shader);
             }
             
-            OnInitialize(mainCamera);
-            OnCameraChange(mainCamera);
+            //OnInitialize(mainCamera);
+            // OnCameraChange(mainCamera);
+            initialized = true;
         }
+
+        // public virtual void Initialize(Camera mainCamera) {
+        //     if (!shader && !string.IsNullOrEmpty(shaderName)) {
+        //         shader = Shader.Find(shaderName);
+        //     }
+            
+        //     if (!material || material.shader != shader) {
+        //         material = new Material(material);
+        //     }
+            
+        //     OnInitialize(mainCamera);
+        //     OnCameraChange(mainCamera);
+        //     initialized = true;
+        // }
 
         
 
         public virtual void OnCameraChange(Camera mainCamera) {
+            Debug.Log("-------OnCameraChange " + name);
             if (tex != null) {
                 UnityEngine.Object.Destroy(tex);
                 tex = null;
             }
-
+            // if (cb != null) {
+            //     this.camera.RemoveCommandBuffer(CameraEvent.AfterImageEffects, cb);
+            // }
             this.camera.RemoveAllCommandBuffers();
 
             // copy all "main" camera parameters into capturing camera
@@ -212,17 +314,21 @@ namespace Thor.Rendering {
 
             // this.camera.depth = 0; // This ensures the new camera does not get rendered on screen
         
-        // TODO: add rescaling here
-        if (renderTexture != null && renderTexture.IsCreated())
-        {
-            renderTexture.Release();
-        }
+        
 
         // renderTexture = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
 
-        renderTexture = CreateRenderTexture(Screen.width, Screen.height);
+        this.renderTexture = CreateRenderTexture(Screen.width, Screen.height);
+        // if (this.name != "_img") {
+        // this.camera.targetTexture = this.renderTexture;
+        // }
+        this.camera.targetDisplay = this.toDisplayId.GetValueOrDefault();
 
-        this.camera.targetTexture = renderTexture;
+        // If set to render to display don't set render texture because display buffer is only written to if targetTexture is null
+        if (!this.toDisplayId.HasValue) {
+            this.camera.targetTexture = this.renderTexture;          
+        }
+        
         
         if (cb != null) {
             cb.Clear();
@@ -230,8 +336,9 @@ namespace Thor.Rendering {
         else {
             cb = new CommandBuffer();
         }
-       
+        Debug.Log("------- Before command buffer " + name);
         this.AddToCommandBuffer(cb);
+        
        
 
         // TODO: debug code for editor
@@ -278,7 +385,32 @@ namespace Thor.Rendering {
 
 // //     }
 
-       
+    public virtual byte[] GetBytes(
+        bool jpg = false
+    ) {
+
+        var renderTexture = this.GetRenderTexture();
+        var prevActiveRT = RenderTexture.active;
+        RenderTexture.active = renderTexture;
+        
+        // float startTime = Time.realtimeSinceStartup;
+
+        tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+        
+        
+        // startTime = Time.realtimeSinceStartup;
+
+        // encode texture into PNG/JPG
+        byte[] bytes;
+        if (jpg) {
+            bytes = tex.EncodeToJPG();
+        } else {
+            bytes = tex.GetRawTextureData();
+        }
+        RenderTexture.active = prevActiveRT;
+        return bytes;
+    }
+
 
 }
 
@@ -287,13 +419,14 @@ public class ReplacementShaderCapture: RenderToTexture {
 
     private readonly Transform cameraParent;
     private ReplacelementMode mode;
-    public ReplacementShaderCapture(string name, Transform cameraParent, ReplacelementMode replacementMode, int antiAliasLevel = 1, string shaderName = null) : base(name, null, antiAliasLevel, shaderName) {
+    public ReplacementShaderCapture(CaptureConfig config, Transform cameraParent) : base(config, null) {
         this.cameraParent = cameraParent;
-        this.mode = replacementMode;
+        this.mode = config.replacementMode;
     }
 
     public override void OnInitialize(Camera mainCamera) {
         this.camera = CreateHiddenCamera(cameraParent, this.name);
+        base.OnInitialize(mainCamera);
     }
 
 
@@ -326,9 +459,11 @@ public class ReplacementShaderCapture: RenderToTexture {
             this.camera.renderingPath = RenderingPath.Forward;
             this.camera.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, cb);
             this.camera.AddCommandBuffer(CameraEvent.BeforeFinalPass, cb);
+            Debug.Log($"------ AddToCommandBuffer for {this.name}");
             this.camera.SetReplacementShader(shader, "");
             this.camera.backgroundColor = Color.blue;
             this.camera.clearFlags = CameraClearFlags.SolidColor;
+            this.camera.targetTexture = this.GetRenderTexture();
         }
     
 
@@ -338,8 +473,8 @@ public class ReplacementShaderCapture: RenderToTexture {
 
         IEnumerable<RenderToTexture> passes;
         Dictionary<string, RenderToTexture> passDict;
-        public MultiCapture(string name, Camera camera, IEnumerable<RenderToTexture> passes, int antiAliasLevel = 1, string shaderName = null) : base(name, camera, antiAliasLevel, shaderName) {
-            this.passDict = passes.ToDictionary(p => p.GetName());
+        public MultiCapture(CaptureConfig config, Camera camera, IEnumerable<RenderToTexture> passes) : base(config, camera) {
+            this.passDict = passes.ToDictionary(p => p.GetName(), p => p);
         }
 
         public override void AddToCommandBuffer(CommandBuffer commandBuffer) {
@@ -357,25 +492,43 @@ public class ReplacementShaderCapture: RenderToTexture {
             // foreach (var pass in passes) {
             //     commandBuffer.Blit(screenCopyID, pass.GetRenderTarget(), material);
             // }
+            // cb.SetRenderTarget(new RenderTargetIdentifier(null as Texture));
+            //this.camera.targetTexture = null;
+
+            // cb.Blit(this.GetRenderTarget(), BuiltinRenderTextureType.CurrentActive);
+             Debug.Log($"----------- Blit for multipass");
+
+            // If rendering to display
+            if (this.toDisplayId.HasValue) {
+                // if it's not cloudrendering camera.targetTexture is null which means it's rendering to the display buffer
+                // so then we need to copy the display buffer into render texture
+
+                // for cloudrendering rbb is rendered directly into our render texture so no need to do this
+                cb.Blit(BuiltinRenderTextureType.CurrentActive, this.GetRenderTexture());
+            }
+
+            // cb.SetRenderTarget(this.GetRenderTarget());
             
             // commandBuffer.ReleaseTemporaryRT(screenCopyID);
             foreach (var pass in this.passDict.Values) {
-                commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, pass.GetRenderTarget(), pass.material);
+                commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, pass.GetRenderTexture(), pass.material);
             }
             
 
             this.camera.AddCommandBuffer(CameraEvent.BeforeImageEffects, commandBuffer);
             this.camera.depthTextureMode = DepthTextureMode.Depth;
+            
         }
 
-        public override void Initialize(Camera mainCamera) {
+        public override void OnInitialize(Camera mainCamera) {
             foreach (var pair in this.passDict) {
-                pair.Value.Initialize(mainCamera);
+                pair.Value.OnInitialize(mainCamera);
             }
-            base.Initialize(mainCamera);
+            base.OnInitialize(mainCamera);
         }
 
         public override void OnCameraChange(Camera mainCamera) {
+            Debug.Log($"----------- Multipass OnCameraChange for {this.passDict.Values.Select(x => x.GetName())}");
             foreach (var pair in this.passDict) {
                 pair.Value.OnCameraChange(mainCamera);
             }
@@ -388,7 +541,7 @@ public class ReplacementShaderCapture: RenderToTexture {
 
 
 
-        public void AddCapturePass(RenderToTexture pass) {
+        public void AddUpdateCapturePass(RenderToTexture pass) {
             this.passDict[pass.GetName()] = pass;
             // if (!this.passDict.ContainsKey(pass.name))
             //     this.passDict.Add(pass)
@@ -396,8 +549,18 @@ public class ReplacementShaderCapture: RenderToTexture {
 
         
     }
+    
+    // public class DistortionCapture : RenderToTexture {
+    //     public DistortionCapture(CaptureConfig config, Camera camera) : base(config, camera) {
+    //     }
+
+
+    // }
 
 }
+
+
+
 
 
 // public class ImageD : MonoBehaviour {

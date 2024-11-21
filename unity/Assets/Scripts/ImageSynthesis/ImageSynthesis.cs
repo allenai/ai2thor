@@ -279,7 +279,25 @@ public class ImageSynthesis : MonoBehaviour {
 
     private Dictionary<string, ICapturePass> availablePasses;
 
+    private ICapturePass mainPass;
+
     private Dictionary<string, ICapturePass> activePasses;
+
+    private bool useImageSynthesis = true;
+
+    public void EnablePasses(IEnumerable<string> activePassesNames) {
+        if (activePassesNames != null) {
+            var newActive = activePassesNames.Select(name => {
+                ICapturePass capturePass; 
+                var exists = availablePasses.TryGetValue(name, out capturePass);
+                return capturePass;
+            });
+            if (newActive.Any(x => x == null)) {
+                throw new InvalidOperationException($"Invalid capture passes `{string.Join(", ", newActive.Where(x => x == null))}`");
+            }
+            this.activePasses = newActive.ToDictionary(x => x.GetName(), x => x);
+        }
+    }
 
     public void OnEnable() {
 
@@ -304,24 +322,7 @@ public class ImageSynthesis : MonoBehaviour {
 
         // new CapturePass() { name = "_distortion", noCamera=true }
 
-        // var camera = GetComponent<Camera>();
-        // var antiAliasLevel = 1;
-        // var mainPass = new MultiCapture("_img", camera, new List<RenderToTexture>() {});
-        // var dPass = new RenderToTexture(
-        //     name: "_depth", camera: camera, antiAliasLevel: antiAliasLevel, shaderName: "Hidden/DepthBW"
-        // );
-
-        // var distPass = new RenderToTexture(
-        //     name: "_distortion", camera: camera, antiAliasLevel: antiAliasLevel, shaderName: "Custom/BarrelDistortion"
-        // );
-
-        // var idPass = new ReplacementShaderCapture(
-        //     name: "_id", cameraParent: this.transform, replacementMode: ReplacelementMode.ObjectId, antiAliasLevel: antiAliasLevel, shaderName: "Hidden/UberReplacement"
-        // );
-
-        // var classPass = new ReplacementShaderCapture(
-        //     name: "_class", cameraParent: this.transform, replacementMode: ReplacelementMode.CatergoryId, antiAliasLevel: antiAliasLevel, shaderName: "Hidden/UberReplacement"
-        // );
+       
 
     //     private static void SetupCameraWithReplacementShader(
     //     Camera cam,
@@ -346,6 +347,10 @@ public class ImageSynthesis : MonoBehaviour {
         // programatically in other functions and need them to be initialized immediately.
         Debug.Log("OnEnable image synth");
         if (!initialized) {
+
+            
+            
+
             // XXXXXXXXXXX************
             // Remember, adding any new Shaders requires them to be included in Project Settings->Graphics->Always Included Shaders
             // otherwise the standlone will build without the shaders and you will be sad
@@ -381,18 +386,21 @@ public class ImageSynthesis : MonoBehaviour {
             opticalFlowSensitivity = 50.0f;
 
             // use real camera to capture final image
+            if (useImageSynthesis) {
             var mainCamera = GetComponent<Camera>();
             capturePasses[0].camera = GetComponent<Camera>();
             for (int q = 1; q < capturePasses.Length; q++) {
-                if (!capturePasses[q].noCamera) {
-                    capturePasses[q].camera = CreateHiddenCamera(capturePasses[q].name);
-                }
-                else {
-                    capturePasses[q].camera = mainCamera;
+                // if (!capturePasses[q].noCamera) {
+                //     capturePasses[q].camera = CreateHiddenCamera(capturePasses[q].name);
+                // }
+                // else {
+                    //capturePasses[q].camera = mainCamera;
 
-                }
+                // }
             }
             md5 = System.Security.Cryptography.MD5.Create();
+
+            }
 
             OnCameraChange();
              Debug.Log("OnEnable image synth scenechange");
@@ -561,6 +569,7 @@ public class ImageSynthesis : MonoBehaviour {
     // Call this if the settings on the main camera ever change? But the main camera now uses slightly different layer masks and deffered/forward render settings than these image synth cameras
     // do, so maybe it's fine for now I dunno
     public void OnCameraChange() {
+        if (useImageSynthesis) {
         if (tex != null) {
             Destroy(tex);
             tex = null;
@@ -570,101 +579,103 @@ public class ImageSynthesis : MonoBehaviour {
         // TODO: add tests, not needed when target display is different
         // mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
 
-        foreach (var pass in capturePasses) {
-            pass.camera.RemoveAllCommandBuffers();
-            if (pass.camera == mainCamera) {            
-                continue;
-            }
+        // foreach (var pass in capturePasses) {
+        //     pass.camera.RemoveAllCommandBuffers();
+        //     if (pass.camera == mainCamera) {            
+        //         continue;
+        //     }
 
-            // cleanup capturing camera
-            // pass.camera.RemoveAllCommandBuffers();
+        //     // cleanup capturing camera
+        //     // pass.camera.RemoveAllCommandBuffers();
 
-            // copy all "main" camera parameters into capturing camera
-            pass.camera.CopyFrom(mainCamera);
+        //     // copy all "main" camera parameters into capturing camera
+        //     pass.camera.CopyFrom(mainCamera);
 
-            // make sure the capturing camera is set to Forward rendering (main camera uses Deffered now)
-            pass.camera.renderingPath = RenderingPath.Forward;
-            // make sure capturing camera renders all layers (value copied from Main camera excludes PlaceableSurfaces layer, which needs to be rendered on this camera)
-            pass.camera.cullingMask = -1;
+        //     // make sure the capturing camera is set to Forward rendering (main camera uses Deffered now)
+        //     pass.camera.renderingPath = RenderingPath.Forward;
+        //     // make sure capturing camera renders all layers (value copied from Main camera excludes PlaceableSurfaces layer, which needs to be rendered on this camera)
+        //     pass.camera.cullingMask = -1;
 
-            pass.camera.depth = 0; // This ensures the new camera does not get rendered on screen
-        }
+        //     pass.camera.depth = 0; // This ensures the new camera does not get rendered on screen
+        // }
 
         // cache materials and setup material properties
-        if (!opticalFlowMaterial || opticalFlowMaterial.shader != opticalFlowShader) {
-            opticalFlowMaterial = new Material(opticalFlowShader);
-        }
-        opticalFlowMaterial.SetFloat("_Sensitivity", opticalFlowSensitivity);
+        // if (!opticalFlowMaterial || opticalFlowMaterial.shader != opticalFlowShader) {
+        //     opticalFlowMaterial = new Material(opticalFlowShader);
+        // }
+        // opticalFlowMaterial.SetFloat("_Sensitivity", opticalFlowSensitivity);
 
-        if (!depthMaterial || depthMaterial.shader != depthShader) {
-            depthMaterial = new Material(depthShader);
-        }
+        // if (!depthMaterial || depthMaterial.shader != depthShader) {
+        //     depthMaterial = new Material(depthShader);
+        // }
 
-        // screenCopyMaterial = new Material(screenCopyShader);
+        // // screenCopyMaterial = new Material(screenCopyShader);
 
-        if (!distortionMaterial || distortionMaterial.shader != distortionShader) {
-            distortionMaterial = new Material(distortionShader);
-        }
-        var distortionPass = capturePasses.First(x => x.name == "_distortion");
+        // if (!distortionMaterial || distortionMaterial.shader != distortionShader) {
+        //     distortionMaterial = new Material(distortionShader);
+        // }
+        // var distortionPass = capturePasses.First(x => x.name == "_distortion");
 
-        distortionMaterial.SetFloat("_fov_y", distortionPass.camera.fieldOfView);
+        // distortionMaterial.SetFloat("_fov_y", distortionPass.camera.fieldOfView);
 
-        Texture2D realTex = null;
-        byte[] fileData;
-        var filePath =  Application.dataPath + "/real_camera/" + "frame_1.png";
+        // Texture2D realTex = null;
+        // byte[] fileData;
+        // var filePath =  Application.dataPath + "/real_camera/" + "frame_1.png";
 
-        if (File.Exists(filePath)) 	{
-            fileData = File.ReadAllBytes(filePath);
-            realTex = new Texture2D(2, 2);
-            realTex.LoadImage(fileData); //..this will auto-resize the texture dimensions.
+        // Move to a shader Uniform Set Callback
+        // if (File.Exists(filePath)) 	{
+        //     fileData = File.ReadAllBytes(filePath);
+        //     realTex = new Texture2D(2, 2);
+        //     realTex.LoadImage(fileData); //..this will auto-resize the texture dimensions.
 
-             distortionMaterial.SetTexture("_RealImage", realTex);
-        }
+        //      distortionMaterial.SetTexture("_RealImage", realTex);
+        // }
 
 
         // capturePasses [1].camera.farClipPlane = 100;
         // SetupCameraWithReplacementShader(capturePasses[1].camera, uberReplacementShader, ReplacelementModes.DepthMultichannel);
 
-        if (renderTexture != null && renderTexture.IsCreated())
-        {
-            renderTexture.Release();
-        }
+        // if (renderTexture != null && renderTexture.IsCreated())
+        // {
+        //     renderTexture.Release();
+        // }
 
-        for (int i = 0; i < capturePasses.Length; i++) { 
-            if (capturePasses[i].noCamera) {
-                if (capturePasses[i].renderTexture != null && capturePasses[i].renderTexture.IsCreated()) {
-                    capturePasses[i].renderTexture.Release();
+        // for (int i = 0; i < capturePasses.Length; i++) { 
+        //     if (capturePasses[i].noCamera) {
+        //         if (capturePasses[i].renderTexture != null && capturePasses[i].renderTexture.IsCreated()) {
+        //             capturePasses[i].renderTexture.Release();
                     
-                }
-                var format = RenderTextureFormat.ARGB32;
-                // if (capturePasses[i].name == "_depth") {
-                //     format = RenderTextureFormat.Depth;
-                // }
-                capturePasses[i].renderTexture = new RenderTexture(Screen.width, Screen.height, 24, format, RenderTextureReadWrite.Default);
-            }
-        }
+        //         }
+        //         var format = RenderTextureFormat.ARGB32;
+        //         // if (capturePasses[i].name == "_depth") {
+        //         //     format = RenderTextureFormat.Depth;
+        //         // }
+        //         capturePasses[i].renderTexture = new RenderTexture(Screen.width, Screen.height, 24, format, RenderTextureReadWrite.Default);
+        //     }
+        // }
       
-        renderTexture = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+        // renderTexture = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
 
         // SetupCameraWithPostShader2(renderTexture, capturePasses[1].camera, depthMaterial,
         // //  screenCopyMaterial: screenCopyMaterial,
         //   DepthTextureMode.Depth);
 
-        SetupCameraWithReplacementShader(
-            capturePasses[2].camera,
-            uberReplacementShader,
-            ReplacelementModes.ObjectId
-        );
-        SetupCameraWithReplacementShader(
-            capturePasses[3].camera,
-            uberReplacementShader,
-            ReplacelementModes.CatergoryId
-        );
-        SetupCameraWithReplacementShader(
-            capturePasses[4].camera,
-            uberReplacementShader,
-            ReplacelementModes.Normals
-        );
+        // SetupCameraWithReplacementShader(
+        //     capturePasses[2].camera,
+        //     uberReplacementShader,
+        //     ReplacelementModes.ObjectId
+        // );
+        // SetupCameraWithReplacementShader(
+        //     capturePasses[3].camera,
+        //     uberReplacementShader,
+        //     ReplacelementModes.CatergoryId
+        // );
+        // SetupCameraWithReplacementShader(
+        //     capturePasses[4].camera,
+        //     uberReplacementShader,
+        //     ReplacelementModes.Normals
+        // );
+
         // SetupCameraWithPostShader2(
         //     renderTexture,
         //     capturePasses[5].camera,
@@ -677,25 +688,29 @@ public class ImageSynthesis : MonoBehaviour {
         // //  screenCopyMaterial: screenCopyMaterial,
         //   DepthTextureMode.Depth);
 
-        SetupCameraWithPostShaders(
-            renderTexture,
-            capturePasses[0].camera, // main camera
-            new List<(Material, CapturePass)>() {
-                (depthMaterial, capturePasses[1]),
-                // opticalFlowMaterial // unused so disabling 
-                (distortionMaterial, capturePasses[6])
-            },
-            DepthTextureMode.Depth | DepthTextureMode.MotionVectors
-        );
+        // SetupCameraWithPostShaders(
+        //     renderTexture,
+        //     capturePasses[0].camera, // main camera
+        //     new List<(Material, CapturePass)>() {
+        //         (depthMaterial, capturePasses[1]),
+        //         // opticalFlowMaterial // unused so disabling 
+        //         (distortionMaterial, capturePasses[6])
+        //     },
+        //     DepthTextureMode.Depth | DepthTextureMode.MotionVectors
+        // );
+        
 
         
 
 #if UNITY_EDITOR
-        for (int i = 0; i < capturePasses.Length; i++) {
-            // Debug.Log("Setting camera " + capturePasses[i].camera.gameObject.name + " to display " + i);
-            capturePasses[i].camera.targetDisplay = i;
-        }
+        // for (int i = 0; i < capturePasses.Length; i++) {
+        //     // Debug.Log("Setting camera " + capturePasses[i].camera.gameObject.name + " to display " + i);
+        //     if (capturePasses[i].camera != mainCamera) {
+        //         capturePasses[i].camera.targetDisplay = i;
+        //     }
+        // }
 #endif
+        }
 
         /*
         SetupCameraWithReplacementShader(capturePasses[6].camera, positionShader);
@@ -764,7 +779,7 @@ public class ImageSynthesis : MonoBehaviour {
             Color classColor = ColorEncoding.EncodeTagAsColor(classTag);
             Color objColor = ColorEncoding.EncodeTagAsColor(objTag);
 
-            capturePasses[0].camera.WorldToScreenPoint(r.bounds.center);
+            // capturePasses[0].camera.WorldToScreenPoint(r.bounds.center);
 
             if (so != null || sop != null) {
                 colorIds[objColor] = objTag;

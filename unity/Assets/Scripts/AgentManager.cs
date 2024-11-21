@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Thor.Procedural.Data;
+using Thor.Rendering;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Networking;
@@ -52,6 +53,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     private bool renderNormalsImage;
     private bool renderFlowImage;
     private bool renderDistortionImage;
+
+    private IEnumerable<string> activeCapturePassList;
     private Socket sock = null;
 
     [SerializeField]
@@ -184,8 +187,9 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         // needed to ensure that the com.unity.simulation.capture package
         // gets initialized
         var instance = Manager.Instance;
-        Camera camera = this.primaryAgent.gameObject.GetComponentInChildren<Camera>();
-        camera.targetTexture = createRenderTexture(Screen.width, Screen.height);
+
+        // Camera camera = this.primaryAgent.gameObject.GetComponentInChildren<Camera>();
+        // camera.targetTexture = createRenderTexture(Screen.width, Screen.height);
 #endif
 
         primaryAgent.actionDuration = this.actionDuration;
@@ -339,6 +343,17 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         this.renderDistortionImage = action.renderDistortionImage;
         this.fastActionEmit = action.fastActionEmit;
 
+        // TODO Refactor so that we know where these strings come from
+        activeCapturePassList = new Dictionary<string, bool>() {
+            {"_img", true},
+            {"_depth", this.renderDepthImage},
+            {"_id", this.renderInstanceSegmentation},
+            {"_class", this.renderSemanticSegmentation},
+            {"_normals", this.renderNormalsImage},
+            {"_flow", this.renderFlowImage},
+            {"_distortion", this.renderDistortionImage}
+        }.Where(x => x.Value).Select(x => x.Key);
+
         PhysicsSceneManager.SetDefaultSimulationParams(action.defaultPhysicsSimulationParams);
         Time.fixedDeltaTime = (
             action.defaultPhysicsSimulationParams?.fixedDeltaTime
@@ -370,6 +385,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         } else {
             ResetSceneBounds();
         }
+        // this.updateImageSynthesis(true, activeCapturePassList);
+        this.updateRenderingManagers(activeCapturePassList, true);
         this.agentManagerState = AgentState.ActionComplete;
     }
 
@@ -539,13 +556,15 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         ResetSceneBounds();
     }
 
+
+    // TODO: deprecate this make people call AddThirdPartyCamera for unified tpcam code
     public void registerAsThirdPartyCamera(Camera camera) {
         this.thirdPartyCameras.Add(camera);
 #if PLATFORM_CLOUD_RENDERING
-        camera.targetTexture = createRenderTexture(
-            this.primaryAgent.m_Camera.pixelWidth,
-            this.primaryAgent.m_Camera.targetTexture.height
-        );
+        // camera.targetTexture = createRenderTexture(
+        //     this.primaryAgent.m_Camera.pixelWidth,
+        //     this.primaryAgent.m_Camera.targetTexture.height
+        // );
 #endif
     }
 
@@ -559,9 +578,19 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         return (fov <= min || fov > max) ? defaultVal : fov;
     }
 
-    public void updateImageSynthesis(bool status) {
+    public void updateRenderingManagers(IEnumerable<string> activePassList, bool cameraChange = false) {
+        var renderingManagers = agents.Select(agent => agent.m_Camera.GetComponent<RenderingManager>())
+            .Concat(thirdPartyCameras.Select(cam => cam.GetComponent<RenderingManager>()));
+        foreach (var renderingManager in renderingManagers) {
+            Debug.Log($"------ updateRenderingManagers enablepasses for {renderingManager.transform.parent.name}");
+            renderingManager.EnablePasses(activePassList, cameraChange);
+        }
+    }
+
+    public void updateImageSynthesis(bool status, IEnumerable<string> activePassList, bool cameraChange = false) {
         foreach (var agent in this.agents) {
-            agent.updateImageSynthesis(status);
+            agent.updateImageSynthesis(status, activePassList);
+            // updateThirdPartyCameraImageSynthesis(status, activePassList, cameraChange);
         }
     }
 
@@ -574,8 +603,16 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 if (imageSynthesis == null) {
                     gameObject.AddComponent(typeof(ImageSynthesis));
                 }
+
+                // gameObject.AddComponent(typeof(RenderCapture))
                 imageSynthesis =
                     gameObject.GetComponentInChildren<ImageSynthesis>() as ImageSynthesis;
+
+                // var renderingManager = gameObject.GetComponentInChildren<RenderingManager>();
+
+                // if (cameraChange) {
+                // renderingManager.OnCameraChange()
+                // renderingManager.a
                 imageSynthesis.enabled = status;
             }
         }
@@ -704,6 +741,20 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         if (imageSynthesis != null && imageSynthesis.enabled) {
             imageSynthesis.OnCameraChange();
         }
+        var renderingManager =  camera.GetComponent<RenderingManager>();
+        // renderingManager.OnCameraChange();
+
+        activeCapturePassList = new Dictionary<string, bool>() {
+            {"_img", true},
+            {"_depth", this.renderDepthImage},
+            {"_id", this.renderInstanceSegmentation},
+            {"_class", this.renderSemanticSegmentation},
+            {"_normals", this.renderNormalsImage},
+            {"_flow", this.renderFlowImage},
+            {"_distortion", this.renderDistortionImage}
+        }.Where(x => x.Value).Select(x => x.Key);
+
+        this.updateRenderingManagers(activeCapturePassList, true);
 
         this.activeAgent().actionFinished(success: true);
     }
@@ -781,12 +832,29 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         ) {
             gameObject.AddComponent(typeof(ImageSynthesis));
         }
+        // activeCapturePassList = new Dictionary<string, bool>() {
+        //     {"_img", true},
+        //     {"_depth", this.renderDepthImage},
+        //     {"_id", this.renderInstanceSegmentation},
+        //     {"_class", this.renderSemanticSegmentation},
+        //     {"_normals", this.renderNormalsImage},
+        //     {"_flow", this.renderFlowImage},
+        //     {"_distortion", this.renderDistortionImage}
+        // }.Where(x => x.Value).Select(x => x.Key);
+
+        // // no on camera change because camera has not been changed, oncamerachange gets called on updateCameraProperties
+        // // consider unifying?
+        // this.updateRenderingManagers(activeCapturePassList);
 
 #if PLATFORM_CLOUD_RENDERING
-        camera.targetTexture = createRenderTexture(
-            this.primaryAgent.m_Camera.pixelWidth,
-            this.primaryAgent.m_Camera.targetTexture.height
-        );
+
+        // this now should happen in call updateCameraProperties which calls updateRenderingManagers
+        // which calls RenderingManager.OnCameraChange and recreates renderTexture
+
+        // camera.targetTexture = createRenderTexture(
+        //     this.primaryAgent.m_Camera.pixelWidth,
+        //     this.primaryAgent.m_Camera.targetTexture.height
+        // );
 #endif
 
         //default to no post processing needed on third party cameras
@@ -968,12 +1036,19 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         UpdateAgentColor(agent, agentColors[this.agents.Count]);
 
 #if PLATFORM_CLOUD_RENDERING
-        agent.m_Camera.targetTexture = createRenderTexture(
-            this.primaryAgent.m_Camera.targetTexture.width,
-            this.primaryAgent.m_Camera.targetTexture.height
-        );
+
+        // this should happen after ProcessControlCommand of AgentManager which is the only thing that calls 
+        //  this function via addAgents
+        // agent.m_Camera.targetTexture = createRenderTexture(
+        //     this.primaryAgent.m_Camera.targetTexture.width,
+        //     this.primaryAgent.m_Camera.targetTexture.height
+        // );
 #endif
         agent.ProcessControlCommand(action.dynamicServerAction);
+        // TODO: instead of calling agent.ProcessControlCommand call
+        // agentmanager ProcessControlCommand which calls RenderingManager updates automatically
+    //    var rm =  agent.m_Camera.GetComponent<RenderingManager>();
+    //    rm.EnablePasses()
     }
 
     private Vector3 agentStartPosition(BaseFPSAgentController agent) {
@@ -1078,6 +1153,15 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         physicsSceneManager.isSceneAtRest = true; // assume the scene is at rest by default
     }
 
+     private void captureScreenAsyncNew(
+        List<KeyValuePair<string, byte[]>> payload,
+        string key,
+        Camera camera
+    ) {
+        var rm = camera.GetComponent<RenderingManager>();
+        rm.GetCaptureAsync("_img", payload, key);
+    }
+
     private void captureScreenAsync(
         List<KeyValuePair<string, byte[]>> payload,
         string key,
@@ -1085,7 +1169,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     ) {
         RenderTexture tt = camera.targetTexture;
         RenderTexture.active = tt;
-        camera.Render();
+        // camera.Render();
         AsyncGPUReadback.Request(
             tt,
             0,
@@ -1110,38 +1194,74 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             );
             readPixelsRect = new Rect(0, 0, UnityEngine.Screen.width, UnityEngine.Screen.height);
         }
+        
         tex.ReadPixels(readPixelsRect, 0, 0);
         // tex.Apply();
         return tex.GetRawTextureData();
     }
 
+    private byte[] captureCamera(Camera camera) {
+        if (tex.height != UnityEngine.Screen.height || tex.width != UnityEngine.Screen.width) {
+            tex = new Texture2D(
+                UnityEngine.Screen.width,
+                UnityEngine.Screen.height,
+                TextureFormat.RGB24,
+                false
+            );
+            readPixelsRect = new Rect(0, 0, UnityEngine.Screen.width, UnityEngine.Screen.height);
+        }
+        var renderingManager = camera.GetComponent<RenderingManager>();
+
+        var prevActiveTex = RenderTexture.active;
+
+        var renderTexture = renderingManager.GetPassRenderTexture("_img");
+        RenderTexture.active = renderTexture;
+
+        tex.ReadPixels(readPixelsRect, 0, 0);
+        // camera.Render();
+
+        RenderTexture.active = prevActiveTex;
+        // tex.Apply();
+        var bytes = tex.GetRawTextureData();
+
+        Debug.Log($"-------- captureCamera {bytes.Length}");
+        return bytes;
+    }
+
     private void addThirdPartyCameraImage(List<KeyValuePair<string, byte[]>> payload, Camera camera) {
 #if PLATFORM_CLOUD_RENDERING
-        captureScreenAsync(payload, "image-thirdParty-camera", camera);
+        // captureScreenAsync(payload, "image-thirdParty-camera", camera);
+        captureScreenAsyncNew(payload, "image-thirdParty-camera", camera);
 #else
-        RenderTexture.active = camera.activeTexture;
-        camera.Render();
-        payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreen()));
+        // RenderTexture.active = camera.activeTexture;
+        // camera.Render();
+        // payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreen()));
+
+        payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureCamera(camera)));
 #endif
     }
 
     private void addImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent) {
         if (this.renderImage) {
 #if PLATFORM_CLOUD_RENDERING
-            captureScreenAsync(payload, "image", agent.m_Camera);
+            // captureScreenAsync(payload, "image", agent.m_Camera);
+             captureScreenAsyncNew(payload, "image", agent.m_Camera);
 #else
-            // XXX may not need this since we call render in captureScreenAsync
-            if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
-                RenderTexture.active = agent.m_Camera.activeTexture;
-                agent.m_Camera.Render();
-            }
-            payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
+            // // XXX may not need this since we call render in captureScreenAsync
+            // if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
+            //     RenderTexture.active = agent.m_Camera.activeTexture;
+            //     agent.m_Camera.Render();
+            // }
+            // payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
+            payload.Add(new KeyValuePair<string, byte[]>("image", captureCamera(agent.m_Camera)));
 #endif
         }
     }
 
     private void resetImageSynthesis(Camera camera) {
         ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis>();
+        var renderingManager = camera.GetComponent<RenderingManager>();
+        renderingManager.OnCameraChange();
         if (imageSynthesis != null && imageSynthesis.enabled) {
             imageSynthesis.OnCameraChange();
             imageSynthesis.OnSceneChange();
@@ -1175,7 +1295,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 + $" This is likely due to Unity not supporting the requested resolution and instead using the closest possible resolution."
             );
         }
-
+        // TODO once image synthesis is deprecated change to updateRenderingManagers
         this.resetAllImageSynthesis();
         this.primaryAgent.actionFinished(success);
     }
@@ -1198,21 +1318,24 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             "current screen resolution pre change: " + Screen.width + " height" + Screen.height
         );
 #if PLATFORM_CLOUD_RENDERING
-        foreach (var agent in this.agents)
-        {
-            var rt = agent.m_Camera.targetTexture;
-            rt.Release();
-            Destroy(rt);
-            agent.m_Camera.targetTexture = createRenderTexture(x, y);
-        }
 
-        foreach (var camera in this.thirdPartyCameras)
-        {
-            var rt = camera.targetTexture;
-            rt.Release();
-            Destroy(rt);
-            camera.targetTexture = createRenderTexture(x, y);
-        }
+        // This should happen automatically with each RenderingManager for it's capture passes
+        // in resetImageSynthesis in coroutine for screen as it detects new screen parameters
+        // foreach (var agent in this.agents)
+        // {
+        //     var rt = agent.m_Camera.targetTexture;
+        //     rt.Release();
+        //     Destroy(rt);
+        //     agent.m_Camera.targetTexture = createRenderTexture(x, y);
+        // }
+
+        // foreach (var camera in this.thirdPartyCameras)
+        // {
+        //     var rt = camera.targetTexture;
+        //     rt.Release();
+        //     Destroy(rt);
+        //     camera.targetTexture = createRenderTexture(x, y);
+        // }
 #endif
         StartCoroutine(WaitOnResolutionChange(width: x, height: y));
     }
@@ -1229,10 +1352,16 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     "Object Image not available in imagesynthesis - returning empty image"
                 );
             }
-            byte[] bytes = agent.ImageSynthesis.Encode("_id");
+            var renderingManager = agent.m_Camera.GetComponent<RenderingManager>();
+
+            byte[] bytes = renderingManager.GetCaptureBytes("_id");
+            // byte[] bytes = agent.ImageSynthesis.Encode("_id");
+
             payload.Add(new KeyValuePair<string, byte[]>("image_ids", bytes));
 
             List<ColorId> colors = new List<ColorId>();
+
+            Debug.Log($"----- imageSynt null? {agent.ImageSynthesis == null} { agent.ImageSynthesis} colorids null {agent.ImageSynthesis.colorIds == null}");
             foreach (Color key in agent.ImageSynthesis.colorIds.Keys) {
                 ColorId cid = new ColorId();
                 cid.color = new ushort[]
@@ -1261,6 +1390,21 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 Debug.LogError(captureName + " not available - sending empty image");
             }
             byte[] bytes = synth.Encode(captureName);
+            payload.Add(new KeyValuePair<string, byte[]>(fieldName, bytes));
+        }
+    }
+
+    private void addCapture(
+        List<KeyValuePair<string, byte[]>> payload,
+        Camera camera,
+        bool flag,
+        string captureName,
+        string fieldName
+    ) {
+        if (flag) {
+            Debug.Log($"------- Gettin capture for {captureName} {flag}");
+            var renderingManager = camera.GetComponent<RenderingManager>();
+            byte[] bytes = renderingManager.GetCaptureBytes(captureName);
             payload.Add(new KeyValuePair<string, byte[]>(fieldName, bytes));
         }
     }
@@ -1334,53 +1478,98 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 cMetadata.fieldOfView = camera.fieldOfView;
 
                 cameraMetadata[i] = cMetadata;
-                addThirdPartyCameraImage(renderPayload, camera);
+                // addThirdPartyCameraImage(renderPayload, camera);
+                renderPayload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureCamera(camera)));
+                
                 if (shouldRenderImageSynthesis) {
                     ImageSynthesis imageSynthesis =
                         camera.gameObject.GetComponentInChildren<ImageSynthesis>()
                         as ImageSynthesis;
-                    addImageSynthesisImage(
+
+                    addCapture(
                         renderPayload,
-                        imageSynthesis,
+                        camera,
                         this.renderDepthImage,
                         "_depth",
                         "image_thirdParty_depth"
                     );
-                    addImageSynthesisImage(
+                    addCapture(
                         renderPayload,
-                        imageSynthesis,
+                        camera,
                         this.renderNormalsImage,
                         "_normals",
                         "image_thirdParty_normals"
                     );
-                    addImageSynthesisImage(
+                    addCapture(
                         renderPayload,
-                        imageSynthesis,
+                        camera,
                         this.renderInstanceSegmentation,
                         "_id",
                         "image_thirdParty_image_ids"
                     );
-                    addImageSynthesisImage(
+                    addCapture(
                         renderPayload,
-                        imageSynthesis,
+                        camera,
                         this.renderSemanticSegmentation,
                         "_class",
                         "image_thirdParty_classes"
                     );
-                    addImageSynthesisImage(
+                    addCapture(
                         renderPayload,
-                        imageSynthesis,
-                        this.renderSemanticSegmentation,
+                        camera,
+                        this.renderFlowImage,
                         "_flow",
                         "image_thirdParty_flow"
                     ); // XXX fix this in a bit
-                    addImageSynthesisImage(
+                    addCapture(
                         renderPayload,
-                        imageSynthesis,
+                        camera,
                         this.renderDistortionImage,
                         "_distortion",
                         "image_thirdParty_distortion"
                     );
+                    // addImageSynthesisImage(
+                    //     renderPayload,
+                    //     imageSynthesis,
+                    //     this.renderDepthImage,
+                    //     "_depth",
+                    //     "image_thirdParty_depth"
+                    // );
+                    // addImageSynthesisImage(
+                    //     renderPayload,
+                    //     imageSynthesis,
+                    //     this.renderNormalsImage,
+                    //     "_normals",
+                    //     "image_thirdParty_normals"
+                    // );
+                    // addImageSynthesisImage(
+                    //     renderPayload,
+                    //     imageSynthesis,
+                    //     this.renderInstanceSegmentation,
+                    //     "_id",
+                    //     "image_thirdParty_image_ids"
+                    // );
+                    // addImageSynthesisImage(
+                    //     renderPayload,
+                    //     imageSynthesis,
+                    //     this.renderSemanticSegmentation,
+                    //     "_class",
+                    //     "image_thirdParty_classes"
+                    // );
+                    // addImageSynthesisImage(
+                    //     renderPayload,
+                    //     imageSynthesis,
+                    //     this.renderSemanticSegmentation,
+                    //     "_flow",
+                    //     "image_thirdParty_flow"
+                    // ); // XXX fix this in a bit
+                    // addImageSynthesisImage(
+                    //     renderPayload,
+                    //     imageSynthesis,
+                    //     this.renderDistortionImage,
+                    //     "_distortion",
+                    //     "image_thirdParty_distortion"
+                    // );
                 }
             }
         }
@@ -1398,42 +1587,78 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             if (shouldRender) {
                 addImage(renderPayload, agent);
                 if (shouldRenderImageSynthesis) {
-                    addImageSynthesisImage(
+                    addCapture(
                         renderPayload,
-                        agent.imageSynthesis,
+                        agent.m_Camera,
                         this.renderDepthImage,
                         "_depth",
                         "image_depth"
                     );
-                    addImageSynthesisImage(
+                    addCapture(
                         renderPayload,
-                        agent.imageSynthesis,
+                        agent.m_Camera,
                         this.renderNormalsImage,
                         "_normals",
                         "image_normals"
                     );
                     addObjectImage(renderPayload, agent, ref metadata);
-                    addImageSynthesisImage(
+                    addCapture(
                         renderPayload,
-                        agent.imageSynthesis,
+                        agent.m_Camera,
                         this.renderSemanticSegmentation,
                         "_class",
                         "image_classes"
                     );
-                    addImageSynthesisImage(
+                    addCapture(
                         renderPayload,
-                        agent.imageSynthesis,
+                        agent.m_Camera,
                         this.renderFlowImage,
                         "_flow",
                         "image_flow"
                     );
-                    addImageSynthesisImage(
+                    addCapture(
                         renderPayload,
-                        agent.imageSynthesis,
+                        agent.m_Camera,
                         this.renderDistortionImage,
                         "_distortion",
                         "image_distortion"
                     );
+                    // addImageSynthesisImage(
+                    //     renderPayload,
+                    //     agent.imageSynthesis,
+                    //     this.renderDepthImage,
+                    //     "_depth",
+                    //     "image_depth"
+                    // );
+                    // addImageSynthesisImage(
+                    //     renderPayload,
+                    //     agent.imageSynthesis,
+                    //     this.renderNormalsImage,
+                    //     "_normals",
+                    //     "image_normals"
+                    // );
+                    // addObjectImage(renderPayload, agent, ref metadata);
+                    // addImageSynthesisImage(
+                    //     renderPayload,
+                    //     agent.imageSynthesis,
+                    //     this.renderSemanticSegmentation,
+                    //     "_class",
+                    //     "image_classes"
+                    // );
+                    // addImageSynthesisImage(
+                    //     renderPayload,
+                    //     agent.imageSynthesis,
+                    //     this.renderFlowImage,
+                    //     "_flow",
+                    //     "image_flow"
+                    // );
+                    // addImageSynthesisImage(
+                    //     renderPayload,
+                    //     agent.imageSynthesis,
+                    //     this.renderDistortionImage,
+                    //     "_distortion",
+                    //     "image_distortion"
+                    // );
                 }
                 metadata.thirdPartyCameras = cameraMetadata;
             }
@@ -1778,16 +2003,22 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 this.renderInstanceSegmentation = true;
             }
 
+            
+                /// TODOremove if?
             if (
                 this.renderDepthImage
                 || this.renderSemanticSegmentation
                 || this.renderInstanceSegmentation
                 || this.renderNormalsImage
+                || this.renderDistortionImage
             ) {
-                updateImageSynthesis(true);
+
+
+                updateImageSynthesis(true, activeCapturePassList);
                 // Call with flags
                 updateThirdPartyCameraImageSynthesis(true);
             }
+            updateRenderingManagers(activeCapturePassList, true);
 
             // let's look in the agent's set of actions for the action
             this.activeAgent().ProcessControlCommand(controlCommand: controlCommand);
@@ -1859,13 +2090,18 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
     public ActionFinished SetDistortionShaderParams(bool mainCamera = true, IEnumerable<int> thidPartyCameraIndices = null, float zoomPercent = 1.0f, float k1 = 0.0f, float k2 = 0.0f, float k3 = 0.0f, float k4 = 0.0f, float strength = 1.0f, float intensityX = 1.0f, float intensityY = 1.0f) {
         
-        IEnumerable<ImageSynthesis> imageSynths = mainCamera ? new List<ImageSynthesis>() {this.primaryAgent.imageSynthesis} : new List<ImageSynthesis>();
-        imageSynths = thidPartyCameraIndices != null ? imageSynths.Concat(this.thirdPartyCameras.Where((cam, i) => thidPartyCameraIndices.Contains(i)).Select(cam => cam.GetComponent<ImageSynthesis>())) : imageSynths;
-        if (imageSynths.Any(x => x == null)) {
-            return new ActionFinished(success: false, errorMessage: "No imageSynthesis, make sure you pass 'renderDistortionImage = true' to the agent constructor.");
-        }
-        foreach (var imageSynthesis in imageSynths) {
-            var material = imageSynthesis.distortionMaterial;
+        IEnumerable<RenderingManager> renderingManagers = mainCamera ? new List<RenderingManager>() {this.primaryAgent.m_Camera.GetComponent<RenderingManager>()} : new List<RenderingManager>();
+        renderingManagers = thidPartyCameraIndices != null ? renderingManagers.Concat(this.thirdPartyCameras.Where((cam, i) => thidPartyCameraIndices.Contains(i)).Select(cam => cam.GetComponent<RenderingManager>())) : renderingManagers;
+        // TODO remove as this should never happen with new flow
+        // if (renderingManagers.Any(x => x == null)) {
+        //     return new ActionFinished(success: false, errorMessage: "No RenderingManager, make sure you pass 'renderDistortionImage = true' to the agent constructor.");
+        // }
+        foreach (var renderingManager in renderingManagers) {
+            var distortion = renderingManager.GetCapturePass("_distortion");
+            if (distortion == null) {
+                return new ActionFinished(success: false, errorMessage: "No Distortion pass, make sure you pass 'renderDistortionImage = true' to the agent constructor.");
+            }   
+            var material = distortion.material;
             material.SetFloat("_ZoomPercent", zoomPercent);
             material.SetFloat("_k1", k1);
             material.SetFloat("_k2", k2);

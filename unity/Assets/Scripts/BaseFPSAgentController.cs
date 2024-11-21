@@ -2725,11 +2725,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return metaMessage;
         }
 
-        public virtual void updateImageSynthesis(bool status) {
+        public virtual void updateImageSynthesis(bool status, IEnumerable<string> activePassList = null) {
             if (this.imageSynthesis == null) {
-                imageSynthesis =
+                this.imageSynthesis =
                     this.m_Camera.gameObject.GetComponent<ImageSynthesis>() as ImageSynthesis;
             }
+            // this.imageSynthesis.EnablePasses(activePassList);
+
+            // var renderingManager = this.m_Camera.gameObject.GetComponent<RenderingManager>();
+            // renderingManager.EnablePasses(activePassList);
+            // if (cameraChange) {
+            //     renderingManager.OnCameraChange();
+            // }
             imageSynthesis.enabled = status;
         }
 

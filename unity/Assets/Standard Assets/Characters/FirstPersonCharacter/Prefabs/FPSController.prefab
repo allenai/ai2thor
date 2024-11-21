@@ -258,6 +258,7 @@ GameObject:
   - component: {fileID: 114176532703538896}
   - component: {fileID: 992261166}
   - component: {fileID: 2007864990}
+  - component: {fileID: 8452980845336696311}
   m_Layer: 10
   m_Name: FirstPersonCharacter
   m_TagString: MainCamera
@@ -366,6 +367,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   opticalFlowSensitivity: 0
+  depthMaterial: {fileID: 0}
+  distortionMaterial: {fileID: 0}
   sentColorCorrespondence: 0
   tex: {fileID: 0}
 --- !u!114 &114176532703538896
@@ -375,7 +378,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 100002}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 76b5ec6153a1d55438228df10fe66844, type: 3}
   m_Name: 
@@ -462,6 +465,18 @@ MonoBehaviour:
   m_BeforeTransparentBundles: []
   m_BeforeStackBundles: []
   m_AfterStackBundles: []
+--- !u!114 &8452980845336696311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68871f0bc5fb742138947ad4c5e73f7d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1340499340313870
 GameObject:
   m_ObjectHideFlags: 0
