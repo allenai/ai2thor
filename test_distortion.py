@@ -40,6 +40,7 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
         renderDistortionImage=distortion,
         renderSemanticSegmentation=True,
         renderInstanceSegmentation=True,
+        fieldOfView=120,
         **args,
     )
 
@@ -102,19 +103,19 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
             intensityY=0.93
         )
 
-    xpos = dict(x=0.0, y=0.900992214679718, z=0.0786)
-    sr = controller.step(
-        action="Teleport", position=xpos, rotation=dict(x=0, y=0, z=0), forceAction=True
-    )
-    if not sr.metadata["lastActionSuccess"]:
-        print(f"Error teleporting to {xpos}")
-        current_pos = controller.last_event.metadata["agent"]["position"]
-        print(f"Current position: {current_pos}")
-    # print("Teleported to calibration room")
-    # print(f"Current position: {thor_controller.last_event.metadata['agent']['position']}")
-    # controller.step(
-    #     {"action": "RotateCameraMount", "degrees": 13, "secondary": False}
-    # )
+    # xpos = dict(x=0.0, y=0.900992214679718, z=0.0786)
+    # # sr = controller.step(
+    # #     action="Teleport", position=xpos, rotation=dict(x=0, y=0, z=0), forceAction=True
+    # # )
+    # # if not sr.metadata["lastActionSuccess"]:
+    # #     print(f"Error teleporting to {xpos}")
+    # #     current_pos = controller.last_event.metadata["agent"]["position"]
+    # #     print(f"Current position: {current_pos}")
+    # # print("Teleported to calibration room")
+    # # print(f"Current position: {thor_controller.last_event.metadata['agent']['position']}")
+    # # controller.step(
+    # #     {"action": "RotateCameraMount", "degrees": 13, "secondary": False}
+    # # )
     cam_param = {
         "position": {"x": -0.1211464, "y": 0.561659, "z": 0.03892733},
         "rotation": {"x": 20.0, "y": 0.0, "z": 0.0},
@@ -128,7 +129,7 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
         position=cam_param["position"],
         rotation=cam_param["rotation"],
         fieldOfView=cam_param["fov"],
-        agentId=0,
+        agentId=0
     )
 
     print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")

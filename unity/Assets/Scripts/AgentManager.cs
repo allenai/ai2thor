@@ -753,8 +753,12 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             {"_flow", this.renderFlowImage},
             {"_distortion", this.renderDistortionImage}
         }.Where(x => x.Value).Select(x => x.Key);
+        renderingManager.EnablePasses(activeCapturePassList, cameraChange: true);
 
-        this.updateRenderingManagers(activeCapturePassList, true);
+        // this.updateRenderingManagers(activeCapturePassList, true);
+
+        
+
 
         this.activeAgent().actionFinished(success: true);
     }
@@ -2020,7 +2024,9 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 // Call with flags
                 updateThirdPartyCameraImageSynthesis(true);
             }
-            updateRenderingManagers(activeCapturePassList, true);
+
+            // TODO: not sure if needed just after initialize
+            // updateRenderingManagers(activeCapturePassList, true);
 
             // let's look in the agent's set of actions for the action
             this.activeAgent().ProcessControlCommand(controlCommand: controlCommand);

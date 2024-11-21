@@ -80,7 +80,7 @@ public class RenderingManager : MonoBehaviour {
         var mainCamera = GetComponent<Camera>();
         
         if (activePassesNames != null) {
-            Debug.Log($"--------- Enabling passes 0 {string.Join(", ", activePassesNames)}");
+            // Debug.Log($"--------- Enabling passes 0 {string.Join(", ", activePassesNames)}");
             var newActive = activePassesNames.Select(name => {
                 ICapturePass capturePass; 
                 var exists = availablePasses.TryGetValue(name, out capturePass);
@@ -90,7 +90,7 @@ public class RenderingManager : MonoBehaviour {
             if (newActive.Any(x => x == null)) {
                 throw new InvalidOperationException($"Invalid capture passes `{string.Join(", ", newActive.Where(x => x == null))}`");
             }
-            Debug.Log($"--------- Enabling passes 2 {string.Join(", ", newActive.Select(x => x.GetName()))}");
+            // Debug.Log($"--------- Enabling passes 2 {string.Join(", ", newActive.Select(x => x.GetName()))}");
             var toInitialize = newActive.Where( x => ! x.IsInitialized());
             // if this is one of the passes that is part of a MultiPass
             var mainMultiPassUpdate = toInitialize.Where(x => this.WithMainMultiPass.Contains(x.GetName()));
@@ -118,29 +118,35 @@ public class RenderingManager : MonoBehaviour {
                 // Initialize calls OnCameraChange
                 var onCameraChange = activePasses.Values.Where(x => !this.WithMainMultiPass.Contains(x.GetName()));
 
-                Debug.Log($"--------- OnCameraChange passes 3 {string.Join(", ", onCameraChange)}");
+                // Debug.Log($"--------- OnCameraChange passes 3 {string.Join(", ", onCameraChange)}");
                 foreach (var pass in onCameraChange) { // && !initialized.Contains(x.GetName()))) {
                     pass.OnCameraChange(mainCamera);
                 }
             }
 
-            Debug.Log($"--------- Enabling passes 4 activePasses {string.Join(", ", this.activePasses)}");
+            // Debug.Log($"--------- Enabling passes 4 activePasses {string.Join(", ", this.activePasses)}");
         }
     }
 
 
     public void OnCameraChange() {
-        Debug.Log($"===== OnCameraChange multipass for {string.Join(", ", this.activePasses.Values.Select(x => x.GetName()))}");
+        // Debug.Log($"===== OnCameraChange multipass for {string.Join(", ", this.activePasses.Values.Select(x => x.GetName()))}");
         var mainCamera = GetComponent<Camera>();
         foreach (var pass in this.activePasses.Values) {
             pass.OnCameraChange(mainCamera);
         }
     }
 
+    //  public void OnCameraChange(Camera camera) {
+    //     foreach (var pass in this.activePasses.Values) {
+    //         pass.OnCameraChange(mainCamera);
+    //     }
+    // }
+
 
     void Awake() { 
 
-        Debug.Log("=-------- Rendering Manager Awake");
+        Debug.Log($"=-------- Rendering Manager Awake parent {this.gameObject.transform.name}");
         var camera = GetComponent<Camera>();
         bool supportsAntialiasing = false;
         var antiAliasLevel = supportsAntialiasing ? Mathf.Max(1, QualitySettings.antiAliasing) : 1;
@@ -228,9 +234,9 @@ public class RenderingManager : MonoBehaviour {
             return (new byte[0]);
         }
         else {
-            Debug.Log($"--- call GetBytes on pass {passName}");
+            // Debug.Log($"--- call GetBytes on pass {passName}");
             var bytes = pass.GetBytes(jpeg);
-            Debug.Log($"-------- bytes size {bytes.Length}");
+            // Debug.Log($"-------- bytes size {bytes.Length}");
             return bytes;
         }
     }

@@ -147,7 +147,7 @@ namespace Thor.Rendering {
         }
        
         public virtual void AddToCommandBuffer(CommandBuffer commandBuffer) {
-            Debug.Log("-------- AddToCommandBuffer " + name);
+            // Debug.Log("-------- AddToCommandBuffer " + name);
             
             // int screenCopyID = Shader.PropertyToID("_MainTex");
             // cb.GetTemporaryRT(screenCopyID, -1, -1, 0, FilterMode.Bilinear);
@@ -161,7 +161,7 @@ namespace Thor.Rendering {
             //  cb.SetRenderTarget(RenderTargetIdentifier);
              // cb.Blit(this.GetRenderTarget(), RenderTexture.active);
 
-            Debug.Log("------- command buffer set for " + this.name);
+            // Debug.Log("------- command buffer set for " + this.name);
             // cb.SetRenderTarget(new RenderTargetIdentifier(null as Texture));
             //this.camera.targetTexture = null;
 
@@ -232,12 +232,12 @@ namespace Thor.Rendering {
         }
 
          if (this.tex == null) {
-            Debug.Log($"------------ texture format  {Enum.GetName(typeof(TextureFormat), readTextureFormat)} val {readTextureFormat}");
+            // Debug.Log($"------------ texture format  {Enum.GetName(typeof(TextureFormat), readTextureFormat)} val {readTextureFormat}");
             tex = new Texture2D(Screen.width, Screen.height, readTextureFormat, false);
         }
         rt.antiAliasing = antiAliasLevel;
         if (rt.Create()) {
-            Debug.Log("Created Render Texture with width= " + width + " height=" + height);
+            // Debug.Log("Created Render Texture with width= " + width + " height=" + height);
             return rt;
         } else {
             // throw exception ?
@@ -248,10 +248,10 @@ namespace Thor.Rendering {
 
         public virtual void OnInitialize(Camera mainCamera) {
 
-            Debug.Log("++++ initialize called for " + this.name);
+            // Debug.Log("++++ initialize called for " + this.name);
             if (!shader && !string.IsNullOrEmpty(shaderName)) {
 
-                Debug.Log("---- loading shader " + shaderName);
+                // Debug.Log("---- loading shader " + shaderName);
                 shader = Shader.Find(shaderName);
             }
             
@@ -281,7 +281,7 @@ namespace Thor.Rendering {
         
 
         public virtual void OnCameraChange(Camera mainCamera) {
-            Debug.Log("-------OnCameraChange " + name);
+            Debug.Log($"-------OnCameraChange  {name} on object {mainCamera.gameObject.name}");
             if (tex != null) {
                 UnityEngine.Object.Destroy(tex);
                 tex = null;
@@ -336,7 +336,7 @@ namespace Thor.Rendering {
         else {
             cb = new CommandBuffer();
         }
-        Debug.Log("------- Before command buffer " + name);
+        // Debug.Log("------- Before command buffer " + name);
         this.AddToCommandBuffer(cb);
         
        
@@ -459,7 +459,7 @@ public class ReplacementShaderCapture: RenderToTexture {
             this.camera.renderingPath = RenderingPath.Forward;
             this.camera.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, cb);
             this.camera.AddCommandBuffer(CameraEvent.BeforeFinalPass, cb);
-            Debug.Log($"------ AddToCommandBuffer for {this.name}");
+            // Debug.Log($"------ AddToCommandBuffer for {this.name}");
             this.camera.SetReplacementShader(shader, "");
             this.camera.backgroundColor = Color.blue;
             this.camera.clearFlags = CameraClearFlags.SolidColor;
@@ -496,7 +496,7 @@ public class ReplacementShaderCapture: RenderToTexture {
             //this.camera.targetTexture = null;
 
             // cb.Blit(this.GetRenderTarget(), BuiltinRenderTextureType.CurrentActive);
-             Debug.Log($"----------- Blit for multipass");
+            // Debug.Log($"----------- Blit for multipass");
 
             // If rendering to display
             if (this.toDisplayId.HasValue) {
@@ -527,8 +527,10 @@ public class ReplacementShaderCapture: RenderToTexture {
             base.OnInitialize(mainCamera);
         }
 
+        private bool done = false;
+
         public override void OnCameraChange(Camera mainCamera) {
-            Debug.Log($"----------- Multipass OnCameraChange for {this.passDict.Values.Select(x => x.GetName())}");
+            // Debug.Log($"----------- Multipass OnCameraChange for {this.passDict.Values.Select(x => x.GetName())}");
             foreach (var pair in this.passDict) {
                 pair.Value.OnCameraChange(mainCamera);
             }
