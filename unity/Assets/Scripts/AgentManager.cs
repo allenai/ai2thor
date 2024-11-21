@@ -1159,6 +1159,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         Camera camera
     ) {
         var rm = camera.GetComponent<RenderingManager>();
+        Debug.Log($"-- is rendering manager null? {rm == null} rm {rm}");
         rm.GetCaptureAsync("_img", payload, key);
     }
 
