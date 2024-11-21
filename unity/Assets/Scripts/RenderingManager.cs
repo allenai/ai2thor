@@ -77,64 +77,64 @@ public class RenderingManager : MonoBehaviour {
     }
 
     public void EnablePasses(IEnumerable<string> activePassesNames, bool cameraChange) {
-        var mainCamera = GetComponent<Camera>();
+        // var mainCamera = GetComponent<Camera>();
         
-        if (activePassesNames != null) {
-            Debug.Log($"--------- Enabling passes 0 {string.Join(", ", activePassesNames)}");
-            var newActive = activePassesNames.Select(name => {
-                ICapturePass capturePass; 
-                var exists = availablePasses.TryGetValue(name, out capturePass);
-                return capturePass;
-            });
-            // var newActive = 
-            if (newActive.Any(x => x == null)) {
-                throw new InvalidOperationException($"Invalid capture passes `{string.Join(", ", newActive.Where(x => x == null))}`");
-            }
-            Debug.Log($"--------- Enabling passes 2 {string.Join(", ", newActive.Select(x => x.GetName()))}");
-            var toInitialize = newActive.Where( x => ! x.IsInitialized());
-            // if this is one of the passes that is part of a MultiPass
-            var mainMultiPassUpdate = toInitialize.Where(x => this.WithMainMultiPass.Contains(x.GetName()));
-            foreach (var pass in mainMultiPassUpdate) {
-                // TODO bad typecast, rework types
-                mainPass.AddUpdateCapturePass(pass as RenderToTexture);
-            }
+        // if (activePassesNames != null) {
+        //     Debug.Log($"--------- Enabling passes 0 {string.Join(", ", activePassesNames)}");
+        //     var newActive = activePassesNames.Select(name => {
+        //         ICapturePass capturePass; 
+        //         var exists = availablePasses.TryGetValue(name, out capturePass);
+        //         return capturePass;
+        //     });
+        //     // var newActive = 
+        //     if (newActive.Any(x => x == null)) {
+        //         throw new InvalidOperationException($"Invalid capture passes `{string.Join(", ", newActive.Where(x => x == null))}`");
+        //     }
+        //     Debug.Log($"--------- Enabling passes 2 {string.Join(", ", newActive.Select(x => x.GetName()))}");
+        //     var toInitialize = newActive.Where( x => ! x.IsInitialized());
+        //     // if this is one of the passes that is part of a MultiPass
+        //     var mainMultiPassUpdate = toInitialize.Where(x => this.WithMainMultiPass.Contains(x.GetName()));
+        //     foreach (var pass in mainMultiPassUpdate) {
+        //         // TODO bad typecast, rework types
+        //         mainPass.AddUpdateCapturePass(pass as RenderToTexture);
+        //     }
 
-            Debug.Log($"--------- Enabling passes 3 toinitialize {string.Join(", ", toInitialize.Select(x => x.GetName()))}");
-            //Sort by
-            // Weird that multiPasCapture does not get Initialized? or already was
+        //     Debug.Log($"--------- Enabling passes 3 toinitialize {string.Join(", ", toInitialize.Select(x => x.GetName()))}");
+        //     //Sort by
+        //     // Weird that multiPasCapture does not get Initialized? or already was
 
-            // Don't initialize or onCamerachange passes that belong to other passes
-            // toInitialize = toInitialize.Where(x => !this.WithMainMultiPass.Contains(x.GetName()));
-            var initialized = new HashSet<string>();
-            foreach (var newPass in toInitialize) {
-                newPass.OnInitialize(mainCamera);
-                initialized.Add(newPass.GetName());
-            }
-            // this.activePasses = newActive.Where(x => !this.WithMainMultiPass.Contains(x.GetName())).ToDictionary(x => x.GetName(), x => x);
-            this.activePasses = newActive.ToDictionary(x => x.GetName(), x => x);
-            if (cameraChange) {
+        //     // Don't initialize or onCamerachange passes that belong to other passes
+        //     // toInitialize = toInitialize.Where(x => !this.WithMainMultiPass.Contains(x.GetName()));
+        //     var initialized = new HashSet<string>();
+        //     foreach (var newPass in toInitialize) {
+        //         newPass.OnInitialize(mainCamera);
+        //         initialized.Add(newPass.GetName());
+        //     }
+        //     // this.activePasses = newActive.Where(x => !this.WithMainMultiPass.Contains(x.GetName())).ToDictionary(x => x.GetName(), x => x);
+        //     this.activePasses = newActive.ToDictionary(x => x.GetName(), x => x);
+        //     if (cameraChange) {
 
-                // TODO order important?
-                // Initialize calls OnCameraChange
-                var onCameraChange = activePasses.Values.Where(x => !this.WithMainMultiPass.Contains(x.GetName()));
+        //         // TODO order important?
+        //         // Initialize calls OnCameraChange
+        //         var onCameraChange = activePasses.Values.Where(x => !this.WithMainMultiPass.Contains(x.GetName()));
 
-                Debug.Log($"--------- OnCameraChange passes 3 {string.Join(", ", onCameraChange)}");
-                foreach (var pass in onCameraChange) { // && !initialized.Contains(x.GetName()))) {
-                    pass.OnCameraChange(mainCamera);
-                }
-            }
+        //         Debug.Log($"--------- OnCameraChange passes 3 {string.Join(", ", onCameraChange)}");
+        //         foreach (var pass in onCameraChange) { // && !initialized.Contains(x.GetName()))) {
+        //             pass.OnCameraChange(mainCamera);
+        //         }
+        //     }
 
-            Debug.Log($"--------- Enabling passes 4 activePasses {string.Join(", ", this.activePasses)}");
-        }
+        //     Debug.Log($"--------- Enabling passes 4 activePasses {string.Join(", ", this.activePasses)}");
+        // }
     }
 
 
     public void OnCameraChange() {
         Debug.Log($"===== OnCameraChange multipass for {string.Join(", ", this.activePasses.Values.Select(x => x.GetName()))}");
-        var mainCamera = GetComponent<Camera>();
-        foreach (var pass in this.activePasses.Values) {
-            pass.OnCameraChange(mainCamera);
-        }
+        // var mainCamera = GetComponent<Camera>();
+        // foreach (var pass in this.activePasses.Values) {
+        //     pass.OnCameraChange(mainCamera);
+        // }
     }
 
 
@@ -179,11 +179,12 @@ public class RenderingManager : MonoBehaviour {
         // make first _img capture created render to Display
         int? toDisplay = null;
         this.mainPass = new MultiCapture(
-            config: new CaptureConfig() { name = "_img", antiAliasLevel = antiAliasLevel, cloudRendering = cloudRenderingCapture, toDisplay = isMainCameraPassCreated ? toDisplay : 0}, 
+            config: new CaptureConfig() { name = "_img", antiAliasLevel = antiAliasLevel, cloudRendering = cloudRenderingCapture, toDisplay = !isMainCameraPassCreated ? toDisplay : 0}, 
             camera: camera, 
             passes: new List<RenderToTexture>() {
             } 
         );
+        isMainCameraPassCreated = true;
 
         availablePasses = new List<ICapturePass>() {
             this.mainPass,
@@ -196,8 +197,10 @@ public class RenderingManager : MonoBehaviour {
         this.activePasses = new List<ICapturePass>() {
             this.mainPass
         }.ToDictionary(x => x.GetName(), x => x);
-        mainPass.OnInitialize(camera);
-        mainPass.OnCameraChange(camera);
+        // mainPass.OnInitialize(camera);
+        // if (!mainPass.IsInitialized()) {
+        // mainPass.OnCameraChange(camera);
+        // }
         // this.enabled = true;
     }
 

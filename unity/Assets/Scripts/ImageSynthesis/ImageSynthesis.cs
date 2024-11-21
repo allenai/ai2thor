@@ -394,7 +394,7 @@ public class ImageSynthesis : MonoBehaviour {
                 //     capturePasses[q].camera = CreateHiddenCamera(capturePasses[q].name);
                 // }
                 // else {
-                    //capturePasses[q].camera = mainCamera;
+                    capturePasses[q].camera = mainCamera;
 
                 // }
             }
@@ -566,6 +566,88 @@ public class ImageSynthesis : MonoBehaviour {
         Flow = 5,
     };
 
+    private void cameraChangeDebug() {
+        Debug.Log("@@@@@@@@@ cameraChangeDebug");
+        var mainCamera = GetComponent<Camera>();
+        foreach (var pass in capturePasses) {
+            pass.camera.RemoveAllCommandBuffers();
+            if (pass.camera == mainCamera) {            
+                continue;
+            }
+
+            // cleanup capturing camera
+            // pass.camera.RemoveAllCommandBuffers();
+
+            // copy all "main" camera parameters into capturing camera
+            pass.camera.CopyFrom(mainCamera);
+
+            // make sure the capturing camera is set to Forward rendering (main camera uses Deffered now)
+            pass.camera.renderingPath = RenderingPath.Forward;
+            // make sure capturing camera renders all layers (value copied from Main camera excludes PlaceableSurfaces layer, which needs to be rendered on this camera)
+            pass.camera.cullingMask = -1;
+
+            pass.camera.depth = 0; // This ensures the new camera does not get rendered on screen
+        }
+
+        
+        if (!depthMaterial || depthMaterial.shader != depthShader) {
+            depthMaterial = new Material(depthShader);
+        }
+
+        // screenCopyMaterial = new Material(screenCopyShader);
+
+       
+        Texture2D realTex = null;
+        byte[] fileData;
+        var filePath =  Application.dataPath + "/real_camera/" + "frame_1.png";
+
+        // Move to a shader Uniform Set Callback
+        // if (File.Exists(filePath)) 	{
+        //     fileData = File.ReadAllBytes(filePath);
+        //     realTex = new Texture2D(2, 2);
+        //     realTex.LoadImage(fileData); //..this will auto-resize the texture dimensions.
+
+        //      distortionMaterial.SetTexture("_RealImage", realTex);
+        // }
+
+
+        // capturePasses [1].camera.farClipPlane = 100;
+        // SetupCameraWithReplacementShader(capturePasses[1].camera, uberReplacementShader, ReplacelementModes.DepthMultichannel);
+
+        if (renderTexture != null && renderTexture.IsCreated())
+        {
+            renderTexture.Release();
+        }
+
+        for (int i = 0; i < capturePasses.Length; i++) { 
+            if (capturePasses[i].noCamera) {
+                if (capturePasses[i].renderTexture != null && capturePasses[i].renderTexture.IsCreated()) {
+                    capturePasses[i].renderTexture.Release();
+                    
+                }
+                var format = RenderTextureFormat.ARGB32;
+                // if (capturePasses[i].name == "_depth") {
+                //     format = RenderTextureFormat.Depth;
+                // }
+                capturePasses[i].renderTexture = new RenderTexture(Screen.width, Screen.height, 24, format, RenderTextureReadWrite.Default);
+            }
+        }
+      
+        renderTexture = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+
+        
+        SetupCameraWithPostShaders(
+            renderTexture,
+            capturePasses[0].camera, // main camera
+            new List<(Material, CapturePass)>() {
+                (depthMaterial, capturePasses[1]),
+                // opticalFlowMaterial // unused so disabling 
+                // (distortionMaterial, capturePasses[6])
+            },
+            DepthTextureMode.Depth | DepthTextureMode.MotionVectors
+        );
+    }
+
     // Call this if the settings on the main camera ever change? But the main camera now uses slightly different layer masks and deffered/forward render settings than these image synth cameras
     // do, so maybe it's fine for now I dunno
     public void OnCameraChange() {
@@ -575,6 +657,7 @@ public class ImageSynthesis : MonoBehaviour {
             tex = null;
         }
         var mainCamera = GetComponent<Camera>();
+        cameraChangeDebug();
 
         // TODO: add tests, not needed when target display is different
         // mainCamera.depth = 9999; // This ensures the main camera is rendered on screen

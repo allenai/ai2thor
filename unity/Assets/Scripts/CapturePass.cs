@@ -74,24 +74,24 @@ namespace Thor.Rendering {
 
     public class RenderToTexture : ICapturePass {
 
-        public static void SetupCameraWithPostShader(
-            Camera cam,
-            Material material,
-            // Material screenCopyMaterial,
-            DepthTextureMode depthTextureMode = DepthTextureMode.None
-            ) {
-            var cb = new CommandBuffer();
+        // public static void SetupCameraWithPostShader(
+        //     Camera cam,
+        //     Material material,
+        //     // Material screenCopyMaterial,
+        //     DepthTextureMode depthTextureMode = DepthTextureMode.None
+        //     ) {
+        //     var cb = new CommandBuffer();
 
-            int screenCopyID = Shader.PropertyToID("_MainTex");
-            cb.GetTemporaryRT(screenCopyID, -1, -1, 0, FilterMode.Bilinear);
-            cb.Blit(BuiltinRenderTextureType.CurrentActive, screenCopyID);
-            cb.Blit(screenCopyID, BuiltinRenderTextureType.CameraTarget, material);
+        //     int screenCopyID = Shader.PropertyToID("_MainTex");
+        //     cb.GetTemporaryRT(screenCopyID, -1, -1, 0, FilterMode.Bilinear);
+        //     cb.Blit(BuiltinRenderTextureType.CurrentActive, screenCopyID);
+        //     cb.Blit(screenCopyID, BuiltinRenderTextureType.CameraTarget, material);
             
-            cb.ReleaseTemporaryRT(screenCopyID);
+        //     cb.ReleaseTemporaryRT(screenCopyID);
 
-            cam.AddCommandBuffer(CameraEvent.BeforeImageEffects, cb);
-            cam.depthTextureMode = depthTextureMode;
-        }
+        //     cam.AddCommandBuffer(CameraEvent.BeforeImageEffects, cb);
+        //     cam.depthTextureMode = depthTextureMode;
+        // }
 
 
         public string name;
@@ -227,7 +227,9 @@ namespace Thor.Rendering {
         // );
         }
         else {
-            rt = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+            // rt = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+            var format = RenderTextureFormat.ARGB32;
+            rt = new RenderTexture(Screen.width, Screen.height, 24, format, RenderTextureReadWrite.Default);
             readTextureFormat = TextureFormat.RGBA32; 
         }
 
@@ -322,12 +324,10 @@ namespace Thor.Rendering {
         // if (this.name != "_img") {
         // this.camera.targetTexture = this.renderTexture;
         // }
-        this.camera.targetDisplay = this.toDisplayId.GetValueOrDefault();
+        // this.camera.targetDisplay = this.toDisplayId.GetValueOrDefault();
 
         // If set to render to display don't set render texture because display buffer is only written to if targetTexture is null
-        if (!this.toDisplayId.HasValue) {
-            this.camera.targetTexture = this.renderTexture;          
-        }
+        
         
         
         if (cb != null) {
@@ -473,6 +473,7 @@ public class ReplacementShaderCapture: RenderToTexture {
 
         IEnumerable<RenderToTexture> passes;
         Dictionary<string, RenderToTexture> passDict;
+        private static int displayNumber = 0;
         public MultiCapture(CaptureConfig config, Camera camera, IEnumerable<RenderToTexture> passes) : base(config, camera) {
             this.passDict = passes.ToDictionary(p => p.GetName(), p => p);
         }
@@ -497,7 +498,7 @@ public class ReplacementShaderCapture: RenderToTexture {
 
             // cb.Blit(this.GetRenderTarget(), BuiltinRenderTextureType.CurrentActive);
              Debug.Log($"----------- Blit for multipass");
-
+            
             // If rendering to display
             if (this.toDisplayId.HasValue) {
                 // if it's not cloudrendering camera.targetTexture is null which means it's rendering to the display buffer
@@ -510,17 +511,21 @@ public class ReplacementShaderCapture: RenderToTexture {
             // cb.SetRenderTarget(this.GetRenderTarget());
             
             // commandBuffer.ReleaseTemporaryRT(screenCopyID);
+            
             foreach (var pass in this.passDict.Values) {
-                commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, pass.GetRenderTexture(), pass.material);
+                commandBuffer.Blit(this.GetRenderTexture(), pass.GetRenderTexture(), pass.material);
             }
             
 
             this.camera.AddCommandBuffer(CameraEvent.BeforeImageEffects, commandBuffer);
-            this.camera.depthTextureMode = DepthTextureMode.Depth;
+            
             
         }
 
         public override void OnInitialize(Camera mainCamera) {
+            this.camera.depthTextureMode = DepthTextureMode.Depth | DepthTextureMode.MotionVectors;
+             mainCamera.depth = 9999;
+            // this.camera.depthTextureMode = DepthTextureMode.Depth;
             foreach (var pair in this.passDict) {
                 pair.Value.OnInitialize(mainCamera);
             }
@@ -533,6 +538,13 @@ public class ReplacementShaderCapture: RenderToTexture {
                 pair.Value.OnCameraChange(mainCamera);
             }
             base.OnCameraChange(mainCamera);
+            this.camera.targetDisplay = displayNumber;
+            if (!this.toDisplayId.HasValue) {
+                this.camera.targetTexture = this.GetRenderTexture(); 
+                this.camera.targetDisplay = this.toDisplayId.GetValueOrDefault();         
+            }
+            
+            
         }
         // TODO: if order of captures matters?
         // public void UpdateCapturePasses(IEnumerable<ICapturePass> passes) {
@@ -549,7 +561,7 @@ public class ReplacementShaderCapture: RenderToTexture {
 
         
     }
-    
+
     // public class DistortionCapture : RenderToTexture {
     //     public DistortionCapture(CaptureConfig config, Camera camera) : base(config, camera) {
     //     }

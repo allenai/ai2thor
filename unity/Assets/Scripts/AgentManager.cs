@@ -1250,12 +1250,13 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
              captureScreenAsyncNew(payload, "image", agent.m_Camera);
 #else
             // // XXX may not need this since we call render in captureScreenAsync
-            // if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
-            //     RenderTexture.active = agent.m_Camera.activeTexture;
-            //     agent.m_Camera.Render();
-            // }
-            // payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
-            payload.Add(new KeyValuePair<string, byte[]>("image", captureCamera(agent.m_Camera)));
+            if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
+                RenderTexture.active = agent.m_Camera.activeTexture;
+                agent.m_Camera.Render();
+            }
+            // RenderTexture.active = agent.m_Camera.activeTexture;
+            payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
+            // payload.Add(new KeyValuePair<string, byte[]>("image", captureCamera(agent.m_Camera)));
 #endif
         }
     }
@@ -1391,6 +1392,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             if (!synth.hasCapturePass(captureName)) {
                 Debug.LogError(captureName + " not available - sending empty image");
             }
+            Debug.Log($"------ getting capture {captureName}");
             byte[] bytes = synth.Encode(captureName);
             payload.Add(new KeyValuePair<string, byte[]>(fieldName, bytes));
         }
@@ -1589,9 +1591,16 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             if (shouldRender) {
                 addImage(renderPayload, agent);
                 if (shouldRenderImageSynthesis) {
-                    addCapture(
+                    // addCapture(
+                    //     renderPayload,
+                    //     agent.m_Camera,
+                    //     this.renderDepthImage,
+                    //     "_depth",
+                    //     "image_depth"
+                    // );
+                    addImageSynthesisImage(
                         renderPayload,
-                        agent.m_Camera,
+                        agent.imageSynthesis,
                         this.renderDepthImage,
                         "_depth",
                         "image_depth"
