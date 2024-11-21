@@ -1079,6 +1079,7 @@ def ci_build(
     novelty_thor_scenes=False,
     skip_delete_tmp_dir=False,  # bool
     cloudrendering_first=False,
+    only_cloudrendering=False
 ):
     assert (commit_id is None) == (
         branch is None
@@ -1167,6 +1168,8 @@ def ci_build(
                 private_scene_options = [novelty_thor_scenes]
 
                 build_archs = ["OSXIntel64"]  # , "Linux64"]
+                build_archs = [] if only_cloudrendering else ["OSXIntel64"]  # , "Linux64"]
+
 
                 # CloudRendering only supported with 2020.3.25
                 # should change this in the future to automatically install
@@ -1263,7 +1266,7 @@ def ci_build(
                         "OSXIntel64" if sys.platform.startswith("darwin") else "CloudRendering"
                     )
                     # Weirdly even in Linux you can run utf tests using OSX build cache, but not CloudRendering
-                    utf_test_platform = "OSXIntel64"
+                    utf_test_platform = "CloudRendering" if only_cloudrendering else "OSXIntel64"
 
                     link_build_cache(
                         arch_temp_dirs[utf_test_platform], utf_test_platform, build["branch"]
@@ -4724,13 +4727,13 @@ def test_create_prefab(ctx, json_path):
 
 
 @task
-def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
+def procedural_asset_callback_test(ctx, asset_dir, house_path, asset_id=""):
     import json
     import ai2thor.controller
-    from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
+    from ai2thor.hooks.procedural_asset_callback import ProceduralAssetActionCallback
     from objathor.asset_conversion.util import view_asset_in_thor
 
-    hook_runner = ProceduralAssetHookRunner(
+    hook_runner = ProceduralAssetActionCallback(
         asset_directory=asset_dir,
         asset_symlink=True,
         verbose=True,
@@ -4747,7 +4750,7 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
         height=300,
         server_class=ai2thor.fifo_server.FifoServer,
         visibilityScheme="Distance",
-        action_hook_runner=hook_runner,
+        before_action_callback=hook_runner,
     )
 
     # TODO bug why skybox is not changing? from just procedural pipeline
@@ -4817,9 +4820,9 @@ def procedural_asset_hook_test(ctx, asset_dir, house_path, asset_id=""):
 def procedural_asset_cache_test(ctx, asset_dir, house_path, asset_ids="", cache_limit=1):
     import json
     import ai2thor.controller
-    from ai2thor.hooks.procedural_asset_hook import ProceduralAssetHookRunner
+    from ai2thor.hooks.procedural_asset_callback import ProceduralAssetActionCallback
 
-    hook_runner = ProceduralAssetHookRunner(
+    hook_runner = ProceduralAssetActionCallback(
         asset_directory=asset_dir, asset_symlink=True, verbose=True, asset_limit=1
     )
     controller = ai2thor.controller.Controller(
@@ -4834,7 +4837,7 @@ def procedural_asset_cache_test(ctx, asset_dir, house_path, asset_ids="", cache_
         height=300,
         server_class=ai2thor.wsgi_server.WsgiServer,
         visibilityScheme="Distance",
-        action_hook_runner=hook_runner,
+        before_action_callback=hook_runner,
     )
     asset_ids = asset_ids.split(",")
     with open(house_path, "r") as f:
