@@ -1263,7 +1263,7 @@ def ci_build(
                     # succeeded during an earlier run
 
                     pytest_platform = (
-                        "OSXIntel64" if sys.platform.startswith("darwin") else "CloudRendering"
+                        "CloudRendering" if only_cloudrendering else ("OSXIntel64" if sys.platform.startswith("darwin") else "CloudRendering")
                     )
                     # Weirdly even in Linux you can run utf tests using OSX build cache, but not CloudRendering
                     utf_test_platform = "CloudRendering" if only_cloudrendering else "OSXIntel64"
