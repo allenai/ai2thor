@@ -188,10 +188,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         // gets initialized
         var instance = Manager.Instance;
 
-        //Why is Rendering manager not in cloudrendering?
-
-        // gameObject.AddComponent(typeof(RenderingManager));
-
         // Camera camera = this.primaryAgent.gameObject.GetComponentInChildren<Camera>();
         // camera.targetTexture = createRenderTexture(Screen.width, Screen.height);
 #endif

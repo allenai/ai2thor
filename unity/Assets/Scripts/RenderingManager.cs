@@ -197,6 +197,7 @@ public class RenderingManager : MonoBehaviour {
             this.mainPass
         }.ToDictionary(x => x.GetName(), x => x);
         mainPass.OnInitialize(camera);
+        mainPass.OnCameraChange(camera);
         // this.enabled = true;
     }
 
