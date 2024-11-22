@@ -16,9 +16,6 @@ public class RenderingManager : MonoBehaviour {
 
     private MultiCapture mainPass;
 
-    // to set _img pass to display 0 in editor and standalone plaforms
-    public bool IsMainCamera;
-
     private Dictionary<string, ICapturePass> activePasses;
     // Start is called before the first frame update
 
@@ -27,14 +24,15 @@ public class RenderingManager : MonoBehaviour {
         "_depth",
         "_distortion"
     };
+    
+    // to set _img pass to display 0 in editor and standalone plaforms
+    public bool IsMainCamera;
+
+    public Material distortionMat;
 
     private Texture2D readTex;
 
-
-    public RenderToTexture distortionMap {
-        get;
-        private set;
-    }
+    private static bool isMainCameraPassCreated = false;  
 
     void Initialize(Camera camera) {
 
@@ -127,13 +125,7 @@ public class RenderingManager : MonoBehaviour {
                 foreach (var pass in onCameraChange) { // && !initialized.Contains(x.GetName()))) {
                     pass.OnCameraChange(mainCamera);
                 }
-
-                // Other special passes
-                // var others = new List<ICapturePass>() { distortionMap };
-                // foreach (var pass in others) {
-                //     pass.OnCameraChange(mainCamera);
-                // }
-             }
+            }
 
             // Debug.Log($"--------- Enabling passes 4 activePasses {string.Join(", ", this.activePasses)}");
         }
@@ -167,9 +159,9 @@ public class RenderingManager : MonoBehaviour {
             cloudRenderingCapture = true;
         #endif
         
-       //cloudRendering = cloudRenderingCapture, renderTextureFormat = RenderTextureFormat.RFloat
+       
         var depthPass = new RenderToTexture(
-            new CaptureConfig() { name = "_depth", antiAliasLevel = antiAliasLevel,  depthBits = 0, shaderName = "Hidden/DepthBW" },
+            new CaptureConfig() { name = "_depth", antiAliasLevel = antiAliasLevel, shaderName = "Hidden/DepthBW" },
             camera: camera
         );
 
@@ -179,12 +171,12 @@ public class RenderingManager : MonoBehaviour {
         );
 
         var idPass = new ReplacementShaderCapture(
-            new CaptureConfig() { name = "_id", antiAliasLevel = antiAliasLevel, shaderName = "Hidden/UberReplacement", replacementMode = ReplacelementMode.ObjectId, toDisplay = IsMainCamera? 2 : null as int? },
+            new CaptureConfig() { name = "_id", antiAliasLevel = antiAliasLevel, shaderName = "Hidden/UberReplacement", replacementMode = ReplacelementMode.ObjectId },
             cameraParent: camera.transform
         );
 
         var classPass = new ReplacementShaderCapture(
-            new CaptureConfig() { name = "_class", antiAliasLevel = antiAliasLevel, shaderName = "Hidden/UberReplacement", replacementMode = ReplacelementMode.CatergoryId, toDisplay =  IsMainCamera? 3 : null as int? },
+            new CaptureConfig() { name = "_class", antiAliasLevel = antiAliasLevel, shaderName = "Hidden/UberReplacement", replacementMode = ReplacelementMode.CatergoryId },
             cameraParent: camera.transform
         );
 
@@ -194,52 +186,37 @@ public class RenderingManager : MonoBehaviour {
         );
         
         // make first _img capture created render to Display
+        int? toDisplay = null;
         this.mainPass = new MultiCapture(
-            config: new CaptureConfig() { name = "_img", antiAliasLevel = antiAliasLevel, depthBits = 32, cloudRendering = cloudRenderingCapture, toDisplay = IsMainCamera? 0 : null as int?}, 
+            config: new CaptureConfig() { name = "_img", antiAliasLevel = antiAliasLevel, cloudRendering = cloudRenderingCapture, toDisplay = isMainCameraPassCreated ? toDisplay : 0}, 
             camera: camera, 
             passes: new List<RenderToTexture>() {
             } 
         );
 
-        this.distortionMap = new OnDemandCapture(
-            new CaptureConfig() { name = "_distortion_map", antiAliasLevel = antiAliasLevel, shaderName = "Custom/BarrelDistortionMap" , cloudRendering = cloudRenderingCapture, toDisplay = 7, renderTextureFormat = RenderTextureFormat.RGFloat }
-        );
-
-
         availablePasses = new List<ICapturePass>() {
             this.mainPass,
             depthPass,
             distPass,
-            distortionMap,
             idPass,
             classPass
         }.ToDictionary(x => x.GetName(), x => x);
 
-        //  Todo move to enable passes call
         this.activePasses = new List<ICapturePass>() {
             this.mainPass
         }.ToDictionary(x => x.GetName(), x => x);
-         if (!mainPass.IsInitialized()) {
-            mainPass.OnInitialize(camera);
-        }
+        mainPass.OnInitialize(camera);
         mainPass.OnCameraChange(camera);
-
-        
-        // Special OnDemand pass not added to available passes
-        
-        // if (!distortionMap.IsInitialized()) {
-        //     distortionMap.OnInitialize(camera);
-        // }
-        // distortionMap.OnCameraChange(camera);
         // this.enabled = true;
     }
 
-    public T GetCapturePass<T>(string passName) where T : ICapturePass {
+    public RenderToTexture GetCapturePass(string passName) {
         ICapturePass pass;
         if (!this.activePasses.TryGetValue(passName, out pass)) {
             Debug.LogError($"No active pass at GetPassRenderTexture {passName}");
+            return null;
         }
-        return (T)pass;
+        return pass as RenderToTexture;
     }
 
     public RenderTexture GetPassRenderTexture(string passName) {
@@ -279,8 +256,8 @@ public class RenderingManager : MonoBehaviour {
             Debug.LogError($"No active pass at GetPassRenderTexture {passName}");
         }
         RenderTexture tt = pass.GetRenderTexture();
-        // var prevActiveTex = RenderTexture.active;
-        // RenderTexture.active = tt;
+        var prevActiveTex = RenderTexture.active;
+        RenderTexture.active = tt;
         // camera.Render();
         AsyncGPUReadback.Request(
             tt,
@@ -294,37 +271,6 @@ public class RenderingManager : MonoBehaviour {
                 }
             }
         );
-    }
-
-    // TODDO: unify readbacks to this
-    public void GetActiveCapturesAsync(
-        List<KeyValuePair<string, byte[]>> payload,
-        List<(string passName, string payloadKey)> passToPayloadKey
-    ) {
-
-        var requestReadbacks = passToPayloadKey
-            .Where(x => activePasses.ContainsKey(x.passName))
-            .Select(mapping => (key: mapping.payloadKey, pass: activePasses[mapping.passName]));
-        foreach (var pair in requestReadbacks) {
-            AsyncGPUReadback.Request(pair.pass.GetRenderTexture(), 0, (request) => 
-                {
-                    if (!request.hasError) {
-                        var data = request.GetData<byte>().ToArray();
-                        payload.Add(new KeyValuePair<string, byte[]>(pair.key, data));
-                    } else {
-                        Debug.LogError("Request error: " + request.hasError);
-                    }
-                }
-            );
-        }
-    }
-
-    public byte[] getDistortionMapBytes() {
-        return this.GetCapturePass<OnDemandCapture>("_distortion_map").GetBytes();
-    }
-
-    public Color32[] getDistortionMapColors() {
-        return this.GetCapturePass<OnDemandCapture>("_distortion_map").GetColors();
     }
 
     // Update is called once per frame
