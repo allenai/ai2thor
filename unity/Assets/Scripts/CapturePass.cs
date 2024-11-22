@@ -618,7 +618,7 @@ public class ReplacementShaderCapture: RenderToTexture {
             camera.clearFlags = CameraClearFlags.SolidColor;
             camera.targetTexture = this.GetRenderTexture();
             // do not render at update
-            // this.camera.enabled = false;
+            this.camera.enabled = false;
             // this.camera.SetReplacementShader(this.shader, "");
         }
 
@@ -717,7 +717,7 @@ public class ReplacementShaderCapture: RenderToTexture {
             // encode texture into PNG/JPG
             Color32[] bytes;
             
-                bytes = tex.GetPixels32();
+            bytes = tex.GetPixels32();
             
             
             
