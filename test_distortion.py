@@ -26,6 +26,8 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
             server_class=ai2thor.wsgi_server.WsgiServer,
         )
 
+    enableDistortionMap = False
+
     all_args = dict(
         # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",
         # local_build=True,
@@ -40,7 +42,7 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
         renderDistortionImage=distortion,
         renderSemanticSegmentation=True,
         renderInstanceSegmentation=True,
-        enableDistortionMap=distortion,
+        enableDistortionMap=enableDistortionMap,
         fieldOfView=120,
         **args,
     )
@@ -103,25 +105,25 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
             intensityX=0.91,
             intensityY=0.93
         )
+        if enableDistortionMap:
+            evt = controller.step(
+                action="GetDistortionMaps",
+                mainCamera=True,
+                thidPartyCameraIndices=[0]
+            )
+            distortionMaps = evt.metadata['actionReturn']
+            # keys = [key for (key, val) in result.items()]
+            maps = []
+            
+            print(f"---Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']} result {distortionMaps.keys()}")
+            # result is dict with 3d arrays in the following:
+            # {'mainCamera': float[height][width][2], 'thirdPartyCameras': float[thirdPartyCameraCount][height][width][2] }
+            print(f"[x,y] at (0,0) (bottom left corner) len {distortionMaps['mainCamera'][0][0]}")
+            tex_height = len(distortionMaps['mainCamera'])
+            tex_width = len(distortionMaps['mainCamera'][0])
+            print(f"[x,y] at (height, width) (top right corner) len {distortionMaps['thirdPartyCameras'][0][tex_height-1][tex_width-1]}")
 
-        evt = controller.step(
-            action="GetDistortionMaps",
-            mainCamera=True,
-            thidPartyCameraIndices=[0]
-        )
-        distortionMaps = evt.metadata['actionReturn']
-        # keys = [key for (key, val) in result.items()]
-        maps = []
-        
-        print(f"---Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']} result {distortionMaps.keys()}")
-        # result is dict with 3d arrays in the following:
-        # {'mainCamera': float[height][width][2], 'thirdPartyCameras': float[thirdPartyCameraCount][height][width][2] }
-        print(f"[x,y] at (0,0) (bottom left corner) len {distortionMaps['mainCamera'][0][0]}")
-        tex_height = len(distortionMaps['mainCamera'])
-        tex_width = len(distortionMaps['mainCamera'][0])
-        print(f"[x,y] at (height, width) (top right corner) len {distortionMaps['thirdPartyCameras'][0][tex_height-1][tex_width-1]}")
-
-        print(f'Error: {evt.metadata["errorMessage"]}')
+            print(f'Error: {evt.metadata["errorMessage"]}')
 
 
     # xpos = dict(x=0.0, y=0.900992214679718, z=0.0786)

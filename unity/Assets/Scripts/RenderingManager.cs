@@ -167,29 +167,29 @@ public class RenderingManager : MonoBehaviour {
             cloudRenderingCapture = true;
         #endif
         
-       
+       //cloudRendering = cloudRenderingCapture, renderTextureFormat = RenderTextureFormat.RFloat
         var depthPass = new RenderToTexture(
-            new CaptureConfig() { name = "_depth", antiAliasLevel = antiAliasLevel,  depthBits = 32, shaderName = "Hidden/DepthBW", cloudRendering = cloudRenderingCapture, renderTextureFormat = RenderTextureFormat.RFloat },
+            new CaptureConfig() { name = "_depth", antiAliasLevel = antiAliasLevel,  depthBits = 0, shaderName = "Hidden/DepthBW" },
             camera: camera
         );
 
         var distPass = new RenderToTexture(
-            new CaptureConfig() { name = "_distortion", antiAliasLevel = antiAliasLevel, shaderName = "Custom/BarrelDistortion", cloudRendering = cloudRenderingCapture },
+            new CaptureConfig() { name = "_distortion", antiAliasLevel = antiAliasLevel, shaderName = "Custom/BarrelDistortion" },
             camera: camera
         );
 
         var idPass = new ReplacementShaderCapture(
-            new CaptureConfig() { name = "_id", antiAliasLevel = antiAliasLevel, shaderName = "Hidden/UberReplacement", replacementMode = ReplacelementMode.ObjectId, toDisplay = IsMainCamera? 2 : null as int?, cloudRendering = cloudRenderingCapture },
+            new CaptureConfig() { name = "_id", antiAliasLevel = antiAliasLevel, shaderName = "Hidden/UberReplacement", replacementMode = ReplacelementMode.ObjectId, toDisplay = IsMainCamera? 2 : null as int? },
             cameraParent: camera.transform
         );
 
         var classPass = new ReplacementShaderCapture(
-            new CaptureConfig() { name = "_class", antiAliasLevel = antiAliasLevel, shaderName = "Hidden/UberReplacement", replacementMode = ReplacelementMode.CatergoryId, toDisplay =  IsMainCamera? 3 : null as int?, cloudRendering = cloudRenderingCapture },
+            new CaptureConfig() { name = "_class", antiAliasLevel = antiAliasLevel, shaderName = "Hidden/UberReplacement", replacementMode = ReplacelementMode.CatergoryId, toDisplay =  IsMainCamera? 3 : null as int? },
             cameraParent: camera.transform
         );
 
         var normalsPass = new ReplacementShaderCapture(
-            new CaptureConfig() { name = "_normals", antiAliasLevel = antiAliasLevel, shaderName = "Hidden/UberReplacement", replacementMode = ReplacelementMode.Normals, cloudRendering = cloudRenderingCapture },
+            new CaptureConfig() { name = "_normals", antiAliasLevel = antiAliasLevel, shaderName = "Hidden/UberReplacement", replacementMode = ReplacelementMode.Normals },
             cameraParent: camera.transform
         );
         

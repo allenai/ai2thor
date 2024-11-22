@@ -260,7 +260,7 @@ namespace Thor.Rendering {
                 this.renderTextureFormat = RenderTextureFormat.ARGB32;
             }
             
-            rt = new RenderTexture(Screen.width, Screen.height, this.depthBits, this.renderTextureFormat, RenderTextureReadWrite.Default);
+            rt = new RenderTexture(Screen.width, Screen.height, 24, this.renderTextureFormat, RenderTextureReadWrite.Default);
             // readTextureFormat = TextureFormat.RGBA32; 
 
             // RenderTextureFormat.RGFloat
