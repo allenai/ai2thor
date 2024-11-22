@@ -24,7 +24,6 @@ using UnityEngine.Networking;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.PostProcessing;
 using UnityStandardAssets.Characters.FirstPerson;
-using UnityStandardAssets.ImageEffects;
 #if PLATFORM_CLOUD_RENDERING
 using Unity.Simulation;
 using UnityEditor;
