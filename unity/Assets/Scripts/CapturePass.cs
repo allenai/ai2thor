@@ -535,7 +535,11 @@ public class ReplacementShaderCapture: RenderToTexture {
             
             // commandBuffer.ReleaseTemporaryRT(screenCopyID);
             foreach (var pass in this.passDict.Values) {
-                commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, pass.GetRenderTexture(), pass.material);
+                if (pass.GetName() == "_depth") {
+                    int depthID = Shader.PropertyToID("_DepthCopyTexture");
+                }
+                commandBuffer.Blit(this.GetRenderTexture(), pass.GetRenderTexture(), pass.material);
+                
             }
             
 

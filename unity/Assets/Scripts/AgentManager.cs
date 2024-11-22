@@ -18,7 +18,6 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Thor.Procedural.Data;
 using Thor.Rendering;
-using UnityEditor.AssetImporters;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using UnityEngine.Networking;
@@ -1412,6 +1411,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             Debug.Log($"------- Gettin capture for {captureName} {flag}");
             var renderingManager = camera.GetComponent<RenderingManager>();
             byte[] bytes = renderingManager.GetCaptureBytes(captureName);
+            if (captureName == "_depth") {
+            var localBytesX = new byte[] {bytes[0], bytes[1], bytes[2], bytes[3] };
+            Debug.Log($"-------- _depth bytes {string.Join(", ", bytes.Take(100))} convert {System.BitConverter.ToSingle(localBytesX, 0)}");
+            }
             payload.Add(new KeyValuePair<string, byte[]>(fieldName, bytes));
         }
     }

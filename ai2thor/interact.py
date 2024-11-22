@@ -328,7 +328,6 @@ class InteractiveControllerPrompt(object):
             if condition:
                 frame = frame_func(event)
                 if frame is not None:
-                    frame = frame_func(event)
                     frame = transform(frame)
                     image_name = os.path.join(
                         image_dir,

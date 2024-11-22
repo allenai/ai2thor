@@ -169,7 +169,7 @@ public class RenderingManager : MonoBehaviour {
         
        
         var depthPass = new RenderToTexture(
-            new CaptureConfig() { name = "_depth", antiAliasLevel = antiAliasLevel, shaderName = "Hidden/DepthBW", cloudRendering = cloudRenderingCapture },
+            new CaptureConfig() { name = "_depth", antiAliasLevel = antiAliasLevel,  depthBits = 32, shaderName = "Hidden/DepthBW", cloudRendering = cloudRenderingCapture, renderTextureFormat = RenderTextureFormat.RFloat },
             camera: camera
         );
 
@@ -195,7 +195,7 @@ public class RenderingManager : MonoBehaviour {
         
         // make first _img capture created render to Display
         this.mainPass = new MultiCapture(
-            config: new CaptureConfig() { name = "_img", antiAliasLevel = antiAliasLevel, depthBits = 24, cloudRendering = cloudRenderingCapture, toDisplay = IsMainCamera? 0 : null as int?}, 
+            config: new CaptureConfig() { name = "_img", antiAliasLevel = antiAliasLevel, depthBits = 32, cloudRendering = cloudRenderingCapture, toDisplay = IsMainCamera? 0 : null as int?}, 
             camera: camera, 
             passes: new List<RenderToTexture>() {
             } 

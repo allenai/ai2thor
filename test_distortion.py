@@ -109,15 +109,15 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
             mainCamera=True,
             thidPartyCameraIndices=[0]
         )
-        result = evt.metadata['actionReturn']
+        distortionMaps = evt.metadata['actionReturn']
         # keys = [key for (key, val) in result.items()]
         maps = []
         
-        print(f"---Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']} result {result.keys()}")
-        print(f"[x,y] at (0,0) (bottom left corner) len {result['mainCamera'][0][0]}")
-        tex_height = len(result['mainCamera'])
-        tex_width = len(result['mainCamera'][0])
-        print(f"[x,y] at (height, width) (top right corner) len {result['thirdPartyCameras'][0][tex_height-1][tex_width-1]}")
+        print(f"---Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']} result {distortionMaps.keys()}")
+        print(f"[x,y] at (0,0) (bottom left corner) len {distortionMaps['mainCamera'][0][0]}")
+        tex_height = len(distortionMaps['mainCamera'])
+        tex_width = len(distortionMaps['mainCamera'][0])
+        print(f"[x,y] at (height, width) (top right corner) len {distortionMaps['thirdPartyCameras'][0][tex_height-1][tex_width-1]}")
 
         print(f'Error: {evt.metadata["errorMessage"]}')
 
@@ -153,7 +153,10 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
 
     print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
-
+    # controller.step(action="MoveAhead")
+    # controller.step(action="MoveAhead")
+    # controller.step(action="MoveAhead")
+    
     InteractiveControllerPrompt.write_image(controller.last_event, image_dir, "", semantic_segmentation_frame=True, depth_frame=True, color_frame=True, third_party_camera_frames=True, distortion_frame=distortion)
     # input()
 
