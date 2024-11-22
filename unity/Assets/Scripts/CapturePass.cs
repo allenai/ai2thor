@@ -58,6 +58,7 @@ namespace Thor.Rendering {
 
         public bool cloudRendering;
         
+        public RenderTextureFormat renderTextureFormat = RenderTextureFormat.ARGB32;
         
     }
     
@@ -118,7 +119,7 @@ namespace Thor.Rendering {
         
         private TextureFormat readTextureFormat;
 
-        
+        private RenderTextureFormat renderTextureFormat;
 
         // private Texture2D readTexture;
 
@@ -133,6 +134,7 @@ namespace Thor.Rendering {
             this.name = config.name;
             this.cloudRendering = config.cloudRendering;
             this.toDisplayId = config.toDisplay;
+            this.renderTextureFormat = config.renderTextureFormat;
 
             // TODO. if config.toDisplay is present then render to display buffer and copy to render texture 
             // for debugging purposes
@@ -214,10 +216,26 @@ namespace Thor.Rendering {
        
          
         if (cloudRendering) {
+            GraphicsFormat cloudRenderingRTFormat;
+            if (this.renderTextureFormat == RenderTextureFormat.RGFloat) {
+                readTextureFormat = TextureFormat.RGFloat;
+                cloudRenderingRTFormat = GraphicsFormat.R32G32_SFloat;
+            } 
+            else if (this.renderTextureFormat == RenderTextureFormat.RFloat) {
+                readTextureFormat = TextureFormat.RFloat;
+                cloudRenderingRTFormat = GraphicsFormat.R32_SFloat;
+            } 
+            else {
+                readTextureFormat = TextureFormat.RGBA32;
+                cloudRenderingRTFormat = GraphicsFormat.R8G8B8A8_UNorm;
+            }
+
             // Why 0 for depth here ?
-            rt = new RenderTexture(Screen.width, Screen.height, 0, GraphicsFormat.R8G8B8A8_UNorm);
-            // TODO: if 0 then RGB24? if not RGB32?
-            readTextureFormat = TextureFormat.RGBA32;
+            rt = new RenderTexture(Screen.width, Screen.height, 0, cloudRenderingRTFormat);
+            // // Why 0 for depth here ?
+            // rt = new RenderTexture(Screen.width, Screen.height, 0, GraphicsFormat.R8G8B8A8_UNorm);
+            // // TODO: if 0 then RGB24? if not RGB32?
+            // readTextureFormat = TextureFormat.RGBA32;
             
         //     RenderTexture rt = new RenderTexture(
         //     width: width,
@@ -227,8 +245,21 @@ namespace Thor.Rendering {
         // );
         }
         else {
-            rt = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
-            readTextureFormat = TextureFormat.RGBA32; 
+            if (this.renderTextureFormat == RenderTextureFormat.RGFloat) {
+                readTextureFormat = TextureFormat.RGFloat;
+            } 
+            else if (this.renderTextureFormat == RenderTextureFormat.RFloat) {
+                readTextureFormat = TextureFormat.RFloat;
+            } 
+            else {
+                readTextureFormat = TextureFormat.RGBA32;
+                this.renderTextureFormat = RenderTextureFormat.ARGB32;
+            }
+
+            rt = new RenderTexture(Screen.width, Screen.height, 24, renderTextureFormat, RenderTextureReadWrite.Default);
+
+            // rt = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
+            // readTextureFormat = TextureFormat.RGBA32; 
         }
 
          if (this.tex == null) {

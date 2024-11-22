@@ -26,7 +26,7 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
             server_class=ai2thor.wsgi_server.WsgiServer,
         )
 
-    enableDistortionMap = False
+    enableDistortionMap = True
 
     all_args = dict(
         # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",

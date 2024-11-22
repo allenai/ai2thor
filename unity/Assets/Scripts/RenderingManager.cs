@@ -189,6 +189,10 @@ public class RenderingManager : MonoBehaviour {
             new CaptureConfig() { name = "_normals", antiAliasLevel = antiAliasLevel, shaderName = "Hidden/UberReplacement", replacementMode = ReplacelementMode.Normals },
             cameraParent: camera.transform
         );
+
+        this.distortionMap = new OnDemandCapture(
+            new CaptureConfig() { name = "_distortion_map", antiAliasLevel = antiAliasLevel, shaderName = "Custom/BarrelDistortionMap" , cloudRendering = cloudRenderingCapture, toDisplay = 7, renderTextureFormat = RenderTextureFormat.RGFloat }
+        );
         
         // make first _img capture created render to Display
         int? toDisplay = null;
@@ -203,6 +207,7 @@ public class RenderingManager : MonoBehaviour {
             this.mainPass,
             depthPass,
             distPass,
+            this.distortionMap,
             idPass,
             classPass
         }.ToDictionary(x => x.GetName(), x => x);
