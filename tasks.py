@@ -1079,7 +1079,8 @@ def ci_build(
     novelty_thor_scenes=False,
     skip_delete_tmp_dir=False,  # bool
     cloudrendering_first=False,
-    only_cloudrendering=False
+    only_cloudrendering=False,
+    private_scenes_skip=False
 ):
     assert (commit_id is None) == (
         branch is None
@@ -1159,13 +1160,18 @@ def ci_build(
                 # disabling delete temporarily since it interferes with pip releases
                 # pytest_s3_object(build["commit_id"]).delete()
                 logger.info(f"pending build for {build['branch']} {build['commit_id']}")
+
+                if not private_scenes_skip:
+                    novelty_thor_scenes = False
+                    private_repos = []
+                    
                 clean(private_repos=private_repos)
+                private_scene_options = [novelty_thor_scenes]
+                
                 subprocess.check_call("git fetch", shell=True)
                 subprocess.check_call("git checkout %s --" % build["branch"], shell=True)
                 logger.info(f" After checkout")
                 subprocess.check_call("git checkout -qf %s" % build["commit_id"], shell=True)
-
-                private_scene_options = [novelty_thor_scenes]
 
                 build_archs = ["OSXIntel64"]  # , "Linux64"]
                 build_archs = [] if only_cloudrendering else ["OSXIntel64"]  # , "Linux64"]

@@ -52,8 +52,6 @@ namespace Thor.Rendering {
 
         public string shaderName;
 
-        public ReplacelementMode replacementMode;
-
         public int? toDisplay = 0;
 
         public bool cloudRendering;
@@ -450,9 +448,9 @@ public class ReplacementShaderCapture: RenderToTexture {
 
     private readonly Transform cameraParent;
     private ReplacelementMode mode;
-    public ReplacementShaderCapture(CaptureConfig config, Transform cameraParent) : base(config, null) {
+    public ReplacementShaderCapture(CaptureConfig config, ReplacelementMode replacementMode, Transform cameraParent) : base(config, null) {
         this.cameraParent = cameraParent;
-        this.mode = config.replacementMode;
+        this.mode = replacementMode;
     }
 
     public override void OnInitialize(Camera mainCamera) {
