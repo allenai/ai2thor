@@ -4,7 +4,7 @@ import argparse
 import sys
 import os
 from ai2thor.interact import InteractiveControllerPrompt
-
+import numpy as np
 
 def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, local_build=False, commit_id=None, fov=120, distortion=False, image_dir=None, width=300, height=300):
     if image_dir is not None:
@@ -40,6 +40,7 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
         renderDistortionImage=distortion,
         renderSemanticSegmentation=True,
         renderInstanceSegmentation=True,
+        enableDistortionMap=distortion,
         fieldOfView=120,
         **args,
     )
@@ -102,6 +103,24 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
             intensityX=0.91,
             intensityY=0.93
         )
+
+        evt = controller.step(
+            action="GetDistortionMaps",
+            mainCamera=True,
+            thidPartyCameraIndices=[0]
+        )
+        result = evt.metadata['actionReturn']
+        # keys = [key for (key, val) in result.items()]
+        maps = []
+        
+        print(f"---Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']} result {result.keys()}")
+        print(f"[x,y] at (0,0) (bottom left corner) len {result['mainCamera'][0][0]}")
+        tex_height = len(result['mainCamera'])
+        tex_width = len(result['mainCamera'][0])
+        print(f"[x,y] at (height, width) (top right corner) len {result['thirdPartyCameras'][0][tex_height-1][tex_width-1]}")
+
+        print(f'Error: {evt.metadata["errorMessage"]}')
+
 
     # xpos = dict(x=0.0, y=0.900992214679718, z=0.0786)
     # # sr = controller.step(
@@ -217,6 +236,6 @@ if __name__ == "__main__":
         fov=float(args.fov),
         distortion=args.distortion,
         image_dir=args.output,
-        width=float(args.width),
-        height=float(args.height)
+        width=int(args.width),
+        height=int(args.height)
     )  # platform="CloudRendering")

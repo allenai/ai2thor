@@ -10,6 +10,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Experimental.Rendering;
 using System.Security.Cryptography;
+using System.Data.SqlTypes;
 
 // // @TODO:
 // // . support custom color wheels in optical flow via lookup textures
@@ -58,7 +59,9 @@ namespace Thor.Rendering {
 
         public bool cloudRendering;
         
-        
+        public RenderTextureFormat renderTextureFormat = RenderTextureFormat.ARGB32;
+
+        public int depthBits = 0;
     }
     
     public interface ICapturePass {
@@ -103,8 +106,8 @@ namespace Thor.Rendering {
 
         public string shaderName;
 
-        private Texture2D tex;
-        private RenderTexture renderTexture;
+        protected Texture2D tex;
+        protected RenderTexture renderTexture;
 
         public Material material;
         protected Shader shader;
@@ -118,7 +121,9 @@ namespace Thor.Rendering {
         
         private TextureFormat readTextureFormat;
 
-        
+        private RenderTextureFormat renderTextureFormat;
+
+        private int depthBits;
 
         // private Texture2D readTexture;
 
@@ -133,6 +138,8 @@ namespace Thor.Rendering {
             this.name = config.name;
             this.cloudRendering = config.cloudRendering;
             this.toDisplayId = config.toDisplay;
+            this.renderTextureFormat = config.renderTextureFormat;
+            this.depthBits = config.depthBits;
 
             // TODO. if config.toDisplay is present then render to display buffer and copy to render texture 
             // for debugging purposes
@@ -191,7 +198,7 @@ namespace Thor.Rendering {
         }
 
 
-    private RenderTexture CreateRenderTexture(int width, int height) {
+    protected RenderTexture CreateRenderTexture(int width, int height) {
 
         // for cloud rendering GraphicsFormat.R8G8B8A8_UNorm
 
@@ -212,8 +219,8 @@ namespace Thor.Rendering {
        
         RenderTexture rt = null;
        
-         
         if (cloudRendering) {
+            
             // Why 0 for depth here ?
             rt = new RenderTexture(Screen.width, Screen.height, 0, GraphicsFormat.R8G8B8A8_UNorm);
             // TODO: if 0 then RGB24? if not RGB32?
@@ -227,8 +234,22 @@ namespace Thor.Rendering {
         // );
         }
         else {
-            rt = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Default);
-            readTextureFormat = TextureFormat.RGBA32; 
+            // Todo string matching from enums, only two supported
+            if (this.renderTextureFormat == RenderTextureFormat.RGFloat) {
+                readTextureFormat = TextureFormat.RGFloat;
+            } 
+            else if (this.renderTextureFormat == RenderTextureFormat.RFloat) {
+                readTextureFormat = TextureFormat.RFloat;
+            } 
+            else {
+                readTextureFormat = TextureFormat.RGBA32;
+                this.renderTextureFormat = RenderTextureFormat.ARGB32;
+            }
+            
+            rt = new RenderTexture(Screen.width, Screen.height, this.depthBits, this.renderTextureFormat, RenderTextureReadWrite.Default);
+            // readTextureFormat = TextureFormat.RGBA32; 
+
+            // RenderTextureFormat.RGFloat
         }
 
          if (this.tex == null) {
@@ -325,7 +346,7 @@ namespace Thor.Rendering {
         this.camera.targetDisplay = this.toDisplayId.GetValueOrDefault();
 
         // If set to render to display don't set render texture because display buffer is only written to if targetTexture is null
-        if (!this.toDisplayId.HasValue) {
+        if (!this.toDisplayId.HasValue || cloudRendering) {
             this.camera.targetTexture = this.renderTexture;          
         }
         
@@ -407,6 +428,7 @@ namespace Thor.Rendering {
         } else {
             bytes = tex.GetRawTextureData();
         }
+
         RenderTexture.active = prevActiveRT;
         return bytes;
     }
@@ -450,6 +472,7 @@ public class ReplacementShaderCapture: RenderToTexture {
 
         var newCamera = go.GetComponent<Camera>();
         newCamera.cullingMask = 1; // render everything, including PlaceableSurfaces
+        
         return newCamera;
     }
 
@@ -463,6 +486,7 @@ public class ReplacementShaderCapture: RenderToTexture {
             this.camera.SetReplacementShader(shader, "");
             this.camera.backgroundColor = Color.blue;
             this.camera.clearFlags = CameraClearFlags.SolidColor;
+            // TODO make optional for editor debugging
             this.camera.targetTexture = this.GetRenderTexture();
         }
     
@@ -499,7 +523,7 @@ public class ReplacementShaderCapture: RenderToTexture {
             // Debug.Log($"----------- Blit for multipass");
 
             // If rendering to display
-            if (this.toDisplayId.HasValue) {
+            if (this.toDisplayId.HasValue && !cloudRendering) {
                 // if it's not cloudrendering camera.targetTexture is null which means it's rendering to the display buffer
                 // so then we need to copy the display buffer into render texture
 
@@ -551,6 +575,138 @@ public class ReplacementShaderCapture: RenderToTexture {
 
         
     }
+
+    // Does not attatch to camera with command buffers to render every frame, only on demand
+    public class OnDemandCapture : RenderToTexture {
+        public OnDemandCapture(CaptureConfig config) : base(config, null) {
+        }
+
+        public override void OnInitialize(Camera mainCamera) {
+            base.OnInitialize(mainCamera);
+            
+            // this.camera.enabled = false;
+
+        }
+
+        public override void OnCameraChange(Camera mainCamera) {
+            if (this.camera == null) {
+                this.camera = ReplacementShaderCapture.CreateHiddenCamera(mainCamera.transform, this.name);
+                
+            }
+            base.OnCameraChange(mainCamera);
+            this.camera.renderingPath = RenderingPath.Forward;
+            // camera renders nothing, unity is silly and dosn't allow to not render anything any other way??
+            camera.cullingMask = 0;
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.targetTexture = this.GetRenderTexture();
+            // do not render at update
+            // this.camera.enabled = false;
+            // this.camera.SetReplacementShader(this.shader, "");
+        }
+
+        // public override void OnCameraChange(Camera mainCamera) {
+        //     // this.camera.RemoveAllCommandBuffers();
+        //     // if (tex != null) {
+        //     //     UnityEngine.Object.Destroy(tex);
+        //     //     tex = null;
+        //     // }
+        //     // this.renderTexture = CreateRenderTexture(Screen.width, Screen.height);
+        //     // this.camera.targetDisplay = this.toDisplayId.GetValueOrDefault();
+
+        //     // // If set to render to display don't set render texture because display buffer is only written to if targetTexture is null
+        //     // if (!this.toDisplayId.HasValue) {
+        //     //     this.camera.targetTexture = this.renderTexture;          
+        //     // }
+
+        //     // if (cb != null) {
+        //     //     cb.Clear();
+        //     // }
+        //     // else {
+        //     //     cb = new CommandBuffer();
+        //     // }
+
+        //     // this.AddToCommandBuffer(cb);
+
+        //     // // this.camera.enabled = false;
+
+        //     base.OnCameraChange(mainCamera);
+
+        // }
+
+        public override void AddToCommandBuffer(CommandBuffer commandBuffer) {
+        
+            
+            // commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, this.GetRenderTexture(), this.material);
+
+            commandBuffer.Blit(null, BuiltinRenderTextureType.CameraTarget, this.material);
+
+            // If data is on a display buffer copy to render texture, just for debugging should not matter
+            if (!this.toDisplayId.HasValue || cloudRendering) {
+                commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, this.GetRenderTexture(), this.material);
+            }
+            
+            this.camera.AddCommandBuffer(CameraEvent.BeforeImageEffects, commandBuffer);
+            this.camera.depthTextureMode = DepthTextureMode.Depth;
+            
+        }
+
+        public override byte[] GetBytes(bool jpeg = false) {
+            var renderTexture = this.GetRenderTexture();
+            var prevActiveRT = RenderTexture.active;
+            RenderTexture.active = renderTexture;
+
+            // this.camera.RenderWithShader(this.shader, "");
+            this.camera.Render();
+            // var bytes = base.GetBytes(jpeg);
+
+            // float startTime = Time.realtimeSinceStartup;
+
+            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+            
+            
+            // startTime = Time.realtimeSinceStartup;
+
+            // encode texture into PNG/JPG
+            byte[] bytes;
+            if (jpeg) {
+                bytes = tex.EncodeToJPG();
+            } else {
+                bytes = tex.GetRawTextureData();
+            }
+            
+            
+            RenderTexture.active = prevActiveRT;
+            return bytes;
+
+        }   
+
+        public Color32[] GetColors() {
+            var renderTexture = this.GetRenderTexture();
+            var prevActiveRT = RenderTexture.active;
+            RenderTexture.active = renderTexture;
+
+            // this.camera.RenderWithShader(this.shader, "");
+            this.camera.Render();
+            // var bytes = base.GetBytes(jpeg);
+
+            // float startTime = Time.realtimeSinceStartup;
+
+            tex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+            
+            
+            // startTime = Time.realtimeSinceStartup;
+
+            // encode texture into PNG/JPG
+            Color32[] bytes;
+            
+                bytes = tex.GetPixels32();
+            
+            
+            
+            RenderTexture.active = prevActiveRT;
+            return bytes;
+
+        }   
     
     // public class DistortionCapture : RenderToTexture {
     //     public DistortionCapture(CaptureConfig config, Camera camera) : base(config, camera) {
@@ -559,6 +715,7 @@ public class ReplacementShaderCapture: RenderToTexture {
 
     // }
 
+    }
 }
 
 
