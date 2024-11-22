@@ -32,7 +32,12 @@ public class RenderingManager : MonoBehaviour {
 
     private Texture2D readTex;
 
-    private static bool isMainCameraPassCreated = false;  
+    private static bool isMainCameraPassCreated = false; 
+
+    public RenderToTexture distortionMap {
+        get;
+        private set;
+    } 
 
     void Initialize(Camera camera) {
 
@@ -210,13 +215,12 @@ public class RenderingManager : MonoBehaviour {
         // this.enabled = true;
     }
 
-    public RenderToTexture GetCapturePass(string passName) {
+    public T GetCapturePass<T>(string passName) where T : ICapturePass {
         ICapturePass pass;
         if (!this.activePasses.TryGetValue(passName, out pass)) {
             Debug.LogError($"No active pass at GetPassRenderTexture {passName}");
-            return null;
         }
-        return pass as RenderToTexture;
+        return (T)pass;
     }
 
     public RenderTexture GetPassRenderTexture(string passName) {
@@ -272,6 +276,12 @@ public class RenderingManager : MonoBehaviour {
             }
         );
     }
+
+    public byte[] getDistortionMapBytes() {
+        // return this.GetCapturePass<OnDemandCapture>("_distortion_map").GetBytes();
+        return this.GetCapturePass<OnDemandCapture>("_distortion_map").GetBytes();
+    }
+
 
     // Update is called once per frame
     void Update() { }
