@@ -2163,8 +2163,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     }
 
     public class DistortionMapReturn {
-        public float[][,] mainCamera;
-        public List<float[][,]> thirdPartyCameras;
+        public float[][][] mainCamera;
+        public List<float[][][]> thirdPartyCameras;
 
     }
 
@@ -2177,7 +2177,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         renderingManagers = renderingManagers.ToList();
 
         var result = new DistortionMapReturn() {
-                thirdPartyCameras = new List<float[][,]>()
+                thirdPartyCameras = new List<float[][][]>()
             };
         foreach (var (index, renderingManager) in renderingManagers) {
             var rt = renderingManager.distortionMap.GetRenderTexture();
@@ -2204,11 +2204,12 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             var y_f = Enumerable.Range(0, maxIndex).Select(i => System.BitConverter.ToSingle(new byte[]{ bytes[i*8 + 4], bytes[ i*8 + 5], bytes[i*8 + 6], bytes[i*8 + 7] }, 0) );
 
             var map = Enumerable.Range(0, rt.height).Select(i => {
-                var row = new float[rt.width, 2];
+                var row = new float[rt.width][];
                 for (int j = 0; j < rt.width; j++) {
                     var val = x_f[i*rt.width + j];
-                    row[j, 0] = val.x;
-                    row[j, 1] = val.y;
+                    row[j] = new float[2];
+                    row[j][0] = val.x;
+                    row[j][1] = val.y;
                 }
                 return row;
             }).ToArray();

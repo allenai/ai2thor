@@ -114,6 +114,8 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
         maps = []
         
         print(f"---Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']} result {distortionMaps.keys()}")
+        # result is dict with 3d arrays in the following:
+        # {'mainCamera': float[height][width][2], 'thirdPartyCameras': float[thirdPartyCameraCount][height][width][2] }
         print(f"[x,y] at (0,0) (bottom left corner) len {distortionMaps['mainCamera'][0][0]}")
         tex_height = len(distortionMaps['mainCamera'])
         tex_width = len(distortionMaps['mainCamera'][0])
@@ -153,10 +155,7 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
 
     print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
-    # controller.step(action="MoveAhead")
-    # controller.step(action="MoveAhead")
-    # controller.step(action="MoveAhead")
-    
+
     InteractiveControllerPrompt.write_image(controller.last_event, image_dir, "", semantic_segmentation_frame=True, depth_frame=True, color_frame=True, third_party_camera_frames=True, distortion_frame=distortion)
     # input()
 

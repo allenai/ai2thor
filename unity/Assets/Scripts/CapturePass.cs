@@ -220,11 +220,25 @@ namespace Thor.Rendering {
         RenderTexture rt = null;
        
         if (cloudRendering) {
+
+            GraphicsFormat cloudRenderingRTFormat;
+             if (this.renderTextureFormat == RenderTextureFormat.RGFloat) {
+                readTextureFormat = TextureFormat.RGFloat;
+                cloudRenderingRTFormat = GraphicsFormat.R32G32_SFloat;
+            } 
+            else if (this.renderTextureFormat == RenderTextureFormat.RFloat) {
+                readTextureFormat = TextureFormat.RFloat;
+                cloudRenderingRTFormat = GraphicsFormat.R32_SFloat;
+            } 
+            else {
+                this.renderTextureFormat = RenderTextureFormat.ARGB32;
+                cloudRenderingRTFormat = GraphicsFormat.R8G8B8A8_UNorm;
+            }
             
             // Why 0 for depth here ?
-            rt = new RenderTexture(Screen.width, Screen.height, 0, GraphicsFormat.R8G8B8A8_UNorm);
+            rt = new RenderTexture(Screen.width, Screen.height, 0, cloudRenderingRTFormat);
             // TODO: if 0 then RGB24? if not RGB32?
-            readTextureFormat = TextureFormat.RGBA32;
+            
             
         //     RenderTexture rt = new RenderTexture(
         //     width: width,
