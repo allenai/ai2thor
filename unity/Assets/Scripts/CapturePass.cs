@@ -231,7 +231,7 @@ namespace Thor.Rendering {
                 cloudRenderingRTFormat = GraphicsFormat.R32_SFloat;
             } 
             else {
-                this.renderTextureFormat = RenderTextureFormat.ARGB32;
+                readTextureFormat = TextureFormat.RGBA32;
                 cloudRenderingRTFormat = GraphicsFormat.R8G8B8A8_UNorm;
             }
             
