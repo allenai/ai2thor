@@ -28,10 +28,36 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
 
     enableDistortionMap = True
 
+    # STRETCH_ENV_ARGS = dict(
+    # gridSize=GRID_SIZE
+    # * 0.75,  # Intentionally make this smaller than AGENT_MOVEMENT_CONSTANT to improve fidelity
+    # width=GOPRO_CAMERA_WIDTH,
+    # height=GOPRO_CAMERA_HEIGHT,
+    # visibilityDistance=MAXIMUM_DISTANCE_ARM_FROM_AGENT_CENTER,
+    # visibilityScheme="Distance",
+    # fieldOfView=INTEL_VERTICAL_FOV,
+    # server_class=ai2thor.fifo_server.FifoServer,
+    # useMassThreshold=True,
+    # massThreshold=10,
+    # autoSimulation=False,
+    # autoSyncTransforms=True,
+    # renderInstanceSegmentation=True,
+    # agentMode="stretch",
+    # renderDepthImage=SAVE_DEPTH,
+    # cameraNearPlane=0.01,  # VERY VERY IMPORTANT
+    # branch=None,  # IMPORTANT do not use branch
+    # commit_id=STRETCH_COMMIT_ID,
+    # server_timeout=MAXIMUM_SERVER_TIMEOUT,
+    # snapToGrid=False,
+    # fastActionEmit=False,
+    # action_hook_runner=_ACTION_HOOK_RUNNER,
+    # renderDistortionImage=True,
+    # enableDistortionMap=True,
+
     all_args = dict(
         # local_executable_path="unity/builds/thor-OSXIntel64-local/thor-OSXIntel64-local.app/Contents/MacOS/AI2-THOR",
         # local_build=True,
-        # agentMode="stretch",
+        agentMode="stretch",
         platform=platform,
         scene=scene_name,
         gridSize=0.25,
@@ -44,6 +70,7 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
         renderInstanceSegmentation=True,
         enableDistortionMap=enableDistortionMap,
         fieldOfView=120,
+        fastActionEmit=False,
         **args,
     )
 
@@ -157,6 +184,35 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
 
     print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
     print(f'Error: {evt.metadata["errorMessage"]}')
+
+    # event = controller.step(
+    #     action="MultiStep",
+    #     actions=[
+    #         dict(action="MoveBack"),
+    #         dict(action="MoveBac"),
+    #         dict(action="MoveBack"),
+    #         dict(action="MoveBack")
+    #     ]
+    # )
+
+
+    event = controller.step([
+            dict(action="MoveBack"),
+            dict(action="MoveBack"),
+            dict(action="MoveBack"),
+            dict(action="MoveBack")
+        ]
+    )
+    
+    print("MultiStep")
+    print(f"last action: {event.metadata['lastAction']}")
+    print(f"Action {controller.last_action['action']} success: {event.metadata['lastActionSuccess']}")
+    print(f'Error: {event.metadata["errorMessage"]}')
+
+    event = controller.step({'action': 'RotateAgent', 'degrees': -34.391552838580424})
+    print(f"last action: {event.metadata['lastAction']}")
+    print(f"Action {controller.last_action['action']} success: {event.metadata['lastActionSuccess']}")
+    print(f'Error: {event.metadata["errorMessage"]}')
 
     InteractiveControllerPrompt.write_image(controller.last_event, image_dir, "", semantic_segmentation_frame=True, depth_frame=True, color_frame=True, third_party_camera_frames=True, distortion_frame=distortion)
     # input()

@@ -104,8 +104,6 @@ Shader "Custom/BarrelDistortionMap" {
 
                 float smoothDistortionMagnitude = 1.0 + _k1 * pow(r, 2.0) + _k2 * pow(r, 4.0) + _k3 * pow(r,6.0) + _k4 * pow(r,8.0);
 
-                float zoom_percent = 0.2;
-                float translate = (1.0 - zoom_percent) / 2.0;
                 float2 centered_uv_norm = normalize(centered_uv);
 
                

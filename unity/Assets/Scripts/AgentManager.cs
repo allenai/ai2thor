@@ -574,14 +574,14 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         var renderingManagers = agents.Select(agent => agent.m_Camera.GetComponent<RenderingManager>())
             .Concat(thirdPartyCameras.Select(cam => cam.GetComponent<RenderingManager>()));
         foreach (var renderingManager in renderingManagers) {
-            Debug.Log($"------ updateRenderingManagers enablepasses for {renderingManager.transform.parent.name}");
+            // Debug.Log($"------ updateRenderingManagers enablepasses for {renderingManager.transform.parent.name}");
             renderingManager.EnablePasses(activePassList, cameraChange);
         }
     }
 
     private void UpdateActivePasses() {
         // TODO Refactor so that we know where these strings come from
-        Debug.Log($"--------- enableDistortionMap {this.enableDistortionMap}");
+        // Debug.Log($"--------- enableDistortionMap {this.enableDistortionMap}");
         activeCapturePassList = new Dictionary<string, bool>() {
             {"_img", true},
             {"_depth", this.renderDepthImage},
@@ -1163,7 +1163,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         Camera camera
     ) {
         var rm = camera.GetComponent<RenderingManager>();
-        Debug.Log($"-- is rendering manager null? {rm == null} rm {rm}");
+        // Debug.Log($"-- is rendering manager null? {rm == null} rm {rm}");
         rm.GetCaptureAsync("_img", payload, key);
     }
 
@@ -1229,7 +1229,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         // tex.Apply();
         var bytes = tex.GetRawTextureData();
 
-        Debug.Log($"-------- captureCamera {bytes.Length}");
+        // Debug.Log($"-------- captureCamera {bytes.Length}");
         return bytes;
     }
 
@@ -1351,7 +1351,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         ref MetadataWrapper metadata
     ) {
         if (this.renderInstanceSegmentation || this.renderSemanticSegmentation) {
-            Debug.Log($"imageSynthesis null {agent.ImageSynthesis == null}");
+            // Debug.Log($"imageSynthesis null {agent.ImageSynthesis == null}");
             if (!agent.ImageSynthesis.hasCapturePass("_id")) {
                 Debug.LogError(
                     "Object Image not available in imagesynthesis - returning empty image"
@@ -1366,7 +1366,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
             List<ColorId> colors = new List<ColorId>();
 
-            Debug.Log($"----- imageSynt null? {agent.ImageSynthesis == null} { agent.ImageSynthesis} colorids null {agent.ImageSynthesis.colorIds == null}");
+            // Debug.Log($"----- imageSynt null? {agent.ImageSynthesis == null} { agent.ImageSynthesis} colorids null {agent.ImageSynthesis.colorIds == null}");
             foreach (Color key in agent.ImageSynthesis.colorIds.Keys) {
                 ColorId cid = new ColorId();
                 cid.color = new ushort[]
@@ -1407,12 +1407,12 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         string fieldName
     ) {
         if (flag) {
-            Debug.Log($"------- Gettin capture for {captureName} {flag}");
+            // Debug.Log($"------- Gettin capture for {captureName} {flag}");
             var renderingManager = camera.GetComponent<RenderingManager>();
             byte[] bytes = renderingManager.GetCaptureBytes(captureName);
             if (captureName == "_depth") {
             var localBytesX = new byte[] {bytes[0], bytes[1], bytes[2], bytes[3] };
-            Debug.Log($"-------- _depth bytes {string.Join(", ", bytes.Take(100))} convert {System.BitConverter.ToSingle(localBytesX, 0)}");
+            // Debug.Log($"-------- _depth bytes {string.Join(", ", bytes.Take(100))} convert {System.BitConverter.ToSingle(localBytesX, 0)}");
             }
             payload.Add(new KeyValuePair<string, byte[]>(fieldName, bytes));
         }
@@ -1489,6 +1489,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 cameraMetadata[i] = cMetadata;
                 // addThirdPartyCameraImage(renderPayload, camera);
                 renderPayload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureCamera(camera)));
+                // Debug.Log($"------- shouldRenderImageSynthesis {shouldRenderImageSynthesis}");
                 
                 if (shouldRenderImageSynthesis) {
                     ImageSynthesis imageSynthesis =

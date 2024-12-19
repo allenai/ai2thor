@@ -2789,6 +2789,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ProcessControlCommand(controlCommand: controlCommand, target: this);
         }
 
+        public ActionFinished MultiStep(List<JObject> actions) {
+            var actionResults = new List<ActionFinished>();
+                foreach (var jobject in actions) {
+                    var action = new DynamicServerAction(jobject);
+                    Debug.Log($"---- Running action: {action.action}");
+                    this.ProcessControlCommand(action);
+                    var actionFinished =  new ActionFinished(
+                        success: this.lastActionSuccess, 
+                        actionReturn: this.actionReturn, 
+                        errorMessage: this.errorMessage
+                    );
+                    if (!actionFinished.success) {
+                        // this.lastAction = action.action;
+                        return actionFinished;
+                    }
+                    actionResults.Add(actionFinished);
+                }
+                return new ActionFinished(
+                    success: actionResults.All(x => x.success),
+                    actionReturn: actionResults.Select(x => x.actionReturn),
+                    errorMessage: string.Join("/n", actionResults.Select(x => x.errorCode))
+                );
+        }
+
         public void ProcessControlCommand<T>(DynamicServerAction controlCommand, T target)
             where T : ActionInvokable {
             lastActionInitialPhysicsSimulateCount = PhysicsSceneManager.PhysicsSimulateCallCount;

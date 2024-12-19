@@ -310,7 +310,7 @@ namespace Thor.Rendering {
         
 
         public virtual void OnCameraChange(Camera mainCamera) {
-            Debug.Log($"-------OnCameraChange  {name} on object {mainCamera.gameObject.name}");
+            // Debug.Log($"-------OnCameraChange  {name} on object {mainCamera.gameObject.name}");
             if (tex != null) {
                 UnityEngine.Object.Destroy(tex);
                 tex = null;
