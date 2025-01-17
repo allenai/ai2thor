@@ -27,6 +27,7 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
         )
 
     enableDistortionMap = True
+    multi_action = True
 
     # STRETCH_ENV_ARGS = dict(
     # gridSize=GRID_SIZE
@@ -195,16 +196,20 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
     #     ]
     # )
 
-
-    event = controller.step([
+    action_seq = [
             dict(action="MoveBack"),
             dict(action="MoveBack"),
             dict(action="MoveBack"),
             dict(action="MoveBack")
         ]
-    )
-    
-    print("MultiStep")
+    if multi_action:
+        event = controller.step(
+            action_seq
+        )
+        print("MultiStep")
+    else:
+        for a in action_seq:
+            controller.step(a)
     print(f"last action: {event.metadata['lastAction']}")
     print(f"Action {controller.last_action['action']} success: {event.metadata['lastActionSuccess']}")
     print(f'Error: {event.metadata["errorMessage"]}')

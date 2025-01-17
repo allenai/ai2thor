@@ -2808,7 +2808,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 return new ActionFinished(
                     success: actionResults.All(x => x.success),
-                    actionReturn: actionResults.Select(x => x.actionReturn),
+                    actionReturn: actionResults.Select(x => x.actionReturn).ToArray(),
                     errorMessage: string.Join("/n", actionResults.Select(x => x.errorCode))
                 );
         }

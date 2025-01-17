@@ -486,13 +486,14 @@ def local_build_test(context, prefix="local", arch="OSXIntel64"):
 
 
 @task(iterable=["scenes"])
-def local_build(context, prefix="local", arch="OSXIntel64", scenes=None, scripts_only=False):
+def local_build(context, prefix="local", arch="OSXIntel64", scenes=None, scripts_only=False, exclude_private_scenes=False):
     import ai2thor.controller
 
     build = ai2thor.build.Build(arch, prefix, False)
     env = dict()
     if os.path.isdir("unity/Assets/Private/Scenes") or os.path.isdir(
         "Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets/Scenes"
+        and not exclude_private_scenes
     ):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
 
