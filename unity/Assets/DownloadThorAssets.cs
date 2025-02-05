@@ -294,46 +294,48 @@ public class DownloadThorAssets : MonoBehaviour
                 // only get the name of the parent that has mesh 
                 MeshFilter parent_meshFilters = _parent.gameObject.GetComponentInParent<MeshFilter>(); // mf.gameObject.GetComponentInParent<MeshFilter>();
 
+                Transform parent_go = null;
                 if(parent_meshFilters != null)
                 {
-                    string parent_name = parent_meshFilters.gameObject.transform.name;
-                    mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = parent_name;
-                    Vector3 grandParentLocalPosition = parent_meshFilters.gameObject.transform.InverseTransformPoint(mf.gameObject.transform.position);
-                    Quaternion grandParentLocalRotation = Quaternion.Inverse(parent_meshFilters.gameObject.transform.rotation) * mf.gameObject.transform.rotation;
-                    Vector3 grandParentLocalScale = parent_meshFilters.gameObject.transform.localScale;
-                    
-                    // should apply scale for every intermeidate parent
-                    Vector3 scale = mf.gameObject.transform.localScale;
-                    Transform parent = mf.gameObject.transform.parent;
-                    Debug.Log("parent name1: " + parent.name);
-                    Debug.Log("parent name2: " + parent_name);
-                    while(parent.name != parent_name)
-                    {
-                        Debug.Log("parent name: " + parent.name);
-                        scale.x *= parent.localScale.x;
-                        scale.y *= parent.localScale.y;
-                        scale.z *= parent.localScale.z;
-                        parent = parent.parent;
-                        if (parent == null) // tho this should never happen!
-                            break;
-                    }
-                    scale.x *= parent_meshFilters.gameObject.transform.localScale.x;
-                    scale.y *= parent_meshFilters.gameObject.transform.localScale.y;
-                    scale.z *= parent_meshFilters.gameObject.transform.localScale.z;
-
-                    mesh_transforms[meshName + "_" +i.ToString()]["localPosition"] = grandParentLocalPosition.ToString("0.0000000"); // geom
-                    mesh_transforms[meshName + "_" +i.ToString()]["localRotation"] = grandParentLocalRotation.ToString("0.0000000");// geom
-                    mesh_transforms[meshName + "_" +i.ToString()]["scale"] = grandParentLocalScale.ToString("0.0000000");
+                    parent_go = parent_meshFilters.gameObject.transform;
                 }
                 else
                 {
-                    mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = mf.gameObject.transform.root.name; //"root";
-                    mesh_transforms[meshName + "_" +i.ToString()]["localPosition"] = mf.gameObject.transform.localPosition.ToString("0.0000000"); // geom
-                    mesh_transforms[meshName + "_" +i.ToString()]["localRotation"] = mf.gameObject.transform.localRotation.ToString("0.0000000");// geom
-                    mesh_transforms[meshName + "_" +i.ToString()]["scale"] = mf.gameObject.transform.localScale.ToString("0.0000000");
+                    parent_go = mf.gameObject.transform.root;
+                    //parent_name = _parent.gameObject.transform.name;
+                    //mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = mf.gameObject.transform.root.name; //"root";
+                }    
+                
 
+                string parent_name = parent_go.name;
+                mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = parent_name;
+
+                Vector3 grandParentLocalPosition = parent_go.InverseTransformPoint(mf.gameObject.transform.position);
+                Quaternion grandParentLocalRotation = Quaternion.Inverse(parent_go.rotation) * mf.gameObject.transform.rotation;
+                Vector3 grandParentLocalScale = parent_go.localScale;
+                
+                // should apply scale for every intermeidate parent
+                Vector3 scale = mf.gameObject.transform.localScale;
+                Transform parent = mf.gameObject.transform.parent;
+                Debug.Log("parent name1: " + parent.name);
+                Debug.Log("parent name2: " + parent_name);
+                while(parent.name != parent_name)
+                {
+                    Debug.Log("parent name: " + parent.name);
+                    scale.x *= parent.localScale.x;
+                    scale.y *= parent.localScale.y;
+                    scale.z *= parent.localScale.z;
+                    parent = parent.parent;
+                    if (parent == null) // tho this should never happen!
+                        break;
                 }
-                    
+                scale.x *= parent_go.localScale.x;
+                scale.y *= parent_go.localScale.y;
+                scale.z *= parent_go.localScale.z;
+
+                mesh_transforms[meshName + "_" +i.ToString()]["localPosition"] = grandParentLocalPosition.ToString("0.0000000"); // geom
+                mesh_transforms[meshName + "_" +i.ToString()]["localRotation"] = grandParentLocalRotation.ToString("0.0000000");// geom
+                mesh_transforms[meshName + "_" +i.ToString()]["scale"] = scale.ToString("0.0000000");        
             }
 
 
@@ -387,7 +389,7 @@ public class DownloadThorAssets : MonoBehaviour
             foreach (Vector3 vx in msh.vertices)
             {
                 Vector3 v = vx;
-                if (false) // TODO: if true, must apply it too all children object
+                if (false) // TODO: applyScale,if true, must apply it too all children object
                 {
                     v = MultiplyVec3s(v, mf.gameObject.transform.lossyScale);
                 }
@@ -559,10 +561,20 @@ public class DownloadThorAssets : MonoBehaviour
         {
             //diffuse
             string _MainTex = TryExportTexture("_MainTex", m);
+            Vector2 _mainTextureScale = m.GetTextureScale("_MainTex");
             if (_MainTex != "false")
             {
                 sb.AppendLine("map_Kd " + _MainTex);
             }
+            
+            Debug.Log("Checking SecondaryTexture");
+            string _SecondaryTex = TryExportTexture("_DetailAlbedoMap", m);
+            Vector2 _secondaryTextureScale = m.GetTextureScale("_DetailAlbedoMap");
+            if (_SecondaryTex != "false")
+            {
+                sb.AppendLine("map_Kd " + _SecondaryTex);
+            }
+            
             //spec map
             string _MetallicGlossMap = TryExportTexture("_MetallicGlossMap", m);
             if (_MetallicGlossMap != "false")
@@ -580,6 +592,10 @@ public class DownloadThorAssets : MonoBehaviour
             {
                 Dictionary<string, string> matdict = new Dictionary<string, string>();
                 matdict.Add("_MainTex", _MainTex);
+                matdict.Add("main_texture_scale", _mainTextureScale.x.ToString() + " " + _mainTextureScale.y.ToString());
+                matdict.Add("_DetailAlbedoMap", _SecondaryTex);
+                matdict.Add("detail_texture_scale", _secondaryTextureScale.x.ToString() + " " + _secondaryTextureScale.y.ToString());
+
                 matdict.Add("_MetallicGlossMap", _MetallicGlossMap);
                 matdict.Add("_BumpMap", _BumpMap);
 
@@ -618,6 +634,7 @@ public class DownloadThorAssets : MonoBehaviour
     string ExportTexture(Texture2D t)
     {
         string assetPath = AssetDatabase.GetAssetPath(t);
+        Debug.Log(assetPath);
 
         if(File.Exists(assetPath))
         {
