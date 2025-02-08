@@ -4,6 +4,7 @@ Shader "Hidden/OpticalFlow"
 {
 	Properties
 	{
+		[MainTexture] _MainTex ("Base (RGB)", 2D) = "white" {}
 		_Sensitivity("Sensitivity", Float) = 50
 	}
 	SubShader
@@ -32,16 +33,17 @@ Shader "Hidden/OpticalFlow"
 				float4 vertex : SV_POSITION;
 			};
 
-			float4 _CameraMotionVectorsTexture_ST;
+			float4 _MainTex_ST;
+			uniform sampler2D _MainTex;
 			v2f vert (appdata v)
 			{
 				v2f o;
 				o.vertex = UnityObjectToClipPos(v.vertex);
-				o.uv = TRANSFORM_TEX(v.uv, _CameraMotionVectorsTexture);
+				o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				return o;
 			}
 			
-			sampler2D _CameraMotionVectorsTexture;
+			// sampler2D _CameraMotionVectorsTexture;
 
             float3 Hue(float H)
 			{
@@ -78,11 +80,14 @@ Shader "Hidden/OpticalFlow"
 			}
 
 			fixed4 frag (v2f i) : SV_Target
-			{
-				float2 motion = tex2D(_CameraMotionVectorsTexture, i.uv).rg;
+			{	
+				float4 t = tex2D(_MainTex, i.uv);
+				float2 motion = t.rg;
 				float3 rgb = MotionVectorsToOpticalFlow(motion);
 				return float4(rgb, 1);
+				// return t;
 			}
+
 			ENDCG
 		}
 	}

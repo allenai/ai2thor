@@ -486,13 +486,14 @@ def local_build_test(context, prefix="local", arch="OSXIntel64"):
 
 
 @task(iterable=["scenes"])
-def local_build(context, prefix="local", arch="OSXIntel64", scenes=None, scripts_only=False):
+def local_build(context, prefix="local", arch="OSXIntel64", scenes=None, scripts_only=False, exclude_private_scenes=False):
     import ai2thor.controller
 
     build = ai2thor.build.Build(arch, prefix, False)
     env = dict()
     if os.path.isdir("unity/Assets/Private/Scenes") or os.path.isdir(
         "Assets/Resources/ai2thor-objaverse/NoveltyTHOR_Assets/Scenes"
+        and not exclude_private_scenes
     ):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
 
@@ -1079,6 +1080,8 @@ def ci_build(
     novelty_thor_scenes=False,
     skip_delete_tmp_dir=False,  # bool
     cloudrendering_first=False,
+    only_cloudrendering=False,
+    private_scenes_skip=False
 ):
     assert (commit_id is None) == (
         branch is None
@@ -1158,15 +1161,22 @@ def ci_build(
                 # disabling delete temporarily since it interferes with pip releases
                 # pytest_s3_object(build["commit_id"]).delete()
                 logger.info(f"pending build for {build['branch']} {build['commit_id']}")
+
+                if not private_scenes_skip:
+                    novelty_thor_scenes = False
+                    private_repos = []
+                    
                 clean(private_repos=private_repos)
+                private_scene_options = [novelty_thor_scenes]
+                
                 subprocess.check_call("git fetch", shell=True)
                 subprocess.check_call("git checkout %s --" % build["branch"], shell=True)
                 logger.info(f" After checkout")
                 subprocess.check_call("git checkout -qf %s" % build["commit_id"], shell=True)
 
-                private_scene_options = [novelty_thor_scenes]
-
                 build_archs = ["OSXIntel64"]  # , "Linux64"]
+                build_archs = [] if only_cloudrendering else ["OSXIntel64"]  # , "Linux64"]
+
 
                 # CloudRendering only supported with 2020.3.25
                 # should change this in the future to automatically install
@@ -1260,10 +1270,10 @@ def ci_build(
                     # succeeded during an earlier run
 
                     pytest_platform = (
-                        "OSXIntel64" if sys.platform.startswith("darwin") else "CloudRendering"
+                        "CloudRendering" if only_cloudrendering else ("OSXIntel64" if sys.platform.startswith("darwin") else "CloudRendering")
                     )
                     # Weirdly even in Linux you can run utf tests using OSX build cache, but not CloudRendering
-                    utf_test_platform = "OSXIntel64"
+                    utf_test_platform = "CloudRendering" if only_cloudrendering else "OSXIntel64"
 
                     link_build_cache(
                         arch_temp_dirs[utf_test_platform], utf_test_platform, build["branch"]

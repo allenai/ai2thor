@@ -10,6 +10,26 @@ using UnityEngine.UIElements;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public partial class StretchAgentController : ArmAgentController {
+        // public int gripperOpennessState = 0;
+
+        // //define default parameters for both main camera and secondary camera, specific to real-life stretch bot rig
+        // //these are kind of magic numbers, but can be adjusted via UpdateMainCamera and UpdateThirdPartyCamera as needed if our
+        // //real rig changes
+        // private Vector3 defaultMainCameraLocalPosition = new Vector3(
+        //     0.001920350f,
+        //     0.544700900f,
+        //     0.067880400f
+        // );
+        // private Vector3 defaultMainCameraLocalRotation = new Vector3(30f, 0, 0);
+        // private float defaultMainCameraFieldOfView = 59f;
+        // private Vector3 defaultSecondaryCameraLocalPosition = new Vector3(
+        //     0.053905130f,
+        //     0.523833600f,
+        //     -0.058848570f
+        // );
+        // private Vector3 defaultSecondaryCameraLocalRotation = new Vector3(50f, 90f, 0);
+        // private float defaultSecondaryCameraFieldOfView = 59f;
+
         public int gripperOpennessState = 0;
 
         //define default parameters for both main camera and secondary camera, specific to real-life stretch bot rig
@@ -29,6 +49,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         );
         private Vector3 defaultSecondaryCameraLocalRotation = new Vector3(50f, 90f, 0);
         private float defaultSecondaryCameraFieldOfView = 59f;
+        protected bool applyActionNoise = true;
+        protected float movementGaussianMu = 0.001f;
+        protected float movementGaussianSigma = 0.005f;
+        protected float rotateGaussianMu = 0.0f;
+        protected float rotateGaussianSigma = 0.5f;
+        protected bool allowHorizontalMovement = false;
 
         public StretchAgentController(
             BaseAgentComponent baseAgentComponent,
@@ -36,7 +62,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         )
             : base(baseAgentComponent, agentManager) { }
 
-        public override void updateImageSynthesis(bool status) {
+        public override void updateImageSynthesis(bool status, IEnumerable<string> activePassList = null) {
             base.updateImageSynthesis(status);
 
             // updateImageSynthesis is run in BaseFPSController's Initialize method after the
@@ -57,36 +83,62 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             cc.center = m_CharacterController.center;
             cc.radius = m_CharacterController.radius;
             cc.height = m_CharacterController.height;
-            m_Camera.GetComponent<PostProcessVolume>().enabled = true;
-            m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
-            // set up main camera parameters
-            m_Camera.fieldOfView = 65f;
+            //no color correction needed for stretch bot at the moment
+            m_Camera.GetComponent<PostProcessLayer>().enabled = false;
 
-            var secondaryCameraName = "SecondaryCamera";
+            // set camera stand/crouch local positions for Tall mode
+            // standingLocalCameraPosition = m_Camera.transform.localPosition;
+            // crouchingLocalCameraPosition = m_Camera.transform.localPosition;
 
-            // activate arm-camera
-            Camera fp_camera_2 = m_CharacterController
-                .transform.Find(secondaryCameraName)
-                .GetComponent<Camera>();
-            fp_camera_2.gameObject.SetActive(true);
-            agentManager.registerAsThirdPartyCamera(fp_camera_2);
-            if (initializeAction.antiAliasing != null) {
-                agentManager.updateAntiAliasing(
-                    postProcessLayer: fp_camera_2.gameObject.GetComponentInChildren<PostProcessLayer>(),
-                    antiAliasing: initializeAction.antiAliasing
-                );
-            }
+            // var secondaryCameraName = "SecondaryCamera";
+
+            // // activate arm-camera
+            // Camera fp_camera_2 = m_CharacterController
+            //     .transform.Find(secondaryCameraName)
+            //     .GetComponent<Camera>();
+            // fp_camera_2.gameObject.SetActive(true);
+            // agentManager.registerAsThirdPartyCamera(fp_camera_2);
+            // if (initializeAction.antiAliasing != null) {
+            //     agentManager.updateAntiAliasing(
+            //         postProcessLayer: fp_camera_2.gameObject.GetComponentInChildren<PostProcessLayer>(),
+            //         antiAliasing: initializeAction.antiAliasing
+            //     );
+            // }
+
+            // // activate GoPro cameras
+            // Transform goProCameraGroup = m_CharacterController.transform.Find("GoProCameras");
+            // goProCameraGroup.gameObject.SetActive(true);
+
+            // Camera[] goProCameras = new Camera[goProCameraGroup.childCount];
+
+            // // Assign each pre-existing camera to goProCameras array, and set up their codified parameters
+            // for (int i = 0; i < goProCameras.Length; i++) {
+            //     goProCameras[i] = goProCameraGroup.GetChild(i).GetComponent<Camera>();
+
+            //     goProCameras[i].transform.localPosition = defaultGoProCameraLocalPositions[i];
+            //     goProCameras[i].transform.localEulerAngles = defaultGoProCameraLocalEulerAngles[i];
+            //     goProCameras[i].fieldOfView = defaultGoProCameraFieldOfView;
+
+            //     agentManager.registerAsThirdPartyCamera(goProCameras[i]);
+            //     if (initializeAction.antiAliasing != null) {
+            //         agentManager.updateAntiAliasing(
+            //             postProcessLayer: goProCameras[i]
+            //                 .gameObject.GetComponentInChildren<PostProcessLayer>(),
+            //             antiAliasing: initializeAction.antiAliasing
+            //         );
+            //     }
+            // }
 
             // set up primary camera parameters for stretch specific parameters
             m_Camera.transform.localPosition = defaultMainCameraLocalPosition;
             m_Camera.transform.localEulerAngles = defaultMainCameraLocalRotation;
             m_Camera.fieldOfView = defaultMainCameraFieldOfView;
 
-            // set up secondary camera paremeters for stretch bot
-            fp_camera_2.transform.localPosition = defaultSecondaryCameraLocalPosition;
-            fp_camera_2.transform.localEulerAngles = defaultSecondaryCameraLocalRotation;
-            fp_camera_2.fieldOfView = defaultSecondaryCameraFieldOfView;
+            // // set up secondary camera paremeters for stretch bot
+            // fp_camera_2.transform.localPosition = defaultSecondaryCameraLocalPosition;
+            // fp_camera_2.transform.localEulerAngles = defaultSecondaryCameraLocalRotation;
+            // fp_camera_2.fieldOfView = defaultSecondaryCameraFieldOfView;
 
             // limit camera from looking too far down/up
             if (Mathf.Approximately(initializeAction.maxUpwardLookAngle, 0.0f)) {
@@ -101,19 +153,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.maxDownwardLookAngle = initializeAction.maxDownwardLookAngle;
             }
 
-            var secondaryCameraParams = new CameraParameters();
-            var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(
-                secondaryCameraName,
-                out secondaryCameraParams
-            );
-
-            if (setSecondaryParams.GetValueOrDefault()) {
-                CameraParameters.setCameraParameters(fp_camera_2, secondaryCameraParams);
-            }
-
-            // set camera stand/crouch local positions for stretch mode even though they arent used
-            standingLocalCameraPosition = m_Camera.transform.localPosition;
-            crouchingLocalCameraPosition = m_Camera.transform.localPosition;
+            // var secondaryCameraParams = new CameraParameters();
+            // var setSecondaryParams = initializeAction.thirdPartyCameraParameters?.TryGetValue(
+            //     secondaryCameraName,
+            //     out secondaryCameraParams
+            // );
 
             // enable stretch arm component
             Debug.Log("initializing stretch arm");
@@ -659,6 +703,275 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void ToggleLensDistortion(bool state) {
+            toggleLensDistortion(state);
+            actionFinished(true);
+        }
+
+        public void toggleLensDistortion(bool state) {
+            PostProcessVolume ppVolume = GameObject
+                .Find("ppProfileSecondary")
+                .GetComponent<PostProcessVolume>();
+            ppVolume.enabled = state;
+
+            // // Keeping this here in case we ever decide unravel the secrets of this obnoxious post-processing instancing when you change anything about its settings
+            // LensDistortion lensDistortion = null;
+            // ppVolume.profile.TryGetSettings(out lensDistortion);
+            // lensDistortion.enabled = new BoolParameter { value = state };
+        }
+
+        public IEnumerator MoveAheadQuick(
+            float? moveMagnitude = null,
+            float noise = 0f,
+            bool forceAction = false,
+            float speed = 1,
+            bool returnToStart = true
+        ) {
+            bool quickMoveSuccess = MoveRelative(
+                z: 1.0f,
+                moveMagnitude: moveMagnitude,
+                noise: noise,
+                forceAction: forceAction
+            );
+            Physics.SyncTransforms();
+
+            if (quickMoveSuccess) {
+                Debug.Log("Use quick MoveAhead");
+                yield return new ActionFinished() {
+                    success = true,
+                    actionReturn = "Use quick MoveAhead"
+                };
+            } else {
+                Debug.Log("Use slow MoveAhead");
+                yield return base.MoveAgent(
+                    ahead: moveMagnitude.GetValueOrDefault(gridSize),
+                    speed: speed,
+                    returnToStart: returnToStart
+                );
+            }
+        }
+
+        public IEnumerator MoveBackQuick(
+            float? moveMagnitude = null,
+            float noise = 0f,
+            bool forceAction = false,
+            float speed = 1,
+            bool returnToStart = true
+        ) {
+            bool quickMoveSuccess = MoveRelative(
+                z: -1.0f,
+                moveMagnitude: moveMagnitude,
+                noise: noise,
+                forceAction: forceAction
+            );
+            Physics.SyncTransforms();
+
+            if (quickMoveSuccess) {
+                Debug.Log("Use quick MoveBack");
+                yield return new ActionFinished() {
+                    success = true,
+                    actionReturn = "Use quick MoveBack"
+                };
+            } else {
+                Debug.Log("Use slow MoveBack");
+                yield return base.MoveAgent(
+                    ahead: -moveMagnitude.GetValueOrDefault(gridSize),
+                    speed: speed,
+                    returnToStart: returnToStart
+                );
+            }
+        }
+
+        public IEnumerator RotateRightQuick(
+            float? degrees = null,
+            float noise = 0f,
+            float speed = 1.0f,
+            bool returnToStart = true
+        ) {
+            bool quickRotateSuccess = Rotate(
+                rotation: new Vector3(0, degrees.GetValueOrDefault(rotateStepDegrees), 0),
+                noise: noise
+            );
+            Physics.SyncTransforms();
+            if (quickRotateSuccess) {
+                Debug.Log("Use quick RotateRight");
+                yield return new ActionFinished() {
+                    success = true,
+                    actionReturn = "Use quick RotateRight"
+                };
+            } else {
+                Debug.Log("Use slow RotateRight");
+                yield return base.RotateAgent(
+                    degrees: degrees.GetValueOrDefault(rotateStepDegrees),
+                    speed: speed,
+                    returnToStart: returnToStart
+                );
+            }
+        }
+
+        public IEnumerator RotateLeftQuick(
+            float? degrees = null,
+            float noise = 0f,
+            float speed = 1.0f,
+            bool returnToStart = true
+        ) {
+            bool quickRotateSuccess = Rotate(
+                rotation: new Vector3(0, -degrees.GetValueOrDefault(rotateStepDegrees), 0),
+                noise: noise
+            );
+            Physics.SyncTransforms();
+            if (quickRotateSuccess) {
+                Debug.Log("Use quick RotateLeft");
+                yield return new ActionFinished() {
+                    success = true,
+                    actionReturn = "Use quick RotateLeft"
+                };
+            } else {
+                Debug.Log("Use slow RotateLeft");
+                yield return base.RotateAgent(
+                    degrees: -degrees.GetValueOrDefault(rotateStepDegrees),
+                    speed: speed,
+                    returnToStart: returnToStart
+                );
+            }
+        }
+
+        public bool MoveRelative(
+            float? moveMagnitude = null,
+            float x = 0f,
+            float z = 0f,
+            float noise = 0f,
+            bool forceAction = false
+        ) {
+            if (!moveMagnitude.HasValue) {
+                moveMagnitude = gridSize;
+            } else if (moveMagnitude.Value <= 0f) {
+                throw new InvalidOperationException("moveMagnitude must be null or >= 0.");
+            }
+
+            if (!allowHorizontalMovement && Math.Abs(x) > 0) {
+                throw new InvalidOperationException(
+                    "Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller."
+                );
+            }
+
+            var moveLocal = new Vector3(x, 0, z);
+            float xzMag = moveLocal.magnitude;
+            if (xzMag > 1e-5f) {
+                // rotate a small amount with every movement since robot doesn't always move perfectly straight
+                if (this.applyActionNoise) {
+                    var rotateNoise = (float)
+                        systemRandom.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
+                    transform.rotation =
+                        transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateNoise, 0.0f));
+                    Physics.SyncTransforms();
+                }
+
+                var moveLocalNorm = moveLocal / xzMag;
+                var magnitudeWithNoise = GetMoveMagnitudeWithNoise(
+                    moveMagnitude: xzMag * moveMagnitude.Value,
+                    noise: noise
+                );
+
+                Debug.Log(
+                    "Move Direction:"
+                        + this.transform.rotation * (moveLocalNorm * magnitudeWithNoise)
+                );
+                return base.moveInDirection(
+                    direction: this.transform.rotation * (moveLocalNorm * magnitudeWithNoise),
+                    forceAction: forceAction
+                );
+            } else {
+                errorMessage = "either x or z must be != 0 for the MoveRelative action";
+                return false;
+            }
+        }
+
+        protected float GetMoveMagnitudeWithNoise(float moveMagnitude, float noise) {
+            float internalNoise = applyActionNoise
+                ? (float)systemRandom.NextGaussian(movementGaussianMu, movementGaussianSigma)
+                : 0;
+            return moveMagnitude + noise + (float)internalNoise;
+        }
+
+        protected bool moveInDirection(
+            Vector3 direction,
+            string objectId = "",
+            float maxDistanceToObject = -1.0f,
+            bool forceAction = false,
+            bool manualInteract = false,
+            HashSet<Collider> ignoreColliders = null
+        ) {
+            Vector3 targetPosition = transform.position + direction;
+            if (
+                checkIfSceneBoundsContainTargetPosition(targetPosition)
+                && CheckIfItemBlocksAgentMovement(direction, forceAction)
+                && // forceAction = true allows ignoring movement restrictions caused by held objects
+                CheckIfAgentCanMove(direction, ignoreColliders)
+            ) {
+                // only default hand if not manually interacting with things
+                if (!manualInteract) {
+                    DefaultAgentHand();
+                }
+
+                Vector3 oldPosition = transform.position;
+                transform.position = targetPosition;
+                this.snapAgentToGrid();
+
+                if (objectId != "" && maxDistanceToObject > 0.0f) {
+                    if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                        errorMessage = "No object with ID " + objectId;
+                        transform.position = oldPosition;
+                        return false;
+                    }
+                    SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                    if (distanceToObject(sop) > maxDistanceToObject) {
+                        errorMessage =
+                            "Agent movement would bring it beyond the max distance of " + objectId;
+                        transform.position = oldPosition;
+                        return false;
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public bool Rotate(Vector3 rotation, float noise, bool manualInteract = false) {
+            // only default hand if not manually Interacting with things
+            if (!manualInteract) {
+                DefaultAgentHand();
+            }
+
+            float rotateAmountDegrees = GetRotateMagnitudeWithNoise(
+                rotation: rotation,
+                noise: noise
+            );
+
+            // multiply quaternions to apply rotation based on rotateAmountDegrees
+            transform.rotation = (
+                transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateAmountDegrees, 0.0f))
+            );
+            Physics.SyncTransforms();
+            if (base.isAgentCapsuleColliding()) {
+                transform.rotation = (
+                    transform.rotation
+                    * Quaternion.Euler(new Vector3(0.0f, -rotateAmountDegrees, 0.0f))
+                );
+                Physics.SyncTransforms();
+                return false;
+            }
+            return true;
+        }
+
+        protected float GetRotateMagnitudeWithNoise(Vector3 rotation, float noise) {
+            float internalNoise = applyActionNoise
+                ? (float)systemRandom.NextGaussian(rotateGaussianMu, rotateGaussianSigma)
+                : 0;
+            return rotation.y + noise + (float)internalNoise;
+        }
+
         public void PlaceObjectIntoGripper(string objectId, bool grasp = true) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = $"Cannot find object with id {objectId}.";
@@ -739,7 +1052,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 Physics.SyncTransforms();
 
-                Collider c = UtilityFunctions.firstColliderObjectCollidingWith(go: sop.gameObject);
+                Collider c = UtilityFunctions.firstColliderObjectCollidingWith(
+                    go: sop.gameObject
+                );
                 if (c != null) {
                     SimObjPhysics collisionSop = ancestorSimObjPhysics(c.gameObject);
                     errorMessage =
@@ -795,4 +1110,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
     }
+
+
 }

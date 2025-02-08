@@ -459,6 +459,7 @@ class Event:
         self.third_party_instance_masks = []
         self.third_party_class_masks = []
         self.third_party_camera_frames = []
+        self.third_party_distortion_frames = []
         self.third_party_semantic_segmentation_frames = []
         self.third_party_instance_segmentation_frames = []
         self.third_party_depth_frames = []
@@ -646,6 +647,17 @@ class Event:
             image_flows_data, self.screen_width, self.screen_height
         )
 
+    # TODO make more generic, above methids minus depth are basically the same
+    def add_image_distortion(self, image_distortion_data):
+        self.distortion_frame = read_buffer_image(
+            image_distortion_data, self.screen_width, self.screen_height
+        )
+    
+    def add_third_party_image_distortion(self, distortion_data):
+        self.third_party_distortion_frames.append(
+            read_buffer_image(distortion_data, self.screen_width, self.screen_height)
+        )
+
     def add_third_party_camera_image(self, third_party_image_data):
         self.third_party_camera_frames.append(
             read_buffer_image(third_party_image_data, self.screen_width, self.screen_height)
@@ -775,6 +787,7 @@ class Server(ABC):
                 image_classes=e.add_image_classes,
                 image_normals=e.add_image_normals,
                 image_flow=e.add_image_flows,
+                image_distortion=e.add_image_distortion
             )
 
             for key in image_mapping.keys():
@@ -796,6 +809,7 @@ class Server(ABC):
                 "image_thirdParty_classes": e.add_third_party_image_classes,
                 "image_thirdParty_normals": e.add_third_party_image_normals,
                 "image_thirdParty_flows": e.add_third_party_image_flows,
+                "image_thirdParty_distortion": e.add_third_party_image_distortion
             }
 
             if a["thirdPartyCameras"] is not None:

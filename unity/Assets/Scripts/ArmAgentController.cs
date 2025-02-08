@@ -29,7 +29,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ActionFinished.Success;
         }
 
-        public override void updateImageSynthesis(bool status) {
+        public override void updateImageSynthesis(bool status, IEnumerable<string> activePassList = null) {
             base.updateImageSynthesis(status);
 
             // updateImageSynthesis is run in BaseFPSController's Initialize method after the

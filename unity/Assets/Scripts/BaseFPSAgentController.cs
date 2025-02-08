@@ -2728,11 +2728,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return metaMessage;
         }
 
-        public virtual void updateImageSynthesis(bool status) {
+        public virtual void updateImageSynthesis(bool status, IEnumerable<string> activePassList = null) {
             if (this.imageSynthesis == null) {
-                imageSynthesis =
+                this.imageSynthesis =
                     this.m_Camera.gameObject.GetComponent<ImageSynthesis>() as ImageSynthesis;
             }
+            // this.imageSynthesis.EnablePasses(activePassList);
+
+            // var renderingManager = this.m_Camera.gameObject.GetComponent<RenderingManager>();
+            // renderingManager.EnablePasses(activePassList);
+            // if (cameraChange) {
+            //     renderingManager.OnCameraChange();
+            // }
             imageSynthesis.enabled = status;
         }
 
@@ -2783,6 +2790,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ProcessControlCommand(DynamicServerAction controlCommand) {
             ProcessControlCommand(controlCommand: controlCommand, target: this);
+        }
+
+        public ActionFinished MultiStep(List<JObject> actions) {
+            var actionResults = new List<ActionFinished>();
+                foreach (var jobject in actions) {
+                    var action = new DynamicServerAction(jobject);
+                    Debug.Log($"---- Running action: {action.action}");
+                    this.ProcessControlCommand(action);
+                    var actionFinished =  new ActionFinished(
+                        success: this.lastActionSuccess, 
+                        actionReturn: this.actionReturn, 
+                        errorMessage: this.errorMessage
+                    );
+                    if (!actionFinished.success) {
+                        // this.lastAction = action.action;
+                        return actionFinished;
+                    }
+                    actionResults.Add(actionFinished);
+                }
+                return new ActionFinished(
+                    success: actionResults.All(x => x.success),
+                    actionReturn: actionResults.Select(x => x.actionReturn).ToArray(),
+                    errorMessage: string.Join("/n", actionResults.Select(x => x.errorCode))
+                );
         }
 
         public void ProcessControlCommand<T>(DynamicServerAction controlCommand, T target)

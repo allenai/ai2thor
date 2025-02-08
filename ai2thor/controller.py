@@ -1012,12 +1012,18 @@ class Controller(object):
             return True
         return False
 
-    def step(self, action: Union[str, Dict[str, Any]] = None, **action_args):
+    def step(self, action: Union[str, list, Dict[str, Any]] = None, **action_args):
         if isinstance(action, Dict):
             # We attempt to prevent changes from leaking, doing a deep copy
             # isn't a good idea as the action may have huge arguments (e.g. when
             # generating a house)
             action = {**action}
+        elif isinstance(action, list):
+            # Multi action
+            action = dict(
+                action="MultiStep",
+                actions=action
+            )
         else:
             action = dict(action=action)
 

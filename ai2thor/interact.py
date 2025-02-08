@@ -224,10 +224,12 @@ class InteractiveControllerPrompt(object):
         image_dir,
         suffix,
         image_per_frame=False,
+        color_frame=False,
         semantic_segmentation_frame=False,
         instance_segmentation_frame=False,
         depth_frame=False,
-        color_frame=False,
+        distortion_frame=False,
+        third_party_camera_frames=False,
         metadata=False,
     ):
         def save_image(name, image, flip_br=False):
@@ -272,6 +274,13 @@ class InteractiveControllerPrompt(object):
                 save_image,
             ),
             (
+                "distortion",
+                distortion_frame,
+                lambda event: event.distortion_frame,
+                array_to_image,
+                lambda x, y: save_image(x, y, flip_br=True),
+            ),
+            (
                 "depth",
                 depth_frame,
                 lambda event: event.depth_frame,
@@ -291,6 +300,22 @@ class InteractiveControllerPrompt(object):
                 ),
             ),
             (
+                "third_party_camera_frames",
+                third_party_camera_frames,
+                lambda event: event.third_party_camera_frames,
+                lambda x: x,
+                lambda name, images: [save_image(name, image, flip_br=True) for  (i, image) in zip(range(len(images)), images)]
+                   
+            ),
+            (
+                "third_party_distortion_frames",
+                third_party_camera_frames and distortion_frame,
+                lambda event: event.third_party_distortion_frames,
+                lambda x: x,
+                lambda name, images: [save_image(name, image, flip_br=True) for  (i, image) in zip(range(len(images)), images)]
+                   
+            ),
+            (
                 "metadata",
                 metadata,
                 lambda event: event.metadata,
@@ -300,19 +325,19 @@ class InteractiveControllerPrompt(object):
         ]
 
         for frame_filename, condition, frame_func, transform, save in frame_writes:
-            frame = frame_func(event)
-            if frame is not None and condition:
-                frame = transform(frame)
-                image_name = os.path.join(
-                    image_dir,
-                    "{}{}".format(frame_filename, "{}".format(suffix) if image_per_frame else ""),
-                )
-                print("Image {}, {}".format(image_name, image_dir))
-                save(image_name, frame)
-
-            elif condition:
-                print(
-                    "No frame '{}' present, call initialize with the right parameters".format(
-                        frame_filename
+            if condition:
+                frame = frame_func(event)
+                if frame is not None:
+                    frame = transform(frame)
+                    image_name = os.path.join(
+                        image_dir,
+                        "{}{}".format(frame_filename, "{}".format(suffix) if image_per_frame else ""),
                     )
-                )
+                    print("Image {}, {}".format(image_name, image_dir))
+                    save(image_name, frame)
+                else:
+                    print(
+                        "No frame '{}' present, call initialize with the right parameters".format(
+                            frame_filename
+                        )
+                    )
