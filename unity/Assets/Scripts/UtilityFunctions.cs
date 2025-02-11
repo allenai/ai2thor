@@ -399,20 +399,18 @@ public static class UtilityFunctions {
     }
 
     // Recursive method to find and return all instances of the component in the hierarchy
-    public static List<T> FindAllComponentsInChildren<T>(Transform parent) where T : Component
-    {
+    public static List<T> FindAllComponentsInChildren<T>(Transform parent)
+        where T : Component {
         List<T> components = new List<T>();
 
         // Check if the parent itself has the component
         T component = parent.GetComponent<T>();
-        if (component != null)
-        {
+        if (component != null) {
             components.Add(component);
         }
 
         // Loop through all children and collect their components recursively
-        foreach (Transform child in parent)
-        {
+        foreach (Transform child in parent) {
             components.AddRange(FindAllComponentsInChildren<T>(child));
         }
 

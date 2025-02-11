@@ -834,9 +834,11 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         //default to agent 0
         var agent = this.agents[agentId];
 
-        List<SyncTransform> st = UtilityFunctions.FindAllComponentsInChildren<SyncTransform>(agent.transform);
+        List<SyncTransform> st = UtilityFunctions.FindAllComponentsInChildren<SyncTransform>(
+            agent.transform
+        );
 
-        if(st.Count > 0) {
+        if (st.Count > 0) {
             foreach (SyncTransform s in st) {
                 s.enabled = !toggleOff;
             }
@@ -846,7 +848,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             );
         }
 
-        agent.actionFinishedEmit(success:true);
+        agent.actionFinishedEmit(success: true);
     }
 
     //allows repositioning and changing of values of agent's primary camera

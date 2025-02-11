@@ -10,5 +10,4 @@ if TYPE_CHECKING:
 
 
 class MetadataHook(Protocol):
-    def __call__(self, metadata: Dict[str, Any], controller: "Controller"):
-        ...
+    def __call__(self, metadata: Dict[str, Any], controller: "Controller"): ...
