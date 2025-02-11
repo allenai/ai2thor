@@ -13,7 +13,7 @@ using UnityStandardAssets.ImageEffects;
 public class PhysicsSimulationParams {
     public bool autoSimulation = false;
     public float fixedDeltaTime = 0.02f;
-    public float minSimulateTimeSeconds = 0;
+    public float minSimulateTimeSeconds = 0.02f;
 
     public bool syncTransformsAfterAction = false;
 
@@ -95,7 +95,7 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     void Awake() {
-        SetDefaultSimulationParams(new PhysicsSimulationParams());
+        //SetDefaultSimulationParams(new PhysicsSimulationParams());
     }
 
     private void OnEnable() {
@@ -200,8 +200,6 @@ public class PhysicsSceneManager : MonoBehaviour {
         PhysicsSimulationParams physicsSimulationParams
     ) {
         var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime;
-        var previousAutoSimulate = Physics.autoSimulation;
-        Physics.autoSimulation = physicsSimulationParams.autoSimulation;
 
         PhysicsSceneManager.PhysicsSimulateTimeSeconds = 0.0f;
         var startPhysicsSimulateCallTime = PhysicsSceneManager.PhysicsSimulateCallCount;
@@ -209,6 +207,9 @@ public class PhysicsSceneManager : MonoBehaviour {
 
         // Recursive expansion of IEnumerator
         ActionFinished actionFinished = ExpandIEnumerator(enumerator, physicsSimulationParams);
+
+        var previousAutoSimulate = Physics.autoSimulation;
+        Physics.autoSimulation = physicsSimulationParams.autoSimulation;
 
         if (actionFinished == null) {
             throw new MissingActionFinishedException();
