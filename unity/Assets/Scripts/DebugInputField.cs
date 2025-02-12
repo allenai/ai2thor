@@ -2787,8 +2787,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "ToggleAgentMainCameraMeshTracking";
                         action["toggleOff"] = true;
-                        CurrentActiveController()
-                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);                        
                         break;
                     }
 

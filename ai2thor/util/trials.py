@@ -3,9 +3,11 @@ import math
 
 
 class TrialMetric(object):
-    def init_trials(self, num_trials, metadata): ...
+    def init_trials(self, num_trials, metadata):
+        ...
 
-    def update_with_trial(self, trial_index, metadata): ...
+    def update_with_trial(self, trial_index, metadata):
+        ...
 
 
 class ObjectPositionVarianceAverage(TrialMetric):

@@ -172,8 +172,7 @@ namespace Tests
         }
 
         [UnityTest]
-        public IEnumerator TestNewAction()
-        {
+        public IEnumerator TestNewAction() {
             var controller = new TestController(this.agentManager);
 
             var result = 5;
