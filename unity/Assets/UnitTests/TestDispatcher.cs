@@ -172,7 +172,8 @@ namespace Tests
         }
 
         [UnityTest]
-        public IEnumerator TestNewAction() {
+        public IEnumerator TestNewAction()
+        {
             var controller = new TestController(this.agentManager);
 
             var result = 5;
@@ -191,8 +192,10 @@ namespace Tests
 
             // Complete (new actionFinished) was called automatically
             Assert.IsTrue(controller.ranCompleteCallback);
-            // Defaults of PhyicsSimulationParams class will have one physics step of 0.02f seconds happen
-            Assert.AreEqual(PhysicsSceneManager.PhysicsSimulateCallCount, 1);
+
+            // No physics sim happened
+            Assert.AreEqual(PhysicsSceneManager.PhysicsSimulateCallCount, 0);
+
             // 1 iteration corresponding the yield return new ActionFinished()
             Assert.AreEqual(PhysicsSceneManager.IteratorExpandCount, 1);
             // returns result
