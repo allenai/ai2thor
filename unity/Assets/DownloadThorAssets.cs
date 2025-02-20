@@ -32,7 +32,7 @@ public class DownloadThorAssets : MonoBehaviour
 
     [Header("Just do the first one because I'm testing things")]
     public bool justDoTheFirstOneBecauseImTestingThings = false;
-    
+
     Dictionary<string, Material> allMaterials = new Dictionary<string, Material>();
     Dictionary<string, Dictionary<string, string>> Mat2Texture = new Dictionary<string, Dictionary<string, string>>();
 
@@ -88,8 +88,6 @@ public class DownloadThorAssets : MonoBehaviour
             File.WriteAllText(Path.Combine(savePath, "quick_material_to_textures.json"), json);
             Debug.Log("Saving material to textures dictionary to: " + Path.Combine(savePath, "material_to_textures.json"));
         }
-
-        Debug.Log($"finished export from {assetPath}");
     }
 
 
@@ -167,7 +165,7 @@ public class DownloadThorAssets : MonoBehaviour
         
         string[] prefabFiles = Directory.GetFiles(directoryPath, "*.prefab", SearchOption.AllDirectories);
 
-
+        int assetsProcessed = 0;
         foreach (string prefabPath in prefabFiles)
         {
             // skip if already exist
@@ -188,6 +186,8 @@ public class DownloadThorAssets : MonoBehaviour
                 instantiatedPrefab.name = prefab.name;
                 SaveEachAsset(instantiatedPrefab, relativePrefabPath, applyBoundingBox, saveSubMeshes, saveSubMeshTransform);
                 Destroy(instantiatedPrefab);
+
+                assetsProcessed++;
             }
             else
             {
@@ -199,6 +199,8 @@ public class DownloadThorAssets : MonoBehaviour
                 break;
             }
         }
+
+        Debug.Log($"finished exporting {assetsProcessed} prefabs from {assetPath}");
     }
 
     
@@ -298,25 +300,29 @@ public class DownloadThorAssets : MonoBehaviour
                 lastIndex = 0;
             }
 
-            string meshName = meshFilters[i].gameObject.name; //+ "_" + i.ToString();
-            Debug.Log(meshName);
-
             MeshFilter mf = meshFilters[i];
 
-            if (mf == null)
-            {
-                Debug.LogError("No mesh filter found for " + meshName);
-                continue;
-            }
+            // if (mf == null)
+            // {
+            //     Debug.LogError("No mesh filter found for " + meshName);
+            //     continue;
+            // }
 
+            string meshName = mf.gameObject.name;
+            Debug.Log($"mesh name: {meshName}");
             
             /// ---- THIS LOGIC DID NOT WORK FOR  DRESSER .. .did work for Fridge but not for Dresser 217 for example
+            /// notes: fridge works because it has nested FridgeBodyMesh with child door meshes under it
+            /// dresser fails because the meshes are siblings of each other rather than children under the body heirarchy
             mesh_transforms[meshName + "_" +i.ToString()] = new Dictionary<string, string>();
             mesh_transforms[meshName + "_" +i.ToString()]["name"] = mf.gameObject.transform.name;
 
             Transform _parent = mf.gameObject.transform.parent;
+
+            Debug.Log($"what is mf.gameObject.transform.parent: {_parent}");
             if(_parent == null)
             {
+                Debug.Log("parent name: root because game object had no parent??");
                 mesh_transforms[meshName + "_" +i.ToString()]["parentName"] =  mf.gameObject.transform.root.name; //"root";
             }
             else
@@ -332,6 +338,7 @@ public class DownloadThorAssets : MonoBehaviour
                 else
                 {
                     parent_go = mf.gameObject.transform.root;
+                    Debug.Log($"parent name: {parent_go}which is the root because parent had no mesh filter");
                     //parent_name = _parent.gameObject.transform.name;
                     //mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = mf.gameObject.transform.root.name; //"root";
                 }    
@@ -533,19 +540,17 @@ public class DownloadThorAssets : MonoBehaviour
         if(true) //!saveSubMeshes)
         {
             //write to disk
-            Debug.Log("writing to disk: " + Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".obj")));
+            Debug.Log("writing obj to disk: " + Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".obj")));
             System.IO.File.WriteAllText( Path.Combine(savePath,  Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".obj")), sb.ToString());
-            Debug.Log("Write to disk done");
-            print("mesh saved");
+            Debug.Log("Write obj to disk done");
         }
 
         if (saveSubMeshTransform)  
         {
             string json = JsonUtility.ToJson(new SerializableDictionary(mesh_transforms), true);
             File.WriteAllText(Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".json")), json);
-            Debug.Log("Saving mesh transform dictionary.");
+            Debug.Log("Saving mesh serializable dictionaries to json.");
         }    
-         
     }
 
     Vector3 RotateAroundPoint(Vector3 point, Vector3 pivot, Quaternion angle)
