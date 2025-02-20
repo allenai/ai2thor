@@ -208,11 +208,7 @@ public class DownloadThorAssets : MonoBehaviour
 
     
     void SaveEachAsset(GameObject go, string relativeExportPath, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false)
-    {    
-
-
-         MeshFilter[] meshFilters = go.transform.GetComponentsInChildren<MeshFilter>();
-
+    {
 
 
         Directory.CreateDirectory(Path.Combine(savePath, Path.GetDirectoryName(relativeExportPath)));
