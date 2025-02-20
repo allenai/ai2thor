@@ -254,6 +254,12 @@ public class RenderingManager : MonoBehaviour {
         }
     }
 
+    public void OnDestroy() {
+        Debug.Log("-------RenderingManager On destroy called");
+        foreach (var pass in availablePasses) {
+            (pass.Value as RenderToTexture).ReleaseRenderTexture();
+        }
+    }
     
 
     public void GetCaptureAsync(

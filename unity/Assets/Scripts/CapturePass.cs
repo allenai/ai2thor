@@ -190,6 +190,22 @@ namespace Thor.Rendering {
             // this.camera.AddCommandBuffer(CameraEvent.AfterImageEffects, cb);
         }
 
+    
+    ~RenderToTexture()
+    {
+        ReleaseRenderTexture();
+    }
+
+    public void ReleaseRenderTexture() {
+        if (this.renderTexture != null && this.renderTexture.IsCreated())
+        {
+            this.renderTexture.Release();
+        }
+        if (tex != null) {
+            UnityEngine.Object.Destroy(tex);
+        }
+    }
+
 
     private RenderTexture CreateRenderTexture(int width, int height) {
 
@@ -204,10 +220,7 @@ namespace Thor.Rendering {
         // );
 
         // TODO: add rescaling here
-        if (this.renderTexture != null && this.renderTexture.IsCreated())
-        {
-            this.renderTexture.Release();
-        }
+        ReleaseRenderTexture();
         
        
         RenderTexture rt = null;
