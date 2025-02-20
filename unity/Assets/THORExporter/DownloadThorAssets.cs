@@ -5,6 +5,9 @@ using UnityEditor;
 using System.Text;
 using System.IO;
 using System;
+using Thor.Procedural;
+using System.Linq;
+using UnityEditorInternal.Profiling.Memory.Experimental;
 
 public class DownloadThorAssets : MonoBehaviour
 {
@@ -205,7 +208,13 @@ public class DownloadThorAssets : MonoBehaviour
 
     
     void SaveEachAsset(GameObject go, string relativeExportPath, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false)
-    {        
+    {    
+
+
+         MeshFilter[] meshFilters = go.transform.GetComponentsInChildren<MeshFilter>();
+
+
+
         Directory.CreateDirectory(Path.Combine(savePath, Path.GetDirectoryName(relativeExportPath)));
         
         // grab reference to all mesh filters in this prefab's heirarchy
@@ -276,8 +285,103 @@ public class DownloadThorAssets : MonoBehaviour
         print("material saved");
     }
 
+    public class MeshData {
+        public Vector3 parentRelativePosition;
+        public Vector3 parentRelativeScale;
+        public Quaternion parentRelativeRotation;
+
+        public string parentName;
+
+        public string meshName;
+
+        public List<Dictionary<string, object>> colliders;
+
+
+
+
+    }
+
+    // void TraverseGO(GameObject go, string parent, Dictionary<string, MeshData> result) {
+    //     var meshFilter = go.GetComponent<MeshFilter>();
+    //     // if go.GetComponent<meshrenderer> is not enabled skip
+    //     if (meshFilter != null) {
+    //         // Vector3 grandParentLocalPosition = parent_go.InverseTransformPoint(mf.gameObject.transform.position);
+    //         // Quaternion grandParentLocalRotation = Quaternion.Inverse(parent_go.rotation) * mf.gameObject.transform.rotation;
+    //         // Vector3 grandParentLocalScale = parent_go.localScale;
+
+    //         // continue but change parent
+
+    //         if (sop != null) {
+    //             result[go.name] = new MeshData {
+    //                 parentRelativePosition= go.transform.position,
+    //                 parentRelativeRotation = go.transform.rotation,
+    //                 parentRelativeScale = go.transform.lossyScale,
+    //                 meshName = go.name,
+    //                 parentName = 
+    //             };
+    //         }
+           
+            
+
+    //     } 
+    //     if (go.transform.childCount == 0) {
+    //         return;
+    //     }
+
+    //     for (var childI = 0; childI < go.transform.childCount; childI++) {
+    //         var child = go.transform.GetChild(childI);
+    //         TraverseGO(child.gameObject, go.name);
+
+
+    //     }
+        
+
+    // }
+    
+
+    void FillMeshData(MeshFilter meshfilter) {
+        var go = meshfilter.gameObject;
+        bool parentRename = true;
+
+        
+        var meshData = new MeshData {
+            parentRelativePosition= go.transform.position,
+            parentRelativeRotation = go.transform.rotation,
+            parentRelativeScale = go.transform.localScale,
+            meshName = go.name,
+            parentName = "",
+            colliders = go.GetComponentsInChildren<Collider>().Select(getCollider).ToList()
+        };
+
+        
+
+        var parent = go.transform.root;
+        while(parent != null) {
+            meshData.parentRelativePosition = parent.transform.InverseTransformPoint(meshData.parentRelativePosition);
+            meshData.parentRelativeRotation = Quaternion.Inverse(parent.rotation * meshData.parentRelativeRotation);
+            meshData.parentRelativeScale =  new Vector3(meshData.parentRelativeScale.x * parent.localScale.x, meshData.parentRelativeScale.y * parent.localScale.y,meshData.parentRelativeScale.z * parent.localScale.z);
+
+            
+            if (parentRename) {
+                meshData.parentName = parent.name;
+            }
+
+            var parentMesh = parent.GetComponent<MeshFilter>();
+            if (parentMesh != null) {
+                parentRename = false;
+            }
+            
+            parent = go.transform.root;
+        }
+
+    }
+
+
     void SaveMeshes(string relativeExportPath, MeshFilter[] meshFilters, Vector3 center, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false, bool saveCombinedSubmeshes=false)
     {
+
+        
+
         Debug.Log("saving mesh");
 
         string baseFileName = Path.GetFileNameWithoutExtension(relativeExportPath);
@@ -716,6 +820,154 @@ public class DownloadThorAssets : MonoBehaviour
             return "null";
         }
         */
+
+    }
+
+    private static Dictionary<string, object> getJsonTransorm(Transform transform) {
+        return new Dictionary<string, object>() {
+                    {"position", transform.position},
+                    {"rotationEuler", transform.rotation.eulerAngles},
+                    {"rotation", transform.rotation},
+                    {"scale", transform.localScale}
+                };
+    }
+
+    public static Dictionary<string, object> getCollider(Collider c) {
+        Dictionary<string, object> co = null;
+        if (c != null) {
+        if (c.GetType() == typeof(CapsuleCollider)) {
+            var ct = c as CapsuleCollider;
+            co = new Dictionary<string, object>(){
+                {"type", "capsule"},
+                {"center", ct.center},
+                {"transformedCenter", ct.transform.TransformPoint(ct.center)},
+                {"radius", ct.radius},
+                {"transform",  getJsonTransorm(ct.transform)}
+            };
+        }
+        else if (c.GetType() == typeof(BoxCollider)) {
+            var ct = c as BoxCollider;
+            co = new Dictionary<string, object>(){
+                {"type", "box"},
+                {"center", ct.center},
+                {"transformedCenter", ct.transform.TransformPoint(ct.center)},
+                {"size", ct.size},
+               {"transform",  getJsonTransorm(ct.transform)}
+            };
+        }
+        else if (c.GetType() == typeof(SphereCollider)) {
+            var ct = c as SphereCollider;
+            co = new Dictionary<string, object>(){
+                {"type", "sphere"},
+                {"center", ct.center},
+                {"transformedCenter", ct.transform.TransformPoint(ct.center)},
+                {"radius", ct.radius},
+                {"transform",  getJsonTransorm(ct.transform)}
+            };
+        }
+        else {
+            co = new Dictionary<string, object>(){
+                {"unsupported", true},
+                {"type", c.GetType().ToString()}
+            };
+        }
+        }
+        else {
+            co = new Dictionary<string, object>(){
+                {"error", "Null collider"}
+            };
+        }
+        // else if (c.GetType() == typeof(MeshRenderer)) {
+
+        // }
+        return co;
+    }
+
+    // [UnityEditor.MenuItem("Procedural/Get Primitive Colliders from PDB")]
+    public static void ExportProcthorPrimitiveColliders() {
+        var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+        var m = assetDb.prefabs.Select(
+                (p, i) => (sop: p.GetComponent<SimObjPhysics>(), i))
+            .Where(x => x.sop != null);// && x.assetID == "Fertility_Statue_1");
+
+        var jsonResolver = new ShouldSerializeContractResolver();
+        
+        var colliderDict =  new Dictionary<string, object>();
+        foreach (var (sop, i) in m) {
+            
+            var assetId = sop.gameObject.name;
+            Debug.Log($"assetID {assetId}");
+
+            // var meshColliders = sop.GetComponentsInChildren<MeshCollider>();
+
+            // var colliders = sop.MyColliders.Count() > 0 ? sop.MyColliders.Select(getCollider) : new List<Dictionary<string, object>>() { getCollider(meshCollider) };
+            var colliders = sop.MyColliders.Select(getCollider);
+            Debug.Log("collider count: " + colliders.Count());
+            
+            
+            if (!colliderDict.ContainsKey(assetId)) { 
+                colliderDict.Add(assetId, new Dictionary<string, object>() { {"colliders", colliders}, {"assetId", assetId} });
+            }
+            else {
+                Debug.Log($"----- Error duplicate key {sop.assetID} object name: {sop.objectID}, GO name: {sop.gameObject.name}, index: {i}" );
+            }
+            // var jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(
+            // new Dictionary<string, object>() {
+            //     {"colliders", colliders},
+            //     {"assetId", sop.assetID}
+            // },
+            // Newtonsoft.Json.Formatting.None,
+            // new Newtonsoft.Json.JsonSerializerSettings() {
+            //     ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+            //     ContractResolver = jsonResolver
+            // }
+            // );
+
+            // Debug.Log($"st {jsonStr}");
+
+        }
+
+        
+        var jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(
+            colliderDict,
+            Newtonsoft.Json.Formatting.None,
+            new Newtonsoft.Json.JsonSerializerSettings() {
+                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                ContractResolver = jsonResolver
+            }
+            );
+
+            Debug.Log($"st {jsonStr}");
+            var fileName = $"{Application.dataPath}/test.json";
+            Debug.Log($"Save as: {fileName}");
+
+            System.IO.StreamWriter file = new System.IO.StreamWriter($"{Application.dataPath}/test.json");
+            // file.WriteLine(jsonStr);
+            file.Write(jsonStr);
+
+            file.Close();
+
+//             using(StreamWriter writetext = new StreamWriter("write.txt"))
+// {
+//     writetext.writeLine
+//     writetext.WriteLine("writing in text file");
+// }
+
+        // var colliderDict = m.ToDictionary(sop => (sop.assetID, new Dictionary<string, object>() {
+        //         {"colliders", sop.MyColliders.Select(getCollider)},
+        //         {"assetId", sop.assetID}
+        // }));
+
+        //     var jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(
+        //     colliderDict,
+        //     Newtonsoft.Json.Formatting.None,
+        //     new Newtonsoft.Json.JsonSerializerSettings() {
+        //         ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+        //         ContractResolver = jsonResolver
+        //     }
+        //     );
+
+        //     Debug.Log($"st {jsonStr}");
 
     }
 }
