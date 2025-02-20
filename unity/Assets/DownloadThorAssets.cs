@@ -13,15 +13,28 @@ public class DownloadThorAssets : MonoBehaviour
     public string materialPath = "Assets/Resources/QuickMaterials";
     //public string doorAssetPath = "Assets/Physics/SimObjsPhysics/ManipulaTHOR Objects/Doorways/Prefabs";
     bool applyBoundingBox = false; // TODO: should always false
+
+
+    [Header("generate obj and mtl")]
     public bool saveSubMeshes = true;
+
+    [Header("include transform key and value for all submeshes in json")]
     public bool saveSubMeshTransform = true;
+
+    [Header("Save all submeshes as one OBJ file")]
     public bool saveCombinedSubmeshes = true;
 
+    [Header("Save time and skip mesh export step")]
+    public bool skipMeshExport = false;
+
+    [Header("Save time and skip material export step")]
+    public bool skipMaterialExport = false;
+
+    [Header("Just do the first one because I'm testing things")]
+    public bool justDoTheFirstOneBecauseImTestingThings = false;
+    
     Dictionary<string, Material> allMaterials = new Dictionary<string, Material>();
     Dictionary<string, Dictionary<string, string>> Mat2Texture = new Dictionary<string, Dictionary<string, string>>();
-
-    public bool skipMeshExport = false;
-    public bool skipMaterialExport = false;
 
     [System.Serializable]
     public class SerializableKeyValuePair
@@ -75,6 +88,8 @@ public class DownloadThorAssets : MonoBehaviour
             File.WriteAllText(Path.Combine(savePath, "quick_material_to_textures.json"), json);
             Debug.Log("Saving material to textures dictionary to: " + Path.Combine(savePath, "material_to_textures.json"));
         }
+
+        Debug.Log($"finished export from {assetPath}");
     }
 
 
@@ -169,13 +184,19 @@ public class DownloadThorAssets : MonoBehaviour
             if (prefab != null)
             {
                 GameObject instantiatedPrefab = Instantiate(prefab);
-                //instantiatedPrefab.name = prefab.name;
+                //remove the "(Clone)" from the name on instantiation
+                instantiatedPrefab.name = prefab.name;
                 SaveEachAsset(instantiatedPrefab, relativePrefabPath, applyBoundingBox, saveSubMeshes, saveSubMeshTransform);
                 Destroy(instantiatedPrefab);
             }
             else
             {
                 Debug.LogWarning("Failed to load prefab at path: " + prefabPath);
+            }
+
+            if(justDoTheFirstOneBecauseImTestingThings) // just do the first one
+            {
+                break;
             }
         }
     }
@@ -185,8 +206,19 @@ public class DownloadThorAssets : MonoBehaviour
     {        
         Directory.CreateDirectory(Path.Combine(savePath, Path.GetDirectoryName(relativeExportPath)));
         
-        // save mesh as obj file
+        // grab reference to all mesh filters in this prefab's heirarchy
         MeshFilter[] meshFilters = go.transform.GetComponentsInChildren<MeshFilter>();
+
+        //remove all mesh filters that have an associated mesh renderer that is not active, these meshes
+        //are meant to be invisible so should not be included in the export
+        List<MeshFilter> activeMeshFilters = new List<MeshFilter>();
+        foreach (MeshFilter mf in meshFilters)
+        {
+            if (mf.gameObject.GetComponent<MeshRenderer>().enabled)
+            {
+                activeMeshFilters.Add(mf);
+            }
+        }
 
         Vector3 center = Vector3.zero;
         SimObjPhysics parent = go.transform.GetComponent<SimObjPhysics>();
@@ -199,23 +231,19 @@ public class DownloadThorAssets : MonoBehaviour
         }       
         else
         {
-            //BoxCollider bbox = go.GetComponent<BoxCollider>();
-            //if(bbox != null)
-            //    center = bbox.center;
-            //else
             Debug.Log("No bounding box found for " + go.name);
         } 
     
-        Debug.Log("saving mesh1" + center.ToString());
+        //Debug.Log("saving mesh1" + center.ToString());
 
         //SaveMeshes(relativeExportPath, meshFilters, center, applyBoundingBox, saveSubMeshes, saveSubMeshTransform, false);    
         if(saveCombinedSubmeshes)
         {
-            SaveMeshes(relativeExportPath, meshFilters, center, applyBoundingBox, saveSubMeshes, saveSubMeshTransform, saveCombinedSubmeshes);
+            SaveMeshes(relativeExportPath, activeMeshFilters.ToArray(), center, applyBoundingBox, saveSubMeshes, saveSubMeshTransform, saveCombinedSubmeshes);
         }
     
 
-        Debug.Log("saving mesh2");
+        //Debug.Log("saving mesh2");
 
         if (!skipMaterialExport)
         {
@@ -257,8 +285,10 @@ public class DownloadThorAssets : MonoBehaviour
         int lastIndex = 0;
 
         Dictionary<string, Dictionary<string, string>> mesh_transforms = new Dictionary<string, Dictionary<string, string>>();
+        
         mesh_transforms["bbox_center"] = new Dictionary<string, string>();
         mesh_transforms["bbox_center"]["position"] = center.ToString("0.00000");
+
         for(int i = 0; i < meshFilters.Length; i++)
         {
             if(!saveCombinedSubmeshes & saveSubMeshes)
