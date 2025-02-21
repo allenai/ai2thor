@@ -7,6 +7,7 @@ using System.IO;
 using System;
 using Thor.Procedural;
 using System.Linq;
+using System.Reflection;
 using UnityEditorInternal.Profiling.Memory.Experimental;
 
 public class DownloadThorAssets : MonoBehaviour
@@ -73,6 +74,51 @@ public class DownloadThorAssets : MonoBehaviour
         }
     }
 
+    [System.Serializable]
+    public class ExportedAssetInfo {
+        //the bounding box center for this entire asset
+        public bbox_center bbox_center = new bbox_center();
+        //mesh heirarchy info for this entire asset
+        public List<MeshData> meshes = new List<MeshData>();
+    }
+
+    [System.Serializable]
+    public class bbox_center {
+        public string position = "";
+    }
+
+    [System.Serializable]
+    public class MeshData {
+        public Vector3 parentRelativePosition;
+        public Vector3 parentRelativeScale;
+        public Quaternion parentRelativeRotation;
+        public string parentName;
+        public string meshName;
+        public AllMyPrimitiveColliders primitiveColliders = new AllMyPrimitiveColliders();
+        public AllMyPlaceableZones placeableZoneColliders = new AllMyPlaceableZones();
+    }
+
+    [System.Serializable]
+    public class AllMyPrimitiveColliders {
+        public List<ColliderInfo> myPrimitiveColliders = new List<ColliderInfo>();
+    }
+
+    [System.Serializable]
+    public class AllMyPlaceableZones {
+        public List<ColliderInfo> myPlaceableZones = new List<ColliderInfo>();
+    }
+
+    [System.Serializable]
+    public class ColliderInfo {
+        public string type;
+        public Vector3 size;
+        public Vector3 position;
+        public Quaternion rotation;
+        public float radius;
+        public float height;
+        public int direction;
+    }
+
 
     // Start is called before the first frame update
     void Start()
@@ -89,7 +135,7 @@ public class DownloadThorAssets : MonoBehaviour
             //Debug.Log(Mat2Texture.Count);
             string json = JsonUtility.ToJson(new SerializableDictionary(Mat2Texture), true);
             File.WriteAllText(Path.Combine(savePath, "quick_material_to_textures.json"), json);
-            Debug.Log("Saving material to textures dictionary to: " + Path.Combine(savePath, "material_to_textures.json"));
+            Debug.Log("Saved material to textures dictionary to: " + Path.Combine(savePath, "material_to_textures.json"));
         }
     }
 
@@ -105,7 +151,7 @@ public class DownloadThorAssets : MonoBehaviour
             foreach (string matFile in matFiles)
             {
                 // Load the Material from the .mat file
-                Debug.Log("Loading material: " + matFile);
+                //Debug.Log("Loading material: " + matFile);
                 Material m = AssetDatabase.LoadAssetAtPath<Material>(matFile);
                 if (m != null)
                 {
@@ -129,7 +175,7 @@ public class DownloadThorAssets : MonoBehaviour
                         //Debug.Log(m.color.r.ToString() + " " + m.color.g.ToString() + " " + m.color.b.ToString() + " " + m.color.a.ToString());
 
                         Mat2Texture.Add(m.name, matdict);
-                        Debug.Log("Adding " + m.name);
+                        //Debug.Log("Adding " + m.name);
                         //Debug.Log("Adding " + m.name + " to Mat2Texture" + Mat2Texture[m.name]["_MainTex"]);
                     }
                 }
@@ -208,9 +254,7 @@ public class DownloadThorAssets : MonoBehaviour
 
     
     void SaveEachAsset(GameObject go, string relativeExportPath, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false)
-    {
-
-
+    {    
         Directory.CreateDirectory(Path.Combine(savePath, Path.GetDirectoryName(relativeExportPath)));
         
         // grab reference to all mesh filters in this prefab's heirarchy
@@ -221,7 +265,7 @@ public class DownloadThorAssets : MonoBehaviour
         List<MeshFilter> activeMeshFilters = new List<MeshFilter>();
         foreach (MeshFilter mf in meshFilters)
         {
-            if (mf.gameObject.GetComponent<MeshRenderer>().enabled)
+            if (mf.gameObject.GetComponent<MeshRenderer>().enabled && mf.transform.gameObject.activeSelf)
             {
                 activeMeshFilters.Add(mf);
             }
@@ -281,104 +325,222 @@ public class DownloadThorAssets : MonoBehaviour
         print("material saved");
     }
 
-    public class MeshData {
-        public Vector3 parentRelativePosition;
-        public Vector3 parentRelativeScale;
-        public Quaternion parentRelativeRotation;
-
-        public string parentName;
-
-        public string meshName;
-
-        public List<Dictionary<string, object>> colliders;
-
-
-
-
-    }
-
-    // void TraverseGO(GameObject go, string parent, Dictionary<string, MeshData> result) {
-    //     var meshFilter = go.GetComponent<MeshFilter>();
-    //     // if go.GetComponent<meshrenderer> is not enabled skip
-    //     if (meshFilter != null) {
-    //         // Vector3 grandParentLocalPosition = parent_go.InverseTransformPoint(mf.gameObject.transform.position);
-    //         // Quaternion grandParentLocalRotation = Quaternion.Inverse(parent_go.rotation) * mf.gameObject.transform.rotation;
-    //         // Vector3 grandParentLocalScale = parent_go.localScale;
-
-    //         // continue but change parent
-
-    //         if (sop != null) {
-    //             result[go.name] = new MeshData {
-    //                 parentRelativePosition= go.transform.position,
-    //                 parentRelativeRotation = go.transform.rotation,
-    //                 parentRelativeScale = go.transform.lossyScale,
-    //                 meshName = go.name,
-    //                 parentName = 
-    //             };
-    //         }
-           
-            
-
-    //     } 
-    //     if (go.transform.childCount == 0) {
-    //         return;
-    //     }
-
-    //     for (var childI = 0; childI < go.transform.childCount; childI++) {
-    //         var child = go.transform.GetChild(childI);
-    //         TraverseGO(child.gameObject, go.name);
-
-
-    //     }
-        
-
-    // }
-    
-
-    void FillMeshData(MeshFilter meshfilter) {
+    //take one mesh filter, and get all the information about it ready to go
+    public MeshData FillMeshData(MeshFilter meshfilter, string meshName) 
+    {
         var go = meshfilter.gameObject;
-        bool parentRename = true;
 
-        
-        var meshData = new MeshData {
-            parentRelativePosition= go.transform.position,
-            parentRelativeRotation = go.transform.rotation,
+        //recursive setup for where mesh's parent is the top level of the heirarchy
+        var meshData = new MeshData
+        {
+            parentRelativePosition = go.transform.localPosition,
+            parentRelativeRotation = go.transform.localRotation,
             parentRelativeScale = go.transform.localScale,
-            meshName = go.name,
-            parentName = "",
-            colliders = go.GetComponentsInChildren<Collider>().Select(getCollider).ToList()
+            meshName = meshName,
+            parentName = ""
         };
 
-        
+        // Traverse the parent hierarchy
+        Transform parent = go.transform.parent;
 
-        var parent = go.transform.root;
-        while(parent != null) {
-            meshData.parentRelativePosition = parent.transform.InverseTransformPoint(meshData.parentRelativePosition);
-            meshData.parentRelativeRotation = Quaternion.Inverse(parent.rotation * meshData.parentRelativeRotation);
-            meshData.parentRelativeScale =  new Vector3(meshData.parentRelativeScale.x * parent.localScale.x, meshData.parentRelativeScale.y * parent.localScale.y,meshData.parentRelativeScale.z * parent.localScale.z);
+        while (parent != null)
+        {
+            // Adjust transform relative to this parent
+            meshData.parentRelativePosition = parent.InverseTransformPoint(meshData.parentRelativePosition);
+            meshData.parentRelativeRotation = Quaternion.Inverse(parent.rotation) * meshData.parentRelativeRotation;
+            meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, parent.localScale);
 
-            
-            if (parentRename) {
-                meshData.parentName = parent.name;
+            //assign this mesh's parentName to the mesh we found above it that has another mesh
+            //meshData.parentName = parent.name;
+            if(parent.GetComponent<MeshFilter>())
+            {
+                meshData.parentName = parent.GetComponent<MeshFilter>().sharedMesh.name;
+            }
+            else
+            meshData.parentName = parent.name;
+
+            // If this parent has a MeshFilter, stop here
+            if (parent.GetComponent<MeshFilter>() != null)
+            {
+                break;  // Stop searching further
             }
 
-            var parentMesh = parent.GetComponent<MeshFilter>();
-            if (parentMesh != null) {
-                parentRename = false;
-            }
-            
-            parent = go.transform.root;
+            // Move up the hierarchy
+            parent = parent.parent;
         }
 
+        CollectValidColliders(meshfilter, ref meshData);
+
+        //meshData cleanup
+        if(meshData.meshName.Contains("fridge_drawer"))
+        {
+            meshData.primitiveColliders.myPrimitiveColliders.Clear();
+
+            List<ColliderInfo> cleanList = new List<ColliderInfo>();
+            var justMesh = new ColliderInfo();
+            justMesh.type = "mesh";
+            cleanList.Add(justMesh);
+            meshData.primitiveColliders.myPrimitiveColliders = cleanList;
+
+        }
+
+        return meshData;
     }
 
+    private void CollectValidColliders(MeshFilter meshfilter, ref MeshData meshData)
+    {
+        Debug.Log("call CollectValidColliders");
+        var go = meshfilter.gameObject;
+
+        Transform parent = go.transform.parent;
+        if (parent != null)
+        {
+            foreach (Transform sibling in parent)
+            {
+                if (sibling == go.transform) continue;
+
+                // Include sibling's colliders and descendants recursively
+                AddCollidersRecursive(sibling, ref meshData, go);
+            }
+        }
+
+        // //cleanup meshData.primitiveColliders if any of these colliders contain a collider of type "mesh"
+        // foreach (ColliderInfo c in meshData.primitiveColliders.myPrimitiveColliders)
+        // {
+        //     if (c.type == "mesh")
+        //     {
+        //         List<ColliderInfo> cleanList = new List<ColliderInfo>();
+        //         var justMesh = new ColliderInfo();
+        //         justMesh.type = "mesh";
+        //         cleanList.Add(justMesh);
+
+        //         meshData.primitiveColliders.myPrimitiveColliders.Clear();
+        //         meshData.primitiveColliders.myPrimitiveColliders = cleanList;
+        //         break;
+        //     }
+        // }
+    }
+
+    private void AddCollidersRecursive(Transform target, ref MeshData meshData, GameObject reference)
+    {
+        // Stop searching if SimObjPhysics is found in sibling or their descendants
+        if (IsSimObjPhysicsFound(target, reference)) return;
+
+        // Collect colliders at this level
+        foreach (var collider in target.GetComponents<Collider>())
+        {
+            if(!collider.enabled)
+            continue;
+
+            var colliderInfo = GetColliderInfo(collider);
+            if (colliderInfo != null)
+            {
+                if (!collider.isTrigger)
+                {
+                    meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
+                }
+                else if (collider.GetComponent("Contains") != null)
+                {
+                    meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
+                }
+            }
+        }
+
+        // Recursively check all children
+        foreach (Transform child in target)
+        {
+            AddCollidersRecursive(child, ref meshData, reference);
+        }
+    }
+
+    private bool IsSimObjPhysicsFound(Transform target, GameObject reference)
+    {
+        // Return true if SimObjPhysics is found on the target or any descendant
+        if (target.GetComponent("SimObjPhysics") != null) return true;
+
+        foreach (Transform child in target)
+        {
+            if (IsSimObjPhysicsFound(child, reference)) return true;
+        }
+
+        return false;
+    }
+
+    public ColliderInfo GetColliderInfo(Collider collider)
+    {
+        ColliderInfo info = new ColliderInfo();
+
+        info.type = collider.GetType().Name.ToLower().Replace("collider", "");
+
+        // Get nearest parent with MeshFilter or root for relative transforms
+        Transform referenceTransform = GetNearestMeshOrRoot(collider.transform);
+
+        Vector3 combinedScale = GetCombinedScale(collider.transform, referenceTransform);
+        Vector3 relativePosition = referenceTransform.InverseTransformPoint(collider.transform.position);
+        Quaternion relativeRotation = Quaternion.Inverse(referenceTransform.rotation) * collider.transform.rotation;
+
+        // BoxCollider
+        if (collider is BoxCollider box)
+        {
+            info.size = Vector3.Scale(box.size, combinedScale) * 0.5f; // Half extents with combined scale
+            info.position = referenceTransform.InverseTransformPoint(box.transform.TransformPoint(box.center));
+            info.rotation = relativeRotation;
+        }
+        // SphereCollider
+        else if (collider is SphereCollider sphere)
+        {
+            float maxScale = Mathf.Max(combinedScale.x, combinedScale.y, combinedScale.z);
+            info.radius = sphere.radius * maxScale;
+            info.position = referenceTransform.InverseTransformPoint(sphere.transform.TransformPoint(sphere.center));
+            info.rotation = relativeRotation;
+        }
+        // CapsuleCollider
+        else if (collider is CapsuleCollider capsule)
+        {
+            float horizontalScale = Mathf.Max(combinedScale.x, combinedScale.z); // Radius uses X/Z
+            info.radius = capsule.radius * horizontalScale;
+            info.height = capsule.height * combinedScale.y; // Height uses Y
+            info.direction = capsule.direction;
+            info.position = referenceTransform.InverseTransformPoint(capsule.transform.TransformPoint(capsule.center));
+            info.rotation = relativeRotation;
+        }
+
+        return info;
+    }
+
+    private Transform GetNearestMeshOrRoot(Transform target)
+    {
+        Transform current = target;
+        while (current.parent != null)
+        {
+            if (current.parent.GetComponent<MeshFilter>() != null)
+                return current.parent;
+
+            current = current.parent;
+        }
+        return target.root;
+    }
+
+    private Vector3 GetCombinedScale(Transform target, Transform reference)
+    {
+        Vector3 scale = target.localScale;
+        Transform parent = target.parent;
+
+        while (parent != null && parent != reference)
+        {
+            scale = Vector3.Scale(scale, parent.localScale);
+            parent = parent.parent;
+        }
+
+        return scale;
+    }
 
     void SaveMeshes(string relativeExportPath, MeshFilter[] meshFilters, Vector3 center, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false, bool saveCombinedSubmeshes=false)
     {
-
-        
-
         Debug.Log("saving mesh");
+
+        ExportedAssetInfo exportedAssetInfo = new ExportedAssetInfo();
+        exportedAssetInfo.bbox_center.position = center.ToString("0.00000");
 
         string baseFileName = Path.GetFileNameWithoutExtension(relativeExportPath);
 
@@ -386,13 +548,17 @@ public class DownloadThorAssets : MonoBehaviour
         sb.AppendLine("mtllib " + baseFileName + ".mtl");
         int lastIndex = 0;
 
-        Dictionary<string, Dictionary<string, string>> mesh_transforms = new Dictionary<string, Dictionary<string, string>>();
-        
-        mesh_transforms["bbox_center"] = new Dictionary<string, string>();
-        mesh_transforms["bbox_center"]["position"] = center.ToString("0.00000");
-
+        // START GOING THROUGH ALL MESH FILTERS HERE
         for(int i = 0; i < meshFilters.Length; i++)
         {
+            MeshFilter mf = meshFilters[i];
+            //ensure mesh name is unique because SOMETIMES THEY ARE NAMED THE SAME IM SORRY
+            //string meshName = mf.gameObject.name + "_" + i.ToString();
+            string meshName = mf.sharedMesh.name;
+
+            MeshData meshData = FillMeshData(meshFilters[i], meshName);
+            exportedAssetInfo.meshes.Add(meshData);
+
             if(!saveCombinedSubmeshes & saveSubMeshes)
             {
                 sb = new StringBuilder();
@@ -400,80 +566,70 @@ public class DownloadThorAssets : MonoBehaviour
                 lastIndex = 0;
             }
 
-            MeshFilter mf = meshFilters[i];
-
-            // if (mf == null)
-            // {
-            //     Debug.LogError("No mesh filter found for " + meshName);
-            //     continue;
-            // }
-
-            string meshName = mf.gameObject.name;
-            Debug.Log($"mesh name: {meshName}");
             
             /// ---- THIS LOGIC DID NOT WORK FOR  DRESSER .. .did work for Fridge but not for Dresser 217 for example
             /// notes: fridge works because it has nested FridgeBodyMesh with child door meshes under it
             /// dresser fails because the meshes are siblings of each other rather than children under the body heirarchy
-            mesh_transforms[meshName + "_" +i.ToString()] = new Dictionary<string, string>();
-            mesh_transforms[meshName + "_" +i.ToString()]["name"] = mf.gameObject.transform.name;
+            /// 
+            // mesh_transforms[meshName + "_" +i.ToString()] = new Dictionary<string, string>();
+            // mesh_transforms[meshName + "_" +i.ToString()]["name"] = mf.gameObject.transform.name;
 
-            Transform _parent = mf.gameObject.transform.parent;
+            // Transform _parent = mf.gameObject.transform.parent;
 
-            Debug.Log($"what is mf.gameObject.transform.parent: {_parent}");
-            if(_parent == null)
-            {
-                Debug.Log("parent name: root because game object had no parent??");
-                mesh_transforms[meshName + "_" +i.ToString()]["parentName"] =  mf.gameObject.transform.root.name; //"root";
-            }
-            else
-            {
-                // only get the name of the parent that has mesh 
-                MeshFilter parent_meshFilters = _parent.gameObject.GetComponentInParent<MeshFilter>(); // mf.gameObject.GetComponentInParent<MeshFilter>();
+            // Debug.Log($"what is mf.gameObject.transform.parent: {_parent}");
+            // if(_parent == null)
+            // {
+            //     Debug.Log("parent name: root because game object had no parent??");
+            //     mesh_transforms[meshName + "_" +i.ToString()]["parentName"] =  mf.gameObject.transform.root.name; //"root";
+            // }
+            // else
+            // {
+            //     // only get the name of the parent that has mesh 
+            //     MeshFilter parent_meshFilters = _parent.gameObject.GetComponentInParent<MeshFilter>(); // mf.gameObject.GetComponentInParent<MeshFilter>();
 
-                Transform parent_go = null;
-                if(parent_meshFilters != null)
-                {
-                    parent_go = parent_meshFilters.gameObject.transform;
-                }
-                else
-                {
-                    parent_go = mf.gameObject.transform.root;
-                    Debug.Log($"parent name: {parent_go}which is the root because parent had no mesh filter");
-                    //parent_name = _parent.gameObject.transform.name;
-                    //mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = mf.gameObject.transform.root.name; //"root";
-                }    
+            //     Transform parent_go = null;
+            //     if(parent_meshFilters != null)
+            //     {
+            //         parent_go = parent_meshFilters.gameObject.transform;
+            //     }
+            //     else
+            //     {
+            //         parent_go = mf.gameObject.transform.root;
+            //         Debug.Log($"parent name: {parent_go}which is the root because parent had no mesh filter");
+            //         //parent_name = _parent.gameObject.transform.name;
+            //         //mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = mf.gameObject.transform.root.name; //"root";
+            //     }    
                 
+            //     string parent_name = parent_go.name;
+            //     mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = parent_name;
 
-                string parent_name = parent_go.name;
-                mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = parent_name;
-
-                Vector3 grandParentLocalPosition = parent_go.InverseTransformPoint(mf.gameObject.transform.position);
-                Quaternion grandParentLocalRotation = Quaternion.Inverse(parent_go.rotation) * mf.gameObject.transform.rotation;
-                Vector3 grandParentLocalScale = parent_go.localScale;
+            //     Vector3 grandParentLocalPosition = parent_go.InverseTransformPoint(mf.gameObject.transform.position);
+            //     Quaternion grandParentLocalRotation = Quaternion.Inverse(parent_go.rotation) * mf.gameObject.transform.rotation;
+            //     Vector3 grandParentLocalScale = parent_go.localScale;
                 
-                // should apply scale for every intermeidate parent
-                Vector3 scale = mf.gameObject.transform.localScale;
-                Transform parent = mf.gameObject.transform.parent;
-                Debug.Log("parent name1: " + parent.name);
-                Debug.Log("parent name2: " + parent_name);
-                while(parent.name != parent_name)
-                {
-                    Debug.Log("parent name: " + parent.name);
-                    scale.x *= parent.localScale.x;
-                    scale.y *= parent.localScale.y;
-                    scale.z *= parent.localScale.z;
-                    parent = parent.parent;
-                    if (parent == null) // tho this should never happen!
-                        break;
-                }
-                scale.x *= parent_go.localScale.x;
-                scale.y *= parent_go.localScale.y;
-                scale.z *= parent_go.localScale.z;
+            //     // should apply scale for every intermeidate parent
+            //     Vector3 scale = mf.gameObject.transform.localScale;
+            //     Transform parent = mf.gameObject.transform.parent;
+            //     Debug.Log("parent name1: " + parent.name);
+            //     Debug.Log("parent name2: " + parent_name);
+            //     while(parent.name != parent_name)
+            //     {
+            //         Debug.Log("parent name: " + parent.name);
+            //         scale.x *= parent.localScale.x;
+            //         scale.y *= parent.localScale.y;
+            //         scale.z *= parent.localScale.z;
+            //         parent = parent.parent;
+            //         if (parent == null) // tho this should never happen!
+            //             break;
+            //     }
+            //     scale.x *= parent_go.localScale.x;
+            //     scale.y *= parent_go.localScale.y;
+            //     scale.z *= parent_go.localScale.z;
 
-                mesh_transforms[meshName + "_" +i.ToString()]["localPosition"] = grandParentLocalPosition.ToString("0.0000000"); // geom
-                mesh_transforms[meshName + "_" +i.ToString()]["localRotation"] = grandParentLocalRotation.ToString("0.0000000");// geom
-                mesh_transforms[meshName + "_" +i.ToString()]["scale"] = scale.ToString("0.0000000");        
-            }
+            //     mesh_transforms[meshName + "_" +i.ToString()]["localPosition"] = grandParentLocalPosition.ToString("0.0000000"); // geom
+            //     mesh_transforms[meshName + "_" +i.ToString()]["localRotation"] = grandParentLocalRotation.ToString("0.0000000");// geom
+            //     mesh_transforms[meshName + "_" +i.ToString()]["scale"] = scale.ToString("0.0000000");        
+            // }
 
 
             Mesh msh = mf.sharedMesh;
@@ -492,7 +648,6 @@ public class DownloadThorAssets : MonoBehaviour
                 }
                 sb.AppendLine("g " + exportName);
             }
-
 
             if(mr != null)
             {
@@ -617,7 +772,6 @@ public class DownloadThorAssets : MonoBehaviour
                     {
                         sb.AppendLine("f " + ConstructOBJString(idx0) + " " + ConstructOBJString(idx1) + " " + ConstructOBJString(idx2));
                     }
-                    
                 }
             }
 
@@ -647,9 +801,13 @@ public class DownloadThorAssets : MonoBehaviour
 
         if (saveSubMeshTransform)  
         {
-            string json = JsonUtility.ToJson(new SerializableDictionary(mesh_transforms), true);
+            //old  json export stuff is here
+            // string json = JsonUtility.ToJson(new SerializableDictionary(mesh_transforms), true);
+            // File.WriteAllText(Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".json")), json);
+
+            string json = JsonUtility.ToJson(exportedAssetInfo, true);
             File.WriteAllText(Path.Combine(savePath, Path.Combine(Path.GetDirectoryName(relativeExportPath), baseFileName + ".json")), json);
-            Debug.Log("Saving mesh serializable dictionaries to json.");
+            Debug.Log("Saved mesh serializable dictionaries to json.");
         }    
     }
 
@@ -769,13 +927,13 @@ public class DownloadThorAssets : MonoBehaviour
     string ExportTexture(Texture2D t)
     {
         string assetPath = AssetDatabase.GetAssetPath(t);
-        Debug.Log(assetPath);
+        //Debug.Log(assetPath);
 
         if(File.Exists(assetPath))
         {
             string textureName = Path.GetFileName(assetPath); // with extension
             string copyPath = Path.Combine(Path.Combine(savePath, "Textures"), textureName);
-            Debug.Log(copyPath);
+            //Debug.Log(copyPath);
 
             File.Copy(assetPath, copyPath, true);
             return copyPath;
@@ -923,7 +1081,6 @@ public class DownloadThorAssets : MonoBehaviour
 
         }
 
-        
         var jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(
             colliderDict,
             Newtonsoft.Json.Formatting.None,
