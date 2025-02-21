@@ -371,17 +371,13 @@ public class DownloadThorAssets : MonoBehaviour
 
         CollectValidColliders(meshfilter, ref meshData);
 
-        //meshData cleanup
+        //meshData cleanup ///////////
+
+        //fridge drawers don't have primitive colliders, so any found may be erroneously assigned and needs to be cleaned up
         if(meshData.meshName.Contains("fridge_drawer"))
         {
             meshData.primitiveColliders.myPrimitiveColliders.Clear();
-
-            List<ColliderInfo> cleanList = new List<ColliderInfo>();
-            var justMesh = new ColliderInfo();
-            justMesh.type = "mesh";
-            cleanList.Add(justMesh);
-            meshData.primitiveColliders.myPrimitiveColliders = cleanList;
-
+            meshData.primitiveColliders.myPrimitiveColliders = new List<ColliderInfo>();
         }
 
         return meshData;
