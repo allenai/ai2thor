@@ -72,6 +72,7 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
         enableDistortionMap=enableDistortionMap,
         fieldOfView=120,
         fastActionEmit=False,
+        unityLogFilePath="/Users/alvaroh/ai2/ai2thor/test.log",
         **args,
     )
 
@@ -195,24 +196,25 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
     #         dict(action="MoveBack")
     #     ]
     # )
-
-    action_seq = [
-            dict(action="MoveBack"),
-            dict(action="MoveBack"),
-            dict(action="MoveBack"),
-            dict(action="MoveBack")
-        ]
-    if multi_action:
-        event = controller.step(
-            action_seq
-        )
-        print("MultiStep")
-    else:
-        for a in action_seq:
-            controller.step(a)
-    print(f"last action: {event.metadata['lastAction']}")
-    print(f"Action {controller.last_action['action']} success: {event.metadata['lastActionSuccess']}")
-    print(f'Error: {event.metadata["errorMessage"]}')
+    multiStep = False
+    if multiStep:
+        action_seq = [
+                dict(action="MoveBack"),
+                dict(action="MoveBack"),
+                dict(action="MoveBack"),
+                dict(action="MoveBack")
+            ]
+        if multi_action:
+            event = controller.step(
+                action_seq
+            )
+            print("MultiStep")
+        else:
+            for a in action_seq:
+                controller.step(a)
+        print(f"last action: {event.metadata['lastAction']}")
+        print(f"Action {controller.last_action['action']} success: {event.metadata['lastActionSuccess']}")
+        print(f'Error: {event.metadata["errorMessage"]}')
 
     event = controller.step({'action': 'RotateAgent', 'degrees': -34.391552838580424})
     print(f"last action: {event.metadata['lastAction']}")
