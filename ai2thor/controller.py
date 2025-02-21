@@ -2085,3 +2085,4 @@ class BFSController(Controller):
                 self.grid_points.append(event.metadata["agent"]["position"])
 
         return event
+
