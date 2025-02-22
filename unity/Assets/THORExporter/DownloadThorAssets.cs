@@ -96,6 +96,19 @@ public class DownloadThorAssets : MonoBehaviour
         public string meshName;
         public AllMyPrimitiveColliders primitiveColliders = new AllMyPrimitiveColliders();
         public AllMyPlaceableZones placeableZoneColliders = new AllMyPlaceableZones();
+        public JointInfo jointInfo = new JointInfo();
+    }
+
+    [System.Serializable]
+    public class JointInfo {
+        public string jointType; //rotate, slide, (scale????)
+        //what is the position of this joint relative to whatever this joint's mesh's parent is?
+        public Vector3 meshParentRelativePosition;
+        //this joint's range of movement in local space
+        //if jointType == rotate, this is a change in rotation in euler angles
+        //if jointType == slide, this is a change in position
+        public Vector3 lowRange;
+        public Vector3 highRange;
     }
 
     [System.Serializable]
@@ -340,6 +353,10 @@ public class DownloadThorAssets : MonoBehaviour
             parentName = ""
         };
 
+        //keep track of what transforms we have traversed upward so we can compare them to associated joints later.....
+        List<Transform> transformsTraversed = new List<Transform>();
+        transformsTraversed.add(go.transform);
+
         // Traverse the parent hierarchy
         Transform parent = go.transform.parent;
 
@@ -399,27 +416,12 @@ public class DownloadThorAssets : MonoBehaviour
                 AddCollidersRecursive(sibling, ref meshData, go);
             }
         }
-
-        // //cleanup meshData.primitiveColliders if any of these colliders contain a collider of type "mesh"
-        // foreach (ColliderInfo c in meshData.primitiveColliders.myPrimitiveColliders)
-        // {
-        //     if (c.type == "mesh")
-        //     {
-        //         List<ColliderInfo> cleanList = new List<ColliderInfo>();
-        //         var justMesh = new ColliderInfo();
-        //         justMesh.type = "mesh";
-        //         cleanList.Add(justMesh);
-
-        //         meshData.primitiveColliders.myPrimitiveColliders.Clear();
-        //         meshData.primitiveColliders.myPrimitiveColliders = cleanList;
-        //         break;
-        //     }
-        // }
     }
 
     private void AddCollidersRecursive(Transform target, ref MeshData meshData, GameObject reference)
     {
         // Stop searching if SimObjPhysics is found in sibling or their descendants
+        //this is because we have found a nest sim object, and any colliders found below this point do not belong to this mesh
         if (IsSimObjPhysicsFound(target, reference)) return;
 
         // Collect colliders at this level
