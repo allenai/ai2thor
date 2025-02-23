@@ -132,6 +132,72 @@ public class DownloadThorAssets : MonoBehaviour
         public int direction;
     }
 
+    public List<string> meshNamesToClearColliders = new List<string> { 
+        "fridge_drawer1_b1", 
+        "fridge_drawer2_b1", 
+        "fridge_drawer1_c1", 
+        "fridge_drawer2_c1", 
+        "fridge_drawer3_c1",
+        "fridge_drawer4_c1",
+        "fridge_freezerdoor_c1",
+        "fridge_drawer1_d1",
+        "fridge_drawer2_d1",
+        "fridge_drawer1_e1",
+        "fridge_drawer2_e1",
+        "fridge_drawer1_b2",
+        "fridge_drawer2_b2",
+        "fridge_drawer1_c2",
+        "fridge_drawer2_c2",
+        "fridge_drawer3_c2",
+        "fridge_drawer4_c2",
+        "fridge_freezerdoor_c2",
+        "fridge_drawer1_d2",
+        "fridge_drawer2_d2",
+        "fridge_drawer1_e2",
+        "fridge_drawer2_e2",
+        "fridge_drawer1_b3",
+        "fridge_drawer2_b3",
+        "fridge_drawer1_c3",
+        "fridge_drawer2_c3",
+        "fridge_freezerdoor_c3",
+        "fridge_drawer1_d3",
+        "fridge_drawer1_e3",
+        "fridge_drawer2_e3",
+        "fridge_drawer1_b4",
+        "fridge_drawer2_b4",
+        "fridge_drawer1_c4",
+        "fridge_drawer2_c4",
+        "fridge_drawer3_c4",
+        "fridge_drawer4_c4",
+        "fridge_freezerdoor_c4",
+        "fridge_drawer1_d4",
+        "fridge_drawer2_d4",
+        "fridge_drawer1_e4",
+        "fridge_drawer2_e4",
+        "fridge_drawer1_b5",
+        "fridge_drawer2_b5",
+        "fridge_drawer1_c5",
+        "fridge_drawer2_c5",
+        "fridge_drawer3_c5",
+        "fridge_drawer4_c5",
+        "fridge_freezerdoor_c5",
+        "fridge_drawer1_d5",
+        "fridge_drawer2_d5",
+        "fridge_drawer1_e5",
+        "fridge_drawer2_e5",
+        "fridge_drawer3_e5",
+        "fridge_drawer1_b6",
+        "fridge_drawer2_b6",
+        "fridge_drawer1_c6",
+        "fridge_drawer2_c6",
+        "fridge_drawer3_c6",
+        "fridge_drawer4_c6",
+        "fridge_freezerdoor_c6",
+        "fridge_drawer1_d6",
+        "fridge_drawer2_d6",
+        "fridge_drawer1_e6",
+        "fridge_drawer2_e6",
+    };
 
     // Start is called before the first frame update
     void Start()
@@ -397,13 +463,16 @@ public MeshData FillMeshData(MeshFilter meshfilter, string meshName)
 
     meshData.jointInfo = CollectValidJoints(meshfilter, ref meshData, transformsTraversed, parent);
 
-    //meshData cleanup ///////////
-
-    //fridge drawers don't have primitive colliders, so any found may be erroneously assigned and needs to be cleaned up
-    if(meshData.meshName.Contains("fridge_drawer"))
+    ////////////////meshData cleanup ///////////
+    //this is jank but oh welllllll
+    foreach (string name in meshNamesToClearColliders)
     {
-        meshData.primitiveColliders.myPrimitiveColliders.Clear();
-        meshData.primitiveColliders.myPrimitiveColliders = new List<ColliderInfo>();
+        if (meshData.meshName.Contains(name))
+        {
+            meshData.primitiveColliders.myPrimitiveColliders.Clear();
+            meshData.primitiveColliders.myPrimitiveColliders = new List<ColliderInfo>();
+            break;
+        }
     }
 
     return meshData;
@@ -512,69 +581,69 @@ private JointInfo CollectValidJoints(MeshFilter meshfilter, ref MeshData meshDat
     return jointInfo;
 }
 
-    private void CollectValidColliders(MeshFilter meshfilter, ref MeshData meshData)
+private void CollectValidColliders(MeshFilter meshfilter, ref MeshData meshData)
+{
+    Debug.Log("call CollectValidColliders");
+    var go = meshfilter.gameObject;
+
+    Transform parent = go.transform.parent;
+    if (parent != null)
     {
-        Debug.Log("call CollectValidColliders");
-        var go = meshfilter.gameObject;
-
-        Transform parent = go.transform.parent;
-        if (parent != null)
+        foreach (Transform sibling in parent)
         {
-            foreach (Transform sibling in parent)
-            {
-                if (sibling == go.transform) continue;
+            if (sibling == go.transform) continue;
 
-                // Include sibling's colliders and descendants recursively
-                AddCollidersRecursive(sibling, ref meshData, go);
-            }
+            // Include sibling's colliders and descendants recursively
+            AddCollidersRecursive(sibling, ref meshData, go);
         }
     }
+}
 
-    private void AddCollidersRecursive(Transform target, ref MeshData meshData, GameObject reference)
+private void AddCollidersRecursive(Transform target, ref MeshData meshData, GameObject reference)
+{
+    // Stop searching if SimObjPhysics is found in sibling or their descendants
+    //this is because we have found a nest sim object, and any colliders found below this point do not belong to this mesh
+    if (IsSimObjPhysicsFound(target, reference)) return;
+
+    // Collect colliders at this level
+    foreach (var collider in target.GetComponents<Collider>())
     {
-        // Stop searching if SimObjPhysics is found in sibling or their descendants
-        //this is because we have found a nest sim object, and any colliders found below this point do not belong to this mesh
-        if (IsSimObjPhysicsFound(target, reference)) return;
-
-        // Collect colliders at this level
-        foreach (var collider in target.GetComponents<Collider>())
-        {
-            if(!collider.enabled)
+        if (!collider.enabled || !collider.gameObject.activeInHierarchy)
             continue;
 
-            var colliderInfo = GetColliderInfo(collider);
-            if (colliderInfo != null)
+        var colliderInfo = GetColliderInfo(collider);
+        if (colliderInfo != null)
+        {
+            if (!collider.isTrigger)
             {
-                if (!collider.isTrigger)
-                {
-                    meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
-                }
-                else if (collider.GetComponent("Contains") != null)
-                {
-                    meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
-                }
+                meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
+            }
+            else if (collider.GetComponent("Contains") != null)
+            {
+                meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
             }
         }
-
-        // Recursively check all children
-        foreach (Transform child in target)
-        {
-            AddCollidersRecursive(child, ref meshData, reference);
-        }
     }
 
-    private bool IsSimObjPhysicsFound(Transform target, GameObject reference)
+    // Recursively check all children
+    foreach (Transform child in target)
     {
-        // Return true if SimObjPhysics is found on the target or any descendant
-        if (target.GetComponent("SimObjPhysics") != null) return true;
-
-        foreach (Transform child in target)
-        {
-            if (IsSimObjPhysicsFound(child, reference)) return true;
-        }
-
-        return false;
+        AddCollidersRecursive(child, ref meshData, reference);
     }
+}
+
+private bool IsSimObjPhysicsFound(Transform target, GameObject reference)
+{
+    // Return true if SimObjPhysics is found on the target or any descendant
+    if (target.GetComponent("SimObjPhysics") != null) return true;
+
+    foreach (Transform child in target)
+    {
+        if (IsSimObjPhysicsFound(child, reference)) return true;
+    }
+
+    return false;
+}
 
     public ColliderInfo GetColliderInfo(Collider collider)
     {
