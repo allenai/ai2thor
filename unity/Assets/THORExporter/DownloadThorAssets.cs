@@ -311,7 +311,7 @@ public class DownloadThorAssets : MonoBehaviour
             {
                 GameObject instantiatedPrefab = Instantiate(prefab);
                 //remove the "(Clone)" from the name on instantiation
-                instantiatedPrefab.name = prefab.name;
+                instantiatedPrefab.name = prefab.name + "_root";
                 SaveEachAsset(instantiatedPrefab, relativePrefabPath, applyBoundingBox, saveSubMeshes, saveSubMeshTransform);
                 Destroy(instantiatedPrefab);
 
@@ -344,9 +344,24 @@ public class DownloadThorAssets : MonoBehaviour
         List<MeshFilter> activeMeshFilters = new List<MeshFilter>();
         foreach (MeshFilter mf in meshFilters)
         {
-            if (mf.gameObject.GetComponent<MeshRenderer>().enabled && mf.transform.gameObject.activeSelf)
+            MeshRenderer mr = mf.gameObject.GetComponent<MeshRenderer>();
+            if (mr != null && mr.enabled && mf.transform.gameObject.activeSelf)
             {
-                activeMeshFilters.Add(mf);
+                //get rid of anything using the Placeable_Surface_Mat
+                bool containsPlaceableSurfaceMat = false;
+                foreach (Material mat in mr.sharedMaterials)
+                {
+                    if (mat != null && mat.name == "Placeable_Surface_Mat")
+                    {
+                        containsPlaceableSurfaceMat = true;
+                        break;
+                    }
+                }
+
+                if (!containsPlaceableSurfaceMat)
+                {
+                    activeMeshFilters.Add(mf);
+                }
             }
         }
 
@@ -369,7 +384,16 @@ public class DownloadThorAssets : MonoBehaviour
         //SaveMeshes(relativeExportPath, meshFilters, center, applyBoundingBox, saveSubMeshes, saveSubMeshTransform, false);    
         if(saveCombinedSubmeshes)
         {
-            SaveMeshes(relativeExportPath, activeMeshFilters.ToArray(), center, applyBoundingBox, saveSubMeshes, saveSubMeshTransform, saveCombinedSubmeshes);
+            SaveMeshes(
+                relativeExportPath, 
+                activeMeshFilters.ToArray(), 
+                center, 
+                applyBoundingBox, 
+                saveSubMeshes, 
+                saveSubMeshTransform, 
+                saveCombinedSubmeshes,
+                parent
+            );
         }
     
 
@@ -404,7 +428,7 @@ public class DownloadThorAssets : MonoBehaviour
     }
 
     //take one mesh filter, and get all the information about it ready to go
-public MeshData FillMeshData(MeshFilter meshfilter, string meshName) 
+public MeshData FillMeshData(MeshFilter meshfilter, string meshName, SimObjPhysics topmostSimObjPhysics)
 {
     var go = meshfilter.gameObject;
 
@@ -437,11 +461,19 @@ public MeshData FillMeshData(MeshFilter meshfilter, string meshName)
         meshData.parentRelativeRotation = Quaternion.Inverse(parent.rotation) * meshData.parentRelativeRotation;
         meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, parent.localScale);
 
-        // If this parent has a MeshFilter or SimObjPhysics, stop here
-        if (parent.GetComponent<MeshFilter>() != null || parent.GetComponent<SimObjPhysics>() != null)
+        // If this parent has a MeshFilter, stop here
+        if (parent.GetComponent<MeshFilter>() != null)
         {
             meshData.parentName = parent.name;
             break;  //Stop searching further
+        }
+
+        // If this parent has a SimObjPhysics component and it's not the topmost one, continue searching
+        if (parent.GetComponent<SimObjPhysics>() != null && parent != topmostSimObjPhysics.transform)
+        {
+            // Move up the hierarchy
+            parent = parent.parent;
+            continue;
         }
 
         // Move up the hierarchy
@@ -461,7 +493,7 @@ public MeshData FillMeshData(MeshFilter meshfilter, string meshName)
     /////////////// Joint setup ///////////
     //check if this mesh has a joint associated with it 
 
-    meshData.jointInfo = CollectValidJoints(meshfilter, ref meshData, transformsTraversed, parent);
+    meshData.jointInfo = CollectValidJoints(meshfilter, ref meshData, transformsTraversed, parent, topmostSimObjPhysics.transform);
 
     ////////////////meshData cleanup ///////////
     //this is jank but oh welllllll
@@ -478,23 +510,50 @@ public MeshData FillMeshData(MeshFilter meshfilter, string meshName)
     return meshData;
 }
 
-private JointInfo CollectValidJoints(MeshFilter meshfilter, ref MeshData meshData, List<Transform> transformsTraversed, Transform parent)
+private JointInfo CollectValidJoints(MeshFilter meshfilter, ref MeshData meshData, List<Transform> transformsTraversed, Transform parent, Transform topmostSimObjPhysics)
 {
     Debug.Log("CollectValidJoints called for mesh: " + meshData.meshName);
 
     JointInfo jointInfo = null;
 
-    // Check if the root object has a SimObjPhysics component
-    var rootSimObjPhysics = meshfilter.GetComponentInParent<SimObjPhysics>();
-    if (rootSimObjPhysics != null)
-    {
-        Debug.Log("SimObjPhysics component found on root: " + rootSimObjPhysics.name);
+    // Traverse up the hierarchy to find the first SimObjPhysics component
+    SimObjPhysics firstSimObjPhysics = null;
+    Transform current = meshfilter.transform;
 
-        // Check if the root object has a CanOpen_Object component
-        var canOpenObject = rootSimObjPhysics.GetComponent<CanOpen_Object>();
+    while (current != null)
+    {
+        if (current.GetComponent<SimObjPhysics>() != null)
+        {
+            firstSimObjPhysics = current.GetComponent<SimObjPhysics>();
+            break;
+        }
+        current = current.parent;
+    }
+
+    if (firstSimObjPhysics != null)
+    {
+        Debug.Log("First SimObjPhysics component found: " + firstSimObjPhysics.name);
+
+        // Check if the first SimObjPhysics component has a CanOpen_Object component
+        var canOpenObject = firstSimObjPhysics.GetComponent<CanOpen_Object>();
         if (canOpenObject != null)
         {
-            Debug.Log("CanOpen_Object component found on root: " + rootSimObjPhysics.name);
+            Debug.Log("CanOpen_Object component found on first SimObjPhysics: " + firstSimObjPhysics.name);
+
+            // Traverse up the hierarchy to find the topmost SimObjPhysics component
+            SimObjPhysics topmostSimObjPhysicsComponent = firstSimObjPhysics;
+            current = firstSimObjPhysics.transform.parent;
+
+            while (current != null)
+            {
+                if (current.GetComponent<SimObjPhysics>() != null)
+                {
+                    topmostSimObjPhysicsComponent = current.GetComponent<SimObjPhysics>();
+                }
+                current = current.parent;
+            }
+
+            Debug.Log("Topmost SimObjPhysics component found: " + topmostSimObjPhysicsComponent.name);
 
             // Get the movementType from CanOpen_Object
             jointInfo = new JointInfo
@@ -531,7 +590,7 @@ private JointInfo CollectValidJoints(MeshFilter meshfilter, ref MeshData meshDat
 
                         // Calculate meshParentRelativePosition
                         Debug.Log("Calculating meshParentRelativePosition...");
-                        jointInfo.meshParentRelativePosition = parent.InverseTransformPoint(movingParts[i].transform.position);
+                        jointInfo.meshParentRelativePosition = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(movingParts[i].transform.position);
 
                         Debug.Log("meshParentRelativePosition: " + jointInfo.meshParentRelativePosition);
 
@@ -539,14 +598,14 @@ private JointInfo CollectValidJoints(MeshFilter meshfilter, ref MeshData meshDat
                         if (canOpenObject.movementType == CanOpen_Object.MovementType.Slide)
                         {
                             Debug.Log("Calculating lowRange and highRange for Slide...");
-                            jointInfo.lowRange = parent != null ? parent.InverseTransformPoint(closedPositions[i]) : movingParts[i].transform.root.InverseTransformPoint(closedPositions[i]);
-                            jointInfo.highRange = parent != null ? parent.InverseTransformPoint(openPositions[i]) : movingParts[i].transform.root.InverseTransformPoint(openPositions[i]);
+                            jointInfo.lowRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(closedPositions[i]);
+                            jointInfo.highRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(openPositions[i]);
                         }
                         else if (canOpenObject.movementType == CanOpen_Object.MovementType.Rotate)
                         {
                             Debug.Log("Calculating lowRange and highRange for Rotate...");
-                            jointInfo.lowRange = parent != null ? (Quaternion.Inverse(parent.rotation) * Quaternion.Euler(closedPositions[i])).eulerAngles : (Quaternion.Inverse(movingParts[i].transform.root.rotation) * Quaternion.Euler(closedPositions[i])).eulerAngles;
-                            jointInfo.highRange = parent != null ? (Quaternion.Inverse(parent.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles : (Quaternion.Inverse(movingParts[i].transform.root.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
+                            jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(closedPositions[i])).eulerAngles;
+                            jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
                         }
 
                         Debug.Log("lowRange: " + jointInfo.lowRange);
@@ -570,7 +629,7 @@ private JointInfo CollectValidJoints(MeshFilter meshfilter, ref MeshData meshDat
         }
         else
         {
-            Debug.Log("CanOpen_Object component not found on root: " + rootSimObjPhysics.name);
+            Debug.Log("CanOpen_Object component not found on first SimObjPhysics: " + firstSimObjPhysics.name);
         }
     }
     else
@@ -714,7 +773,7 @@ private bool IsSimObjPhysicsFound(Transform target, GameObject reference)
         return scale;
     }
 
-    void SaveMeshes(string relativeExportPath, MeshFilter[] meshFilters, Vector3 center, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false, bool saveCombinedSubmeshes=false)
+    void SaveMeshes(string relativeExportPath, MeshFilter[] meshFilters, Vector3 center, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false, bool saveCombinedSubmeshes = false, SimObjPhysics topmostSimObjPhysics = null)
     {
         Debug.Log("saving mesh");
 
@@ -735,7 +794,7 @@ private bool IsSimObjPhysicsFound(Transform target, GameObject reference)
             //string meshName = mf.gameObject.name + "_" + i.ToString();
             string meshName = mf.sharedMesh.name;
 
-            MeshData meshData = FillMeshData(meshFilters[i], meshName);
+            MeshData meshData = FillMeshData(meshFilters[i], meshName, topmostSimObjPhysics);
             exportedAssetInfo.meshes.Add(meshData);
 
             if(!saveCombinedSubmeshes & saveSubMeshes)
@@ -744,72 +803,6 @@ private bool IsSimObjPhysicsFound(Transform target, GameObject reference)
                 sb.AppendLine("mtllib " + baseFileName + ".mtl");
                 lastIndex = 0;
             }
-
-            
-            /// ---- THIS LOGIC DID NOT WORK FOR  DRESSER .. .did work for Fridge but not for Dresser 217 for example
-            /// notes: fridge works because it has nested FridgeBodyMesh with child door meshes under it
-            /// dresser fails because the meshes are siblings of each other rather than children under the body heirarchy
-            /// 
-            // mesh_transforms[meshName + "_" +i.ToString()] = new Dictionary<string, string>();
-            // mesh_transforms[meshName + "_" +i.ToString()]["name"] = mf.gameObject.transform.name;
-
-            // Transform _parent = mf.gameObject.transform.parent;
-
-            // Debug.Log($"what is mf.gameObject.transform.parent: {_parent}");
-            // if(_parent == null)
-            // {
-            //     Debug.Log("parent name: root because game object had no parent??");
-            //     mesh_transforms[meshName + "_" +i.ToString()]["parentName"] =  mf.gameObject.transform.root.name; //"root";
-            // }
-            // else
-            // {
-            //     // only get the name of the parent that has mesh 
-            //     MeshFilter parent_meshFilters = _parent.gameObject.GetComponentInParent<MeshFilter>(); // mf.gameObject.GetComponentInParent<MeshFilter>();
-
-            //     Transform parent_go = null;
-            //     if(parent_meshFilters != null)
-            //     {
-            //         parent_go = parent_meshFilters.gameObject.transform;
-            //     }
-            //     else
-            //     {
-            //         parent_go = mf.gameObject.transform.root;
-            //         Debug.Log($"parent name: {parent_go}which is the root because parent had no mesh filter");
-            //         //parent_name = _parent.gameObject.transform.name;
-            //         //mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = mf.gameObject.transform.root.name; //"root";
-            //     }    
-                
-            //     string parent_name = parent_go.name;
-            //     mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = parent_name;
-
-            //     Vector3 grandParentLocalPosition = parent_go.InverseTransformPoint(mf.gameObject.transform.position);
-            //     Quaternion grandParentLocalRotation = Quaternion.Inverse(parent_go.rotation) * mf.gameObject.transform.rotation;
-            //     Vector3 grandParentLocalScale = parent_go.localScale;
-                
-            //     // should apply scale for every intermeidate parent
-            //     Vector3 scale = mf.gameObject.transform.localScale;
-            //     Transform parent = mf.gameObject.transform.parent;
-            //     Debug.Log("parent name1: " + parent.name);
-            //     Debug.Log("parent name2: " + parent_name);
-            //     while(parent.name != parent_name)
-            //     {
-            //         Debug.Log("parent name: " + parent.name);
-            //         scale.x *= parent.localScale.x;
-            //         scale.y *= parent.localScale.y;
-            //         scale.z *= parent.localScale.z;
-            //         parent = parent.parent;
-            //         if (parent == null) // tho this should never happen!
-            //             break;
-            //     }
-            //     scale.x *= parent_go.localScale.x;
-            //     scale.y *= parent_go.localScale.y;
-            //     scale.z *= parent_go.localScale.z;
-
-            //     mesh_transforms[meshName + "_" +i.ToString()]["localPosition"] = grandParentLocalPosition.ToString("0.0000000"); // geom
-            //     mesh_transforms[meshName + "_" +i.ToString()]["localRotation"] = grandParentLocalRotation.ToString("0.0000000");// geom
-            //     mesh_transforms[meshName + "_" +i.ToString()]["scale"] = scale.ToString("0.0000000");        
-            // }
-
 
             Mesh msh = mf.sharedMesh;
             if (msh == null)
@@ -821,10 +814,10 @@ private bool IsSimObjPhysicsFound(Transform target, GameObject reference)
             MeshRenderer mr = mf.gameObject.GetComponent<MeshRenderer>();
             {
                 string exportName = meshName;
-                if (true)
-                {
-                    exportName += "_" + i;
-                }
+                // if (true)
+                // {
+                //     exportName += "_" + i;
+                // }
                 sb.AppendLine("g " + exportName);
             }
 
