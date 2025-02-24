@@ -401,6 +401,7 @@ class Controller(object):
         # objaverse_asset_ids=[], TODO add and implement when objaverse.load_thor_objects is available
         action_hook_runner=None,
         metadata_hook: Optional[MetadataHook] = None,
+        unityLogFilePath = None,
         **unity_initialization_parameters,
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -410,6 +411,7 @@ class Controller(object):
         self.width = width
         self.height = height
         self.start_unity = start_unity
+        self.unityLogFilePath = unityLogFilePath
 
         self.server_timeout = server_timeout
         self.server_start_timeout = server_start_timeout
@@ -1099,6 +1101,8 @@ class Controller(object):
                 " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s"
                 % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
             )
+        if self.unityLogFilePath != None:
+            command += f" -logFile {self.unityLogFilePath}"
 
         if self.gpu_device is not None:
             # This parameter only applies to the CloudRendering platform.
