@@ -348,17 +348,17 @@ public class DownloadThorAssets : MonoBehaviour
             if (mr != null && mr.enabled && mf.transform.gameObject.activeSelf)
             {
                 //get rid of anything using the Placeable_Surface_Mat
-                bool containsPlaceableSurfaceMat = false;
+                bool containsMaterialWeDontWant = false;
                 foreach (Material mat in mr.sharedMaterials)
                 {
-                    if (mat != null && mat.name == "Placeable_Surface_Mat")
+                    if (mat != null && (mat.name == "Placeable_Surface_Mat") || (mat.name == "Water_Volume_Surface_Mat"))
                     {
-                        containsPlaceableSurfaceMat = true;
+                        containsMaterialWeDontWant = true;
                         break;
                     }
                 }
 
-                if (!containsPlaceableSurfaceMat)
+                if (!containsMaterialWeDontWant)
                 {
                     activeMeshFilters.Add(mf);
                 }
@@ -507,6 +507,16 @@ public MeshData FillMeshData(MeshFilter meshfilter, string meshName, SimObjPhysi
         }
     }
 
+    // foreach (ColliderInfo cInfo in meshData.primitiveColliders.myPrimitiveColliders) 
+    // {
+    //     if (cInfo.type == "mesh")
+    //     {
+    //         Debug.Log("Mesh Collider found on " + meshData.meshName + " clearing all colliders");
+    //         meshData.primitiveColliders.myPrimitiveColliders.Remove(cInfo);
+    //         break;
+    //     }
+    // }
+
     return meshData;
 }
 
@@ -631,6 +641,104 @@ private JointInfo CollectValidJoints(MeshFilter meshfilter, ref MeshData meshDat
         {
             Debug.Log("CanOpen_Object component not found on first SimObjPhysics: " + firstSimObjPhysics.name);
         }
+
+        // Check if the first SimObjPhysics component has a CanToggleOnOff component
+        var canToggleOnOff = firstSimObjPhysics.GetComponent<CanToggleOnOff>();
+        if (canToggleOnOff != null)
+        {
+            Debug.Log("CanToggleOnOff component found on first SimObjPhysics: " + firstSimObjPhysics.name);
+
+            // Traverse up the hierarchy to find the topmost SimObjPhysics component
+            SimObjPhysics topmostSimObjPhysicsComponent = firstSimObjPhysics;
+            current = firstSimObjPhysics.transform.parent;
+
+            while (current != null)
+            {
+                if (current.GetComponent<SimObjPhysics>() != null)
+                {
+                    topmostSimObjPhysicsComponent = current.GetComponent<SimObjPhysics>();
+                }
+                current = current.parent;
+            }
+
+            Debug.Log("Topmost SimObjPhysics component found: " + topmostSimObjPhysicsComponent.name);
+
+            // Get the movementType from CanToggleOnOff
+            jointInfo = new JointInfo
+            {
+                jointType = canToggleOnOff.movementType.ToString()
+            };
+            Debug.Log("MovementType: " + jointInfo.jointType);
+
+            // Get the OnPositions and OffPositions arrays from CanToggleOnOff
+            Vector3[] onPositions = canToggleOnOff.OnPositions;
+            Vector3[] offPositions = canToggleOnOff.OffPositions;
+            GameObject[] movingParts = canToggleOnOff.MovingParts;
+
+            Debug.Log("MovingParts length: " + movingParts.Length);
+            Debug.Log("OnPositions length: " + onPositions.Length);
+            Debug.Log("OffPositions length: " + offPositions.Length);
+
+            // Find the associated moving part
+            bool foundAssociatedMovingPart = false;
+            for (int i = 0; i < movingParts.Length; i++)
+            {
+                Debug.Log("Checking MovingPart: " + movingParts[i].name);
+
+                // Compare each transform traversed against the moving parts
+                foreach (var transform in transformsTraversed)
+                {
+                    Debug.Log("Transform encountered: " + transform.name);
+                    Debug.Log("MovingPart InstanceID: " + movingParts[i].GetInstanceID());
+                    Debug.Log("Transform InstanceID: " + transform.gameObject.GetInstanceID());
+
+                    if (movingParts[i] == transform.gameObject)
+                    {
+                        Debug.Log("Associated MovingPart found: " + movingParts[i].name);
+
+                        // Calculate meshParentRelativePosition
+                        Debug.Log("Calculating meshParentRelativePosition...");
+                        jointInfo.meshParentRelativePosition = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(movingParts[i].transform.position);
+
+                        Debug.Log("meshParentRelativePosition: " + jointInfo.meshParentRelativePosition);
+
+                        // Calculate lowRange and highRange based on movementType
+                        if (canToggleOnOff.movementType == CanToggleOnOff.MovementType.Slide)
+                        {
+                            Debug.Log("Calculating lowRange and highRange for Slide...");
+                            jointInfo.lowRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(offPositions[i]);
+                            jointInfo.highRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(onPositions[i]);
+                        }
+                        else if (canToggleOnOff.movementType == CanToggleOnOff.MovementType.Rotate)
+                        {
+                            Debug.Log("Calculating lowRange and highRange for Rotate...");
+                            jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(offPositions[i])).eulerAngles;
+                            jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(onPositions[i])).eulerAngles;
+                        }
+
+                        Debug.Log("lowRange: " + jointInfo.lowRange);
+                        Debug.Log("highRange: " + jointInfo.highRange);
+
+                        foundAssociatedMovingPart = true;
+                        break; // Stop searching further
+                    }
+                }
+
+                if (foundAssociatedMovingPart)
+                {
+                    break; // Stop searching further
+                }
+            }
+
+            if (!foundAssociatedMovingPart)
+            {
+                jointInfo = null; // No associated moving part found, so set jointInfo to null
+            }
+        }
+        else
+        {
+            Debug.Log("CanToggleOnOff component not found on first SimObjPhysics: " + firstSimObjPhysics.name);
+        }
     }
     else
     {
@@ -658,14 +766,40 @@ private void CollectValidColliders(MeshFilter meshfilter, ref MeshData meshData)
     }
 }
 
-private void AddCollidersRecursive(Transform target, ref MeshData meshData, GameObject reference)
+private void AddCollidersRecursive(Transform sibling, ref MeshData meshData, GameObject meshFiltersGameObject)
 {
-    // Stop searching if SimObjPhysics is found in sibling or their descendants
-    //this is because we have found a nest sim object, and any colliders found below this point do not belong to this mesh
-    if (IsSimObjPhysicsFound(target, reference)) return;
+    // Check if SimObjPhysics is found in the target or its descendants
+    SimObjPhysics simObjPhysics = sibling.GetComponent<SimObjPhysics>();
+    if (simObjPhysics != null)
+    {
+        // Check if the SimObjPhysics type is BathtubBasin or SinkBasin
+        if (simObjPhysics.Type == SimObjType.BathtubBasin || simObjPhysics.Type == SimObjType.SinkBasin)
+        {
+            // Continue the search and include colliders with the Contains component
+            foreach (var collider in sibling.GetComponents<Collider>())
+            {
+                if (!collider.enabled || !collider.gameObject.activeInHierarchy)
+                    continue;
+
+                var colliderInfo = GetColliderInfo(collider);
+                if (colliderInfo != null)
+                {
+                    if (collider.GetComponent("Contains") != null)
+                    {
+                        meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Stop searching if SimObjPhysics is found and it's not BathtubBasin or SinkBasin
+            return;
+        }
+    }
 
     // Collect colliders at this level
-    foreach (var collider in target.GetComponents<Collider>())
+    foreach (var collider in sibling.GetComponents<Collider>())
     {
         if (!collider.enabled || !collider.gameObject.activeInHierarchy)
             continue;
@@ -685,30 +819,37 @@ private void AddCollidersRecursive(Transform target, ref MeshData meshData, Game
     }
 
     // Recursively check all children
-    foreach (Transform child in target)
+    foreach (Transform child in sibling)
     {
-        AddCollidersRecursive(child, ref meshData, reference);
+        AddCollidersRecursive(child, ref meshData, meshFiltersGameObject);
     }
 }
 
-private bool IsSimObjPhysicsFound(Transform target, GameObject reference)
-{
-    // Return true if SimObjPhysics is found on the target or any descendant
-    if (target.GetComponent("SimObjPhysics") != null) return true;
+// private bool IsSimObjPhysicsFound(Transform target, GameObject reference)
+// {
+//     // Return true if SimObjPhysics is found on the target or any descendant
+//     if (target.GetComponent("SimObjPhysics") != null) return true;
 
-    foreach (Transform child in target)
-    {
-        if (IsSimObjPhysicsFound(child, reference)) return true;
-    }
+//     foreach (Transform child in target)
+//     {
+//         if (IsSimObjPhysicsFound(child, reference)) return true;
+//     }
 
-    return false;
-}
+//     return false;
+// }
 
     public ColliderInfo GetColliderInfo(Collider collider)
     {
+        string colliderType = collider.GetType().Name.ToLower().Replace("collider", "");
         ColliderInfo info = new ColliderInfo();
 
-        info.type = collider.GetType().Name.ToLower().Replace("collider", "");
+        // mesh colliders
+        if (colliderType == "mesh")
+        {
+            return null; // Skip mesh colliders
+        }
+
+        info.type = colliderType;
 
         // Get nearest parent with MeshFilter or root for relative transforms
         Transform referenceTransform = GetNearestMeshOrRoot(collider.transform);
