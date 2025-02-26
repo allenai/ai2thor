@@ -517,7 +517,7 @@ public class DownloadThorAssets : MonoBehaviour
             //track what transforms we have traversed so far
             transformsTraversed.Add(parent);
 
-            // Adjust transform relative to this parent
+            // Adjust the parent-relative position, rotation, and scale
             meshData.parentRelativePosition = parent.InverseTransformPoint(go.transform.position);
             meshData.parentRelativeRotation = Quaternion.Inverse(parent.rotation) * go.transform.rotation;
             meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, parent.localScale);
