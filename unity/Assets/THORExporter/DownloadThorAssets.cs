@@ -281,6 +281,38 @@ public class DownloadThorAssets : MonoBehaviour
         return relativePath;
     }
 
+    string[] GetFilesExcludingDirectories(string rootPath, string searchPattern, List<string> excludeDirectoryNames)
+    {
+        List<string> files = new List<string>();
+        GetFilesRecursively(rootPath, searchPattern, excludeDirectoryNames, files);
+        return files.ToArray();
+    }
+
+    void GetFilesRecursively(string currentPath, string searchPattern, List<string> excludeDirectoryNames, List<string> files)
+    {
+        try
+        {
+            foreach (string file in Directory.GetFiles(currentPath, searchPattern))
+            {
+                files.Add(file);
+            }
+
+            foreach (string directory in Directory.GetDirectories(currentPath))
+            {
+                if (excludeDirectoryNames.Contains(Path.GetFileName(directory), StringComparer.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                GetFilesRecursively(directory, searchPattern, excludeDirectoryNames, files);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError("Error while searching files: " + ex.Message);
+        }
+    }
+
     void GatherGameObjectsFromPrefabsAndSave(string directoryPath, bool applyBoundingBox = false, bool saveSubMeshes = false, bool saveSubMeshTransform = false)
     {
         if (!Directory.Exists(directoryPath))
@@ -291,7 +323,12 @@ public class DownloadThorAssets : MonoBehaviour
 
         Directory.CreateDirectory(Path.Combine(savePath, "Textures")); 
         
-        string[] prefabFiles = Directory.GetFiles(directoryPath, "*.prefab", SearchOption.AllDirectories);
+        // Get all prefab files, excluding specified directories
+        List<string> excludeDirectories = new List<string> { "Custom Project Objects", "Entryway Objects" };
+        string[] prefabFiles = GetFilesExcludingDirectories(directoryPath, "*.prefab", excludeDirectories);
+
+        // Filter out prefabs that contain "Sliced" in their names
+        prefabFiles = prefabFiles.Where(prefabPath => !Path.GetFileNameWithoutExtension(prefabPath).Contains("Sliced")).ToArray();
 
         int assetsProcessed = 0;
         foreach (string prefabPath in prefabFiles)
@@ -312,6 +349,15 @@ public class DownloadThorAssets : MonoBehaviour
                 GameObject instantiatedPrefab = Instantiate(prefab);
                 //remove the "(Clone)" from the name on instantiation
                 instantiatedPrefab.name = prefab.name + "_root";
+
+                // Check if the instantiated prefab has a SimObjPhysics component on its topmost game object
+                if (instantiatedPrefab.GetComponentInChildren<SimObjPhysics>() == null)
+                {
+                    Debug.LogWarning("No SimObjPhysics component found on topmost game object or any of its children of prefab: " + prefabPath);
+                    Destroy(instantiatedPrefab);
+                    continue;
+                }
+
                 SaveEachAsset(instantiatedPrefab, relativePrefabPath, applyBoundingBox, saveSubMeshes, saveSubMeshTransform);
                 Destroy(instantiatedPrefab);
 
