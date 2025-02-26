@@ -541,6 +541,7 @@ public class DownloadThorAssets : MonoBehaviour
         {
             if (meshData.meshName.Contains(name))
             {
+                //clear prmitive colliders but leave placeable zones
                 meshData.primitiveColliders.myPrimitiveColliders.Clear();
                 meshData.primitiveColliders.myPrimitiveColliders = new List<ColliderInfo>();
                 break;
