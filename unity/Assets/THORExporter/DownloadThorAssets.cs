@@ -330,6 +330,7 @@ public class DownloadThorAssets : MonoBehaviour
             "Entryway Objects", 
             "RoboTHOR_Assets_Environment" 
         };
+
         string[] prefabFiles = GetFilesExcludingDirectories(directoryPath, "*.prefab", excludeDirectories);
 
         // Filter out prefabs that contain "Sliced" in their names
@@ -338,12 +339,6 @@ public class DownloadThorAssets : MonoBehaviour
         int assetsProcessed = 0;
         foreach (string prefabPath in prefabFiles)
         {
-            // skip if already exist
-            //if (File.Exists(Path.Combine(savePath, GetRelativePath(assetPath, prefabPath).Replace(".prefab", ".obj"))))
-            //{
-            //    Debug.Log("Skipping " + prefabPath);
-            //    continue;
-            //}
 
             string relativePrefabPath = GetRelativePath(assetPath, prefabPath);
             Debug.Log("Prefab path: " + relativePrefabPath);
@@ -430,8 +425,6 @@ public class DownloadThorAssets : MonoBehaviour
             Debug.Log("No bounding box found for " + go.name);
         } 
     
-        //Debug.Log("saving mesh1" + center.ToString());
-
         //SaveMeshes(relativeExportPath, meshFilters, center, applyBoundingBox, saveSubMeshes, saveSubMeshTransform, false);    
         if(saveCombinedSubmeshes)
         {
@@ -447,9 +440,6 @@ public class DownloadThorAssets : MonoBehaviour
             );
         }
     
-
-        //Debug.Log("saving mesh2");
-
         if (!skipMaterialExport)
         {
             Debug.Log("saving material");
@@ -556,16 +546,6 @@ public class DownloadThorAssets : MonoBehaviour
                 break;
             }
         }
-
-        // foreach (ColliderInfo cInfo in meshData.primitiveColliders.myPrimitiveColliders) 
-        // {
-        //     if (cInfo.type == "mesh")
-        //     {
-        //         Debug.Log("Mesh Collider found on " + meshData.meshName + " clearing all colliders");
-        //         meshData.primitiveColliders.myPrimitiveColliders.Remove(cInfo);
-        //         break;
-        //     }
-        // }
 
         return meshData;
     }
@@ -874,19 +854,6 @@ public class DownloadThorAssets : MonoBehaviour
             AddCollidersRecursive(child, ref meshData, meshFiltersGameObject);
         }
     }
-
-// private bool IsSimObjPhysicsFound(Transform target, GameObject reference)
-// {
-//     // Return true if SimObjPhysics is found on the target or any descendant
-//     if (target.GetComponent("SimObjPhysics") != null) return true;
-
-//     foreach (Transform child in target)
-//     {
-//         if (IsSimObjPhysicsFound(child, reference)) return true;
-//     }
-
-//     return false;
-// }
 
     public ColliderInfo GetColliderInfo(Collider collider)
     {
@@ -1340,6 +1307,8 @@ public class DownloadThorAssets : MonoBehaviour
 
     }
 
+    //////////////// Alvaro Collider serialization Reference Code Below /////////////////////
+
     private static Dictionary<string, object> getJsonTransorm(Transform transform) {
         return new Dictionary<string, object>() {
                     {"position", transform.position},
@@ -1394,9 +1363,7 @@ public class DownloadThorAssets : MonoBehaviour
                 {"error", "Null collider"}
             };
         }
-        // else if (c.GetType() == typeof(MeshRenderer)) {
 
-        // }
         return co;
     }
 
@@ -1428,20 +1395,6 @@ public class DownloadThorAssets : MonoBehaviour
             else {
                 Debug.Log($"----- Error duplicate key {sop.assetID} object name: {sop.objectID}, GO name: {sop.gameObject.name}, index: {i}" );
             }
-            // var jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(
-            // new Dictionary<string, object>() {
-            //     {"colliders", colliders},
-            //     {"assetId", sop.assetID}
-            // },
-            // Newtonsoft.Json.Formatting.None,
-            // new Newtonsoft.Json.JsonSerializerSettings() {
-            //     ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-            //     ContractResolver = jsonResolver
-            // }
-            // );
-
-            // Debug.Log($"st {jsonStr}");
-
         }
 
         var jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(
@@ -1462,28 +1415,6 @@ public class DownloadThorAssets : MonoBehaviour
             file.Write(jsonStr);
 
             file.Close();
-
-//             using(StreamWriter writetext = new StreamWriter("write.txt"))
-// {
-//     writetext.writeLine
-//     writetext.WriteLine("writing in text file");
-// }
-
-        // var colliderDict = m.ToDictionary(sop => (sop.assetID, new Dictionary<string, object>() {
-        //         {"colliders", sop.MyColliders.Select(getCollider)},
-        //         {"assetId", sop.assetID}
-        // }));
-
-        //     var jsonStr = Newtonsoft.Json.JsonConvert.SerializeObject(
-        //     colliderDict,
-        //     Newtonsoft.Json.Formatting.None,
-        //     new Newtonsoft.Json.JsonSerializerSettings() {
-        //         ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-        //         ContractResolver = jsonResolver
-        //     }
-        //     );
-
-        //     Debug.Log($"st {jsonStr}");
 
     }
 }
