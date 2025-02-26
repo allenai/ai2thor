@@ -10,6 +10,27 @@ using System.Linq;
 using System.Reflection;
 using UnityEditorInternal.Profiling.Memory.Experimental;
 
+public static class PathExtensions
+{
+    public static string GetRelativePath(string relativeTo, string path)
+    {
+        Uri fromUri = new Uri(Path.GetFullPath(relativeTo));
+        Uri toUri = new Uri(Path.GetFullPath(path));
+
+        if (fromUri.Scheme != toUri.Scheme) { return path; } // path can't be made relative.
+
+        Uri relativeUri = fromUri.MakeRelativeUri(toUri);
+        string relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+
+        if (toUri.Scheme.Equals("file", StringComparison.InvariantCultureIgnoreCase))
+        {
+            relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        }
+
+        return relativePath;
+    }
+}
+
 public class DownloadThorAssets : MonoBehaviour
 {
     public string savePath = "Assets/ExportedThorAssets";
@@ -1188,7 +1209,7 @@ public class DownloadThorAssets : MonoBehaviour
             Vector2 _mainTextureScale = m.GetTextureScale("_MainTex");
             if (_MainTex != "false")
             {
-                sb.AppendLine("map_Kd " + _MainTex);
+                sb.AppendLine("map_Kd " + PathExtensions.GetRelativePath(savePath, _MainTex));// relative to savePath 
             }
             
             Debug.Log("Checking SecondaryTexture");
@@ -1196,20 +1217,20 @@ public class DownloadThorAssets : MonoBehaviour
             Vector2 _secondaryTextureScale = m.GetTextureScale("_DetailAlbedoMap");
             if (_SecondaryTex != "false")
             {
-                sb.AppendLine("map_Kd " + _SecondaryTex);
+                sb.AppendLine("map_Kd " + PathExtensions.GetRelativePath(savePath, _SecondaryTex));
             }
             
             //spec map
             string _MetallicGlossMap = TryExportTexture("_MetallicGlossMap", m);
             if (_MetallicGlossMap != "false")
             {
-                sb.AppendLine("map_Ks " + _MetallicGlossMap);
+                sb.AppendLine("map_Ks " + PathExtensions.GetRelativePath(savePath, _MetallicGlossMap));
             }
             //bump map
             string _BumpMap = TryExportTexture("_BumpMap", m);
             if (_BumpMap != "false")
             {
-                sb.AppendLine("map_Bump " + _BumpMap);
+                sb.AppendLine("map_Bump " + PathExtensions.GetRelativePath(savePath, _BumpMap));
             }
 
             if (!Mat2Texture.ContainsKey(m.name))
