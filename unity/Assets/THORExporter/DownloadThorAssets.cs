@@ -124,7 +124,7 @@ public class DownloadThorAssets : MonoBehaviour
     public class JointInfo {
         public string jointType = "none"; //rotate, slide, (scale????)
         //what is the position of this joint relative to whatever this joint's mesh's parent is?
-        public Vector3 meshParentRelativePosition;
+        public Vector3 meshRelativePosition;
         //this joint's range of movement in local space
         //if jointType == rotate, this is a change in rotation in euler angles
         //if jointType == slide, this is a change in position
@@ -418,7 +418,7 @@ public class DownloadThorAssets : MonoBehaviour
                 bool containsMaterialWeDontWant = false;
                 foreach (Material mat in mr.sharedMaterials)
                 {
-                    if (mat != null && (mat.name == "Placeable_Surface_Mat") || (mat.name == "Water_Volume_Surface_Mat"))
+                    if (mat != null && (mat.name == "Placeable_Surface_Mat") || (mat.name == "Water_Volume_Surface_Mat") || mat.name == "Material.002 Stove")
                     {
                         containsMaterialWeDontWant = true;
                         break;
@@ -602,91 +602,95 @@ public class DownloadThorAssets : MonoBehaviour
             {
                 Debug.Log("CanOpen_Object component found on first SimObjPhysics: " + firstSimObjPhysics.name);
 
-                // Traverse up the hierarchy to find the topmost SimObjPhysics component
-                SimObjPhysics topmostSimObjPhysicsComponent = firstSimObjPhysics;
-                current = firstSimObjPhysics.transform.parent;
-
-                while (current != null)
+                //make sure we actually have some, if not do nothing
+                if(canOpenObject.MovingParts.Length != 0)
                 {
-                    if (current.GetComponent<SimObjPhysics>() != null)
+                    // Traverse up the hierarchy to find the topmost SimObjPhysics component
+                    SimObjPhysics topmostSimObjPhysicsComponent = firstSimObjPhysics;
+                    current = firstSimObjPhysics.transform.parent;
+
+                    while (current != null)
                     {
-                        topmostSimObjPhysicsComponent = current.GetComponent<SimObjPhysics>();
-                    }
-                    current = current.parent;
-                }
-
-                Debug.Log("Topmost SimObjPhysics component found: " + topmostSimObjPhysicsComponent.name);
-
-                // Get the movementType from CanOpen_Object
-                jointInfo = new JointInfo
-                {
-                    jointType = canOpenObject.movementType.ToString()
-                };
-                Debug.Log("MovementType: " + jointInfo.jointType);
-
-                // Get the openPositions and closedPositions arrays from CanOpen_Object
-                Vector3[] openPositions = canOpenObject.openPositions;
-                Vector3[] closedPositions = canOpenObject.closedPositions;
-                GameObject[] movingParts = canOpenObject.MovingParts;
-
-                Debug.Log("MovingParts length: " + movingParts.Length);
-                Debug.Log("OpenPositions length: " + openPositions.Length);
-                Debug.Log("ClosedPositions length: " + closedPositions.Length);
-
-                // Find the associated moving part
-                bool foundAssociatedMovingPart = false;
-                for (int i = 0; i < movingParts.Length; i++)
-                {
-                    Debug.Log("Checking MovingPart: " + movingParts[i].name);
-
-                    // Compare each transform traversed against the moving parts
-                    foreach (var transform in transformsTraversed)
-                    {
-                        Debug.Log("Transform encountered: " + transform.name);
-                        Debug.Log("MovingPart InstanceID: " + movingParts[i].GetInstanceID());
-                        Debug.Log("Transform InstanceID: " + transform.gameObject.GetInstanceID());
-
-                        if (movingParts[i] == transform.gameObject)
+                        if (current.GetComponent<SimObjPhysics>() != null)
                         {
-                            Debug.Log("Associated MovingPart found: " + movingParts[i].name);
+                            topmostSimObjPhysicsComponent = current.GetComponent<SimObjPhysics>();
+                        }
+                        current = current.parent;
+                    }
 
-                            // Calculate meshParentRelativePosition
-                            Debug.Log("Calculating meshParentRelativePosition...");
-                            jointInfo.meshParentRelativePosition = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(movingParts[i].transform.position);
+                    Debug.Log("Topmost SimObjPhysics component found: " + topmostSimObjPhysicsComponent.name);
 
-                            Debug.Log("meshParentRelativePosition: " + jointInfo.meshParentRelativePosition);
+                    // Get the movementType from CanOpen_Object
+                    jointInfo = new JointInfo
+                    {
+                        jointType = canOpenObject.movementType.ToString()
+                    };
+                    Debug.Log("MovementType: " + jointInfo.jointType);
 
-                            // Calculate lowRange and highRange based on movementType
-                            if (canOpenObject.movementType == CanOpen_Object.MovementType.Slide)
+                    // Get the openPositions and closedPositions arrays from CanOpen_Object
+                    Vector3[] openPositions = canOpenObject.openPositions;
+                    Vector3[] closedPositions = canOpenObject.closedPositions;
+                    GameObject[] movingParts = canOpenObject.MovingParts;
+
+                    Debug.Log("MovingParts length: " + movingParts.Length);
+                    Debug.Log("OpenPositions length: " + openPositions.Length);
+                    Debug.Log("ClosedPositions length: " + closedPositions.Length);
+
+                    // Find the associated moving part
+                    bool foundAssociatedMovingPart = false;
+                    for (int i = 0; i < movingParts.Length; i++)
+                    {
+                        Debug.Log("Checking MovingPart: " + movingParts[i].name);
+
+                        // Compare each transform traversed against the moving parts
+                        foreach (var transform in transformsTraversed)
+                        {
+                            Debug.Log("Transform encountered: " + transform.name);
+                            Debug.Log("MovingPart InstanceID: " + movingParts[i].GetInstanceID());
+                            Debug.Log("Transform InstanceID: " + transform.gameObject.GetInstanceID());
+
+                            if (movingParts[i] == transform.gameObject)
                             {
-                                Debug.Log("Calculating lowRange and highRange for Slide...");
-                                jointInfo.lowRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(closedPositions[i]);
-                                jointInfo.highRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(openPositions[i]);
-                            }
-                            else if (canOpenObject.movementType == CanOpen_Object.MovementType.Rotate)
-                            {
-                                Debug.Log("Calculating lowRange and highRange for Rotate...");
-                                jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(closedPositions[i])).eulerAngles;
-                                jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
-                            }
+                                Debug.Log("Associated MovingPart found: " + movingParts[i].name);
 
-                            Debug.Log("lowRange: " + jointInfo.lowRange);
-                            Debug.Log("highRange: " + jointInfo.highRange);
+                                // Calculate meshRelativePosition
+                                Debug.Log("Calculating meshRelativePosition...");
+                                jointInfo.meshRelativePosition = meshfilter.gameObject.transform.InverseTransformPoint(movingParts[i].transform.position);
 
-                            foundAssociatedMovingPart = true;
+                                Debug.Log("meshRelativePosition: " + jointInfo.meshRelativePosition);
+
+                                // Calculate lowRange and highRange based on movementType
+                                if (canOpenObject.movementType == CanOpen_Object.MovementType.Slide)
+                                {
+                                    Debug.Log("Calculating lowRange and highRange for Slide...");
+                                    jointInfo.lowRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(closedPositions[i]);
+                                    jointInfo.highRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(openPositions[i]);
+                                }
+                                else if (canOpenObject.movementType == CanOpen_Object.MovementType.Rotate)
+                                {
+                                    Debug.Log("Calculating lowRange and highRange for Rotate...");
+                                    jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(closedPositions[i])).eulerAngles;
+                                    jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
+                                }
+
+                                Debug.Log("lowRange: " + jointInfo.lowRange);
+                                Debug.Log("highRange: " + jointInfo.highRange);
+
+                                foundAssociatedMovingPart = true;
+                                break; // Stop searching further
+                            }
+                        }
+
+                        if (foundAssociatedMovingPart)
+                        {
                             break; // Stop searching further
                         }
                     }
 
-                    if (foundAssociatedMovingPart)
+                    if (!foundAssociatedMovingPart)
                     {
-                        break; // Stop searching further
+                        jointInfo = null; // No associated moving part found, so set jointInfo to null
                     }
-                }
-
-                if (!foundAssociatedMovingPart)
-                {
-                    jointInfo = null; // No associated moving part found, so set jointInfo to null
                 }
             }
             else
@@ -700,92 +704,97 @@ public class DownloadThorAssets : MonoBehaviour
             {
                 Debug.Log("CanToggleOnOff component found on first SimObjPhysics: " + firstSimObjPhysics.name);
 
-                // Traverse up the hierarchy to find the topmost SimObjPhysics component
-                SimObjPhysics topmostSimObjPhysicsComponent = firstSimObjPhysics;
-                current = firstSimObjPhysics.transform.parent;
-
-                while (current != null)
+                if(canToggleOnOff.MovingParts.Length != 0)
                 {
-                    if (current.GetComponent<SimObjPhysics>() != null)
+                    // Traverse up the hierarchy to find the topmost SimObjPhysics component
+                    SimObjPhysics topmostSimObjPhysicsComponent = firstSimObjPhysics;
+                    current = firstSimObjPhysics.transform.parent;
+
+                    while (current != null)
                     {
-                        topmostSimObjPhysicsComponent = current.GetComponent<SimObjPhysics>();
-                    }
-                    current = current.parent;
-                }
-
-                Debug.Log("Topmost SimObjPhysics component found: " + topmostSimObjPhysicsComponent.name);
-
-                // Get the movementType from CanToggleOnOff
-                jointInfo = new JointInfo
-                {
-                    jointType = canToggleOnOff.movementType.ToString()
-                };
-                Debug.Log("MovementType: " + jointInfo.jointType);
-
-                // Get the OnPositions and OffPositions arrays from CanToggleOnOff
-                Vector3[] onPositions = canToggleOnOff.OnPositions;
-                Vector3[] offPositions = canToggleOnOff.OffPositions;
-                GameObject[] movingParts = canToggleOnOff.MovingParts;
-
-                Debug.Log("MovingParts length: " + movingParts.Length);
-                Debug.Log("OnPositions length: " + onPositions.Length);
-                Debug.Log("OffPositions length: " + offPositions.Length);
-
-                // Find the associated moving part
-                bool foundAssociatedMovingPart = false;
-                for (int i = 0; i < movingParts.Length; i++)
-                {
-                    Debug.Log("Checking MovingPart: " + movingParts[i].name);
-
-                    // Compare each transform traversed against the moving parts
-                    foreach (var transform in transformsTraversed)
-                    {
-                        Debug.Log("Transform encountered: " + transform.name);
-                        Debug.Log("MovingPart InstanceID: " + movingParts[i].GetInstanceID());
-                        Debug.Log("Transform InstanceID: " + transform.gameObject.GetInstanceID());
-
-                        if (movingParts[i] == transform.gameObject)
+                        if (current.GetComponent<SimObjPhysics>() != null)
                         {
-                            Debug.Log("Associated MovingPart found: " + movingParts[i].name);
+                            topmostSimObjPhysicsComponent = current.GetComponent<SimObjPhysics>();
+                        }
+                        current = current.parent;
+                    }
 
-                            // Calculate meshParentRelativePosition
-                            Debug.Log("Calculating meshParentRelativePosition...");
-                            jointInfo.meshParentRelativePosition = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(movingParts[i].transform.position);
+                    Debug.Log("Topmost SimObjPhysics component found: " + topmostSimObjPhysicsComponent.name);
 
-                            Debug.Log("meshParentRelativePosition: " + jointInfo.meshParentRelativePosition);
+                    // Get the movementType from CanToggleOnOff
+                    jointInfo = new JointInfo
+                    {
+                        jointType = canToggleOnOff.movementType.ToString()
+                    };
+                    Debug.Log("MovementType: " + jointInfo.jointType);
 
-                            // Calculate lowRange and highRange based on movementType
-                            if (canToggleOnOff.movementType == CanToggleOnOff.MovementType.Slide)
+                    // Get the OnPositions and OffPositions arrays from CanToggleOnOff
+                    Vector3[] onPositions = canToggleOnOff.OnPositions;
+                    Vector3[] offPositions = canToggleOnOff.OffPositions;
+                    GameObject[] movingParts = canToggleOnOff.MovingParts;
+
+                    Debug.Log("MovingParts length: " + movingParts.Length);
+                    Debug.Log("OnPositions length: " + onPositions.Length);
+                    Debug.Log("OffPositions length: " + offPositions.Length);
+
+                    // Find the associated moving part
+                    bool foundAssociatedMovingPart = false;
+                    for (int i = 0; i < movingParts.Length; i++)
+                    {
+                        Debug.Log("Checking MovingPart: " + movingParts[i].name);
+
+                        // Compare each transform traversed against the moving parts
+                        foreach (var transform in transformsTraversed)
+                        {
+                            Debug.Log("Transform encountered: " + transform.name);
+                            Debug.Log("MovingPart InstanceID: " + movingParts[i].GetInstanceID());
+                            Debug.Log("Transform InstanceID: " + transform.gameObject.GetInstanceID());
+
+                            if (movingParts[i] == transform.gameObject)
                             {
-                                Debug.Log("Calculating lowRange and highRange for Slide...");
-                                jointInfo.lowRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(offPositions[i]);
-                                jointInfo.highRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(onPositions[i]);
-                            }
-                            else if (canToggleOnOff.movementType == CanToggleOnOff.MovementType.Rotate)
-                            {
-                                Debug.Log("Calculating lowRange and highRange for Rotate...");
-                                jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(offPositions[i])).eulerAngles;
-                                jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(onPositions[i])).eulerAngles;
-                            }
+                                Debug.Log("Associated MovingPart found: " + movingParts[i].name);
 
-                            Debug.Log("lowRange: " + jointInfo.lowRange);
-                            Debug.Log("highRange: " + jointInfo.highRange);
+                                // Calculate meshRelativePosition
+                                Debug.Log("Calculating meshRelativePosition...");
+                                jointInfo.meshRelativePosition = meshfilter.gameObject.transform.InverseTransformPoint(movingParts[i].transform.position);
 
-                            foundAssociatedMovingPart = true;
+                                Debug.Log("meshRelativePosition: " + jointInfo.meshRelativePosition);
+
+                                // Calculate lowRange and highRange based on movementType
+                                if (canToggleOnOff.movementType == CanToggleOnOff.MovementType.Slide)
+                                {
+                                    Debug.Log("Calculating lowRange and highRange for Slide...");
+                                    jointInfo.lowRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(offPositions[i]);
+                                    jointInfo.highRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(onPositions[i]);
+                                }
+                                else if (canToggleOnOff.movementType == CanToggleOnOff.MovementType.Rotate)
+                                {
+                                    Debug.Log("Calculating lowRange and highRange for Rotate...");
+                                    jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(offPositions[i])).eulerAngles;
+                                    jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(onPositions[i])).eulerAngles;
+                                }
+
+                                Debug.Log("lowRange: " + jointInfo.lowRange);
+                                Debug.Log("highRange: " + jointInfo.highRange);
+
+                                foundAssociatedMovingPart = true;
+                                break; // Stop searching further
+                            }
+                        }
+
+                        if (foundAssociatedMovingPart)
+                        {
                             break; // Stop searching further
                         }
                     }
 
-                    if (foundAssociatedMovingPart)
+                    if (!foundAssociatedMovingPart)
                     {
-                        break; // Stop searching further
+                        jointInfo = null; // No associated moving part found, so set jointInfo to null
                     }
                 }
+ 
 
-                if (!foundAssociatedMovingPart)
-                {
-                    jointInfo = null; // No associated moving part found, so set jointInfo to null
-                }
             }
             else
             {
@@ -808,55 +817,63 @@ public class DownloadThorAssets : MonoBehaviour
         Transform parent = go.transform.parent;
         if (parent != null)
         {
-            foreach (Transform sibling in parent)
+            foreach (Transform child in parent)
             {
-                if (sibling == go.transform) continue;
+                //actually no we want to check ourself too
+                //if (sibling == go.transform) continue;
 
                 // Include sibling's colliders and descendants recursively
-                AddCollidersRecursive(sibling, ref meshData, go);
+                AddCollidersRecursive(child, ref meshData, go);
             }
         }
     }
 
-    private void AddCollidersRecursive(Transform sibling, ref MeshData meshData, GameObject meshFiltersGameObject)
+    private void AddCollidersRecursive(Transform child, ref MeshData meshData, GameObject meshFiltersGameObject)
     {
         // Check if SimObjPhysics is found in the target or its descendants
-        SimObjPhysics simObjPhysics = sibling.GetComponent<SimObjPhysics>();
+        SimObjPhysics simObjPhysics = child.GetComponent<SimObjPhysics>();
         if (simObjPhysics != null)
         {
-            // Check if the SimObjPhysics type is BathtubBasin or SinkBasin
-            if (simObjPhysics.Type == SimObjType.BathtubBasin || simObjPhysics.Type == SimObjType.SinkBasin)
+            // Check if the SimObjPhysics type is BathtubBasin, Shelf, or SinkBasin
+            if (simObjPhysics.Type == SimObjType.BathtubBasin || simObjPhysics.Type == SimObjType.Shelf || simObjPhysics.Type == SimObjType.SinkBasin)
             {
                 // Continue the search and include colliders with the Contains component
-                foreach (var collider in sibling.GetComponents<Collider>())
+                foreach (var collider in child.GetComponents<Collider>())
                 {
+                    //only look at enabled colliders, active colliders
                     if (!collider.enabled || !collider.gameObject.activeInHierarchy)
                         continue;
 
-                    var colliderInfo = GetColliderInfo(collider);
+                    var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject);
                     if (colliderInfo != null)
                     {
                         if (collider.GetComponent("Contains") != null)
                         {
                             meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
                         }
+                        
+                        //dont include trigger colliders to PrimitiveColliders
+                        if(!collider.isTrigger)
+                        {
+                            meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
+                        }
                     }
                 }
             }
             else
             {
-                // Stop searching if SimObjPhysics is found and it's not BathtubBasin or SinkBasin
+                // Stop searching if SimObjPhysics is found and it's not BathtubBasin, Shelf, or SinkBasin
                 return;
             }
         }
 
-        // Collect colliders at this level
-        foreach (var collider in sibling.GetComponents<Collider>())
+        // Collect colliders at this level if this level is not a SimObjPhysics
+        foreach (var collider in child.GetComponents<Collider>())
         {
             if (!collider.enabled || !collider.gameObject.activeInHierarchy)
                 continue;
 
-            var colliderInfo = GetColliderInfo(collider);
+            var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject);
             if (colliderInfo != null)
             {
                 if (!collider.isTrigger)
@@ -871,13 +888,13 @@ public class DownloadThorAssets : MonoBehaviour
         }
 
         // Recursively check all children
-        foreach (Transform child in sibling)
+        foreach (Transform childOfchild in child)
         {
-            AddCollidersRecursive(child, ref meshData, meshFiltersGameObject);
+            AddCollidersRecursive(childOfchild, ref meshData, meshFiltersGameObject);
         }
     }
 
-    public ColliderInfo GetColliderInfo(Collider collider)
+    public ColliderInfo GetColliderInfo(Collider collider, GameObject meshFiltersGameObject)
     {
         string colliderType = collider.GetType().Name.ToLower().Replace("collider", "");
         ColliderInfo info = new ColliderInfo();
@@ -890,18 +907,16 @@ public class DownloadThorAssets : MonoBehaviour
 
         info.type = colliderType;
 
-        // Get nearest parent with MeshFilter or root for relative transforms
-        Transform referenceTransform = GetNearestMeshOrRoot(collider.transform);
-
-        Vector3 combinedScale = GetCombinedScale(collider.transform, referenceTransform);
-        Vector3 relativePosition = referenceTransform.InverseTransformPoint(collider.transform.position);
-        Quaternion relativeRotation = Quaternion.Inverse(referenceTransform.rotation) * collider.transform.rotation;
+        // Ensure the size, position, rotation, radius, height, etc., are all relative to the local space of the meshFiltersGameObject
+        Vector3 combinedScale = GetCombinedScale(collider.transform, meshFiltersGameObject.transform);
+        //Vector3 relativePosition = meshFiltersGameObject.transform.InverseTransformPoint(collider.transform.position);
+        Quaternion relativeRotation = Quaternion.Inverse(meshFiltersGameObject.transform.rotation) * collider.transform.rotation;
 
         // BoxCollider
         if (collider is BoxCollider box)
         {
             info.size = Vector3.Scale(box.size, combinedScale) * 0.5f; // Half extents with combined scale
-            info.position = referenceTransform.InverseTransformPoint(box.transform.TransformPoint(box.center));
+            info.position = meshFiltersGameObject.transform.InverseTransformPoint(box.transform.TransformPoint(box.center));
             info.rotation = relativeRotation;
         }
         // SphereCollider
@@ -909,7 +924,7 @@ public class DownloadThorAssets : MonoBehaviour
         {
             float maxScale = Mathf.Max(combinedScale.x, combinedScale.y, combinedScale.z);
             info.radius = sphere.radius * maxScale;
-            info.position = referenceTransform.InverseTransformPoint(sphere.transform.TransformPoint(sphere.center));
+            info.position = meshFiltersGameObject.transform.InverseTransformPoint(sphere.transform.TransformPoint(sphere.center));
             info.rotation = relativeRotation;
         }
         // CapsuleCollider
@@ -919,24 +934,11 @@ public class DownloadThorAssets : MonoBehaviour
             info.radius = capsule.radius * horizontalScale;
             info.height = capsule.height * combinedScale.y; // Height uses Y
             info.direction = capsule.direction;
-            info.position = referenceTransform.InverseTransformPoint(capsule.transform.TransformPoint(capsule.center));
+            info.position = meshFiltersGameObject.transform.InverseTransformPoint(capsule.transform.TransformPoint(capsule.center));
             info.rotation = relativeRotation;
         }
 
         return info;
-    }
-
-    private Transform GetNearestMeshOrRoot(Transform target)
-    {
-        Transform current = target;
-        while (current.parent != null)
-        {
-            if (current.parent.GetComponent<MeshFilter>() != null)
-                return current.parent;
-
-            current = current.parent;
-        }
-        return target.root;
     }
 
     private Vector3 GetCombinedScale(Transform target, Transform reference)
@@ -952,6 +954,19 @@ public class DownloadThorAssets : MonoBehaviour
 
         return scale;
     }
+
+    // private Transform GetNearestMeshOrRoot(Transform target)
+    // {
+    //     Transform current = target;
+    //     while (current.parent != null)
+    //     {
+    //         if (current.parent.GetComponent<MeshFilter>() != null)
+    //             return current.parent;
+
+    //         current = current.parent;
+    //     }
+    //     return target.root;
+    // }
 
     void SaveMeshes(string relativeExportPath, MeshFilter[] meshFilters, Vector3 center, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false, bool saveCombinedSubmeshes = false, SimObjPhysics topmostSimObjPhysics = null)
     {
