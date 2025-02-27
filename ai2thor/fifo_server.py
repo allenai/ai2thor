@@ -309,8 +309,10 @@ class FifoServer(ai2thor.server.Server):
 
         if self.unity_proc is not None and self.unity_proc.poll() is None:
             try:
+                print(f"Unity process '{self.unity_proc.pid}' alive, trying to kill it.")
                 self.unity_proc.kill()
-            except:
+            except Exception as e:
+                print(f"Exception trying to kill unity process '{self.unity_proc.pid}'. Exception: {e}")
                 pass
 
     def __del__(self):

@@ -1519,6 +1519,7 @@ class Controller(object):
         return self.last_event
 
     def stop(self):
+        print(f"Calling stop")
         self.stop_unity()
         self.server.stop()
         self._build.unlock()
@@ -1532,8 +1533,12 @@ class Controller(object):
                     break
                 try:
                     proc.kill()
-                    proc.wait(1)
+                    seconds_wait = pow(2, i)
+                    print(f"Sent SIGKILL to unity process '{proc.pid}'. Waiting '{seconds_wait}' seconds.")
+                    # increase wait time exponentially
+                    proc.wait(seconds_wait)
                 except subprocess.TimeoutExpired:
+                    print(f"Timeout waiting for stopped unity process expired. Possible zombie process for: '{proc.pid}'")
                     pass
 
 

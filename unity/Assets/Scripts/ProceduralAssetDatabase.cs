@@ -127,6 +127,7 @@ namespace Thor.Procedural {
             var current = proceduralAssetQueue.First;
             var toDequeuePrio = proceduralAssetQueue.GetPriority(current);
             int dequeueCount = 0;
+            int assetCountBeforeRemove = proceduralAssetQueue.Count;
             // Do not delete items with the highest priority if !deleteWithHighestPriority
             while (
                 proceduralAssetQueue.Count > limit
@@ -154,7 +155,9 @@ namespace Thor.Procedural {
             if (dequeueCount > 0) {
                 // WARNING: Async operation, should be ok for deleting assets if using the same creation-deletion hook
                 // cache should be all driven within one system, currently python driven
-
+                var heapSizeBeforeUnload = System.GC.GetTotalMemory(false);
+                Debug.Log($"Asset count was '{assetCountBeforeRemove}' and limit '{limit}'. Deleted '{dequeueCount}' GameObjects and removed them from cache. Total assets in cache now '{proceduralAssetQueue.Count}'.");
+                Debug.Log($"C# available Heap estimate '{heapSizeBeforeUnload}'. Unity RAM aprox(systemMemorySize) {SystemInfo.systemMemorySize}. Unity VRAM aprox(graphicsMemorySize) {SystemInfo.graphicsMemorySize}. Calling 'Resources.UnloadUnusedAssets'.");
                 asyncOp = Resources.UnloadUnusedAssets();
                 asyncOp.completed += (op) => {
                     Debug.Log("Asyncop callback called calling GC");
@@ -169,6 +172,8 @@ namespace Thor.Procedural {
                     continue;
                 }
                 GC.Collect();
+                var heapSizeAfterUnload = System.GC.GetTotalMemory(false);
+                Debug.Log($"After Garbage Collection {heapSizeAfterUnload}. C# available Heap estimate '{heapSizeBeforeUnload}'. C# available Heap difference {heapSizeAfterUnload-heapSizeBeforeUnload}. Unity RAM aprox(systemMemorySize) {SystemInfo.systemMemorySize}. Unity VRAM aprox(graphicsMemorySize) {SystemInfo.graphicsMemorySize}.");
                 // #endif
             }
             return asyncOp;
