@@ -130,6 +130,8 @@ public class DownloadThorAssets : MonoBehaviour
         //if jointType == slide, this is a change in position
         public Vector3 lowRange;
         public Vector3 highRange;
+
+        public GameObject jointGO;
     }
 
     [System.Serializable]
@@ -509,6 +511,7 @@ public class DownloadThorAssets : MonoBehaviour
         //include THIS MESH's transform because that can sometimes be a joint
         transformsTraversed.Add(go.transform);
 
+        // TODO: Parent mesh node is not correct
         // Traverse the parent hierarchy
         Transform parent = go.transform.parent;
 
@@ -523,6 +526,7 @@ public class DownloadThorAssets : MonoBehaviour
             meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, parent.localScale);
 
             // If this parent has a MeshFilter, stop here
+            // TOASTER _ Parent can be meshFIlter. take note.
             if (parent.GetComponent<MeshFilter>() != null)
             {
                 meshData.parentName = parent.name;
@@ -549,12 +553,22 @@ public class DownloadThorAssets : MonoBehaviour
             Debug.LogWarning("No parent with MeshFilter or SimObjPhysics found, using root transform as fallback.");
         }
 
-        CollectValidColliders(meshfilter, ref meshData);
+        // 1. get joint info
+        meshData.jointInfo = CollectValidJoints(meshfilter, ref meshData, transformsTraversed, parent, topmostSimObjPhysics.transform);
+        Debug.Log($"Joint info: {meshData.jointInfo}");
+        GameObject collider_parent = null;
+        if (meshData.jointInfo != null)
+        {
+            Debug.Log("Joint info found for mesh: " + meshData.meshName);
+            collider_parent = meshData.jointInfo.jointGO;
+
+        }
+        CollectValidColliders(collider_parent, meshfilter, ref meshData);
 
         /////////////// Joint setup ///////////
         //check if this mesh has a joint associated with it 
 
-        meshData.jointInfo = CollectValidJoints(meshfilter, ref meshData, transformsTraversed, parent, topmostSimObjPhysics.transform);
+        //meshData.jointInfo = CollectValidJoints(meshfilter, ref meshData, transformsTraversed, parent, topmostSimObjPhysics.transform);
 
         ////////////////meshData cleanup ///////////
         //this is jank but oh welllllll
@@ -584,14 +598,16 @@ public class DownloadThorAssets : MonoBehaviour
 
         while (current != null)
         {
+            Debug.Log("Checking Transform: " + current.name);
             if (current.GetComponent<SimObjPhysics>() != null)
             {
                 firstSimObjPhysics = current.GetComponent<SimObjPhysics>();
                 break;
             }
             current = current.parent;
-        }
 
+        }
+        Debug.Log("First SIM OBJ PHYSICS: " + firstSimObjPhysics);
         if (firstSimObjPhysics != null)
         {
             Debug.Log("First SimObjPhysics component found: " + firstSimObjPhysics.name);
@@ -640,7 +656,7 @@ public class DownloadThorAssets : MonoBehaviour
                     bool foundAssociatedMovingPart = false;
                     for (int i = 0; i < movingParts.Length; i++)
                     {
-                        Debug.Log("Checking MovingPart: " + movingParts[i].name);
+                        Debug.Log("Checking MovingPart: " + movingParts[i].name + " " + transformsTraversed.Count);
 
                         // Compare each transform traversed against the moving parts
                         foreach (var transform in transformsTraversed)
@@ -648,6 +664,8 @@ public class DownloadThorAssets : MonoBehaviour
                             Debug.Log("Transform encountered: " + transform.name);
                             Debug.Log("MovingPart InstanceID: " + movingParts[i].GetInstanceID());
                             Debug.Log("Transform InstanceID: " + transform.gameObject.GetInstanceID());
+
+                           Debug.Log("traversed transformed: " + transform.gameObject.name);
 
                             if (movingParts[i] == transform.gameObject)
                             {
@@ -672,6 +690,9 @@ public class DownloadThorAssets : MonoBehaviour
                                     jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(closedPositions[i])).eulerAngles;
                                     jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
                                 }
+                                
+                                Debug.Log("Moving Part of Joint: " + movingParts[i]);
+                                jointInfo.jointGO = movingParts[i].gameObject;
 
                                 Debug.Log("lowRange: " + jointInfo.lowRange);
                                 Debug.Log("highRange: " + jointInfo.highRange);
@@ -777,6 +798,9 @@ public class DownloadThorAssets : MonoBehaviour
                                 Debug.Log("lowRange: " + jointInfo.lowRange);
                                 Debug.Log("highRange: " + jointInfo.highRange);
 
+                                Debug.Log("Moving Part of Joint: " + movingParts[i]);
+                                jointInfo.jointGO = movingParts[i].gameObject;
+
                                 foundAssociatedMovingPart = true;
                                 break; // Stop searching further
                             }
@@ -809,21 +833,50 @@ public class DownloadThorAssets : MonoBehaviour
         return jointInfo;
     }
 
-    private void CollectValidColliders(MeshFilter meshfilter, ref MeshData meshData)
+    private void CollectValidColliders(GameObject collider_parent, MeshFilter meshfilter, ref MeshData meshData)
     {
         Debug.Log("call CollectValidColliders");
         var go = meshfilter.gameObject;
 
         Transform parent = go.transform.parent;
+        if (collider_parent != null)
+        {
+            parent = collider_parent.transform;
+        }
         if (parent != null)
         {
             foreach (Transform child in parent)
             {
                 //actually no we want to check ourself too
-                //if (sibling == go.transform) continue;
+                //if (sibling == go.transform) continue ;
+                bool skip = false;
+                Debug.Log("I am at: " + go.name + " and checking " + child.parent.name + " children");
+                MeshFilter[] all_mf = child.GetComponentsInChildren<MeshFilter>();
+                if (all_mf.Count() > 0)
+                    skip = true;
+                
 
+                /*
+                for (int i = 0; i< all_mf.Count(); i++)
+                {
+                    if (all_mf[i] != meshfilter)
+                    {
+                        // if the meshfilter, is a child of my sibling. than i just skip collider associate with it but keep everything else
+                        Transform mf_parent = meshfilter.gameObject.transform.parent;
+                        if (mf_parent == child)
+                            skip=true;
+                        else
+                            skip = false;
+                    }
+                }
+                */
                 // Include sibling's colliders and descendants recursively
-                AddCollidersRecursive(child, ref meshData, go);
+                if (!skip)
+                {
+                    Debug.Log("Transform CHild " + child.name);
+                    AddCollidersRecursive(child, ref meshData, go);
+                }
+                
             }
         }
     }
@@ -866,6 +919,9 @@ public class DownloadThorAssets : MonoBehaviour
                 return;
             }
         }
+        // if child's sibling has meshrenderer comppnent but is not what we care about
+        // then we skipp 
+        
 
         // Collect colliders at this level if this level is not a SimObjPhysics
         foreach (var collider in child.GetComponents<Collider>())
@@ -884,6 +940,8 @@ public class DownloadThorAssets : MonoBehaviour
                 {
                     meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
                 }
+                
+
             }
         }
 
@@ -907,16 +965,46 @@ public class DownloadThorAssets : MonoBehaviour
 
         info.type = colliderType;
 
+        // --------------
         // Ensure the size, position, rotation, radius, height, etc., are all relative to the local space of the meshFiltersGameObject
-        Vector3 combinedScale = GetCombinedScale(collider.transform, meshFiltersGameObject.transform);
+        Transform reference = null; // meshFiltersGameObject.transform;
+        reference = meshFiltersGameObject.transform;
+        // loop up meshFilterGame
+        bool stop_update = false;
+        while (stop_update == false)
+        {
+            Debug.Log("Scale referening updated to : " + reference.name);
+            if(reference.parent == null)
+            {
+                stop_update = true;
+                break;
+            }
+
+            foreach (Transform child in reference.parent)
+            {
+                //if self skip
+                if(child.transform == reference)
+                continue;
+
+                //check if meshfilter
+                if (child.GetComponent<MeshFilter>() != null)
+                {
+                    stop_update = true;
+                    break;
+                }
+            }
+            reference = reference.parent;
+        }
+        Vector3 combinedScale = GetCombinedScale(collider.transform, reference);
         //Vector3 relativePosition = meshFiltersGameObject.transform.InverseTransformPoint(collider.transform.position);
-        Quaternion relativeRotation = Quaternion.Inverse(meshFiltersGameObject.transform.rotation) * collider.transform.rotation;
+        Quaternion relativeRotation = Quaternion.Inverse(reference.transform.rotation) * collider.transform.rotation;
 
         // BoxCollider
+        // TODO: position and rotation trasnform needs fixing. sth to do with scaling
         if (collider is BoxCollider box)
         {
             info.size = Vector3.Scale(box.size, combinedScale) * 0.5f; // Half extents with combined scale
-            info.position = meshFiltersGameObject.transform.InverseTransformPoint(box.transform.TransformPoint(box.center));
+            info.position = reference.transform.InverseTransformPoint(box.transform.TransformPoint(box.center));
             info.rotation = relativeRotation;
         }
         // SphereCollider
@@ -924,7 +1012,7 @@ public class DownloadThorAssets : MonoBehaviour
         {
             float maxScale = Mathf.Max(combinedScale.x, combinedScale.y, combinedScale.z);
             info.radius = sphere.radius * maxScale;
-            info.position = meshFiltersGameObject.transform.InverseTransformPoint(sphere.transform.TransformPoint(sphere.center));
+            info.position = reference.transform.InverseTransformPoint(sphere.transform.TransformPoint(sphere.center));
             info.rotation = relativeRotation;
         }
         // CapsuleCollider
@@ -934,7 +1022,7 @@ public class DownloadThorAssets : MonoBehaviour
             info.radius = capsule.radius * horizontalScale;
             info.height = capsule.height * combinedScale.y; // Height uses Y
             info.direction = capsule.direction;
-            info.position = meshFiltersGameObject.transform.InverseTransformPoint(capsule.transform.TransformPoint(capsule.center));
+            info.position = reference.transform.InverseTransformPoint(capsule.transform.TransformPoint(capsule.center));
             info.rotation = relativeRotation;
         }
 
@@ -948,6 +1036,7 @@ public class DownloadThorAssets : MonoBehaviour
 
         while (parent != null && parent != reference)
         {
+            Debug.Log("Scaling includes: + " + parent.name);
             scale = Vector3.Scale(scale, parent.localScale);
             parent = parent.parent;
         }
@@ -980,6 +1069,9 @@ public class DownloadThorAssets : MonoBehaviour
         StringBuilder sb = new StringBuilder();
         sb.AppendLine("mtllib " + baseFileName + ".mtl");
         int lastIndex = 0;
+
+
+        //all_colliders = 
 
         // START GOING THROUGH ALL MESH FILTERS HERE
         for(int i = 0; i < meshFilters.Length; i++)
