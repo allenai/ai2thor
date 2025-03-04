@@ -159,7 +159,7 @@ public class Break : MonoBehaviour {
 
             // ContactPoint cp = collision.GetContact(0);
             foreach (Rigidbody subRb in resultObject.GetComponentsInChildren<Rigidbody>()) {
-                subRb.velocity = rb.velocity * 0.4f;
+                subRb.linearVelocity = rb.linearVelocity * 0.4f;
                 subRb.angularVelocity = rb.angularVelocity * 0.4f;
             }
 

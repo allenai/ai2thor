@@ -9,6 +9,7 @@ using UnityEngine.SceneManagement;
 using UnityStandardAssets.Characters.FirstPerson;
 using UnityStandardAssets.ImageEffects;
 
+
 [ExecuteInEditMode]
 public class PhysicsSimulationParams {
     public bool autoSimulation = false;
@@ -339,7 +340,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                 SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
 
                 float currentVelocity = Math.Abs(
-                    rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude
+                    rb.angularVelocity.sqrMagnitude + rb.linearVelocity.sqrMagnitude
                 );
                 float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
@@ -361,24 +362,24 @@ public class PhysicsSceneManager : MonoBehaviour {
                 if (rb.transform.gameObject.activeSelf) {
                     // is the rigidbody at non zero velocity? then the scene is not at rest
                     if (
-                        Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) >= 0.01
+                        Math.Abs(rb.angularVelocity.sqrMagnitude + rb.linearVelocity.sqrMagnitude) >= 0.01
                     ) {
                         isSceneAtRest = false;
                         // make sure the rb's drag values are not at 0 exactly
                         // if (rb.drag < 0.1f)
-                        rb.drag += 0.01f;
+                        rb.linearDamping += 0.01f;
 
                         // if (rb.angularDrag < 0.1f)
                         // rb.angularDrag = 1.5f;
-                        rb.angularDrag += 0.01f;
+                        rb.angularDamping += 0.01f;
 
 #if UNITY_EDITOR
                         //print(rb.transform.name + " is still in motion!");
 #endif
                     } else {
                         // the velocities are small enough, assume object has come to rest and force this one to sleep
-                        rb.drag = 1.0f;
-                        rb.angularDrag = 1.0f;
+                        rb.linearDamping = 1.0f;
+                        rb.angularDamping = 1.0f;
                     }
 
                     // if the shard/broken piece gets out of bounds somehow and begins falling forever, get rid of it with this check
@@ -1298,7 +1299,7 @@ public class PhysicsSceneManager : MonoBehaviour {
                     if (rb.GetComponentInParent<SimObjPhysics>()) {
                         SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
                         sop.lastVelocity = Math.Abs(
-                            rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude
+                            rb.angularVelocity.sqrMagnitude + rb.linearVelocity.sqrMagnitude
                         );
                     }
                 }

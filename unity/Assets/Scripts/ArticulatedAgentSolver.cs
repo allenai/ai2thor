@@ -120,7 +120,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
 
         double distanceTransformedThisFixedUpdate = 0f;
 
-        Vector3 agentOrientedVelocity = myAB.transform.InverseTransformDirection(myAB.velocity);
+        Vector3 agentOrientedVelocity = myAB.transform.InverseTransformDirection(myAB.linearVelocity);
         // Damping force for part of velocity that is not in the direction of movement
         float dampingForceX = Mathf.Clamp(
             -100f * agentOrientedVelocity.x * currentAgentMoveParams.agentMass,
@@ -403,7 +403,7 @@ public class ArticulatedAgentSolver : MonoBehaviour, MovableContinuous {
 
     public ActionFinished FinishContinuousMove(BaseFPSAgentController controller) {
         Debug.Log("starting continuousMoveFinishAB");
-        controller.transform.GetComponent<ArticulationBody>().velocity = Vector3.zero;
+        controller.transform.GetComponent<ArticulationBody>().linearVelocity = Vector3.zero;
         controller.transform.GetComponent<ArticulationBody>().angularVelocity = Vector3.zero;
         controller
             .transform.GetComponent<ArticulatedAgentSolver>()

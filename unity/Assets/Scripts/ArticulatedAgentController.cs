@@ -21,7 +21,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private Collider FloorCollider;
 
         [SerializeField]
-        private PhysicMaterial FloorColliderPhysicsMaterial;
+        private PhysicsMaterial FloorColliderPhysicsMaterial;
 
         private CapsuleData originalCapsule;
 
@@ -255,14 +255,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //helper functions to set physics material values
         public void SetFloorColliderToSlippery() {
             FloorColliderPhysicsMaterial.staticFriction = 0;
-            FloorColliderPhysicsMaterial.frictionCombine = PhysicMaterialCombine.Minimum; //ensure min friction take priority
+            FloorColliderPhysicsMaterial.frictionCombine = PhysicsMaterialCombine.Minimum; //ensure min friction take priority
 
             //FloorColliderPhysicsMaterial.dynamicFriction = 0;
         }
 
         public void SetFloorColliderToHighFriction() {
             FloorColliderPhysicsMaterial.staticFriction = 1;
-            FloorColliderPhysicsMaterial.frictionCombine = PhysicMaterialCombine.Maximum; //ensure max friction takes priority
+            FloorColliderPhysicsMaterial.frictionCombine = PhysicsMaterialCombine.Maximum; //ensure max friction takes priority
             //FloorColliderPhysicsMaterial.dynamicFriction = 1;
         }
 

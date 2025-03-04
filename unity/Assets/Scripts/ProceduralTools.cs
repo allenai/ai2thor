@@ -12,6 +12,7 @@ using Thor.Procedural.Data;
 using Thor.Utils;
 using UnityEngine;
 using UnityEngine.AI;
+using Unity.AI.Navigation;
 using UnityStandardAssets.Characters.FirstPerson;
 #if UNITY_EDITOR
 using UnityEditor.SceneManagement;
@@ -1136,7 +1137,7 @@ namespace Thor.Procedural {
             if (withRigidBody) {
                 var rb = floorGameObject.AddComponent<Rigidbody>();
                 rb.mass = 1.0f;
-                rb.angularDrag = 0.05f;
+                rb.angularDamping = 0.05f;
                 rb.useGravity = true;
                 rb.isKinematic = true;
             }
@@ -2961,8 +2962,8 @@ namespace Thor.Procedural {
             Rigidbody rb = go.AddComponent<Rigidbody>();
             if (physicalProperties != null) {
                 rb.mass = physicalProperties.mass;
-                rb.drag = physicalProperties.drag;
-                rb.angularDrag = physicalProperties.angularDrag;
+                rb.linearDamping = physicalProperties.drag;
+                rb.angularDamping = physicalProperties.angularDrag;
                 rb.useGravity = physicalProperties.useGravity;
                 rb.isKinematic = physicalProperties.isKinematic;
             }

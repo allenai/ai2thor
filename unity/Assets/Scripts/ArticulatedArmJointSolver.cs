@@ -202,7 +202,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                     float maxSpeed = Mathf.Max(distanceRemaining / fixedDeltaTime, 0f); // Never move so fast we'll overshoot in 1 step
                     currentArmMoveParams.speed = Mathf.Min(maxSpeed, currentArmMoveParams.speed);
 
-                    float curVelocity = myAB.velocity.y;
+                    float curVelocity = myAB.linearVelocity.y;
                     float curSpeed = Mathf.Abs(curVelocity);
 
                     float switchWhenThisClose = 0.01f;
@@ -235,7 +235,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                     Debug.Log(
                         $"distance moved: {distanceTransformedSoFar} ({currentArmMoveParams.distance} target)"
                     );
-                    Debug.Log($"velocity: {myAB.velocity.y} ({drive.targetVelocity} target)");
+                    Debug.Log($"velocity: {myAB.linearVelocity.y} ({drive.targetVelocity} target)");
                     Debug.Log($"current force applied: {curForceApplied}");
 
                     //this sets the drive to begin moving to the new target position
@@ -310,7 +310,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                     float maxSpeed = Mathf.Max(distanceRemaining / fixedDeltaTime, 0f); // Never move so fast we'll overshoot in 1 step
                     currentArmMoveParams.speed = Mathf.Min(maxSpeed, currentArmMoveParams.speed);
 
-                    float curVelocity = myAB.velocity.z;
+                    float curVelocity = myAB.linearVelocity.z;
                     float curSpeed = Mathf.Abs(curVelocity);
 
                     float switchWhenThisClose = 0.01f;
@@ -344,7 +344,7 @@ public class ArticulatedArmJointSolver : MonoBehaviour {
                     Debug.Log(
                         $"distance moved: {distanceTransformedSoFar} ({currentArmMoveParams.distance} target)"
                     );
-                    Debug.Log($"velocity: {myAB.velocity.y} ({drive.targetVelocity} target)");
+                    Debug.Log($"velocity: {myAB.linearVelocity.y} ({drive.targetVelocity} target)");
                     Debug.Log($"current force applied: {curForceApplied}");
 
                     //this sets the drive to begin moving to the new target position

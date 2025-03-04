@@ -999,15 +999,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         if (myRigidbody != null) {
             Rigidbody rb = myRigidbody;
 
-            RBoriginalAngularDrag = rb.angularDrag;
-            RBoriginalDrag = rb.drag;
+            RBoriginalAngularDrag = rb.angularDamping;
+            RBoriginalDrag = rb.linearDamping;
 
             //default all rigidbodies so that if their drag/angular drag is zero, it's at least nonzero
-            if (myRigidbody.drag == 0) {
-                myRigidbody.drag = 0.01f;
+            if (myRigidbody.linearDamping == 0) {
+                myRigidbody.linearDamping = 0.01f;
             }
-            if (myRigidbody.angularDrag == 0) {
-                myRigidbody.angularDrag = 0.01f;
+            if (myRigidbody.angularDamping == 0) {
+                myRigidbody.angularDamping = 0.01f;
             }
         }
 
@@ -1091,7 +1091,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         // record this object's current velocity
         {
             lastVelocity = Math.Abs(
-                myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.velocity.sqrMagnitude
+                myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.linearVelocity.sqrMagnitude
             );
         }
     }
@@ -1201,8 +1201,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
                 Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
                 // add something so that drag/angular drag isn't reset if we haven't set it on the object yet
-                rb.drag = HFrbdrag;
-                rb.angularDrag = HFrbangulardrag;
+                rb.linearDamping = HFrbdrag;
+                rb.angularDamping = HFrbangulardrag;
 
                 foreach (Collider col in MyColliders) {
                     col.material.dynamicFriction = HFdynamicfriction;
@@ -1225,8 +1225,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
 
             Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
-            rb.drag = RBoriginalDrag;
-            rb.angularDrag = RBoriginalAngularDrag;
+            rb.linearDamping = RBoriginalDrag;
+            rb.angularDamping = RBoriginalAngularDrag;
 
             for (int i = 0; i < MyColliders.Length; i++) {
                 MyColliders[i].material.dynamicFriction =

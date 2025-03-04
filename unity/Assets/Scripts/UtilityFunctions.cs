@@ -717,7 +717,7 @@ public static class UtilityFunctions {
                 } else if (l.Value == LightType.Point) {
                     l.Key.name = "scene|" + l.Value.ToString() + "|" + pointInstance.ToString();
                     pointInstance++;
-                } else if (l.Value == LightType.Area) {
+                } else if (l.Value == LightType.Rectangle) {
                     l.Key.name = "scene|" + l.Value.ToString() + "|" + areaInstance.ToString();
                     areaInstance++;
                 }
@@ -795,7 +795,7 @@ public static class UtilityFunctions {
                         + simObjToPointInstanceCountInThatSimObj[light.Value].ToString();
                 }
                   //we currently don't really use area lights since they are baked only but this is here just in case
-                  else if (light.Key.Value == LightType.Area) {
+                  else if (light.Key.Value == LightType.Rectangle) {
                     if (!simObjToAreaInstanceCountInThatSimObj.ContainsKey(light.Value)) {
                         simObjToAreaInstanceCountInThatSimObj.Add(light.Value, 0);
                     } else {

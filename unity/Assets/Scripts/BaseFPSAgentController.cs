@@ -18,6 +18,7 @@ using Thor.Procedural;
 using Thor.Procedural.Data;
 using UnityEngine;
 using UnityEngine.AI;
+using Unity.AI.Navigation;
 using UnityEngine.Rendering.PostProcessing;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
@@ -1913,7 +1914,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ];
                     toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
                     Rigidbody rb = toReParent.GetComponent<Rigidbody>();
-                    rb.velocity = new Vector3(0f, 0f, 0f);
+                    rb.linearVelocity = new Vector3(0f, 0f, 0f);
                     rb.angularVelocity = new Vector3(0f, 0f, 0f);
                     rb.isKinematic = false;
                 }
@@ -3725,14 +3726,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     float currentVelocity = Math.Abs(
-                        rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude
+                        rb.angularVelocity.sqrMagnitude + rb.linearVelocity.sqrMagnitude
                     );
                     float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
                     // ok the accel is basically zero, so it has stopped moving
                     if (Mathf.Abs(accel) <= 0.001f) {
                         // force the rb to stop moving just to be safe
-                        rb.velocity = Vector3.zero;
+                        rb.linearVelocity = Vector3.zero;
                         rb.angularVelocity = Vector3.zero;
                         rb.Sleep();
                         stoppedMoving = true;

@@ -324,7 +324,7 @@ public class InstantiatePrefabTest : MonoBehaviour {
         // zero out rotation and velocity/angular velocity, then match the target receptacle's rotation
         sop.transform.rotation = rsp.ReceptacleBox.transform.rotation;
         Rigidbody sopRB = sop.GetComponent<Rigidbody>();
-        sopRB.velocity = Vector3.zero;
+        sopRB.linearVelocity = Vector3.zero;
         sopRB.angularVelocity = Vector3.zero;
 
         // set 360 degree increment to only check one angle, set smaller increments to check more angles when trying to place (warning THIS WILL GET SLOWER)

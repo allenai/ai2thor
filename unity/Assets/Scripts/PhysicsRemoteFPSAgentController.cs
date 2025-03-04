@@ -151,8 +151,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ) {
                         Rigidbody rb = sop.GetComponent<Rigidbody>();
                         rb.mass = mass;
-                        rb.drag = drag;
-                        rb.angularDrag = angularDrag;
+                        rb.linearDamping = drag;
+                        rb.angularDamping = angularDrag;
 
                         actionFinished(true);
                         return;
@@ -2188,14 +2188,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     float currentVelocity = Math.Abs(
-                        rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude
+                        rb.angularVelocity.sqrMagnitude + rb.linearVelocity.sqrMagnitude
                     );
                     float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
                     // ok the accel is basically zero, so it has stopped moving
                     if (Mathf.Abs(accel) <= 0.001f) {
                         // force the rb to stop moving just to be safe
-                        rb.velocity = Vector3.zero;
+                        rb.linearVelocity = Vector3.zero;
                         rb.angularVelocity = Vector3.zero;
                         rb.Sleep();
                         stoppedMoving = true;
@@ -2228,7 +2228,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
 
                 // force objec to stop moving
-                rb.velocity = Vector3.zero;
+                rb.linearVelocity = Vector3.zero;
                 rb.angularVelocity = Vector3.zero;
                 rb.Sleep();
 
@@ -2269,7 +2269,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     float currentSqrVelocity =
-                        rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude;
+                        rb.angularVelocity.sqrMagnitude + rb.linearVelocity.sqrMagnitude;
                     float squaredAccel =
                         (currentSqrVelocity - sop.lastVelocity)
                         / (Time.fixedDeltaTime * Time.fixedDeltaTime);
@@ -2277,7 +2277,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     // ok the accel is basically zero, so it has stopped moving
                     if (Mathf.Abs(squaredAccel) <= squaredAccelerationEpsilon) {
                         // force the rb to stop moving just to be safe
-                        rb.velocity = Vector3.zero;
+                        rb.linearVelocity = Vector3.zero;
                         rb.angularVelocity = Vector3.zero;
                         rb.Sleep();
                         stoppedMoving = true;
@@ -2316,7 +2316,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
 
                     // force objec to stop moving
-                    rb.velocity = Vector3.zero;
+                    rb.linearVelocity = Vector3.zero;
                     rb.angularVelocity = Vector3.zero;
                     rb.Sleep();
 
@@ -2431,7 +2431,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             for (int i = 0; i < 100; i++) {
                 seenPositions.Add(rb.transform.position);
                 seenRotations.Add(rb.transform.rotation);
-                if (rb.velocity.magnitude < 1) {
+                if (rb.linearVelocity.magnitude < 1) {
                     rb.AddForce(forceDirection, ForceMode.Force);
                 }
                 rb.angularVelocity = rb.angularVelocity * 0.96f;
@@ -2484,7 +2484,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // leavingViewport = !objectIsCurrentlyVisible(simObjInHand, 1000f);
 
                 if (hitMaxDistance) {
-                    rb.velocity = new Vector3(0f, 0f, 0f);
+                    rb.linearVelocity = new Vector3(0f, 0f, 0f);
                     rb.angularVelocity = 0.0f * rb.angularVelocity;
                     break;
                 }
@@ -2519,7 +2519,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             AgentHand.transform.position = lastPosition;
             rb.transform.localPosition = new Vector3(0f, 0f, 0f);
             rb.transform.rotation = lastRotation;
-            rb.velocity = new Vector3(0f, 0f, 0f);
+            rb.linearVelocity = new Vector3(0f, 0f, 0f);
             rb.angularVelocity = new Vector3(0f, 0f, 0f);
 
             // SetUpRotationBoxChecks();
@@ -4805,7 +4805,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     yield return null;
 #endif
                     if (
-                        Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude)
+                        Math.Abs(rb.angularVelocity.sqrMagnitude + rb.linearVelocity.sqrMagnitude)
                         < 0.00001
                     ) {
                         break;

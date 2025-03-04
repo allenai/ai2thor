@@ -159,7 +159,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         void InitializeUserControl() {
-            GameObject fpsController = GameObject.FindObjectOfType<BaseAgentComponent>().gameObject;
+            Debug.Log($"--- IS NULL?  {GameObject.FindFirstObjectByType<BaseAgentComponent>() == null}");
+            GameObject fpsController = GameObject.FindFirstObjectByType<BaseAgentComponent>().gameObject;
             Agent = fpsController.gameObject;
             AManager = GameObject
                 .Find("PhysicsSceneManager")
