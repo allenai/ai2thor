@@ -1171,7 +1171,7 @@ def ci_build(
                 # CloudRendering only supported with 2020.3.25
                 # should change this in the future to automatically install
                 # cloudrendering engine if available
-                if _unity_version() == "2020.3.25f1":
+                if _unity_version() in ["2020.3.25f1", "6000.0.40f1"]:
                     build_archs.append("CloudRendering")
 
                 if cloudrendering_first:
