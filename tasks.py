@@ -1173,6 +1173,7 @@ def ci_build(
                 # cloudrendering engine if available
                 if _unity_version() in ["2020.3.25f1", "6000.0.40f1"]:
                     build_archs.append("CloudRendering")
+                    
 
                 if cloudrendering_first:
                     build_archs.reverse()  # Let's do CloudRendering first as it's more likely to fail
