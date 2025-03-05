@@ -1,0 +1,48 @@
+<mujoco model="Wine_Bottle_1">
+  <compiler autolimits="true" boundmass="0.01" angle="radian"/>
+  <default>
+    <default class="/">
+      <default class="__VISUAL_MJT__">
+        <geom contype="0" conaffinity="0" group="0"/>
+      </default>
+      <default class="__STRUCTURAL_MJT__">
+        <geom contype="8" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+      <default class="__DYNAMIC_MJT__">
+        <geom contype="1" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="Labels" type="2d" file="Labels.png"/>
+    <material name="material_Labels" class="/" texture="Labels" specular="0.5" shininess="0.5" rgba="1 1 1 1"/>
+    <material name="material_Glass_Detailed_Green_Mat" class="/" specular="0.5" shininess="0.5" rgba="0.042900609999999999 0.1323529 0 0.5"/>
+    <mesh name="Wine_Bottle_1_wine_bottle_1_0" class="/" file="Wine_Bottle_1_wine_bottle_1/Wine_Bottle_1_wine_bottle_1_0.obj" scale="1 1 1"/>
+    <mesh name="Wine_Bottle_1_wine_bottle_1_1" class="/" file="Wine_Bottle_1_wine_bottle_1/Wine_Bottle_1_wine_bottle_1_1.obj" scale="1 1 1"/>
+  </asset>
+  <worldbody>
+    <body name="Wine_Bottle_1">
+      <joint name="Wine_Bottle_1_free" class="/" type="free" pos="0 0 0" axis="0 0 1" stiffness="0" range="0 0" armature="0" damping="0.10000000000000001" frictionloss="0"/>
+      <body name="Wine_Bottle_1_wine_bottle_1" pos="-0 -0.16289000000000001 0" quat="1 0 0 0">
+        <geom name="Wine_Bottle_1_wine_bottle_1_0" class="__VISUAL_MJT__" type="mesh" material="material_Labels" shellinertia="false" mesh="Wine_Bottle_1_wine_bottle_1_0"/>
+        <geom name="Wine_Bottle_1_wine_bottle_1_1" class="__VISUAL_MJT__" type="mesh" material="material_Glass_Detailed_Green_Mat" shellinertia="false" mesh="Wine_Bottle_1_wine_bottle_1_1"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_0" class="__DYNAMIC_MJT__" type="box" size="0.017917059361934662 0.10040634870529175 0.044093437492847443" rgba="0 1 0 1" pos="-0 0.10039997100830078 0" quat="1 0 0 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_1" class="__DYNAMIC_MJT__" type="box" size="0.017917059361934662 0.10040634870529175 0.044093500822782516" rgba="0 1 0 1" pos="-0 0.10039997100830078 0" quat="0.70710784196853638 0 0.70710575580596924 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_2" class="__DYNAMIC_MJT__" type="box" size="0.017917059361934662 0.10040634870529175 0.044093437492847443" rgba="0 1 0 1" pos="-0 0.10040000081062317 0" quat="0.92387980222702026 0 0.38268274068832397 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_3" class="__DYNAMIC_MJT__" type="box" size="0.017917059361934662 0.10040634870529175 0.044093500822782516" rgba="0 1 0 1" pos="-0 0.10039997100830078 0" quat="0.38268548250198364 0 0.92387866973876953 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_4" class="__DYNAMIC_MJT__" type="box" size="0.014803182333707809 0.013974661938846111 0.03643026202917099" rgba="0 1 0 1" pos="-0 0.21449995040893555 0" quat="1 0 0 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_5" class="__DYNAMIC_MJT__" type="box" size="0.014803182333707809 0.013974661938846111 0.036430399864912033" rgba="0 1 0 1" pos="-0 0.21449999511241913 0" quat="0.70710784196853638 0 0.70710575580596924 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_6" class="__DYNAMIC_MJT__" type="box" size="0.014803182333707809 0.013974661938846111 0.03643026202917099" rgba="0 1 0 1" pos="-0 0.21449995040893555 0" quat="0.92387980222702026 0 0.38268274068832397 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_7" class="__DYNAMIC_MJT__" type="box" size="0.014803182333707809 0.013974661938846111 0.036430399864912033" rgba="0 1 0 1" pos="-0 0.21449995040893555 0" quat="0.38268548250198364 0 0.92387866973876953 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_8" class="__DYNAMIC_MJT__" type="box" size="0.010001410730183125 0.008894631639122963 0.024613220244646072" rgba="0 1 0 1" pos="-0 0.23705153167247772 0" quat="1 0 0 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_9" class="__DYNAMIC_MJT__" type="box" size="0.010001410730183125 0.0088946344330906868 0.024613251909613609" rgba="0 1 0 1" pos="-0 0.23705153167247772 0" quat="0.70710784196853638 0 0.70710575580596924 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_10" class="__DYNAMIC_MJT__" type="box" size="0.010001410730183125 0.0088946297764778137 0.024613220244646072" rgba="0 1 0 1" pos="-0 0.23705160617828369 0" quat="0.92387980222702026 0 0.38268274068832397 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_11" class="__DYNAMIC_MJT__" type="box" size="0.010001410730183125 0.0088946344330906868 0.024613251909613609" rgba="0 1 0 1" pos="-0 0.23705153167247772 0" quat="0.38268548250198364 0 0.92387866973876953 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_12" class="__DYNAMIC_MJT__" type="box" size="0.0061757750809192657 0.040119655430316925 0.015198426321148872" rgba="0 1 0 1" pos="-0 0.28567180037498474 0" quat="1 0 0 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_13" class="__DYNAMIC_MJT__" type="box" size="0.0061757746152579784 0.04011964425444603 0.015198452398180962" rgba="0 1 0 1" pos="-0 0.28567180037498474 0" quat="0.70710784196853638 0 0.70710575580596924 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_14" class="__DYNAMIC_MJT__" type="box" size="0.0061757750809192657 0.040127124637365341 0.015198427252471447" rgba="0 1 0 1" pos="-0 0.28566434979438782 0" quat="0.92387980222702026 0 0.38268274068832397 0"/>
+        <geom name="Wine_Bottle_1_PrimitiveCollider_15" class="__DYNAMIC_MJT__" type="box" size="0.0061757746152579784 0.040127076208591461 0.015198449604213238" rgba="0 1 0 1" pos="-0 0.28566440939903259 0" quat="0.38268548250198364 0 0.92387866973876953 0"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

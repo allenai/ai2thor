@@ -1,0 +1,31 @@
+<mujoco model="Lettuce_3">
+  <compiler autolimits="true" boundmass="0.01" angle="radian"/>
+  <default>
+    <default class="/">
+      <default class="__VISUAL_MJT__">
+        <geom contype="0" conaffinity="0" group="0"/>
+      </default>
+      <default class="__STRUCTURAL_MJT__">
+        <geom contype="8" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+      <default class="__DYNAMIC_MJT__">
+        <geom contype="1" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="Lettuce1_Mat" type="2d" file="Lettuce1_AlbedoTransparency.png"/>
+    <material name="material_Lettuce1_Mat" class="/" texture="Lettuce1_Mat" specular="0.5" shininess="0.5" rgba="0.9945233 1 0.60294119999999995 1"/>
+    <mesh name="Lettuce_3_lettuce_a3" class="/" file="Lettuce_3_lettuce_a3/Lettuce_3_lettuce_a3.obj" scale="1 1 1"/>
+  </asset>
+  <worldbody>
+    <body name="Lettuce_3">
+      <joint name="Lettuce_3_free" class="/" type="free" pos="0 0 0" axis="0 0 1" stiffness="0" range="0 0" armature="0" damping="0.10000000000000001" frictionloss="0"/>
+      <body name="Lettuce_3_lettuce_a3" pos="-0.0028999999999999998 -0.0014 0.0052199999999999998" quat="1 0 0 0">
+        <geom name="Lettuce_3_lettuce_a3" class="__VISUAL_MJT__" type="mesh" material="material_Lettuce1_Mat" shellinertia="true" mesh="Lettuce_3_lettuce_a3"/>
+        <geom name="Lettuce_3_PrimitiveCollider_0" class="__DYNAMIC_MJT__" type="capsule" size="0.078164666891098022 0.019112952053546906" rgba="0 1 0 1" pos="-0.002899999963119626 0.0014000837691128254 -0.031344354152679443" quat="0.99999999999891198 1.4751396607739272e-06 0 0"/>
+        <geom name="Lettuce_3_PrimitiveCollider_1" class="__DYNAMIC_MJT__" type="capsule" size="0.054693114012479782 0.0089912153780460358" rgba="0 1 0 1" pos="-0.0028998851776123047 -0.004099865909665823 0.054499506950378418" quat="0.99999999999891198 1.4751396607739272e-06 0 0"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

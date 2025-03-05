@@ -1,0 +1,30 @@
+<mujoco model="Potato_4">
+  <compiler autolimits="true" boundmass="0.01" angle="radian"/>
+  <default>
+    <default class="/">
+      <default class="__VISUAL_MJT__">
+        <geom contype="0" conaffinity="0" group="0"/>
+      </default>
+      <default class="__STRUCTURAL_MJT__">
+        <geom contype="8" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+      <default class="__DYNAMIC_MJT__">
+        <geom contype="1" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="Potato1_Mat4" type="2d" file="Potato1_AlbedoTransparency.png"/>
+    <material name="material_Potato1_Mat4" class="/" texture="Potato1_Mat4" specular="0.5" shininess="0.5" rgba="0.93382350000000003 0.57658390000000004 0.30211939999999998 1"/>
+    <mesh name="Potato_4_potato_a4" class="/" file="Potato_4_potato_a4/Potato_4_potato_a4.obj" scale="1 1 1"/>
+  </asset>
+  <worldbody>
+    <body name="Potato_4">
+      <joint name="Potato_4_free" class="/" type="free" pos="0 0 0" axis="0 0 1" stiffness="0" range="0 0" armature="0" damping="0.10000000000000001" frictionloss="0"/>
+      <body name="Potato_4_potato_a4" pos="0.00067000000000000002 -0.00095 -0.0023400000000000001" quat="1 0 0 0">
+        <geom name="Potato_4_potato_a4" class="__VISUAL_MJT__" type="mesh" material="material_Potato1_Mat4" shellinertia="true" mesh="Potato_4_potato_a4"/>
+        <geom name="Potato_4_PrimitiveCollider_0" class="__DYNAMIC_MJT__" type="capsule" size="0.033506035804748535 0.023470044136047363" rgba="0 1 0 1" pos="0.00066882744431495667 0.00095164705999195576 0.0023441286757588387" quat="1.4751396609986736e-06 0.99999999999891198 0 0"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

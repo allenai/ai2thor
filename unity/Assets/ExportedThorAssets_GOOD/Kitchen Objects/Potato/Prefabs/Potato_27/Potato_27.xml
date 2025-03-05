@@ -1,0 +1,32 @@
+<mujoco model="Potato_27">
+  <compiler autolimits="true" boundmass="0.01" angle="radian"/>
+  <default>
+    <default class="/">
+      <default class="__VISUAL_MJT__">
+        <geom contype="0" conaffinity="0" group="0"/>
+      </default>
+      <default class="__STRUCTURAL_MJT__">
+        <geom contype="8" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+      <default class="__DYNAMIC_MJT__">
+        <geom contype="1" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="Potato3_Mat2" type="2d" file="Potato3_AlbedoTransparency.png"/>
+    <material name="material_Potato3_Mat2" class="/" texture="Potato3_Mat2" specular="0.5" shininess="0.5" rgba="1 0.65441179999999999 0.65441179999999999 1"/>
+    <mesh name="Potato_27_potato_c7" class="/" file="Potato_27_potato_c7/Potato_27_potato_c7.obj" scale="1 1 1"/>
+  </asset>
+  <worldbody>
+    <body name="Potato_27">
+      <joint name="Potato_27_free" class="/" type="free" pos="0 0 0" axis="0 0 1" stiffness="0" range="0 0" armature="0" damping="0.10000000000000001" frictionloss="0"/>
+      <body name="Potato_27_potato_c7" pos="-0.0098867388916015625 0.00038000000000000002 -0.0097575341796874993" quat="0.96198475360870361 0 -0.27310311794281006 0">
+        <geom name="Potato_27_potato_c7" class="__VISUAL_MJT__" type="mesh" material="material_Potato3_Mat2" shellinertia="true" mesh="Potato_27_potato_c7"/>
+        <geom name="Potato_27_PrimitiveCollider_0" class="__DYNAMIC_MJT__" type="capsule" size="0.040016308426856995 0.019168943166732788" rgba="0 1 0 1" pos="0.0055731534957885742 -0.00038395635783672333 0.0066559035331010818" quat="1.4751396609986736e-06 0.99999999999891198 0 0"/>
+        <geom name="Potato_27_PrimitiveCollider_1" class="__DYNAMIC_MJT__" type="capsule" size="0.036998867988586426 0.022186387330293655" rgba="0 1 0 1" pos="-0.019826846197247505 -0.00038395635783672333 0.0066559039987623692" quat="1.4751396609986736e-06 0.99999999999891198 0 0"/>
+        <geom name="Potato_27_PrimitiveCollider_2" class="__DYNAMIC_MJT__" type="capsule" size="0.04174523800611496 0.017849374562501907" rgba="0 1 0 1" pos="-0.0073268990963697433 -0.00038362113991752267 0.0066551947966217995" quat="1.4751396609986736e-06 0.99999999999891198 0 0"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

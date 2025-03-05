@@ -1,0 +1,29 @@
+<mujoco model="Egg_23">
+  <compiler autolimits="true" boundmass="0.01" angle="radian"/>
+  <default>
+    <default class="/">
+      <default class="__VISUAL_MJT__">
+        <geom contype="0" conaffinity="0" group="0"/>
+      </default>
+      <default class="__STRUCTURAL_MJT__">
+        <geom contype="8" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+      <default class="__DYNAMIC_MJT__">
+        <geom contype="1" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <material name="material_Egg5_Mat" class="/" specular="0.5" shininess="0.5" rgba="1 0.91935489999999997 0.875 1"/>
+    <mesh name="Egg_23_egg_23" class="/" file="Egg_23_egg_23/Egg_23_egg_23.obj" scale="1 1 1"/>
+  </asset>
+  <worldbody>
+    <body name="Egg_23">
+      <joint name="Egg_23_free" class="/" type="free" pos="0 0 0" axis="0 0 1" stiffness="0" range="0 0" armature="0" damping="0.10000000000000001" frictionloss="0"/>
+      <body name="Egg_23_egg_23" pos="-0 0 -9.0000000000000006e-05" quat="1 0 0 0">
+        <geom name="Egg_23_egg_23" class="__VISUAL_MJT__" type="mesh" material="material_Egg5_Mat" shellinertia="true" mesh="Egg_23_egg_23"/>
+        <geom name="Egg_23_PrimitiveCollider_0" class="__DYNAMIC_MJT__" type="capsule" size="0.024891743436455727 0.0099723245948553085" rgba="0 1 0 1" pos="-0 0 0" quat="0.70710678118654757 0.70710678118654746 0 0"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>
