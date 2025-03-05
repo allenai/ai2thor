@@ -1,0 +1,31 @@
+<mujoco model="Bread_14">
+  <compiler autolimits="true" boundmass="0.01" angle="radian"/>
+  <default>
+    <default class="/">
+      <default class="__VISUAL_MJT__">
+        <geom contype="0" conaffinity="0" group="0"/>
+      </default>
+      <default class="__STRUCTURAL_MJT__">
+        <geom contype="8" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+      <default class="__DYNAMIC_MJT__">
+        <geom contype="1" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="Bread6_Mat2" type="2d" file="Bread6_AlbedoTransparency.png"/>
+    <material name="material_Bread6_Mat2" class="/" texture="Bread6_Mat2" specular="0.5" shininess="0.5" rgba="0.95588240000000002 0.83886919999999998 0.45685550000000003 1"/>
+    <mesh name="Bread_14_bread6_b_mesh" class="/" file="Bread_14_bread6_b_mesh/Bread_14_bread6_b_mesh.obj" scale="1 1 1"/>
+  </asset>
+  <worldbody>
+    <body name="Bread_14">
+      <joint name="Bread_14_free" class="/" type="free" pos="0 0 0" axis="0 0 1" stiffness="0" range="0 0" armature="0" damping="0.10000000000000001" frictionloss="0"/>
+      <body name="Bread_14_bread6_b_mesh" pos="-0 -0.01044 0" quat="1 0 0 0">
+        <geom name="Bread_14_bread6_b_mesh" class="__VISUAL_MJT__" type="mesh" material="material_Bread6_Mat2" shellinertia="false" mesh="Bread_14_bread6_b_mesh"/>
+        <geom name="Bread_14_PrimitiveCollider_0" class="__DYNAMIC_MJT__" type="box" size="0.078207254409790039 0.051680564880371094 0.13157816231250763" rgba="0 1 0 1" pos="-0 -0.025359153747558594 0" quat="1 0 0 0"/>
+        <geom name="Bread_14_PrimitiveCollider_1" class="__DYNAMIC_MJT__" type="box" size="0.072795912623405457 0.035857200622558594 0.12215443700551987" rgba="0 1 0 1" pos="-0 0.062067784368991852 0" quat="1 0 0 0"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

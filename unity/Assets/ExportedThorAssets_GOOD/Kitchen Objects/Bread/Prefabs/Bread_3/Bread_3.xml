@@ -1,0 +1,30 @@
+<mujoco model="Bread_3">
+  <compiler autolimits="true" boundmass="0.01" angle="radian"/>
+  <default>
+    <default class="/">
+      <default class="__VISUAL_MJT__">
+        <geom contype="0" conaffinity="0" group="0"/>
+      </default>
+      <default class="__STRUCTURAL_MJT__">
+        <geom contype="8" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+      <default class="__DYNAMIC_MJT__">
+        <geom contype="1" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="Bread1_Mat3" type="2d" file="Bread1_AlbedoTransparency.png"/>
+    <material name="material_Bread1_Mat3" class="/" texture="Bread1_Mat3" specular="0.5" shininess="0.5" rgba="1 0.96551719999999996 0.85294119999999995 1"/>
+    <mesh name="Bread_3_bread1_c_mesh" class="/" file="Bread_3_bread1_c_mesh/Bread_3_bread1_c_mesh.obj" scale="1 1 1"/>
+  </asset>
+  <worldbody>
+    <body name="Bread_3">
+      <joint name="Bread_3_free" class="/" type="free" pos="0 0 0" axis="0 0 1" stiffness="0" range="0 0" armature="0" damping="0.10000000000000001" frictionloss="0"/>
+      <body name="Bread_3_bread1_c_mesh" pos="-0 0.0047999999999999996 0.00020000000000000001" quat="1 0 0 0">
+        <geom name="Bread_3_bread1_c_mesh" class="__VISUAL_MJT__" type="mesh" material="material_Bread1_Mat3" shellinertia="false" mesh="Bread_3_bread1_c_mesh"/>
+        <geom name="Bread_3_PrimitiveCollider_0" class="__DYNAMIC_MJT__" type="box" size="0.059852510690689087 0.065715670585632324 0.15615236759185791" rgba="0 1 0 1" pos="-0 -0.0048009157180786133 -0.0002009272575378418" quat="1 0 0 0"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

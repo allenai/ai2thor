@@ -1,0 +1,33 @@
+<mujoco model="Bread_26">
+  <compiler autolimits="true" boundmass="0.01" angle="radian"/>
+  <default>
+    <default class="/">
+      <default class="__VISUAL_MJT__">
+        <geom contype="0" conaffinity="0" group="0"/>
+      </default>
+      <default class="__STRUCTURAL_MJT__">
+        <geom contype="8" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+      <default class="__DYNAMIC_MJT__">
+        <geom contype="1" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="LoafBread_Mat2" type="2d" file="LoafBread_AlbedoTransparency.png"/>
+    <material name="material_LoafBread_Mat2" class="/" texture="LoafBread_Mat2" specular="0.5" shininess="0.5" rgba="0.92647060000000003 0.62109230000000004 0.48367209999999999 1"/>
+    <mesh name="Bread_26_loafbread_b_mesh" class="/" file="Bread_26_loafbread_b_mesh/Bread_26_loafbread_b_mesh.obj" scale="1 1 1"/>
+  </asset>
+  <worldbody>
+    <body name="Bread_26">
+      <joint name="Bread_26_free" class="/" type="free" pos="0 0 0" axis="0 0 1" stiffness="0" range="0 0" armature="0" damping="0.10000000000000001" frictionloss="0"/>
+      <body name="Bread_26_loafbread_b_mesh" pos="-0.00050000000000000001 0.0067299999999999999 -0.0040000000000000001" quat="1 0 0 0">
+        <geom name="Bread_26_loafbread_b_mesh" class="__VISUAL_MJT__" type="mesh" material="material_LoafBread_Mat2" shellinertia="false" mesh="Bread_26_loafbread_b_mesh"/>
+        <geom name="Bread_26_PrimitiveCollider_0" class="__DYNAMIC_MJT__" type="box" size="0.070648618042469025 0.03418448194861412 0.13284669816493988" rgba="0 1 0 1" pos="-0.000499725341796875 -0.016890509054064751 0.0016957670450210571" quat="1 0 0 0"/>
+        <geom name="Bread_26_PrimitiveCollider_1" class="__DYNAMIC_MJT__" type="box" size="0.06632649153470993 0.025001782923936844 0.15795296430587769" rgba="0 1 0 1" pos="-0.000499725341796875 -0.026073209941387177 0.0039997100830078125" quat="1 0 0 0"/>
+        <geom name="Bread_26_PrimitiveCollider_2" class="__DYNAMIC_MJT__" type="capsule" size="0.042384408414363861 0.085135646164417267" rgba="0 1 0 1" pos="-0.000499725341796875 -0.0047794519923627377 0.003999707754701376" quat="0.99999999999891198 1.4751396607739272e-06 0 0"/>
+        <geom name="Bread_26_PrimitiveCollider_3" class="__DYNAMIC_MJT__" type="box" size="0.10982378572225571 0.026568597182631493 0.11149927973747253" rgba="0 1 0 1" pos="-0.00050000002374872565 -0.023021597415208817 0.0040000001899898052" quat="1 0 0 0"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>
