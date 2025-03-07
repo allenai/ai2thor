@@ -127,6 +127,7 @@ namespace Thor.Procedural {
             var current = proceduralAssetQueue.First;
             var toDequeuePrio = proceduralAssetQueue.GetPriority(current);
             int dequeueCount = 0;
+            int assetCountBeforeRemove = proceduralAssetQueue.Count;
             // Do not delete items with the highest priority if !deleteWithHighestPriority
             while (
                 proceduralAssetQueue.Count > limit
@@ -154,7 +155,11 @@ namespace Thor.Procedural {
             if (dequeueCount > 0) {
                 // WARNING: Async operation, should be ok for deleting assets if using the same creation-deletion hook
                 // cache should be all driven within one system, currently python driven
-
+                var heapSizeBeforeUnload = System.GC.GetTotalMemory(false);
+                System.Diagnostics.Process proc = System.Diagnostics.Process.GetCurrentProcess();
+                proc.Refresh();
+                Debug.Log($"Asset count was '{assetCountBeforeRemove}' and limit '{limit}'. Deleted '{dequeueCount}' GameObjects and removed them from cache. Total assets in cache now '{proceduralAssetQueue.Count}'.");
+                Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64} Bytes. GarbageCollector available Heap estimate '{heapSizeBeforeUnload}' Bytes.");
                 asyncOp = Resources.UnloadUnusedAssets();
                 asyncOp.completed += (op) => {
                     Debug.Log("Asyncop callback called calling GC");
@@ -169,6 +174,10 @@ namespace Thor.Procedural {
                     continue;
                 }
                 GC.Collect();
+                proc.Refresh();
+                var heapSizeAfterUnload = System.GC.GetTotalMemory(false);
+                Debug.Log($"GarbageCollector available Heap Before Unload '{heapSizeBeforeUnload}' Bytes. After Garbage Collection {heapSizeAfterUnload} Bytes. GarbageCollector available Heap difference {heapSizeAfterUnload-heapSizeBeforeUnload} Bytes. Process Used Memory(WorkingSet64) {proc.WorkingSet64}");
+                proc.Dispose();
                 // #endif
             }
             return asyncOp;

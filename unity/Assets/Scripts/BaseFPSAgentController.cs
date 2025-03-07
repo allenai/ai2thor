@@ -464,6 +464,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionCounter = 0;
             targetTeleport = Vector3.zero;
 
+            System.Diagnostics.Process proc = System.Diagnostics.Process.GetCurrentProcess();
+         proc.Refresh();     
+            Debug.Log($"--ActionFinished. lastAction: '{this.lastAction}. lastActionSuccess: '{success}'. errorMessage: error message '{this.errorMessage}'. actionReturn: '{actionReturn}'");
+            Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64} Bytes. C# available Heap estimate '{System.GC.GetTotalMemory(false)}' Bytes.");
+            proc.Dispose();
 #if UNITY_EDITOR
             Debug.Log($"lastAction: '{this.lastAction}'");
             Debug.Log($"lastActionSuccess: '{success}'");
@@ -6955,7 +6960,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         getFloorY(target.x, target.y, target.z)
                     );
                     Vector3 startPositionWithFloorY = new Vector3(start.x, floorY, start.z);
-                    Debug.Log($"----- Navmesh floorY {floorY.ToString("F6")}");
                     Vector3 targetPositionWithFloorY = new Vector3(target.x, floorY, target.z);
 
                     NavMeshHit startHit;

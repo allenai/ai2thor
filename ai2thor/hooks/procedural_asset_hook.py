@@ -377,7 +377,7 @@ def download_with_progress_bar(save_path: str, url: str, verbose: bool = False):
         else:
             dl = 0
             total_length = int(total_length)
-
+                
             with (
                 tqdm.tqdm(
                     total=total_length,

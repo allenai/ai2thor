@@ -286,7 +286,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             T? currentTarget = null;
             T directionToTarget;
             var currentProperty = getProp(moveTransform);
-            Debug.Log("currentProperty is " + currentProperty);
             float currentDistance = 0;
             bool haveGottenWithinEpsilon = currentDistance <= epsilon;
 

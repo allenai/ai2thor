@@ -1975,6 +1975,12 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
     // Uniform entry point for both the test runner and the python server for step dispatch calls
     public void ProcessControlCommand(DynamicServerAction controlCommand) {
+
+        Debug.Log($"--Action Received: {controlCommand.action}, full command: {controlCommand}");
+        System.Diagnostics.Process proc = System.Diagnostics.Process.GetCurrentProcess();
+        proc.Refresh();
+        Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64} Bytes. C# available Heap estimate '{System.GC.GetTotalMemory(false)}' Bytes.");
+        proc.Dispose();
         this.renderInstanceSegmentation = this.initializedInstanceSeg;
 
         this.currentSequenceId = controlCommand.sequenceId;
@@ -2135,31 +2141,15 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
         float[] x = new float[width * height];
         float[] y = new float[width * height];
-        Debug.Log($"------------- width {width} height {height} bytes {bytes.Length} ");
         int floatingPointPrecision = 8;
         for (int i = 0; i < bytes.Length / floatingPointPrecision; i++)
         {
             int byteIndex = i * floatingPointPrecision;
             byte[] localBytesX = new byte[] { bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3] }; // converts 4 bytes to a float
             x[i] = System.BitConverter.ToSingle(localBytesX, 0);
-            // byte[] localBytesY = new byte[] { bytes[i + 4], bytes[i + 5], bytes[i + 6], bytes[i + 7] }; 
-            // y[i] = System.BitConverter.ToSingle(localBytesY, 0);
-            if (i == 0 || i == 1) {
-                // Debug.Log($"--------- i {i} LocalBytesX {string.Join(", ", localBytesX)} decodex {x[i]} localBytesY {string.Join(", ",localBytesY)} decodey {y[i]}");
-                Debug.Log($"--------- i {i} LocalBytesX {string.Join(", ", localBytesX)} decodex {x[i]}");
-            }
+
         }
-        // for (int i = 0; i < bytes.Length /  4; i++)
-        // {
-        //     int byteIndex = i * 4;
-        //     byte[] localBytesX = new byte[] { bytes[i], bytes[i + 1] }; // converts 4 bytes to a float
-        //     x[i] = System.BitConverter.ToSingle(localBytesX, 0);
-        //     byte[] localBytesY = new byte[] { bytes[i + 2], bytes[i + 3] }; 
-        //     y[i] = System.BitConverter.ToSingle(localBytesY, 0);
-        //     if (i == 0 || i == 1) {
-        //         Debug.Log($"--------- i {i} LocalBytesX {string.Join(", ", localBytesX)} decodex {x[i]} localBytesY {string.Join(", ",localBytesY)} decodey {y[i]}");
-        //     }
-        // }
+
         return (x, y);
     }
 
