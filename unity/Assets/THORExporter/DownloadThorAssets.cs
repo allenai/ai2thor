@@ -515,6 +515,7 @@ public class DownloadThorAssets : MonoBehaviour
         // Traverse the parent hierarchy
         Transform parent = go.transform.parent;
 
+        // Fault recursion for assigning parent, which results in the WRONG parent being assigned
         while (parent != null)
         {
             //track what transforms we have traversed so far
@@ -545,6 +546,7 @@ public class DownloadThorAssets : MonoBehaviour
             parent = parent.parent;
         }
 
+        // PROBABLY DELETE THIS, it is now officially redundent in light of updates
         // If no parent with MeshFilter or SimObjPhysics was found, use the root transform
         if (parent == null)
         {
@@ -622,6 +624,7 @@ public class DownloadThorAssets : MonoBehaviour
                 if(canOpenObject.MovingParts.Length != 0)
                 {
                     // Traverse up the hierarchy to find the topmost SimObjPhysics component
+                    // THIS NEEDS TO CHANGE TO BE RELATIVE TO THE ---mesh-parent---
                     SimObjPhysics topmostSimObjPhysicsComponent = firstSimObjPhysics;
                     current = firstSimObjPhysics.transform.parent;
 
@@ -833,6 +836,8 @@ public class DownloadThorAssets : MonoBehaviour
         return jointInfo;
     }
 
+    // THIS IS WRONG, and the only reason it's been allowed to exist is because static objects don't even use this logic,
+    // since they have no joints
     private void CollectValidColliders(GameObject collider_parent, MeshFilter meshfilter, ref MeshData meshData)
     {
         Debug.Log("call CollectValidColliders");
@@ -880,6 +885,7 @@ public class DownloadThorAssets : MonoBehaviour
             }
         }
     }
+    // Done with redundant stuff
 
     private void AddCollidersRecursive(Transform child, ref MeshData meshData, GameObject meshFiltersGameObject)
     {
@@ -906,7 +912,7 @@ public class DownloadThorAssets : MonoBehaviour
                         }
                         
                         //dont include trigger colliders to PrimitiveColliders
-                        if(!collider.isTrigger)
+                        else if(!collider.isTrigger)
                         {
                             meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
                         }
@@ -952,6 +958,8 @@ public class DownloadThorAssets : MonoBehaviour
         }
     }
 
+    // REDUNDANT CRAP //
+    // Find all colliders associated with this mesh, and convert it to the correct coordinates
     public ColliderInfo GetColliderInfo(Collider collider, GameObject meshFiltersGameObject)
     {
         string colliderType = collider.GetType().Name.ToLower().Replace("collider", "");
@@ -1001,6 +1009,8 @@ public class DownloadThorAssets : MonoBehaviour
 
         // BoxCollider
         // TODO: position and rotation trasnform needs fixing. sth to do with scaling
+        // THIS NEEDS TO BE FIXED BECAUSE IT RELEGATES THE "SIZE" CONSOLIDATION INTO DIFFERENT PARTS OF THE PIPELINE,
+        // DEPENIDING ON WHAT TYPE OF COLLIDER IT IS. BAD IDEA!!!!!! HUGE POTENTIAL FOR MISCOMMUNICATION!!!
         if (collider is BoxCollider box)
         {
             info.size = Vector3.Scale(box.size, combinedScale) * 0.5f; // Half extents with combined scale
@@ -1028,6 +1038,7 @@ public class DownloadThorAssets : MonoBehaviour
 
         return info;
     }
+    // REDUNDANT CRAP //
 
     private Vector3 GetCombinedScale(Transform target, Transform reference)
     {
@@ -1037,6 +1048,7 @@ public class DownloadThorAssets : MonoBehaviour
         while (parent != null && parent != reference)
         {
             Debug.Log("Scaling includes: + " + parent.name);
+            // BAD BAD BAD
             scale = Vector3.Scale(scale, parent.localScale);
             parent = parent.parent;
         }
