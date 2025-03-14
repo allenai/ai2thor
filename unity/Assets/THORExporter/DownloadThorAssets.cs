@@ -693,10 +693,15 @@ public class DownloadThorAssets : MonoBehaviour
                                 else if (canOpenObject.movementType == CanOpen_Object.MovementType.Rotate)
                                 {
                                     Debug.Log("Calculating lowRange and highRange for Rotate...");
-                                    jointInfo.lowRange = closedPositions[i];
-                                    jointInfo.highRange = openPositions[i];
-                                    // jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(closedPositions[i])).eulerAngles;
-                                    // jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
+                                    if (closedPositions[i].x < openPositions[i].x ||
+                                        closedPositions[i].y < openPositions[i].y ||
+                                        closedPositions[i].z < openPositions[i].z) {
+                                        jointInfo.lowRange = closedPositions[i];
+                                        jointInfo.highRange = openPositions[i];
+                                    } else {
+                                        jointInfo.lowRange = openPositions[i];
+                                        jointInfo.highRange = closedPositions[i];
+                                    }
                                 }
                                 
                                 Debug.Log("Moving Part of Joint: " + movingParts[i]);
