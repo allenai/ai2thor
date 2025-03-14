@@ -704,7 +704,7 @@ public class DownloadThorAssets : MonoBehaviour
                                         jointInfo.highRange = closedPositions[i];
                                     }
                                     
-                                    Debug.Log("Converting open-close values from joint-mesh space to joint-node space")
+                                    Debug.Log("Converting open-close values from joint-mesh space to joint-node space");
                                     jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
                                     jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
                                 }
