@@ -546,6 +546,7 @@ public class DownloadThorAssets : MonoBehaviour
             parent = parent.parent;
         }
 
+        
         // PROBABLY DELETE THIS, it is now officially redundent in light of updates
         // If no parent with MeshFilter or SimObjPhysics was found, use the root transform
         if (parent == null)
@@ -554,6 +555,8 @@ public class DownloadThorAssets : MonoBehaviour
             meshData.parentName = parent.name;
             Debug.LogWarning("No parent with MeshFilter or SimObjPhysics found, using root transform as fallback.");
         }
+        
+        GameObject mesh_parent = go; //parent.gameObject;
 
         // 1. get joint info
         meshData.jointInfo = CollectValidJoints(meshfilter, ref meshData, transformsTraversed, parent, topmostSimObjPhysics.transform);
@@ -565,7 +568,7 @@ public class DownloadThorAssets : MonoBehaviour
             collider_parent = meshData.jointInfo.jointGO;
 
         }
-        CollectValidColliders(collider_parent, meshfilter, ref meshData);
+        CollectValidColliders(collider_parent, meshfilter, ref meshData, mesh_parent);
 
         /////////////// Joint setup ///////////
         //check if this mesh has a joint associated with it 
@@ -690,8 +693,10 @@ public class DownloadThorAssets : MonoBehaviour
                                 else if (canOpenObject.movementType == CanOpen_Object.MovementType.Rotate)
                                 {
                                     Debug.Log("Calculating lowRange and highRange for Rotate...");
-                                    jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(closedPositions[i])).eulerAngles;
-                                    jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
+                                    jointInfo.lowRange = closedPositions[i];
+                                    jointInfo.highRange = openPositions[i];
+                                    // jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(closedPositions[i])).eulerAngles;
+                                    // jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
                                 }
                                 
                                 Debug.Log("Moving Part of Joint: " + movingParts[i]);
@@ -838,7 +843,7 @@ public class DownloadThorAssets : MonoBehaviour
 
     // THIS IS WRONG, and the only reason it's been allowed to exist is because static objects don't even use this logic,
     // since they have no joints
-    private void CollectValidColliders(GameObject collider_parent, MeshFilter meshfilter, ref MeshData meshData)
+    private void CollectValidColliders(GameObject collider_parent, MeshFilter meshfilter, ref MeshData meshData, GameObject mesh_parent)
     {
         Debug.Log("call CollectValidColliders");
         var go = meshfilter.gameObject;
@@ -879,7 +884,7 @@ public class DownloadThorAssets : MonoBehaviour
                 if (!skip)
                 {
                     Debug.Log("Transform CHild " + child.name);
-                    AddCollidersRecursive(child, ref meshData, go);
+                    AddCollidersRecursive(child, ref meshData, go, mesh_parent);
                 }
                 
             }
@@ -887,7 +892,7 @@ public class DownloadThorAssets : MonoBehaviour
     }
     // Done with redundant stuff
 
-    private void AddCollidersRecursive(Transform child, ref MeshData meshData, GameObject meshFiltersGameObject)
+    private void AddCollidersRecursive(Transform child, ref MeshData meshData, GameObject meshFiltersGameObject, GameObject mesh_parent)
     {
         // Check if SimObjPhysics is found in the target or its descendants
         SimObjPhysics simObjPhysics = child.GetComponent<SimObjPhysics>();
@@ -903,7 +908,7 @@ public class DownloadThorAssets : MonoBehaviour
                     if (!collider.enabled || !collider.gameObject.activeInHierarchy)
                         continue;
 
-                    var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject);
+                    var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, mesh_parent);
                     if (colliderInfo != null)
                     {
                         if (collider.GetComponent("Contains") != null)
@@ -935,7 +940,7 @@ public class DownloadThorAssets : MonoBehaviour
             if (!collider.enabled || !collider.gameObject.activeInHierarchy)
                 continue;
 
-            var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject);
+            var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, mesh_parent);
             if (colliderInfo != null)
             {
                 if (!collider.isTrigger)
@@ -954,13 +959,13 @@ public class DownloadThorAssets : MonoBehaviour
         // Recursively check all children
         foreach (Transform childOfchild in child)
         {
-            AddCollidersRecursive(childOfchild, ref meshData, meshFiltersGameObject);
+            AddCollidersRecursive(childOfchild, ref meshData, meshFiltersGameObject, mesh_parent);
         }
     }
 
     // REDUNDANT CRAP //
     // Find all colliders associated with this mesh, and convert it to the correct coordinates
-    public ColliderInfo GetColliderInfo(Collider collider, GameObject meshFiltersGameObject)
+    public ColliderInfo GetColliderInfo(Collider collider, GameObject meshFiltersGameObject, GameObject ref_mesh_parent)
     {
         string colliderType = collider.GetType().Name.ToLower().Replace("collider", "");
         ColliderInfo info = new ColliderInfo();
@@ -976,7 +981,8 @@ public class DownloadThorAssets : MonoBehaviour
         // --------------
         // Ensure the size, position, rotation, radius, height, etc., are all relative to the local space of the meshFiltersGameObject
         Transform reference = null; // meshFiltersGameObject.transform;
-        reference = meshFiltersGameObject.transform;
+        reference = ref_mesh_parent.transform; //meshFiltersGameObject.transform;
+        /*
         // loop up meshFilterGame
         bool stop_update = false;
         while (stop_update == false)
@@ -1003,6 +1009,7 @@ public class DownloadThorAssets : MonoBehaviour
             }
             reference = reference.parent;
         }
+        */
         Vector3 combinedScale = GetCombinedScale(collider.transform, reference);
         //Vector3 relativePosition = meshFiltersGameObject.transform.InverseTransformPoint(collider.transform.position);
         Quaternion relativeRotation = Quaternion.Inverse(reference.transform.rotation) * collider.transform.rotation;
@@ -1352,8 +1359,11 @@ public class DownloadThorAssets : MonoBehaviour
                 sb.AppendLine("map_Bump " + PathExtensions.GetRelativePath(savePath, _BumpMap));
             }
 
-            if (!Mat2Texture.ContainsKey(m.name))
+            
+            Debug.Log(m.shader.name);
+            if (!Mat2Texture.ContainsKey(m.name) & m.shader.name != "Custom/EmissiveDeferredDecal")
             {
+
                 Dictionary<string, string> matdict = new Dictionary<string, string>();
                 matdict.Add("_MainTex", _MainTex);
                 matdict.Add("main_texture_scale", _mainTextureScale.x.ToString() + " " + _mainTextureScale.y.ToString());
