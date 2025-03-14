@@ -696,12 +696,17 @@ public class DownloadThorAssets : MonoBehaviour
                                     if (closedPositions[i].x < openPositions[i].x ||
                                         closedPositions[i].y < openPositions[i].y ||
                                         closedPositions[i].z < openPositions[i].z) {
+                                        
                                         jointInfo.lowRange = closedPositions[i];
                                         jointInfo.highRange = openPositions[i];
                                     } else {
                                         jointInfo.lowRange = openPositions[i];
                                         jointInfo.highRange = closedPositions[i];
                                     }
+                                    
+                                    Debug.Log("Converting open-close values from joint-mesh space to joint-node space")
+                                    jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
+                                    jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
                                 }
                                 
                                 Debug.Log("Moving Part of Joint: " + movingParts[i]);
