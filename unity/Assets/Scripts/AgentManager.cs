@@ -2121,7 +2121,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 return new ActionFinished(success: false, errorMessage: "No Distortion pass, make sure you pass 'renderDistortionImage = true' to the agent constructor.");
             }   
             // var material = distortion.material;
-            var mats = new List<Material>() {distortion.material, renderingManager.distortionMap.material};
+            var mats = new List<Material>() {distortion.material, renderingManager.distortionMap.material}.Where(m => m != null);
             foreach (var material in mats) {
                 material.SetFloat("_ZoomPercent", zoomPercent);
                 material.SetFloat("_k1", k1);

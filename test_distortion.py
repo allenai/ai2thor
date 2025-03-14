@@ -26,8 +26,8 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
             server_class=ai2thor.wsgi_server.WsgiServer,
         )
 
-    enableDistortionMap = True
-    multi_action = True
+    enableDistortionMap = False
+    multi_action = False
 
     # STRETCH_ENV_ARGS = dict(
     # gridSize=GRID_SIZE
@@ -134,6 +134,7 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
             intensityX=0.91,
             intensityY=0.93
         )
+        
         if enableDistortionMap:
             evt = controller.step(
                 action="GetDistortionMaps",

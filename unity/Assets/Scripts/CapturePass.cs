@@ -545,7 +545,7 @@ public class ReplacementShaderCapture: RenderToTexture {
                 // if it's not cloudrendering camera.targetTexture is null which means it's rendering to the display buffer
                 // so then we need to copy the display buffer into render texture
 
-                // for cloudrendering rbb is rendered directly into our render texture so no need to do this
+                // for cloudrendering rgb is rendered directly into our render texture so no need to do this
                 cb.Blit(BuiltinRenderTextureType.CurrentActive, this.GetRenderTexture());
             }
 
