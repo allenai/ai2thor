@@ -229,7 +229,7 @@ public class DownloadThorAssets : MonoBehaviour
         {
             AxisAlignedBoundingBox box = parent.AxisAlignedBoundingBox;
             center = box.center;
-            //Debug.Log("center" + center.ToString());
+            Debug.Log(parent.name + " center" + center.ToString());
         }       
         else
         {
@@ -257,7 +257,7 @@ public class DownloadThorAssets : MonoBehaviour
 
     }
 
-    void SaveMaterials(string relativeExportPath)
+    public void SaveMaterials(string relativeExportPath)
     {
         
         string baseFileName = Path.GetFileNameWithoutExtension(relativeExportPath);
@@ -276,7 +276,7 @@ public class DownloadThorAssets : MonoBehaviour
         print("material saved");
     }
 
-    void SaveMeshes(string relativeExportPath, MeshFilter[] meshFilters, Vector3 center, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false, bool saveCombinedSubmeshes=false)
+    public void SaveMeshes(string relativeExportPath, MeshFilter[] meshFilters, Vector3 center, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false, bool saveCombinedSubmeshes=false)
     {
         Debug.Log("saving mesh");
 
@@ -309,6 +309,9 @@ public class DownloadThorAssets : MonoBehaviour
             // }
 
             string meshName = mf.gameObject.name;
+            meshName = meshName.Replace(" ", "_");
+            meshName = meshName.Replace("(", "");
+            meshName = meshName.Replace(")", "");
             Debug.Log($"mesh name: {meshName}");
             
             /// ---- THIS LOGIC DID NOT WORK FOR  DRESSER .. .did work for Fridge but not for Dresser 217 for example
@@ -345,7 +348,7 @@ public class DownloadThorAssets : MonoBehaviour
                 
 
                 string parent_name = parent_go.name;
-                mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = parent_name;
+                mesh_transforms[meshName + "_" +i.ToString()]["parentName"] = parent_name; // TODO: it looks like i'm not saving the full name DrawerMesh instead of "DrawerMesh_0'
 
                 Vector3 grandParentLocalPosition = parent_go.InverseTransformPoint(mf.gameObject.transform.position);
                 Quaternion grandParentLocalRotation = Quaternion.Inverse(parent_go.rotation) * mf.gameObject.transform.rotation;
