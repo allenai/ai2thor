@@ -692,6 +692,7 @@ public class DownloadThorAssets : MonoBehaviour
                                 }
                                 else if (canOpenObject.movementType == CanOpen_Object.MovementType.Rotate)
                                 {
+                                    /*
                                     Debug.Log("Calculating lowRange and highRange for Rotate...");
                                     if (closedPositions[i].x < openPositions[i].x ||
                                         closedPositions[i].y < openPositions[i].y ||
@@ -707,6 +708,9 @@ public class DownloadThorAssets : MonoBehaviour
                                     Debug.Log("Converting open-close values from joint-mesh space to joint-node space");
                                     jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
                                     jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
+                                    */
+                                    jointInfo.lowRange = closedPositions[i];
+                                    jointInfo.highRange = openPositions[i];
                                 }
                                 
                                 Debug.Log("Moving Part of Joint: " + movingParts[i]);
@@ -873,9 +877,9 @@ public class DownloadThorAssets : MonoBehaviour
                 Debug.Log("I am at: " + go.name + " and checking " + child.parent.name + " children");
                 MeshFilter[] all_mf = child.GetComponentsInChildren<MeshFilter>();
                 if (all_mf.Count() > 0)
-                    skip = true;
+                    skip = true; // this is skipping receptacle for cabinet door. which btw should not be rotating with the door. for now. cabinet receptacle can be child of root next to dresser mesh
                 
-
+                //Debug.Log(go.name  + " all_mf: " + all_mf.Count());
                 /*
                 for (int i = 0; i< all_mf.Count(); i++)
                 {
@@ -909,7 +913,7 @@ public class DownloadThorAssets : MonoBehaviour
         if (simObjPhysics != null)
         {
             // Check if the SimObjPhysics type is BathtubBasin, Shelf, or SinkBasin
-            if (simObjPhysics.Type == SimObjType.BathtubBasin || simObjPhysics.Type == SimObjType.Shelf || simObjPhysics.Type == SimObjType.SinkBasin)
+            if (simObjPhysics.Type == SimObjType.BathtubBasin || simObjPhysics.Type == SimObjType.Shelf || simObjPhysics.Type == SimObjType.SinkBasin || simObjPhysics.Type == SimObjType.Cabinet)
             {
                 // Continue the search and include colliders with the Contains component
                 foreach (var collider in child.GetComponents<Collider>())
@@ -918,6 +922,8 @@ public class DownloadThorAssets : MonoBehaviour
                     if (!collider.enabled || !collider.gameObject.activeInHierarchy)
                         continue;
 
+                    Debug.Log("ColliderInfo: " + collider.gameObject.name);
+                    
                     var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, mesh_parent);
                     if (colliderInfo != null)
                     {
@@ -931,6 +937,8 @@ public class DownloadThorAssets : MonoBehaviour
                         {
                             meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
                         }
+                        Debug.Log("not null: " + collider.gameObject.name);
+
                     }
                 }
             }
@@ -949,6 +957,8 @@ public class DownloadThorAssets : MonoBehaviour
         {
             if (!collider.enabled || !collider.gameObject.activeInHierarchy)
                 continue;
+            
+            Debug.Log("ColliderInfo: " + collider.gameObject.name);
 
             var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, mesh_parent);
             if (colliderInfo != null)
@@ -962,6 +972,7 @@ public class DownloadThorAssets : MonoBehaviour
                     meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
                 }
                 
+                Debug.Log("not null: " + collider.gameObject.name);
 
             }
         }
@@ -992,6 +1003,7 @@ public class DownloadThorAssets : MonoBehaviour
         // Ensure the size, position, rotation, radius, height, etc., are all relative to the local space of the meshFiltersGameObject
         Transform reference = null; // meshFiltersGameObject.transform;
         reference = ref_mesh_parent.transform; //meshFiltersGameObject.transform;
+        
         /*
         // loop up meshFilterGame
         bool stop_update = false;
@@ -1020,7 +1032,10 @@ public class DownloadThorAssets : MonoBehaviour
             reference = reference.parent;
         }
         */
-        Vector3 combinedScale = GetCombinedScale(collider.transform, reference);
+
+
+        Vector3 combinedScale =  GetCombinedScale(collider.transform, reference);
+        Debug.Log("combinedScale: " + combinedScale);
         //Vector3 relativePosition = meshFiltersGameObject.transform.InverseTransformPoint(collider.transform.position);
         Quaternion relativeRotation = Quaternion.Inverse(reference.transform.rotation) * collider.transform.rotation;
 
@@ -1028,18 +1043,51 @@ public class DownloadThorAssets : MonoBehaviour
         // TODO: position and rotation trasnform needs fixing. sth to do with scaling
         // THIS NEEDS TO BE FIXED BECAUSE IT RELEGATES THE "SIZE" CONSOLIDATION INTO DIFFERENT PARTS OF THE PIPELINE,
         // DEPENIDING ON WHAT TYPE OF COLLIDER IT IS. BAD IDEA!!!!!! HUGE POTENTIAL FOR MISCOMMUNICATION!!!
+        
+        // This helped with scaled position issue
+        reference = reference.parent;
+
+
         if (collider is BoxCollider box)
         {
             info.size = Vector3.Scale(box.size, combinedScale) * 0.5f; // Half extents with combined scale
-            info.position = reference.transform.InverseTransformPoint(box.transform.TransformPoint(box.center));
-            info.rotation = relativeRotation;
+
+            //info.position = reference.transform.InverseTransformPoint(box.transform.TransformPoint(box.center));
+            //info.rotation = Quaternion.Inverse(reference.transform.rotation) * collider.transform.rotation;
+            //Debug.Log("box collider info: " + info.position);
+    
+            Transform meshTransform = ref_mesh_parent.transform;
+            Matrix4x4 meshMatrix = Matrix4x4.TRS(
+                meshTransform.localPosition,
+                meshTransform.localRotation,
+                Vector3.one //meshTransform.localScale
+            );
+            
+            // First get the box's local transform matrix
+            Matrix4x4 boxMatrix = Matrix4x4.TRS(
+                box.center,                // Local position (center)
+                Quaternion.identity,       // Local rotation
+                Vector3.one               // Local scale
+            );
+            
+            // Combine with the box's game object transform
+            Matrix4x4 boxWorldMatrix = box.transform.localToWorldMatrix * boxMatrix;
+            
+            // Transform to reference space
+            Matrix4x4 referenceWorldToLocal = reference.worldToLocalMatrix;
+            Matrix4x4 finalTransform = meshMatrix.inverse * referenceWorldToLocal * boxWorldMatrix;
+            
+            // Extract final position and rotation
+            info.position = finalTransform.GetColumn(3);
+            info.rotation = finalTransform.rotation;
+
         }
         // SphereCollider
         else if (collider is SphereCollider sphere)
         {
             float maxScale = Mathf.Max(combinedScale.x, combinedScale.y, combinedScale.z);
             info.radius = sphere.radius * maxScale;
-            info.position = reference.transform.InverseTransformPoint(sphere.transform.TransformPoint(sphere.center));
+            info.position = reference.transform.InverseTransformPoint(sphere.transform.TransformPoint(sphere.center)) ;
             info.rotation = relativeRotation;
         }
         // CapsuleCollider
@@ -1086,7 +1134,7 @@ public class DownloadThorAssets : MonoBehaviour
     //     return target.root;
     // }
 
-    void SaveMeshes(string relativeExportPath, MeshFilter[] meshFilters, Vector3 center, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false, bool saveCombinedSubmeshes = false, SimObjPhysics topmostSimObjPhysics = null)
+    public void SaveMeshes(string relativeExportPath, MeshFilter[] meshFilters, Vector3 center, bool applyBoundingBox = true, bool saveSubMeshes = false, bool saveSubMeshTransform = false, bool saveCombinedSubmeshes = false, SimObjPhysics topmostSimObjPhysics = null)
     {
         Debug.Log("saving mesh");
 
