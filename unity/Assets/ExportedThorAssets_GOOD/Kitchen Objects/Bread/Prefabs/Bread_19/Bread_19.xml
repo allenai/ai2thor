@@ -1,0 +1,32 @@
+<mujoco model="Bread_19">
+  <compiler autolimits="true" boundmass="0.01" angle="radian"/>
+  <default>
+    <default class="/">
+      <default class="__VISUAL_MJT__">
+        <geom contype="0" conaffinity="0" group="0"/>
+      </default>
+      <default class="__STRUCTURAL_MJT__">
+        <geom contype="8" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+      <default class="__DYNAMIC_MJT__">
+        <geom contype="1" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="GrainBread_Mat1" type="2d" file="GrainBread_AlbedoTransparency.png"/>
+    <material name="material_GrainBread_Mat1" class="/" texture="GrainBread_Mat1" specular="0.5" shininess="0.5" rgba="0.59558820000000001 0.59558820000000001 0.59558820000000001 1"/>
+    <mesh name="Bread_19_grainbread_a_mesh" class="/" file="Bread_19_grainbread_a_mesh/Bread_19_grainbread_a_mesh.obj" scale="1 1 1"/>
+  </asset>
+  <worldbody>
+    <body name="Bread_19">
+      <joint name="Bread_19_free" class="/" type="free" pos="0 0 0" axis="0 0 1" stiffness="0" range="0 0" armature="0" damping="0.10000000000000001" frictionloss="0"/>
+      <body name="Bread_19_grainbread_a_mesh" pos="-0 0.0034099999999999998 0" quat="1 0 0 0">
+        <geom name="Bread_19_grainbread_a_mesh" class="__VISUAL_MJT__" type="mesh" material="material_GrainBread_Mat1" shellinertia="false" mesh="Bread_19_grainbread_a_mesh"/>
+        <geom name="Bread_19_PrimitiveCollider_0" class="__DYNAMIC_MJT__" type="capsule" size="0.038926124572753906 0.15208315849304199" rgba="0 1 0 1" pos="-0 -0.0051220059394836426 -1.4901161193847656e-08" quat="0.99999999999891198 1.4751396607739272e-06 0 0"/>
+        <geom name="Bread_19_PrimitiveCollider_1" class="__DYNAMIC_MJT__" type="box" size="0.078064307570457458 0.040815353393554688 0.11505968123674393" rgba="0 1 0 1" pos="-0 -0.00331868976354599 0" quat="1 0 0 0"/>
+        <geom name="Bread_19_PrimitiveCollider_2" class="__DYNAMIC_MJT__" type="box" size="0.064637862145900726 0.035835951566696167 0.14706014096736908" rgba="0 1 0 1" pos="-0 -0.0084870476275682449 0" quat="1 0 0 0"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

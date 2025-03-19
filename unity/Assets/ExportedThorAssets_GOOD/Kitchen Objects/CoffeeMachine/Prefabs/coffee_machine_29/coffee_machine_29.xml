@@ -1,0 +1,52 @@
+<mujoco model="coffee_machine_29">
+  <compiler autolimits="true" boundmass="0.01" angle="radian"/>
+  <default>
+    <default class="/">
+      <default class="__VISUAL_MJT__">
+        <geom contype="0" conaffinity="0" group="0"/>
+      </default>
+      <default class="__STRUCTURAL_MJT__">
+        <geom contype="8" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+      <default class="__DYNAMIC_MJT__">
+        <geom contype="1" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <material name="material_coffee_machine_backup_mat" class="/" specular="0.5" shininess="0.5" rgba="0.5 0.5 0.5 1"/>
+    <material name="material_Coffee_Machine_Readout_Mat_Off" class="/" specular="0.5" shininess="0.5" rgba="0 0 0 1"/>
+    <texture name="Coffee_Machine_Decal_Mat" type="2d" file="Coffee_Machine_Decal_AlbedoTransparency.png"/>
+    <material name="material_Coffee_Machine_Decal_Mat" class="/" texture="Coffee_Machine_Decal_Mat" specular="0.5" shininess="0.5" rgba="1 1 1 1"/>
+    <texture name="Coffee_Machine_Metal_Mat" type="2d" file="MetalBumpy_AlbedoTransparency.png"/>
+    <material name="material_Coffee_Machine_Metal_Mat" class="/" texture="Coffee_Machine_Metal_Mat" specular="0.5" shininess="0.5" rgba="0.66176469999999998 0.66176469999999998 0.66176469999999998 1"/>
+    <texture name="Coffee_Machine_Secondary4_Color_Mat" type="2d" file="BrushedIron_AlbedoTransparency.png"/>
+    <material name="material_Coffee_Machine_Secondary4_Color_Mat" class="/" texture="Coffee_Machine_Secondary4_Color_Mat" specular="0.5" shininess="0.5" rgba="0.72058820000000001 0.72058820000000001 0.72058820000000001 1"/>
+    <texture name="Coffee_Machine_Primary2_Color_Mat" type="2d" file="BumpyPlastic_Albedo.png"/>
+    <material name="material_Coffee_Machine_Primary2_Color_Mat" class="/" texture="Coffee_Machine_Primary2_Color_Mat" specular="0.5" shininess="0.5" rgba="0.6323529 0.46849269999999998 0.29292820000000003 1"/>
+    <mesh name="coffee_machine_29_coffee_machine_29_0" class="/" file="coffee_machine_29_coffee_machine_29/coffee_machine_29_coffee_machine_29_0.obj" scale="1 1 1"/>
+    <mesh name="coffee_machine_29_coffee_machine_29_1" class="/" file="coffee_machine_29_coffee_machine_29/coffee_machine_29_coffee_machine_29_1.obj" scale="1 1 1"/>
+    <mesh name="coffee_machine_29_coffee_machine_29_2" class="/" file="coffee_machine_29_coffee_machine_29/coffee_machine_29_coffee_machine_29_2.obj" scale="1 1 1"/>
+    <mesh name="coffee_machine_29_coffee_machine_29_3" class="/" file="coffee_machine_29_coffee_machine_29/coffee_machine_29_coffee_machine_29_3.obj" scale="1 1 1"/>
+    <mesh name="coffee_machine_29_coffee_machine_29_4" class="/" file="coffee_machine_29_coffee_machine_29/coffee_machine_29_coffee_machine_29_4.obj" scale="1 1 1"/>
+    <mesh name="coffee_machine_29_coffee_machine_29_5" class="/" file="coffee_machine_29_coffee_machine_29/coffee_machine_29_coffee_machine_29_5.obj" scale="1 1 1"/>
+  </asset>
+  <worldbody>
+    <body name="coffee_machine_29">
+      <joint name="coffee_machine_29_free" class="/" type="free" pos="0 0 0" axis="0 0 1" stiffness="0" range="0 0" armature="0" damping="0.10000000000000001" frictionloss="0"/>
+      <body name="coffee_machine_29_coffee_machine_29" pos="-0.0012099999999999999 -0.23872999992847443 -0.059380000000000002" quat="1 0 0 0">
+        <geom name="coffee_machine_29_coffee_machine_29_0" class="__VISUAL_MJT__" type="mesh" material="material_coffee_machine_backup_mat" shellinertia="true" mesh="coffee_machine_29_coffee_machine_29_0"/>
+        <geom name="coffee_machine_29_coffee_machine_29_1" class="__VISUAL_MJT__" type="mesh" material="material_Coffee_Machine_Readout_Mat_Off" shellinertia="false" mesh="coffee_machine_29_coffee_machine_29_1"/>
+        <geom name="coffee_machine_29_coffee_machine_29_2" class="__VISUAL_MJT__" type="mesh" material="material_Coffee_Machine_Decal_Mat" shellinertia="false" mesh="coffee_machine_29_coffee_machine_29_2"/>
+        <geom name="coffee_machine_29_coffee_machine_29_3" class="__VISUAL_MJT__" type="mesh" material="material_Coffee_Machine_Metal_Mat" shellinertia="false" mesh="coffee_machine_29_coffee_machine_29_3"/>
+        <geom name="coffee_machine_29_coffee_machine_29_4" class="__VISUAL_MJT__" type="mesh" material="material_Coffee_Machine_Secondary4_Color_Mat" shellinertia="false" mesh="coffee_machine_29_coffee_machine_29_4"/>
+        <geom name="coffee_machine_29_coffee_machine_29_5" class="__VISUAL_MJT__" type="mesh" material="material_Coffee_Machine_Primary2_Color_Mat" shellinertia="false" mesh="coffee_machine_29_coffee_machine_29_5"/>
+        <site name="coffee_machine_29_Receptacle_0" class="/" type="box" rgba="1 0 0 1" size="0.05413408949971199 0.053846582770347595 0.044631212949752808" pos="0.10660000145435333 0.10594658553600311 0.1664210706949234" quat="1 0 0 0"/>
+        <geom name="coffee_machine_29_PrimitiveCollider_0" class="__DYNAMIC_MJT__" type="box" size="0.11600898206233978 0.19032560288906097 0.14944553375244141" rgba="0 1 0 1" pos="-0.10346435010433197 0.19032560288906097 0.0040574073791503906" quat="1 0 0 0"/>
+        <geom name="coffee_machine_29_PrimitiveCollider_1" class="__DYNAMIC_MJT__" type="box" size="0.10785198211669922 0.20749808847904205 0.12755060195922852" rgba="0 1 0 1" pos="0.10732793807983398 0.20749808847904205 -0.0178375244140625" quat="1 0 0 0"/>
+        <geom name="coffee_machine_29_PrimitiveCollider_2" class="__DYNAMIC_MJT__" type="box" size="0.10785198211669922 0.069688796997070312 0.17005252838134766" rgba="0 1 0 1" pos="0.10732793807983398 0.38136956095695496 0.054716110229492188" quat="1 0 0 0"/>
+        <geom name="coffee_machine_29_PrimitiveCollider_3" class="__DYNAMIC_MJT__" type="box" size="0.10832728445529938 0.026328310370445251 0.20476865768432617" rgba="0 1 0 1" pos="0.10873565077781677 0.026328310370445251 0.059380531311035156" quat="1 0 0 0"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

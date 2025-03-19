@@ -1,0 +1,30 @@
+<mujoco model="Apple_25">
+  <compiler autolimits="true" boundmass="0.01" angle="radian"/>
+  <default>
+    <default class="/">
+      <default class="__VISUAL_MJT__">
+        <geom contype="0" conaffinity="0" group="0"/>
+      </default>
+      <default class="__STRUCTURAL_MJT__">
+        <geom contype="8" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+      <default class="__DYNAMIC_MJT__">
+        <geom contype="1" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="Apple2_Mat1" type="2d" file="Apple2_AlbedoTransparency1.png"/>
+    <material name="material_Apple2_Mat1" class="/" texture="Apple2_Mat1" specular="0.5" shininess="0.5" rgba="1 1 1 1"/>
+    <mesh name="Apple_25_apple_b10" class="/" file="Apple_25_apple_b10/Apple_25_apple_b10.obj" scale="1 1 1"/>
+  </asset>
+  <worldbody>
+    <body name="Apple_25">
+      <joint name="Apple_25_free" class="/" type="free" pos="0 0 0" axis="0 0 1" stiffness="0" range="0 0" armature="0" damping="0.10000000000000001" frictionloss="0"/>
+      <body name="Apple_25_apple_b10" pos="-0 0.0039399999999999999 0" quat="1 0 0 0">
+        <geom name="Apple_25_apple_b10" class="__VISUAL_MJT__" type="mesh" material="material_Apple2_Mat1" shellinertia="false" mesh="Apple_25_apple_b10"/>
+        <geom name="Apple_25_PrimitiveCollider_0" class="__DYNAMIC_MJT__" type="capsule" size="0.061046727001667023 0.009563155472278595" rgba="0 1 0 1" pos="-0 -0.0039416253566741943 0" quat="0.70710678118654757 0.70710678118654746 0 0"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>

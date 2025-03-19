@@ -1,0 +1,32 @@
+<mujoco model="Lettuce_9">
+  <compiler autolimits="true" boundmass="0.01" angle="radian"/>
+  <default>
+    <default class="/">
+      <default class="__VISUAL_MJT__">
+        <geom contype="0" conaffinity="0" group="0"/>
+      </default>
+      <default class="__STRUCTURAL_MJT__">
+        <geom contype="8" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+      <default class="__DYNAMIC_MJT__">
+        <geom contype="1" conaffinity="15" group="4" friction="0.90000000000000002 0.90000000000000002 0.001" solref="0.025000000000000001 1" solimp="0.998 0.998 0.001"/>
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture name="Lettuce1_Mat" type="2d" file="Lettuce1_AlbedoTransparency.png"/>
+    <material name="material_Lettuce1_Mat" class="/" texture="Lettuce1_Mat" specular="0.5" shininess="0.5" rgba="0.9945233 1 0.60294119999999995 1"/>
+    <mesh name="Lettuce_9_lettuce_a9" class="/" file="Lettuce_9_lettuce_a9/Lettuce_9_lettuce_a9.obj" scale="1 1 1"/>
+  </asset>
+  <worldbody>
+    <body name="Lettuce_9">
+      <joint name="Lettuce_9_free" class="/" type="free" pos="0 0 0" axis="0 0 1" stiffness="0" range="0 0" armature="0" damping="0.10000000000000001" frictionloss="0"/>
+      <body name="Lettuce_9_lettuce_a9" pos="3.0000000000000001e-05 -0.00299 0.0056100000000000004" quat="1 0 0 0">
+        <geom name="Lettuce_9_lettuce_a9" class="__VISUAL_MJT__" type="mesh" material="material_Lettuce1_Mat" shellinertia="true" mesh="Lettuce_9_lettuce_a9"/>
+        <geom name="Lettuce_9_PrimitiveCollider_0" class="__DYNAMIC_MJT__" type="capsule" size="0.084463946521282196 0.0029457062482833862" rgba="0 1 0 1" pos="3.3416319638490677e-05 0.002988182008266449 -0.046093601733446121" quat="0.99895446298273716 1.4329928131603213e-06 -7.1122805068990504e-08 -0.045716308740020237"/>
+        <geom name="Lettuce_9_PrimitiveCollider_1" class="__DYNAMIC_MJT__" type="capsule" size="0.038348205387592316 0.010454177856445312" rgba="0 1 0 1" pos="0.019300000742077827 -0.0036505311727523804 0.073475584387779236" quat="0.99999999999891198 1.4751396607739272e-06 0 0"/>
+        <geom name="Lettuce_9_PrimitiveCollider_2" class="__DYNAMIC_MJT__" type="capsule" size="0.065289974212646484 0.0031912475824356079" rgba="0 1 0 1" pos="0.012300113216042519 0.0029882043600082397 0.01265011727809906" quat="0.99787885181640079 1.6015801650461442e-06 -1.0536711613634565e-07 -0.065098364764450731"/>
+      </body>
+    </body>
+  </worldbody>
+</mujoco>
