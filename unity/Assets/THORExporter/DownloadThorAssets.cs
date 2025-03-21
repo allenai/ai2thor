@@ -518,6 +518,7 @@ public class DownloadThorAssets : MonoBehaviour
         // Fault recursion for assigning parent, which results in the WRONG parent being assigned
         while (parent != null)
         {
+            bool foundParent = false;
             //track what transforms we have traversed so far
             transformsTraversed.Add(parent);
 
@@ -528,10 +529,35 @@ public class DownloadThorAssets : MonoBehaviour
 
             // If this parent has a MeshFilter, stop here
             // TOASTER _ Parent can be meshFIlter. take note.
+            Debug.Log(meshfilter.sharedMesh.name + " parent: " + parent.name);
             if (parent.GetComponent<MeshFilter>() != null)
             {
                 meshData.parentName = parent.name;
                 break;  //Stop searching further
+            }
+
+            foreach(Transform child in parent)
+            {
+                Debug.Log(meshfilter.sharedMesh.name + " parnet " + parent.name + "'s child: " + child.name + " " + child.GetComponent<MeshFilter>());
+                if(child.GetComponent<MeshFilter>() != null)
+                {
+                    Debug.Log(child.GetComponent<MeshFilter>().sharedMesh.name + " " + meshfilter.sharedMesh.name);
+                    if (child.GetComponent<MeshFilter>().sharedMesh.name != meshfilter.sharedMesh.name)
+                    {
+                        meshData.parentName = child.GetComponent<MeshFilter>().sharedMesh.name;
+                        meshData.parentRelativePosition = child.InverseTransformPoint(go.transform.position);
+                        meshData.parentRelativeRotation = Quaternion.Inverse(child.rotation) * go.transform.rotation;
+                        meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, child.localScale);
+                        Debug.Log("found parnet: " +child.GetComponent<MeshFilter>().sharedMesh.name + " " + meshfilter.sharedMesh.name);
+                        foundParent = true;
+                        break;
+                    }
+                }
+            }
+
+            if (foundParent)
+            {
+                break;
             }
 
             // If this parent has a SimObjPhysics component and it's not the topmost one, continue searching
@@ -545,7 +571,6 @@ public class DownloadThorAssets : MonoBehaviour
             // Move up the hierarchy
             parent = parent.parent;
         }
-
         
         // PROBABLY DELETE THIS, it is now officially redundent in light of updates
         // If no parent with MeshFilter or SimObjPhysics was found, use the root transform
@@ -555,8 +580,10 @@ public class DownloadThorAssets : MonoBehaviour
             meshData.parentName = parent.name;
             Debug.LogWarning("No parent with MeshFilter or SimObjPhysics found, using root transform as fallback.");
         }
+
+        Debug.Log(meshfilter.sharedMesh.name + " parent: " + meshData.parentName);
         
-        GameObject mesh_parent = go; //parent.gameObject;
+        GameObject mesh_parent = go; //= parent.gameObject;
 
         // 1. get joint info
         meshData.jointInfo = CollectValidJoints(meshfilter, ref meshData, transformsTraversed, parent, topmostSimObjPhysics.transform);
@@ -859,14 +886,14 @@ public class DownloadThorAssets : MonoBehaviour
     // since they have no joints
     private void CollectValidColliders(GameObject collider_parent, MeshFilter meshfilter, ref MeshData meshData, GameObject mesh_parent)
     {
-        Debug.Log("call CollectValidColliders");
+        Debug.Log("call CollectValidColliders " + meshfilter.sharedMesh.name);
         var go = meshfilter.gameObject;
 
         Transform parent = go.transform.parent;
-        if (collider_parent != null)
-        {
-            parent = collider_parent.transform;
-        }
+        //if (collider_parent != null)
+        //{
+        //    parent = collider_parent.transform;
+        //}
         if (parent != null)
         {
             foreach (Transform child in parent)
@@ -874,12 +901,12 @@ public class DownloadThorAssets : MonoBehaviour
                 //actually no we want to check ourself too
                 //if (sibling == go.transform) continue ;
                 bool skip = false;
-                Debug.Log("I am at: " + go.name + " and checking " + child.parent.name + " children");
+                Debug.Log("I am at: " + go.name + " and checking " + parent.name + " children");
                 MeshFilter[] all_mf = child.GetComponentsInChildren<MeshFilter>();
                 if (all_mf.Count() > 0)
                     skip = true; // this is skipping receptacle for cabinet door. which btw should not be rotating with the door. for now. cabinet receptacle can be child of root next to dresser mesh
                 
-                //Debug.Log(go.name  + " all_mf: " + all_mf.Count());
+                Debug.Log(go.name  + " all_mf: " + all_mf.Count());
                 /*
                 for (int i = 0; i< all_mf.Count(); i++)
                 {
@@ -895,6 +922,7 @@ public class DownloadThorAssets : MonoBehaviour
                 }
                 */
                 // Include sibling's colliders and descendants recursively
+                // skip condition is wrong for some candle objects. still skipping so just changed the hierarhy in prefab.
                 if (!skip)
                 {
                     Debug.Log("Transform CHild " + child.name);
@@ -953,7 +981,9 @@ public class DownloadThorAssets : MonoBehaviour
         
 
         // Collect colliders at this level if this level is not a SimObjPhysics
-        foreach (var collider in child.GetComponents<Collider>())
+        int i = 0;
+        //foreach (var collider in child.GetComponents<Collider>())
+        foreach (var collider in child.GetComponentsInChildren<Collider>())
         {
             if (!collider.enabled || !collider.gameObject.activeInHierarchy)
                 continue;
@@ -966,6 +996,7 @@ public class DownloadThorAssets : MonoBehaviour
                 if (!collider.isTrigger)
                 {
                     meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
+                    i++;
                 }
                 else if (collider.GetComponent("Contains") != null)
                 {
@@ -973,15 +1004,15 @@ public class DownloadThorAssets : MonoBehaviour
                 }
                 
                 Debug.Log("not null: " + collider.gameObject.name);
-
             }
         }
+        Debug.Log("Collecting colliders at this level: " + child.name + " " + mesh_parent.GetComponent<MeshFilter>().sharedMesh.name + " " + i);
 
-        // Recursively check all children
-        foreach (Transform childOfchild in child)
-        {
-            AddCollidersRecursive(childOfchild, ref meshData, meshFiltersGameObject, mesh_parent);
-        }
+        // Recursively check all children - NOTE this is wrong for doorway bc it's not stopping at the meshfilter
+        //foreach (Transform childOfchild in child)
+        //{
+        //    AddCollidersRecursive(childOfchild, ref meshData, meshFiltersGameObject, mesh_parent);
+        //}
     }
 
     // REDUNDANT CRAP //
@@ -1044,7 +1075,7 @@ public class DownloadThorAssets : MonoBehaviour
         // THIS NEEDS TO BE FIXED BECAUSE IT RELEGATES THE "SIZE" CONSOLIDATION INTO DIFFERENT PARTS OF THE PIPELINE,
         // DEPENIDING ON WHAT TYPE OF COLLIDER IT IS. BAD IDEA!!!!!! HUGE POTENTIAL FOR MISCOMMUNICATION!!!
         
-        // This helped with scaled position issue
+        // NOTE: this change of passing the mesh gameobject and then referencing its parent helped with scaled position issue
         reference = reference.parent;
 
 
@@ -1060,7 +1091,8 @@ public class DownloadThorAssets : MonoBehaviour
             Matrix4x4 meshMatrix = Matrix4x4.TRS(
                 meshTransform.localPosition,
                 meshTransform.localRotation,
-                Vector3.one //meshTransform.localScale
+                Vector3.one 
+                //meshTransform.localScale
             );
             
             // First get the box's local transform matrix
@@ -1076,12 +1108,14 @@ public class DownloadThorAssets : MonoBehaviour
             // Transform to reference space
             Matrix4x4 referenceWorldToLocal = reference.worldToLocalMatrix;
             Matrix4x4 finalTransform = meshMatrix.inverse * referenceWorldToLocal * boxWorldMatrix;
-            
+
+
             // Extract final position and rotation
             info.position = finalTransform.GetColumn(3);
             info.rotation = finalTransform.rotation;
 
         }
+
         // SphereCollider
         else if (collider is SphereCollider sphere)
         {
