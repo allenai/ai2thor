@@ -604,16 +604,16 @@ public class DownloadThorAssets : MonoBehaviour
 
         ////////////////meshData cleanup ///////////
         //this is jank but oh welllllll
-        foreach (string name in meshNamesToClearColliders)
-        {
-            if (meshData.meshName.Contains(name))
-            {
-                //clear prmitive colliders but leave placeable zones
-                meshData.primitiveColliders.myPrimitiveColliders.Clear();
-                meshData.primitiveColliders.myPrimitiveColliders = new List<ColliderInfo>();
-                break;
-            }
-        }
+        // foreach (string name in meshNamesToClearColliders)
+        // {
+        //     if (meshData.meshName.Contains(name))
+        //     {
+        //         //clear prmitive colliders but leave placeable zones
+        //         meshData.primitiveColliders.myPrimitiveColliders.Clear();
+        //         meshData.primitiveColliders.myPrimitiveColliders = new List<ColliderInfo>();
+        //         break;
+        //     }
+        // }
 
         return meshData;
     }
