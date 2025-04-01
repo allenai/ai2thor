@@ -525,7 +525,8 @@ public class DownloadThorAssets : MonoBehaviour
             // Adjust the parent-relative position, rotation, and scale
             meshData.parentRelativePosition = parent.InverseTransformPoint(go.transform.position);
             meshData.parentRelativeRotation = Quaternion.Inverse(parent.rotation) * go.transform.rotation;
-            meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, parent.localScale);
+            //meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, parent.localScale);
+            meshData.parentRelativeScale = GetCombinedScale(go.transform, parent);
 
             // If this parent has a MeshFilter, stop here
             // TOASTER _ Parent can be meshFIlter. take note.
@@ -547,7 +548,7 @@ public class DownloadThorAssets : MonoBehaviour
                         meshData.parentName = child.GetComponent<MeshFilter>().sharedMesh.name;
                         meshData.parentRelativePosition = child.InverseTransformPoint(go.transform.position);
                         meshData.parentRelativeRotation = Quaternion.Inverse(child.rotation) * go.transform.rotation;
-                        meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, child.localScale);
+                        meshData.parentRelativeScale =GetCombinedScale(go.transform, child);
                         Debug.Log("found parnet: " +child.GetComponent<MeshFilter>().sharedMesh.name + " " + meshfilter.sharedMesh.name);
                         foundParent = true;
                         break;
@@ -1063,10 +1064,11 @@ public class DownloadThorAssets : MonoBehaviour
             reference = reference.parent;
         }
         */
+        
 
-
-        Vector3 combinedScale =  GetCombinedScale(collider.transform, reference);
-        Debug.Log("combinedScale: " + combinedScale);
+        Vector3 combinedScale = GetCombinedScale(collider.transform, reference);
+        Debug.Log(reference.name + " combinedScale: " + combinedScale);
+        
         //Vector3 relativePosition = meshFiltersGameObject.transform.InverseTransformPoint(collider.transform.position);
         Quaternion relativeRotation = Quaternion.Inverse(reference.transform.rotation) * collider.transform.rotation;
 
@@ -1076,17 +1078,13 @@ public class DownloadThorAssets : MonoBehaviour
         // DEPENIDING ON WHAT TYPE OF COLLIDER IT IS. BAD IDEA!!!!!! HUGE POTENTIAL FOR MISCOMMUNICATION!!!
         
         // NOTE: this change of passing the mesh gameobject and then referencing its parent helped with scaled position issue
-        reference = reference.parent;
-
+        reference = reference.parent; 
+        Debug.Log(reference.name + " reference meshfilter: " + meshFiltersGameObject.name);
 
         if (collider is BoxCollider box)
         {
             info.size = Vector3.Scale(box.size, combinedScale) * 0.5f; // Half extents with combined scale
 
-            //info.position = reference.transform.InverseTransformPoint(box.transform.TransformPoint(box.center));
-            //info.rotation = Quaternion.Inverse(reference.transform.rotation) * collider.transform.rotation;
-            //Debug.Log("box collider info: " + info.position);
-    
             Transform meshTransform = ref_mesh_parent.transform;
             Matrix4x4 meshMatrix = Matrix4x4.TRS(
                 meshTransform.localPosition,
@@ -1100,6 +1098,7 @@ public class DownloadThorAssets : MonoBehaviour
                 box.center,                // Local position (center)
                 Quaternion.identity,       // Local rotation
                 Vector3.one               // Local scale
+                //box.transform.localScale
             );
             
             // Combine with the box's game object transform
@@ -1111,7 +1110,8 @@ public class DownloadThorAssets : MonoBehaviour
 
 
             // Extract final position and rotation
-            info.position = finalTransform.GetColumn(3);
+            //info.position = finalTransform.GetColumn(3);
+            info.position = Vector3.Scale(finalTransform.GetColumn(3), combinedScale); // this fixed collider position issue
             info.rotation = finalTransform.rotation;
 
         }
