@@ -1083,6 +1083,8 @@ public class DownloadThorAssets : MonoBehaviour
 
         if (collider is BoxCollider box)
         {
+            bool hasParentCollider = box.transform.parent != null && box.transform.parent.GetComponent<Collider>() != null;
+
             info.size = Vector3.Scale(box.size, combinedScale) * 0.5f; // Half extents with combined scale
 
             Transform meshTransform = ref_mesh_parent.transform;
@@ -1110,8 +1112,12 @@ public class DownloadThorAssets : MonoBehaviour
 
 
             // Extract final position and rotation
-            //info.position = finalTransform.GetColumn(3);
-            info.position = Vector3.Scale(finalTransform.GetColumn(3), combinedScale); // this fixed collider position issue
+            Debug.Log("names: " + ref_mesh_parent.name + " " + reference.name + " " + box.gameObject.name + " " + box.transform.parent.name);
+            //if (box.isTrigger | box.parent) //ref_mesh_parent.name == box.transform.parent.name)
+            if (reference.parent == null || box.isTrigger || !hasParentCollider)
+                info.position = finalTransform.GetColumn(3); // this required for receptacle collider
+            else
+                info.position = Vector3.Scale(finalTransform.GetColumn(3), combinedScale); // this fixed collider position issue
             info.rotation = finalTransform.rotation;
 
         }
