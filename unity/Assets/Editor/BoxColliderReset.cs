@@ -3,7 +3,7 @@ using UnityEditor;
 
 public class BoxColliderCenterReset : MonoBehaviour
 {
-    [MenuItem("Tools/Fix BoxCollider Center and Normalize Scale &k")] // Ctrl+K
+    [MenuItem("Tools/Fix BoxCollider Center and Normalize Scale &k")] // Option+K
     static void FixBoxColliderCenterAndScale()
     {
         GameObject[] selectedObjects = Selection.gameObjects;
