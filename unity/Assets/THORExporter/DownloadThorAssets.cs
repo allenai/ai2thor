@@ -1115,13 +1115,13 @@ public class DownloadThorAssets : MonoBehaviour
             // Extract final position and rotation
             Debug.Log("names: " + ref_mesh_parent.name + " " + reference.name + " " + box.gameObject.name + " " + box.transform.parent.name);
 
-            bool hasColliderParent = box.transform.parent != null && box.transform.parent.name == "Colliders";
+            bool hasColliderParent = box.transform.parent != null && box.transform.parent.name.Contains("Colliders");
             if (box.isTrigger)
                 info.position = finalTransform.GetColumn(3); // this required for receptacle collider
-            else if (hasColliderParent)
+            else //if (hasColliderParent)
                 info.position = Vector3.Scale(finalTransform.GetColumn(3), combinedScale); // this fixed collider position issue
-            else
-                info.position = finalTransform.GetColumn(3); // this required for receptacle collider
+            //else
+            //    info.position = finalTransform.GetColumn(3); // this required for receptacle collider
             
             info.rotation = finalTransform.rotation;
 
