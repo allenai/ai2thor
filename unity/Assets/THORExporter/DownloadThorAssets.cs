@@ -514,6 +514,7 @@ public class DownloadThorAssets : MonoBehaviour
         // TODO: Parent mesh node is not correct
         // Traverse the parent hierarchy
         Transform parent = go.transform.parent;
+        Transform orig_parent = parent;
 
         // Fault recursion for assigning parent, which results in the WRONG parent being assigned
         while (parent != null)
@@ -525,8 +526,8 @@ public class DownloadThorAssets : MonoBehaviour
             // Adjust the parent-relative position, rotation, and scale
             meshData.parentRelativePosition = parent.InverseTransformPoint(go.transform.position);
             meshData.parentRelativeRotation = Quaternion.Inverse(parent.rotation) * go.transform.rotation;
-            //meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, parent.localScale);
-            meshData.parentRelativeScale = GetCombinedScale(go.transform, parent);
+            meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, parent.localScale);
+            //meshData.parentRelativeScale = GetCombinedScale(go.transform, parent);
 
             // If this parent has a MeshFilter, stop here
             // TOASTER _ Parent can be meshFIlter. take note.
@@ -548,7 +549,9 @@ public class DownloadThorAssets : MonoBehaviour
                         meshData.parentName = child.GetComponent<MeshFilter>().sharedMesh.name;
                         meshData.parentRelativePosition = child.InverseTransformPoint(go.transform.position);
                         meshData.parentRelativeRotation = Quaternion.Inverse(child.rotation) * go.transform.rotation;
-                        meshData.parentRelativeScale =GetCombinedScale(go.transform, child);
+                        //meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, child.localScale); 
+                        //meshData.parentRelativeScale =GetCombinedScale(go.transform, child); // child
+                        //meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, GetCombinedScale(go.transform, child)); 
                         Debug.Log("found parnet: " +child.GetComponent<MeshFilter>().sharedMesh.name + " " + meshfilter.sharedMesh.name);
                         foundParent = true;
                         break;
@@ -1083,8 +1086,6 @@ public class DownloadThorAssets : MonoBehaviour
 
         if (collider is BoxCollider box)
         {
-            bool hasParentCollider = box.transform.parent != null && box.transform.parent.GetComponent<Collider>() != null;
-
             info.size = Vector3.Scale(box.size, combinedScale) * 0.5f; // Half extents with combined scale
 
             Transform meshTransform = ref_mesh_parent.transform;
@@ -1113,11 +1114,15 @@ public class DownloadThorAssets : MonoBehaviour
 
             // Extract final position and rotation
             Debug.Log("names: " + ref_mesh_parent.name + " " + reference.name + " " + box.gameObject.name + " " + box.transform.parent.name);
-            //if (box.isTrigger | box.parent) //ref_mesh_parent.name == box.transform.parent.name)
-            if (reference.parent == null || box.isTrigger || !hasParentCollider)
+
+            bool hasColliderParent = box.transform.parent != null && box.transform.parent.name == "Colliders";
+            if (box.isTrigger)
                 info.position = finalTransform.GetColumn(3); // this required for receptacle collider
-            else
+            else if (hasColliderParent)
                 info.position = Vector3.Scale(finalTransform.GetColumn(3), combinedScale); // this fixed collider position issue
+            else
+                info.position = finalTransform.GetColumn(3); // this required for receptacle collider
+            
             info.rotation = finalTransform.rotation;
 
         }
