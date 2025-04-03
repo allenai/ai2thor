@@ -2363,6 +2363,68 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return metadata.ToArray();
         }
 
+        public class SimObjectMaterialProperties {
+            public string name;
+            public SerializableColor albedo;
+        }
+
+        public ActionFinished GetSimObjectMaterials(string[] objectFilter = null) {
+
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();//physicsSceneManager.ObjectIdToSimObjPhysics.Values.ToArray();
+            
+            SimObjPhysics[] soFilter = null;
+            if (objectFilter != null && objectFilter.Count() > 0) {
+                HashSet<SimObjPhysics> filter = new HashSet<SimObjPhysics>();
+                HashSet<string> filterObjectIds = new HashSet<string>(objectFilter);
+                foreach (var simObj in simObjects) {
+                    if (filterObjectIds.Contains(simObj.ObjectID)) {
+                        filter.Add(simObj);
+                    }
+                }
+                soFilter = filter.ToArray();
+            }
+            var toSend = soFilter == null
+                        ? simObjects
+                        : soFilter;
+
+            var objectMaterialMap = getObjectMaterialMap(
+                toSend
+            );
+            return new ActionFinished() {
+                success = true,
+                actionReturn = objectMaterialMap
+            };
+        }
+
+        public Dictionary<string, List<SimObjectMaterialProperties>> getObjectMaterialMap(SimObjPhysics[] simObjects) {
+            // physicsSceneManager.ObjectIdToSimObjPhysics.Values.ToArray()
+            if (simObjects == null) {
+                throw new NullReferenceException(
+                    "null SimObjPhysics passed to getObjectMaterialMap"
+                );
+            }
+
+            int numObj = simObjects.Length;   
+            var objectMaterialMap = new Dictionary<string, List<SimObjectMaterialProperties>>();
+
+            for (int k = 0; k < numObj; k++) {
+                SimObjPhysics simObj = simObjects[k];
+                ObjectMetadata meta;
+                var materials = new List<SimObjectMaterialProperties>();
+
+                objectMaterialMap[simObj.ObjectID] = simObj.GetComponentsInChildren<MeshRenderer>()
+                .SelectMany(
+                    mr => mr.materials.Select(
+                        m => 
+                            new SimObjectMaterialProperties() {
+                                name = m.name.EndsWith(" (Instance)")? m.name.Substring(0, m.name.LastIndexOf(" (Instance)")) : m.name,
+                                albedo = SerializableColor.fromUnityColor(m.color)
+                            }
+                )).ToList();
+            }
+            return objectMaterialMap;
+        }
+
         // generates object metatada based on sim object's properties
         public virtual ObjectMetadata ObjectMetadataFromSimObjPhysics(
             SimObjPhysics simObj,
@@ -6882,6 +6944,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return float.NegativeInfinity;
             }
             return getFloorY(x, hit.point.y + 0.1f, z);
+        }
+
+        protected GameObject getFloor(float maxDistance) {
+            int layerMask = ~LayerMask.GetMask("Agent", "SimObjInvisible", "FloorAgent");
+
+            Ray ray = new Ray(transform.position, -transform.up);
+            RaycastHit hit;
+            if (!Physics.Raycast(ray, out hit, maxDistance, layerMask, QueryTriggerInteraction.Ignore)) {
+                errorMessage = $"Could not find the floor from position {transform.position}";
+                return null;
+            }
+            return hit.collider.gameObject;
+        }
+
+        public ActionFinished GetFloorBelowAgent(float maxDistance = 10.0f) {
+            var floorGO = getFloor(maxDistance);
+            return new ActionFinished() {
+                success = floorGO != null,
+                actionReturn = floorGO != null? floorGO.GetComponentInParent<SimObjPhysics>().ObjectID: null
+            };
         }
 
         protected void SafelyComputeFirstNavMeshPath(

@@ -486,7 +486,7 @@ def local_build_test(context, prefix="local", arch="OSXIntel64"):
 
 
 @task(iterable=["scenes"])
-def local_build(context, prefix="local", arch="OSXIntel64", scenes=None, scripts_only=False, exclude_private_scenes=False):
+def local_build(context, prefix="local", arch="OSXIntel64", scenes=None, scripts_only=False, exclude_private_scenes=False, procedural_only=False):
     import ai2thor.controller
 
     build = ai2thor.build.Build(arch, prefix, False)
@@ -496,6 +496,9 @@ def local_build(context, prefix="local", arch="OSXIntel64", scenes=None, scripts
         and not exclude_private_scenes
     ):
         env["INCLUDE_PRIVATE_SCENES"] = "true"
+
+    if procedural_only:
+        env["PROCEDURAL_ONLY"] = "true"
 
     build_dir = os.path.join("builds", build.name)
     if scripts_only:
@@ -1081,7 +1084,8 @@ def ci_build(
     skip_delete_tmp_dir=False,  # bool
     cloudrendering_first=False,
     only_cloudrendering=False,
-    private_scenes_skip=False
+    private_scenes_skip=False,
+    procedural_only=False
 ):
     assert (commit_id is None) == (
         branch is None
@@ -1236,6 +1240,7 @@ def ci_build(
                                 arch=arch,
                                 commit_id=build["commit_id"],
                                 include_private_scenes=include_private_scenes,
+                                procedural_only=procedural_only,
                                 immediately_fail_and_push_log=has_any_build_failed,
                                 timeout=60 * 60,
                                 # Don't bother trying another build if one has already failed
@@ -1429,6 +1434,7 @@ def ci_build_arch(
     arch: str,
     commit_id: str,
     include_private_scenes=False,
+    procedural_only=False,
     immediately_fail_and_push_log: bool = False,
     timeout: int = 60 * 60,
 ):
@@ -1454,6 +1460,10 @@ def ci_build_arch(
             env = {}
             if include_private_scenes:
                 env["INCLUDE_PRIVATE_SCENES"] = "true"
+            
+            if procedural_only:
+                env["PROCEDURAL_ONLY"] = "true"
+
             set_gi_cache_folder(arch)
 
             logger.info(f"Starting build for {arch} {commit_id}")

@@ -2141,6 +2141,52 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         );
                     break;
 
+                case "gsom":
+
+                    List<string> includedObjectIds = new List<string>();
+                    if (splitcommand.Length > 1) {
+                        includedObjectIds.Add(splitcommand[1]);
+                    }
+                
+                    CurrentActiveController()
+                        .ProcessControlCommand(
+                            new Dictionary<string, object>() {
+                                ["action"] = "GetSimObjectMaterials",
+                                ["objectFilter"] = includedObjectIds
+                            }
+                        );
+
+                    Debug.Log($" actionreturn null {CurrentActiveController().actionReturn == null}");
+
+                    var objectMaterialMap = CurrentActiveController().actionReturn as Dictionary<string, List<BaseFPSAgentController.SimObjectMaterialProperties>>;
+
+                    // var map = CurrentActiveController().actionReturn as Dictionary<string, List<MaterialProperties>>;
+                    //Debug.Log(string.Join(",", map.Select(m => $"{m.Key}: {string.Join(",", m.Value.Select(mat => $"name: {mat.name}, color: {{{mat.color.r}, {mat.color.g}, {mat.color.b}"))}}}")));
+                    //Debug.Log(string.Join(",", map.Select(m => $"{m.Key}: {string.Join(",", m.Value.Select(mat => $"name: {mat.name}, color: {mat.color}"))}")));
+
+                    Debug.Log($" null {objectMaterialMap == null}");
+
+                    Debug.Log(string.Join(",", objectMaterialMap.Select(m => $"{m.Key}: {string.Join(",", m.Value.Select(mat => $"name: {mat.name}, color: {{{mat.albedo.r}, {mat.albedo.g}, {mat.albedo.b}"))}}}")));
+                    // Debug.Log(string.Join(",", map.Select(m => $"{m.Key}: {m.Value}")));
+
+                break;
+
+                case "gfba": 
+
+                    // CurrentActiveController()
+                    //     .ProcessControlCommand(
+                    //         new Dictionary<string, object>() {
+                    //             ["action"] = "GetFloorBelowAgent"
+                    //         }
+                    //     );
+
+                    //     var floorID = CurrentActiveController().actionReturn as string;
+                var actionFF = CurrentActiveController().GetFloorBelowAgent();
+                    
+
+                        Debug.Log($" floorID = {actionFF.actionReturn}");
+                break;
+
                 case "light": {
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "RandomizeLighting",

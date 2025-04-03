@@ -146,7 +146,10 @@ public class Build
         List<string> scenes = new List<string>();
         files.AddRange(Directory.GetFiles("Assets/Scenes/"));
 
-        if (IncludePrivateScenes())
+        // var proceduralOnlyBuild = ProceduralOnly();
+        var proceduralOnlyBuild = false;
+
+        if (IncludePrivateScenes() && !proceduralOnlyBuild)
         {
             files.AddRange(Directory.GetFiles("Assets/Private/Scenes/"));
             files.AddRange(
@@ -155,12 +158,15 @@ public class Build
         }
 
         files.AddRange(Directory.GetFiles("Assets/Scenes/Procedural"));
-        files.AddRange(Directory.GetFiles("Assets/Scenes/Procedural/ArchitecTHOR"));
-        files.AddRange(
-            Directory.GetFiles(
-                "Assets/Standard Assets/Characters/FirstPersonCharacter/StretchCalibration/Scenes"
-            )
-        );
+
+        if (!proceduralOnlyBuild) {
+            // files.AddRange(Directory.GetFiles("Assets/Scenes/Procedural/ArchitecTHOR"));
+            files.AddRange(
+                Directory.GetFiles(
+                    "Assets/Standard Assets/Characters/FirstPersonCharacter/StretchCalibration/Scenes"
+                )
+            );
+        }
 
         foreach (string f in files)
         {
@@ -181,8 +187,30 @@ public class Build
             }
         }
 
+
         // return scenes;
-        return scenes.Where(x => x.Contains("FloorPlan1_") || x.Contains("FloorPlan28_") || x.Contains("Procedural") || x.Contains("ProceduralAB") || x.Contains("Calibration_Room")).ToList();
+        var proceduralOnlyScenesFilter = new HashSet<string>() {
+            {"FloorPlan1_physics"},
+            {"FloorPlan15_physics"},
+            {"FloorPlan28_physics"},
+            {"FloorPlan20_physics"},
+            {"FloorPlan_Val3_2"},
+            {"FloorPlan_Train5_2"},
+            {"Procedural.unity"},
+            {"ProceduralAB.unity"}
+        };
+
+        var containsScenes = scenes.Where(s => proceduralOnlyScenesFilter.Contains(s)).ToList();
+
+        var strictScenes = scenes.Where(x =>proceduralOnlyScenesFilter.Any(filter => x.Contains(filter)) ).ToList();
+
+        Debug.Log($"------- Build.cs Compare contains: {string.Join(",", containsScenes)} strict contains: {string.Join(",", strictScenes)}");
+
+        // return scenes.Where(s => proceduralOnlyScenesFilter.Contains(s)).ToList();
+        return scenes.Where(x =>proceduralOnlyScenesFilter.Any(filter => x.Contains(filter)) ).ToList();
+        // return proceduralOnlyBuild ? scenes.Where(s => proceduralOnlyScenesFilter.Contains(s)).ToList(): scenes;
+        return scenes.Where(x => x.Contains("FloorPlan1_") || x.Contains("FloorPlan15_") || x.Contains("FloorPlan20_") || x.Contains("FloorPlan28_") || x.Contains("Procedural") || x.Contains("ProceduralAB") || x.Contains("Calibration_Room")).ToList();
+        // return scenes.Where(x => x.Contains("FloorPlan1_") || x.Contains("FloorPlan28_") || x.Contains("Procedural") || x.Contains("ProceduralAB") || x.Contains("Calibration_Room")).ToList();
         // uncomment for faster builds for testing
         return scenes; //.Where(x => x.Contains("Procedural.unity") || x.Contains("Procedural.unity")).ToList(); //.Where(x => x.Contains("FloorPlan1_") || x.Contains("Procedural")).ToList();
     }
@@ -219,6 +247,11 @@ public class Build
     private static bool ScriptsOnly()
     {
         return GetBoolEnvVariable("BUILD_SCRIPTS_ONLY");
+    }
+
+    private static bool ProceduralOnly()
+    {
+        return GetBoolEnvVariable("PROCEDURAL_ONLY");
     }
 
     private static bool IncludePrivateScenes()

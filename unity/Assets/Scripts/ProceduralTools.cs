@@ -928,7 +928,9 @@ namespace Thor.Procedural {
 
             var collider = new GameObject("Col");
             // SimObjVisible
-            collider.layer = LayerMask.NameToLayer("SimObjVisible");
+
+            // Shoul be SimObjInvisible instead
+            collider.layer = LayerMask.NameToLayer("SimObjInvisible");
             collider.tag = "SimObjPhysics";
             var box = collider.AddComponent<BoxCollider>();
 
@@ -944,7 +946,8 @@ namespace Thor.Procedural {
             collider.transform.parent = colliders.transform;
 
             colliders.transform.parent = floorGameObject.transform;
-
+            
+            // Why duplicate this collider????
             GameObject duplicateCol = UnityEngine.Object.Instantiate(collider, colliders.transform);
             duplicateCol.layer = LayerMask.NameToLayer("FloorAgent");
             duplicateCol.name = "Col1";
