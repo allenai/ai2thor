@@ -1217,6 +1217,8 @@ class Controller(object):
         extra_args = {}
         if os.name == "nt":
             extra_args = dict(shell=True)
+        
+        print(f"Running with env: {env}\ncommand: {command}")
         self.server.unity_proc = proc = subprocess.Popen(
             command,
             env=env,
@@ -1231,10 +1233,9 @@ class Controller(object):
                 # immediately after launching
                 self.server.unity_proc.wait(timeout=1.0)
                 if self.server.unity_proc.returncode is not None:
+                    logFilePath =  self.unityLogFilePath if self.unityLogFilePath != None else "~/.config/unity3d/Allen\ Institute\ for\ Artificial\ Intelligence/AI2-THOR/Player.log"
                     message = (
-                        "Unity process has exited - check "
-                        "~/.config/unity3d/Allen\ Institute\ for\ "
-                        "Artificial\ Intelligence/AI2-THOR/Player.log for errors. "
+                        f"Unity process has exited - check '{logFilePath}' for errors. "
                         "Confirm that Vulkan is properly configured on this system "
                         "using vulkaninfo from the vulkan-utils package. returncode=%s"
                         % (self.server.unity_proc.returncode,)
