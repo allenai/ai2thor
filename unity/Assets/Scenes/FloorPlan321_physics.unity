@@ -2176,7 +2176,6 @@ GameObject:
   - component: {fileID: 320313753}
   - component: {fileID: 320313755}
   - component: {fileID: 320313754}
-  - component: {fileID: 320313756}
   - component: {fileID: 320313757}
   m_Layer: 8
   m_Name: FP321:StandardDoor1
@@ -2196,11 +2195,9 @@ Transform:
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 2.825, y: 1, z: 1.77}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 512138582}
-  - {fileID: 1589032946}
+  m_Children: []
   m_Father: {fileID: 1481105228}
-  m_RootOrder: 3
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &320313754
 MeshRenderer:
@@ -2253,19 +2250,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 320313752}
   m_Mesh: {fileID: 4300006, guid: 090d20a296bbdcb4ba6af2316abaa299, type: 3}
---- !u!65 &320313756
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 320313752}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.84999996, y: 2, z: 0.05600006}
-  m_Center: {x: -0.42499998, y: 0, z: -0.02}
 --- !u!114 &320313757
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2780,7 +2764,6 @@ GameObject:
   - component: {fileID: 512138582}
   - component: {fileID: 512138584}
   - component: {fileID: 512138583}
-  - component: {fileID: 512138585}
   - component: {fileID: 512138586}
   m_Layer: 8
   m_Name: FP321:StandardKnob1
@@ -2797,12 +2780,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 512138581}
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.42499998, y: -1, z: -0.02}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.4, y: 0, z: 1.75}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 320313753}
-  m_RootOrder: 0
+  m_Father: {fileID: 1481105228}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &512138583
 MeshRenderer:
@@ -2855,19 +2838,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 512138581}
   m_Mesh: {fileID: 4300008, guid: 090d20a296bbdcb4ba6af2316abaa299, type: 3}
---- !u!65 &512138585
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 512138581}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.058000177, y: 0.16449988, z: 0.12510651}
-  m_Center: {x: -0.388, y: 0.88824993, z: -0.000400085}
 --- !u!114 &512138586
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7705,7 +7675,6 @@ GameObject:
   - component: {fileID: 1207938385}
   - component: {fileID: 1207938387}
   - component: {fileID: 1207938386}
-  - component: {fileID: 1207938388}
   - component: {fileID: 1207938389}
   m_Layer: 8
   m_Name: FP321:Light1Done
@@ -7780,19 +7749,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1207938384}
   m_Mesh: {fileID: 4300000, guid: 090d20a296bbdcb4ba6af2316abaa299, type: 3}
---- !u!65 &1207938388
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1207938384}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.6384295, y: 0.62914824, z: 0.6384203}
-  m_Center: {x: 0.0000018030405, y: 0.22996372, z: 0.0000043213367}
 --- !u!114 &1207938389
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9340,6 +9296,8 @@ Transform:
   - {fileID: 115068819}
   - {fileID: 955091489}
   - {fileID: 1207938385}
+  - {fileID: 512138582}
+  - {fileID: 1589032946}
   - {fileID: 320313753}
   m_Father: {fileID: 0}
   m_RootOrder: 4
@@ -9773,11 +9731,11 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1589032945}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.4250002, y: -1, z: -0.07000005}
+  m_LocalPosition: {x: 2.3999999, y: 0, z: 1.6999999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 320313753}
-  m_RootOrder: 1
+  m_Father: {fileID: 1481105228}
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1589032947
 MeshRenderer:
