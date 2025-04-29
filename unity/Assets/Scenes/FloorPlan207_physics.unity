@@ -12572,6 +12572,8 @@ Transform:
   - {fileID: 1749749515}
   - {fileID: 1749749512}
   - {fileID: 1749749509}
+  - {fileID: 1749749495}
+  - {fileID: 1749749491}
   - {fileID: 1749749494}
   - {fileID: 1749749488}
   - {fileID: 1610495511}
@@ -12711,7 +12713,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4248124881432168, guid: fe91cb3602a754920b10df0f196b17c2, type: 3}
       propertyPath: m_RootOrder
-      value: 8
+      value: 9
       objectReference: {fileID: 0}
     - target: {fileID: 4248124881432168, guid: fe91cb3602a754920b10df0f196b17c2, type: 3}
       propertyPath: m_LocalScale.x
@@ -13458,7 +13460,6 @@ GameObject:
   - component: {fileID: 1749749495}
   - component: {fileID: 1749749497}
   - component: {fileID: 1749749496}
-  - component: {fileID: 1749749463}
   - component: {fileID: 1749749466}
   m_Layer: 8
   m_Name: FP207:StandardKnob1
@@ -13479,7 +13480,6 @@ GameObject:
   - component: {fileID: 1749749494}
   - component: {fileID: 1749749499}
   - component: {fileID: 1749749498}
-  - component: {fileID: 1749749464}
   - component: {fileID: 1749749467}
   m_Layer: 8
   m_Name: FP207:StandardDoor1
@@ -13543,7 +13543,7 @@ GameObject:
   - component: {fileID: 1749749468}
   m_Layer: 8
   m_Name: FP207:PaperClutter
-  m_TagString: Structure
+  m_TagString: visual_only
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -13626,7 +13626,7 @@ GameObject:
   - component: {fileID: 1749749480}
   m_Layer: 8
   m_Name: FP207:Carpet
-  m_TagString: Structure
+  m_TagString: visual_only
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -13700,32 +13700,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300156, guid: 01d21b9d74c5f164f8df6df573f48826, type: 3}
---- !u!65 &1749749463
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1749749444}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.12510635, y: 0.16449988, z: 0.058000177}
-  m_Center: {x: -0.0003998559, y: 0.88824993, z: 0.388}
---- !u!65 &1749749464
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1749749445}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.056000367, y: 2, z: 0.84999996}
-  m_Center: {x: 0, y: 0, z: 0.42499998}
 --- !u!114 &1749749465
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13885,7 +13859,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1575831888}
-  m_RootOrder: 6
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1749749489
 MeshRenderer:
@@ -13948,11 +13922,11 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1749749443}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -1, z: 0.42499995}
+  m_LocalPosition: {x: -2.05, y: 0, z: 3.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 1749749494}
-  m_RootOrder: 1
+  m_Father: {fileID: 1575831888}
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1749749492
 MeshRenderer:
@@ -14016,11 +13990,9 @@ Transform:
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -2.05, y: 1, z: 2.875}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 1749749495}
-  - {fileID: 1749749491}
+  m_Children: []
   m_Father: {fileID: 1575831888}
-  m_RootOrder: 5
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1749749495
 Transform:
@@ -14030,12 +14002,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1749749444}
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0, y: -1, z: 0.42499998}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -2.05, y: 0, z: 3.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 1749749494}
-  m_RootOrder: 0
+  m_Father: {fileID: 1575831888}
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1749749496
 MeshRenderer:
