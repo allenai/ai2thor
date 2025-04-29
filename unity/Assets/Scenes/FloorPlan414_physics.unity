@@ -1712,7 +1712,6 @@ GameObject:
   - component: {fileID: 163401020}
   - component: {fileID: 163401022}
   - component: {fileID: 163401021}
-  - component: {fileID: 163401023}
   - component: {fileID: 163401024}
   m_Layer: 8
   m_Name: FP414:Cube.1890
@@ -1733,8 +1732,8 @@ Transform:
   m_LocalPosition: {x: -3.03681, y: 0.131837, z: 1.377164}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 190672193}
-  m_RootOrder: 0
+  m_Father: {fileID: 861043101}
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &163401021
 MeshRenderer:
@@ -1788,19 +1787,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 163401019}
   m_Mesh: {fileID: 4300064, guid: 4767620398e126c4290117d5a75aa9ef, type: 3}
---- !u!65 &163401023
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 163401019}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1.0166442, y: 1.1978405, z: 0.23068252}
-  m_Center: {x: 0.2889337, y: 0.46492755, z: 0.079230115}
 --- !u!114 &163401024
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2027,11 +2013,9 @@ Transform:
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 163401020}
-  - {fileID: 1739911929}
+  m_Children: []
   m_Father: {fileID: 861043101}
-  m_RootOrder: 3
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &190672194
 MeshRenderer:
@@ -4754,7 +4738,6 @@ GameObject:
   - component: {fileID: 426178047}
   - component: {fileID: 426178049}
   - component: {fileID: 426178048}
-  - component: {fileID: 426178050}
   - component: {fileID: 426178051}
   m_Layer: 8
   m_Name: FP414:Handle_Front.009
@@ -4772,11 +4755,11 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 426178046}
   m_LocalRotation: {x: -0, y: -0, z: -1, w: 0.0000023543832}
-  m_LocalPosition: {x: 0.098, y: 0.000010140903, z: -0.029000038}
+  m_LocalPosition: {x: -1.3138392, y: 1.0441617, z: 3.6378756}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 1229383795}
-  m_RootOrder: 1
+  m_Father: {fileID: 861043101}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -180.00002}
 --- !u!23 &426178048
 MeshRenderer:
@@ -4829,19 +4812,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 426178046}
   m_Mesh: {fileID: 4300080, guid: 4767620398e126c4290117d5a75aa9ef, type: 3}
---- !u!65 &426178050
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 426178046}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.17748365, y: 0.08221169, z: 0.06976471}
-  m_Center: {x: -0.047686297, y: 0.00006491132, z: -0.037564944}
 --- !u!114 &426178051
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7124,7 +7094,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 861043101}
-  m_RootOrder: 4
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &661975171
 MeshRenderer:
@@ -10112,8 +10082,13 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 940378100}
+  - {fileID: 1229383795}
+  - {fileID: 942650024}
+  - {fileID: 426178047}
   - {fileID: 1655026738}
   - {fileID: 1450503574}
+  - {fileID: 163401020}
+  - {fileID: 1739911929}
   - {fileID: 190672193}
   - {fileID: 661975170}
   m_Father: {fileID: 0}
@@ -11009,7 +10984,6 @@ GameObject:
   - component: {fileID: 942650024}
   - component: {fileID: 942650026}
   - component: {fileID: 942650025}
-  - component: {fileID: 942650027}
   - component: {fileID: 942650028}
   m_Layer: 8
   m_Name: FP414:Handle_Back.005
@@ -11026,12 +11000,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 942650023}
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.764, y: 0.0000018471246, z: -0.0050001135}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.6478391, y: 1.0441533, z: 3.6618755}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 1229383795}
-  m_RootOrder: 0
+  m_Father: {fileID: 861043101}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &942650025
 MeshRenderer:
@@ -11084,19 +11058,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 942650023}
   m_Mesh: {fileID: 4300082, guid: 4767620398e126c4290117d5a75aa9ef, type: 3}
---- !u!65 &942650027
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 942650023}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.17748365, y: 0.08221161, z: 0.069764405}
-  m_Center: {x: -0.047686297, y: -0.00006492622, z: 0.037565224}
 --- !u!114 &942650028
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15585,7 +15546,6 @@ GameObject:
   - component: {fileID: 1229383795}
   - component: {fileID: 1229383797}
   - component: {fileID: 1229383796}
-  - component: {fileID: 1229383798}
   - component: {fileID: 1229383799}
   m_Layer: 8
   m_Name: FP414:Door.009
@@ -15602,14 +15562,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1229383794}
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.41799998, y: 1.0499923, z: 0.02246306}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -1.4118391, y: 1.0441515, z: 3.6668756}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 942650024}
-  - {fileID: 426178047}
-  m_Father: {fileID: 1655026738}
-  m_RootOrder: 0
+  m_Children: []
+  m_Father: {fileID: 861043101}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1229383796
 MeshRenderer:
@@ -15662,19 +15620,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1229383794}
   m_Mesh: {fileID: 4300078, guid: 4767620398e126c4290117d5a75aa9ef, type: 3}
---- !u!65 &1229383798
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1229383794}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.836, y: 2.0100112, z: 0.03469452}
-  m_Center: {x: 0.418, y: -0.040994227, z: -0.017014204}
 --- !u!114 &1229383799
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18486,7 +18431,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 861043101}
-  m_RootOrder: 2
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1450503575
 MeshRenderer:
@@ -20498,7 +20443,6 @@ GameObject:
   - component: {fileID: 1655026738}
   - component: {fileID: 1655026740}
   - component: {fileID: 1655026739}
-  - component: {fileID: 1655026741}
   - component: {fileID: 1655026742}
   m_Layer: 8
   m_Name: FP414:DoorFrame.009
@@ -20518,10 +20462,9 @@ Transform:
   m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -0.99383914, y: -0.005840783, z: 3.6444125}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 1229383795}
+  m_Children: []
   m_Father: {fileID: 861043101}
-  m_RootOrder: 1
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1655026739
 MeshRenderer:
@@ -20574,19 +20517,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1655026737}
   m_Mesh: {fileID: 4300076, guid: 4767620398e126c4290117d5a75aa9ef, type: 3}
---- !u!65 &1655026741
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1655026737}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1.0000001, y: 2.1000278, z: 0.08072571}
-  m_Center: {x: -0.000000059604645, y: 1.0500046, z: -0.012970481}
 --- !u!114 &1655026742
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21539,8 +21469,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 190672193}
-  m_RootOrder: 1
+  m_Father: {fileID: 861043101}
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1739911930
 MeshRenderer:
