@@ -527,14 +527,15 @@ public class DownloadThorAssets : MonoBehaviour
             meshData.parentRelativePosition = parent.InverseTransformPoint(go.transform.position);
             meshData.parentRelativeRotation = Quaternion.Inverse(parent.rotation) * go.transform.rotation;
             meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, parent.localScale);
-            //meshData.parentRelativeScale = GetCombinedScale(go.transform, parent);
-
+            meshData.parentRelativeScale = GetCombinedScale(go.transform, parent);
+            
             // If this parent has a MeshFilter, stop here
             // TOASTER _ Parent can be meshFIlter. take note.
             Debug.Log(meshfilter.sharedMesh.name + " parent: " + parent.name);
             if (parent.GetComponent<MeshFilter>() != null)
             {
-                meshData.parentName = parent.name;
+                meshData.parentName = parent.GetComponent<MeshFilter>().sharedMesh.name;
+                meshData.parentRelativeScale = GetCombinedScale(go.transform, parent.parent);
                 break;  //Stop searching further
             }
 
@@ -543,14 +544,19 @@ public class DownloadThorAssets : MonoBehaviour
                 Debug.Log(meshfilter.sharedMesh.name + " parnet " + parent.name + "'s child: " + child.name + " " + child.GetComponent<MeshFilter>());
                 if(child.GetComponent<MeshFilter>() != null)
                 {
+                    if (child.GetComponent<MeshFilter>().sharedMesh == null)
+                    {
+                        Debug.LogWarning("MeshFilter has no mesh: " + child.name + " " + child.GetComponent<MeshFilter>().name);
+                        continue;
+                    }
                     Debug.Log(child.GetComponent<MeshFilter>().sharedMesh.name + " " + meshfilter.sharedMesh.name);
                     if (child.GetComponent<MeshFilter>().sharedMesh.name != meshfilter.sharedMesh.name)
                     {
                         meshData.parentName = child.GetComponent<MeshFilter>().sharedMesh.name;
                         meshData.parentRelativePosition = child.InverseTransformPoint(go.transform.position);
                         meshData.parentRelativeRotation = Quaternion.Inverse(child.rotation) * go.transform.rotation;
-                        //meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, child.localScale); 
-                        //meshData.parentRelativeScale =GetCombinedScale(go.transform, child); // child
+                        meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, child.localScale); 
+                        meshData.parentRelativeScale =GetCombinedScale(go.transform, child); // child
                         //meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, GetCombinedScale(go.transform, child)); 
                         Debug.Log("found parnet: " +child.GetComponent<MeshFilter>().sharedMesh.name + " " + meshfilter.sharedMesh.name);
                         foundParent = true;
@@ -581,7 +587,7 @@ public class DownloadThorAssets : MonoBehaviour
         if (parent == null)
         {
             parent = go.transform.root;
-            meshData.parentName = parent.name;
+            meshData.parentName = parent.name;//parent.GetComponent<MeshFilter>().sharedMesh.name; //parent.name;
             Debug.LogWarning("No parent with MeshFilter or SimObjPhysics found, using root transform as fallback.");
         }
 
@@ -1010,7 +1016,7 @@ public class DownloadThorAssets : MonoBehaviour
                 Debug.Log("not null: " + collider.gameObject.name);
             }
         }
-        Debug.Log("Collecting colliders at this level: " + child.name + " " + mesh_parent.GetComponent<MeshFilter>().sharedMesh.name + " " + i);
+        Debug.Log("Collecting colliders at this level: " + child.parent.name + " " + mesh_parent.GetComponent<MeshFilter>().sharedMesh.name + " " + i);
 
         // Recursively check all children - NOTE this is wrong for doorway bc it's not stopping at the meshfilter
         //foreach (Transform childOfchild in child)
