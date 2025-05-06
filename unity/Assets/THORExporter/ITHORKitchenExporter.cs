@@ -19,7 +19,7 @@ public class ITHORKitchenExporter : MonoBehaviour
     public int floorplanID = -1;
 
 
-    private Scene currentScene;
+    private Scene? previousScene = null;  // Add this field at class level
 
     private string scenePath = null;
 
@@ -48,46 +48,62 @@ public class ITHORKitchenExporter : MonoBehaviour
             scenePaths.Add($"Scenes/FloorPlan{floorplanID}_physics");
         }
 
-        // for loop 
-        foreach (var scenePath in scenePaths)
+        StartCoroutine(ProcessAllKitchenScenes(scenePaths));
+    }
+
+    IEnumerator ProcessAllKitchenScenes(List<string> scenePaths)
+    {
+        foreach (string sceneName in scenePaths)
         {
-            // LoadAndExportScene(scenePath);
-            StartCoroutine(LoadAndExportSceneAsync(scenePath));
-        }   
+            Debug.Log($"Processing kitchen scene: {sceneName}");
+            
+            // Load and process each kitchen scene
+            yield return StartCoroutine(LoadAndExportSceneAsync(sceneName));
+            
+            Debug.Log($"Finished processing {sceneName}");
+        }
+        
+        Debug.Log("Finished processing all kitchen scenes");
     }
 
     IEnumerator LoadAndExportSceneAsync(string sceneName)
     {
         Debug.Log($"Loading scene {sceneName}");
         
-        var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-        var asyncLoad = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+        // Load the new scene in Single mode (this automatically unloads current scene)
+        var asyncLoad = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Single);
 
         while (!asyncLoad.isDone)
         {
             yield return null;
         }
 
-        var newScene = UnityEngine.SceneManagement.SceneManager.GetSceneByName(sceneName);
-        UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(gameObject, newScene);
-        UnityEngine.SceneManagement.SceneManager.UnloadSceneAsync(currentScene);
+        // Get reference to newly loaded scene
+        var newScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+        Debug.Log($"Successfully loaded scene: {newScene.name}");
+
+        // Debug print the number of root GameObjects in the scene
+        var rootObjects = newScene.GetRootGameObjects();
+        Debug.Log($"Number of root GameObjects in {sceneName}: {rootObjects.Length}");
+
+        // Print info about each root object
+        foreach (var obj in rootObjects)
+        {
+            Debug.Log($"Root object: {obj.name}");
+            Debug.Log($"Number of children in {obj.name}: {obj.transform.childCount}");
+        }
     }
 
-    void LoadAndExportScene(string sceneName)
+    // Add your scene processing methods here
+    IEnumerator ProcessCurrentScene()
     {
-        Debug.Log($"Loading scene {sceneName}");
-
-        var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName, LoadSceneMode.Single);
-        // UnityEngine.SceneManagement.SceneManager.UnloadScene(currentScene);
-        var newScene = UnityEngine.SceneManagement.SceneManager.GetSceneByName(sceneName);
-        UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(gameObject, newScene);
+        // Add your logic to process the current kitchen scene
+        yield return null;
     }
 
-    void Update() {
-        var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-        Debug.Log($"Current Scene Name: {currentScene.name}");
-        // var gameObjects = currentScene.GetRootGameObjects();
-        // Debug.Log("fuuuuuuuuu");
+    void Update() 
+    {
+        // Remove this method if you don't need continuous scene name printing
+        // Or keep it if you find it useful for debugging
     }
 }
