@@ -535,6 +535,12 @@ public class DownloadThorAssets : MonoBehaviour
             if (parent.GetComponent<MeshFilter>() != null)
             {
                 meshData.parentName = parent.GetComponent<MeshFilter>().sharedMesh.name;
+                if (meshData.parentName.Contains("PS_"))
+                {
+                    Debug.Log("-----------parent name: " + meshData.parentName + " " + parent.name);
+                    meshData.parentName = parent.name;
+                }
+
                 meshData.parentRelativeScale = GetCombinedScale(go.transform, parent.parent);
                 break;  //Stop searching further
             }
@@ -553,6 +559,11 @@ public class DownloadThorAssets : MonoBehaviour
                     if (child.GetComponent<MeshFilter>().sharedMesh.name != meshfilter.sharedMesh.name)
                     {
                         meshData.parentName = child.GetComponent<MeshFilter>().sharedMesh.name;
+                        if (meshData.parentName.Contains("PS_"))
+                        {
+                            Debug.Log("-----------parent name: " + meshData.parentName + " " + parent.name);
+                            meshData.parentName = parent.name;
+                        }
                         meshData.parentRelativePosition = child.InverseTransformPoint(go.transform.position);
                         meshData.parentRelativeRotation = Quaternion.Inverse(child.rotation) * go.transform.rotation;
                         meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, child.localScale); 
@@ -571,7 +582,13 @@ public class DownloadThorAssets : MonoBehaviour
             }
 
             // If this parent has a SimObjPhysics component and it's not the topmost one, continue searching
-            if (parent.GetComponent<SimObjPhysics>() != null && parent != topmostSimObjPhysics.transform)
+            Transform topmostTransform2 = meshfilter.transform;
+            if (topmostSimObjPhysics != null)
+            {
+                topmostTransform2 = topmostSimObjPhysics.transform;
+            }
+
+            if (parent.GetComponent<SimObjPhysics>() != null && parent != topmostTransform2)
             {
                 // Move up the hierarchy
                 parent = parent.parent;
@@ -596,7 +613,13 @@ public class DownloadThorAssets : MonoBehaviour
         GameObject mesh_parent = go; //= parent.gameObject;
 
         // 1. get joint info
-        meshData.jointInfo = CollectValidJoints(meshfilter, ref meshData, transformsTraversed, parent, topmostSimObjPhysics.transform);
+        Transform topmostTransform = meshfilter.transform;
+        if (topmostSimObjPhysics != null)
+        {
+            topmostTransform = topmostSimObjPhysics.transform;
+        }
+
+        meshData.jointInfo = CollectValidJoints(meshfilter, ref meshData, transformsTraversed, parent, topmostTransform);
         Debug.Log($"Joint info: {meshData.jointInfo}");
         GameObject collider_parent = null;
         if (meshData.jointInfo != null)

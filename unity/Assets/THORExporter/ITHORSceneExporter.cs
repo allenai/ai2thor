@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 using System.IO;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 public class ITHORSceneExporter : MonoBehaviour
 {
@@ -44,7 +45,7 @@ public class ITHORSceneExporter : MonoBehaviour
         sceneData.structuralObjects = GetStructuralObjects(floorPlanName);
 
         // Save to JSON
-        string savePath = Path.Combine("Assets/iTHOR/Scenes", floorPlanName);
+        string savePath = Path.Combine("Assets/iTHOR", floorPlanName);
         Directory.CreateDirectory(savePath);
         
         string jsonPath = Path.Combine(savePath, $"{floorPlanName}.json");
@@ -63,7 +64,7 @@ public class ITHORSceneExporter : MonoBehaviour
             objectCount[objectId] = 0;
 
         string assetId = objectId + "_" + objectCount[objectId];
-        string exportPath = Path.Combine("Assets/iTHOR/Scenes", floorPlanName);
+        string exportPath = Path.Combine("Assets/iTHOR", floorPlanName);
         
         // Create all necessary directories
         Directory.CreateDirectory(exportPath);  // Base directory
@@ -78,7 +79,29 @@ public class ITHORSceneExporter : MonoBehaviour
         foreach (MeshFilter mf in meshFilters)
         {
             Debug.Log($"Processing mesh: {mf.mesh.name}");
-            if (mf.mesh.name.Contains("Surface"))
+            
+            // Skip if mesh filter or renderer is invalid
+            if (mf == null || mf.mesh == null)
+                continue;
+            
+            MeshRenderer renderer = mf.GetComponent<MeshRenderer>();
+            if (renderer == null || renderer.sharedMaterials == null || renderer.sharedMaterials.Length == 0)
+                continue;
+            
+            // Skip if any materials are null
+            bool hasNullMaterial = false;
+            foreach (Material mat in renderer.sharedMaterials)
+            {
+                if (mat == null)
+                {
+                    hasNullMaterial = true;
+                    break;
+                }
+            }
+            if (hasNullMaterial)
+                continue;
+
+            if (mf.mesh.name.Contains("PS") && go.tag != "Structure")
                 continue;
 
             if (mf.gameObject.activeSelf)
@@ -89,7 +112,18 @@ public class ITHORSceneExporter : MonoBehaviour
 
         MeshFilter goMeshFilter = go.GetComponent<MeshFilter>();
         if (goMeshFilter != null)
-            activeMeshFilters.Add(goMeshFilter);
+        {
+            MeshRenderer renderer = goMeshFilter.GetComponent<MeshRenderer>();
+            bool isValid = renderer != null && 
+                          renderer.sharedMaterials != null && 
+                          renderer.sharedMaterials.Length > 0 &&
+                          !renderer.sharedMaterials.Any(m => m == null);
+                          
+            if (isValid)
+            {
+                activeMeshFilters.Add(goMeshFilter);
+            }
+        }
         Debug.Log($"Active mesh filters: {activeMeshFilters.Count}");
 
         // Handle bounding box and center
@@ -100,24 +134,17 @@ public class ITHORSceneExporter : MonoBehaviour
         bool saveCombinedSubmeshes = false;
 
         // Get the SimObjPhysics component
-        SimObjPhysics simObjPhysics = go.GetComponent<SimObjPhysics>();
-        if (simObjPhysics == null)
+        if (go.tag == "SimObjPhysics")
         {
-            simObjPhysics = go.GetComponentInChildren<SimObjPhysics>();
-        }
-
-        if (simObjPhysics != null)
-        {
+            SimObjPhysics simObjPhysics = go.GetComponent<SimObjPhysics>();
             AxisAlignedBoundingBox box = simObjPhysics.AxisAlignedBoundingBox;
-            if (box != null)
-            {
-                center = box.center;
-                applyBoundingBox = true;
-                saveSubMeshes = true;
-                saveSubMeshTransform = true;
-                saveCombinedSubmeshes = true;
-            }
+            center = box.center;
+            applyBoundingBox = true; 
+            saveSubMeshes = true;
+            saveSubMeshTransform = true;
+            saveCombinedSubmeshes = true;
         }
+        
 
         // Initialize DownloadThorAssets if not already initialized
         if (downloadThorAssets == null)
@@ -138,8 +165,8 @@ public class ITHORSceneExporter : MonoBehaviour
                 applyBoundingBox, 
                 saveSubMeshes, 
                 saveSubMeshTransform, 
-                saveCombinedSubmeshes,
-                simObjPhysics
+                saveCombinedSubmeshes//,
+                //simObjPhysics
             );
 
             // Create materials directory if needed
@@ -170,12 +197,17 @@ public class ITHORSceneExporter : MonoBehaviour
                 continue;
 
             SimObjPhysics simObjPhysics = obj.GetComponent<SimObjPhysics>();
+            Vector3 bbox_center = Vector3.zero;
             if (simObjPhysics != null)
             {
                 string objectType = Enum.GetName(typeof(SimObjType), simObjPhysics.Type);
                 string objectId = obj.name.Replace(" ", "_");
                 string assetId = simObjPhysics.assetID;
-
+                Transform bbox = obj.transform.Find("BoundingBox");
+                if (bbox != null)
+                {
+                    bbox_center = bbox.GetComponent<BoxCollider>().center;
+                }
                 // Export asset if it doesn't have an assetID
                 if (string.IsNullOrEmpty(assetId))
                 {
@@ -183,6 +215,7 @@ public class ITHORSceneExporter : MonoBehaviour
                     clone.name = objectId;
                     Debug.Log($"No asset ID for {objectId}, exporting asset");
                     assetId = ExportAsset(clone, objectId, objectType, floorPlanName);
+                    bbox_center = Vector3.zero;
                     Destroy(clone);
                 }
 
@@ -216,17 +249,14 @@ public class ITHORSceneExporter : MonoBehaviour
             SimObjPhysics simObjPhysics = obj.GetComponent<SimObjPhysics>();
             string objectId = obj.name.Replace(" ", "_");
             string objectType = "Structural";  // Use a consistent type for structural objects
-            string assetId = simObjPhysics != null ? simObjPhysics.assetID : "";
+            string assetId = objectId; // simObjPhysics != null ? simObjPhysics.assetID : "";
 
-            // Export asset if it doesn't have an assetID
-            if (string.IsNullOrEmpty(assetId))
-            {
-                GameObject clone = Instantiate(obj);
-                clone.name = objectId;
-                Debug.Log($"No asset ID for structural object {objectId}, exporting asset");
-                assetId = ExportAsset(clone, objectId, objectType, floorPlanName);
-                Destroy(clone);
-            }
+            GameObject clone = Instantiate(obj);
+            clone.name = objectId;
+            assetId = ExportAsset(clone, objectId, objectType, floorPlanName);
+            Debug.Log($"Exported structural object: {obj.name} with assetId: {assetId}");
+            Destroy(clone);
+        
 
             IThorObject thorObj = new IThorObject
             {
