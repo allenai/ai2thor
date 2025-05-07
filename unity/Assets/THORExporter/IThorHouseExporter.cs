@@ -171,4 +171,9 @@ public class IThorHouseExporter : MonoBehaviour
         var json = JsonUtility.ToJson(nodesList, true);
         File.WriteAllText(fileNameJSON, json);
     }
+
+    void Start()
+    {
+        Debug.Log($"ITHORHouseExporter started in scene: {gameObject.scene.name}");
+    }
 }
