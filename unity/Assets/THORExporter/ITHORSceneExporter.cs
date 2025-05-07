@@ -34,7 +34,7 @@ public class ITHORSceneExporter : MonoBehaviour
     {
         // Get the current active scene
         Scene currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
-        string floorPlanName = currentScene.name;
+        string floorPlanName = currentScene.name.Replace(" ", "");
         Debug.Log($"Exporting scene: {floorPlanName}");
 
         // Create scene data container
@@ -63,13 +63,17 @@ public class ITHORSceneExporter : MonoBehaviour
         if (!objectCount.ContainsKey(objectId))
             objectCount[objectId] = 0;
 
-        string assetId = objectId + "_" + objectCount[objectId];
+        string assetId = (objectId + "_" + objectCount[objectId])
+            .Replace(" ", "")
+            .Replace("(Instance)", "")
+            .Replace("Instance", "");
+
         string exportPath = Path.Combine("Assets/iTHOR", floorPlanName);
         
         // Create all necessary directories
+        Directory.CreateDirectory(Path.Combine("Assets/iTHOR", "Textures"));  // Textures directory moved up one level
         Directory.CreateDirectory(exportPath);  // Base directory
-        Directory.CreateDirectory(Path.Combine(exportPath, "Textures"));  // Textures directory
-        Directory.CreateDirectory(Path.Combine(exportPath, objectType));  // Object type directory
+        Directory.CreateDirectory(Path.Combine(exportPath, objectType.Replace(" ", "")));  // Object type directory
         
         Debug.Log($"Created directories in: {exportPath}");
 
@@ -154,7 +158,7 @@ public class ITHORSceneExporter : MonoBehaviour
         downloadThorAssets.savePath = exportPath;
 
         // Export asset obj
-        string relativeExportPath = Path.Combine(objectType, assetId);
+        string relativeExportPath = Path.Combine(objectType.Replace(" ", ""), assetId);
         
         try
         {
@@ -200,9 +204,12 @@ public class ITHORSceneExporter : MonoBehaviour
             Vector3 bbox_center = Vector3.zero;
             if (simObjPhysics != null)
             {
-                string objectType = Enum.GetName(typeof(SimObjType), simObjPhysics.Type);
-                string objectId = obj.name.Replace(" ", "_");
-                string assetId = simObjPhysics.assetID;
+                string objectType = Enum.GetName(typeof(SimObjType), simObjPhysics.Type).Replace(" ", "");
+                string objectId = obj.name
+                    .Replace(" ", "")
+                    .Replace("(Instance)", "")
+                    .Replace("Instance", "");
+                string assetId = simObjPhysics.assetID?.Replace(" ", "");
                 Transform bbox = obj.transform.Find("BoundingBox");
                 if (bbox != null)
                 {
@@ -247,9 +254,12 @@ public class ITHORSceneExporter : MonoBehaviour
                 continue;
 
             SimObjPhysics simObjPhysics = obj.GetComponent<SimObjPhysics>();
-            string objectId = obj.name.Replace(" ", "_");
-            string objectType = "Structural";  // Use a consistent type for structural objects
-            string assetId = objectId; // simObjPhysics != null ? simObjPhysics.assetID : "";
+            string objectId = obj.name
+                .Replace(" ", "")
+                .Replace("(Instance)", "")
+                .Replace("Instance", "");
+            string objectType = "Structural";
+            string assetId = objectId;
 
             GameObject clone = Instantiate(obj);
             clone.name = objectId;

@@ -345,7 +345,8 @@ public class DownloadThorAssets : MonoBehaviour
             return;
         }
 
-        Directory.CreateDirectory(Path.Combine(savePath, "Textures")); 
+        // Move Textures directory up one level
+        Directory.CreateDirectory(Path.Combine("Assets/iTHOR", "Textures")); 
         
         // Get all prefab files, excluding specified directories
         List<string> excludeDirectories = new List<string> { 
@@ -495,10 +496,16 @@ public class DownloadThorAssets : MonoBehaviour
     {
         var go = meshfilter.gameObject;
 
-        //recursive setup for where mesh's parent is the top level of the hierarchy
+        // Clean up mesh name by removing spaces and instances
+        meshName = meshName
+            .Replace(" ", "")
+            .Replace("(Instance)", "")
+            .Replace("Instance", "");
+
+        // Recursive setup for where mesh's parent is the top level of the hierarchy
         var meshData = new MeshData
         {
-            //default with this mesh's current local pos, rot, and scale
+            // Default with this mesh's current local pos, rot, and scale
             parentRelativePosition = go.transform.localPosition,
             parentRelativeRotation = go.transform.localRotation,
             parentRelativeScale = go.transform.localScale,
@@ -534,11 +541,17 @@ public class DownloadThorAssets : MonoBehaviour
             Debug.Log(meshfilter.sharedMesh.name + " parent: " + parent.name);
             if (parent.GetComponent<MeshFilter>() != null)
             {
-                meshData.parentName = parent.GetComponent<MeshFilter>().sharedMesh.name;
+                meshData.parentName = parent.GetComponent<MeshFilter>().sharedMesh.name
+                    .Replace(" ", "")
+                    .Replace("(Instance)", "")
+                    .Replace("Instance", "");
                 if (meshData.parentName.Contains("PS_"))
                 {
                     Debug.Log("-----------parent name: " + meshData.parentName + " " + parent.name);
-                    meshData.parentName = parent.name;
+                    meshData.parentName = parent.name
+                        .Replace(" ", "")
+                        .Replace("(Instance)", "")
+                        .Replace("Instance", "");
                 }
 
                 meshData.parentRelativeScale = GetCombinedScale(go.transform, parent.parent);
@@ -558,11 +571,17 @@ public class DownloadThorAssets : MonoBehaviour
                     Debug.Log(child.GetComponent<MeshFilter>().sharedMesh.name + " " + meshfilter.sharedMesh.name);
                     if (child.GetComponent<MeshFilter>().sharedMesh.name != meshfilter.sharedMesh.name)
                     {
-                        meshData.parentName = child.GetComponent<MeshFilter>().sharedMesh.name;
+                        meshData.parentName = child.GetComponent<MeshFilter>().sharedMesh.name
+                            .Replace(" ", "")
+                            .Replace("(Instance)", "")
+                            .Replace("Instance", "");
                         if (meshData.parentName.Contains("PS_"))
                         {
                             Debug.Log("-----------parent name: " + meshData.parentName + " " + parent.name);
-                            meshData.parentName = parent.name;
+                            meshData.parentName = parent.name
+                                .Replace(" ", "")
+                                .Replace("(Instance)", "")
+                                .Replace("Instance", "");
                         }
                         meshData.parentRelativePosition = child.InverseTransformPoint(go.transform.position);
                         meshData.parentRelativeRotation = Quaternion.Inverse(child.rotation) * go.transform.rotation;
@@ -604,7 +623,10 @@ public class DownloadThorAssets : MonoBehaviour
         if (parent == null)
         {
             parent = go.transform.root;
-            meshData.parentName = parent.name;//parent.GetComponent<MeshFilter>().sharedMesh.name; //parent.name;
+            meshData.parentName = parent.name
+                .Replace(" ", "")
+                .Replace("(Instance)", "")
+                .Replace("Instance", "");
             Debug.LogWarning("No parent with MeshFilter or SimObjPhysics found, using root transform as fallback.");
         }
 
@@ -1215,14 +1237,14 @@ public class DownloadThorAssets : MonoBehaviour
         ExportedAssetInfo exportedAssetInfo = new ExportedAssetInfo();
         exportedAssetInfo.bbox_center.position = center.ToString("0.00000");
 
-        string baseFileName = Path.GetFileNameWithoutExtension(relativeExportPath);
+        string baseFileName = Path.GetFileNameWithoutExtension(relativeExportPath)
+            .Replace(" ", "")
+            .Replace("(Instance)", "")
+            .Replace("Instance", "");
 
         StringBuilder sb = new StringBuilder();
         sb.AppendLine("mtllib " + baseFileName + ".mtl");
         int lastIndex = 0;
-
-
-        //all_colliders = 
 
         // START GOING THROUGH ALL MESH FILTERS HERE
         for(int i = 0; i < meshFilters.Length; i++)
@@ -1230,7 +1252,10 @@ public class DownloadThorAssets : MonoBehaviour
             MeshFilter mf = meshFilters[i];
             //ensure mesh name is unique because SOMETIMES THEY ARE NAMED THE SAME IM SORRY
             //string meshName = mf.gameObject.name + "_" + i.ToString();
-            string meshName = mf.sharedMesh.name;
+            string meshName = mf.sharedMesh.name
+                .Replace(" ", "")
+                .Replace("(Instance)", "")
+                .Replace("Instance", "");
 
             MeshData meshData = FillMeshData(meshFilters[i], meshName, topmostSimObjPhysics);
             exportedAssetInfo.meshes.Add(meshData);
@@ -1252,10 +1277,6 @@ public class DownloadThorAssets : MonoBehaviour
             MeshRenderer mr = mf.gameObject.GetComponent<MeshRenderer>();
             {
                 string exportName = meshName;
-                // if (true)
-                // {
-                //     exportName += "_" + i;
-                // }
                 sb.AppendLine("g " + exportName);
             }
 
@@ -1540,54 +1561,18 @@ public class DownloadThorAssets : MonoBehaviour
     string ExportTexture(Texture2D t)
     {
         string assetPath = AssetDatabase.GetAssetPath(t);
-        //Debug.Log(assetPath);
 
         if(File.Exists(assetPath))
         {
             string textureName = Path.GetFileName(assetPath); // with extension
-            string copyPath = Path.Combine(Path.Combine(savePath, "Textures"), textureName);
-            //Debug.Log(copyPath);
+            // Change texture save location to be one level up
+            string copyPath = Path.Combine(Path.Combine("Assets/iTHOR", "Textures"), textureName);
 
             File.Copy(assetPath, copyPath, true);
             return copyPath;
         }
         else
             return "false";
-        /*
-        try
-        {
-            if (autoMarkTexReadable)
-            {
-                string assetPath = AssetDatabase.GetAssetPath(t);
-                Debug.Log(assetPath);
-
-                var tImporter = AssetImporter.GetAtPath(assetPath) as TextureImporter;
-                if (tImporter != null)
-                {
-                    tImporter.textureType = TextureImporterType.Advanced;
-
-                    if (!tImporter.isReadable)
-                    {
-                        tImporter.isReadable = true;
-
-                        AssetDatabase.ImportAsset(assetPath);
-                        AssetDatabase.Refresh();
-                    }
-                }
-            }
-            string exportName = lastExportFolder + "\\" + t.name + ".png";
-            Texture2D exTexture = new Texture2D(t.width, t.height, TextureFormat.ARGB32, false);
-            exTexture.SetPixels(t.GetPixels());
-            System.IO.File.WriteAllBytes(exportName, exTexture.EncodeToPNG());
-            return exportName;
-        }
-        catch (System.Exception ex)
-        {
-            Debug.Log("Could not export texture : " + t.name + ". is it readable?");
-            return "null";
-        }
-        */
-
     }
 
     //////////////// Alvaro Collider serialization Reference Code Below /////////////////////
