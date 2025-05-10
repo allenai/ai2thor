@@ -58,7 +58,7 @@ public class ITHORSceneExporter : MonoBehaviour
         Debug.Log($"Exported {sceneData.structuralObjects.Count} structural objects");
     }
 
-    private string ExportAsset(GameObject go, string objectId, string objectType, string floorPlanName)
+    private string ExportAsset(GameObject go, string tagType, string objectId, string objectType, string floorPlanName)
     {
         if (!objectCount.ContainsKey(objectId))
             objectCount[objectId] = 0;
@@ -78,11 +78,14 @@ public class ITHORSceneExporter : MonoBehaviour
         Debug.Log($"Created directories in: {exportPath}");
 
         // Get active mesh filters
-        MeshFilter[] meshFilters = go.GetComponentsInChildren<MeshFilter>();
+        var meshFilters = go.GetComponentsInChildren<MeshFilter>();
         List<MeshFilter> activeMeshFilters = new List<MeshFilter>();
         foreach (MeshFilter mf in meshFilters)
         {
-            Debug.Log($"Processing mesh: {mf.mesh.name}");
+            if (tagType == "Structure" && mf.gameObject.tag != tagType)
+                continue;
+
+            Debug.Log($"Processing mesh: {mf.sharedMesh.name}");
             
             // Skip if mesh filter or renderer is invalid
             if (mf == null || mf.mesh == null)
@@ -221,7 +224,8 @@ public class ITHORSceneExporter : MonoBehaviour
                     GameObject clone = Instantiate(obj);
                     clone.name = objectId;
                     Debug.Log($"No asset ID for {objectId}, exporting asset");
-                    assetId = ExportAsset(clone, objectId, objectType, floorPlanName);
+                    var tagType = obj.tag;
+                    assetId = ExportAsset(clone,  tagType, objectId, objectType, floorPlanName);
                     bbox_center = Vector3.zero;
                     Destroy(clone);
                 }
@@ -253,7 +257,7 @@ public class ITHORSceneExporter : MonoBehaviour
             if (!obj.activeSelf)
                 continue;
 
-            SimObjPhysics simObjPhysics = obj.GetComponent<SimObjPhysics>();
+            //SimObjPhysics simObjPhysics = obj.GetComponent<SimObjPhysics>();
             string objectId = obj.name
                 .Replace(" ", "")
                 .Replace("(Instance)", "")
@@ -261,11 +265,12 @@ public class ITHORSceneExporter : MonoBehaviour
             string objectType = "Structural";
             string assetId = objectId;
 
-            GameObject clone = Instantiate(obj);
-            clone.name = objectId;
-            assetId = ExportAsset(clone, objectId, objectType, floorPlanName);
+            //GameObject clone = Instantiate(obj);
+            //clone.name = objectId;
+            var tagType = obj.tag;
+            assetId = ExportAsset(obj, tagType, objectId, objectType, floorPlanName);
             Debug.Log($"Exported structural object: {obj.name} with assetId: {assetId}");
-            Destroy(clone);
+            //Destroy(clone);
         
 
             IThorObject thorObj = new IThorObject

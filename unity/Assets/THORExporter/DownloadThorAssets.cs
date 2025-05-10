@@ -491,6 +491,75 @@ public class DownloadThorAssets : MonoBehaviour
         print("material saved");
     }
 
+    // MAKE SURE THIS WORKS FOR 'STRUCTURE" TAG.
+    public MeshData FillStructureMeshData(MeshFilter meshfilter, string meshName, SimObjPhysics topmostSimObjPhysics)
+    {
+        var go = meshfilter.gameObject;
+
+        var meshData = new MeshData
+        {
+            // Default with this mesh's current local pos, rot, and scale
+            parentRelativePosition = Vector3.zero,
+            parentRelativeRotation = Quaternion.identity,
+            parentRelativeScale = go.transform.localScale,
+            meshName = meshName,
+            parentName = ""
+        };
+
+        // FILL IN THE REST primitives and 
+        //public AllMyPrimitiveColliders primitiveColliders = new AllMyPrimitiveColliders();
+        //public AllMyPlaceableZones placeableZoneColliders = new AllMyPlaceableZones();
+        int i = 0;
+        var meshFiltersGameObject = go;
+        var mesh_parent = go.transform.parent.gameObject;
+        var child = go.transform.Find("Colliders");
+        if (child == null)
+            return meshData;
+        //foreach (var collider in child.GetComponents<Collider>())
+        foreach (var collider in child.GetComponents<Collider>())
+        {
+            if (!collider.enabled || !collider.gameObject.activeInHierarchy)
+                continue;
+            
+            Debug.Log("ColliderInfo: " + collider.gameObject.name);
+
+            var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, mesh_parent);
+            if (colliderInfo != null)
+            {
+                if (!collider.isTrigger)
+                {
+                    meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
+                    i++;
+                }
+                
+                Debug.Log("not null: " + collider.gameObject.name);
+            }
+        }
+
+        child = go.transform.Find("Receptacles");
+        //foreach (var collider in child.GetComponents<Collider>())
+        foreach (var collider in child.GetComponents<Collider>())
+        {
+            if (!collider.enabled || !collider.gameObject.activeInHierarchy)
+                continue;
+            
+            Debug.Log("ColliderInfo: " + collider.gameObject.name);
+
+            var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, mesh_parent);
+            if (colliderInfo != null)
+            {
+                if (collider.GetComponent("Contains") != null)
+                {
+                    meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
+                }
+                
+                Debug.Log("not null: " + collider.gameObject.name);
+            }
+        }
+        return meshData;
+    }
+
+
     //take one mesh filter, and get all the information about it ready to go
     public MeshData FillMeshData(MeshFilter meshfilter, string meshName, SimObjPhysics topmostSimObjPhysics)
     {
@@ -669,7 +738,6 @@ public class DownloadThorAssets : MonoBehaviour
         //         break;
         //     }
         // }
-
         return meshData;
     }
 
@@ -945,6 +1013,7 @@ public class DownloadThorAssets : MonoBehaviour
         var go = meshfilter.gameObject;
 
         Transform parent = go.transform.parent;
+
         //if (collider_parent != null)
         //{
         //    parent = collider_parent.transform;
@@ -1061,7 +1130,7 @@ public class DownloadThorAssets : MonoBehaviour
                 Debug.Log("not null: " + collider.gameObject.name);
             }
         }
-        Debug.Log("Collecting colliders at this level: " + child.parent.name + " " + mesh_parent.GetComponent<MeshFilter>().sharedMesh.name + " " + i);
+        //Debug.Log("Collecting colliders at this level: " + child.parent.name + " " + mesh_parent.GetComponent<MeshFilter>().sharedMesh.name + " " + i);
 
         // Recursively check all children - NOTE this is wrong for doorway bc it's not stopping at the meshfilter
         //foreach (Transform childOfchild in child)
@@ -1132,9 +1201,9 @@ public class DownloadThorAssets : MonoBehaviour
         // DEPENIDING ON WHAT TYPE OF COLLIDER IT IS. BAD IDEA!!!!!! HUGE POTENTIAL FOR MISCOMMUNICATION!!!
         
         // NOTE: this change of passing the mesh gameobject and then referencing its parent helped with scaled position issue
-        reference = reference.parent; 
+        reference = reference.parent; // FOR STRUCTURE OBJECT
         Debug.Log(reference.name + " reference meshfilter: " + meshFiltersGameObject.name);
-
+        
         if (collider is BoxCollider box)
         {
             info.size = Vector3.Scale(box.size, combinedScale) * 0.5f; // Half extents with combined scale
@@ -1159,6 +1228,7 @@ public class DownloadThorAssets : MonoBehaviour
             Matrix4x4 boxWorldMatrix = box.transform.localToWorldMatrix * boxMatrix;
             
             // Transform to reference space
+            Debug.Log("reference " + reference.name);
             Matrix4x4 referenceWorldToLocal = reference.worldToLocalMatrix;
             Matrix4x4 finalTransform = meshMatrix.inverse * referenceWorldToLocal * boxWorldMatrix;
 
@@ -1257,8 +1327,17 @@ public class DownloadThorAssets : MonoBehaviour
                 .Replace("(Instance)", "")
                 .Replace("Instance", "");
 
-            MeshData meshData = FillMeshData(meshFilters[i], meshName, topmostSimObjPhysics);
-            exportedAssetInfo.meshes.Add(meshData);
+
+            if (mf.gameObject.tag == "Structure")
+            {
+                MeshData meshData = FillStructureMeshData(meshFilters[i], meshName, topmostSimObjPhysics);  
+                exportedAssetInfo.meshes.Add(meshData);
+            }
+            else
+            {
+                MeshData meshData = FillMeshData(meshFilters[i], meshName, topmostSimObjPhysics);
+                exportedAssetInfo.meshes.Add(meshData);
+            }
 
             if(!saveCombinedSubmeshes & saveSubMeshes)
             {
@@ -1430,7 +1509,7 @@ public class DownloadThorAssets : MonoBehaviour
             Debug.Log("Write obj to disk done");
         }
 
-        if (saveSubMeshTransform)  
+        if (true) //saveSubMeshTransform)  
         {
             //old  json export stuff is here
             // string json = JsonUtility.ToJson(new SerializableDictionary(mesh_transforms), true);
