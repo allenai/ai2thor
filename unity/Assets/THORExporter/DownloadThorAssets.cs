@@ -39,6 +39,8 @@ public class DownloadThorAssets : MonoBehaviour
     //public string doorAssetPath = "Assets/Physics/SimObjsPhysics/ManipulaTHOR Objects/Doorways/Prefabs";
     bool applyBoundingBox = false; // TODO: should always false
 
+    [Header("Apply scale to all mesh")]
+    public bool applyScale = false;
 
     [Header("generate obj and mtl")]
     public bool saveSubMeshes = true;
@@ -501,7 +503,7 @@ public class DownloadThorAssets : MonoBehaviour
             // Default with this mesh's current local pos, rot, and scale
             parentRelativePosition = Vector3.zero,
             parentRelativeRotation = Quaternion.identity,
-            parentRelativeScale = go.transform.localScale,
+            parentRelativeScale = Vector3.one, // go.transform.localScale,
             meshName = meshName,
             parentName = ""
         };
@@ -511,51 +513,63 @@ public class DownloadThorAssets : MonoBehaviour
         //public AllMyPlaceableZones placeableZoneColliders = new AllMyPlaceableZones();
         int i = 0;
         var meshFiltersGameObject = go;
-        var mesh_parent = go.transform.parent.gameObject;
-        var child = go.transform.Find("Colliders");
-        if (child == null)
-            return meshData;
-        //foreach (var collider in child.GetComponents<Collider>())
-        foreach (var collider in child.GetComponents<Collider>())
-        {
-            if (!collider.enabled || !collider.gameObject.activeInHierarchy)
-                continue;
-            
-            Debug.Log("ColliderInfo: " + collider.gameObject.name);
+        var mesh_parent = GameObject.Find("Objects");
+        //var child = go.transform.Find("Colliders"); 
 
-            var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, mesh_parent);
-            if (colliderInfo != null)
-            {
-                if (!collider.isTrigger)
-                {
-                    meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
-                    i++;
-                }
-                
-                Debug.Log("not null: " + collider.gameObject.name);
-            }
+        var colliders = go.GetComponentsInChildren<Collider>();
+    
+        //Debug.LogWarning("No colliders found for " + go.name);
+        var topmostparent = go.transform.parent;
+        
+        while (colliders.Length == 0)
+        {
+            colliders = topmostparent.GetComponentsInChildren<Collider>();
+            if(topmostparent.transform.parent == mesh_parent)
+                break;
+            topmostparent = topmostparent.transform.parent;
         }
 
-        child = go.transform.Find("Receptacles");
-        //foreach (var collider in child.GetComponents<Collider>())
-        foreach (var collider in child.GetComponents<Collider>())
+        if (colliders.Length > 0)
         {
-            if (!collider.enabled || !collider.gameObject.activeInHierarchy)
-                continue;
-            
-            Debug.Log("ColliderInfo: " + collider.gameObject.name);
-
-            var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, mesh_parent);
-            if (colliderInfo != null)
+            //foreach (var collider in child.GetComponents<Collider>())
+            foreach (var collider in colliders)
             {
-                if (collider.GetComponent("Contains") != null)
-                {
-                    meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
-                }
+                if (!collider.enabled || !collider.gameObject.activeInHierarchy)
+                    continue;
+
+                if (collider.transform != null && collider.transform.gameObject.tag == "SimObjPhysics")
+                    continue;
+
+                if (collider.transform.parent != null && collider.transform.parent.gameObject.tag == "SimObjPhysics")
+                    continue;
+
+                if (collider.transform.parent != null && collider.transform.parent.parent != null && collider.transform.parent.parent.gameObject.tag == "SimObjPhysics")
+                    continue;
                 
-                Debug.Log("not null: " + collider.gameObject.name);
+                if (collider.transform.parent != null && collider.transform.parent.parent != null && collider.transform.parent.parent.parent != null && collider.transform.parent.parent.parent.gameObject.tag == "SimObjPhysics")
+                    continue;
+
+                Debug.Log("ColliderInfo: " + collider.gameObject.name);
+                Debug.Log("mesh_parent: " + mesh_parent.name);
+                Debug.Log("meshFiltersGameObject: " + meshFiltersGameObject.name);
+                var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, mesh_parent);
+                if (colliderInfo != null)
+                {
+                    if (!collider.isTrigger)
+                    {
+                        meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
+                        i++;
+                    }         
+                    else if (collider.GetComponent("Contains") != null)
+                    {
+                        meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
+                    }
+                    
+                    Debug.Log("not null: " + collider.gameObject.name);
+                }
             }
         }
+  
         return meshData;
     }
 
@@ -565,179 +579,114 @@ public class DownloadThorAssets : MonoBehaviour
     {
         var go = meshfilter.gameObject;
 
-        // Clean up mesh name by removing spaces and instances
-        meshName = meshName
-            .Replace(" ", "")
-            .Replace("(Instance)", "")
-            .Replace("Instance", "");
+        // root 
+        var root = topmostSimObjPhysics.transform.gameObject;
+        var all_meshes = root.GetComponentsInChildren<MeshFilter>();
 
-        // Recursive setup for where mesh's parent is the top level of the hierarchy
+        // Filter out meshes with null shared meshes or names starting with "PS" (particle system)
+        all_meshes = all_meshes.Where(mesh => 
+            mesh.sharedMesh != null && 
+            !mesh.sharedMesh.name.StartsWith("PS") && 
+            !mesh.name.Contains("PS_") &&
+            !mesh.name.Contains("Placeable")
+        ).ToArray();
+
+        // Build mesh hierarchy
+        var meshHierarchy = BuildMeshHierarchy(all_meshes, root.transform);
+
+        // Find parent for this specific mesh
+        MeshFilter parentMeshFilter = null;
+        GameObject mesh_parent;
+        
+        if (meshHierarchy.TryGetValue(meshfilter, out parentMeshFilter))
+        {
+            // Found a parent mesh
+            mesh_parent = parentMeshFilter.gameObject;
+        }
+        else
+        {
+            // No parent found, use the mesh itself as parent
+            mesh_parent = root;
+        }
+        
         var meshData = new MeshData
         {
-            // Default with this mesh's current local pos, rot, and scale
-            parentRelativePosition = go.transform.localPosition,
-            parentRelativeRotation = go.transform.localRotation,
-            parentRelativeScale = go.transform.localScale,
+            // Calculate transforms relative to the parent mesh
+            parentRelativePosition = mesh_parent.transform.InverseTransformPoint(go.transform.position),
+            parentRelativeRotation = Quaternion.Inverse(mesh_parent.transform.rotation) * go.transform.rotation,
+            parentRelativeScale = meshHierarchy.TryGetValue(meshfilter, out _) ? 
+                new Vector3(
+                    go.transform.localScale.x / mesh_parent.transform.localScale.x,
+                    go.transform.localScale.y / mesh_parent.transform.localScale.y,
+                    go.transform.localScale.z / mesh_parent.transform.localScale.z
+                ) : 
+                Vector3.Scale(go.transform.localScale, mesh_parent.transform.localScale),
             meshName = meshName,
-            parentName = ""
+            parentName = mesh_parent.name.Replace(" ", "_")
         };
-
-        //keep track of what transforms we have traversed upward so we can compare them to associated joints later.....
+        
+        // Keep track of what transforms we have traversed upward so we can compare them to associated joints later
         List<Transform> transformsTraversed = new List<Transform>();
-        //include THIS MESH's transform because that can sometimes be a joint
         transformsTraversed.Add(go.transform);
-
-        // TODO: Parent mesh node is not correct
-        // Traverse the parent hierarchy
-        Transform parent = go.transform.parent;
-        Transform orig_parent = parent;
-
-        // Fault recursion for assigning parent, which results in the WRONG parent being assigned
-        while (parent != null)
-        {
-            bool foundParent = false;
-            //track what transforms we have traversed so far
-            transformsTraversed.Add(parent);
-
-            // Adjust the parent-relative position, rotation, and scale
-            meshData.parentRelativePosition = parent.InverseTransformPoint(go.transform.position);
-            meshData.parentRelativeRotation = Quaternion.Inverse(parent.rotation) * go.transform.rotation;
-            meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, parent.localScale);
-            meshData.parentRelativeScale = GetCombinedScale(go.transform, parent);
-            
-            // If this parent has a MeshFilter, stop here
-            // TOASTER _ Parent can be meshFIlter. take note.
-            Debug.Log(meshfilter.sharedMesh.name + " parent: " + parent.name);
-            if (parent.GetComponent<MeshFilter>() != null)
-            {
-                meshData.parentName = parent.GetComponent<MeshFilter>().sharedMesh.name
-                    .Replace(" ", "")
-                    .Replace("(Instance)", "")
-                    .Replace("Instance", "");
-                if (meshData.parentName.Contains("PS_"))
-                {
-                    Debug.Log("-----------parent name: " + meshData.parentName + " " + parent.name);
-                    meshData.parentName = parent.name
-                        .Replace(" ", "")
-                        .Replace("(Instance)", "")
-                        .Replace("Instance", "");
-                }
-
-                meshData.parentRelativeScale = GetCombinedScale(go.transform, parent.parent);
-                break;  //Stop searching further
-            }
-
-            foreach(Transform child in parent)
-            {
-                Debug.Log(meshfilter.sharedMesh.name + " parnet " + parent.name + "'s child: " + child.name + " " + child.GetComponent<MeshFilter>());
-                if(child.GetComponent<MeshFilter>() != null)
-                {
-                    if (child.GetComponent<MeshFilter>().sharedMesh == null)
-                    {
-                        Debug.LogWarning("MeshFilter has no mesh: " + child.name + " " + child.GetComponent<MeshFilter>().name);
-                        continue;
-                    }
-                    Debug.Log(child.GetComponent<MeshFilter>().sharedMesh.name + " " + meshfilter.sharedMesh.name);
-                    if (child.GetComponent<MeshFilter>().sharedMesh.name != meshfilter.sharedMesh.name)
-                    {
-                        meshData.parentName = child.GetComponent<MeshFilter>().sharedMesh.name
-                            .Replace(" ", "")
-                            .Replace("(Instance)", "")
-                            .Replace("Instance", "");
-                        if (meshData.parentName.Contains("PS_"))
-                        {
-                            Debug.Log("-----------parent name: " + meshData.parentName + " " + parent.name);
-                            meshData.parentName = parent.name
-                                .Replace(" ", "")
-                                .Replace("(Instance)", "")
-                                .Replace("Instance", "");
-                        }
-                        meshData.parentRelativePosition = child.InverseTransformPoint(go.transform.position);
-                        meshData.parentRelativeRotation = Quaternion.Inverse(child.rotation) * go.transform.rotation;
-                        meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, child.localScale); 
-                        meshData.parentRelativeScale =GetCombinedScale(go.transform, child); // child
-                        //meshData.parentRelativeScale = Vector3.Scale(meshData.parentRelativeScale, GetCombinedScale(go.transform, child)); 
-                        Debug.Log("found parnet: " +child.GetComponent<MeshFilter>().sharedMesh.name + " " + meshfilter.sharedMesh.name);
-                        foundParent = true;
-                        break;
-                    }
-                }
-            }
-
-            if (foundParent)
-            {
-                break;
-            }
-
-            // If this parent has a SimObjPhysics component and it's not the topmost one, continue searching
-            Transform topmostTransform2 = meshfilter.transform;
-            if (topmostSimObjPhysics != null)
-            {
-                topmostTransform2 = topmostSimObjPhysics.transform;
-            }
-
-            if (parent.GetComponent<SimObjPhysics>() != null && parent != topmostTransform2)
-            {
-                // Move up the hierarchy
-                parent = parent.parent;
-                continue;
-            }
-
-            // Move up the hierarchy
-            parent = parent.parent;
-        }
+        transformsTraversed.Add(mesh_parent.transform);
         
-        // PROBABLY DELETE THIS, it is now officially redundent in light of updates
-        // If no parent with MeshFilter or SimObjPhysics was found, use the root transform
-        if (parent == null)
-        {
-            parent = go.transform.root;
-            meshData.parentName = parent.name
-                .Replace(" ", "")
-                .Replace("(Instance)", "")
-                .Replace("Instance", "");
-            Debug.LogWarning("No parent with MeshFilter or SimObjPhysics found, using root transform as fallback.");
-        }
-
-        Debug.Log(meshfilter.sharedMesh.name + " parent: " + meshData.parentName);
-        
-        GameObject mesh_parent = go; //= parent.gameObject;
-
-        // 1. get joint info
-        Transform topmostTransform = meshfilter.transform;
-        if (topmostSimObjPhysics != null)
-        {
-            topmostTransform = topmostSimObjPhysics.transform;
-        }
-
-        meshData.jointInfo = CollectValidJoints(meshfilter, ref meshData, transformsTraversed, parent, topmostTransform);
+        // Get joint info -- parent . mesh_parent or itself
+        var meshFiltersGameObject = meshfilter.gameObject;
+        meshData.jointInfo = CollectValidJoints(meshfilter, ref meshData, transformsTraversed, meshFiltersGameObject.transform.parent.gameObject.transform, topmostSimObjPhysics.transform);
         Debug.Log($"Joint info: {meshData.jointInfo}");
+        
         GameObject collider_parent = null;
         if (meshData.jointInfo != null)
         {
             Debug.Log("Joint info found for mesh: " + meshData.meshName);
             collider_parent = meshData.jointInfo.jointGO;
-
         }
-        CollectValidColliders(collider_parent, meshfilter, ref meshData, mesh_parent);
+        
+        // Get colliders
 
-        /////////////// Joint setup ///////////
-        //check if this mesh has a joint associated with it 
-
-        //meshData.jointInfo = CollectValidJoints(meshfilter, ref meshData, transformsTraversed, parent, topmostSimObjPhysics.transform);
-
-        ////////////////meshData cleanup ///////////
-        //this is jank but oh welllllll
-        // foreach (string name in meshNamesToClearColliders)
-        // {
-        //     if (meshData.meshName.Contains(name))
-        //     {
-        //         //clear prmitive colliders but leave placeable zones
-        //         meshData.primitiveColliders.myPrimitiveColliders.Clear();
-        //         meshData.primitiveColliders.myPrimitiveColliders = new List<ColliderInfo>();
-        //         break;
-        //     }
-        // }
+        //collider_parent = mesh_parent;
+        collider_parent = meshFiltersGameObject.transform.parent.gameObject;
+        
+        Debug.Log("-------------------mesh_parent: " + collider_parent.name);
+        Debug.Log("-------------------mesh: " + meshfilter.gameObject.name);
+        
+        //collider_parent = meshFiltersGameObject.transform.parent.gameObject;
+        var colliders = collider_parent.GetComponentsInChildren<Collider>();
+        if (colliders.Length == 0)
+        {
+            Debug.LogWarning("No colliders found for " + mesh_parent.name);
+            return meshData;
+        }
+        
+        // Process colliders
+        foreach (var collider in colliders)
+        {
+            if (!collider.enabled || !collider.gameObject.activeInHierarchy)
+                continue;
+            
+            if (collider.gameObject.name.Contains("rb"))
+                continue;
+            
+            Debug.Log("ColliderInfo: " + collider.gameObject.name);
+            Debug.Log("mesh_parent: " + mesh_parent.name);
+            Debug.Log("meshFiltersGameObject: " + meshFiltersGameObject.name);
+            
+            var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, meshFiltersGameObject);
+            if (colliderInfo != null)
+            {
+                if (!collider.isTrigger)
+                {
+                    meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
+                }
+                else if (collider.GetComponent("Contains") != null)
+                {
+                    meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
+                }
+                
+                Debug.Log("not null: " + collider.gameObject.name);
+            }
+        }
+        
         return meshData;
     }
 
@@ -745,264 +694,349 @@ public class DownloadThorAssets : MonoBehaviour
     {
         Debug.Log("CollectValidJoints called for mesh: " + meshData.meshName);
 
-        JointInfo jointInfo = null;
+        JointInfo jointInfo = new JointInfo();
+        jointInfo.jointType = "none";
 
-        // Traverse up the hierarchy to find the first SimObjPhysics component
-        SimObjPhysics firstSimObjPhysics = null;
+        // Find the SimObjPhysics component that contains this mesh
+        SimObjPhysics simObjPhysics = null;
         Transform current = meshfilter.transform;
 
         while (current != null)
         {
-            Debug.Log("Checking Transform: " + current.name);
-            if (current.GetComponent<SimObjPhysics>() != null)
-            {
-                firstSimObjPhysics = current.GetComponent<SimObjPhysics>();
+            simObjPhysics = current.GetComponent<SimObjPhysics>();
+            if (simObjPhysics != null)
                 break;
-            }
             current = current.parent;
-
         }
-        Debug.Log("First SIM OBJ PHYSICS: " + firstSimObjPhysics);
-        if (firstSimObjPhysics != null)
+
+        if (simObjPhysics == null)
         {
-            Debug.Log("First SimObjPhysics component found: " + firstSimObjPhysics.name);
+            Debug.Log("No SimObjPhysics found for mesh: " + meshData.meshName);
+            return jointInfo;
+        }
 
-            // Check if the first SimObjPhysics component has a CanOpen_Object component
-            var canOpenObject = firstSimObjPhysics.GetComponent<CanOpen_Object>();
-            if (canOpenObject != null)
+        // Check if this object has a CanOpen_Object component
+        CanOpen_Object canOpen = simObjPhysics.GetComponent<CanOpen_Object>();
+        CanToggleOnOff canToggle = simObjPhysics.GetComponent<CanToggleOnOff>();
+        // make sure it is active 
+        if (canOpen != null && !canOpen.gameObject.activeInHierarchy)
+            canOpen = null;
+        if (canToggle != null && !canToggle.gameObject.activeInHierarchy)
+            canToggle = null;
+
+        
+        if (canOpen == null && canToggle==null)
+        {
+            Debug.Log("No CanToggle_Object or CanToggleOnOff component found for: " + simObjPhysics.name);
+            return jointInfo;
+        }
+        var allMovingParts = new List<GameObject>();
+        if (canOpen != null && canOpen.MovingParts != null)
+            allMovingParts.AddRange(canOpen.MovingParts);
+        if (canToggle != null && canToggle.MovingParts != null)
+            allMovingParts.AddRange(canToggle.MovingParts);
+
+        // Check if this mesh is part of a moving part
+        foreach (GameObject movingPart in allMovingParts)
+        {
+            if (movingPart == null)
+                continue;
+            
+            Debug.Log("---------movingPart: " + movingPart.name);
+            Debug.Log("---------meshData.meshName: " + meshData.meshName);
+            Debug.Log("---------meshfilter.gameObject.name: " + meshfilter.gameObject.transform.parent.name);
+            // Check if this mesh is part of this moving part
+            if (IsChildOf(meshfilter.gameObject, movingPart) || meshfilter.gameObject == movingPart)
             {
-                Debug.Log("CanOpen_Object component found on first SimObjPhysics: " + firstSimObjPhysics.name);
+                // but if parent has meshfilter and parent is child of movingpart, then skip (example. handle door and door are both child of movingpart)
+                var meshParent = meshfilter.gameObject.transform.parent.gameObject;
+                if (meshParent.GetComponent<MeshFilter>() != null && IsChildOf(meshParent, movingPart))
+                    continue;
+                if (meshParent.GetComponent<MeshFilter>() != null && meshParent == movingPart)
+                    continue;
 
-                //make sure we actually have some, if not do nothing
-                if(canOpenObject.MovingParts.Length != 0)
+
+                Debug.Log("Found moving part for mesh: " + meshData.meshName + " - " + movingPart.name);
+                
+                // Determine joint type based on the movement type
+                if (canOpen != null && canOpen.MovingParts.Contains(movingPart))
                 {
-                    // Traverse up the hierarchy to find the topmost SimObjPhysics component
-                    // THIS NEEDS TO CHANGE TO BE RELATIVE TO THE ---mesh-parent---
-                    SimObjPhysics topmostSimObjPhysicsComponent = firstSimObjPhysics;
-                    current = firstSimObjPhysics.transform.parent;
-
-                    while (current != null)
+                    // Handle CanOpen_Object joints
+                    if (canOpen.GetMovementType() == CanOpen_Object.MovementType.Rotate)
                     {
-                        if (current.GetComponent<SimObjPhysics>() != null)
+                        jointInfo.jointType = "rotate";
+                        
+                        // Set rotation limits based on the current openness
+                        Vector3 lowRange = Vector3.zero;
+                        Vector3 highRange = Vector3.zero;
+                        
+                        // Get the rotation difference between open and closed positions
+                        for (int i = 0; i < canOpen.MovingParts.Length; i++)
                         {
-                            topmostSimObjPhysicsComponent = current.GetComponent<SimObjPhysics>();
-                        }
-                        current = current.parent;
-                    }
-
-                    Debug.Log("Topmost SimObjPhysics component found: " + topmostSimObjPhysicsComponent.name);
-
-                    // Get the movementType from CanOpen_Object
-                    jointInfo = new JointInfo
-                    {
-                        jointType = canOpenObject.movementType.ToString()
-                    };
-                    Debug.Log("MovementType: " + jointInfo.jointType);
-
-                    // Get the openPositions and closedPositions arrays from CanOpen_Object
-                    Vector3[] openPositions = canOpenObject.openPositions;
-                    Vector3[] closedPositions = canOpenObject.closedPositions;
-                    GameObject[] movingParts = canOpenObject.MovingParts;
-
-                    Debug.Log("MovingParts length: " + movingParts.Length);
-                    Debug.Log("OpenPositions length: " + openPositions.Length);
-                    Debug.Log("ClosedPositions length: " + closedPositions.Length);
-
-                    // Find the associated moving part
-                    bool foundAssociatedMovingPart = false;
-                    for (int i = 0; i < movingParts.Length; i++)
-                    {
-                        Debug.Log("Checking MovingPart: " + movingParts[i].name + " " + transformsTraversed.Count);
-
-                        // Compare each transform traversed against the moving parts
-                        foreach (var transform in transformsTraversed)
-                        {
-                            Debug.Log("Transform encountered: " + transform.name);
-                            Debug.Log("MovingPart InstanceID: " + movingParts[i].GetInstanceID());
-                            Debug.Log("Transform InstanceID: " + transform.gameObject.GetInstanceID());
-
-                           Debug.Log("traversed transformed: " + transform.gameObject.name);
-
-                            if (movingParts[i] == transform.gameObject)
+                            if (canOpen.MovingParts[i] == movingPart)
                             {
-                                Debug.Log("Associated MovingPart found: " + movingParts[i].name);
-
-                                // Calculate meshRelativePosition
-                                Debug.Log("Calculating meshRelativePosition...");
-                                jointInfo.meshRelativePosition = meshfilter.gameObject.transform.InverseTransformPoint(movingParts[i].transform.position);
-
-                                Debug.Log("meshRelativePosition: " + jointInfo.meshRelativePosition);
-
-                                // Calculate lowRange and highRange based on movementType
-                                if (canOpenObject.movementType == CanOpen_Object.MovementType.Slide)
+                                // Use the openPositions and closedPositions arrays to determine rotation axis and limits
+                                Vector3 closedRot = canOpen.closedPositions[i];
+                                Vector3 openRot = canOpen.openPositions[i];
+                                Vector3 rotDiff = openRot - closedRot;
+                                
+                                // Determine which axis has the largest rotation
+                                if (Mathf.Abs(rotDiff.x) > Mathf.Abs(rotDiff.y) && Mathf.Abs(rotDiff.x) > Mathf.Abs(rotDiff.z))
                                 {
-                                    Debug.Log("Calculating lowRange and highRange for Slide...");
-                                    jointInfo.lowRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(closedPositions[i]);
-                                    jointInfo.highRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(openPositions[i]);
+                                    // X-axis rotation
+                                    lowRange.x = 0;
+                                    highRange.x = rotDiff.x;
                                 }
-                                else if (canOpenObject.movementType == CanOpen_Object.MovementType.Rotate)
+                                else if (Mathf.Abs(rotDiff.y) > Mathf.Abs(rotDiff.x) && Mathf.Abs(rotDiff.y) > Mathf.Abs(rotDiff.z))
                                 {
-                                    /*
-                                    Debug.Log("Calculating lowRange and highRange for Rotate...");
-                                    if (closedPositions[i].x < openPositions[i].x ||
-                                        closedPositions[i].y < openPositions[i].y ||
-                                        closedPositions[i].z < openPositions[i].z) {
-                                        
-                                        jointInfo.lowRange = closedPositions[i];
-                                        jointInfo.highRange = openPositions[i];
-                                    } else {
-                                        jointInfo.lowRange = openPositions[i];
-                                        jointInfo.highRange = closedPositions[i];
-                                    }
-                                    
-                                    Debug.Log("Converting open-close values from joint-mesh space to joint-node space");
-                                    jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
-                                    jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(openPositions[i])).eulerAngles;
-                                    */
-                                    jointInfo.lowRange = closedPositions[i];
-                                    jointInfo.highRange = openPositions[i];
+                                    // Y-axis rotation
+                                    lowRange.y = 0;
+                                    highRange.y = rotDiff.y;
+                                }
+                                else
+                                {
+                                    // Z-axis rotation
+                                    lowRange.z = 0;
+                                    highRange.z = rotDiff.z;
                                 }
                                 
-                                Debug.Log("Moving Part of Joint: " + movingParts[i]);
-                                jointInfo.jointGO = movingParts[i].gameObject;
-
-                                Debug.Log("lowRange: " + jointInfo.lowRange);
-                                Debug.Log("highRange: " + jointInfo.highRange);
-
-                                foundAssociatedMovingPart = true;
-                                break; // Stop searching further
+                                break;
                             }
                         }
-
-                        if (foundAssociatedMovingPart)
-                        {
-                            break; // Stop searching further
-                        }
+                        
+                        jointInfo.lowRange = lowRange;
+                        jointInfo.highRange = highRange;
                     }
-
-                    if (!foundAssociatedMovingPart)
+                    else if (canOpen.GetMovementType() == CanOpen_Object.MovementType.Slide)
                     {
-                        jointInfo = null; // No associated moving part found, so set jointInfo to null
-                    }
-                }
-            }
-            else
-            {
-                Debug.Log("CanOpen_Object component not found on first SimObjPhysics: " + firstSimObjPhysics.name);
-            }
-
-            // Check if the first SimObjPhysics component has a CanToggleOnOff component
-            var canToggleOnOff = firstSimObjPhysics.GetComponent<CanToggleOnOff>();
-            if (canToggleOnOff != null)
-            {
-                Debug.Log("CanToggleOnOff component found on first SimObjPhysics: " + firstSimObjPhysics.name);
-
-                if(canToggleOnOff.MovingParts.Length != 0)
-                {
-                    // Traverse up the hierarchy to find the topmost SimObjPhysics component
-                    SimObjPhysics topmostSimObjPhysicsComponent = firstSimObjPhysics;
-                    current = firstSimObjPhysics.transform.parent;
-
-                    while (current != null)
-                    {
-                        if (current.GetComponent<SimObjPhysics>() != null)
+                        jointInfo.jointType = "slide";
+                        
+                        // Set slide limits based on the current openness
+                        for (int i = 0; i < canOpen.MovingParts.Length; i++)
                         {
-                            topmostSimObjPhysicsComponent = current.GetComponent<SimObjPhysics>();
-                        }
-                        current = current.parent;
-                    }
-
-                    Debug.Log("Topmost SimObjPhysics component found: " + topmostSimObjPhysicsComponent.name);
-
-                    // Get the movementType from CanToggleOnOff
-                    jointInfo = new JointInfo
-                    {
-                        jointType = canToggleOnOff.movementType.ToString()
-                    };
-                    Debug.Log("MovementType: " + jointInfo.jointType);
-
-                    // Get the OnPositions and OffPositions arrays from CanToggleOnOff
-                    Vector3[] onPositions = canToggleOnOff.OnPositions;
-                    Vector3[] offPositions = canToggleOnOff.OffPositions;
-                    GameObject[] movingParts = canToggleOnOff.MovingParts;
-
-                    Debug.Log("MovingParts length: " + movingParts.Length);
-                    Debug.Log("OnPositions length: " + onPositions.Length);
-                    Debug.Log("OffPositions length: " + offPositions.Length);
-
-                    // Find the associated moving part
-                    bool foundAssociatedMovingPart = false;
-                    for (int i = 0; i < movingParts.Length; i++)
-                    {
-                        Debug.Log("Checking MovingPart: " + movingParts[i].name);
-
-                        // Compare each transform traversed against the moving parts
-                        foreach (var transform in transformsTraversed)
-                        {
-                            Debug.Log("Transform encountered: " + transform.name);
-                            Debug.Log("MovingPart InstanceID: " + movingParts[i].GetInstanceID());
-                            Debug.Log("Transform InstanceID: " + transform.gameObject.GetInstanceID());
-
-                            if (movingParts[i] == transform.gameObject)
+                            if (canOpen.MovingParts[i] == movingPart)
                             {
-                                Debug.Log("Associated MovingPart found: " + movingParts[i].name);
-
-                                // Calculate meshRelativePosition
-                                Debug.Log("Calculating meshRelativePosition...");
-                                jointInfo.meshRelativePosition = meshfilter.gameObject.transform.InverseTransformPoint(movingParts[i].transform.position);
-
-                                Debug.Log("meshRelativePosition: " + jointInfo.meshRelativePosition);
-
-                                // Calculate lowRange and highRange based on movementType
-                                if (canToggleOnOff.movementType == CanToggleOnOff.MovementType.Slide)
-                                {
-                                    Debug.Log("Calculating lowRange and highRange for Slide...");
-                                    jointInfo.lowRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(offPositions[i]);
-                                    jointInfo.highRange = topmostSimObjPhysicsComponent.transform.InverseTransformPoint(onPositions[i]);
-                                }
-                                else if (canToggleOnOff.movementType == CanToggleOnOff.MovementType.Rotate)
-                                {
-                                    Debug.Log("Calculating lowRange and highRange for Rotate...");
-                                    jointInfo.lowRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(offPositions[i])).eulerAngles;
-                                    jointInfo.highRange = (Quaternion.Inverse(topmostSimObjPhysicsComponent.transform.rotation) * Quaternion.Euler(onPositions[i])).eulerAngles;
-                                }
-
-                                Debug.Log("lowRange: " + jointInfo.lowRange);
-                                Debug.Log("highRange: " + jointInfo.highRange);
-
-                                Debug.Log("Moving Part of Joint: " + movingParts[i]);
-                                jointInfo.jointGO = movingParts[i].gameObject;
-
-                                foundAssociatedMovingPart = true;
-                                break; // Stop searching further
+                                // Use the openPositions and closedPositions arrays to determine slide direction and distance
+                                Vector3 closedPos = canOpen.closedPositions[i];
+                                Vector3 openPos = canOpen.openPositions[i];
+                                Vector3 slideVector = openPos - closedPos;
+                                // transform slide vector to local meshfilter space
+                                slideVector = meshfilter.transform.InverseTransformDirection(slideVector);
+                                jointInfo.lowRange = Vector3.zero;
+                                jointInfo.highRange = slideVector;
+                                break;
                             }
                         }
-
-                        if (foundAssociatedMovingPart)
-                        {
-                            break; // Stop searching further
-                        }
-                    }
-
-                    if (!foundAssociatedMovingPart)
-                    {
-                        jointInfo = null; // No associated moving part found, so set jointInfo to null
                     }
                 }
- 
-
-            }
-            else
-            {
-                Debug.Log("CanToggleOnOff component not found on first SimObjPhysics: " + firstSimObjPhysics.name);
+                else if (canToggle != null && canToggle.MovingParts.Contains(movingPart))
+                {
+                    // Handle CanToggleOnOff joints
+                    // Check if this is a sliding toggle (if the component has a movement type property)
+                    bool isSliding = false;
+                    
+                    // Try to access the movement type using reflection since not all versions may have this
+                    try {
+                        var movementTypeProperty = canToggle.GetType().GetProperty("MovementType");
+                        if (movementTypeProperty != null) {
+                            var movementType = movementTypeProperty.GetValue(canToggle);
+                            // Check if it's a slide type (assuming similar enum to CanOpen_Object)
+                            isSliding = movementType.ToString().Contains("Slide");
+                        }
+                    } catch {
+                        // If we can't access it, default to rotate
+                        isSliding = false;
+                    }
+                    
+                    if (isSliding) {
+                        jointInfo.jointType = "slide";
+                        
+                        // Set slide limits based on the toggle positions
+                        for (int i = 0; i < canToggle.MovingParts.Length; i++)
+                        {
+                            if (canToggle.MovingParts[i] == movingPart)
+                            {
+                                // Use the OnPositions and OffPositions arrays to determine slide direction and distance
+                                Vector3 offPos = canToggle.OffPositions[i];
+                                Vector3 onPos = canToggle.OnPositions[i];
+                                Vector3 slideVector = onPos - offPos;
+                                // Transform slide vector to local meshfilter space
+                                slideVector = meshfilter.transform.InverseTransformDirection(slideVector);
+                                jointInfo.lowRange = Vector3.zero;
+                                jointInfo.highRange = slideVector;
+                                break;
+                            }
+                        }
+                    } else {
+                        jointInfo.jointType = "rotate"; // Most toggle objects rotate
+                        
+                        // Set rotation limits based on the toggle positions
+                        Vector3 lowRange = Vector3.zero;
+                        Vector3 highRange = Vector3.zero;
+                        
+                        // Get the rotation difference between on and off positions
+                        for (int i = 0; i < canToggle.MovingParts.Length; i++)
+                        {
+                            if (canToggle.MovingParts[i] == movingPart)
+                            {
+                                // Use the onPositions and offPositions arrays to determine rotation axis and limits
+                                Vector3 offRot = canToggle.OffPositions[i];
+                                Vector3 onRot = canToggle.OnPositions[i];
+                                Vector3 rotDiff = onRot - offRot;
+                                
+                                // Determine which axis has the largest rotation
+                                if (Mathf.Abs(rotDiff.x) > Mathf.Abs(rotDiff.y) && Mathf.Abs(rotDiff.x) > Mathf.Abs(rotDiff.z))
+                                {
+                                    // X-axis rotation
+                                    lowRange.x = 0;
+                                    highRange.x = rotDiff.x;
+                                }
+                                else if (Mathf.Abs(rotDiff.y) > Mathf.Abs(rotDiff.x) && Mathf.Abs(rotDiff.y) > Mathf.Abs(rotDiff.z))
+                                {
+                                    // Y-axis rotation
+                                    lowRange.y = 0;
+                                    highRange.y = rotDiff.y;
+                                }
+                                else
+                                {
+                                    // Z-axis rotation
+                                    lowRange.z = 0;
+                                    highRange.z = rotDiff.z;
+                                }
+                                
+                                break;
+                            }
+                        }
+                        
+                        jointInfo.lowRange = lowRange;
+                        jointInfo.highRange = highRange;
+                    }
+                }
+                
+                // Set joint position relative to parent
+                // apply onPositions to jointInfo.meshRelativePosition  
+                jointInfo.meshRelativePosition = parent.InverseTransformPoint(movingPart.transform.position);
+                
+                // We can keep the quaternion-based rotation calculation for debugging purposes only
+                if (jointInfo.jointType == "rotate") {
+                    Vector3 rotRange = jointInfo.highRange;
+                    Vector3 worldAxis = Vector3.zero;
+                    float angle = 0f;
+                    
+                    // First, determine which component we're working with (CanOpen or CanToggle)
+                    if (canOpen != null && canOpen.MovingParts.Contains(movingPart)) {
+                        // Find the index of this moving part
+                        for (int i = 0; i < canOpen.MovingParts.Length; i++) {
+                            if (canOpen.MovingParts[i] == movingPart) {
+                                // Get the closed and open rotations
+                                Vector3 closedRot = canOpen.closedPositions[i];
+                                Vector3 openRot = canOpen.openPositions[i];
+                                
+                                // Store original rotation
+                                Quaternion originalRotation = movingPart.transform.rotation;
+                                
+                                // Temporarily set to closed position to get base orientation
+                                movingPart.transform.eulerAngles = closedRot;
+                                Quaternion closedOrientation = movingPart.transform.rotation;
+                                
+                                // Set to open position to get target orientation
+                                movingPart.transform.eulerAngles = openRot;
+                                Quaternion openOrientation = movingPart.transform.rotation;
+                                
+                                // Calculate the rotation delta in world space
+                                Quaternion rotationDelta = openOrientation * Quaternion.Inverse(closedOrientation);
+                                
+                                // Extract the rotation axis and angle
+                                rotationDelta.ToAngleAxis(out angle, out Vector3 axis);
+                                worldAxis = axis.normalized;
+                                
+                                // Restore original rotation
+                                movingPart.transform.rotation = originalRotation;
+                                
+                                break;
+                            }
+                        }
+                    } else if (canToggle != null && canToggle.MovingParts.Contains(movingPart)) {
+                        // Similar implementation for toggle objects
+                        for (int i = 0; i < canToggle.MovingParts.Length; i++) {
+                            if (canToggle.MovingParts[i] == movingPart) {
+                                Vector3 offRot = canToggle.OffPositions[i];
+                                Vector3 onRot = canToggle.OnPositions[i];
+                                
+                                // Store original rotation
+                                Quaternion originalRotation = movingPart.transform.rotation;
+                                
+                                // Temporarily set to off position to get base orientation
+                                movingPart.transform.eulerAngles = offRot;
+                                Quaternion offOrientation = movingPart.transform.rotation;
+                                
+                                // Set to on position to get target orientation
+                                movingPart.transform.eulerAngles = onRot;
+                                Quaternion onOrientation = movingPart.transform.rotation;
+                                
+                                // Calculate the rotation delta in world space
+                                Quaternion rotationDelta = onOrientation * Quaternion.Inverse(offOrientation);
+                                
+                                // Extract the rotation axis and angle
+                                rotationDelta.ToAngleAxis(out angle, out Vector3 axis);
+                                worldAxis = axis.normalized;
+                                
+                                // Restore original rotation
+                                movingPart.transform.rotation = originalRotation;
+                                
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Transform the world axis to meshfilter's local space for debugging
+                    Vector3 localAxisRelativeToMovingPart = meshfilter.transform.InverseTransformDirection(worldAxis).normalized;
+                    
+                    // Debug log only
+                    Debug.Log($"Rotation joint - World axis: {worldAxis}, Local axis: {localAxisRelativeToMovingPart}, Angle: {angle}");
+                }
+                else if (jointInfo.jointType == "slide") {
+                    // For slide joints, we need to handle the slide vector similarly
+                    Vector3 slideVector = jointInfo.highRange;
+                    
+                    // If meshfilter is the moving part itself, just use the slide vector directly
+                    Vector3 localSlideVectorRelativeToMovingPart;
+                    
+                    if (meshfilter.gameObject == movingPart) {
+                        localSlideVectorRelativeToMovingPart = slideVector;
+                    } else {
+                        // First convert the slide vector to world space from the current local space
+                        Vector3 worldSlideVector = meshfilter.transform.TransformDirection(slideVector);
+                        
+                        // Then convert it to the meshfilter's local space relative to the moving part
+                        localSlideVectorRelativeToMovingPart = meshfilter.transform.InverseTransformDirection(worldSlideVector);
+                    }
+                    
+                    // Debug log only
+                    Debug.Log($"Slide joint - Local vector relative to moving part: {localSlideVectorRelativeToMovingPart}");
+                }
+                
+                jointInfo.jointGO = movingPart;
+                
+                return jointInfo;
             }
         }
-        else
-        {
-            Debug.Log("SimObjPhysics component not found on root: " + meshfilter.name);
-        }
 
+        Debug.Log("Mesh is not part of any moving part: " + meshData.meshName);
         return jointInfo;
+    }
+
+    // Helper method to check if an object is a child of another
+    private bool IsChildOf(GameObject child, GameObject parent)
+    {
+        Transform current = child.transform.parent;
+        while (current != null)
+        {
+            if (current.gameObject == parent)
+                return true;
+            current = current.parent;
+        }
+        return false;
     }
 
     // THIS IS WRONG, and the only reason it's been allowed to exist is because static objects don't even use this logic,
@@ -1141,133 +1175,119 @@ public class DownloadThorAssets : MonoBehaviour
 
     // REDUNDANT CRAP //
     // Find all colliders associated with this mesh, and convert it to the correct coordinates
-    public ColliderInfo GetColliderInfo(Collider collider, GameObject meshFiltersGameObject, GameObject ref_mesh_parent)
+    private ColliderInfo GetColliderInfo(Collider collider, GameObject meshObject, GameObject reference)
     {
-        string colliderType = collider.GetType().Name.ToLower().Replace("collider", "");
-        ColliderInfo info = new ColliderInfo();
-
-        // mesh colliders
-        if (colliderType == "mesh")
-        {
-            return null; // Skip mesh colliders
-        }
-
-        info.type = colliderType;
-
-        // --------------
-        // Ensure the size, position, rotation, radius, height, etc., are all relative to the local space of the meshFiltersGameObject
-        Transform reference = null; // meshFiltersGameObject.transform;
-        reference = ref_mesh_parent.transform; //meshFiltersGameObject.transform;
+        // Skip MeshColliders entirely
+        if (collider is MeshCollider)
+            return null;
         
-        /*
-        // loop up meshFilterGame
-        bool stop_update = false;
-        while (stop_update == false)
+        ColliderInfo colliderInfo = new ColliderInfo();
+        
+        // Set basic properties - use simple type names without "Collider" suffix
+        if (collider is BoxCollider)
+            colliderInfo.type = "box";
+        else if (collider is SphereCollider)
+            colliderInfo.type = "sphere";
+        else if (collider is CapsuleCollider)
+            colliderInfo.type = "capsule";
+        else
+            colliderInfo.type = collider.GetType().Name.ToLower().Replace("collider", "");
+        
+        // Calculate transform relative to reference
+        Matrix4x4 referenceWorldToLocal = reference.transform.worldToLocalMatrix;
+        Matrix4x4 colliderLocalToWorld = collider.transform.localToWorldMatrix;
+        
+        if (collider is BoxCollider boxCollider)
         {
-            Debug.Log("Scale referening updated to : " + reference.name);
-            if(reference.parent == null)
+            // For rotated boxes, we need to handle the size differently
+            
+            // First, calculate the box's corners in world space
+            Vector3 center = boxCollider.center;
+            Vector3 size = boxCollider.size;
+            Vector3 extents = size * 0.5f; // Half-extents
+            
+            // Calculate the 8 corners of the box in local space
+            Vector3[] corners = new Vector3[8];
+            corners[0] = center + new Vector3(-extents.x, -extents.y, -extents.z);
+            corners[1] = center + new Vector3(extents.x, -extents.y, -extents.z);
+            corners[2] = center + new Vector3(-extents.x, extents.y, -extents.z);
+            corners[3] = center + new Vector3(extents.x, extents.y, -extents.z);
+            corners[4] = center + new Vector3(-extents.x, -extents.y, extents.z);
+            corners[5] = center + new Vector3(extents.x, -extents.y, extents.z);
+            corners[6] = center + new Vector3(-extents.x, extents.y, extents.z);
+            corners[7] = center + new Vector3(extents.x, extents.y, extents.z);
+            
+            // Transform corners to world space
+            for (int i = 0; i < 8; i++)
             {
-                stop_update = true;
-                break;
+                corners[i] = collider.transform.TransformPoint(corners[i]);
             }
-
-            foreach (Transform child in reference.parent)
+            
+            // Transform corners to reference space
+            for (int i = 0; i < 8; i++)
             {
-                //if self skip
-                if(child.transform == reference)
-                continue;
-
-                //check if meshfilter
-                if (child.GetComponent<MeshFilter>() != null)
-                {
-                    stop_update = true;
-                    break;
-                }
+                corners[i] = reference.transform.InverseTransformPoint(corners[i]);
             }
-            reference = reference.parent;
+            
+            // Calculate the axis-aligned bounding box in reference space
+            Vector3 min = corners[0];
+            Vector3 max = corners[0];
+            
+            for (int i = 1; i < 8; i++)
+            {
+                min = Vector3.Min(min, corners[i]);
+                max = Vector3.Max(max, corners[i]);
+            }
+            
+            // Calculate the center and size of the AABB
+            Vector3 aabbCenter = (min + max) * 0.5f;
+            Vector3 aabbSize = max - min;
+            
+            // Set the position to the AABB center
+            colliderInfo.position = aabbCenter;
+            
+            // Set the rotation to identity since we're using an AABB
+            colliderInfo.rotation = Quaternion.identity;
+            
+            // Set the size to half-extents for Mujoco
+            colliderInfo.size = aabbSize * 0.5f;
+            
+            Debug.Log($"Box collider: {collider.name}, Original size: {boxCollider.size}, AABB size: {aabbSize}, Half size: {colliderInfo.size}");
         }
-        */
-        
-
-        Vector3 combinedScale = GetCombinedScale(collider.transform, reference);
-        Debug.Log(reference.name + " combinedScale: " + combinedScale);
-        
-        //Vector3 relativePosition = meshFiltersGameObject.transform.InverseTransformPoint(collider.transform.position);
-        Quaternion relativeRotation = Quaternion.Inverse(reference.transform.rotation) * collider.transform.rotation;
-
-        // BoxCollider
-        // TODO: position and rotation trasnform needs fixing. sth to do with scaling
-        // THIS NEEDS TO BE FIXED BECAUSE IT RELEGATES THE "SIZE" CONSOLIDATION INTO DIFFERENT PARTS OF THE PIPELINE,
-        // DEPENIDING ON WHAT TYPE OF COLLIDER IT IS. BAD IDEA!!!!!! HUGE POTENTIAL FOR MISCOMMUNICATION!!!
-        
-        // NOTE: this change of passing the mesh gameobject and then referencing its parent helped with scaled position issue
-        reference = reference.parent; // FOR STRUCTURE OBJECT
-        Debug.Log(reference.name + " reference meshfilter: " + meshFiltersGameObject.name);
-        
-        if (collider is BoxCollider box)
+        else if (collider is SphereCollider sphereCollider)
         {
-            info.size = Vector3.Scale(box.size, combinedScale) * 0.5f; // Half extents with combined scale
-
-            Transform meshTransform = ref_mesh_parent.transform;
-            Matrix4x4 meshMatrix = Matrix4x4.TRS(
-                meshTransform.localPosition,
-                meshTransform.localRotation,
-                Vector3.one 
-                //meshTransform.localScale
-            );
+            // Create a matrix for the center offset
+            Matrix4x4 centerOffset = Matrix4x4.Translate(sphereCollider.center);
             
-            // First get the box's local transform matrix
-            Matrix4x4 boxMatrix = Matrix4x4.TRS(
-                box.center,                // Local position (center)
-                Quaternion.identity,       // Local rotation
-                Vector3.one               // Local scale
-                //box.transform.localScale
-            );
+            // Combine the matrices to get the final transform
+            Matrix4x4 finalTransform = referenceWorldToLocal * colliderLocalToWorld * centerOffset;
             
-            // Combine with the box's game object transform
-            Matrix4x4 boxWorldMatrix = box.transform.localToWorldMatrix * boxMatrix;
+            // Extract position and rotation
+            colliderInfo.position = finalTransform.GetColumn(3);
+            colliderInfo.rotation = finalTransform.rotation;
             
-            // Transform to reference space
-            Debug.Log("reference " + reference.name);
-            Matrix4x4 referenceWorldToLocal = reference.worldToLocalMatrix;
-            Matrix4x4 finalTransform = meshMatrix.inverse * referenceWorldToLocal * boxWorldMatrix;
-
-
-            // Extract final position and rotation
-            Debug.Log("names: " + ref_mesh_parent.name + " " + reference.name + " " + box.gameObject.name + " " + box.transform.parent.name);
-
-            bool hasColliderParent = box.transform.parent != null && box.transform.parent.name.Contains("Colliders");
-            if (box.isTrigger)
-                info.position = finalTransform.GetColumn(3); // this required for receptacle collider
-            else //if (hasColliderParent)
-                info.position = Vector3.Scale(finalTransform.GetColumn(3), combinedScale); // this fixed collider position issue
-            //else
-            //    info.position = finalTransform.GetColumn(3); // this required for receptacle collider
-            
-            info.rotation = finalTransform.rotation;
-
+            // Set sphere-specific properties
+            colliderInfo.radius = sphereCollider.radius;
         }
-
-        // SphereCollider
-        else if (collider is SphereCollider sphere)
+        else if (collider is CapsuleCollider capsuleCollider)
         {
-            float maxScale = Mathf.Max(combinedScale.x, combinedScale.y, combinedScale.z);
-            info.radius = sphere.radius * maxScale;
-            info.position = reference.transform.InverseTransformPoint(sphere.transform.TransformPoint(sphere.center)) ;
-            info.rotation = relativeRotation;
+            // Create a matrix for the center offset
+            Matrix4x4 centerOffset = Matrix4x4.Translate(capsuleCollider.center);
+            
+            // Combine the matrices to get the final transform
+            Matrix4x4 finalTransform = referenceWorldToLocal * colliderLocalToWorld * centerOffset;
+            
+            // Extract position and rotation
+            colliderInfo.position = finalTransform.GetColumn(3);
+            colliderInfo.rotation = finalTransform.rotation;
+            
+            // Set capsule-specific properties
+            colliderInfo.radius = capsuleCollider.radius;
+            colliderInfo.height = capsuleCollider.height;
+            colliderInfo.direction = capsuleCollider.direction;
         }
-        // CapsuleCollider
-        else if (collider is CapsuleCollider capsule)
-        {
-            float horizontalScale = Mathf.Max(combinedScale.x, combinedScale.z); // Radius uses X/Z
-            info.radius = capsule.radius * horizontalScale;
-            info.height = capsule.height * combinedScale.y; // Height uses Y
-            info.direction = capsule.direction;
-            info.position = reference.transform.InverseTransformPoint(capsule.transform.TransformPoint(capsule.center));
-            info.rotation = relativeRotation;
-        }
-
-        return info;
+        
+        return colliderInfo;
     }
     // REDUNDANT CRAP //
 
@@ -1320,14 +1340,8 @@ public class DownloadThorAssets : MonoBehaviour
         for(int i = 0; i < meshFilters.Length; i++)
         {
             MeshFilter mf = meshFilters[i];
-            //ensure mesh name is unique because SOMETIMES THEY ARE NAMED THE SAME IM SORRY
-            //string meshName = mf.gameObject.name + "_" + i.ToString();
-            string meshName = mf.sharedMesh.name
-                .Replace(" ", "")
-                .Replace("(Instance)", "")
-                .Replace("Instance", "");
-
-
+            string meshName = mf.gameObject.name.Replace(" ", "_");
+            
             if (mf.gameObject.tag == "Structure")
             {
                 MeshData meshData = FillStructureMeshData(meshFilters[i], meshName, topmostSimObjPhysics);  
@@ -1391,7 +1405,7 @@ public class DownloadThorAssets : MonoBehaviour
             foreach (Vector3 vx in msh.vertices)
             {
                 Vector3 v = vx;
-                if (false) // TODO: applyScale,if true, must apply it too all children object
+                if (applyScale) // TODO: applyScale,if true, must apply it too all children object
                 {
                     v = MultiplyVec3s(v, mf.gameObject.transform.lossyScale);
                 }
@@ -1410,7 +1424,7 @@ public class DownloadThorAssets : MonoBehaviour
                     //v += mf.gameObject.transform.localPosition;
                 }
 
-                if (false) //applyBoundingBox) //true)// move to bouning box center
+                if (applyBoundingBox) //true)// move to bouning box center
                     v -= center;                
 
                 v.x *= -1;
@@ -1421,7 +1435,7 @@ public class DownloadThorAssets : MonoBehaviour
             {
                 Vector3 v = vx;
                 
-                if (false) //applyScale)
+                if (applyScale) //applyScale)
                 {
                     v = MultiplyVec3s(v, mf.gameObject.transform.lossyScale.normalized);
                 }
@@ -1436,7 +1450,7 @@ public class DownloadThorAssets : MonoBehaviour
                     //v += mf.gameObject.transform.localPosition;
                 }
 
-                if (false) //true)// move to bouning box center
+                if (applyBoundingBox) //true)// move to bouning box center
                     v -= center;    
 
                 v.x *= -1;
@@ -1763,5 +1777,110 @@ public class DownloadThorAssets : MonoBehaviour
 
             file.Close();
 
+    }
+
+    // Find the nearest parent MeshFilter for a given MeshFilter
+    private MeshFilter FindNearestParentMeshFilter(MeshFilter meshFilter, MeshFilter[] allMeshFilters, Transform rootTransform)
+    {
+        // Skip if this is already at the root level
+        if (meshFilter.transform.parent == rootTransform || meshFilter.transform.parent == null)
+        {
+            return null; // No parent
+        }
+        
+        // Start from the immediate parent and work our way up
+        Transform currentTransform = meshFilter.transform.parent;
+        
+        while (currentTransform != null && currentTransform != rootTransform)
+        {
+            // Check if this transform has a MeshFilter
+            MeshFilter parentFilter = currentTransform.GetComponent<MeshFilter>();
+            if (parentFilter != null && parentFilter != meshFilter && IsSuitableParentMesh(parentFilter))
+            {
+                // Found a parent with a MeshFilter
+                return parentFilter;
+            }
+            
+            // Check if any of the siblings at this level have a MeshFilter
+            foreach (Transform sibling in currentTransform.parent)
+            {
+                if (sibling != currentTransform)
+                {
+                    MeshFilter siblingFilter = sibling.GetComponent<MeshFilter>();
+                    if (siblingFilter != null && siblingFilter != meshFilter && IsSuitableParentMesh(siblingFilter))
+                    {
+                        // Found a sibling with a MeshFilter
+                        return siblingFilter;
+                    }
+                }
+            }
+            
+            // Move up to the next parent
+            currentTransform = currentTransform.parent;
+        }
+        
+        // No parent MeshFilter found
+        return null;
+    }
+
+    // Check if a mesh is suitable to be a parent
+    private bool IsSuitableParentMesh(MeshFilter meshFilter)
+    {
+        // Check mesh name for exclusion patterns
+        if (meshFilter.name.Contains("PS_") || 
+            meshFilter.name.Contains("Particle") || 
+            meshFilter.name.Contains("Placeable"))
+        {
+            return false;
+        }
+        
+        // Check if mesh has a shared mesh
+        if (meshFilter.sharedMesh == null || 
+            meshFilter.sharedMesh.name.StartsWith("PS"))
+        {
+            return false;
+        }
+        
+        // Check if mesh has a renderer with placeable surface material
+        MeshRenderer renderer = meshFilter.GetComponent<MeshRenderer>();
+        if (renderer != null && renderer.sharedMaterials != null)
+        {
+            foreach (Material mat in renderer.sharedMaterials)
+            {
+                if (mat != null && (
+                    mat.name == "Placeable_Surface_Mat" || 
+                    mat.name == "Water_Volume_Surface_Mat" || 
+                    mat.name.Contains("Placeable")))
+                {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    }
+
+    // Use this function to build a hierarchy of MeshFilters
+    private Dictionary<MeshFilter, MeshFilter> BuildMeshHierarchy(MeshFilter[] meshFilters, Transform rootTransform)
+    {
+        Dictionary<MeshFilter, MeshFilter> meshParents = new Dictionary<MeshFilter, MeshFilter>();
+        
+        // First pass: find direct parent relationships
+        foreach (MeshFilter mf in meshFilters)
+        {
+            // Skip meshes that aren't suitable as children
+            if (!IsSuitableParentMesh(mf))
+            {
+                continue;
+            }
+            
+            MeshFilter parentMf = FindNearestParentMeshFilter(mf, meshFilters, rootTransform);
+            if (parentMf != null)
+            {
+                meshParents[mf] = parentMf;
+            }
+        }
+        
+        return meshParents;
     }
 }

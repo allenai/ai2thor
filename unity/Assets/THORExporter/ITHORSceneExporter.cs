@@ -40,9 +40,42 @@ public class ITHORSceneExporter : MonoBehaviour
         // Create scene data container
         IThorScene sceneData = new IThorScene();
 
-        // Get all objects in scene
-        sceneData.objects = GetObjects(floorPlanName);
-        sceneData.structuralObjects = GetStructuralObjects(floorPlanName);
+
+        // FIRST PASS. GET ALL OBJECTS
+        GameObject root = GameObject.Find("Objects");
+        if (root == null)
+        {
+            Debug.LogError("Objects root not found");
+            return;
+        }
+        
+        // Get all objects in the root
+        List<GameObject> objects = new List<GameObject>();
+        List<GameObject> structuralObjects = new List<GameObject>();
+        foreach (Transform child in root.transform)
+        {
+            if (child.gameObject.activeSelf)
+            {
+                if (child.gameObject.tag == "Structure")
+                {
+                    structuralObjects.Add(child.gameObject);
+                    
+                    // go through all children and add them to the scene data
+                    foreach (Transform grandChild in child)
+                    {
+                        if (grandChild.gameObject.activeSelf && grandChild.gameObject.tag == "SimObjPhysics")
+                            objects.Add(grandChild.gameObject);
+                    }
+                    
+                } 
+                else if (child.gameObject.tag == "SimObjPhysics")
+                    objects.Add(child.gameObject);
+            }
+        }
+
+        // SECOND PASS. Get INFO for all objects
+        sceneData.objects = GetObjects(floorPlanName, objects);
+        sceneData.structuralObjects = GetStructuralObjects(floorPlanName, structuralObjects);
 
         // Save to JSON
         string savePath = Path.Combine("Assets/iTHOR", floorPlanName);
@@ -78,86 +111,101 @@ public class ITHORSceneExporter : MonoBehaviour
         Debug.Log($"Created directories in: {exportPath}");
 
         // Get active mesh filters
-        var meshFilters = go.GetComponentsInChildren<MeshFilter>();
         List<MeshFilter> activeMeshFilters = new List<MeshFilter>();
-        foreach (MeshFilter mf in meshFilters)
+        if (false) //tagType == "Structure")
         {
-            if (tagType == "Structure" && mf.gameObject.tag != tagType)
-                continue;
-
-            Debug.Log($"Processing mesh: {mf.sharedMesh.name}");
-            
-            // Skip if mesh filter or renderer is invalid
-            if (mf == null || mf.mesh == null)
-                continue;
-            
-            MeshRenderer renderer = mf.GetComponent<MeshRenderer>();
-            if (renderer == null || renderer.sharedMaterials == null || renderer.sharedMaterials.Length == 0)
-                continue;
-            
-            // Skip if any materials are null
-            bool hasNullMaterial = false;
-            foreach (Material mat in renderer.sharedMaterials)
+            var meshFilter = go.GetComponent<MeshFilter>();
+            if (meshFilter != null)
             {
-                if (mat == null)
+                activeMeshFilters.Add(meshFilter);
+            }
+        }
+        else
+        {
+            var meshFilters = go.GetComponentsInChildren<MeshFilter>();
+            foreach (MeshFilter mf in meshFilters)
+            {
+                if (tagType == "Structure" && mf.gameObject.tag != tagType)
+                    continue;
+
+                Debug.Log($"Processing mesh: {mf.sharedMesh.name}");
+                
+                // Skip if mesh filter or renderer is invalid
+                if (mf == null || mf.mesh == null)
+                    continue;
+                
+                MeshRenderer renderer = mf.GetComponent<MeshRenderer>();
+                if (renderer == null || renderer.sharedMaterials == null || renderer.sharedMaterials.Length == 0)
+                    continue;
+                
+                // Skip if any materials are null
+                bool hasNullMaterial = false;
+                foreach (Material mat in renderer.sharedMaterials)
                 {
-                    hasNullMaterial = true;
-                    break;
+                    if (mat == null)
+                    {
+                        hasNullMaterial = true;
+                        break;
+                    }
+                }
+                if (hasNullMaterial)
+                    continue;
+
+                if (mf.mesh.name.Contains("PS") && go.tag != "Structure")
+                    continue;
+
+                if (mf.gameObject.activeSelf)
+                {
+                    activeMeshFilters.Add(mf);
                 }
             }
-            if (hasNullMaterial)
-                continue;
-
-            if (mf.mesh.name.Contains("PS") && go.tag != "Structure")
-                continue;
-
-            if (mf.gameObject.activeSelf)
+   
+            MeshFilter goMeshFilter = go.GetComponent<MeshFilter>();
+            if (goMeshFilter != null)
             {
-                activeMeshFilters.Add(mf);
+                MeshRenderer renderer = goMeshFilter.GetComponent<MeshRenderer>();
+                bool isValid = renderer != null && 
+                            renderer.sharedMaterials != null && 
+                            renderer.sharedMaterials.Length > 0 &&
+                            !renderer.sharedMaterials.Any(m => m == null);
+                            
+                if (isValid)
+                {
+                    activeMeshFilters.Add(goMeshFilter);
+                }
             }
-        }
+            Debug.Log($"Active mesh filters: {activeMeshFilters.Count}");
 
-        MeshFilter goMeshFilter = go.GetComponent<MeshFilter>();
-        if (goMeshFilter != null)
-        {
-            MeshRenderer renderer = goMeshFilter.GetComponent<MeshRenderer>();
-            bool isValid = renderer != null && 
-                          renderer.sharedMaterials != null && 
-                          renderer.sharedMaterials.Length > 0 &&
-                          !renderer.sharedMaterials.Any(m => m == null);
-                          
-            if (isValid)
-            {
-                activeMeshFilters.Add(goMeshFilter);
-            }
         }
-        Debug.Log($"Active mesh filters: {activeMeshFilters.Count}");
-
-        // Handle bounding box and center
-        Vector3 center = Vector3.zero;
-        bool applyBoundingBox = false;
-        bool saveSubMeshes = false;
-        bool saveSubMeshTransform = false;
-        bool saveCombinedSubmeshes = false;
-
-        // Get the SimObjPhysics component
-        if (go.tag == "SimObjPhysics")
-        {
-            SimObjPhysics simObjPhysics = go.GetComponent<SimObjPhysics>();
-            AxisAlignedBoundingBox box = simObjPhysics.AxisAlignedBoundingBox;
-            center = box.center;
-            applyBoundingBox = true; 
-            saveSubMeshes = true;
-            saveSubMeshTransform = true;
-            saveCombinedSubmeshes = true;
-        }
-        
 
         // Initialize DownloadThorAssets if not already initialized
         if (downloadThorAssets == null)
         {
             downloadThorAssets = new DownloadThorAssets();
         }
+        // Handle bounding box and center
+        Vector3 center = Vector3.zero;
+        bool applyBoundingBox = false;
+        bool saveSubMeshes = false;
+        bool saveSubMeshTransform = false;
+        bool saveCombinedSubmeshes = true;
+        downloadThorAssets.applyScale = true; 
+
+        // Get the SimObjPhysics component
+        if (go.tag == "SimObjPhysics")
+        {
+            SimObjPhysics simObjPhysics = go.GetComponent<SimObjPhysics>();
+            //AxisAlignedBoundingBox box = simObjPhysics.AxisAlignedBoundingBox;
+            //center = box.center;
+            applyBoundingBox = false;//true; 
+            saveSubMeshes = true;
+            saveSubMeshTransform = true;
+            saveCombinedSubmeshes = true;
+            downloadThorAssets.applyScale = false;
+        }
+        
+
+        
         downloadThorAssets.savePath = exportPath;
 
         // Export asset obj
@@ -165,6 +213,7 @@ public class ITHORSceneExporter : MonoBehaviour
         
         try
         {
+            var simObjPhysics = go.GetComponent<SimObjPhysics>();
             downloadThorAssets.SaveMeshes(
                 relativeExportPath, 
                 activeMeshFilters.ToArray(), 
@@ -172,8 +221,8 @@ public class ITHORSceneExporter : MonoBehaviour
                 applyBoundingBox, 
                 saveSubMeshes, 
                 saveSubMeshTransform, 
-                saveCombinedSubmeshes//,
-                //simObjPhysics
+                saveCombinedSubmeshes,
+                simObjPhysics
             );
 
             // Create materials directory if needed
@@ -192,12 +241,15 @@ public class ITHORSceneExporter : MonoBehaviour
         return assetId;
     }
 
-    private List<IThorObject> GetObjects(string floorPlanName)
-    {
+    private List<IThorObject> GetObjects(string floorPlanName, List<GameObject> allObjects)
+    {        
         List<IThorObject> objects = new List<IThorObject>();
         
+        // All Relative Positive from here
+        var rootParent = GameObject.Find("Objects");
+
+
         // Find all objects with SimObjPhysics tag in the scene
-        GameObject[] allObjects = GameObject.FindGameObjectsWithTag("SimObjPhysics");
         foreach (GameObject obj in allObjects)
         {
             if (!obj.activeSelf)
@@ -214,29 +266,33 @@ public class ITHORSceneExporter : MonoBehaviour
                     .Replace("Instance", "");
                 string assetId = simObjPhysics.assetID?.Replace(" ", "");
                 Transform bbox = obj.transform.Find("BoundingBox");
+                //AxisAlignedBoundingBox box = simObjPhysics.AxisAlignedBoundingBox;
                 if (bbox != null)
                 {
-                    bbox_center = bbox.GetComponent<BoxCollider>().center;
+                    bbox_center.y = bbox.GetComponent<BoxCollider>().center.y; // For some reason, THOR assets need this
                 }
+
                 // Export asset if it doesn't have an assetID
                 if (string.IsNullOrEmpty(assetId))
                 {
-                    GameObject clone = Instantiate(obj);
-                    clone.name = objectId;
+                    //GameObject clone = Instantiate(obj);
+                    //clone.name = objectId;
                     Debug.Log($"No asset ID for {objectId}, exporting asset");
                     var tagType = obj.tag;
-                    assetId = ExportAsset(clone,  tagType, objectId, objectType, floorPlanName);
+                    assetId = ExportAsset(obj,  tagType, objectId, objectType, floorPlanName);
                     bbox_center = Vector3.zero;
-                    Destroy(clone);
+                    //Destroy(clone);
                 }
 
+                
+                var position = rootParent.transform.InverseTransformPoint(obj.transform.position);
                 IThorObject thorObj = new IThorObject
                 {
                     objectType = objectType,
                     assetId = assetId,
-                    position = obj.transform.localPosition,
-                    rotation = obj.transform.localEulerAngles,
-                    kinematic = simObjPhysics.isStatic
+                    position = obj.transform.position + bbox_center, // position,
+                    rotation = WrapEulerAngles(obj.transform.rotation.eulerAngles), // Wrap the angles
+                    kinematic = false //simObjPhysics.isStatic
                 };
                 objects.Add(thorObj);
                 Debug.Log($"Added object: {obj.name} of type {thorObj.objectType}");
@@ -246,12 +302,11 @@ public class ITHORSceneExporter : MonoBehaviour
         return objects;
     }
 
-    private List<IThorObject> GetStructuralObjects(string floorPlanName)
+    private List<IThorObject> GetStructuralObjects(string floorPlanName, List<GameObject> allStructural)
     {
         List<IThorObject> structuralObjects = new List<IThorObject>();
         
         // Find all objects with Structural tag in the scene
-        GameObject[] allStructural = GameObject.FindGameObjectsWithTag("Structure");
         foreach (GameObject obj in allStructural)
         {
             if (!obj.activeSelf)
@@ -277,8 +332,8 @@ public class ITHORSceneExporter : MonoBehaviour
             {
                 objectType = objectId,  // Use the object name as type for structural objects
                 assetId = assetId,
-                position = obj.transform.localPosition,
-                rotation = obj.transform.localEulerAngles,
+                position = Vector3.zero,//obj.transform.localPosition,
+                rotation = Vector3.zero,//obj.transform.localEulerAngles,
                 kinematic = true
             };
             structuralObjects.Add(thorObj);
@@ -286,5 +341,26 @@ public class ITHORSceneExporter : MonoBehaviour
         }
 
         return structuralObjects;
+    }
+
+    // Add these utility methods to wrap angles between -180 and 180 degrees
+    private Vector3 WrapEulerAngles(Vector3 angles)
+    {
+        // Wrap each component between -180 and 180 degrees
+        angles.x = WrapAngle(angles.x);
+        angles.y = WrapAngle(angles.y);
+        angles.z = WrapAngle(angles.z);
+        return angles;
+    }
+
+    private float WrapAngle(float angle)
+    {
+        // Wrap the angle between -180 and 180 degrees
+        angle %= 360f;
+        if (angle > 180f)
+            angle -= 360f;
+        else if (angle < -180f)
+            angle += 360f;
+        return angle;
     }
 }
