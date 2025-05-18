@@ -128,12 +128,13 @@ public class ITHORSceneExporter : MonoBehaviour
                 if (tagType == "Structure" && mf.gameObject.tag != tagType)
                     continue;
 
-                Debug.Log($"Processing mesh: {mf.sharedMesh.name}");
                 
                 // Skip if mesh filter or renderer is invalid
                 if (mf == null || mf.mesh == null)
                     continue;
                 
+                Debug.Log($"Processing mesh: {mf.sharedMesh.name}");
+
                 MeshRenderer renderer = mf.GetComponent<MeshRenderer>();
                 if (renderer == null || renderer.sharedMaterials == null || renderer.sharedMaterials.Length == 0)
                     continue;
@@ -152,6 +153,10 @@ public class ITHORSceneExporter : MonoBehaviour
                     continue;
 
                 if (mf.mesh.name.Contains("PS") && go.tag != "Structure")
+                    continue;
+                if (mf.mesh.name.Contains("Quad") && go.tag != "Structure")
+                    continue;
+                if (mf.gameObject.name.Contains("Decal") && go.tag != "Structure")
                     continue;
 
                 if (mf.gameObject.activeSelf)

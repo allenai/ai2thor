@@ -1428,7 +1428,9 @@ public class DownloadThorAssets : MonoBehaviour
                     v -= center;                
 
                 v.x *= -1;
-                sb.AppendLine("v " + v.x + " " + v.y + " " + v.z);
+                sb.AppendLine("v " + Math.Ceiling(v.x * 100000) / 100000.0f + " " + 
+                             Math.Ceiling(v.y * 100000) / 100000.0f + " " + 
+                             Math.Ceiling(v.z * 100000) / 100000.0f);
             }
 
             foreach (Vector3 vx in msh.normals)
@@ -1553,6 +1555,13 @@ public class DownloadThorAssets : MonoBehaviour
 
     string MaterialToString(Material m)
     {
+
+        // handle a material with different shaders
+        if (m.shader.name.StartsWith("Custom"))
+        {
+            return "";
+        }
+
         StringBuilder sb = new StringBuilder();
 
         sb.AppendLine("newmtl " + m.name);
