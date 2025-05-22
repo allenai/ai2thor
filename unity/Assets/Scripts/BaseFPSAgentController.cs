@@ -464,15 +464,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionCounter = 0;
             targetTeleport = Vector3.zero;
 
-            System.Diagnostics.Process proc = System.Diagnostics.Process.GetCurrentProcess();
-         proc.Refresh();     
-            Debug.Log($"--ActionFinished. lastAction: '{this.lastAction}. lastActionSuccess: '{success}'. errorMessage: error message '{this.errorMessage}'. actionReturn: '{actionReturn}'");
-            Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64} Bytes. C# available Heap estimate '{System.GC.GetTotalMemory(false)}' Bytes.");
-            proc.Dispose();
+            #if UNITY_WEBGL
+                this.agentManager.TransitionStateMachine(AgentState.ActionComplete, AgentState.Emit);
+            #endif
+
+            // System.Diagnostics.Process proc = System.Diagnostics.Process.GetCurrentProcess();
+            // proc.Refresh();     
+            
+            // Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64} Bytes. C# available Heap estimate '{System.GC.GetTotalMemory(false)}' Bytes.");
+            //proc.Dispose();
 #if UNITY_EDITOR
-            Debug.Log($"lastAction: '{this.lastAction}'");
-            Debug.Log($"lastActionSuccess: '{success}'");
-            Debug.Log($"actionReturn: '{actionReturn}'");
+
+            Debug.Log($"ActionFinished. lastAction: '{this.lastAction}. lastActionSuccess: '{success}'. errorMessage: error message '{this.errorMessage}'. actionReturn: '{actionReturn}'");
             if (!success) {
                 Debug.Log($"Action failed with error message '{this.errorMessage}'.");
             } else if (actionReturn != null) {
@@ -762,8 +765,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.maxDownwardLookAngle = action.maxDownwardLookAngle;
             }
 
+            var actionFinishedInitBody = new ActionFinished(success: true);
             if (action.agentMode != "fpin") {
-                this.InitializeBody(action);
+                actionFinishedInitBody = this.InitializeBody(action);
             }
 
             if (action.antiAliasing != null) {
@@ -775,6 +779,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera
                 .GetComponent<FirstPersonCharacterCull>()
                 .SwitchRenderersToHide(this.VisibilityCapsule);
+            var renderingManager = this.m_Camera.GetComponent<RenderingManager>();
+
+            // to set _img pass to display 0 in editor and standalone plaforms (here cloudrendering is not differentiated so also set to displaybuffer 0, not sure what it means)
+            renderingManager.Initialize(imgDisplayTarget: 0, action.overwriteRGBWithDistortion);
 
             if (action.gridSize == 0) {
                 action.gridSize = 0.25f;
@@ -882,7 +890,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             } else {
                 gridSize = action.gridSize;
-                StartCoroutine(checkInitializeAgentLocationAction());
+                StartCoroutine(checkInitializeAgentLocationAction(actionFinishedInitBody));
             }
 
             // initialize how long the default wait time for objects to stop moving is
@@ -913,9 +921,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.originalLightingValues = null;
             // Physics.autoSimulation = true;
             // Debug.Log("True if physics is auto-simulating: " + Physics.autoSimulation);
+            // Debug.Log($"========== Initialize Action finished call: {actionFinishedInitBody.success}");
+            // actionFinished(success: actionFinishedInitBody.success, errorMessage: actionFinishedInitBody.errorMessage);
         }
 
-        public IEnumerator checkInitializeAgentLocationAction() {
+        public IEnumerator checkInitializeAgentLocationAction(ActionFinished initBodyActionFinished) {
             yield return null;
 
             if (agentManager.agentMode != "stretchab") {
@@ -984,22 +994,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     // Debug.Log("STAGE 4. Starting position is (" + this.transform.position.x + ", " + this.transform.position.y + ", " + this.transform.position.z + ")");
                     snapAgentToGrid();
 
+                    Debug.Log($"----- calling action Finished {initBodyActionFinished.success}");
+
                     actionFinished(
-                        true,
-                        new InitializeReturn {
+                        success: initBodyActionFinished.success,
+                        errorMessage: initBodyActionFinished.errorMessage,
+                        actionReturn: new InitializeReturn {
                             cameraNearPlane = m_Camera.nearClipPlane,
                             cameraFarPlane = m_Camera.farClipPlane
                         }
                     );
                 } else {
                     // Debug.Log("Initialize: no valid starting positions found");
-                    actionFinished(false);
+                    var prefix = string.IsNullOrEmpty(initBodyActionFinished.errorMessage) ? "InitializeBody Error: " : "";
+                    actionFinished(false, errorMessage: $"Initialize failure, no valid movements at position. Try initializing at a different position. {prefix}{initBodyActionFinished.errorMessage}");
                 }
             } else {
                 yield return null;
+                Debug.Log($"----- calling action Finished {initBodyActionFinished.success}");
                 actionFinished(
-                    true,
-                    new InitializeReturn {
+                    success: initBodyActionFinished.success,
+                    errorMessage: initBodyActionFinished.errorMessage,
+                    actionReturn: new InitializeReturn {
                         cameraNearPlane = m_Camera.nearClipPlane,
                         cameraFarPlane = m_Camera.farClipPlane
                     }
@@ -1729,7 +1745,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // during initialization and reduces the chance of an object held by the
         // arm from moving a large mass object.  This also eliminates the chance
         // of a large mass object moving vs. relying on the CollisionListener to prevent it.
-        public void MakeObjectsStaticKinematicMassThreshold() {
+        public ActionFinished MakeObjectsStaticKinematicMassThreshold() {
             foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 // check if the sopType is something that can be hung
                 if (
@@ -1753,7 +1769,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
                 }
             }
-            actionFinished(true);
+            return ActionFinished.Success;
         }
 
         // if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
@@ -7743,7 +7759,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 receptacleCandidate: asset.receptacleCandidate,
                 yRotOffset: asset.yRotOffset,
                 serializable: asset.serializable,
-                parentTexturesDir: asset.parentTexturesDir
+                parentTexturesDir: asset.parentTexturesDir,
+                rawTextures: asset.rawTextures
             );
             return new ActionFinished { success = true, actionReturn = assetData };
         }
@@ -7896,6 +7913,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ActionFinished.Success;
         }
 
+        public ActionFinished CreateRuntimeAssets(
+            List<ProceduralAsset> assets
+        ) {
+            foreach (var asset in assets) {
+                var actionFinished = CreateRuntimeAsset(
+                    asset: asset
+                );
+                if (!actionFinished.success) {
+                    return actionFinished;
+                }
+            }
+            return ActionFinished.Success;
+        }
+
         public void GetStreamingAssetsPath() {
             actionFinished(success: true, actionReturn: Application.streamingAssetsPath);
         }
@@ -7903,6 +7934,55 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void GetPersistentDataPath() {
             actionFinished(success: true, actionReturn: Application.persistentDataPath);
         }
+
+        public ActionFinished DeleteAssetsFromDBNotInHouse(ProceduralHouse house) {
+            return ProceduralTools.DeleteAssetsFromDBNotInHouse(house);
+        }
+
+
+
+
+        //     // if (dequeueCount > 0) {
+        //     //     // WARNING: Async operation, should be ok for deleting assets if using the same creation-deletion hook
+        //     //     // cache should be all driven within one system, currently python driven
+        //     //     var heapSizeBeforeUnload = System.GC.GetTotalMemory(false);
+        //     //     // System.Diagnostics.Process proc = System.Diagnostics.Process.GetCurrentProcess();
+        //     //     // proc.Refresh();
+        //     //     Debug.Log($"Asset count was '{assetCountBeforeRemove}' and limit '{limit}'. Deleted '{dequeueCount}' GameObjects and removed them from cache. Total assets in cache now '{proceduralAssetQueue.Count}'.");
+        //     //     // Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64} Bytes. GarbageCollector available Heap estimate '{heapSizeBeforeUnload}' Bytes.");
+        //     //     asyncOp = Resources.UnloadUnusedAssets();
+        //     //     asyncOp.completed += (op) => {
+        //     //         Debug.Log("Asyncop callback called calling GC");
+        //     //         GC.Collect();
+        //     //     };
+
+        //     //     // #if !UNITY_EDITOR && !UNITY_WEBGL
+        //     //     float timeout = 2.0f;
+        //     //     float startTime = Time.realtimeSinceStartup;
+        //     //     while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
+        //     //         // waiting
+        //     //         continue;
+        //     //     }
+        //     //     GC.Collect();
+        //     //     // proc.Refresh();
+        //     //     var heapSizeAfterUnload = System.GC.GetTotalMemory(false);
+        //     //     Debug.Log($"GarbageCollector available Heap Before Unload '{heapSizeBeforeUnload}' Bytes. After Garbage Collection {heapSizeAfterUnload} Bytes. GarbageCollector available Heap difference {heapSizeAfterUnload-heapSizeBeforeUnload} Bytes.");
+        //     //     // Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64}");
+        //     //     // proc.Dispose();
+        //     //     // #endif
+        //     // }
+
+        //     assetDB.prefabs = assetDB.prefabs.Where(p => assetIds.Contains(p.name)).ToList();
+        //     assetDB.materials = assetDB.materials.Where(m => materialIds.Contains(m.name)).ToList();
+        //     assetDB.totalMats = assetDB.materials.Count;
+
+        //     assetDB.BuildAssetDatabase();
+
+        //     return new ActionFinished(success: true, actionReturn: new Dictionary<string, List<string>>() {
+        //         ["prefabs"]=assetIds.ToList(),
+        //         ["materials"]=materialIds.ToList()
+        //     });
+        // }
 
         public void CreateHouse(ProceduralHouse house) {
             var rooms = house.rooms.SelectMany(room => house.rooms);
@@ -8975,6 +9055,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
             actionFinished(success: true);
+        }
+
+        // public ActionFinished GetThirdPartyCameraImage(int index) {
+        //     Camera camera = null; //which camera are we checking visibility from?
+        //     if (index < agentManager.thirdPartyCameras.Count) {
+        //         camera = agentManager.thirdPartyCameras[thirdPartyCameraIndex.Value];
+        //     }
+        //     else {
+        //         return new ActionFinished(success: false, errorMessage: $"Invalid index '{index}', greater than number of ThirdPArtyCameras '{gentManager.thirdPartyCameras.Count}'");
+        //     }
+
+        //     // came
+
+        // }
+
+        private static void GetAllHouseObjects(
+            AssetMap<GameObject> assetDb,
+            IEnumerable<HouseObject> hos,
+            List<string> objectIds
+        ) {
+            // if (hos == null) {
+            //     return true;
+            // } else {
+            //     var result = true;
+            //     foreach (var ho in hos) {
+            //         var inDb = assetDb.ContainsKey(ho.assetId);
+            //         if (!inDb) {
+            //             objectIds.Add(ho.assetId);
+            //         }
+            //         result = inDb && validateHouseObjects(assetDb, ho.children, missingIds);
+            //     }
+
+            //     return result;
+            // }
         }
 
 #if UNITY_EDITOR

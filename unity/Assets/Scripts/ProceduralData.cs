@@ -476,6 +476,17 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
+    public class ProceduralTextures {
+
+        public string albedoBase64JPG;
+        public string metallicSmoothnessBase64JPG;
+        public string normalBase64JPG;
+        public string emissionBase64JPG;
+
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
     public class ProceduralAsset {
         public Vector3[] vertices;
         public Vector3[] normals;
@@ -494,6 +505,7 @@ namespace Thor.Procedural.Data {
         public float yRotOffset = 0f;
         public bool serializable = false;
         public string parentTexturesDir = null;
+        public ProceduralTextures rawTextures = null;
     }
 
     public static class ExtensionMethods {

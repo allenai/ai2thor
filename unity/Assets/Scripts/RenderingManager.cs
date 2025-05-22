@@ -8,11 +8,16 @@ using Unity.Rendering;
 using MessagePack.Resolvers;
 using UnityEngine.Rendering;
 using System.Runtime.Remoting.Messaging;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using Thor.Attributes;
 
 public class RenderingManager : MonoBehaviour {
 
-
-    private Dictionary<string, ICapturePass> availablePasses;
+    public Dictionary<string, ICapturePass> availablePasses {
+        get;
+        private set;
+    }
 
     private MultiCapture mainPass;
 
@@ -24,9 +29,6 @@ public class RenderingManager : MonoBehaviour {
         "_depth",
         "_distortion"
     };
-    
-    // to set _img pass to display 0 in editor and standalone plaforms
-    public bool IsMainCamera;
 
     public Material distortionMat;
 
@@ -37,50 +39,10 @@ public class RenderingManager : MonoBehaviour {
         private set;
     } 
 
-    void Initialize(Camera camera) {
+    [SerializeField, Thor.Attributes.ReadOnly] private bool ready;
 
-        // var camera = GetComponent<Camera>();
-        // var antiAliasLevel = 1;
-        
-       
-        // var depthPass = new RenderToTexture(
-        //     name: "_depth", camera: camera, antiAliasLevel: antiAliasLevel, shaderName: "Hidden/DepthBW"
-        // );
 
-        // var distPass = new RenderToTexture(
-        //     name: "_distortion", camera: camera, antiAliasLevel: antiAliasLevel, shaderName: "Custom/BarrelDistortion"
-        // );
-
-        // var idPass = new ReplacementShaderCapture(
-        //     name: "_id", cameraParent: this.transform, replacementMode: ReplacelementMode.ObjectId, antiAliasLevel: antiAliasLevel, shaderName: "Hidden/UberReplacement"
-        // );
-
-        // var classPass = new ReplacementShaderCapture(
-        //     name: "_class", cameraParent: this.transform, replacementMode: ReplacelementMode.CatergoryId, antiAliasLevel: antiAliasLevel, shaderName: "Hidden/UberReplacement"
-        // );
-
-        // var normalsPass = new ReplacementShaderCapture(
-        //     name: "_normals", cameraParent: this.transform, replacementMode: ReplacelementMode.Normals, antiAliasLevel: antiAliasLevel, shaderName: "Hidden/UberReplacement"
-        // ); 
-
-        // this.mainPass = new MultiCapture("_img", camera, new List<RenderToTexture>() {
-            
-        // });
-
-        // availablePasses = new List<ICapturePass>() {
-        //     this.mainPass,
-        //     depthPass,
-        //     distPass,
-        //     idPass,
-        //     classPass
-        // }.ToDictionary(x => x.GetName(), x => x);
-
-        // this.activePasses = new List<ICapturePass>() {
-        //     this.mainPass
-        // }.ToDictionary(x => x.GetName(), x => x);
-        // mainPass.OnInitialize(camera);
-
-    }
+    public bool IsReady => ready;
 
     // void OnPreRender() {
     //     Debug.Log($"---RenderingManager, gameObject {this.gameObject.name},  OnPreRender");
@@ -113,7 +75,7 @@ public class RenderingManager : MonoBehaviour {
                 mainPass.AddUpdateCapturePass(pass as RenderToTexture);
             }
 
-            Debug.Log($"--------- Enabling passes 3 toinitialize {string.Join(", ", toInitialize.Select(x => x.GetName()))}");
+            Debug.Log($"--------- Enabling passes toinitialize {string.Join(", ", toInitialize.Select(x => x.GetName()))}");
             //Sort by
             // Weird that multiPasCapture does not get Initialized? or already was
 
@@ -157,10 +119,9 @@ public class RenderingManager : MonoBehaviour {
     //     }
     // }
 
+    // TODO make initializa configurable, pass a list of List<ICapturePass>() 
+    public void Initialize(int? imgDisplayTarget = null, bool overwriteImgWithDistortion = false) {
 
-    void Awake() { 
-
-        Debug.Log($"=-------- Rendering Manager Awake parent {this.gameObject.transform.name}");
         var camera = GetComponent<Camera>();
         bool supportsAntialiasing = false;
         var antiAliasLevel = supportsAntialiasing ? Mathf.Max(1, QualitySettings.antiAliasing) : 1;
@@ -204,12 +165,13 @@ public class RenderingManager : MonoBehaviour {
         );
         
         // make first _img capture created render to Display
-        int? toDisplay = null;
+        string k = !overwriteImgWithDistortion? null : distPass.name;
         this.mainPass = new MultiCapture(
-            config: new CaptureConfig() { name = "_img", antiAliasLevel = antiAliasLevel, cloudRendering = cloudRenderingCapture, toDisplay = IsMainCamera ? 0 : toDisplay}, 
+            config: new CaptureConfig() { name = "_img", antiAliasLevel = antiAliasLevel, cloudRendering = cloudRenderingCapture, toDisplay = imgDisplayTarget}, 
             camera: camera, 
             passes: new List<RenderToTexture>() {
-            } 
+            },
+            overwriteWithPass: !overwriteImgWithDistortion? null : distPass.name
         );
 
         availablePasses = new List<ICapturePass>() {
@@ -226,6 +188,13 @@ public class RenderingManager : MonoBehaviour {
         }.ToDictionary(x => x.GetName(), x => x);
         mainPass.OnInitialize(camera);
         mainPass.OnCameraChange(camera);
+        ready = true;
+    }
+
+    void Awake() { 
+
+        // Debug.Log($"=-------- Rendering Manager Awake parent {this.gameObject.transform.name}");
+        
         // this.enabled = true;
     }
 

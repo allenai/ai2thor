@@ -594,6 +594,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                    case "initsdist": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "stretch";
+                        action["agentControllerType"] = "stretch";
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
+                        //                  action["antiAliasing"] = "smaa";
+                        action["massThreshold"] = 10.0f;
+                        action["renderDistortionImage"] = true;
+                        action["overwriteRGBWithDistortion"] = true;
+
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+
                 //fpin using stretch bot as source mesh
                 case "initpinnobody": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
@@ -2715,7 +2735,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ["position"] = new Vector3(1, 1, 1),
                             ["rotation"] = new Vector3(10, 20, 30),
                             ["parent"] = "agent",
-                            ["agentPositionRelativeCoordinates"] = true
+                            ["agentPositionRelativeCoordinates"] = true,
+                        };
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+
+                     case "atpc2": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "AddThirdPartyCamera",
+                            ["position"] = new Vector3(1, 1, 1),
+                            ["rotation"] = new Vector3(10, 20, 30),
+                            ["parent"] = "agent",
+                            ["agentPositionRelativeCoordinates"] = true,
+                            ["targetDisplay"] = 0,
+                            ["viewPort"] = new Rect(x: 0.5f, y: 0.5f, width: 0.5f, height: 0.5f),
+                        };
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+
+                     case "atpc3": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "AddThirdPartyCamera",
+                            ["position"] = new Vector3(1, 1, 1),
+                            ["rotation"] = new Vector3(10, 20, 30),
+                            ["parent"] = "agent",
+                            ["agentPositionRelativeCoordinates"] = true,
+                            ["targetDisplay"] = 0,
+                            ["viewPort"] = new Rect(x: 0.5f, y: 0.5f, width: 0.5f, height: 0.5f),
+                            ["overwriteRGBWithDistortion"] = true,
                         };
 
                         CurrentActiveController()
@@ -2731,7 +2784,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ["k2"] = 0.01f,
                             ["k3"] = -0.2f,
                             ["k4"] = 0.0,
-                            ["strength"] = 1.0
+                            ["strength"] = 1.0,
+                            ["thidPartyCameraIndices"] = new List<int>() {0}
                         };
                     this.AManager.ProcessControlCommand(new DynamicServerAction(action));
                     break;
@@ -2869,6 +2923,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ["position"] = new Vector3(0.5f, 0.5f, 0.5f),
                             ["rotation"] = new Vector3(15, 25, 35),
                             ["fieldOfView"] = 120f,
+                            //["agentPositionRelativeCoordinates"] = false
+                        };
+
+                        CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action), AManager);
+                        break;
+                    }
+                case "umc2": {
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "UpdateMainCamera",
+                            ["viewPort"] = new Rect(x: 0.0f, y: 0.5f, width: 0.5f, height: 0.5f)
                             //["agentPositionRelativeCoordinates"] = false
                         };
 
@@ -5564,6 +5629,75 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         break;
                     }
 
+                     case "obj2": {
+                        // AssetDatabase.Refresh();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "CreateRuntimeAsset";
+                        var OBJECTS_BASE_PATH = "/Resources/objects/";
+
+                        path = Application.dataPath + OBJECTS_BASE_PATH + "main.json";
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            if (!file.EndsWith(".json")) {
+                                file += ".json";
+                            }
+                            path = Application.dataPath + OBJECTS_BASE_PATH + file;
+                        }
+
+                        var jsonStr = System.IO.File.ReadAllText(path);
+                        Debug.Log($"jjson: {jsonStr}");
+
+                        JObject obj = JObject.Parse(jsonStr);
+
+                        action["asset"] = obj;
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+                        break;
+                    }
+
+                    case "obj_msg": {
+                        // AssetDatabase.Refresh();
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        // AssetDatabase.Refresh();
+                        action["action"] = "CreateRuntimeAsset";
+                        var OBJECTS_BASE_PATH = "/Resources/objects/";
+                        file = "000074a334c541878360457c672b6c2e";
+                        path = Application.dataPath + OBJECTS_BASE_PATH;
+                       
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            path = Application.dataPath + OBJECTS_BASE_PATH;
+                            // if (!file.EndsWith(".msgpack.gz")) {
+                            //     file += ".msgpack.gz";
+                            // }
+                            // path = Application.dataPath + OBJECTS_BASE_PATH + file;
+                        }
+
+                        // var jsonStr = System.IO.File.ReadAllText(path);
+                        // Debug.Log($"jjson: {jsonStr}");
+
+                        // JObject obj = JObject.Parse(jsonStr);
+
+
+                        action["id"] = file;
+                        action["dir"] = path;
+                        action["extension"] = ".msgpack.gz";
+                        action["annotations"] = null;
+                        action["serializable"] = true;
+
+                        CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action));
+
+                        break;
+                    }
+
+
                 case "chp": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
@@ -5593,6 +5727,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+
+                case "dadbh": {
+                    Dictionary<string, object> action = new Dictionary<string, object>();
+
+                    // AssetDatabase.Refresh();
+                    action["action"] = "DeleteAssetsFromDBNotInHouse";
+                    var ROOM_BASE_PATH = "/Resources/rooms/";
+
+                    path = Application.dataPath + "/Resources/rooms/house_full.json";
+
+                    if (splitcommand.Length == 2) {
+                        // uses ./debug/{splitcommand[1]}[.json]
+                        file = splitcommand[1].Trim();
+                        if (!file.EndsWith(".json")) {
+                            file += ".json";
+                        }
+                        path = Application.dataPath + ROOM_BASE_PATH + file;
+                    }
+
+                    var jsonStr = System.IO.File.ReadAllText(path);
+                    Debug.Log($"jjson: {jsonStr}");
+
+                    JObject obj = JObject.Parse(jsonStr);
+
+                    action["house"] = obj;
+                    CurrentActiveController()
+                        .ProcessControlCommand(new DynamicServerAction(action));
+
+                    break;
+                }
+
+                    
                 case "chp_direct": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 

@@ -101,7 +101,6 @@ def load_scene(scene_name, house_path=None, run_in_editor=False, platform=None, 
         )
         print(f"Action {controller.last_action['action']} success: {evt.metadata['lastActionSuccess']}")
         print(f'Error: {evt.metadata["errorMessage"]}')
-
     
     addThirdPartyCam = {'action': 'AddThirdPartyCamera', 'agentPositionRelativeCoordinates': True, 'fieldOfView': 139, 'parent': 'agent', 'position': {'x': 0.04, 'y': 0.5560812, 'z': 0.0}, 'rotation': {'x': 30.0, 'y': 120.0, 'z': 0.0}}
 

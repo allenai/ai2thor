@@ -23,6 +23,13 @@ namespace Thor.Procedural {
 
         public bool dontDestroyOnLoad = true;
 
+        /// Build database based on materials and prefabs
+        public void BuildAssetDatabase() {
+            this.assetMap = new ProceduralLRUCacheAssetMap<GameObject>(
+                prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First())
+            );
+        }
+
         public void Awake() {
             if (Instance != null) {
                 Destroy(gameObject);
@@ -30,9 +37,7 @@ namespace Thor.Procedural {
             }
 
             Instance = this;
-            this.assetMap = new ProceduralLRUCacheAssetMap<GameObject>(
-                prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First())
-            );
+            BuildAssetDatabase();
             if (dontDestroyOnLoad) {
                 DontDestroyOnLoad(gameObject);
             } else {
@@ -156,10 +161,10 @@ namespace Thor.Procedural {
                 // WARNING: Async operation, should be ok for deleting assets if using the same creation-deletion hook
                 // cache should be all driven within one system, currently python driven
                 var heapSizeBeforeUnload = System.GC.GetTotalMemory(false);
-                System.Diagnostics.Process proc = System.Diagnostics.Process.GetCurrentProcess();
-                proc.Refresh();
+                // System.Diagnostics.Process proc = System.Diagnostics.Process.GetCurrentProcess();
+                // proc.Refresh();
                 Debug.Log($"Asset count was '{assetCountBeforeRemove}' and limit '{limit}'. Deleted '{dequeueCount}' GameObjects and removed them from cache. Total assets in cache now '{proceduralAssetQueue.Count}'.");
-                Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64} Bytes. GarbageCollector available Heap estimate '{heapSizeBeforeUnload}' Bytes.");
+                // Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64} Bytes. GarbageCollector available Heap estimate '{heapSizeBeforeUnload}' Bytes.");
                 asyncOp = Resources.UnloadUnusedAssets();
                 asyncOp.completed += (op) => {
                     Debug.Log("Asyncop callback called calling GC");
@@ -174,10 +179,11 @@ namespace Thor.Procedural {
                     continue;
                 }
                 GC.Collect();
-                proc.Refresh();
+                // proc.Refresh();
                 var heapSizeAfterUnload = System.GC.GetTotalMemory(false);
-                Debug.Log($"GarbageCollector available Heap Before Unload '{heapSizeBeforeUnload}' Bytes. After Garbage Collection {heapSizeAfterUnload} Bytes. GarbageCollector available Heap difference {heapSizeAfterUnload-heapSizeBeforeUnload} Bytes. Process Used Memory(WorkingSet64) {proc.WorkingSet64}");
-                proc.Dispose();
+                Debug.Log($"GarbageCollector available Heap Before Unload '{heapSizeBeforeUnload}' Bytes. After Garbage Collection {heapSizeAfterUnload} Bytes. GarbageCollector available Heap difference {heapSizeAfterUnload-heapSizeBeforeUnload} Bytes.");
+                // Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64}");
+                // proc.Dispose();
                 // #endif
             }
             return asyncOp;

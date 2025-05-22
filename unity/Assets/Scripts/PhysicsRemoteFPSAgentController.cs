@@ -644,24 +644,189 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return arcPoints;
         }
 
-        // TODO: I dunno who was using this or for what, but it doesn't play nice with the new rotate functions so please add back functionality later
-        //  public void RotateRightSmooth(ServerAction controlCommand) {
-        //     if (CheckIfAgentCanTurn(90)) {
-        //         DefaultAgentHand(controlCommand);
-        //         StartCoroutine(InterpolateRotation(this.GetRotateQuaternion(1), controlCommand.timeStep));
-        //     } else {
-        //         actionFinished(false);
-        //     }
-        // }
+        ///------- FOR HideNSeek
 
-        // public void RotateLeftSmooth(ServerAction controlCommand) {
-        //     if (CheckIfAgentCanTurn(-90)) {
-        //         DefaultAgentHand(controlCommand);
-        //         StartCoroutine(InterpolateRotation(this.GetRotateQuaternion(-1), controlCommand.timeStep));
-        //     } else {
-        //         actionFinished(false);
-        //     }
-        // }
+        [SerializeField] protected GameObject[] RotateRLPivots = null;
+        [SerializeField] protected GameObject[] RotateRLTriggerBoxes = null;
+        [SerializeField] protected GameObject[] LookUDPivots = null;
+        [SerializeField] protected GameObject[] LookUDTriggerBoxes = null;
+
+
+        public bool CheckIfAgentCanTurn(int direction) {
+            bool result = true;
+
+            if (ItemInHand == null) {
+                //Debug.Log("Rotation check passed: nothing in Agent Hand");
+                return true;
+            }
+
+            if (direction != 90 && direction != -90) {
+                Debug.Log("Please give -90(left) or 90(right) as direction parameter");
+                return false;
+            }
+
+            //if turning right, check first 3 in array (30R, 60R, 90R)
+            // if (direction > 0) {
+            //     for (int i = 0; i < 6; i++) {
+            //         if (RotateRLTriggerBoxes[i].GetComponent<RotationTriggerCheck>().isColliding == true) {
+            //             Debug.Log("Can't rotate right");
+            //             return false;
+            //         }
+            //     }
+            // }
+
+            //if turning left, check last 3 in array (30L, 60L, 90L)
+            // else {
+            //     for (int i = 6; i < 11; i++) {
+            //         if (RotateRLTriggerBoxes[i].GetComponent<RotationTriggerCheck>().isColliding == true) {
+            //             Debug.Log("Can't rotate left");
+            //             return false;
+            //         }
+            //     }
+            // }
+
+            return result;
+        }
+
+        public void DefaultAgentHand(ServerAction action = null) {
+            ResetAgentHandPosition(action);
+            ResetAgentHandRotation(action);
+            SetUpRotationBoxChecks();
+            IsHandDefault = true;
+        }
+
+        public void SetUpRotationBoxChecks() {
+            if (ItemInHand == null) {
+                //Debug.Log("no need to set up boxes if nothing in hand");
+                return;
+
+            }
+
+            BoxCollider HeldItemBox = ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>();
+
+            //rotate all pivots to 0, move all box colliders to the position of the box collider of item in hand
+            //change each box collider's size and center
+            //rotate all pivots to where they need to go
+
+            //////////////Left/Right stuff first
+
+            //zero out everything first
+            for (int i = 0; i < RotateRLPivots.Length; i++) {
+                RotateRLPivots[i].transform.localRotation = Quaternion.Euler(Vector3.zero);
+            }
+
+            //set the size of all RotateRL trigger boxes to the Rotate Agent Collider's dimesnions
+            for (int i = 0; i < RotateRLTriggerBoxes.Length; i++) {
+                RotateRLTriggerBoxes[i].transform.position = HeldItemBox.transform.position;
+                RotateRLTriggerBoxes[i].transform.rotation = HeldItemBox.transform.rotation;
+                RotateRLTriggerBoxes[i].transform.localScale = HeldItemBox.transform.localScale;
+
+                RotateRLTriggerBoxes[i].GetComponent<BoxCollider>().size = HeldItemBox.size;
+                RotateRLTriggerBoxes[i].GetComponent<BoxCollider>().center = HeldItemBox.center;
+            }
+
+            int deg = -90;
+
+            //set all pivots to their corresponding rotations
+            for (int i = 0; i < RotateRLTriggerBoxes.Length; i++) {
+                if (deg == 0) {
+                    deg = 15;
+                }
+
+                RotateRLPivots[i].transform.localRotation = Quaternion.Euler(new Vector3(0, deg, 0));
+                deg += 15;
+            }
+
+            //////////////////Up/Down stuff now
+
+            //zero out everything first
+            for (int i = 0; i < LookUDPivots.Length; i++) {
+                LookUDPivots[i].transform.localRotation = Quaternion.Euler(Vector3.zero);
+            }
+
+            for (int i = 0; i < LookUDTriggerBoxes.Length; i++) {
+                LookUDTriggerBoxes[i].transform.position = HeldItemBox.transform.position;
+                LookUDTriggerBoxes[i].transform.rotation = HeldItemBox.transform.rotation;
+                LookUDTriggerBoxes[i].transform.localScale = HeldItemBox.transform.localScale;
+
+                LookUDTriggerBoxes[i].GetComponent<BoxCollider>().size = HeldItemBox.size;
+                LookUDTriggerBoxes[i].GetComponent<BoxCollider>().center = HeldItemBox.center;
+            }
+
+            int otherdeg = -30;
+
+            for (int i = 0; i < LookUDPivots.Length; i++) {
+                if (otherdeg == 0) {
+                    otherdeg = 10;
+                }
+                LookUDPivots[i].transform.localRotation = Quaternion.Euler(new Vector3(otherdeg, 0, 0)); //30 up
+                otherdeg += 10;
+                //print(otherdeg);
+            }
+        }
+
+        public void ResetAgentHandPosition(ServerAction action = null) {
+            AgentHand.transform.position = DefaultHandPosition.transform.position;
+            // SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
+            // if (sop != null) {
+            //     sop.gameObject.transform.localPosition = Vector3.zero;
+            // }
+        }
+
+        public void ResetAgentHandRotation(ServerAction action = null) {
+            AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
+            // SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
+            // if (sop != null) {
+            //     sop.gameObject.transform.rotation = transform.rotation;
+            // }
+        }
+
+        protected IEnumerator InterpolateRotation(Quaternion targetRotation, float seconds) {
+            var time = Time.time;
+            var newTime = time;
+            while (newTime - time < seconds) {
+                yield return null;
+                newTime = Time.time;
+                var diffSeconds = newTime - time;
+                var alpha = Mathf.Min(diffSeconds / seconds, 1.0f);
+                this.transform.rotation = Quaternion.Lerp(this.transform.rotation, targetRotation, alpha);
+                
+            }
+            // Debug.Log("Rotate action finished! " + (newTime - time) );
+            //  this.transform.rotation = targetRotation;
+            actionFinished(true);
+        }
+
+        public virtual Quaternion GetRotateQuaternion(int headIndex)
+		{
+			// int index = (headingAngles.Length + (currentHeadingAngleIndex() + headIndex)) % headingAngles.Length;
+			// float targetRotation = headingAngles[index];
+			// return Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
+            return this.transform.rotation * Quaternion.Euler(0.0f, headIndex * 90.0f, 0.0f);
+		}
+
+        // TODO: I dunno who was using this or for what, but it doesn't play nice with the new rotate functions so please add back functionality later
+         public void RotateRightSmooth(ServerAction controlCommand) {
+            if (CheckIfAgentCanTurn(90)) {
+                DefaultAgentHand(controlCommand);
+                StartCoroutine(InterpolateRotation(this.GetRotateQuaternion(1), controlCommand.timeStep));
+            } else {
+                actionFinished(false);
+            }
+        }
+
+        public void RotateLeftSmooth(ServerAction controlCommand) {
+            if (CheckIfAgentCanTurn(-90)) {
+                DefaultAgentHand(controlCommand);
+                StartCoroutine(InterpolateRotation(this.GetRotateQuaternion(-1), controlCommand.timeStep));
+            } else {
+                actionFinished(false);
+            }
+        }
+
+         ///------- 
+
+
 
         // checks if agent is clear to rotate left/right/up/down some number of degrees while holding an object
         public bool CheckIfAgentCanRotate(string direction, float degrees) {
@@ -1691,7 +1856,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool? standing,
             bool forceAction = false
         ) {
-            Debug.Log($"------- Teleport Full physicsFPS type {this.GetType()}");
             // cache old values in case there's a failure
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
@@ -1898,7 +2062,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool manualInteract = false,
             bool allowAgentsToIntersect = false
         ) {
-            Debug.Log("MoveRight at physics fps? call ");
+            //Debug.Log("MoveRight at physics fps? call ");
             if (!moveMagnitude.HasValue) {
                 moveMagnitude = gridSize;
             } else if (moveMagnitude <= 0f) {

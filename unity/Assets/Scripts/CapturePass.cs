@@ -511,12 +511,31 @@ public class ReplacementShaderCapture: RenderToTexture {
 
 }
 
+    // This is mainly used for WEBGL where we want the distortion image instead of the RGB, so 
+    // we tell our main MultiCapture to overwrite it's final image with one of our sub-passes render texture
+    public class OverwritePassWithSubCapture {
+        private readonly ICapturePass pass;
+        public string PassName {
+            get;
+            private set;
+        }
+        public OverwritePassWithSubCapture(string passName) {
+            this.PassName = passName;
+        }
+        public void AddToCommandBuffer(ICapturePass pass, CommandBuffer commandBuffer) {
+            commandBuffer.Blit(pass.GetRenderTexture(), BuiltinRenderTextureType.CameraTarget);
+        }
+    }
+
     public class MultiCapture : RenderToTexture {
 
         IEnumerable<RenderToTexture> passes;
         Dictionary<string, RenderToTexture> passDict;
-        public MultiCapture(CaptureConfig config, Camera camera, IEnumerable<RenderToTexture> passes) : base(config, camera) {
+        OverwritePassWithSubCapture overwriteWithPass;
+
+        public MultiCapture(CaptureConfig config, Camera camera, IEnumerable<RenderToTexture> passes, string overwriteWithPass = null ) : base(config, camera) {
             this.passDict = passes.ToDictionary(p => p.GetName(), p => p);
+            this.overwriteWithPass = overwriteWithPass == null ? null : new OverwritePassWithSubCapture(overwriteWithPass); 
         }
 
         public override void AddToCommandBuffer(CommandBuffer commandBuffer) {
@@ -540,7 +559,7 @@ public class ReplacementShaderCapture: RenderToTexture {
             // cb.Blit(this.GetRenderTarget(), BuiltinRenderTextureType.CurrentActive);
             // Debug.Log($"----------- Blit for multipass");
 
-            // If rendering to display
+            // If rendering to a display, camera.targetTexture is null so we have to copy displaybuffer into our tendertexture
             if (this.toDisplayId.HasValue) {
                 // if it's not cloudrendering camera.targetTexture is null which means it's rendering to the display buffer
                 // so then we need to copy the display buffer into render texture
@@ -555,6 +574,16 @@ public class ReplacementShaderCapture: RenderToTexture {
             foreach (var pass in this.passDict.Values) {
                 commandBuffer.Blit(BuiltinRenderTextureType.CameraTarget, pass.GetRenderTexture(), pass.material);
             }
+
+            // Overwrites this passes target with one of it's sub-passes, useful for debugging or platforms like webgl
+            // where we don't want to pass extra image bytes for passes
+            if (overwriteWithPass != null && passDict.TryGetValue(overwriteWithPass.PassName, out RenderToTexture overwritePass)) {
+                 this.overwriteWithPass.AddToCommandBuffer(overwritePass, commandBuffer);
+            }
+
+            // this.overwriteWithPass?.AddToCommandBuffer(overwritePass, commandBuffer);
+
+            // commandBuffer.Blit( passDict["_distortion"].GetRenderTexture(), BuiltinRenderTextureType.CameraTarget);
             
 
             this.camera.AddCommandBuffer(CameraEvent.BeforeImageEffects, commandBuffer);

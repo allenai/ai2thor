@@ -8,8 +8,17 @@ using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-public class Build
+using UnityEditor.Build;
+
+public class Build : IPreprocessBuildWithReport
 {
+
+    public int callbackOrder => 1;
+    public void OnPreprocessBuild(BuildReport report)
+    {
+        Debug.Log("----------- OnPreprocessBuild called");
+        System.Environment.SetEnvironmentVariable("EMSDK_PYTHON", "/Library/Frameworks/Python.framework/Versions/2.7/bin/python");
+    }
     // Since CloudRendering uses a different version of Unity (2020.2) vs production (2019.4), GraphicsSettings and ProjectSettings
     // must be copied over from the Standalone platform.  As well, continuing to use this ensures that settings made for
     // the Standalone platform get used for CloudRendering

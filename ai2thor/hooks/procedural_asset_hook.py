@@ -19,6 +19,7 @@ from typing import Dict, Any, List, TYPE_CHECKING, Sequence
 
 import requests
 import tqdm
+import shutil
 from filelock import FileLock
 
 if TYPE_CHECKING:
@@ -31,6 +32,7 @@ from objathor.asset_conversion.util import (
     change_asset_paths,
     add_default_annotations,
     load_existing_thor_asset_file,
+    save_thor_asset_file
 )
 
 logger = logging.getLogger(__name__)
@@ -394,12 +396,38 @@ def download_with_progress_bar(save_path: str, url: str, verbose: bool = False):
                     if verbose:
                         pbar.update(len(data))
 
+def convert_asset_to_extesion(asset_id: str, asset_directory: str, extension: str, delete_original: bool = False):
+    inner_asset_dir = os.path.join(asset_directory, asset_id)
+    desired_asset_path = None
+    try:
+        desired_asset_path = get_existing_thor_asset_file_path(
+            out_dir=inner_asset_dir, asset_id=asset_id, force_extension=extension
+        )
+    except:
+            pass
+    if desired_asset_path == None:
+        existing_asset_path = get_existing_thor_asset_file_path(
+            out_dir=inner_asset_dir, asset_id=asset_id
+        )
+        original_extension = ''.join(pathlib.Path(existing_asset_path).suffixes)
+        if extension != original_extension:
+            asset = load_existing_thor_asset_file(
+                inner_asset_dir, asset_id
+            )
+            
+            # save as desired extesion
+            save_asset_path = os.path.join(inner_asset_dir, f"{asset_id}{extension}")
+            save_thor_asset_file(asset, save_asset_path)
+            if delete_original and original_extension != extension:
+                os.remove(existing_asset_path)
+
 
 def download_missing_asset(
     asset_id: str,
     asset_directory: str,
     base_url: str,
     verbose: bool = False,
+    extension: str = None
 ) -> str:
     final_save_dir = os.path.join(asset_directory, asset_id)
 
@@ -433,6 +461,10 @@ def download_missing_asset(
                 for member in sorted(tar.getmembers(), key=lambda x: f"{asset_id}." in x.name):
                     # if "_renders" not in member.name and "success.txt" not in member.name:
                     tar.extract(member=member, path=asset_directory)
+
+                # if there is a desired extension convert    
+                if extension:
+                    convert_asset_to_extesion(asset_id=asset_id, asset_directory=asset_directory, extension=extension, delete_original=True)
     return final_save_dir
 
 
@@ -455,6 +487,7 @@ def download_missing_assets(
     base_url: str,
     verbose: bool = True,
     threads: int = 1,
+    extension: str = None
 ):
     if verbose and threads > 1:
         print(f"Downloading assets with {threads} threads. Will NOT log progress bars.")
@@ -469,6 +502,7 @@ def download_missing_assets(
                 asset_directory=asset_directory,
                 base_url=base_url,
                 verbose=verbose and (threads == 1),
+                extension=extension
             )
             for asset_id in asset_ids
         ]
@@ -500,7 +534,7 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
         )
         self.base_url = base_url
 
-    def _download_missing_assets(self, controller: "Controller", asset_ids: Sequence[str]):
+    def _download_missing_assets(self, controller: "Controller", asset_ids: Sequence[str], extension: str = None):
         asset_in_db = controller.step(
             action="AssetsInDatabase", assetIds=asset_ids, updateProceduralLRUCache=False
         ).metadata["actionReturn"]
@@ -509,6 +543,7 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
             asset_ids=assets_not_created,
             asset_directory=self.asset_directory,
             base_url=self.base_url,
+            extension=self.extension
         )
 
     def Initialize(self, action, controller):
@@ -520,18 +555,18 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
     def CreateHouse(self, action: Dict[str, Any], controller: "Controller"):
         house = action["house"]
         asset_ids = get_all_asset_ids_recursively(house["objects"], [])
-        self._download_missing_assets(controller=controller, asset_ids=asset_ids)
+        self._download_missing_assets(controller=controller, asset_ids=asset_ids, extension=self.extension)
 
         return super().CreateHouse(action=action, controller=controller)
 
     def SpawnAsset(self, action, controller):
-        self._download_missing_assets(controller=controller, asset_ids=[action["assetId"]])
+        self._download_missing_assets(controller=controller, asset_ids=[action["assetId"]], extension=self.extension)
 
         return super().SpawnAsset(action=action, controller=controller)
 
     def GetHouseFromTemplate(self, action, controller):
         template = action["template"]
         asset_ids = get_all_asset_ids_recursively([v for (k, v) in template["objects"].items()], [])
-        self._download_missing_assets(controller=controller, asset_ids=asset_ids)
+        self._download_missing_assets(controller=controller, asset_ids=asset_ids, extension=self.extension)
 
         super().GetHouseFromTemplate(action=action, controller=controller)

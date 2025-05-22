@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,23 +15,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     public class DiscreteHidenSeekgentController : MonoBehaviour {
         [SerializeField]
         private float HandMoveMagnitude = 0.1f;
-        public PhysicsRemoteFPSAgentController PhysicsController = null;
+        // public PhysicsRemoteFPSAgentController PhysicsController = null;
         private GameObject InputMode_Text = null;
         private ObjectHighlightController highlightController = null;
         private GameObject throwForceBar = null;
         private bool handMode = false;
         private bool visibleObject = true;
         private bool hidingPhase = false;
+        private AgentManager agentManager = null;
         public string onlyPickableObjectId = null;
         public bool disableCollistionWithPickupObject = false;
 
+        public PhysicsRemoteFPSAgentController PhysicsController {
+            get { return (PhysicsRemoteFPSAgentController)this.agentManager.GetActiveAgent(); }
+        }
+
         void Start() {
             var Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
-            AgentManager agentManager = GameObject
+            agentManager = GameObject
                 .Find("PhysicsSceneManager")
                 .GetComponentInChildren<AgentManager>();
             agentManager.SetUpPhysicsController();
-            PhysicsController = (PhysicsRemoteFPSAgentController)agentManager.PrimaryAgent;
+            // PhysicsController = (PhysicsRemoteFPSAgentController)agentManager.PrimaryAgent;
 
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
@@ -78,10 +84,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var objectData = new ObjectSpanwMetadata();
             Debug.Log(objectMeta);
             JsonUtility.FromJsonOverwrite(objectMeta, objectData);
-            ServerAction action = new ServerAction() {
-                action = "CreateObject",
-                objectType = objectData.objectType,
-                objectVariation = objectData.objectVariation
+            Dictionary<string, object> action = new Dictionary<string, object>() {
+                {"action", "CreateObject"},
+                {"objectType", objectData.objectType},
+                {"objectVariation", objectData.objectVariation}
             };
             PhysicsController.ProcessControlCommand(action);
             onlyPickableObjectId = objectData.objectType + "|" + objectData.objectVariation;
@@ -105,9 +111,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void SpawnAgent(int randomSeed) {
-            ServerAction action = new ServerAction() {
-                action = "RandomlyMoveAgent",
-                randomSeed = randomSeed
+            Dictionary<string, object> action = new Dictionary<string, object>() {
+                {"action", "RandomlyMoveAgent"},
+                {"randomSeed", randomSeed}
             };
             PhysicsController.ProcessControlCommand(action);
         }
@@ -141,11 +147,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void Step(string serverAction) {
-            ServerAction controlCommand = new ServerAction();
-            JsonUtility.FromJsonOverwrite(serverAction, controlCommand);
-            PhysicsController.ProcessControlCommand(controlCommand);
-        }
+        // public void Step(string serverAction) {
+        //     ServerAction controlCommand = new ServerAction();
+
+        //     JsonUtility.FromJsonOverwrite(serverAction, controlCommand);
+        //     PhysicsController.ProcessControlCommand(controlCommand);
+        // }
 
         // public void TeleportAgent(string actionStr) {
         //     var command = new ServerAction();
@@ -162,48 +169,47 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 float WalkMagnitude = 0.25f;
                 if (!handMode && !hidingPhase) {
                     if (Input.GetKeyDown(KeyCode.W)) {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveAhead";
-                        action.moveMagnitude = WalkMagnitude;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveAhead";
+                        action["moveMagnitude"] = WalkMagnitude;
                         PhysicsController.ProcessControlCommand(action);
                     }
 
                     if (Input.GetKeyDown(KeyCode.S)) {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveBack";
-                        action.moveMagnitude = WalkMagnitude;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "MoveBack";
+                        action["moveMagnitude"] = WalkMagnitude;
                         PhysicsController.ProcessControlCommand(action);
                     }
 
                     if (Input.GetKeyDown(KeyCode.A)) {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveLeft";
-                        action.moveMagnitude = WalkMagnitude;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveLeft";
+                        action["moveMagnitude"] = WalkMagnitude;
                         PhysicsController.ProcessControlCommand(action);
                     }
 
                     if (Input.GetKeyDown(KeyCode.D)) {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveRight";
-                        action.moveMagnitude = WalkMagnitude;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "MoveRight";
+                        action["moveMagnitude"] = WalkMagnitude;
                         PhysicsController.ProcessControlCommand(action);
                     }
 
                     if (Input.GetKeyDown(KeyCode.LeftArrow)) //|| Input.GetKeyDown(KeyCode.J))
                     {
-                        ServerAction action = new ServerAction();
-                        // action.action = "RotateLeft";
-                        action.action = "RotateLeftSmooth";
-                        action.timeStep = 0.4f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RotateLeftSmooth";
+                        action["timeStep"] = 0.4f;
                         PhysicsController.ProcessControlCommand(action);
                     }
 
                     if (Input.GetKeyDown(KeyCode.RightArrow)) //|| Input.GetKeyDown(KeyCode.L))
                     {
-                        ServerAction action = new ServerAction();
-                        // action.action = "RotateRight";
-                        action.action = "RotateRightSmooth";
-                        action.timeStep = 0.4f;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RotateRightSmooth";
+                        action["timeStep"] = 0.4f;
                         PhysicsController.ProcessControlCommand(action);
                     }
                 }
@@ -226,20 +232,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         localPos.x += HandMoveMagnitude;
                     }
                     if (actionName != "" && localPos.sqrMagnitude > 0) {
-                        ServerAction action = new ServerAction {
-                            action = "MoveHandForce",
-                            x = localPos.x,
-                            y = localPos.y,
-                            z = localPos.z
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            {"action", "MoveHandForce"},
+                            {"x", localPos.x},
+                            {"y", localPos.y},
+                            {"z", localPos.z}
                         };
                         this.PhysicsController.ProcessControlCommand(action);
                     }
 
                     if (Input.GetKeyDown(KeyCode.Space)) {
                         SetObjectVisible(true);
-                        var action = new ServerAction {
-                            action = "DropHandObject",
-                            forceAction = true
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            {"action", "DropHandObject"},
+                            {"forceAction", true}
                         };
                         this.PhysicsController.ProcessControlCommand(action);
                     }
@@ -249,9 +255,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             PhysicsController.FindObjectInVisibleSimObjPhysics(onlyPickableObjectId)
                             != null;
                         if (withinReach) {
-                            ServerAction action = new ServerAction();
-                            action.objectId = onlyPickableObjectId;
-                            action.action = "PickupObject";
+                            Dictionary<string, object> action = new Dictionary<string, object>();
+                            action["objectId"] = onlyPickableObjectId;
+                            action["action"] = "PickupObject";
                             PhysicsController.ProcessControlCommand(action);
                         }
                     }
@@ -263,12 +269,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         || Input.GetKeyDown(KeyCode.RightControl)
                     ) && PhysicsController.ReadyForCommand
                 ) {
-                    ServerAction action = new ServerAction();
+                    Dictionary<string, object> action = new Dictionary<string, object>();
                     if (this.PhysicsController.isStanding()) {
-                        action.action = "Crouch";
+                        action["action"] = "Crouch";
                         PhysicsController.ProcessControlCommand(action);
                     } else {
-                        action.action = "Stand";
+                        action["action"] = "Stand";
                         PhysicsController.ProcessControlCommand(action);
                     }
                 }

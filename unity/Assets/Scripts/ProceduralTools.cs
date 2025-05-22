@@ -2718,6 +2718,151 @@ namespace Thor.Procedural {
             return null;
         }
 
+        // public static void GetAllAssetIds(List<HouseObject> objects, List<string> ids) {
+        //     foreach (var obj in objects) {
+        //         if (obj != null) {
+        //             ids.Add(obj.assetId);
+        //             if (obj.children != null) {
+        //                 GetAllAssetIds(objects, ids);
+        //             }
+        //         }
+        //     }
+        //     var assetSet = new HashSet<string>(ids);
+        //     if (assetSet.Contains("")) {
+        //         assetSet.Remove("");
+        //     }
+        //     ids.Clear();
+        //     ids.Concat(assetSet);
+        //     // return assetSet.ToList();
+        // }
+
+    public static List<string> GetAllAssetIds(List<HouseObject> objects)
+    {
+        var assetIds = new HashSet<string>();
+        var stack = new Stack<HouseObject>(objects);
+
+        while (stack.Count > 0)
+        {
+            var obj = stack.Pop();
+            if (!string.IsNullOrEmpty(obj.assetId))
+            {
+                assetIds.Add(obj.assetId);
+            }
+
+            if (obj.children != null && obj.children.Count > 0)
+            {
+                foreach (var child in obj.children)
+                {
+                    stack.Push(child);
+                }
+            }
+        }
+
+        return new List<string>(assetIds);
+    }
+
+    public static ActionFinished DeleteAssetsFromDBNotInHouse(ProceduralHouse house) {
+            if (house == null ) {
+                return new ActionFinished(success: false, errorMessage: "House is null.");
+            }
+            var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            var materials = ProceduralTools.GetMaterials();
+            var materialIds = new HashSet<string>(
+                house
+                    .rooms.SelectMany(r =>
+                        r.ceilings.Select(c => c.material.name)
+                            .Concat(new List<string>() { r.floorMaterial.name })
+                            .Concat(house.walls.Select(w => w.material.name))
+                    )
+                    .Concat(new List<string>() { house.proceduralParameters.ceilingMaterial.name })
+            );
+            
+            var assetIds = new HashSet<string>(
+                ProceduralTools.GetAllAssetIds(house.objects)
+                 .Concat(house.windows.Select(w => w.assetId))
+                 .Concat(house.doors.Select(d => d.assetId))
+            );
+
+            var assetCountBeforeRemove = assetDB.prefabs.Count;
+            var materialCountBeforeRemove = assetDB.materials.Count;
+
+            
+            var toDeleteAssets = new HashSet<GameObject>(assetDB.prefabs.Where(p => !assetIds.Contains(p.name)));
+            var toDeleteMaterials = new HashSet<Material>(assetDB.materials.Where(m => !materialIds.Contains(m.name)));
+
+            assetDB.prefabs = assetDB.prefabs.Where(p => assetIds.Contains(p.name)).ToList();
+            assetDB.materials = assetDB.materials.Where(m => materialIds.Contains(m.name)).ToList();
+            assetDB.totalMats = assetDB.materials.Count;
+
+
+            // var k = Resources.Load("Sink_1") as GameObject;
+
+            // Debug.Log($"Loaded prefab {k.name}");
+
+            // PrefabUtility.FindPrefabRoot(_targ.gameObject);'
+            var testP = assetDB.prefabs[0];
+            string path = AssetDatabase.GetAssetPath(testP);
+            Debug.Log($" path of prefab ${testP.name} path ${path}");
+
+             var k = Resources.Load("Test_load/Sink_20") as GameObject;
+
+            Debug.Log($"Loaded prefab {k.name}");
+
+            foreach (var toDeleteAsset in toDeleteAssets) {
+                GameObject.DestroyImmediate(toDeleteAsset, allowDestroyingAssets: true);
+            }
+
+            
+
+             foreach (var toDeleteMaterial in toDeleteMaterials) {
+                GameObject.DestroyImmediate(toDeleteMaterial, allowDestroyingAssets: true);
+            }
+
+            ProceduralTools.FreeMemory(10.0f);
+
+            Debug.Log($"Deleted Asset count was '{assetCountBeforeRemove}'. Remaining '{assetDB.prefabs.Count}'.");
+
+            assetDB.BuildAssetDatabase();
+
+            return new ActionFinished(success: true, actionReturn: new Dictionary<string, List<string>>() {
+                ["prefabs"]=assetIds.ToList(),
+                ["materials"]=materialIds.ToList()
+            });
+        }
+
+        public static void FreeMemory(float timeoutSeconds = 2.0f) {
+                    // WARNING: Async operation, should be ok for deleting assets if using the same creation-deletion hook
+                // cache should be all driven within one system, currently python driven
+                var heapSizeBeforeUnload = System.GC.GetTotalMemory(false);
+                // System.Diagnostics.Process proc = System.Diagnostics.Process.GetCurrentProcess();
+                // proc.Refresh();
+                
+                // Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64} Bytes. GarbageCollector available Heap estimate '{heapSizeBeforeUnload}' Bytes.");
+                AsyncOperation asyncOp = null;
+                asyncOp = Resources.UnloadUnusedAssets();
+                asyncOp.completed += (op) => {
+                    Debug.Log("Asyncop callback called calling GC");
+                    GC.Collect();
+                };
+                
+                float timeout = 2.0f;
+                float startTime = Time.realtimeSinceStartup;
+                while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
+                    // waiting
+                    continue;
+                }
+                GC.Collect();
+                var heapSizeAfterUnload = System.GC.GetTotalMemory(false);
+                Debug.Log($"GarbageCollector available Heap Before Unload '{heapSizeBeforeUnload}' Bytes. After Garbage Collection {heapSizeAfterUnload} Bytes. GarbageCollector available Heap difference {heapSizeAfterUnload-heapSizeBeforeUnload} Bytes.");
+
+
+        } 
+
+        
+            
+
+        // }
+
         public static Dictionary<string, object> getAssetMetadata(GameObject asset) {
             if (asset.GetComponent<SimObjPhysics>() == null) {
                 return null;
@@ -2774,7 +2919,8 @@ namespace Thor.Procedural {
             bool returnObject = false,
             Transform parent = null,
             bool addAnotationComponent = false,
-            string parentTexturesDir = ""
+            string parentTexturesDir = "",
+            ProceduralTextures rawTextures = null
         ) {
             // create a new game object
             GameObject go = new GameObject();
@@ -2874,87 +3020,118 @@ namespace Thor.Procedural {
             Material mat = null;
             RuntimePrefab runtimePrefab = null;
 
-            // load image from disk
-            if (albedoTexturePath != null) {
-                albedoTexturePath = !Path.IsPathRooted(albedoTexturePath)
-                    ? Path.Combine(parentTexturesDir, albedoTexturePath)
-                    : albedoTexturePath;
-                // textures aren't saved as part of the prefab, so we load them from disk
+            var k = rawTextures != null ? rawTextures.albedoBase64JPG : "";
+            Debug.Log($"======== Raw textures is null {rawTextures == null} one {k}");
+
+            // If it has any textures to load add a RuntimePrefab and do loading
+            if (
+                !string.IsNullOrEmpty(albedoTexturePath) || 
+                !string.IsNullOrEmpty(metallicSmoothnessTexturePath)|| 
+                !string.IsNullOrEmpty(normalTexturePath) || 
+                !string.IsNullOrEmpty(emissionTexturePath) ||
+                rawTextures != null
+            ) {
                 runtimePrefab = go.AddComponent<RuntimePrefab>();
-                runtimePrefab.albedoTexturePath = albedoTexturePath;
-
-                byte[] imageBytes = File.ReadAllBytes(albedoTexturePath);
-                // Is this size right?
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
-
-                // create a new material
+                // runtimePrefab. reloadtextures runs on awake, but first time things are null so got to call
+                // it again after setting it's member variables via SetProperties
                 mat = new Material(Shader.Find("Standard"));
-                mat.mainTexture = tex;
-
-                // assign the material to the game object
-                meshObj.GetComponent<Renderer>().material = mat;
-                runtimePrefab.sharedMaterial = mat;
-            } else {
-                // create a new material
+                runtimePrefab.SetProperties(
+                    newMaterial: mat,
+                    albedoTexturePath: !string.IsNullOrEmpty(albedoTexturePath) && !Path.IsPathRooted(albedoTexturePath)? Path.Combine(parentTexturesDir, albedoTexturePath): albedoTexturePath,
+                    metallicSmoothnessTexturePath: !string.IsNullOrEmpty(metallicSmoothnessTexturePath) && !Path.IsPathRooted(metallicSmoothnessTexturePath) ? Path.Combine(parentTexturesDir, metallicSmoothnessTexturePath) : metallicSmoothnessTexturePath,
+                    normalTexturePath:  !string.IsNullOrEmpty(normalTexturePath) && !Path.IsPathRooted(normalTexturePath) ? Path.Combine(parentTexturesDir, normalTexturePath) : normalTexturePath,
+                    emissionTexturePath: !string.IsNullOrEmpty(emissionTexturePath) && !Path.IsPathRooted(emissionTexturePath) ? Path.Combine(parentTexturesDir, emissionTexturePath) : emissionTexturePath,
+                    rawTextures: rawTextures
+                );
+                runtimePrefab.reloadtextures();
+                meshObj.GetComponent<Renderer>().material = runtimePrefab.sharedMaterial;
+            }
+            else {
                 mat = new Material(Shader.Find("Standard"));
                 meshObj.GetComponent<Renderer>().material = mat;
             }
 
-            if (metallicSmoothnessTexturePath != null) {
-                metallicSmoothnessTexturePath = !Path.IsPathRooted(metallicSmoothnessTexturePath)
-                    ? Path.Combine(parentTexturesDir, metallicSmoothnessTexturePath)
-                    : metallicSmoothnessTexturePath;
-                if (runtimePrefab == null) {
-                    runtimePrefab = go.AddComponent<RuntimePrefab>();
-                }
-                runtimePrefab.metallicSmoothnessTexturePath = metallicSmoothnessTexturePath;
-                mat.EnableKeyword("_METALLICGLOSSMAP");
-                byte[] imageBytes = File.ReadAllBytes(metallicSmoothnessTexturePath);
-                Texture2D tex = new Texture2D(2, 2);
-                if (metallicSmoothnessTexturePath.ToLower().EndsWith(".jpg")) {
-                    tex = SwapChannelsRGBAtoRRRB(tex);
-                }
-                tex.LoadImage(imageBytes);
+            // // load image from disk
+            // if (albedoTexturePath != null) {
+            //     albedoTexturePath = !Path.IsPathRooted(albedoTexturePath)
+            //         ? Path.Combine(parentTexturesDir, albedoTexturePath)
+            //         : albedoTexturePath;
+            //     // textures aren't saved as part of the prefab, so we load them from disk
+            //     runtimePrefab = go.AddComponent<RuntimePrefab>();
+            //     runtimePrefab.albedoTexturePath = albedoTexturePath;
 
-                mat.SetTexture("_MetallicGlossMap", tex);
-            } else {
-                mat.SetFloat("_Metallic", 0f);
-                mat.SetFloat("_Glossiness", 0f);
-            }
+            //     byte[] imageBytes = File.ReadAllBytes(albedoTexturePath);
+            //     // Is this size right?
+            //     Texture2D tex = new Texture2D(2, 2);
+            //     tex.LoadImage(imageBytes);
 
-            if (normalTexturePath != null) {
-                normalTexturePath = !Path.IsPathRooted(normalTexturePath)
-                    ? Path.Combine(parentTexturesDir, normalTexturePath)
-                    : normalTexturePath;
-                if (runtimePrefab == null) {
-                    runtimePrefab = go.AddComponent<RuntimePrefab>();
-                }
-                runtimePrefab.normalTexturePath = normalTexturePath;
-                mat.EnableKeyword("_NORMALMAP");
-                byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
+            //     // create a new material
+            //     mat = new Material(Shader.Find("Standard"));
+            //     mat.mainTexture = tex;
 
-                mat.SetTexture("_BumpMap", tex);
-            }
+            //     // assign the material to the game object
+            //     meshObj.GetComponent<Renderer>().material = mat;
+            //     runtimePrefab.sharedMaterial = mat;
+            // } else {
+            //     // create a new material
+            //     mat = new Material(Shader.Find("Standard"));
+            //     meshObj.GetComponent<Renderer>().material = mat;
+            // }
 
-            if (emissionTexturePath != null) {
-                emissionTexturePath = !Path.IsPathRooted(emissionTexturePath)
-                    ? Path.Combine(parentTexturesDir, emissionTexturePath)
-                    : emissionTexturePath;
-                if (runtimePrefab == null) {
-                    runtimePrefab = go.AddComponent<RuntimePrefab>();
-                }
-                runtimePrefab.emissionTexturePath = emissionTexturePath;
-                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-                mat.EnableKeyword("_EMISSION");
-                byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
-                mat.SetTexture("_EmissionMap", tex);
-                mat.SetColor("_EmissionColor", Color.white);
-            }
+            // if (metallicSmoothnessTexturePath != null) {
+            //     metallicSmoothnessTexturePath = !Path.IsPathRooted(metallicSmoothnessTexturePath)
+            //         ? Path.Combine(parentTexturesDir, metallicSmoothnessTexturePath)
+            //         : metallicSmoothnessTexturePath;
+            //     if (runtimePrefab == null) {
+            //         runtimePrefab = go.AddComponent<RuntimePrefab>();
+            //     }
+            //     runtimePrefab.metallicSmoothnessTexturePath = metallicSmoothnessTexturePath;
+            //     mat.EnableKeyword("_METALLICGLOSSMAP");
+            //     byte[] imageBytes = File.ReadAllBytes(metallicSmoothnessTexturePath);
+            //     Texture2D tex = new Texture2D(2, 2);
+            //     if (metallicSmoothnessTexturePath.ToLower().EndsWith(".jpg")) {
+            //         tex = SwapChannelsRGBAtoRRRB(tex);
+            //     }
+            //     tex.LoadImage(imageBytes);
+
+            //     mat.SetTexture("_MetallicGlossMap", tex);
+            // } else {
+            //     mat.SetFloat("_Metallic", 0f);
+            //     mat.SetFloat("_Glossiness", 0f);
+            // }
+
+            // if (normalTexturePath != null) {
+            //     normalTexturePath = !Path.IsPathRooted(normalTexturePath)
+            //         ? Path.Combine(parentTexturesDir, normalTexturePath)
+            //         : normalTexturePath;
+            //     if (runtimePrefab == null) {
+            //         runtimePrefab = go.AddComponent<RuntimePrefab>();
+            //     }
+            //     runtimePrefab.normalTexturePath = normalTexturePath;
+            //     mat.EnableKeyword("_NORMALMAP");
+            //     byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
+            //     Texture2D tex = new Texture2D(2, 2);
+            //     tex.LoadImage(imageBytes);
+
+            //     mat.SetTexture("_BumpMap", tex);
+            // }
+
+            // if (emissionTexturePath != null) {
+            //     emissionTexturePath = !Path.IsPathRooted(emissionTexturePath)
+            //         ? Path.Combine(parentTexturesDir, emissionTexturePath)
+            //         : emissionTexturePath;
+            //     if (runtimePrefab == null) {
+            //         runtimePrefab = go.AddComponent<RuntimePrefab>();
+            //     }
+            //     runtimePrefab.emissionTexturePath = emissionTexturePath;
+            //     mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            //     mat.EnableKeyword("_EMISSION");
+            //     byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);
+            //     Texture2D tex = new Texture2D(2, 2);
+            //     tex.LoadImage(imageBytes);
+            //     mat.SetTexture("_EmissionMap", tex);
+            //     mat.SetColor("_EmissionColor", Color.white);
+            // }
 
             // have the mesh refer to the mesh at meshPath
             meshObj.GetComponent<MeshFilter>().sharedMesh = mesh;

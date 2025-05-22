@@ -29,6 +29,7 @@ using Unity.Simulation;
 using UnityEditor;
 using UnityEngine.CloudRendering;
 #endif
+using System.Runtime.CompilerServices;
 
 public class AgentManager : MonoBehaviour, ActionInvokable {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
@@ -138,7 +139,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         robosimsPort = LoadIntVariable(robosimsPort, "PORT");
         robosimsHost = LoadStringVariable(robosimsHost, "HOST");
         serverSideScreenshot = LoadBoolVariable(serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
-        // serverSideScreenshot = true;
+        serverSideScreenshot = true;
         robosimsClientToken = LoadStringVariable(robosimsClientToken, "CLIENT_TOKEN");
         serverType = (serverTypes)
             Enum.Parse(
@@ -168,6 +169,11 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         }
 
 #endif
+        
+        // Needed if passing textures to WEBGL
+        // #if UNITY_WEBGL 
+        //     serverSideScreenshot = true;
+        // #endif
 
         bool trainPhase = true;
         trainPhase = LoadBoolVariable(trainPhase, "TRAIN_PHASE");
@@ -201,6 +207,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
         // auto set agentMode to default for the web demo
 #if UNITY_WEBGL
+        WebGLInput.captureAllKeyboardInput = false;
         physicsSceneManager.UnpausePhysicsAutoSim();
         primaryAgent.InitializeBody(null);
         JavaScriptInterface jsInterface = primaryAgent.GetComponent<JavaScriptInterface>();
@@ -326,9 +333,11 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 ? action.dynamicServerAction
                 : action.dynamicServerAction.agentInitializationParams
         );
+        #if UNITY_EDITOR
         Debug.Log(
             $"Initialize of AgentController. lastActionSuccess: {primaryAgent.lastActionSuccess}, errorMessage: {primaryAgent.errorMessage}, actionReturn: {primaryAgent.actionReturn}, agentState: {primaryAgent.agentState}"
         );
+        #endif
         Time.fixedDeltaTime = action.fixedDeltaTime.GetValueOrDefault(Time.fixedDeltaTime);
         if (action.targetFrameRate > 0) {
             Application.targetFrameRate = action.targetFrameRate;
@@ -454,10 +463,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     // on initialization of agentMode = "arm" and agentControllerType = "mid-level"
     // if mass threshold should be used to prevent arm from knocking over objects that
     // are too big (table, sofa, shelf, etc) use this
-    private void SetUpMassThreshold(float massThreshold) {
+    private ActionFinished SetUpMassThreshold(float massThreshold) {
         CollisionListener.useMassThreshold = true;
         CollisionListener.massThreshold = massThreshold;
-        primaryAgent.MakeObjectsStaticKinematicMassThreshold();
+        return primaryAgent.MakeObjectsStaticKinematicMassThreshold();
     }
 
     // return reference to primary agent in case we need a reference to the primary
@@ -638,7 +647,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         string antiAliasing,
         bool agentPositionRelativeCoordinates = false,
         string parent = null,
-        int agentId = 0
+        int agentId = 0,
+        Rect? viewPort = null
     ) {
         if (orthographic != true && orthographicSize != null) {
             throw new InvalidOperationException(
@@ -699,6 +709,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             if (orthographic == true && orthographicSize != null) {
                 camera.orthographicSize = (float)orthographicSize;
             }
+        }
+
+        if (viewPort.HasValue) {
+            camera.rect = viewPort.GetValueOrDefault();
         }
 
         //updates camera near and far clipping planes
@@ -813,7 +827,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         string antiAliasing = "none",
         bool agentPositionRelativeCoordinates = false,
         string parent = "world",
-        int agentId = 0
+        int agentId = 0,
+        int? targetDisplay = null,
+        Rect? viewPort = null,
+        bool overwriteRGBWithDistortion = false
     ) {
         // adds error if fieldOfView is out of bounds
         assertFovInBounds(fov: fieldOfView);
@@ -822,6 +839,9 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             GameObject.Instantiate(Resources.Load("ThirdPartyCameraTemplate")) as GameObject;
         gameObject.name = "ThirdPartyCamera" + thirdPartyCameras.Count;
         Camera camera = gameObject.GetComponentInChildren<Camera>();
+
+        RenderingManager renderingManager = gameObject.GetComponentInChildren<RenderingManager>();
+        renderingManager.Initialize(imgDisplayTarget: targetDisplay, overwriteImgWithDistortion: overwriteRGBWithDistortion);
 
         // set up returned image
         camera.cullingMask = ~LayerMask.GetMask("PlaceableSurface");
@@ -877,7 +897,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             antiAliasing: antiAliasing,
             agentPositionRelativeCoordinates: agentPositionRelativeCoordinates, //local pos/rot of camera will be using agent.position as the origin if this is true
             parent: parent,
-            agentId: agentId
+            agentId: agentId,
+            viewPort: viewPort
         );
     }
 
@@ -918,7 +939,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         float? nearClippingPlane = null,
         float? farClippingPlane = null,
         string antiAliasing = null,
-        int agentId = 0
+        int agentId = 0,
+        Rect? viewPort = null
     ) {
         // adds error if fieldOfView is out of bounds
         if (fieldOfView != null) {
@@ -955,7 +977,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             antiAliasing: antiAliasing,
             agentPositionRelativeCoordinates: true, // always keep main camera relative to agent so other functions like visibility don't break
             parent: null, // Should already be parented correctly
-            agentId: agentId
+            agentId: agentId,
+            viewPort: viewPort
         );
     }
 
@@ -973,7 +996,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         string antiAliasing = null,
         bool agentPositionRelativeCoordinates = false,
         string parent = null,
-        int agentId = 0
+        int agentId = 0,
+        Rect? viewPort = null
     ) {
         // adds error if fieldOfView is out of bounds
         if (fieldOfView != null) {
@@ -1022,7 +1046,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             antiAliasing: antiAliasing,
             agentPositionRelativeCoordinates: agentPositionRelativeCoordinates,
             parent: parent,
-            agentId: agentId
+            agentId: agentId,
+            viewPort: viewPort
         );
     }
 
@@ -1220,6 +1245,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         var prevActiveTex = RenderTexture.active;
 
         var renderTexture = renderingManager.GetPassRenderTexture("_img");
+        
         RenderTexture.active = renderTexture;
 
         tex.ReadPixels(readPixelsRect, 0, 0);
@@ -1450,7 +1476,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
         RenderTexture currentTexture = null;
 
-        if (shouldRender) {
+        //if (shouldRender) {
+           
             currentTexture = RenderTexture.active;
             for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
                 ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
@@ -1490,8 +1517,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 // addThirdPartyCameraImage(renderPayload, camera);
                 renderPayload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureCamera(camera)));
                 // Debug.Log($"------- shouldRenderImageSynthesis {shouldRenderImageSynthesis}");
+
+                RenderingManager renderingManager = camera.GetComponent<RenderingManager>();
                 
-                if (shouldRenderImageSynthesis) {
+                if (shouldRenderImageSynthesis && renderingManager.IsReady) {
                     ImageSynthesis imageSynthesis =
                         camera.gameObject.GetComponentInChildren<ImageSynthesis>()
                         as ImageSynthesis;
@@ -1582,9 +1611,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                     // );
                 }
             }
-        }
+        // }
         for (int i = 0; i < this.agents.Count; i++) {
             BaseFPSAgentController agent = this.agents[i];
+            RenderingManager renderingManager = agent.m_Camera.GetComponent<RenderingManager>();
             MetadataWrapper metadata = agent.generateMetadataWrapper();
             // This value may never change, but the purpose is to provide a way
             //  to be backwards compatible in the future by knowing the output format
@@ -1594,7 +1624,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
 
             // we don't need to render the agent's camera for the first agent
 
-            if (shouldRender) {
+            if (shouldRender && renderingManager.IsReady) {
                 addImage(renderPayload, agent);
                 if (shouldRenderImageSynthesis) {
                     addCapture(
@@ -1724,6 +1754,28 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         }
     }
 
+    public void TransitionStateMachine(AgentState fromState, AgentState toState) {
+
+        // Debug.Log($"====== Transition state machine, from {fromState} to {toState} current state am {agentManagerState} current agent {this.primaryAgent.agentState}");
+        if (this.agentManagerState == fromState) {
+            this.agentManagerState = toState;
+        }
+
+        foreach (BaseFPSAgentController agent in this.agents) {
+            if (agent.agentState == fromState) {
+                agent.agentState = toState;
+            }
+        }
+    }
+
+    public static string ObjectToStr(string label, object obj)
+    {
+        if (obj == null) {
+            return $"{label} null";
+        }
+        return $"{label}: HashCode={obj.GetHashCode()}, Type={obj.GetType().FullName}";
+    }
+
     public IEnumerator EmitFrame() {
         while (true) {
             bool shouldRender = this.renderImage && serverSideScreenshot;
@@ -1745,20 +1797,23 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             yield return new WaitForEndOfFrame();
 
             frameCounter += 1;
-
-            if (this.agentManagerState == AgentState.ActionComplete) {
-                this.agentManagerState = AgentState.Emit;
-            }
-
-            foreach (BaseFPSAgentController agent in this.agents) {
-                if (agent.agentState == AgentState.ActionComplete) {
-                    agent.agentState = AgentState.Emit;
-                }
-            }
+            
+            #if !UNITY_WEBGL
+                /// Because the code that blocks, which calls ProcessControlCommand 
+                // recieved from the FIFO/HTTP server, is never called on WEBGL builds,
+                // the metadata keeps being sent repeatedly. 
+                // To avoid this the state machine is not automatically advanced from 
+                // AgentState.ActionComplete to  AgentState.Emit, and all javascript actions
+                // transition to AgentState.Emit after ProcessControlCommand is called in js side invoked JavaScriptInterface.Step,
+                // and return to AgentState.ActionComplete once metadata is sent to javascript, at the end of JavaScriptInterface.SendActionMetadata
+                // to make sure it's only done once per action called
+                TransitionStateMachine(AgentState.ActionComplete, AgentState.Emit);
+            #endif
 
             if (!this.canEmit()) {
                 continue;
             }
+
             MultiAgentMetadata multiMeta = new MultiAgentMetadata();
 
             ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[
@@ -1766,6 +1821,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             ];
             List<KeyValuePair<string, byte[]>> renderPayload =
                 new List<KeyValuePair<string, byte[]>>();
+
             createPayload(
                 multiMeta,
                 cameraMetadata,
@@ -1976,11 +2032,13 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     // Uniform entry point for both the test runner and the python server for step dispatch calls
     public void ProcessControlCommand(DynamicServerAction controlCommand) {
 
+        #if UNITY_EDITOR
         Debug.Log($"--Action Received: {controlCommand.action}, full command: {controlCommand}");
-        System.Diagnostics.Process proc = System.Diagnostics.Process.GetCurrentProcess();
-        proc.Refresh();
-        Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64} Bytes. C# available Heap estimate '{System.GC.GetTotalMemory(false)}' Bytes.");
-        proc.Dispose();
+        #endif
+        //System.Diagnostics.Process proc = System.Diagnostics.Process.GetCurrentProcess();
+        //proc.Refresh();
+        //Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64} Bytes. C# available Heap estimate '{System.GC.GetTotalMemory(false)}' Bytes.");
+        //proc.Dispose();
         this.renderInstanceSegmentation = this.initializedInstanceSeg;
 
         this.currentSequenceId = controlCommand.sequenceId;
@@ -2069,7 +2127,13 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     }
 
     private BaseFPSAgentController activeAgent() {
-        return this.agents[activeAgentId];
+        if (agents.Count > activeAgentId) {
+            return this.agents[activeAgentId];
+        }
+        else {
+            return null;
+        }
+        
     }
 
     private void ProcessControlCommand(string msg) {
@@ -2987,6 +3051,7 @@ public class ServerAction {
     public bool renderFlowImage;
     public bool renderDistortionImage;
     public bool enableDistortionMap;
+    public bool overwriteRGBWithDistortion;
     public float cameraY = 0.675f;
     public bool placeStationary = true; // when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
 

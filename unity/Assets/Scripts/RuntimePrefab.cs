@@ -5,6 +5,8 @@ using System.IO;
 using System.Reflection;
 using EasyButtons;
 using UnityEngine;
+using Thor.Procedural.Data;
+
 #if UNITY_EDITOR
 using EasyButtons.Editor;
 using UnityEditor.SceneManagement;
@@ -23,10 +25,13 @@ public class RuntimePrefab : MonoBehaviour {
     public string normalTexturePath;
 
     public string emissionTexturePath;
+    
+    public ProceduralTextures rawTextures = null;
 
-    // we cache the material so that if multiple of the same
-    // runtime prefabs are spawned in, they don't each need to load
-    // the texture again, since they can share it.
+    // Storing the textures as paths, and loading them on object awake,
+    // In the case that rawTextures is provided textures are stored
+    // as base64 strings in this component for the prefab, and decoded on awake
+    // TODO: maybe store as Textures when rawTextures is not null
     public Material sharedMaterial;
 
     Texture2D SwapChannelsRGBAtoRRRB(Texture2D originalTexture) {
@@ -42,46 +47,111 @@ public class RuntimePrefab : MonoBehaviour {
         return newTexture;
     }
 
-    private void reloadtextures() {
-        GameObject mesh = transform.Find("mesh").gameObject;
-        // load the texture from disk
-        if (!string.IsNullOrEmpty(albedoTexturePath)) {
-            if (sharedMaterial.mainTexture == null) {
-                byte[] imageBytes = File.ReadAllBytes(albedoTexturePath);
-                Texture2D tex = new Texture2D(2, 2);
-                tex.LoadImage(imageBytes);
-                sharedMaterial.mainTexture = tex;
+    public static Texture2D LoadTextureFromBase64(string base64String)
+    {
+        if (!string.IsNullOrEmpty(base64String)) {
+            // Strip off the header if present (e.g., "data:image/jpeg;base64,")
+            var commaIndex = base64String.IndexOf(',');
+            if (commaIndex != -1)
+            {
+                base64String = base64String.Substring(commaIndex + 1);
             }
-        }
 
-        if (!string.IsNullOrEmpty(metallicSmoothnessTexturePath)) {
-            sharedMaterial.EnableKeyword("_METALLICGLOSSMAP");
-            byte[] imageBytes = File.ReadAllBytes(metallicSmoothnessTexturePath);
+            byte[] imageData = System.Convert.FromBase64String(base64String);
+            Texture2D tex = new Texture2D(2, 2); // Temporary size; will resize on LoadImage
+            tex.LoadImage(imageData);
+            return tex;
+        }
+        return null;
+    }
+
+    public static Texture2D LoadTextureFromFile(string filePath) {
+        if (!string.IsNullOrEmpty(filePath)) {
+            byte[] imageBytes = File.ReadAllBytes(filePath);
             Texture2D tex = new Texture2D(2, 2);
             tex.LoadImage(imageBytes);
-            if (metallicSmoothnessTexturePath.ToLower().EndsWith(".jpg")) {
+            return tex;
+        }
+        return null;
+    }
+
+    private void setAlbedoProps(Texture2D tex) {
+        sharedMaterial.mainTexture = tex;
+    }
+
+    private void setMetallicProps(Texture2D tex, bool swapRGBAtoRRRB = false) {
+        if (tex != null) {
+            sharedMaterial.EnableKeyword("_METALLICGLOSSMAP");
+            if (swapRGBAtoRRRB) {
                 tex = SwapChannelsRGBAtoRRRB(tex);
             }
             sharedMaterial.SetTexture("_MetallicGlossMap", tex);
         }
-
-        if (!string.IsNullOrEmpty(normalTexturePath)) {
-            sharedMaterial.EnableKeyword("_NORMALMAP");
-            byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
-            Texture2D tex = new Texture2D(2, 2);
-            tex.LoadImage(imageBytes);
-            sharedMaterial.SetTexture("_BumpMap", tex);
+        else {
+            sharedMaterial.SetFloat("_Metallic", 0f);
+            sharedMaterial.SetFloat("_Glossiness", 0f);
         }
+    }
 
-        if (!string.IsNullOrEmpty(emissionTexturePath)) {
+    private void setNormalProps(Texture2D tex) {
+            sharedMaterial.EnableKeyword("_NORMALMAP");
+            sharedMaterial.SetTexture("_BumpMap", tex);
+    }
+
+    private void setEmissionProps(Texture2D tex) {
             sharedMaterial.globalIlluminationFlags =
                 MaterialGlobalIlluminationFlags.RealtimeEmissive;
             sharedMaterial.EnableKeyword("_EMISSION");
-            byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);
-            Texture2D tex = new Texture2D(2, 2);
-            tex.LoadImage(imageBytes);
             sharedMaterial.SetTexture("_EmissionMap", tex);
             sharedMaterial.SetColor("_EmissionColor", Color.white);
+    }
+
+      // Acts as a constructor
+    public void SetProperties(
+        Material newMaterial = null,
+        string albedoTexturePath = null,
+        string metallicSmoothnessTexturePath = null,
+        string normalTexturePath = null,
+        string emissionTexturePath = null,
+        ProceduralTextures rawTextures = null
+    ) {
+        // shoulw happen only when fist creating this component
+            this.sharedMaterial = newMaterial;
+            this.albedoTexturePath = albedoTexturePath;
+            this.metallicSmoothnessTexturePath = metallicSmoothnessTexturePath;
+            this.normalTexturePath = normalTexturePath;
+            this.emissionTexturePath = emissionTexturePath;
+            this.rawTextures = rawTextures;
+
+            Debug.Log($"albedoTexturePath { albedoTexturePath} m {metallicSmoothnessTexturePath} n {normalTexturePath} e {emissionTexturePath}");
+    }
+
+
+    public void reloadtextures(
+    ) {
+        if (sharedMaterial != null) {
+            if (rawTextures == null) {
+                // use file paths
+                if (sharedMaterial.mainTexture == null) {
+                    setAlbedoProps(LoadTextureFromFile(albedoTexturePath));
+                }
+                setMetallicProps(LoadTextureFromFile(metallicSmoothnessTexturePath), swapRGBAtoRRRB: metallicSmoothnessTexturePath.ToLower().EndsWith(".jpg"));
+                setNormalProps(LoadTextureFromFile(normalTexturePath));
+                setEmissionProps(LoadTextureFromFile(emissionTexturePath));
+
+                
+            }
+            else {
+                // use string encoded textures
+                if (sharedMaterial.mainTexture == null) {
+                    setAlbedoProps(LoadTextureFromBase64(rawTextures.albedoBase64JPG));
+                }
+                // swap because it's a jpg
+                setMetallicProps(LoadTextureFromBase64(rawTextures.metallicSmoothnessBase64JPG), swapRGBAtoRRRB: true);
+                setNormalProps(LoadTextureFromBase64(rawTextures.normalBase64JPG));
+                setEmissionProps(LoadTextureFromBase64(rawTextures.emissionBase64JPG));
+                
+            }
         }
     }
 

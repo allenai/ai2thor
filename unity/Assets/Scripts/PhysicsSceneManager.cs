@@ -119,8 +119,8 @@ public class PhysicsSceneManager : MonoBehaviour {
     }
 
     public void SetupScene(bool generateObjectIds = true) {
-        var process = System.Diagnostics.Process.GetCurrentProcess();
-        Debug.Log("------- Setup Scene called " + (generateObjectIds && !ProceduralMode) + $" process id: {process.Id}");
+        // var process = System.Diagnostics.Process.GetCurrentProcess();
+        // Debug.Log("------- Setup Scene called " + (generateObjectIds && !ProceduralMode) + $" process id: {process.Id}");
         ObjectIdToSimObjPhysics.Clear();
         GatherSimObjPhysInScene(generateObjectIds && !ProceduralMode);
         GatherAllRBsInScene();
