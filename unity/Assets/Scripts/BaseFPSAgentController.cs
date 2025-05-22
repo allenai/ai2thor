@@ -7713,6 +7713,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             procAsset.parentTexturesDir = Path.Combine(dir, id);
 
+            procAsset.annotations = annotations ?? procAsset.annotations;
+            
             return procAsset;
         }
 
@@ -7740,7 +7742,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 serializable: serializable
             ).Result;
             procAsset.serializable = serializable;
-            procAsset.annotations = procAsset.annotations ?? annotations;
+            procAsset.annotations = annotations ?? procAsset.annotations;
 
             // Debug.Log($"root is null? {parent == null} -  {parent}");
             return CreateRuntimeAsset(asset: procAsset, returnObject: true);
