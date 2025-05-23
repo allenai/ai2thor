@@ -7253,6 +7253,622 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public static void TryToAddReceptacleTriggerBox(
             SimObjPhysics sop,
             float yThresMax = 0.075f,
+            float worldOffset = -100f,
+            float minClearance = 0.2f
+        ) {
+            if (sop == null) {
+                throw new NotImplementedException(
+                    $"Adding receptacle trigger box is only possible the active game object, has an associated SimObjPhysics script."
+                );
+            }
+
+            float maxSpacingY = Mathf.Min(minClearance, yThresMax) / 2;
+
+            Quaternion oldRot = sop.transform.rotation;
+            Vector3 oldPos = sop.transform.position;
+
+            List<MeshCollider> tmpMeshColliders = new List<MeshCollider>();
+            List<Collider> enabledColliders = new List<Collider>();
+            foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
+                if (c.enabled) {
+                    enabledColliders.Add(c);
+                    c.enabled = false;
+                }
+            }
+
+            try {
+                sop.transform.rotation = Quaternion.identity;
+                sop.transform.position = new Vector3(worldOffset, worldOffset, worldOffset);
+                sop.GetComponent<Rigidbody>().isKinematic = true;
+
+                foreach (MeshFilter mf in sop.GetComponentsInChildren<MeshFilter>()) {
+                    GameObject tmpGo = new GameObject();
+                    tmpGo.layer = LayerMask.NameToLayer("SimObjVisible");
+                    tmpGo.transform.position = mf.gameObject.transform.position;
+                    tmpGo.transform.rotation = mf.gameObject.transform.rotation;
+                    tmpGo.transform.parent = sop.transform;
+
+                    MeshCollider mc = tmpGo.AddComponent<MeshCollider>();
+                    mc.sharedMesh = mf.sharedMesh;
+
+                    Rigidbody rb = tmpGo.AddComponent<Rigidbody>();
+                    rb.isKinematic = true;
+
+                    tmpMeshColliders.Add(mc);
+                }
+
+                Physics.SyncTransforms();
+
+                sop.syncBoundingBoxes(forceCacheReset: true);
+                AxisAlignedBoundingBox aabb = sop.AxisAlignedBoundingBox;
+
+                Vector3 center = aabb.center;
+                Vector3 size = aabb.size;
+                float rtbYSize = Mathf.Min(0.25f, Mathf.Max(size.x, size.y, size.z));
+
+                float yThres = Mathf.Min(yThresMax, size.y * 0.15f);
+
+                float xMin = center.x - 0.95f * size.x / 2f;
+                float xMax = center.x + 0.95f * size.x / 2f;
+                float zMin = center.z - 0.95f * size.z / 2f;
+                float zMax = center.z + 0.95f * size.z / 2f;
+
+                float yStart = center.y + size.y / 2f + 0.5f;
+                float dummyY = -1000f;
+
+                // Func<int, float> iXToX = (i => xMin + i * (xMax - xMin) / (n - 1.0f));
+
+                // Store the point and clearance (if sufficiently large) for the point with maximum clearance in a discrete coordinate
+                Dictionary<(int, int, int), (float, float)> sparseMat = new Dictionary<(int, int, int), (float, float)>();
+                // Store populated y coordinates for a x-z grid
+                Dictionary<(int, int), SortedSet<int>> validYs = new Dictionary<(int, int), SortedSet<int>>();
+
+                int n = 30;
+                for (int iX = 0; iX < n; iX++) {
+                    float x = xMin + iX * (xMax - xMin) / (n - 1.0f);
+                    // Debug.Log($"x val: {x}");
+
+                    for (int iZ = 0; iZ < n; iZ++) {
+                        float z = zMin + iZ * (zMax - zMin) / (n - 1.0f);
+
+                        // Debug.Log($"Pos: ({iX}, {iZ}), vals ({x}, {z})");
+
+                        validYs[(iX, iZ)] = new SortedSet<int>();
+
+                        // RaycastHit[] hits;
+                        // hits = Physics.RaycastAll(
+                        //     origin: new Vector3(x, yStart, z),
+                        //     direction: new Vector3(0f, -1f, 0f),
+                        //     maxDistance: 10f,
+                        //     layerMask: LayerMask.GetMask("SimObjVisible"),
+                        //     queryTriggerInteraction: QueryTriggerInteraction.Ignore
+                        // );
+
+                        // for (int iHits = 0; iHits < hits.Length; iHits++) {
+                        //     RaycastHit hit = hits[iHits];
+                        
+                        float step = 0.25f; // Vertical step between checks
+                        float minY = yStart - size.y - 0.25f; // Bounding box min Y
+                        float maxY = yStart; // Bounding box max Y
+
+                        for (float y = maxY; y >= minY; y -= step) {
+                            if (
+                                !Physics.Raycast(
+                                    new Vector3(x, y, z),
+                                    new Vector3(0f, -1f, 0f),
+                                    out RaycastHit hit,
+                                    10f,
+                                    LayerMask.GetMask("SimObjVisible"),
+                                    QueryTriggerInteraction.Ignore
+                                )
+                            ) {
+                                continue;
+                            }
+
+                            // Debug.Log($"HITS {hit.point.y}");
+                            // Debug.DrawLine(hit.point, hit.point + new Vector3(0f, 0.1f, 0f), Color.cyan, 15f);
+
+                            if (Vector3.Angle(hit.normal, Vector3.up) < 30f) {
+                                bool store = false;
+                                float ypos = hit.point.y;
+                                int iY = Mathf.FloorToInt(ypos / maxSpacingY + 0.5f);
+                                float clearance = 0f;
+
+                                RaycastHit upHit;
+                                if (
+                                    Physics.Raycast(
+                                        origin: hit.point + new Vector3(0f, 0.01f, 0f),
+                                        direction: new Vector3(0f, 1f, 0f),
+                                        hitInfo: out upHit,
+                                        maxDistance: 10f,
+                                        layerMask: LayerMask.GetMask("SimObjVisible"),
+                                        queryTriggerInteraction: QueryTriggerInteraction.Ignore
+                                    )
+                                ) {
+                                    clearance = Mathf.Min(upHit.point.y - ypos, 0.25f);
+                                    if ((!sparseMat.TryGetValue((iX, iY, iZ), out var existing) || clearance > existing.Item2) && clearance >= minClearance) {
+                                        store = true;
+                                    }
+                                } else {
+                                    clearance = 0.25f;
+                                    store = true;
+                                }
+
+                                if (store) {
+                                    sparseMat[(iX, iY, iZ)] = (ypos, clearance);
+                                    validYs[(iX, iZ)].Add(iY);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Now I need to detect triplets of ys to process, then apply the 2D algorithm on each aggregate mat for each triplet
+                // The triplets will be the local maxima of a histogram for y. then I can use DP to select the set of ys that maximize
+                // the collected number of points while being at distance >= clearance from the neighbor (previous y). In the dense
+                // mat float [,], each entry has either the y value nearest to the mode center corresponsing from the triplet for that x-z
+                // coordinate or a dummy large negative value if none
+
+                // Parameters
+
+                // Step 1: Find range of iY values
+                int minIY = sparseMat.Keys.Min(k => k.Item2);
+                int maxIY = sparseMat.Keys.Max(k => k.Item2);
+
+                // Step 2: Initialize dense histogram
+                Dictionary<int, float> denseYCounts = new Dictionary<int, float>();
+                for (int iy = minIY; iy <= maxIY; iy++) {
+                    denseYCounts[iy] = 0f;
+                }
+
+                // Step 3: Fill smoothed histogram with contributions
+                foreach (var key in sparseMat.Keys) {
+                    int iX = key.Item1;
+                    int iY = key.Item2;
+                    int iZ = key.Item3;
+
+                    denseYCounts[iY] += 1f;
+
+                    // Half contribution to neighbors if they exist in validYs
+                    if (validYs[(iX, iZ)].Contains(iY - 1)) {
+                        denseYCounts[iY - 1] += 0.5f;
+                    }
+                    if (validYs[(iX, iZ)].Contains(iY + 1)) {
+                        denseYCounts[iY + 1] += 0.5f;
+                    }
+                }
+
+                // Step 4: Convert to sorted arrays
+                var sortedYs = denseYCounts.Keys.OrderBy(y => y).ToArray();
+                var counts = sortedYs.Select(y => denseYCounts[y]).ToArray();
+
+                // Step 5: Detect local maxima
+                List<int> localMaxima = new List<int>();
+                for (int i = 1; i < sortedYs.Length - 1; i++) {
+                    if (counts[i] > counts[i - 1] && counts[i] > counts[i + 1]) {
+                        localMaxima.Add(sortedYs[i]);
+                    }
+                }
+
+                // Endpoints check
+                if (counts[0] > counts[1]) {
+                    localMaxima.Add(sortedYs[0]);
+                }
+                if (counts[counts.Length - 1] > counts[counts.Length - 2]) {
+                    localMaxima.Add(sortedYs[counts.Length - 1]);
+                }
+
+                // Sort local maxima descending (we always want to keep the highest plane)
+                localMaxima.Sort();
+                localMaxima.Reverse();
+
+                // Precompute y+clearance per mode iY
+                // Step 1: Convert localMaxima to HashSet for fast lookup
+                HashSet<int> localMaximaSet = new HashSet<int>(localMaxima);
+
+                // Step 2: Initialize dictionary to track max clearances
+                Dictionary<int, float> yClearancePerMode = new Dictionary<int, float>();
+                foreach (int iY in localMaximaSet) {
+                    yClearancePerMode[iY] = float.MinValue;
+                }
+
+                // Step 3: Iterate sparseMat only once
+                foreach (var kvp in sparseMat) {
+                    int iY = kvp.Key.Item2;
+                    if (localMaximaSet.Contains(iY)) {
+                        float yPos = kvp.Value.Item1;
+                        float clearance = kvp.Value.Item2;
+                        float yClearance = yPos + clearance;
+                        if (yClearance > yClearancePerMode[iY]) {
+                            yClearancePerMode[iY] = yClearance;
+                        }
+                    }
+                }
+
+                int m = localMaxima.Count;
+                float[] dp = new float[m];
+                int[] prev = new int[m];
+                for (int i = 0; i < m; i++) {
+                    dp[i] = denseYCounts[localMaxima[i]];
+                    prev[i] = -1;
+                    for (int j = 0; j < i; j++) {
+                        float diff = Math.Abs(yClearancePerMode[localMaxima[i]] - yClearancePerMode[localMaxima[j]]);
+                        if (diff >= minClearance) {
+                            float val = dp[j] + denseYCounts[localMaxima[i]];
+                            if (val > dp[i]) {
+                                dp[i] = val;
+                                prev[i] = j;
+                            }
+                        }
+                    }
+                }
+
+                // Find max coverage index
+                int maxIndex = 0;
+                for (int i = 1; i < m; i++) {
+                    if (dp[i] > dp[maxIndex]) { maxIndex = i; }
+                }
+                // Reconstruct selected modes
+                List<int> selectedModes = new List<int>();
+                int curr = maxIndex;
+                while (curr != -1) {
+                    selectedModes.Add(localMaxima[curr]);
+                    curr = prev[curr];
+                }
+                selectedModes.Reverse();
+
+                // Initialize accumulators
+                Dictionary<int, float> sumYPerMode = selectedModes.ToDictionary(mode => mode, _ => 0f);
+                Dictionary<int, int> countPerMode = selectedModes.ToDictionary(mode => mode, _ => 0);
+
+                // Iterate over sparseMat once
+                foreach (var kvp in sparseMat) {
+                    var key = kvp.Key;
+                    int iY = key.Item2;
+                    float yVal = kvp.Value.Item1;
+
+                    if (sumYPerMode.ContainsKey(iY)) {
+                        sumYPerMode[iY] += yVal;
+                        countPerMode[iY]++;
+                    }
+                }
+
+                // Compute averages
+                Dictionary<int, float> modeCenterHeights = new Dictionary<int, float>();
+                foreach (var mode in selectedModes) {
+                    int count = countPerMode[mode];
+                    float avg = (count > 0) ? (sumYPerMode[mode] / count) : 0f;
+                    modeCenterHeights[mode] = avg;
+                }
+
+                Dictionary<int, float> groupToMaxYVal = new Dictionary<int, float>();
+                Dictionary<int, float> groupToMinYVal = new Dictionary<int, float>();
+                Dictionary<int, List<(int, int)>> groupToPos = new Dictionary<int, List<(int, int)>>();
+                var group_toYIndex = new Dictionary<int, int>();
+                int nextGroup = 0;
+
+                foreach (int modeCenter in selectedModes) {
+                    float[,] mat = new float[n, n];
+                    for (int ix = 0; ix < n; ix++) {
+                        for (int iz = 0; iz < n; iz++) {
+                            mat[ix, iz] = dummyY;
+                        }
+                    }
+
+                    float modeCenterY = modeCenterHeights[modeCenter];
+
+
+                    for (int ix = 0; ix < n; ix++) {
+                        for (int iz = 0; iz < n; iz++) {
+                            if (!validYs.TryGetValue((ix, iz), out var ySet)) { continue; }
+
+                            // Efficient range query using GetViewBetween
+                            var nearbyYs = ySet.GetViewBetween(modeCenter - 1, modeCenter + 1);
+
+                            foreach (int iY in nearbyYs) {
+                                if (sparseMat.TryGetValue((ix, iY, iz), out var val)) {
+                                    float yVal = val.Item1;
+
+                                    if (Math.Abs(yVal - modeCenterY) <= yThres) {
+                                        if (mat[ix, iz] == dummyY || Math.Abs(yVal - modeCenterY) < Math.Abs(mat[ix, iz] - modeCenterY)) {
+                                            mat[ix, iz] = yVal;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Dictionary<(int, int), int> posToGroup = new Dictionary<(int, int), int>();
+                    for (int iX = 0; iX < n; iX++) {
+                        for (int iZ = 0; iZ < n; iZ++) {
+                            // Debug.Log($"Pos: ({iX}, {iZ})");
+                            float curYVal = mat[iX, iZ];
+                            // Debug.Log($"Cur Y: {curYVal}");
+
+                            if (curYVal == dummyY) {
+                                posToGroup[(iX, iZ)] = -1;
+                                groupToMaxYVal[-1] = dummyY;
+                                groupToMinYVal[-1] = dummyY;
+                                continue;
+                            }
+
+                            if (iX > 0) {
+                                int group = posToGroup[(iX - 1, iZ)];
+                                float otherMaxYVal = groupToMaxYVal[group];
+                                float otherMinYVal = groupToMinYVal[group];
+
+                                if (
+                                    Mathf.Abs(curYVal - otherMaxYVal) < yThres
+                                    && Mathf.Abs(curYVal - otherMinYVal) < yThres
+                                ) {
+                                    posToGroup[(iX, iZ)] = group;
+                                    groupToPos[group].Add((iX, iZ));
+                                    groupToMaxYVal[group] = Mathf.Max(curYVal, otherMaxYVal);
+                                    groupToMinYVal[group] = Mathf.Min(curYVal, otherMinYVal);
+                                    continue;
+                                }
+                            }
+
+                            if (iZ > 0) {
+                                int group = posToGroup[(iX, iZ - 1)];
+                                float otherMaxYVal = groupToMaxYVal[group];
+                                float otherMinYVal = groupToMinYVal[group];
+
+                                if (
+                                    Mathf.Abs(curYVal - otherMaxYVal) < yThres
+                                    && Mathf.Abs(curYVal - otherMinYVal) < yThres
+                                ) {
+                                    posToGroup[(iX, iZ)] = group;
+                                    groupToPos[group].Add((iX, iZ));
+                                    groupToMaxYVal[group] = Mathf.Max(curYVal, otherMaxYVal);
+                                    groupToMinYVal[group] = Mathf.Min(curYVal, otherMinYVal);
+                                    continue;
+                                }
+                            }
+
+                            posToGroup[(iX, iZ)] = nextGroup;
+                            groupToMaxYVal[nextGroup] = curYVal;
+                            groupToMinYVal[nextGroup] = curYVal;
+                            groupToPos[nextGroup] = new List<(int, int)>();
+                            groupToPos[nextGroup].Add((iX, iZ));
+                            group_toYIndex[nextGroup] = modeCenter;
+                            nextGroup++;
+                        }
+                    }
+                }
+
+                // TODO: Improve this logic so that we get rectangles more intelligently
+                var groupToRectangles = new Dictionary<int, List<((int, int), (int, int))>>();
+                foreach (int group in groupToPos.Keys) {
+                    var posSet = new HashSet<(int, int)>(groupToPos[group]);
+
+                    List<((int, int), (int, int))> rectangles =
+                        new List<((int, int), (int, int))>();
+
+                    while (posSet.Count > 0) {
+                        (int, int) nextiXiZ = posSet.Min();
+
+                        int startIX = nextiXiZ.Item1;
+                        int startIZ = nextiXiZ.Item2;
+
+                        int k = 1;
+                        while (posSet.Contains((startIX + k, startIZ))) {
+                            k++;
+                        }
+
+                        int endIX = startIX + k - 1;
+
+                        k = 1;
+                        while (true) {
+                            bool allContained = true;
+                            for (int iX = startIX; iX <= endIX; iX++) {
+                                if (!posSet.Contains((iX, startIZ + k))) {
+                                    allContained = false;
+                                    break;
+                                }
+                            }
+                            if (!allContained) {
+                                break;
+                            }
+                            k++;
+                        }
+                        int endIZ = startIZ + k - 1;
+
+                        for (int iX = startIX; iX <= endIX; iX++) {
+                            for (int iZ = startIZ; iZ <= endIZ; iZ++) {
+                                posSet.Remove((iX, iZ));
+                            }
+                        }
+
+                        rectangles.Add(((startIX, startIZ), (endIX, endIZ)));
+                        // Debug.Log($"Group {group}: ({startIX}, {startIZ}), ({endIX}, {endIZ})");
+                    }
+                    groupToRectangles[group] = rectangles;
+                }
+
+                Dictionary<int, List<float>> rectangleClearances = new Dictionary<int, List<float>>();
+
+                foreach (var kvp in groupToRectangles) {
+                    int groupId = kvp.Key;
+                    float yRectBase = groupToMinYVal[groupId];
+                    var rectangles = kvp.Value;
+
+                    List<float> groupClearances = new List<float>();
+
+                    foreach (var rect in rectangles) {
+                        var ((startIX, startIZ), (endIX, endIZ)) = rect;
+
+                        float minEffectiveClearance = float.MaxValue;
+                        bool hasPoint = false;
+
+                        for (int iX = startIX; iX <= endIX; iX++) {
+                            for (int iZ = startIZ; iZ <= endIZ; iZ++) {
+                                if (validYs.TryGetValue((iX, iZ), out var ySet)) {
+                                    for (int offset = -1; offset <= 1; offset++) {
+                                        int iYCheck = group_toYIndex[groupId] + offset;
+                                        if (ySet.Contains(iYCheck)) {
+                                            if (sparseMat.TryGetValue((iX, iYCheck, iZ), out var val)) {
+                                                float yPos = val.Item1;
+                                                float clearance = val.Item2;
+                                                float effectiveClearance = clearance - (yRectBase - yPos);
+
+                                                if (effectiveClearance < minEffectiveClearance) {
+                                                    minEffectiveClearance = effectiveClearance;
+                                                }
+                                                hasPoint = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // for (int iX = startIX; iX <= endIX; iX++) {
+                        //     for (int iZ = startIZ; iZ <= endIZ; iZ++) {
+                        //         // Loop over iY's for this (iX, iZ)
+                        //         if (validYs.TryGetValue((iX, iZ), out var ySet)) {
+                        //             foreach (int iY in ySet) {
+                        //                 if (sparseMat.TryGetValue((iX, iY, iZ), out var val)) {
+                        //                     float yPos = val.Item1;
+                        //                     float clearance = val.Item2;
+                        //                     float effectiveClearance = clearance - (yRectBase - yPos);
+
+                        //                     if (effectiveClearance < minEffectiveClearance) {
+                        //                         minEffectiveClearance = effectiveClearance;
+                        //                     }
+                        //                     hasPoint = true;
+                        //                 }
+                        //             }
+                        //         }
+                        //     }
+                        // }
+
+                        groupClearances.Add(hasPoint ? minEffectiveClearance : 0f);
+                    }
+
+                    rectangleClearances[groupId] = groupClearances;
+                }
+
+                var vector3CornerLists = new List<List<Vector3>>();
+                var clearanceList = new List<float>();
+                List<Color> colors = new List<Color>
+                {
+                    Color.cyan,
+                    Color.yellow,
+                    Color.red,
+                    Color.magenta,
+                    Color.green,
+                    Color.blue
+                };
+                int yar = -1;
+                // foreach (int group in groupToRectangles.Keys) {
+                //     float y = groupToMinYVal[group];
+
+                //     foreach (((int, int), (int, int)) extents in groupToRectangles[group]) {
+                foreach (int group in groupToRectangles.Keys) {
+                    float y = groupToMinYVal[group];
+                    var rectangles = groupToRectangles[group];
+                    var clearances = rectangleClearances[group];
+
+                    for (int i = 0; i < rectangles.Count; i++) {
+                        var extents = rectangles[i];
+                        float clearance = clearances[i];
+
+                        yar++;
+                        (int, int) start = extents.Item1;
+                        (int, int) end = extents.Item2;
+
+                        float startX = xMin + (start.Item1 - 0.5f) * (xMax - xMin) / (n - 1.0f);
+                        float endX = xMin + (end.Item1 + 0.5f) * (xMax - xMin) / (n - 1.0f);
+
+                        float startZ = zMin + (start.Item2 - 0.5f) * (zMax - zMin) / (n - 1.0f);
+                        float endZ = zMin + (end.Item2 + 0.5f) * (zMax - zMin) / (n - 1.0f);
+
+                        if (
+                            Math.Min(
+                                Math.Abs(start.Item1 - end.Item1),
+                                Math.Abs(start.Item2 - end.Item2)
+                            ) <= 1
+                        ) {
+                            continue;
+                        }
+
+                        List<Vector3> corners = new List<Vector3>();
+                        corners.Add(new Vector3(startX, y, startZ));
+                        corners.Add(new Vector3(endX, y, startZ));
+                        corners.Add(new Vector3(endX, y, endZ));
+                        corners.Add(new Vector3(startX, y, endZ));
+
+                        // Debug.Log($"(({start.Item1}, {start.Item2}), ({end.Item1}, {end.Item2}))");
+#if UNITY_EDITOR
+                        Debug.DrawLine(corners[0], corners[1], colors[yar % colors.Count], 15f);
+                        Debug.DrawLine(corners[1], corners[2], colors[yar % colors.Count], 15f);
+                        Debug.DrawLine(corners[2], corners[3], colors[yar % colors.Count], 15f);
+                        Debug.DrawLine(corners[3], corners[0], colors[yar % colors.Count], 15f);
+#endif
+                        vector3CornerLists.Add(corners);
+                        clearanceList.Add(clearance);
+                    }
+                }
+
+                Transform t = sop.transform.Find("ReceptacleTriggerBoxes");
+                GameObject go = null;
+                if (t != null) {
+                    GameObject.DestroyImmediate(t.gameObject);
+                }
+                if (t == null) {
+                    go = new GameObject("ReceptacleTriggerBoxes");
+                    go.transform.position = sop.transform.position;
+                    go.transform.parent = sop.transform;
+                }
+                Physics.SyncTransforms();
+
+                int cornerListInd = 0;
+                List<GameObject> boxGos = new List<GameObject>();
+                // foreach (List<Vector3> cornerList in vector3CornerLists) {
+                for (int i = 0; i < vector3CornerLists.Count; i++) {
+                    var cornerList = vector3CornerLists[i];
+                    var clearance = clearanceList[i];
+
+                    Vector3 c0 = cornerList[0];
+                    Vector3 c1 = cornerList[1];
+                    Vector3 c2 = cornerList[2];
+                    Vector3 c3 = cornerList[3];
+
+                    GameObject rtb = new GameObject($"ReceptacleTriggerBox{cornerListInd++}");
+                    boxGos.Add(rtb);
+                    rtb.transform.position = sop.transform.position;
+                    rtb.transform.parent = go.transform;
+                    rtb.layer = LayerMask.NameToLayer("SimObjInvisible");
+                    rtb.AddComponent<Contains>();
+                    BoxCollider bc = rtb.AddComponent<BoxCollider>();
+                    bc.center =
+                        (c0 + c1 + c2 + c3) * 0.25f
+                        - rtb.transform.position
+                        + new Vector3(0f, clearance / 2.0f, 0f);
+                    bc.size = c2 - c0 + new Vector3(0f, clearance, 0f);
+                    bc.isTrigger = true;
+                }
+                sop.ReceptacleTriggerBoxes = boxGos.ToArray();
+            } finally {
+                sop.transform.position = oldPos;
+                sop.transform.rotation = oldRot;
+                sop.GetComponent<Rigidbody>().isKinematic = false;
+
+                foreach (MeshCollider tmc in tmpMeshColliders) {
+                    GameObject.DestroyImmediate(tmc.gameObject);
+                }
+                foreach (Collider c in enabledColliders) {
+                    c.enabled = true;
+                }
+                Physics.SyncTransforms();
+            }
+        }
+
+        public static void TryToAddReceptacleTriggerBox2D(
+            SimObjPhysics sop,
+            float yThresMax = 0.075f,
             float worldOffset = -100f
         ) {
             if (sop == null) {
