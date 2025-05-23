@@ -1,10 +1,105 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Priority_Queue;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Thor.Procedural {
+    using PrefabAsset = AssetHandle<GameObject>;
+    public interface IAsset<T> where T : class {
+        void OnDelete();
+        T Get();
+    }
+
+    // public class PrefabAsset : IAsset<GameObject> {
+    //     public GameObject prefab;
+    //     public bool isAddressable;
+    //     private AsyncOperationHandle<GameObject>? handle;
+
+    //     public PrefabAsset(GameObject prefab, bool isAddressable, AsyncOperationHandle<GameObject>? handle = null) {
+    //         this.prefab = prefab;
+    //         this.isAddressable = isAddressable;
+    //         this.handle = handle;
+    //     }
+
+    //     public void OnDelete() {
+    //         prefab.transform.parent = null;
+    //         prefab.SetActive(false);
+    //         if (isAddressable && handle.HasValue) {
+    //             Addressables.Release(handle.Value);
+    //         }
+    //         else {
+    //             UnityEngine.Object.Destroy(prefab);
+    //         }
+    //     }
+
+    //     public GameObject Get() {
+    //        return prefab;
+    //     }
+    // }
+    public class AssetHandle<T> : IAsset<T> where T : UnityEngine.Object {
+        private T asset;
+        private AsyncOperationHandle<T>? handle;
+
+        public AssetHandle(T asset, AsyncOperationHandle<T>? handle = null) {
+            this.asset = asset;
+            this.handle = handle;
+        }
+
+        public void OnDelete() {
+            if (handle.HasValue) {
+                Addressables.Release(handle.Value);
+            } else {
+                GameObject.Destroy(asset);
+            }
+        }
+
+        public T Get() => asset;
+    }
+
+    
+
+    [ExecuteInEditMode]
+    [Serializable]
+    public class AssetMap<T, U> where U : class, IAsset<T> where T : class {
+        protected Dictionary<string, U> assetMap;
+
+        public AssetMap(Dictionary<string, U> assetMap) {
+            this.assetMap = assetMap;
+        }
+
+        public virtual T getAsset(string name) {
+            return assetMap[name]?.Get();
+        }
+
+        public virtual U getAssetWrapper(string name) {
+            return assetMap[name];
+        }
+
+        public virtual bool ContainsKey(string key) {
+            return assetMap.ContainsKey(key);
+        }
+
+        public virtual int Count() {
+            return assetMap.Count;
+        }
+
+        public virtual IEnumerable<string> Keys() {
+            return assetMap.Keys;
+        }
+
+        public virtual IEnumerable<T> Values() {
+            return assetMap.Values.Select(x => x?.Get());
+        }
+
+        public virtual void Clear() {
+            assetMap.Clear();
+        }
+    }
+
     public class ProceduralAssetDatabase : MonoBehaviour {
         public static ProceduralAssetDatabase Instance { get; private set; }
 
@@ -19,14 +114,14 @@ namespace Thor.Procedural {
         public int totalMats;
 
         [SerializeField]
-        public ProceduralLRUCacheAssetMap<GameObject> assetMap;
+        public ProceduralLRUCacheAssetMap<GameObject, PrefabAsset> assetMap;
 
         public bool dontDestroyOnLoad = true;
 
         /// Build database based on materials and prefabs
-        public void BuildAssetDatabase() {
-            this.assetMap = new ProceduralLRUCacheAssetMap<GameObject>(
-                prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First())
+        public void BuildAssetMap() {
+            this.assetMap = new ProceduralLRUCacheAssetMap<GameObject, PrefabAsset>(
+                prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => new PrefabAsset(asset: p.First()))
             );
         }
 
@@ -37,7 +132,7 @@ namespace Thor.Procedural {
             }
 
             Instance = this;
-            BuildAssetDatabase();
+            BuildAssetMap();
             if (dontDestroyOnLoad) {
                 DontDestroyOnLoad(gameObject);
             } else {
@@ -46,14 +141,21 @@ namespace Thor.Procedural {
             }
         }
 
-        public void addAsset(GameObject asset, bool procedural = false) {
+        public void addAsset(GameObject asset, bool procedural = false, AsyncOperationHandle<GameObject>? handle = null) {
             // prefabs.Add(asset);
-            assetMap.addAsset(asset.name, asset, procedural);
+            assetMap.addAsset(asset.name, new PrefabAsset(asset: asset, handle: handle));
         }
 
-        public void addAssets(IEnumerable<GameObject> assets, bool procedural = false) {
+        public void addMaterial(Material material) {
+            // prefabs.Add(asset);
+            materials.Add(material);
+            // assetMap.addAsset(asset.name, asset, procedural);
+            totalMats = materials.Count;
+        }
+
+        public void addAssets(IEnumerable<GameObject> assets, bool procedural = false, AsyncOperationHandle<GameObject>? handle = null) {
             foreach (var asset in assets) {
-                assetMap.addAsset(asset.name, asset, procedural);
+                assetMap.addAsset(asset.name, new PrefabAsset(asset: asset, handle: handle), procedural);
             }
         }
 
@@ -72,9 +174,18 @@ namespace Thor.Procedural {
         public IEnumerable<GameObject> GetPrefabs() {
             return this.assetMap.Values();
         }
+
+        public AssetMap<GameObject, PrefabAsset> GetPrefabMap() {
+            return this.assetMap;
+        }
     }
 
-    public class ProceduralLRUCacheAssetMap<T> : AssetMap<T> {
+
+
+    public class ProceduralLRUCacheAssetMap<T, U> : AssetMap<T, U> 
+        where T : class
+        where U : class, IAsset<T>
+    {
         public SimplePriorityQueue<string, int> proceduralAssetQueue { get; private set; }
         public int priorityMinValue { get; private set; }
         public int priorityMaxValue { get; private set; }
@@ -82,10 +193,10 @@ namespace Thor.Procedural {
         private int originalPriorityMaxValue;
 
         public ProceduralLRUCacheAssetMap(int priorityMinValue = 0, int priorityMaxValue = 1)
-            : this(new Dictionary<string, T>(), priorityMinValue, priorityMaxValue) { }
+            : this(new Dictionary<string, U>(), priorityMinValue, priorityMaxValue) { }
 
         public ProceduralLRUCacheAssetMap(
-            Dictionary<string, T> assetMap,
+            Dictionary<string, U> assetMap,
             int rankingMinValue = 0,
             int rankingMaxValue = 1
         )
@@ -99,12 +210,7 @@ namespace Thor.Procedural {
         // python hooks is desired because asset-dynamic-creation is driven by hooks
         // so there can be times if we internally drive the LRU cache that we may delete
         // assets and not have the hook to create them
-
-        public override T getAsset(string name) {
-            return assetMap[name];
-        }
-
-        public void addAsset(string id, T asset, bool procedural = true) {
+        public void addAsset(string id, U asset, bool procedural = true) {
             if (procedural) {
                 proceduralAssetQueue.Enqueue(id, this.priorityMaxValue);
             }
@@ -139,14 +245,11 @@ namespace Thor.Procedural {
                 && (deleteWithHighestPriority || toDequeuePrio < this.priorityMaxValue)
             ) {
                 var removed = proceduralAssetQueue.Dequeue();
-                if (this.getAsset(removed) is GameObject go) {
-                    go.transform.parent = null;
-                    go.SetActive(false);
-                    this.assetMap.Remove(removed);
-                    GameObject.Destroy(go);
-                } else {
-                    this.assetMap.Remove(removed);
-                }
+
+                var asset = this.getAssetWrapper(removed);
+                asset.OnDelete();
+                this.assetMap.Remove(removed);
+                
                 //                Debug.Log($"Removing {removed}");
                 dequeueCount++;
                 if (proceduralAssetQueue.Count == 0) {
@@ -170,6 +273,7 @@ namespace Thor.Procedural {
                     Debug.Log("Asyncop callback called calling GC");
                     GC.Collect();
                 };
+                
 
                 // #if !UNITY_EDITOR && !UNITY_WEBGL
                 float timeout = 2.0f;

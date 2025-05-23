@@ -15,6 +15,21 @@ namespace Tests
 {
     public class TestProceduralAssetCache
     {
+        public class TestAsset : IAsset<string> {
+            private string v;
+
+            public TestAsset(string v) {
+                this.v = v;
+            }
+
+            public string Get() {
+                return v;
+            }
+
+            public void OnDelete() {
+                
+            }
+        }
         [UnityTest]
         public IEnumerator TestBinaryValuedPriority()
         {
@@ -23,15 +38,15 @@ namespace Tests
             int minPrioVal = 0;
             int maxPrioVal = 1;
 
-            var cache = new ProceduralLRUCacheAssetMap<string>(
-                preloadedContent.GroupBy(p => p).ToDictionary(p => p.Key, p => p.First()),
+            var cache = new ProceduralLRUCacheAssetMap<string, TestAsset>(
+                preloadedContent.GroupBy(p => p).ToDictionary(p => p.Key, p => new TestAsset(p.First())),
                 rankingMinValue: minPrioVal,
                 rankingMaxValue: maxPrioVal
             );
 
-            cache.addAsset("6", "6", procedural: true);
-            cache.addAsset("7", "7", procedural: true);
-            cache.addAsset("8", "8", procedural: true);
+            cache.addAsset("6",new TestAsset("6"), procedural: true);
+            cache.addAsset("7", new TestAsset("7"), procedural: true);
+            cache.addAsset("8", new TestAsset("8"), procedural: true);
 
             Assert.AreEqual(cache.Count(), 8);
 
@@ -58,15 +73,15 @@ namespace Tests
             int minPrioVal = 0;
             int maxPrioVal = 10;
 
-            var cache = new ProceduralLRUCacheAssetMap<string>(
-                preloadedContent.GroupBy(p => p).ToDictionary(p => p.Key, p => p.First()),
+            var cache = new ProceduralLRUCacheAssetMap<string, TestAsset>(
+                preloadedContent.GroupBy(p => p).ToDictionary(p => p.Key, p => new TestAsset(p.First())),
                 rankingMinValue: minPrioVal,
                 rankingMaxValue: maxPrioVal
             );
 
-            cache.addAsset("6", "6", procedural: true);
-            cache.addAsset("7", "7", procedural: true);
-            cache.addAsset("8", "8", procedural: true);
+            cache.addAsset("6", new TestAsset("6"), procedural: true);
+            cache.addAsset("7", new TestAsset("7"), procedural: true);
+            cache.addAsset("8", new TestAsset("8"), procedural: true);
 
             Assert.AreEqual(cache.Count(), 8);
 
@@ -96,16 +111,16 @@ namespace Tests
             int minPrioVal = 0;
             int maxPrioVal = 10;
 
-            var cache = new ProceduralLRUCacheAssetMap<string>(
-                preloadedContent.GroupBy(p => p).ToDictionary(p => p.Key, p => p.First()),
+            var cache = new ProceduralLRUCacheAssetMap<string, TestAsset>(
+                preloadedContent.GroupBy(p => p).ToDictionary(p => p.Key, p => new TestAsset(p.First())),
                 rankingMinValue: minPrioVal,
                 rankingMaxValue: maxPrioVal
             );
 
-            cache.addAsset("6", "6", procedural: true);
-            cache.addAsset("7", "7", procedural: true);
-            cache.addAsset("8", "8", procedural: true);
-            cache.addAsset("9", "9", procedural: true);
+            cache.addAsset("6", new TestAsset("6"), procedural: true);
+            cache.addAsset("7", new TestAsset("7"), procedural: true);
+            cache.addAsset("8", new TestAsset("8"), procedural: true);
+            cache.addAsset("9", new TestAsset("9"), procedural: true);
 
             Assert.AreEqual(cache.Count(), 9);
 
@@ -135,15 +150,15 @@ namespace Tests
             int minRankingVal = int.MaxValue - 2;
             int maxRankingVal = int.MaxValue - 1;
 
-            var cache = new ProceduralLRUCacheAssetMap<string>(
-                preloadedContent.GroupBy(p => p).ToDictionary(p => p.Key, p => p.First()),
+            var cache = new ProceduralLRUCacheAssetMap<string, TestAsset>(
+                preloadedContent.GroupBy(p => p).ToDictionary(p => p.Key, p => new TestAsset(p.First())),
                 rankingMinValue: minRankingVal,
                 rankingMaxValue: maxRankingVal
             );
 
-            cache.addAsset("6", "6", procedural: true);
-            cache.addAsset("7", "7", procedural: true);
-            cache.addAsset("8", "8", procedural: true);
+            cache.addAsset("6", new TestAsset("6"), procedural: true);
+            cache.addAsset("7", new TestAsset("7"), procedural: true);
+            cache.addAsset("8", new TestAsset("8"), procedural: true);
 
             Assert.AreEqual(cache.Count(), 8);
 

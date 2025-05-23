@@ -23,6 +23,7 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
 using Random = UnityEngine.Random;
+using PrefabAsset = Thor.Procedural.AssetHandle<UnityEngine.GameObject>;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public abstract class BaseFPSAgentController : ActionInvokable {
@@ -9071,7 +9072,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // }
 
         private static void GetAllHouseObjects(
-            AssetMap<GameObject> assetDb,
+            AssetMap<GameObject, PrefabAsset> assetDb,
             IEnumerable<HouseObject> hos,
             List<string> objectIds
         ) {

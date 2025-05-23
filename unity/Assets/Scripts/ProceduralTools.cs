@@ -13,51 +13,24 @@ using Thor.Utils;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityStandardAssets.Characters.FirstPerson;
+using System.Collections;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+
 #if UNITY_EDITOR
 using UnityEditor.SceneManagement;
 using UnityEditor;
 #endif
 
 namespace Thor.Procedural {
-    [ExecuteInEditMode]
-    [Serializable]
-    public class AssetMap<T> {
-        protected Dictionary<string, T> assetMap;
-
-        public AssetMap(Dictionary<string, T> assetMap) {
-            this.assetMap = assetMap;
-        }
-
-        public virtual T getAsset(string name) {
-            return assetMap[name];
-        }
-
-        public virtual bool ContainsKey(string key) {
-            return assetMap.ContainsKey(key);
-        }
-
-        public virtual int Count() {
-            return assetMap.Count;
-        }
-
-        public virtual IEnumerable<string> Keys() {
-            return assetMap.Keys;
-        }
-
-        public virtual IEnumerable<T> Values() {
-            return assetMap.Values;
-        }
-
-        public virtual void Clear() {
-            assetMap.Clear();
-        }
-    }
+    using PrefabAsset = AssetHandle<GameObject>;
+    using MaterialAsset = AssetHandle<Material>;
 
     // TODO: Turn caller of procedural tools into an instance that has certain
     // creation attributes like the material database
     [ExecuteInEditMode]
     public class RoomCreatorFactory {
-        public RoomCreatorFactory(AssetMap<Material> materials, AssetMap<GameObject> prefabs) { }
+        public RoomCreatorFactory(AssetMap<Material, MaterialAsset> materials, AssetMap<GameObject, PrefabAsset> prefabs) { }
 
         public static GameObject CreateProceduralRoomFromArray() {
             return null;
@@ -516,7 +489,7 @@ namespace Thor.Procedural {
 
         public static GameObject createWalls(
             IEnumerable<Wall> walls,
-            AssetMap<Material> materialDb,
+            AssetMap<Material, MaterialAsset> materialDb,
             ProceduralParameters proceduralParameters,
             string gameObjectId = "Structure"
         ) {
@@ -601,7 +574,7 @@ namespace Thor.Procedural {
 
         public static GameObject createAndJoinWall(
             int index,
-            AssetMap<Material> materialDb,
+            AssetMap<Material, MaterialAsset> materialDb,
             Wall toCreate,
             Wall previous = null,
             Wall next = null,
@@ -1353,7 +1326,7 @@ namespace Thor.Procedural {
         }
 
         private static bool validateHouseObjects(
-            AssetMap<GameObject> assetDb,
+            AssetMap<GameObject, PrefabAsset> assetDb,
             IEnumerable<HouseObject> hos,
             List<string> missingIds
         ) {
@@ -1375,7 +1348,7 @@ namespace Thor.Procedural {
 
         public static GameObject CreateHouse(
             ProceduralHouse house,
-            AssetMap<Material> materialDb,
+            AssetMap<Material, MaterialAsset> materialDb,
             Vector3? position = null
         ) {
             // raise exception if metadata contains schema
@@ -2212,15 +2185,48 @@ namespace Thor.Procedural {
 #endif
 
         //not sure if this is needed, a helper function like this might exist somewhere already?
-        public static AssetMap<GameObject> getAssetMap() {
+        public static AssetMap<GameObject, PrefabAsset> getAssetMap() {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             return assetDB.assetMap;
-            // return new AssetMap<GameObject>(assetDB.prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
+            // return new AssetMap<GameObject, PrefabAsset>(assetDB.prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
+        }
+        
+        public static IEnumerator LoadAddressableAssetsToDatabase(
+            ProceduralAssetDatabase assetDB, 
+            List<string> prefabNames, 
+            List<string> materialNames
+        )
+        {
+            
+            foreach (var prefabName in prefabNames) {
+                var handle = Addressables.LoadAssetAsync<GameObject>(prefabName);
+                yield return handle;
+                if (handle.Status == AsyncOperationStatus.Succeeded)
+                {
+                    Debug.Log($"-------- Loaded asset: {handle.Result.name} ");
+                    
+                    assetDB.addAsset(handle.Result);
+                }
+
+            }
+
+            foreach (var matName in materialNames)
+            {
+                var handle = Addressables.LoadAssetAsync<Material>(matName);
+                yield return handle;
+                if (handle.Status == AsyncOperationStatus.Succeeded)
+                {
+                    assetDB.addMaterial(handle.Result);
+                }
+            }
+
+            Debug.Log("Scene assets loaded.");
+            yield return null;
         }
 
         //generic function to spawn object in scene. No bounds or collision checks done
         public static GameObject spawnHouseObject(
-            AssetMap<GameObject> goDb,
+            AssetMap<GameObject, PrefabAsset> goDb,
             HouseObject ho,
             CollisionDetectionMode collisionDetectionMode
         ) {
@@ -2410,7 +2416,7 @@ namespace Thor.Procedural {
 
         public static GameObject spawnObjectInReceptacle(
             PhysicsRemoteFPSAgentController agent,
-            AssetMap<GameObject> goDb,
+            AssetMap<GameObject, PrefabAsset> goDb,
             string prefabName,
             string objectId,
             SimObjPhysics receptacleSimObj,
@@ -2503,7 +2509,7 @@ namespace Thor.Procedural {
         //will attempt to spawn prefabName at random free position in receptacle
         public static GameObject spawnObjectInReceptacleRandomly(
             PhysicsRemoteFPSAgentController agent,
-            AssetMap<GameObject> goDb,
+            AssetMap<GameObject, PrefabAsset> goDb,
             string prefabName,
             string objectId,
             SimObjPhysics receptacleSimObj,
@@ -2695,25 +2701,28 @@ namespace Thor.Procedural {
             }
         }
 
-        public static AssetMap<Material> GetMaterials() {
+        public static AssetMap<Material, MaterialAsset> GetMaterials() {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDB != null) {
-                return new AssetMap<Material>(
-                    assetDB.materials.GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First())
+                /// TODO replace with m
+                var mats = assetDB.materials.GroupBy(m => m.name).ToDictionary(m => m.Key, m => new MaterialAsset(asset: m.First()));
+                return new AssetMap<Material, MaterialAsset>(
+                    mats
                 );
             }
             return null;
         }
 
-        public static AssetMap<GameObject> GetPrefabs() {
+        public static AssetMap<GameObject, PrefabAsset> GetPrefabs() {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDB != null) {
-                return new AssetMap<GameObject>(
-                    assetDB
-                        .GetPrefabs()
-                        .GroupBy(m => m.name)
-                        .ToDictionary(m => m.Key, m => m.First())
-                );
+                // return new AssetMap<GameObject, PrefabAsset>(
+                //     assetDB
+                //         .GetPrefabs()
+                //         .GroupBy(m => m.name)
+                //         .ToDictionary(m => m.Key, m => m.First())
+                // );
+                assetDB.GetPrefabMap();
             }
             return null;
         }
@@ -2822,7 +2831,7 @@ namespace Thor.Procedural {
 
             Debug.Log($"Deleted Asset count was '{assetCountBeforeRemove}'. Remaining '{assetDB.prefabs.Count}'.");
 
-            assetDB.BuildAssetDatabase();
+            assetDB.BuildAssetMap();
 
             return new ActionFinished(success: true, actionReturn: new Dictionary<string, List<string>>() {
                 ["prefabs"]=assetIds.ToList(),

@@ -1341,8 +1341,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
     [UnityEditor.MenuItem("Procedural/Build Asset Database")]
     public static void BuildAssetDB() {
         var proceduralADB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
-        // proceduralADB.prefabs = new AssetMap<GameObject>(ProceduralTools.FindPrefabsInAssets().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
-        // proceduralADB.materials = new AssetMap<Material>(ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+        // proceduralADB.prefabs = new AssetMap<GameObject, PrefabAsset>(ProceduralTools.FindPrefabsInAssets().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+        // proceduralADB.materials = new AssetMap<Material, MaterialAsset>(ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
 
         proceduralADB.prefabs = ProceduralTools.FindPrefabsInAssets();
         // proceduralADB.assetMap.Clear();
@@ -1359,8 +1359,8 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
         var house = readHouseFromJsonStatic("test_0_out.json");
 
-        // proceduralADB.prefabs = new AssetMap<GameObject>(ProceduralTools.FindPrefabsInAssets().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
-        // proceduralADB.materials = new AssetMap<Material>(ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+        // proceduralADB.prefabs = new AssetMap<GameObject, PrefabAsset>(ProceduralTools.FindPrefabsInAssets().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+        // proceduralADB.materials = new AssetMap<Material, MaterialAsset>(ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
 
         proceduralADB.prefabs = ProceduralTools.FindPrefabsInAssets();
         proceduralADB.materials = ProceduralTools.FindAssetsByType<Material>();
