@@ -270,12 +270,16 @@ public class ITHORSceneExporter : MonoBehaviour
                     .Replace("(Instance)", "")
                     .Replace("Instance", "");
                 string assetId = simObjPhysics.assetID?.Replace(" ", "");
-                Transform bbox = obj.transform.Find("BoundingBox");
-                //AxisAlignedBoundingBox box = simObjPhysics.AxisAlignedBoundingBox;
+                //Transform bbox = obj.transform.Find("BoundingBox");
+                AxisAlignedBoundingBox bbox = simObjPhysics.AxisAlignedBoundingBox;
                 if (bbox != null)
                 {
-                    bbox_center.y = bbox.GetComponent<BoxCollider>().center.y; // For some reason, THOR assets need this
+                    //bbox_center.y = bbox.GetComponent<BoxCollider>().center.y; // For some reason, THOR assets need this
+                    //bbox_center.y = bbox.GetComponent<BoxCollider>().size.y/2.0f; // For some reason, THOR assets need this
+                    bbox_center.y = bbox.center.y;
+                
                 }
+                
 
                 // Export asset if it doesn't have an assetID
                 if (string.IsNullOrEmpty(assetId))
@@ -290,12 +294,14 @@ public class ITHORSceneExporter : MonoBehaviour
                 }
 
                 
-                var position = rootParent.transform.InverseTransformPoint(obj.transform.position);
+                //var position = rootParent.transform.InverseTransformPoint(obj.transform.position);
+                var position = obj.transform.position;
+                position.y = bbox_center.y;
                 IThorObject thorObj = new IThorObject
                 {
                     objectType = objectType,
                     assetId = assetId,
-                    position = obj.transform.position + bbox_center, // position,
+                    position = position, //obj.transform.position + bbox_center, // position,
                     rotation = WrapEulerAngles(obj.transform.rotation.eulerAngles), // Wrap the angles
                     kinematic = false //simObjPhysics.isStatic
                 };
