@@ -7368,11 +7368,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return output;
         }
 
+        private static bool IsAccessible(Vector3 point) {
+            Vector3[] directions = {
+                Vector3.forward, Vector3.back,
+                Vector3.left, Vector3.right,
+                Vector3.up
+            };
+
+            foreach (Vector3 dir in directions) {
+                if (!Physics.Raycast(
+                        point + new Vector3(0f, 0.02f, 0f), dir, out RaycastHit hit, 10f, LayerMask.GetMask("SimObjVisible"), QueryTriggerInteraction.Ignore
+                    )
+                ) {
+                    return true;  // Hits nothing — open space
+                }
+            }
+            return false;
+        }
+
         public static void TryToAddReceptacleTriggerBox(
             SimObjPhysics sop,
             float yThresMax = 0.075f,
             float worldOffset = -100f,
-            float minClearance = 0.2f
+            float minClearance = 0.2f,
+            bool excludeInterior = true
         ) {
             if (sop == null) {
                 throw new NotImplementedException(
@@ -7479,6 +7498,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 float ypos = hit.point.y;
                                 int iY = Mathf.FloorToInt(ypos / maxSpacingY + 0.5f);
                                 float clearance = 0f;
+
+                                if (excludeInterior) {
+                                    if (!IsAccessible(hit.point)) {
+                                        continue;
+                                    }
+                                }
 
                                 RaycastHit upHit;
                                 if (
