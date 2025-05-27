@@ -7313,7 +7313,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 float zMin = center.z - 0.95f * size.z / 2f;
                 float zMax = center.z + 0.95f * size.z / 2f;
 
-                float yStart = center.y + size.y / 2f + 0.5f;
+                float yStart = center.y + size.y / 2f + 0.1f;
                 float dummyY = -1000f;
 
                 // Func<int, float> iXToX = (i => xMin + i * (xMax - xMin) / (n - 1.0f));
@@ -7335,20 +7335,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         validYs[(iX, iZ)] = new SortedSet<int>();
 
-                        // RaycastHit[] hits;
-                        // hits = Physics.RaycastAll(
-                        //     origin: new Vector3(x, yStart, z),
-                        //     direction: new Vector3(0f, -1f, 0f),
-                        //     maxDistance: 10f,
-                        //     layerMask: LayerMask.GetMask("SimObjVisible"),
-                        //     queryTriggerInteraction: QueryTriggerInteraction.Ignore
-                        // );
-
-                        // for (int iHits = 0; iHits < hits.Length; iHits++) {
-                        //     RaycastHit hit = hits[iHits];
-                        
-                        float step = 0.25f; // Vertical step between checks
-                        float minY = yStart - size.y - 0.25f; // Bounding box min Y
+                        float step = 0.1f; // Vertical step between checks
+                        float minY = yStart - size.y; // Bounding box min Y
                         float maxY = yStart; // Bounding box max Y
 
                         for (float y = maxY; y >= minY; y -= step) {
@@ -7398,6 +7386,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     sparseMat[(iX, iY, iZ)] = (ypos, clearance);
                                     validYs[(iX, iZ)].Add(iY);
                                 }
+                                // Fast-forward y (will then be post-decremented)
+                                y = ypos;
                             }
                         }
                     }
@@ -7417,7 +7407,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // Step 2: Initialize dense histogram
                 Dictionary<int, float> denseYCounts = new Dictionary<int, float>();
-                for (int iy = minIY; iy <= maxIY; iy++) {
+                for (int iy = minIY - 1; iy <= maxIY + 1; iy++) {
                     denseYCounts[iy] = 0f;
                 }
 
@@ -7485,6 +7475,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
 
+                float minSpacing = 0.05f; //just to avoid some local overlaps
+
                 int m = localMaxima.Count;
                 float[] dp = new float[m];
                 int[] prev = new int[m];
@@ -7493,7 +7485,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     prev[i] = -1;
                     for (int j = 0; j < i; j++) {
                         float diff = Math.Abs(yClearancePerMode[localMaxima[i]] - yClearancePerMode[localMaxima[j]]);
-                        if (diff >= minClearance) {
+                        if (diff >= minSpacing) {
                             float val = dp[j] + denseYCounts[localMaxima[i]];
                             if (val > dp[i]) {
                                 dp[i] = val;
@@ -7556,7 +7548,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     float modeCenterY = modeCenterHeights[modeCenter];
-
 
                     for (int ix = 0; ix < n; ix++) {
                         for (int iz = 0; iz < n; iz++) {
@@ -7723,27 +7714,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 }
                             }
                         }
-
-                        // for (int iX = startIX; iX <= endIX; iX++) {
-                        //     for (int iZ = startIZ; iZ <= endIZ; iZ++) {
-                        //         // Loop over iY's for this (iX, iZ)
-                        //         if (validYs.TryGetValue((iX, iZ), out var ySet)) {
-                        //             foreach (int iY in ySet) {
-                        //                 if (sparseMat.TryGetValue((iX, iY, iZ), out var val)) {
-                        //                     float yPos = val.Item1;
-                        //                     float clearance = val.Item2;
-                        //                     float effectiveClearance = clearance - (yRectBase - yPos);
-
-                        //                     if (effectiveClearance < minEffectiveClearance) {
-                        //                         minEffectiveClearance = effectiveClearance;
-                        //                     }
-                        //                     hasPoint = true;
-                        //                 }
-                        //             }
-                        //         }
-                        //     }
-                        // }
-
                         groupClearances.Add(hasPoint ? minEffectiveClearance : 0f);
                     }
 
@@ -7762,10 +7732,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Color.blue
                 };
                 int yar = -1;
-                // foreach (int group in groupToRectangles.Keys) {
-                //     float y = groupToMinYVal[group];
-
-                //     foreach (((int, int), (int, int)) extents in groupToRectangles[group]) {
                 foreach (int group in groupToRectangles.Keys) {
                     float y = groupToMinYVal[group];
                     var rectangles = groupToRectangles[group];
