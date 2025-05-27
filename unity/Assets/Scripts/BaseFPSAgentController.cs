@@ -7250,6 +7250,124 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, actionReturn: result.ToList());
         }
 
+        public static float[,] MorphErosion(float[,] input, int radius)
+        {
+            var temp = MorphHorizontalMin(input, radius);
+            return MorphVerticalMin(temp, radius);
+        }
+
+        public static float[,] MorphDilation(float[,] input, int radius)
+        {
+            var temp = MorphHorizontalMax(input, radius);
+            return MorphVerticalMax(temp, radius);
+        }
+
+        public static float[,] MorphClose(float[,] input, int radius)
+        {
+            return MorphErosion(MorphDilation(input, radius), radius);
+        }
+
+        public static float[,] MorphOpen(float[,] input, int radius)
+        {
+            return MorphDilation(MorphErosion(input, radius), radius);
+        }
+
+        private static float[,] MorphHorizontalMin(float[,] input, int radius) {
+            int height = input.GetLength(0);
+            int width = input.GetLength(1);
+            float[,] output = new float[height, width];
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    float minVal = float.PositiveInfinity;
+                    for (int dx = -radius; dx <= radius; dx++) {
+                        int nx = x + dx;
+                        if (nx >= 0 && nx < width) {
+                            minVal = Math.Min(minVal, input[y, nx]);
+                        }
+                    }
+                    output[y, x] = minVal;
+                }
+            }
+
+            return output;
+        }
+
+        private static float[,] MorphVerticalMin(float[,] input, int radius)
+        {
+            int height = input.GetLength(0);
+            int width = input.GetLength(1);
+            float[,] output = new float[height, width];
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    float minVal = float.PositiveInfinity;
+                    for (int dy = -radius; dy <= radius; dy++)
+                    {
+                        int ny = y + dy;
+                        if (ny >= 0 && ny < height) {
+                            minVal = Math.Min(minVal, input[ny, x]);
+                        }
+                    }
+                    output[y, x] = minVal;
+                }
+            }
+
+            return output;
+        }
+
+        private static float[,] MorphHorizontalMax(float[,] input, int radius)
+        {
+            int height = input.GetLength(0);
+            int width = input.GetLength(1);
+            float[,] output = new float[height, width];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float maxVal = float.NegativeInfinity;
+                    for (int dx = -radius; dx <= radius; dx++)
+                    {
+                        int nx = x + dx;
+                        if (nx >= 0 && nx < width) {
+                            maxVal = Math.Max(maxVal, input[y, nx]);
+                        }
+                    }
+                    output[y, x] = maxVal;
+                }
+            }
+
+            return output;
+        }
+
+        private static float[,] MorphVerticalMax(float[,] input, int radius)
+        {
+            int height = input.GetLength(0);
+            int width = input.GetLength(1);
+            float[,] output = new float[height, width];
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    float maxVal = float.NegativeInfinity;
+                    for (int dy = -radius; dy <= radius; dy++)
+                    {
+                        int ny = y + dy;
+                        if (ny >= 0 && ny < height) {
+                            maxVal = Math.Max(maxVal, input[ny, x]);
+                        }
+                    }
+                    output[y, x] = maxVal;
+                }
+            }
+
+            return output;
+        }
+
         public static void TryToAddReceptacleTriggerBox(
             SimObjPhysics sop,
             float yThresMax = 0.075f,
@@ -7570,6 +7688,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
 
+                    mat = MorphClose(mat, radius: 1);
+
                     Dictionary<(int, int), int> posToGroup = new Dictionary<(int, int), int>();
                     for (int iX = 0; iX < n; iX++) {
                         for (int iZ = 0; iZ < n; iZ++) {
@@ -7745,12 +7865,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         (int, int) start = extents.Item1;
                         (int, int) end = extents.Item2;
 
-                        float startX = xMin + (start.Item1 - 0.5f) * (xMax - xMin) / (n - 1.0f);
-                        float endX = xMin + (end.Item1 + 0.5f) * (xMax - xMin) / (n - 1.0f);
-
-                        float startZ = zMin + (start.Item2 - 0.5f) * (zMax - zMin) / (n - 1.0f);
-                        float endZ = zMin + (end.Item2 + 0.5f) * (zMax - zMin) / (n - 1.0f);
-
                         if (
                             Math.Min(
                                 Math.Abs(start.Item1 - end.Item1),
@@ -7759,6 +7873,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         ) {
                             continue;
                         }
+
+                        float startX = xMin + (start.Item1 - 0.5f) * (xMax - xMin) / (n - 1.0f);
+                        float endX = xMin + (end.Item1 + 0.5f) * (xMax - xMin) / (n - 1.0f);
+
+                        float startZ = zMin + (start.Item2 - 0.5f) * (zMax - zMin) / (n - 1.0f);
+                        float endZ = zMin + (end.Item2 + 0.5f) * (zMax - zMin) / (n - 1.0f);
 
                         List<Vector3> corners = new List<Vector3>();
                         corners.Add(new Vector3(startX, y, startZ));
