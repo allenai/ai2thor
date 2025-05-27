@@ -7377,7 +7377,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             foreach (Vector3 dir in directions) {
                 if (!Physics.Raycast(
-                        point + new Vector3(0f, 0.02f, 0f), dir, out RaycastHit hit, 10f, LayerMask.GetMask("SimObjVisible"), QueryTriggerInteraction.Ignore
+                        point + new Vector3(0f, 0.05f, 0f), dir, out RaycastHit hit, 10f, LayerMask.GetMask("SimObjVisible"), QueryTriggerInteraction.Ignore
                     )
                 ) {
                     return true;  // Hits nothing — open space
