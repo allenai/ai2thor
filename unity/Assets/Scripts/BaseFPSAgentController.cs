@@ -7440,7 +7440,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 Vector3 center = aabb.center;
                 Vector3 size = aabb.size;
-                float rtbYSize = Mathf.Min(0.25f, Mathf.Max(size.x, size.y, size.z));
 
                 float yThres = Mathf.Min(yThresMax, size.y * 0.15f);
 
@@ -7449,10 +7448,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 float zMin = center.z - 0.95f * size.z / 2f;
                 float zMax = center.z + 0.95f * size.z / 2f;
 
-                float yStart = center.y + size.y / 2f + 0.1f;
+                float yStart = center.y + size.y / 2f + minClearance / 2f;
+                float yEnd = center.y - size.y / 2f;
                 float dummyY = -1000f;
-
-                float yEnd = yStart - size.y;
 
                 // Func<int, float> iXToX = (i => xMin + i * (xMax - xMin) / (n - 1.0f));
 
@@ -7473,7 +7471,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         validYs[(iX, iZ)] = new SortedSet<int>();
 
-                        for (float y = yStart; y >= yEnd; y -= yThres) {
+                        for (float y = yStart; y > yEnd; y -= yThres)
+                        {
                             if (
                                 !Physics.Raycast(
                                     new Vector3(x, y, z),
@@ -7483,51 +7482,57 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     LayerMask.GetMask("SimObjVisible"),
                                     QueryTriggerInteraction.Ignore
                                 )
-                            ) {
+                            )
+                            {
                                 break;  // there's no object surface left, so just go
                             }
 
                             // Debug.Log($"HITS {hit.point.y}");
                             // Debug.DrawLine(hit.point, hit.point + new Vector3(0f, 0.1f, 0f), Color.cyan, 15f);
 
-                            if (Vector3.Angle(hit.normal, Vector3.up) < 30f) {
-                                bool store = false;
-                                float ypos = hit.point.y;
-                                int iY = Mathf.FloorToInt(ypos / yThres + 0.5f);
-                                float clearance = 0f;
+                            // Fast-forward y (will also be post-decremented)
+                            y = hit.point.y;
 
-                                if (excludeInterior && !IsAccessible(hit.point)) {
-                                    y = ypos;
+                            if (Vector3.Angle(hit.normal, Vector3.up) < 30f)
+                            {
+                                if (excludeInterior && !IsAccessible(hit.point))
+                                {
                                     continue;
                                 }
 
-                                RaycastHit upHit;
+                                bool store = false;
+                                int iY = Mathf.FloorToInt(y / yThres + 0.5f);
+                                float clearance = 0f;
+
                                 if (
                                     Physics.Raycast(
                                         origin: hit.point + new Vector3(0f, 0.01f, 0f),
                                         direction: new Vector3(0f, 1f, 0f),
-                                        hitInfo: out upHit,
+                                        hitInfo: out RaycastHit upHit,
                                         maxDistance: 10f,
                                         layerMask: LayerMask.GetMask("SimObjVisible"),
                                         queryTriggerInteraction: QueryTriggerInteraction.Ignore
                                     )
-                                ) {
-                                    clearance = Mathf.Min(upHit.point.y - ypos, maxClearance);
-                                    if ((!sparseMat.TryGetValue((iX, iY, iZ), out var existing) || clearance > existing.Item2) && clearance >= minClearance) {
+                                )
+                                {
+                                    clearance = Mathf.Min(upHit.point.y - y, maxClearance);
+                                    if (clearance >= minClearance && (!sparseMat.TryGetValue((iX, iY, iZ), out var existing) || clearance > existing.Item2))
+                                    {
                                         store = true;
                                     }
-                                } else {
+                                }
+                                else
+                                {
                                     clearance = maxClearance;
                                     store = true;
                                 }
 
-                                if (store) {
-                                    sparseMat[(iX, iY, iZ)] = (ypos, clearance);
+                                if (store)
+                                {
+                                    sparseMat[(iX, iY, iZ)] = (y, clearance);
                                     validYs[(iX, iZ)].Add(iY);
                                 }
 
-                                // Fast-forward y (will then be post-decremented)
-                                y = ypos;
                             }
                         }
                     }
@@ -7607,19 +7612,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 // Compute averages
-                Dictionary<int, float> modeCenterHeights = new Dictionary<int, float>();
+                Dictionary<int, float> indexToMeanY = new Dictionary<int, float>();
                 foreach (var mode in localMaxima) {
                     int count = countPerMode[mode];
-                    modeCenterHeights[mode] = (count > 0) ? (sumYPerMode[mode] / count) : 0f;
+                    indexToMeanY[mode] = (count > 0) ? (sumYPerMode[mode] / count) : 0f;
                 }
 
                 Dictionary<int, float> groupToMaxYVal = new Dictionary<int, float>();
                 Dictionary<int, float> groupToMinYVal = new Dictionary<int, float>();
                 Dictionary<int, List<(int, int)>> groupToPos = new Dictionary<int, List<(int, int)>>();
-                var group_toYIndex = new Dictionary<int, int>();
+                var groupToYIndex = new Dictionary<int, int>();
                 int nextGroup = 0;
 
-                foreach (int modeCenter in localMaxima) {
+                foreach (int localMaximaiY in localMaxima) {
                     float[,] mat = new float[n, n];
                     for (int ix = 0; ix < n; ix++) {
                         for (int iz = 0; iz < n; iz++) {
@@ -7627,21 +7632,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
 
-                    float modeCenterY = modeCenterHeights[modeCenter];
+                    float meanY = indexToMeanY[localMaximaiY];
 
                     for (int ix = 0; ix < n; ix++) {
                         for (int iz = 0; iz < n; iz++) {
                             if (!validYs.TryGetValue((ix, iz), out var ySet)) { continue; }
 
                             // Efficient range query using GetViewBetween
-                            var nearbyYs = ySet.GetViewBetween(modeCenter - 1, modeCenter + 1);
+                            var nearbyYs = ySet.GetViewBetween(localMaximaiY - 1, localMaximaiY + 1);
 
                             foreach (int iY in nearbyYs) {
                                 if (sparseMat.TryGetValue((ix, iY, iz), out var val)) {
                                     float yVal = val.Item1;
 
-                                    if (Math.Abs(yVal - modeCenterY) <= yThres) {
-                                        if (mat[ix, iz] == dummyY || Math.Abs(yVal - modeCenterY) < Math.Abs(mat[ix, iz] - modeCenterY)) {
+                                    if (Math.Abs(yVal - meanY) <= yThres) {
+                                        if (mat[ix, iz] == dummyY || Math.Abs(yVal - meanY) < Math.Abs(mat[ix, iz] - meanY)) {
                                             mat[ix, iz] = yVal;
                                         }
                                     }
@@ -7705,7 +7710,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             groupToMinYVal[nextGroup] = curYVal;
                             groupToPos[nextGroup] = new List<(int, int)>();
                             groupToPos[nextGroup].Add((iX, iZ));
-                            group_toYIndex[nextGroup] = modeCenter;
+                            groupToYIndex[nextGroup] = localMaximaiY;
                             nextGroup++;
                         }
                     }
@@ -7779,7 +7784,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             for (int iZ = startIZ; iZ <= endIZ; iZ++) {
                                 if (validYs.TryGetValue((iX, iZ), out var ySet)) {
                                     for (int offset = -1; offset <= 1; offset++) {
-                                        int iYCheck = group_toYIndex[groupId] + offset;
+                                        int iYCheck = groupToYIndex[groupId] + offset;
                                         if (ySet.Contains(iYCheck)) {
                                             if (sparseMat.TryGetValue((iX, iYCheck, iZ), out var val)) {
                                                 float yPos = val.Item1;
