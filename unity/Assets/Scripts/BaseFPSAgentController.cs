@@ -7370,17 +7370,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private static bool IsAccessible(Vector3 point) {
             Vector3[] directions = {
+                Vector3.up,
                 Vector3.forward, Vector3.back,
                 Vector3.left, Vector3.right,
-                Vector3.up
+                Vector3.forward + Vector3.left,
+                Vector3.forward + Vector3.right,
+                Vector3.back + Vector3.left,
+                Vector3.back + Vector3.right
             };
 
             foreach (Vector3 dir in directions) {
                 if (!Physics.Raycast(
-                        point + new Vector3(0f, 0.05f, 0f), dir, out RaycastHit hit, 10f, LayerMask.GetMask("SimObjVisible"), QueryTriggerInteraction.Ignore
+                        point + new Vector3(0f, 0.05f, 0f),
+                        dir,
+                        out RaycastHit hit,
+                        10f,
+                        LayerMask.GetMask("SimObjVisible"),
+                        QueryTriggerInteraction.Ignore
                     )
                 ) {
-                    return true;  // Hits nothing — open space
+                    return true;  // open space at least along one direction
                 }
             }
             return false;
@@ -7500,9 +7509,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     continue;
                                 }
 
-                                bool store = false;
-                                int iY = Mathf.FloorToInt(y / yThres + 0.5f);
-                                float clearance = 0f;
+                                float clearance = maxClearance;
 
                                 if (
                                     Physics.Raycast(
@@ -7516,23 +7523,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 )
                                 {
                                     clearance = Mathf.Min(upHit.point.y - y, maxClearance);
-                                    if (clearance >= minClearance && (!sparseMat.TryGetValue((iX, iY, iZ), out var existing) || clearance > existing.Item2))
-                                    {
-                                        store = true;
-                                    }
-                                }
-                                else
-                                {
-                                    clearance = maxClearance;
-                                    store = true;
                                 }
 
-                                if (store)
+                                if (clearance >= minClearance)
                                 {
+                                    int iY = Mathf.FloorToInt(y / yThres + 0.5f);
                                     sparseMat[(iX, iY, iZ)] = (y, clearance);
                                     validYs[(iX, iZ)].Add(iY);
                                 }
-
                             }
                         }
                     }
