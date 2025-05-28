@@ -7621,30 +7621,42 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Dictionary<int, List<(int, int)>> groupToPos = new Dictionary<int, List<(int, int)>>();
                 var groupToYIndex = new Dictionary<int, int>();
                 int nextGroup = 0;
+                
+                groupToMaxYVal[-1] = dummyY;
+                groupToMinYVal[-1] = dummyY;
 
-                foreach (int localMaximaiY in localMaxima) {
+                foreach (int localMaximaiY in localMaxima)
+                {
                     float[,] mat = new float[n, n];
-                    for (int ix = 0; ix < n; ix++) {
-                        for (int iz = 0; iz < n; iz++) {
+                    for (int ix = 0; ix < n; ix++)
+                    {
+                        for (int iz = 0; iz < n; iz++)
+                        {
                             mat[ix, iz] = dummyY;
                         }
                     }
 
                     float meanY = indexToMeanY[localMaximaiY];
 
-                    for (int ix = 0; ix < n; ix++) {
-                        for (int iz = 0; iz < n; iz++) {
+                    for (int ix = 0; ix < n; ix++)
+                    {
+                        for (int iz = 0; iz < n; iz++)
+                        {
                             if (!validYs.TryGetValue((ix, iz), out var ySet)) { continue; }
 
                             // Efficient range query using GetViewBetween
                             var nearbyYs = ySet.GetViewBetween(localMaximaiY - 1, localMaximaiY + 1);
 
-                            foreach (int iY in nearbyYs) {
-                                if (sparseMat.TryGetValue((ix, iY, iz), out var val)) {
+                            foreach (int iY in nearbyYs)
+                            {
+                                if (sparseMat.TryGetValue((ix, iY, iz), out var val))
+                                {
                                     float yVal = val.Item1;
 
-                                    if (Math.Abs(yVal - meanY) <= yThres) {
-                                        if (mat[ix, iz] == dummyY || Math.Abs(yVal - meanY) < Math.Abs(mat[ix, iz] - meanY)) {
+                                    if (Math.Abs(yVal - meanY) <= yThres)
+                                    {
+                                        if (mat[ix, iz] == dummyY || Math.Abs(yVal - meanY) < Math.Abs(mat[ix, iz] - meanY))
+                                        {
                                             mat[ix, iz] = yVal;
                                         }
                                     }
@@ -7656,51 +7668,80 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     mat = MorphClose(mat, radius: 1);
 
                     Dictionary<(int, int), int> posToGroup = new Dictionary<(int, int), int>();
-                    for (int iX = 0; iX < n; iX++) {
-                        for (int iZ = 0; iZ < n; iZ++) {
+                    for (int iX = 0; iX < n; iX++)
+                    {
+                        for (int iZ = 0; iZ < n; iZ++)
+                        {
                             // Debug.Log($"Pos: ({iX}, {iZ})");
                             float curYVal = mat[iX, iZ];
                             // Debug.Log($"Cur Y: {curYVal}");
 
-                            if (curYVal == dummyY) {
+                            if (curYVal == dummyY)
+                            {
                                 posToGroup[(iX, iZ)] = -1;
-                                groupToMaxYVal[-1] = dummyY;
-                                groupToMinYVal[-1] = dummyY;
                                 continue;
                             }
 
-                            if (iX > 0) {
+                            int maybeRelable = -1;
+
+                            if (iX > 0)
+                            {
                                 int group = posToGroup[(iX - 1, iZ)];
                                 float otherMaxYVal = groupToMaxYVal[group];
                                 float otherMinYVal = groupToMinYVal[group];
 
                                 if (
-                                    Mathf.Abs(curYVal - otherMaxYVal) < yThres
-                                    && Mathf.Abs(curYVal - otherMinYVal) < yThres
-                                ) {
+                                    Mathf.Abs(curYVal - otherMaxYVal) < 2 * yThres
+                                    && Mathf.Abs(curYVal - otherMinYVal) < 2 * yThres
+                                )
+                                {
+                                    maybeRelable = group;
                                     posToGroup[(iX, iZ)] = group;
                                     groupToPos[group].Add((iX, iZ));
                                     groupToMaxYVal[group] = Mathf.Max(curYVal, otherMaxYVal);
                                     groupToMinYVal[group] = Mathf.Min(curYVal, otherMinYVal);
-                                    continue;
                                 }
                             }
 
-                            if (iZ > 0) {
+                            if (iZ > 0)
+                            {
                                 int group = posToGroup[(iX, iZ - 1)];
                                 float otherMaxYVal = groupToMaxYVal[group];
                                 float otherMinYVal = groupToMinYVal[group];
 
                                 if (
-                                    Mathf.Abs(curYVal - otherMaxYVal) < yThres
-                                    && Mathf.Abs(curYVal - otherMinYVal) < yThres
-                                ) {
-                                    posToGroup[(iX, iZ)] = group;
-                                    groupToPos[group].Add((iX, iZ));
-                                    groupToMaxYVal[group] = Mathf.Max(curYVal, otherMaxYVal);
-                                    groupToMinYVal[group] = Mathf.Min(curYVal, otherMinYVal);
+                                    Mathf.Abs(curYVal - otherMaxYVal) < 2 * yThres
+                                    && Mathf.Abs(curYVal - otherMinYVal) < 2 * yThres
+                                )
+                                {
+                                    if (maybeRelable != -1 && maybeRelable != group)
+                                    {
+                                        foreach (var pos in groupToPos[maybeRelable]) {
+                                            posToGroup[pos] = group;
+                                            groupToPos[group].Add(pos);
+                                        }
+
+                                        groupToMaxYVal[group] = Mathf.Max(groupToMaxYVal[maybeRelable], otherMaxYVal);
+                                        groupToMinYVal[group] = Mathf.Min(groupToMinYVal[maybeRelable], otherMinYVal);
+
+                                        groupToPos.Remove(maybeRelable);
+                                        groupToMaxYVal.Remove(maybeRelable);
+                                        groupToMinYVal.Remove(maybeRelable);
+                                    }
+                                    else {
+                                        posToGroup[(iX, iZ)] = group;
+                                        groupToPos[group].Add((iX, iZ));
+
+                                        groupToMaxYVal[group] = Mathf.Max(curYVal, otherMaxYVal);
+                                        groupToMinYVal[group] = Mathf.Min(curYVal, otherMinYVal);
+                                    }
                                     continue;
                                 }
+                            }
+
+                            if (maybeRelable != -1)
+                            {
+                                continue;
                             }
 
                             posToGroup[(iX, iZ)] = nextGroup;
@@ -7714,52 +7755,106 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
 
-                // TODO: Improve this logic so that we get rectangles more intelligently
+                // // TODO: Improve this logic so that we get rectangles more intelligently
+                // var groupToRectangles = new Dictionary<int, List<((int, int), (int, int))>>();
+                // foreach (int group in groupToPos.Keys) {
+                //     var posSet = new HashSet<(int, int)>(groupToPos[group]);
+
+                //     List<((int, int), (int, int))> rectangles =
+                //         new List<((int, int), (int, int))>();
+
+                //     while (posSet.Count > 0) {
+                //         (int, int) nextiXiZ = posSet.Min();
+
+                //         int startIX = nextiXiZ.Item1;
+                //         int startIZ = nextiXiZ.Item2;
+
+                //         int k = 1;
+                //         while (posSet.Contains((startIX + k, startIZ))) {
+                //             k++;
+                //         }
+
+                //         int endIX = startIX + k - 1;
+
+                //         k = 1;
+                //         while (true) {
+                //             bool allContained = true;
+                //             for (int iX = startIX; iX <= endIX; iX++) {
+                //                 if (!posSet.Contains((iX, startIZ + k))) {
+                //                     allContained = false;
+                //                     break;
+                //                 }
+                //             }
+                //             if (!allContained) {
+                //                 break;
+                //             }
+                //             k++;
+                //         }
+                //         int endIZ = startIZ + k - 1;
+
+                //         for (int iX = startIX; iX <= endIX; iX++) {
+                //             for (int iZ = startIZ; iZ <= endIZ; iZ++) {
+                //                 posSet.Remove((iX, iZ));
+                //             }
+                //         }
+
+                //         rectangles.Add(((startIX, startIZ), (endIX, endIZ)));
+                //         // Debug.Log($"Group {group}: ({startIX}, {startIZ}), ({endIX}, {endIZ})");
+                //     }
+                //     groupToRectangles[group] = rectangles;
+                // }
+
                 var groupToRectangles = new Dictionary<int, List<((int, int), (int, int))>>();
+
                 foreach (int group in groupToPos.Keys) {
                     var posSet = new HashSet<(int, int)>(groupToPos[group]);
 
-                    List<((int, int), (int, int))> rectangles =
-                        new List<((int, int), (int, int))>();
+                    ((int, int), (int, int)) bestRect = ((0, 0), (0, 0));
+                    int maxArea = 0;
+                    
+                    List<((int, int), (int, int))> rectangles = new List<((int, int), (int, int))>();
 
-                    while (posSet.Count > 0) {
-                        (int, int) nextiXiZ = posSet.Min();
+                    foreach ((int startX, int startZ) in posSet)
+                    {
+                        int maxWidth = 0;
 
-                        int startIX = nextiXiZ.Item1;
-                        int startIZ = nextiXiZ.Item2;
-
-                        int k = 1;
-                        while (posSet.Contains((startIX + k, startIZ))) {
-                            k++;
+                        // Find max width from this row
+                        while (posSet.Contains((startX + maxWidth, startZ)))
+                        {
+                            maxWidth++;
                         }
 
-                        int endIX = startIX + k - 1;
+                        // Try all widths from 1 to maxWidth
+                        for (int width = 2; width <= maxWidth; width++)
+                        {
+                            int height = 0;
+                            bool valid = true;
 
-                        k = 1;
-                        while (true) {
-                            bool allContained = true;
-                            for (int iX = startIX; iX <= endIX; iX++) {
-                                if (!posSet.Contains((iX, startIZ + k))) {
-                                    allContained = false;
-                                    break;
+                            while (valid)
+                            {
+                                for (int dx = 0; dx < width; dx++)
+                                {
+                                    if (!posSet.Contains((startX + dx, startZ + height)))
+                                    {
+                                        valid = false;
+                                        break;
+                                    }
+                                }
+
+                                if (valid)
+                                {
+                                    height++;
+                                    int area = width * height;
+                                    if (area > maxArea)
+                                    {
+                                        maxArea = area;
+                                        bestRect = ((startX, startZ), (startX + width - 1, startZ + height - 1));
+                                    }
                                 }
                             }
-                            if (!allContained) {
-                                break;
-                            }
-                            k++;
                         }
-                        int endIZ = startIZ + k - 1;
-
-                        for (int iX = startIX; iX <= endIX; iX++) {
-                            for (int iZ = startIZ; iZ <= endIZ; iZ++) {
-                                posSet.Remove((iX, iZ));
-                            }
-                        }
-
-                        rectangles.Add(((startIX, startIZ), (endIX, endIZ)));
-                        // Debug.Log($"Group {group}: ({startIX}, {startIZ}), ({endIX}, {endIZ})");
                     }
+                    rectangles.Add(bestRect);
                     groupToRectangles[group] = rectangles;
                 }
 
