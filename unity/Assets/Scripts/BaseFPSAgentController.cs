@@ -7691,8 +7691,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 float otherMinYVal = groupToMinYVal[group];
 
                                 if (
-                                    Mathf.Abs(curYVal - otherMaxYVal) < 2 * yThres
-                                    && Mathf.Abs(curYVal - otherMinYVal) < 2 * yThres
+                                    Mathf.Abs(curYVal - otherMaxYVal) < yThres
+                                    && Mathf.Abs(curYVal - otherMinYVal) < yThres
                                 )
                                 {
                                     maybeRelable = group;
@@ -7710,8 +7710,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 float otherMinYVal = groupToMinYVal[group];
 
                                 if (
-                                    Mathf.Abs(curYVal - otherMaxYVal) < 2 * yThres
-                                    && Mathf.Abs(curYVal - otherMinYVal) < 2 * yThres
+                                    Mathf.Abs(curYVal - otherMaxYVal) < yThres
+                                    && Mathf.Abs(curYVal - otherMinYVal) < yThres
                                 )
                                 {
                                     if (maybeRelable != -1 && maybeRelable != group)
