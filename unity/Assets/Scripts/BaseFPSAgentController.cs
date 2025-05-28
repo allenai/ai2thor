@@ -7390,7 +7390,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics sop,
             float yThresMax = 0.075f,
             float worldOffset = -100f,
-            float minClearance = 0.2f,
+            float minClearance = 0.15f,
+            float maxClearance = 0.25f,
             bool excludeInterior = true
         ) {
             if (sop == null) {
@@ -7398,8 +7399,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     $"Adding receptacle trigger box is only possible the active game object, has an associated SimObjPhysics script."
                 );
             }
-
-            float maxSpacingY = Mathf.Min(minClearance, yThresMax) / 2;
 
             Quaternion oldRot = sop.transform.rotation;
             Vector3 oldPos = sop.transform.position;
@@ -7453,6 +7452,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 float yStart = center.y + size.y / 2f + 0.1f;
                 float dummyY = -1000f;
 
+                float yEnd = yStart - size.y;
+
                 // Func<int, float> iXToX = (i => xMin + i * (xMax - xMin) / (n - 1.0f));
 
                 // Store the point and clearance (if sufficiently large) for the point with maximum clearance in a discrete coordinate
@@ -7472,11 +7473,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         validYs[(iX, iZ)] = new SortedSet<int>();
 
-                        float step = 0.1f; // Vertical step between checks
-                        float minY = yStart - size.y; // Bounding box min Y
-                        float maxY = yStart; // Bounding box max Y
-
-                        for (float y = maxY; y >= minY; y -= step) {
+                        for (float y = yStart; y >= yEnd; y -= yThres) {
                             if (
                                 !Physics.Raycast(
                                     new Vector3(x, y, z),
@@ -7487,7 +7484,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     QueryTriggerInteraction.Ignore
                                 )
                             ) {
-                                continue;
+                                break;  // there's no object surface left, so just go
                             }
 
                             // Debug.Log($"HITS {hit.point.y}");
@@ -7496,13 +7493,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             if (Vector3.Angle(hit.normal, Vector3.up) < 30f) {
                                 bool store = false;
                                 float ypos = hit.point.y;
-                                int iY = Mathf.FloorToInt(ypos / maxSpacingY + 0.5f);
+                                int iY = Mathf.FloorToInt(ypos / yThres + 0.5f);
                                 float clearance = 0f;
 
-                                if (excludeInterior) {
-                                    if (!IsAccessible(hit.point)) {
-                                        continue;
-                                    }
+                                if (excludeInterior && !IsAccessible(hit.point)) {
+                                    y = ypos;
+                                    continue;
                                 }
 
                                 RaycastHit upHit;
@@ -7516,12 +7512,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                         queryTriggerInteraction: QueryTriggerInteraction.Ignore
                                     )
                                 ) {
-                                    clearance = Mathf.Min(upHit.point.y - ypos, 0.25f);
+                                    clearance = Mathf.Min(upHit.point.y - ypos, maxClearance);
                                     if ((!sparseMat.TryGetValue((iX, iY, iZ), out var existing) || clearance > existing.Item2) && clearance >= minClearance) {
                                         store = true;
                                     }
                                 } else {
-                                    clearance = 0.25f;
+                                    clearance = maxClearance;
                                     store = true;
                                 }
 
@@ -7529,6 +7525,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     sparseMat[(iX, iY, iZ)] = (ypos, clearance);
                                     validYs[(iX, iZ)].Add(iY);
                                 }
+
                                 // Fast-forward y (will then be post-decremented)
                                 y = ypos;
                             }
@@ -7536,25 +7533,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
 
-                // Now I need to detect triplets of ys to process, then apply the 2D algorithm on each aggregate mat for each triplet
-                // The triplets will be the local maxima of a histogram for y. then I can use DP to select the set of ys that maximize
-                // the collected number of points while being at distance >= clearance from the neighbor (previous y). In the dense
-                // mat float [,], each entry has either the y value nearest to the mode center corresponsing from the triplet for that x-z
-                // coordinate or a dummy large negative value if none
-
-                // Parameters
-
-                // Step 1: Find range of iY values
+                // Find range of iY values
                 int minIY = sparseMat.Keys.Min(k => k.Item2);
                 int maxIY = sparseMat.Keys.Max(k => k.Item2);
 
-                // Step 2: Initialize dense histogram
+                // Initialize dense histogram
                 Dictionary<int, float> denseYCounts = new Dictionary<int, float>();
                 for (int iy = minIY - 1; iy <= maxIY + 1; iy++) {
                     denseYCounts[iy] = 0f;
                 }
 
-                // Step 3: Fill smoothed histogram with contributions
+                // Fill smoothed histogram with contributions
                 foreach (var key in sparseMat.Keys) {
                     int iX = key.Item1;
                     int iY = key.Item2;
@@ -7571,90 +7560,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
 
-                // Step 4: Convert to sorted arrays
+                // Convert to sorted arrays
                 var sortedYs = denseYCounts.Keys.OrderBy(y => y).ToArray();
                 var counts = sortedYs.Select(y => denseYCounts[y]).ToArray();
 
-                // Step 5: Detect local maxima
+                // Detect local maxima
                 List<int> localMaxima = new List<int>();
-                for (int i = 1; i < sortedYs.Length - 1; i++) {
-                    if (counts[i] > counts[i - 1] && counts[i] > counts[i + 1]) {
+
+                // Endpoints check
+                if (counts[0] > counts[1])
+                {
+                    localMaxima.Add(sortedYs[0]);
+                }
+
+                for (int i = 1; i < sortedYs.Length - 1; i++)
+                {
+                    if (counts[i] > counts[i - 1] && counts[i] > counts[i + 1])
+                    {
                         localMaxima.Add(sortedYs[i]);
                     }
                 }
 
                 // Endpoints check
-                if (counts[0] > counts[1]) {
-                    localMaxima.Add(sortedYs[0]);
-                }
-                if (counts[counts.Length - 1] > counts[counts.Length - 2]) {
+                if (counts[counts.Length - 1] > counts[counts.Length - 2])
+                {
                     localMaxima.Add(sortedYs[counts.Length - 1]);
                 }
 
-                // Sort local maxima descending (we always want to keep the highest plane)
-                localMaxima.Sort();
+                // Sort local maxima descending (start from the highest plane)
                 localMaxima.Reverse();
 
-                // Precompute y+clearance per mode iY
-                // Step 1: Convert localMaxima to HashSet for fast lookup
-                HashSet<int> localMaximaSet = new HashSet<int>(localMaxima);
-
-                // Step 2: Initialize dictionary to track max clearances
-                Dictionary<int, float> yClearancePerMode = new Dictionary<int, float>();
-                foreach (int iY in localMaximaSet) {
-                    yClearancePerMode[iY] = float.MinValue;
-                }
-
-                // Step 3: Iterate sparseMat only once
-                foreach (var kvp in sparseMat) {
-                    int iY = kvp.Key.Item2;
-                    if (localMaximaSet.Contains(iY)) {
-                        float yPos = kvp.Value.Item1;
-                        float clearance = kvp.Value.Item2;
-                        float yClearance = yPos + clearance;
-                        if (yClearance > yClearancePerMode[iY]) {
-                            yClearancePerMode[iY] = yClearance;
-                        }
-                    }
-                }
-
-                float minSpacing = 0.05f; //just to avoid some local overlaps
-
-                int m = localMaxima.Count;
-                float[] dp = new float[m];
-                int[] prev = new int[m];
-                for (int i = 0; i < m; i++) {
-                    dp[i] = denseYCounts[localMaxima[i]];
-                    prev[i] = -1;
-                    for (int j = 0; j < i; j++) {
-                        float diff = Math.Abs(yClearancePerMode[localMaxima[i]] - yClearancePerMode[localMaxima[j]]);
-                        if (diff >= minSpacing) {
-                            float val = dp[j] + denseYCounts[localMaxima[i]];
-                            if (val > dp[i]) {
-                                dp[i] = val;
-                                prev[i] = j;
-                            }
-                        }
-                    }
-                }
-
-                // Find max coverage index
-                int maxIndex = 0;
-                for (int i = 1; i < m; i++) {
-                    if (dp[i] > dp[maxIndex]) { maxIndex = i; }
-                }
-                // Reconstruct selected modes
-                List<int> selectedModes = new List<int>();
-                int curr = maxIndex;
-                while (curr != -1) {
-                    selectedModes.Add(localMaxima[curr]);
-                    curr = prev[curr];
-                }
-                selectedModes.Reverse();
-
                 // Initialize accumulators
-                Dictionary<int, float> sumYPerMode = selectedModes.ToDictionary(mode => mode, _ => 0f);
-                Dictionary<int, int> countPerMode = selectedModes.ToDictionary(mode => mode, _ => 0);
+                Dictionary<int, float> sumYPerMode = localMaxima.ToDictionary(mode => mode, _ => 0f);
+                Dictionary<int, int> countPerMode = localMaxima.ToDictionary(mode => mode, _ => 0);
 
                 // Iterate over sparseMat once
                 foreach (var kvp in sparseMat) {
@@ -7670,10 +7608,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 // Compute averages
                 Dictionary<int, float> modeCenterHeights = new Dictionary<int, float>();
-                foreach (var mode in selectedModes) {
+                foreach (var mode in localMaxima) {
                     int count = countPerMode[mode];
-                    float avg = (count > 0) ? (sumYPerMode[mode] / count) : 0f;
-                    modeCenterHeights[mode] = avg;
+                    modeCenterHeights[mode] = (count > 0) ? (sumYPerMode[mode] / count) : 0f;
                 }
 
                 Dictionary<int, float> groupToMaxYVal = new Dictionary<int, float>();
@@ -7682,7 +7619,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 var group_toYIndex = new Dictionary<int, int>();
                 int nextGroup = 0;
 
-                foreach (int modeCenter in selectedModes) {
+                foreach (int modeCenter in localMaxima) {
                     float[,] mat = new float[n, n];
                     for (int ix = 0; ix < n; ix++) {
                         for (int iz = 0; iz < n; iz++) {
@@ -7861,7 +7798,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                         groupClearances.Add(hasPoint ? minEffectiveClearance : 0f);
                     }
-
                     rectangleClearances[groupId] = groupClearances;
                 }
 
