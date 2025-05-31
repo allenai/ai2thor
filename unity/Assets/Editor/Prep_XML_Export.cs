@@ -24,7 +24,7 @@ public class Prep_XML_Export : MonoBehaviour
                 if ((canToggleOnOff != null && canToggleOnOff.MovingParts.Length > 0) ||
                     (canOpenClose != null && canOpenClose.MovingParts.Length > 0))
                 {
-                    Debug.Log($"Skipping tag change for {simObj.gameObject.name} because it has populated MovingParts.");
+                    //Debug.Log($"Skipping tag change for {simObj.gameObject.name} because it has populated MovingParts.");
                     continue; // Skip this object
                 }
 
@@ -59,7 +59,7 @@ public class Prep_XML_Export : MonoBehaviour
         }
         else
         {
-            Debug.Log($"Skipping tag change for GameObject: {obj.name} (tag remains '{obj.tag}')");
+            //Debug.Log($"Skipping tag change for GameObject: {obj.name} (tag remains '{obj.tag}')");
         }
 
         // Recursively check children
