@@ -622,7 +622,7 @@ public class DownloadThorAssets : MonoBehaviour
                 ) : 
                 Vector3.Scale(go.transform.localScale, mesh_parent.transform.localScale),
             meshName = meshName,
-            parentName = mesh_parent.name.Replace(" ", "_")
+            parentName = mesh_parent.name.Replace(" ", "_").Replace(".", "_")
         };
         
         // Keep track of what transforms we have traversed upward so we can compare them to associated joints later
@@ -1330,7 +1330,8 @@ public class DownloadThorAssets : MonoBehaviour
         string baseFileName = Path.GetFileNameWithoutExtension(relativeExportPath)
             .Replace(" ", "")
             .Replace("(Instance)", "")
-            .Replace("Instance", "");
+            .Replace("Instance", "")
+            .Replace(".", "_");
 
         StringBuilder sb = new StringBuilder();
         sb.AppendLine("mtllib " + baseFileName + ".mtl");

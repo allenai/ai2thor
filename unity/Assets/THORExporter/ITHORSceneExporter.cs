@@ -99,7 +99,8 @@ public class ITHORSceneExporter : MonoBehaviour
         string assetId = (objectId + "_" + objectCount[objectId])
             .Replace(" ", "")
             .Replace("(Instance)", "")
-            .Replace("Instance", "");
+            .Replace("Instance", "")
+            .Replace(".", "_");
 
         string exportPath = Path.Combine("Assets/iTHOR", floorPlanName);
         
@@ -268,19 +269,12 @@ public class ITHORSceneExporter : MonoBehaviour
                 string objectId = obj.name
                     .Replace(" ", "")
                     .Replace("(Instance)", "")
-                    .Replace("Instance", "");
-                string assetId = simObjPhysics.assetID?.Replace(" ", "");
-                //Transform bbox = obj.transform.Find("BoundingBox");
-                AxisAlignedBoundingBox bbox = simObjPhysics.AxisAlignedBoundingBox;
-                if (bbox != null)
-                {
-                    //bbox_center.y = bbox.GetComponent<BoxCollider>().center.y; // For some reason, THOR assets need this
-                    //bbox_center.y = bbox.GetComponent<BoxCollider>().size.y/2.0f; // For some reason, THOR assets need this
-                    bbox_center.y = bbox.center.y;
+                    .Replace("Instance", "")
+                    .Replace(".", "_");
                 
-                }
-                
+                var position = obj.transform.position;
 
+                string assetId = simObjPhysics.assetID?.Replace(" ", "");
                 // Export asset if it doesn't have an assetID
                 if (string.IsNullOrEmpty(assetId))
                 {
@@ -292,11 +286,22 @@ public class ITHORSceneExporter : MonoBehaviour
                     bbox_center = Vector3.zero;
                     //Destroy(clone);
                 }
+                else
+                {
+                    
+                    //Transform bbox = obj.transform.Find("BoundingBox");
+                    AxisAlignedBoundingBox bbox = simObjPhysics.AxisAlignedBoundingBox;
+                    if (bbox != null)
+                    {
+                        //bbox_center.y = bbox.GetComponent<BoxCollider>().center.y; // For some reason, THOR assets need this
+                        //bbox_center.y = bbox.GetComponent<BoxCollider>().size.y/2.0f; // For some reason, THOR assets need this
+                        bbox_center.y = bbox.center.y;
+                        position.y = bbox_center.y;
+                    }
+                }                
 
-                
+
                 //var position = rootParent.transform.InverseTransformPoint(obj.transform.position);
-                var position = obj.transform.position;
-                position.y = bbox_center.y;
                 IThorObject thorObj = new IThorObject
                 {
                     objectType = objectType,
@@ -327,7 +332,8 @@ public class ITHORSceneExporter : MonoBehaviour
             string objectId = obj.name
                 .Replace(" ", "")
                 .Replace("(Instance)", "")
-                .Replace("Instance", "");
+                .Replace("Instance", "")
+                .Replace(".", "_");
             string objectType = "Structural";
             string assetId = objectId;
 
