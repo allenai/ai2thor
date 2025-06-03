@@ -645,13 +645,26 @@ public class DownloadThorAssets : MonoBehaviour
         // Get colliders
 
         //collider_parent = mesh_parent;
-        collider_parent = meshFiltersGameObject.transform.parent.gameObject;
-        
+        //collider_parent = meshFiltersGameObject.transform.parent.gameObject; // was okay for iTHOR and most of THOR assets 
+        // for assets with handles. simobj that have nested meshfilters with colliders. 
+        var collider_parent_transform =  meshFiltersGameObject.transform.parent.gameObject.transform.Find("Colliders");
+        if (collider_parent_transform == null)
+        {
+            // specifically for handles 
+            collider_parent_transform =  meshFiltersGameObject.transform.Find("Colliders");
+            if (collider_parent_transform == null)
+            {
+                return meshData; 
+            }
+        }
+        collider_parent = collider_parent_transform.gameObject;
         Debug.Log("-------------------mesh_parent: " + collider_parent.name);
         Debug.Log("-------------------mesh: " + meshfilter.gameObject.name);
         
         //collider_parent = meshFiltersGameObject.transform.parent.gameObject;
         var colliders = collider_parent.GetComponentsInChildren<Collider>();
+        // collider_parent 
+
         if (colliders.Length == 0)
         {
             Debug.LogWarning("No colliders found for " + mesh_parent.name);
@@ -666,6 +679,8 @@ public class DownloadThorAssets : MonoBehaviour
             
             if (collider.gameObject.name.Contains("rb"))
                 continue;
+
+            
             
             Debug.Log("ColliderInfo: " + collider.gameObject.name);
             Debug.Log("mesh_parent: " + mesh_parent.name);
@@ -678,15 +693,41 @@ public class DownloadThorAssets : MonoBehaviour
                 {
                     meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
                 }
-                else if (collider.GetComponent("Contains") != null)
-                {
-                    meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
-                }
                 
                 Debug.Log("not null: " + collider.gameObject.name);
             }
         }
+
+
+        // for receptacles
+        collider_parent = meshFiltersGameObject.transform.parent.gameObject; // was okay for iTHOR and most of THOR assets 
+        colliders = collider_parent.GetComponentsInChildren<Collider>();
         
+        if (colliders.Length == 0)
+        {
+            Debug.LogWarning("No colliders found for " + mesh_parent.name);
+            return meshData;
+        }
+        
+        // Process colliders
+        foreach (var collider in colliders)
+        {
+            if (!collider.enabled || !collider.gameObject.activeInHierarchy)
+                continue;
+            
+            if (collider.gameObject.name.Contains("rb"))
+                continue;
+
+            var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, meshFiltersGameObject);
+            if (colliderInfo != null)
+            {
+                if (collider.isTrigger && collider.GetComponent("Contains") != null)
+                {
+                    meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
+                }                
+            }
+        }
+
         return meshData;
     }
 
