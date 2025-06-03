@@ -1234,115 +1234,129 @@ public class DownloadThorAssets : MonoBehaviour
         else
             colliderInfo.type = collider.GetType().Name.ToLower().Replace("collider", "");
         
-        // Calculate transform relative to reference
-        Matrix4x4 referenceWorldToLocal = reference.transform.worldToLocalMatrix;
-        Matrix4x4 colliderLocalToWorld = collider.transform.localToWorldMatrix;
+        // Debug logging to see what scales we're working with
+        Debug.Log($"Collider {collider.name}: localScale = {collider.transform.localScale}, lossyScale = {collider.transform.lossyScale}");
+        Debug.Log($"Reference {reference.name}: localScale = {reference.transform.localScale}, lossyScale = {reference.transform.lossyScale}");
         
         if (collider is BoxCollider boxCollider)
         {
-            // For rotated boxes, we need to handle the size differently
+            // Calculate the box's center in world space, accounting for scale
+            Vector3 localCenter = boxCollider.center;
+            Vector3 worldCenter = collider.transform.TransformPoint(boxCollider.center);
             
-            // First, calculate the box's corners in world space
-            Vector3 center = boxCollider.center;
-            Vector3 size = boxCollider.size;
-            Vector3 extents = size * 0.5f; // Half-extents
+            // Get reference world position and calculate offset in world units
+            Vector3 referenceWorldPos = reference.transform.position;
+            Vector3 worldOffset = worldCenter - referenceWorldPos;
             
-            // Calculate the 8 corners of the box in local space
-            Vector3[] corners = new Vector3[8];
-            corners[0] = center + new Vector3(-extents.x, -extents.y, -extents.z);
-            corners[1] = center + new Vector3(extents.x, -extents.y, -extents.z);
-            corners[2] = center + new Vector3(-extents.x, extents.y, -extents.z);
-            corners[3] = center + new Vector3(extents.x, extents.y, -extents.z);
-            corners[4] = center + new Vector3(-extents.x, -extents.y, extents.z);
-            corners[5] = center + new Vector3(extents.x, -extents.y, extents.z);
-            corners[6] = center + new Vector3(-extents.x, extents.y, extents.z);
-            corners[7] = center + new Vector3(extents.x, extents.y, extents.z);
+            // Transform the world offset direction to reference's local space (rotation only, no scale)
+            Vector3 referenceSpaceCenter = Quaternion.Inverse(reference.transform.rotation) * worldOffset;
+            colliderInfo.position = referenceSpaceCenter;
             
-            // Transform corners to world space
-            for (int i = 0; i < 8; i++)
-            {
-                corners[i] = collider.transform.TransformPoint(corners[i]);
-            }
+            // Calculate rotation relative to reference
+            Quaternion relativeRotation = Quaternion.Inverse(reference.transform.rotation) * collider.transform.rotation;
+            colliderInfo.rotation = relativeRotation;
             
-            // Transform corners to reference space
-            for (int i = 0; i < 8; i++)
-            {
-                corners[i] = reference.transform.InverseTransformPoint(corners[i]);
-            }
+            // Apply scale to the box size - use lossyScale for world-space scaling
+            Vector3 originalSize = boxCollider.size;
+            Vector3 scaledSize = Vector3.Scale(boxCollider.size, collider.transform.lossyScale);
+            // Convert to half-extents for Mujoco
+            colliderInfo.size = scaledSize * 0.5f;
             
-            // Calculate the axis-aligned bounding box in reference space
-            Vector3 min = corners[0];
-            Vector3 max = corners[0];
-            
-            for (int i = 1; i < 8; i++)
-            {
-                min = Vector3.Min(min, corners[i]);
-                max = Vector3.Max(max, corners[i]);
-            }
-            
-            // Calculate the center and size of the AABB
-            Vector3 aabbCenter = (min + max) * 0.5f;
-            Vector3 aabbSize = max - min;
-            
-            // Set the position to the AABB center
-            colliderInfo.position = aabbCenter;
-            
-            // Set the rotation to identity since we're using an AABB
-            colliderInfo.rotation = Quaternion.identity;
-            
-            // Set the size to half-extents for Mujoco
-            colliderInfo.size = aabbSize * 0.5f;
-            
-            Debug.Log($"Box collider: {collider.name}, Original size: {boxCollider.size}, AABB size: {aabbSize}, Half size: {colliderInfo.size}");
+            Debug.Log($"Box collider: {collider.name}");
+            Debug.Log($"  Original center: {localCenter}, World center: {worldCenter}, Reference space center: {referenceSpaceCenter}");
+            Debug.Log($"  Original size: {originalSize}, Scaled size: {scaledSize}, Half size: {colliderInfo.size}");
+            Debug.Log($"  Scale applied: {collider.transform.lossyScale}");
         }
         else if (collider is SphereCollider sphereCollider)
         {
-            // Create a matrix for the center offset
-            Matrix4x4 centerOffset = Matrix4x4.Translate(sphereCollider.center);
+            // Calculate the sphere's center in world space
+            Vector3 localCenter = sphereCollider.center;
+            Vector3 worldCenter = collider.transform.TransformPoint(sphereCollider.center);
             
-            // Combine the matrices to get the final transform
-            Matrix4x4 finalTransform = referenceWorldToLocal * colliderLocalToWorld * centerOffset;
+            // Get reference world position and calculate offset in world units
+            Vector3 referenceWorldPos = reference.transform.position;
+            Vector3 worldOffset = worldCenter - referenceWorldPos;
             
-            // Extract position and rotation
-            colliderInfo.position = finalTransform.GetColumn(3);
-            colliderInfo.rotation = finalTransform.rotation;
+            // Transform the world offset direction to reference's local space (rotation only, no scale)
+            Vector3 referenceSpaceCenter = Quaternion.Inverse(reference.transform.rotation) * worldOffset;
+            colliderInfo.position = referenceSpaceCenter;
             
-            // Set sphere-specific properties
-            colliderInfo.radius = sphereCollider.radius;
+            // Calculate rotation relative to reference
+            Quaternion relativeRotation = Quaternion.Inverse(reference.transform.rotation) * collider.transform.rotation;
+            colliderInfo.rotation = relativeRotation;
+            
+            // Apply scale to radius - use the maximum scale component for spheres
+            float maxScale = Mathf.Max(collider.transform.lossyScale.x, collider.transform.lossyScale.y, collider.transform.lossyScale.z);
+            float originalRadius = sphereCollider.radius;
+            colliderInfo.radius = sphereCollider.radius * maxScale;
+            
+            Debug.Log($"Sphere collider: {collider.name}");
+            Debug.Log($"  Original center: {localCenter}, World center: {worldCenter}, Reference space center: {referenceSpaceCenter}");
+            Debug.Log($"  Original radius: {originalRadius}, Scaled radius: {colliderInfo.radius}");
+            Debug.Log($"  Scale applied: {maxScale} (from {collider.transform.lossyScale})");
         }
         else if (collider is CapsuleCollider capsuleCollider)
         {
-            // Create a matrix for the center offset
-            Matrix4x4 centerOffset = Matrix4x4.Translate(capsuleCollider.center);
+            // Calculate the capsule's center in world space
+            Vector3 localCenter = capsuleCollider.center;
+            Vector3 worldCenter = collider.transform.TransformPoint(capsuleCollider.center);
             
-            // Combine the matrices to get the final transform
-            Matrix4x4 finalTransform = referenceWorldToLocal * colliderLocalToWorld * centerOffset;
+            // Get reference world position and calculate offset in world units
+            Vector3 referenceWorldPos = reference.transform.position;
+            Vector3 worldOffset = worldCenter - referenceWorldPos;
             
-            // Extract position and rotation
-            colliderInfo.position = finalTransform.GetColumn(3);
-            colliderInfo.rotation = finalTransform.rotation;
+            // Transform the world offset direction to reference's local space (rotation only, no scale)
+            Vector3 referenceSpaceCenter = Quaternion.Inverse(reference.transform.rotation) * worldOffset;
+            colliderInfo.position = referenceSpaceCenter;
             
-            // Set capsule-specific properties
-            colliderInfo.radius = capsuleCollider.radius;
-            colliderInfo.height = capsuleCollider.height;
+            // Calculate rotation relative to reference
+            Quaternion relativeRotation = Quaternion.Inverse(reference.transform.rotation) * collider.transform.rotation;
+            colliderInfo.rotation = relativeRotation;
+            
+            // Apply scale to radius and height based on capsule direction
+            Vector3 scale = collider.transform.lossyScale;
+            float originalRadius = capsuleCollider.radius;
+            float originalHeight = capsuleCollider.height;
+            
+            // Capsule direction: 0 = X-axis, 1 = Y-axis, 2 = Z-axis
+            if (capsuleCollider.direction == 0) // X-axis
+            {
+                colliderInfo.radius = capsuleCollider.radius * Mathf.Max(scale.y, scale.z);
+                colliderInfo.height = capsuleCollider.height * scale.x;
+            }
+            else if (capsuleCollider.direction == 1) // Y-axis (default)
+            {
+                colliderInfo.radius = capsuleCollider.radius * Mathf.Max(scale.x, scale.z);
+                colliderInfo.height = capsuleCollider.height * scale.y;
+            }
+            else // Z-axis
+            {
+                colliderInfo.radius = capsuleCollider.radius * Mathf.Max(scale.x, scale.y);
+                colliderInfo.height = capsuleCollider.height * scale.z;
+            }
+            
             colliderInfo.direction = capsuleCollider.direction;
+            
+            Debug.Log($"Capsule collider: {collider.name}");
+            Debug.Log($"  Original center: {localCenter}, World center: {worldCenter}, Reference space center: {referenceSpaceCenter}");
+            Debug.Log($"  Original radius: {originalRadius}, height: {originalHeight}");
+            Debug.Log($"  Scaled radius: {colliderInfo.radius}, height: {colliderInfo.height}");
+            Debug.Log($"  Scale applied: {scale}, Direction: {capsuleCollider.direction}");
         }
         
         return colliderInfo;
     }
-    // REDUNDANT CRAP //
 
     private Vector3 GetCombinedScale(Transform target, Transform reference)
     {
-        Vector3 scale = target.localScale;
-        Transform parent = target.parent;
+        Vector3 scale = Vector3.one;
+        Transform current = target;
 
-        while (parent != null && parent != reference)
+        // Accumulate scale from target up to (but not including) reference
+        while (current != null && current != reference)
         {
-            Debug.Log("Scaling includes: + " + parent.name);
-            // BAD BAD BAD
-            scale = Vector3.Scale(scale, parent.localScale);
-            parent = parent.parent;
+            scale = Vector3.Scale(scale, current.localScale);
+            current = current.parent;
         }
 
         return scale;
