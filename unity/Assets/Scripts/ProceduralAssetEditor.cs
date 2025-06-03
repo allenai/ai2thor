@@ -256,7 +256,8 @@ namespace Thor.Procedural {
                 serializable: true,
                 returnObject: true,
                 parent: transform,
-                addAnotationComponent: addAnotationComponent
+                addAnotationComponent: addAnotationComponent,
+                saveMaterialToAssetDB: procAsset.saveMaterialToAssetDB
             );
             var go = result["gameObject"] as GameObject;
 

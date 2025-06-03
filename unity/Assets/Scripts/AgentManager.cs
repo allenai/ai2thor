@@ -215,6 +215,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         {
             jsInterface.enabled = true;
         }
+        
 #endif
         StartCoroutine(EmitFrame());
     }

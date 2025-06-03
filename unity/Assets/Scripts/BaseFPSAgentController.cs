@@ -22,6 +22,10 @@ using UnityEngine.Rendering.PostProcessing;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using System.Text.RegularExpressions;
+
 using Random = UnityEngine.Random;
 using PrefabAsset = Thor.Procedural.AssetHandle<UnityEngine.GameObject>;
 
@@ -365,9 +369,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected Bounds objectBounds;
 
+        private JavaScriptInterface jsInterface = null;
+
 #if UNITY_WEBGL
         // Javascript communication
-        private JavaScriptInterface jsInterface = null;
         public Quaternion TargetRotation
         {
             get { return targetRotation; }
@@ -7761,7 +7766,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 yRotOffset: asset.yRotOffset,
                 serializable: asset.serializable,
                 parentTexturesDir: asset.parentTexturesDir,
-                rawTextures: asset.rawTextures
+                rawTextures: asset.rawTextures,
+                saveMaterialToAssetDB: asset.saveMaterialToAssetDB
             );
             return new ActionFinished { success = true, actionReturn = assetData };
         }
@@ -7881,7 +7887,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 serializable: serializable,
                 parent: null,
                 addAnotationComponent: false,
-                parentTexturesDir: procAsset.parentTexturesDir
+                parentTexturesDir: procAsset.parentTexturesDir,
+                saveMaterialToAssetDB: procAsset.saveMaterialToAssetDB
             );
 
             // Debug.Log($"root is null? {parent == null} -  {parent}");
@@ -7928,6 +7935,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ActionFinished.Success;
         }
 
+        // public IEnumerator test() {
+        //     yield return new ActionFinished(success: true);
+        // }
+
+        public IEnumerator DownloadAndCreateRuntimeAssets(string baseUrl, List<string> assetIds, string extension = null, bool saveMaterialToAssetDB = true, bool reportProgressToJS = false) {
+                return ProceduralAssetDownloader.DownloadAndCreateAssets(
+                    baseUrl,
+                    assetIds,
+                    extension: extension,
+                    saveMaterialToAssetDB: saveMaterialToAssetDB,
+                    progressReporter: reportProgressToJS ? this.jsInterface : null
+                );
+
+                // This fails action with no ActionFinished found due to nested IEnumerator
+                // yield return test();
+        }
+
         public void GetStreamingAssetsPath() {
             actionFinished(success: true, actionReturn: Application.streamingAssetsPath);
         }
@@ -7939,8 +7963,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public ActionFinished DeleteAssetsFromDBNotInHouse(ProceduralHouse house) {
             return ProceduralTools.DeleteAssetsFromDBNotInHouse(house);
         }
-
-
 
 
         //     // if (dequeueCount > 0) {
@@ -7985,10 +8007,56 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //     });
         // }
 
-        public void CreateHouse(ProceduralHouse house) {
+        // public void CreateHouse(ProceduralHouse house) {
+        //     var rooms = house.rooms.SelectMany(room => house.rooms);
+
+        //     var materials = ProceduralTools.GetMaterials();
+        //     var materialIds = new HashSet<string>(
+        //         house
+        //             .rooms.SelectMany(r =>
+        //                 r.ceilings.Select(c => c.material.name)
+        //                     .Concat(new List<string>() { r.floorMaterial.name })
+        //                     .Concat(house.walls.Select(w => w.material.name))
+        //             )
+        //             .Concat(new List<string>() { house.proceduralParameters.ceilingMaterial.name })
+        //     );
+        //     var missingIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
+        //     if (missingIds.Count() > 0) {
+        //         actionFinished(
+        //             success: false,
+        //             errorMessage: (
+        //                 $"Invalid materials: {string.Join(", ", missingIds.Select(id => $"'{id}'"))}. "
+        //                 + "Not existing or not loaded to the ProceduralAssetDatabase component."
+        //             )
+        //         );
+        //     }
+
+        //     try {
+        //         ProceduralTools.CreateHouse(house: house, materialDb: materials);
+        //     } catch (Exception e) {
+        //         Debug.Log(e);
+        //         var msg = $"Exception creating house.\n'{e.Message}'\n'{e.InnerException}'";
+        //         Debug.Log(msg);
+        //         actionFinished(false, actionReturn: null, errorMessage: msg);
+        //         return;
+        //     }
+        //     actionFinished(true);
+        // }
+
+        
+
+        public IEnumerator PreloadHouseAssets(ProceduralHouse house, bool freeMemoryAfter = false, float freeMemorySecondsTimeout = 2.0f) {
+            var db = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (db == null) {
+                yield return new ActionFinished(
+                    success: false,
+                    errorMessage: (
+                        $"ProceduralAssetDatabase is null, make sure you are running in a `Procedural*` scene with a `ProceduralAssetDatabase`"
+                    )
+                );
+            }
             var rooms = house.rooms.SelectMany(room => house.rooms);
 
-            var materials = ProceduralTools.GetMaterials();
             var materialIds = new HashSet<string>(
                 house
                     .rooms.SelectMany(r =>
@@ -7996,29 +8064,195 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             .Concat(new List<string>() { r.floorMaterial.name })
                             .Concat(house.walls.Select(w => w.material.name))
                     )
-                    .Concat(new List<string>() { house.proceduralParameters.ceilingMaterial.name })
+                    .Concat(new List<string>() { house.proceduralParameters.ceilingMaterial.name, house.proceduralParameters.skyboxId })
             );
-            var missingIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
-            if (missingIds.Count() > 0) {
-                actionFinished(
+            
+            var assetIds = new HashSet<string>(
+                ProceduralTools.GetAllAssetIds(house.objects)
+                 .Concat(house.windows.Select(w => w.assetId))
+                 .Concat(house.doors.Select(d => d.assetId))
+                 .Where(name => !ProceduralTools.isHex(name)) // Is not objaverse
+            );
+
+            Debug.Log($"{string.Join(",\n", assetIds.Select(x => $"\"{x}\""))}");
+
+            var materials = db.materialMap; 
+            var assets = db.assetMap;
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+
+            var missingMaterialIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
+            var missingAssetIds = assetIds.Where(id => id != null && !assets.ContainsKey(id));
+
+            Debug.Log($"{string.Join(",\n", materialIds.Select(x => $"\"{x}\""))}");
+
+
+            // If its Procedurals_lazy load assets as addressables
+            if (scene.name == "Procedural_lazy") {
+
+                Debug.Log("---------- Procedural_lazy loading assets");
+                // Super slow
+                // yield return ProceduralTools.LoadAddressableAssetsToDatabase(db, missingAssetIds, missingMaterialIds);
+
+                //  var handle = Addressables.LoadAssetAsync<Material>(missingMaterialIds.First());
+                //  handle.
+                // yield return handle;
+                // if (handle.Status == AsyncOperationStatus.Succeeded)
+                // {
+                //     db.addMaterial(handle.Result);
+                // }
+                yield return ProceduralTools.RunTaskAsCoroutine(ProceduralTools.LoadAssetsAsync(db, missingAssetIds, missingMaterialIds));
+            }
+            else {
+                yield return new ActionFinished(success: false, errorMessage: "Can't preload assets in a scene other than 'Procedural_lazy'. Assets  are already loaded in other scens");
+            }
+            db.totalMats = db.materialMap.Count();
+
+            if (freeMemoryAfter) {
+                var asyncOp = Resources.UnloadUnusedAssets();
+                asyncOp.completed += (op) => {
+                    Debug.Log("Asyncop callback called calling GC");
+                    GC.Collect();
+                };
+
+                yield return asyncOp;
+                
+                float timeout = freeMemorySecondsTimeout;
+                float startTime = Time.realtimeSinceStartup;
+                while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
+                    // waiting
+                    // continue;
+                    yield return null;
+                }
+                GC.Collect();
+            }
+            yield return ActionFinished.Success;
+        }
+
+        public IEnumerator UnloadUnusedAssets() {
+            // var asyncOp = Resources.UnloadUnusedAssets();
+            // asyncOp.completed += (op) => {
+            //     Debug.Log("Asyncop callback called calling GC");
+            //     GC.Collect();
+            // };
+                
+            //     float timeout = 2.0f;
+            //     float startTime = Time.realtimeSinceStartup;
+            //     while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
+            //         // waiting
+            //         continue;
+            //     }
+            //     GC.Collect();
+            yield return Resources.UnloadUnusedAssets();
+            GC.Collect();
+            yield return new ActionFinished(
+                success: true
+            );
+        }
+
+        public void UnloadUnusedAssetsWithCoroutine() {
+            StartCoroutine(
+                UnloadUnusedAssets()
+            );
+        }
+
+        public IEnumerator CreateHouse(ProceduralHouse house) {
+            var db = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (db == null) {
+                yield return new ActionFinished(
                     success: false,
                     errorMessage: (
-                        $"Invalid materials: {string.Join(", ", missingIds.Select(id => $"'{id}'"))}. "
+                        $"ProceduralAssetDatabase is null, make sure you are running in a `Procedural*` scene with a `ProceduralAssetDatabase`"
+                    )
+                );
+            }
+            var rooms = house.rooms.SelectMany(room => house.rooms);
+
+            var materialIds = new HashSet<string>(
+                house
+                    .rooms.SelectMany(r =>
+                        r.ceilings.Select(c => c.material.name)
+                            .Concat(new List<string>() { r.floorMaterial.name })
+                            .Concat(house.walls.Select(w => w.material.name))
+                    )
+                    .Concat(new List<string>() { house.proceduralParameters.ceilingMaterial.name, house.proceduralParameters.skyboxId })
+            );
+            
+            var assetIds = new HashSet<string>(
+                ProceduralTools.GetAllAssetIds(house.objects)
+                 .Concat(house.windows.Select(w => w.assetId))
+                 .Concat(house.doors.Select(d => d.assetId))
+                 .Where(name => !ProceduralTools.isHex(name)) // Is not objaverse
+            );
+
+            Debug.Log($"{string.Join(",\n", assetIds.Select(x => $"\"{x}\""))}");
+
+            var materials = db.materialMap; 
+            var assets = db.assetMap;
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+
+            var missingMaterialIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
+            var missingAssetIds = assetIds.Where(id => id != null && !assets.ContainsKey(id));
+
+            Debug.Log($"{string.Join(",\n", materialIds.Select(x => $"\"{x}\""))}");
+
+
+            // If its Procedurals_lazy load assets as addressables
+            if (scene.name == "Procedural_lazy") {
+
+                Debug.Log("---------- Procedural_lazy loading assets:");
+                Debug.Log($"{string.Join(",\n", missingAssetIds.Select(x => $"\"{x}\""))}");
+                Debug.Log($"{string.Join(",\n", missingMaterialIds.Select(x => $"\"{x}\""))}");
+                // Super slow
+                // yield return ProceduralTools.LoadAddressableAssetsToDatabase(db, missingAssetIds, missingMaterialIds);
+
+                //  var handle = Addressables.LoadAssetAsync<Material>(missingMaterialIds.First());
+                //  handle.
+                // yield return handle;
+                // if (handle.Status == AsyncOperationStatus.Succeeded)
+                // {
+                //     db.addMaterial(handle.Result);
+                // }
+                yield return ProceduralTools.RunTaskAsCoroutine(ProceduralTools.LoadAssetsAsync(db, missingAssetIds, missingMaterialIds));
+            }
+            db.totalMats = db.materialMap.Count();
+
+            
+            missingMaterialIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
+            missingAssetIds = assetIds.Where(id => id != null && !assets.ContainsKey(id));
+                
+            if (missingMaterialIds.Count() > 0) {
+                yield return new ActionFinished(
+                    success: false,
+                    errorMessage: (
+                        $"Invalid materials: {string.Join(", ", missingMaterialIds.Select(id => $"'{id}'"))}. "
                         + "Not existing or not loaded to the ProceduralAssetDatabase component."
                     )
                 );
             }
 
+            if (missingAssetIds.Count() > 0) {
+                yield return new ActionFinished(
+                    success: false,
+                    errorMessage: (
+                        $"Invalid assets: {string.Join(", ", missingMaterialIds.Select(id => $"'{id}'"))}. "
+                        + "Not existing or not loaded to the ProceduralAssetDatabase component. Either use the `Procedural_lazy` scene to load them as"
+                        + "Addressables or call `CreateAsset` for Procedural assets before calling this fucntion"
+                    )
+                );
+            }
+            
+            
+            
+            var actionFinished = ActionFinished.Success;
             try {
                 ProceduralTools.CreateHouse(house: house, materialDb: materials);
             } catch (Exception e) {
                 Debug.Log(e);
                 var msg = $"Exception creating house.\n'{e.Message}'\n'{e.InnerException}'";
                 Debug.Log(msg);
-                actionFinished(false, actionReturn: null, errorMessage: msg);
-                return;
+                actionFinished = new ActionFinished(success: false, actionReturn: null, errorMessage: msg);
             }
-            actionFinished(true);
+            yield return actionFinished;
         }
 
         public void GetHouseFromTemplate(HouseTemplate template) {

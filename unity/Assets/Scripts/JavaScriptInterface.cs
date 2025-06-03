@@ -5,8 +5,15 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Thor.Procedural;
 
-public class JavaScriptInterface : MonoBehaviour {
+public class JavaScriptInterface : MonoBehaviour, ProgressReporter {
+
+    public void OnProgress(float progress) {
+        #if UNITY_WEBGL
+        ObjaverseDownloadProgress(progress);
+        #endif
+    }
     // IL2CPP throws exceptions about SendMetadata and Init not existing
     // so the body is only used for WebGL
 #if UNITY_WEBGL
@@ -25,6 +32,9 @@ public class JavaScriptInterface : MonoBehaviour {
 
     [DllImport("__Internal")]
     private static extern void FreeJsonBuffer(int ptr);
+
+    [DllImport("__Internal")]
+    private static extern void ObjaverseDownloadProgress(float progress);
 
     /*
         metadata: serialized metadata, commonly an instance of MultiAgentMetadata
@@ -129,12 +139,29 @@ public class JavaScriptInterface : MonoBehaviour {
 
         // Optional: Free memory
         FreeJsonBuffer(ptr);
+
+
+         var asyncOp = Resources.UnloadUnusedAssets();
+            asyncOp.completed += (op) => {
+                Debug.Log("Asyncop callback called calling GC");
+                GC.Collect();
+            };
+                
+                float timeout = 2.0f;
+                float startTime = Time.realtimeSinceStartup;
+                while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
+                    // waiting
+                    continue;
+                }
+                GC.Collect();
     }
 
     private BaseFPSAgentController CurrentActiveController()
     {
         return this.agentManager.PrimaryAgent;
     }
+
+    
 
     //  if (this.agentManagerState == AgentState.ActionComplete) {
     //             this.agentManagerState = AgentState.Emit;

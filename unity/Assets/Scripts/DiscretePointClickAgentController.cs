@@ -80,6 +80,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     if (Input.GetKeyDown(KeyCode.S)) {
                         executeAction("MoveBack", WalkMagnitude);
+                        
                     }
 
                     if (Input.GetKeyDown(KeyCode.A)) {

@@ -561,7 +561,6 @@ public static class ActionDispatcher {
         } else {
             // Only IEnumerators return functions can be run in a coroutine
             var runAsCoroutine = false;
-
             if (method.ReturnType == typeof(System.Collections.IEnumerator)) {
                 methodReturn = method.Invoke(target, arguments);
                 action = methodReturn as IEnumerator;

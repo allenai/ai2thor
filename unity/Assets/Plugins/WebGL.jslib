@@ -27,4 +27,10 @@ mergeInto(LibraryManager.library, {
     }
   },
 
+  ObjaverseDownloadProgress: function(progress) {
+     if (window.objaverseProgressCallback && typeof window.objaverseProgressCallback === "function") {
+        window.objaverseProgressCallback(progress);
+    }
+  }
+
 });

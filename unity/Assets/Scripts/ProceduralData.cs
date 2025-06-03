@@ -506,6 +506,8 @@ namespace Thor.Procedural.Data {
         public bool serializable = false;
         public string parentTexturesDir = null;
         public ProceduralTextures rawTextures = null;
+
+        public bool saveMaterialToAssetDB = false;
     }
 
     public static class ExtensionMethods {

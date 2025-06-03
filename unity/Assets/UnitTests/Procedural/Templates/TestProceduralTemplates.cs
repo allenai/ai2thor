@@ -146,6 +146,7 @@ namespace Tests
             // 0 0 0 0 0 0
             // ",
             var house = createTestHouse();
+            Debug.Log(JsonUtility.ToJson(house));
 
             Assert.AreEqual(house.rooms.Count, 2);
             var roomIds = new HashSet<string>() { "1", "2" };

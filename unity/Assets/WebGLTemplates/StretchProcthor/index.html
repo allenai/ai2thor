@@ -94,7 +94,7 @@
       <div class="webgl-content">
         <div class="canvas-container">
           <!-- <canvas id="unity-canvas" width={{{ WIDTH }}} height={{{ HEIGHT }}} style="width: 75vmin; height: 75vmin"></canvas> -->
-          <canvas id="unity-canvas" width={{{ WIDTH }}} height={{{ HEIGHT }}} tabindex="1" style="width: 115vmin; height: 98vmin"></canvas>
+          <canvas id="unity-canvas" width={{{ WIDTH }}} height={{{ HEIGHT }}} tabindex="1" style="width: 95vmin; height: 120vmin"></canvas>
             
           </canvas>
           <div id="unity-loading-bar">
@@ -107,6 +107,7 @@
       </div>
 
       <script>
+        var UNITY_LOADER_GL_DEBUG = 1;
         var container = document.querySelector("#unity-container");
         var canvas = document.querySelector("#unity-canvas");
   

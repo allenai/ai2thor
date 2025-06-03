@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 // using UnityEditor;
@@ -11,7 +12,7 @@ using UnityStandardAssets.ImageEffects;
 
 [ExecuteInEditMode]
 public class PhysicsSimulationParams {
-    public bool autoSimulation = false;
+    public bool autoSimulation = true;
     public float fixedDeltaTime = 0.02f;
     public float minSimulateTimeSeconds = 0;
 
@@ -200,6 +201,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         IEnumerator enumerator,
         PhysicsSimulationParams physicsSimulationParams
     ) {
+         Debug.Log("======== RunSimulatePhysicsForAction start");
         var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime;
         var previousAutoSimulate = Physics.autoSimulation;
         Physics.autoSimulation = physicsSimulationParams.autoSimulation;
@@ -207,6 +209,8 @@ public class PhysicsSceneManager : MonoBehaviour {
         PhysicsSceneManager.PhysicsSimulateTimeSeconds = 0.0f;
         var startPhysicsSimulateCallTime = PhysicsSceneManager.PhysicsSimulateCallCount;
         PhysicsSceneManager.IteratorExpandCount = 0;
+
+        Debug.Log("======== ExpandIEnumerator");
 
         // Recursive expansion of IEnumerator
         ActionFinished actionFinished = ExpandIEnumerator(enumerator, physicsSimulationParams);
@@ -240,6 +244,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         return actionFinished;
     }
 
+    // TODO: bugfix for yield return (yield return ActionFinished) d
     public static IEnumerator RunActionForCoroutine(
         ActionInvokable target,
         IEnumerator action,
@@ -251,10 +256,15 @@ public class PhysicsSceneManager : MonoBehaviour {
         var startFixedTimeSeconds = Time.fixedTime;
         ActionFinished actionFinished = null;
 
-        while (true) {
+        // while (actionFinished != null) {
+         while (true) {
+            // Debug.Log($"======== action current null {action.Current == null} {action.Current}");
+            // Debug.Log($"----------- Action Finished type {action.Current != null && typeof(ActionFinished) == action.Current.GetType()}");
+            // Debug.Log($"======== Ienumerator type {action.Current?.GetType()} is ienumerator? {typeof(IEnumerator).IsAssignableFrom(action.Current?.GetType())} ActionFinished type {typeof(ActionFinished).IsAssignableFrom(action.Current?.GetType())}");
             // Adds Exception handling for Coroutines!
             try {
                 if (!action.MoveNext()) {
+                    // Debug.Log($"======== MoveNext break");
                     break;
                 }
             } catch (Exception e) {
@@ -273,10 +283,24 @@ public class PhysicsSceneManager : MonoBehaviour {
                 break;
             }
 
+            
+            // Debug.Log($"======== Ienumerator type {action.Current?.GetType()} is ienumerator? {typeof(IEnumerator).IsAssignableFrom(action.Current.GetType())} ActionFinished type {typeof(ActionFinished).IsAssignableFrom(action.Current.GetType())}");
             if (action.Current != null && typeof(ActionFinished) == action.Current.GetType()) {
-                actionFinished = (ActionFinished)(action.Current as ActionFinished);
+                // Debug.Log("======== Found Action Finished");
+                actionFinished = action.Current as ActionFinished;
                 break;
             }
+            // else if (typeof(IEnumerator).IsAssignableFrom(action.Current.GetType())) {
+            //     Debug.Log("------ Recursive call RunActionForCoroutine");
+            //     actionFinished = RunActionForCoroutine(
+            //         target,
+            //         action.Current as IEnumerator,
+            //         physicsSimulationParams
+            //     ) as ActionFinished;
+
+            //     Debug.Log($"------ Recursive call return  actionFinished null {actionFinished == null}");
+            // }
+            
             yield return action.Current;
         }
 

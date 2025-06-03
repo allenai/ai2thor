@@ -12,6 +12,10 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
+using System.Text.RegularExpressions;
+using System.IO.Compression;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     public class DebugInputField : MonoBehaviour {
@@ -151,6 +155,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #if CROWDSOURCE_TASK
             Debug.Log("CROWDSOURCE_TASK");
             setControlMode(ControlMode.DISCRETE_HIDE_N_SEEK);
+#endif
+#if STRETCH_CROWDSOURCE_TASK
+            Debug.Log("STRETCH_CROWDSOURCE_TASK");
+            setControlMode(ControlMode.STRETCH_MINIMAL_TURK);
 #endif
 #if TURK_TASK
             Debug.Log("Player Control Set To: TURK");
@@ -577,6 +585,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                 case "inits": {
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "stretch";
+                        action["agentControllerType"] = "stretch";
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+                        action["renderDepth"] = true;
+                        //                  action["antiAliasing"] = "smaa";
+                        action["massThreshold"] = 10.0f;
+
+                        ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+                        break;
+                    }
+                     case "initu": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
 
                         action["action"] = "Initialize";
@@ -5696,6 +5721,75 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+                
+                case "obja_down": {
+
+
+                    // StartCoroutine(
+                    //         ProceduralAssetDownloader.DownloadAndProcessAssets(
+                    //         "https://pub-2619544d52bd4f35927b08d301d2aba0.r2.dev/assets",
+                    //         new List<string>() {
+                    //             "ebffe6f39615477aba35e900985dbe71"
+                    //         },
+                    //         assets => {
+                    //             foreach (var asset in assets) {
+                    //                 // Debug.Log($"Asset: {string.Join(",", asset.Keys)} | Has Albedo:");
+                    //                 Debug.Log($"Asset: {asset.name} | Has Albedo: {asset.rawTextures?.albedoBase64JPG != null}");
+                    //                 CurrentActiveController().CreateRuntimeAsset(asset);
+                    //             }
+                    //         }
+                    //     )
+
+                    // );
+
+                    // StartCoroutine(
+                    //         ProceduralAssetDownloader.DownloadAndCreateAssets(
+                    //         "https://pub-2619544d52bd4f35927b08d301d2aba0.r2.dev/assets",
+                    //         new List<string>() {
+                    //             "ebffe6f39615477aba35e900985dbe71",
+                    //             "cc74f221fa264294baed2a3fff2915ce"
+                    //         },
+                    //         assets => {
+                    //             foreach (var asset in assets) {
+                    //                 Debug.Log($"Asset: {string.Join(",", asset.Keys)} | Has Albedo:");
+                    //                 // Debug.Log($"Asset: {asset.name} | Has Albedo: {asset.rawTextures?.albedoBase64JPG != null}");
+
+                    //             }
+                    //         },
+                    //         extension: null
+                    //     )
+
+                    // );
+                    Dictionary<string, object> action = new Dictionary<string, object>() {
+                        ["action"] = "DownloadAndCreateRuntimeAssets",
+                        ["baseUrl"] = "https://pub-2619544d52bd4f35927b08d301d2aba0.r2.dev/assets",
+                        ["assetIds"] =  new List<string>() {
+                            "ebffe6f39615477aba35e900985dbe71",
+                            "3657c48466cd4294bdaddc1a531b7a2b"
+                        },
+                        ["extension"] = ".msgpack.gz"
+                    };
+
+                        // AssetDatabase.Refresh();
+                    CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+                    Debug.Log($"ActionFinished {CurrentActiveController().lastActionSuccess} {CurrentActiveController().errorMessage}");
+                    
+
+                    break;
+                }
+
+                case "hex": {
+                    
+                    bool isHex(string hc) {
+                    return Regex.IsMatch(hc, @"\A[0-9a-fA-F]+\z");
+                    }
+                    var m = new List<string>(){
+                        "ebffe6f39615477aba35e900985dbe71"
+                    };
+                    Debug.Log($"Is hex {string.Join(",\n", m.Select(x => $"{x}: {isHex(x)}"))}");
+                    break;
+                }
 
 
                 case "chp": {
@@ -5724,6 +5818,133 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         action["house"] = obj;
                         CurrentActiveController()
                             .ProcessControlCommand(new DynamicServerAction(action));
+
+                        break;
+                    }
+
+                case "chp_obja": {
+                        
+
+                        // AssetDatabase.Refresh();
+                        var ROOM_BASE_PATH = "/Resources/rooms/";
+                        
+
+                        path = Application.dataPath + "/Resources/rooms/6.json.gz";
+
+                        if (splitcommand.Length == 2) {
+                            // uses ./debug/{splitcommand[1]}[.json]
+                            file = splitcommand[1].Trim();
+                            
+
+                            // if (!file.EndsWith(".json.gz")) {
+                            //     file += ".json.gz";
+                            // }
+                            // else if (file.EndsWith(".json")) {
+
+                            // }
+
+                            path = Application.dataPath + ROOM_BASE_PATH + file;
+                        }
+
+
+                        // var presentStages = extension
+                        // .Split('.')
+                        // .Reverse()
+                        // .Where(s => !string.IsNullOrEmpty(s))
+                        // .ToArray();
+
+                        using FileStream rawFileStream = File.Open(path, FileMode.Open);
+                        using var resultStream = new MemoryStream();
+                        var stageIndex = 0;
+                        if (path.EndsWith(".json.gz")) {
+                            using var decompressor = new GZipStream(rawFileStream, CompressionMode.Decompress);
+                            decompressor.CopyTo(resultStream);
+                            stageIndex++;
+                        } else {
+                            rawFileStream.CopyTo(resultStream);
+                        }
+
+                        resultStream.Seek(0, SeekOrigin.Begin);
+                        using var reader = new StreamReader(resultStream);
+
+                        var jsonResolver = new ShouldSerializeContractResolver();
+                        var serializer = new Newtonsoft.Json.JsonSerializerSettings() {
+                            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                            ContractResolver = jsonResolver,
+                            ObjectCreationHandling = ObjectCreationHandling.Replace
+                        };
+                        var json = reader.ReadToEnd();
+                // procAsset = Newtonsoft.Json.JsonConvert.DeserializeObject<ProceduralAsset>(reader.ReadToEnd(), serializer);
+                        var house = JsonConvert.DeserializeObject<ProceduralHouse>(json);
+
+                        // var jsonStr = System.IO.File.ReadAllText(path);
+                        // Debug.Log($"jjson: {jsonStr}");
+
+                        // JObject obj = JObject.Parse(jsonStr);
+                        // var house = obj.ToObject<ProceduralHouse>()
+
+
+                        var assetIds = new HashSet<string>(
+                            ProceduralTools.GetAllAssetIds(house.objects)
+                            .Concat(house.windows.Select(w => w.assetId))
+                            .Concat(house.doors.Select(d => d.assetId))
+                            .Where(x => ProceduralTools.isHex(x))
+                        );
+
+                        Debug.Log($"------- To Download assetIds: {string.Join(",", assetIds)}");
+
+                        Dictionary<string, object> action = new Dictionary<string, object>() {
+                            ["action"] = "DownloadAndCreateRuntimeAssets",
+                            ["baseUrl"] = "https://pub-2619544d52bd4f35927b08d301d2aba0.r2.dev/assets",
+                            ["assetIds"] =  assetIds,
+                            ["extension"] = ".msgpack.gz"
+                        };
+
+                            // AssetDatabase.Refresh();
+                        CurrentActiveController()
+                                .ProcessControlCommand(new DynamicServerAction(action));
+                        Debug.Log($"ActionFinished {CurrentActiveController().lastAction}  {CurrentActiveController().lastActionSuccess} {CurrentActiveController().errorMessage}");
+
+                        IEnumerator waitForActionFinishedCreateHouse(ProceduralHouse house, BaseFPSAgentController controller) {
+                            while (controller.agentState == AgentState.Processing) {
+                                // Debug.Log($"========= waitForActionFinishedCreateHouse {controller.agentState}");
+                                yield return null;
+                            }
+                            var action = new Dictionary<string, object>() {
+                                ["action"] = "CreateHouse",
+                                ["house"] =  house
+                            };
+                            Debug.Log($"========= action finished {controller.lastAction} {controller.lastActionSuccess} ");
+                            controller
+                            .ProcessControlCommand(new DynamicServerAction(action));
+
+                            var agent = house?.metadata?.agentPoses["stretch"];
+
+                            action = new Dictionary<string, object>() {
+                                ["action"] = "TeleportFull",
+                                ["x"] = agent.position.x,
+                                ["y"] = agent.position.y,
+                                ["z"] = agent.position.z,
+                                ["rotation"] = agent.rotation,
+                                ["horizon"] = agent.horizon,
+                                ["standing"] = agent.standing,
+                                ["forceAction"] = true,
+                            };
+                             while (controller.agentState == AgentState.Processing) {
+                                // Debug.Log($"========= waitForActionFinishedCreateHouse {controller.agentState}");
+                                yield return null;
+                            }
+                            controller
+                            .ProcessControlCommand(new DynamicServerAction(action));
+                        }
+
+                        StartCoroutine(waitForActionFinishedCreateHouse(house, CurrentActiveController()));
+                        
+
+                        
+
+                        // action["house"] = obj;
+                        
 
                         break;
                     }

@@ -94,6 +94,22 @@ $(
   
     return btoa(binary);
   }
+
+  function isHex(str) {
+    return /^[0-9a-fA-F]+$/.test(str);
+  }
+
+  function getAllAssetIdsRecursively(objects, assetIds = []) {
+    for (const obj of objects) {
+        assetIds.push(obj.assetId);
+        if (obj.children) {
+          getAllAssetIdsRecursively(obj.children, assetIds);
+        }
+    }
+    const assetSet = new Set(assetIds);
+    assetSet.delete("");
+    return Array.from(assetSet);
+  }
   
 
   class WebProceduralAssetActionCallback {
@@ -130,8 +146,10 @@ $(
       });
       let assetsInDb = metadata.agents[0]["actionReturn"];
       const assetsIdsNotCreated = Object.entries(assetsInDb)
-        .filter(([assetId, inDb]) => !inDb)
+        .filter(([assetId, inDb]) => !inDb && isHex(assetId))
         .map(([assetId]) => assetId);
+      console.log("========== assetsIdsNotCreated");
+      console.log(assetsIdsNotCreated);
       return assetsIdsNotCreated;
     }
 
@@ -158,44 +176,55 @@ $(
       // });
 
       let assetsToDownload = await this.getAssetsNotInDatabase(controller, assetIds);
-      assetsToDownload = assetsToDownload.slice(0, 1);
+      // assetsToDownload = assetsToDownload.slice(0, 1);
       console.log(` ========== assetsToDownload ${assetsToDownload}`);
+      if (assetsToDownload.length > 0) {
+      let metadata = await controller.step({
+        action: "DownloadAndCreateRuntimeAssets",
+        baseUrl: this.baseUrl, 
+        assetIds: assetsToDownload
+      });
+      console.log(` ========== after DownloadAndCreateRuntimeAssets `);
+      console.log(` success: ${metadata.agents[0].lastActionSuccess} message: ${metadata.agents[0].errorMessage}`);
+
+    }
+
+    let metadata = await controller.step({
+      action: "UnloadUnusedAssets",
+    });
+    console.log(` ========== after UnloadUnusedAssets `);
+    console.log(` success: ${metadata.agents[0].lastActionSuccess} message: ${metadata.agents[0].errorMessage}`);
+
+
+
+
+      
 
       // let urls = assetsToDownload.map((assetId) => `${this.baseUrl}/${assetId}.tar`)
       // return downloadAndProcessTar();
 
-      let tasks = assetsToDownload.map((assetId) => {
-          let url = `${this.baseUrl}/${assetId}.tar`;
-          return downloadAndProcessAssetTar(url).then(
-            (asset) => {
-              return controller.step(
-                {
-                  action: "CreateRuntimeAsset",
-                  asset: asset
-                },
-                true
-              );
-            }
-          )
-      });
-      return Promise.all(tasks);
+      // let tasks = assetsToDownload.map((assetId) => {
+      //     let url = `${this.baseUrl}/${assetId}.tar`;
+      //     return downloadAndProcessAssetTar(url).then(
+      //       (asset) => {
+      //         return controller.step(
+      //           {
+      //             action: "CreateRuntimeAsset",
+      //             asset: asset
+      //           },
+      //           true
+      //         );
+      //       }
+      //     )
+      // });
+      // return Promise.all(tasks);
     }
 
-    getAllAssetIdsRecursively(objects, assetIds = []) {
-      for (const obj of objects) {
-          assetIds.push(obj.assetId);
-          if (obj.children) {
-            this.getAllAssetIdsRecursively(obj.children, assetIds);
-          }
-      }
-      const assetSet = new Set(assetIds);
-      assetSet.delete("");
-      return Array.from(assetSet);
-    }
+    
 
     async Initialize(action, controller) {
       if (this.assetLimit > 0) {
-        return controller.step({
+        return await controller.step({
           action:"DeleteLRUFromProceduralCache", 
           assetLimit:self.asset_limit
         });
@@ -206,7 +235,7 @@ $(
     async CreateHouse(action, controller) {
       let house = action["house"];
       console.log(`========= assetlimit ${this.assetLimit}`);
-      let assetIds = this.getAllAssetIdsRecursively(house["objects"], []);
+      let assetIds = getAllAssetIdsRecursively(house["objects"], []);
       console.log(`========== CreateHouse callback`);
       console.log(assetIds);
 
@@ -348,10 +377,10 @@ $(
             //   sequenceId: prevSequenceId
             // }));
 
-            const jsonString = JSON.stringify(JSON.stringify({
-                "testObject": 1,
-                "test": "string"
-              }));
+            const jsonString = JSON.stringify({
+                  ...action,
+                 sequenceId: prevSequenceId
+              });
 
             // Encode JSON string as UTF-8
             const encoder = new TextEncoder();
@@ -548,6 +577,7 @@ $(
 
     async function LoadProcthorHouse(house_name) {
 
+
       console.log("------------ LoadProcthorHouse");
       console.log(house_name);
       let url = newHouses ? `https://thor-turk.s3.us-west-2.amazonaws.com/houses/val/${house_name}.json.gz` : `https://thor-turk.s3.us-west-2.amazonaws.com/houses/${house_name}.json`;
@@ -570,13 +600,23 @@ $(
           house = JSON.parse(decompressedData);
 
       }
-        
       
         console.log("----- read house");
         console.log(house);
-
+        
+        console.log("----- PreloadHouseAssets");
 
         let metadata = await controller.step({
+          "action": "PreloadHouseAssets",
+          "house": house,
+          "freeMemoryAfter": true,
+          freeMemorySecondsTimeout: 2.0
+        });
+
+        console.log(metadata);
+
+
+        metadata = await controller.step({
           "action": "CreateHouse",
           "house": house,
           "sequenceId": 1
@@ -584,7 +624,22 @@ $(
 
         console.log("--- CreateHouse ");
         console.log(metadata);
-        
+
+        metadata = await controller.step({
+          action: "UnloadUnusedAssets",
+        });
+        console.log(` ========== after UnloadUnusedAssets `);
+        console.log(` success: ${metadata.agents[0].lastActionSuccess} message: ${metadata.agents[0].errorMessage}`);
+    
+        // metadata = await controller.step({
+        //   action:"DeleteLRUFromProceduralCache", 
+        //   assetLimit: 0
+        // });
+
+        // console.log(` ========== after DeleteLRUFromProceduralCache `);
+        // console.log(` success: ${metadata.agents[0].lastActionSuccess} message: ${metadata.agents[0].errorMessage}`);
+    
+
         let agent = house["metadata"]["agent"];
         metadata = await controller.step({
           "action": "TeleportFull",
@@ -836,6 +891,16 @@ $(
               console.log(`--- ${metadata.agents[0].lastAction}`);
               console.log(metadata);
           }
+          
+          // Deletes all the object even instantiated ones :)
+        //   metadata = await controller.step({
+        //   action:"DeleteLRUFromProceduralCache", 
+        //   assetLimit: 0
+        // });
+
+        // console.log(` ========== after DeleteLRUFromProceduralCache `);
+        // console.log(` success: ${metadata.agents[0].lastActionSuccess} message: ${metadata.agents[0].errorMessage}`);
+    
 
     //         "zoomPercent": 0.49,
     // "k1": 0.9,
@@ -1035,6 +1100,7 @@ $(
       // TODO black screen issue in webgl when calling initialize before loading the house so always load house first
       console.log("-- LoadProcthorHouse");
       // await LoadProcthorHouse("procthor_train_1.json");
+      // await LoadProcthorHouse(houseId ? houseId : "house_val_0");
       await LoadProcthorHouse(houseId ? houseId : "house_val_0");
       console.log("-- Initialize arm");
       await InitializeArm();

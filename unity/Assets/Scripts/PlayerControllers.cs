@@ -11,7 +11,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         FPS,
         DISCRETE_POINT_CLICK,
         DISCRETE_HIDE_N_SEEK,
-        MINIMAL_FPS
+        MINIMAL_FPS,
+        STRETCH_MINIMAL_TURK
     }
 
     class PlayerControllers {
@@ -24,7 +25,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             { ControlMode.FPS, typeof(DebugFPSAgentController) },
             { ControlMode.DISCRETE_POINT_CLICK, typeof(DiscretePointClickAgentController) },
             { ControlMode.DISCRETE_HIDE_N_SEEK, typeof(DiscreteHidenSeekgentController) },
-            { ControlMode.MINIMAL_FPS, typeof(MinimalFPSController) }
+            { ControlMode.MINIMAL_FPS, typeof(MinimalFPSController) },
+            { ControlMode.STRETCH_MINIMAL_TURK, typeof(StretchMinimalTurkController)}
         };
     }
 }

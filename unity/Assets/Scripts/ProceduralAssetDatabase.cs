@@ -9,6 +9,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Thor.Procedural {
     using PrefabAsset = AssetHandle<GameObject>;
+    using MaterialAsset = AssetHandle<Material>;
     public interface IAsset<T> where T : class {
         void OnDelete();
         T Get();
@@ -105,7 +106,6 @@ namespace Thor.Procedural {
 
         [SerializeField]
         public List<Material> materials;
-
         // TODO: move to not use this list
         [SerializeField]
         public List<GameObject> prefabs;
@@ -116,12 +116,19 @@ namespace Thor.Procedural {
         [SerializeField]
         public ProceduralLRUCacheAssetMap<GameObject, PrefabAsset> assetMap;
 
+        [SerializeField]
+        public ProceduralLRUCacheAssetMap<Material, MaterialAsset> materialMap;
+
         public bool dontDestroyOnLoad = true;
 
         /// Build database based on materials and prefabs
         public void BuildAssetMap() {
             this.assetMap = new ProceduralLRUCacheAssetMap<GameObject, PrefabAsset>(
                 prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => new PrefabAsset(asset: p.First()))
+            );
+
+            this.materialMap = new ProceduralLRUCacheAssetMap<Material, MaterialAsset>(
+                materials.GroupBy(m => m.name).ToDictionary(p => p.Key, p => new MaterialAsset(asset: p.First()))
             );
         }
 
@@ -143,14 +150,14 @@ namespace Thor.Procedural {
 
         public void addAsset(GameObject asset, bool procedural = false, AsyncOperationHandle<GameObject>? handle = null) {
             // prefabs.Add(asset);
-            assetMap.addAsset(asset.name, new PrefabAsset(asset: asset, handle: handle));
+            assetMap.addAsset(asset.name, new PrefabAsset(asset: asset, handle: handle), procedural: procedural);
         }
 
-        public void addMaterial(Material material) {
+        public void addMaterial(Material material, bool procedural = false, AsyncOperationHandle<Material>? handle = null) {
             // prefabs.Add(asset);
-            materials.Add(material);
+            materialMap.addAsset(material.name, new MaterialAsset(asset: material, handle: handle), procedural: procedural);
             // assetMap.addAsset(asset.name, asset, procedural);
-            totalMats = materials.Count;
+            totalMats = materialMap.Count();
         }
 
         public void addAssets(IEnumerable<GameObject> assets, bool procedural = false, AsyncOperationHandle<GameObject>? handle = null) {
@@ -161,6 +168,10 @@ namespace Thor.Procedural {
 
         public bool ContainsAssetKey(string key) {
             return assetMap.ContainsKey(key);
+        }
+
+        public bool ContainsMaterialKey(string key) {
+            return materialMap.ContainsKey(key);
         }
 
         public void touchProceduralLRUCache(IEnumerable<string> ids) {
@@ -177,6 +188,10 @@ namespace Thor.Procedural {
 
         public AssetMap<GameObject, PrefabAsset> GetPrefabMap() {
             return this.assetMap;
+        }
+
+        public AssetMap<Material, MaterialAsset> GetMaterialMap() {
+            return this.materialMap;
         }
     }
 

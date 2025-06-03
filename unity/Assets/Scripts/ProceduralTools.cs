@@ -16,6 +16,9 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Collections;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+
 
 #if UNITY_EDITOR
 using UnityEditor.SceneManagement;
@@ -1346,11 +1349,16 @@ namespace Thor.Procedural {
             }
         }
 
+        public static Material GetMaterialOrNew(string materialName, AssetMap<Material, MaterialAsset> materialDb) {
+            return !string.IsNullOrEmpty(materialName)? materialDb.getAsset(materialName) : new Material(Shader.Find("Standard"));
+        }
+
         public static GameObject CreateHouse(
             ProceduralHouse house,
             AssetMap<Material, MaterialAsset> materialDb,
             Vector3? position = null
         ) {
+            Debug.Log("---------- Create House");
             // raise exception if metadata contains schema
             if (house.metadata == null || house.metadata.schema == null) {
                 throw new ArgumentException(
@@ -1449,7 +1457,7 @@ namespace Thor.Procedural {
 
                 var dimensions = getAxisAlignedWidthDepth(room.floorPolygon);
                 meshRenderer.material = generatePolygonMaterial(
-                    sharedMaterial: materialDb.getAsset(room.floorMaterial.name),
+                    sharedMaterial: GetMaterialOrNew(room.floorMaterial.name, materialDb),
                     materialProperties: room.floorMaterial,
                     dimensions: dimensions,
                     squareTiling: house.proceduralParameters.squareTiling
@@ -1569,7 +1577,7 @@ namespace Thor.Procedural {
                         }
                     }
                     ceilingMeshRenderer.material = generatePolygonMaterial(
-                        materialDb.getAsset(roomCeilingMaterialId),
+                        GetMaterialOrNew(roomCeilingMaterialId, materialDb),
                         dimensions,
                         house.proceduralParameters.ceilingMaterial,
                         0.0f,
@@ -1734,7 +1742,7 @@ namespace Thor.Procedural {
                 string.IsNullOrEmpty(house.proceduralParameters.skyboxId)
                 || !materialDb.ContainsKey(house.proceduralParameters.skyboxId)
             ) {
-                Color flatColor = house.proceduralParameters.skyboxColor.toUnityColor();
+                var flatColor = house.proceduralParameters?.skyboxColor?.toUnityColor();
 
                 // The below is commented out as setting the skybox color like this results in unexpected/bad behavior
                 // like heavily exposed scenes or arbitrarily lit objects. We instead will not use the skybox material at all in this case.
@@ -1753,7 +1761,7 @@ namespace Thor.Procedural {
                 // Set the camera background color to the "skybox" color so that it renders as expected.
                 var cam = GameObject.Find("FirstPersonCharacter").GetComponent<Camera>();
                 cam.clearFlags = CameraClearFlags.SolidColor;
-                cam.backgroundColor = flatColor;
+                cam.backgroundColor = flatColor.GetValueOrDefault(Color.black);
             } else {
                 RenderSettings.skybox = materialDb.getAsset(house.proceduralParameters.skyboxId);
             }
@@ -2190,11 +2198,51 @@ namespace Thor.Procedural {
             return assetDB.assetMap;
             // return new AssetMap<GameObject, PrefabAsset>(assetDB.prefabs.GroupBy(p => p.name).ToDictionary(p => p.Key, p => p.First()));
         }
+
+    public static IEnumerator RunTaskAsCoroutine(Task task) {
+        while (!task.IsCompleted) {
+            yield return null;
+        }
+
+        if (task.IsFaulted) {
+            Debug.LogException(task.Exception);
+        }
+    }
+
+    public async static Task LoadAssetsAsync(ProceduralAssetDatabase assetDB, IEnumerable<string> prefabNames, IEnumerable<string> materialNames) {
+        // Step 1: Start loading all assets
+        var loadOperations = new List<Task>();
+
+        foreach (var name in prefabNames) {
+            loadOperations.Add(LoadAndStore(assetDB.assetMap, name));
+        }
+
+        foreach (var name in materialNames) {
+            loadOperations.Add(LoadAndStore(assetDB.materialMap, name));
+        }
+
+        // Step 2: Wait for all of them to complete
+        await Task.WhenAll(loadOperations);
+    }
+
+    private async static Task LoadAndStore<T>(ProceduralLRUCacheAssetMap<T, AssetHandle<T>> map, string key) where T : UnityEngine.Object {
+        Debug.Log($"======= LoadAndStore handle for asset {key}");
+        AsyncOperationHandle<T> handle = Addressables.LoadAssetAsync<T>(key);
+        await handle.Task;
+
+        if (handle.Status == AsyncOperationStatus.Succeeded) {
+            var asset = new AssetHandle<T>(handle.Result, handle);
+            map.addAsset(key, asset, procedural: true);
+            
+        } else {
+            Debug.LogError($"Failed to load addressable: {key}");
+        }
+    }
         
         public static IEnumerator LoadAddressableAssetsToDatabase(
             ProceduralAssetDatabase assetDB, 
-            List<string> prefabNames, 
-            List<string> materialNames
+            IEnumerable<string> prefabNames, 
+            IEnumerable<string> materialNames
         )
         {
             
@@ -2203,25 +2251,35 @@ namespace Thor.Procedural {
                 yield return handle;
                 if (handle.Status == AsyncOperationStatus.Succeeded)
                 {
-                    Debug.Log($"-------- Loaded asset: {handle.Result.name} ");
-                    
-                    assetDB.addAsset(handle.Result);
+                   
+                    if (handle.Result) {
+                        Debug.Log($"-------- Loaded asset: {handle.Result.name} ");
+                        assetDB.addAsset(handle.Result, procedural: true, handle);
+                    }
                 }
 
             }
 
             foreach (var matName in materialNames)
-            {
+            {   
                 var handle = Addressables.LoadAssetAsync<Material>(matName);
                 yield return handle;
                 if (handle.Status == AsyncOperationStatus.Succeeded)
                 {
                     assetDB.addMaterial(handle.Result);
+                    if (handle.Result) {
+                        Debug.Log($"-------- Loaded asset: {handle.Result.name} ");
+                        if (!assetDB.materialMap.ContainsKey(handle.Result.name)) {
+                            assetDB.addMaterial(handle.Result, procedural: true, handle);
+                        }
+                    }
                 }
+
+                 
             }
 
             Debug.Log("Scene assets loaded.");
-            yield return null;
+            // yield return null;
         }
 
         //generic function to spawn object in scene. No bounds or collision checks done
@@ -2701,14 +2759,15 @@ namespace Thor.Procedural {
             }
         }
 
-        public static AssetMap<Material, MaterialAsset> GetMaterials() {
-            var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+        public static AssetMap<Material, MaterialAsset> GetMaterials(ProceduralAssetDatabase assetDB = null) {
+            assetDB = assetDB == null ? GameObject.FindObjectOfType<ProceduralAssetDatabase>() : assetDB;
             if (assetDB != null) {
                 /// TODO replace with m
-                var mats = assetDB.materials.GroupBy(m => m.name).ToDictionary(m => m.Key, m => new MaterialAsset(asset: m.First()));
-                return new AssetMap<Material, MaterialAsset>(
-                    mats
-                );
+                // var mats = assetDB.materials.GroupBy(m => m.name).ToDictionary(m => m.Key, m => new MaterialAsset(asset: m.First()));
+                // return new AssetMap<Material, MaterialAsset>(
+                //     mats
+                // );
+                return assetDB.GetMaterialMap();
             }
             return null;
         }
@@ -2744,6 +2803,11 @@ namespace Thor.Procedural {
         //     ids.Concat(assetSet);
         //     // return assetSet.ToList();
         // }
+    public static bool isHex(string hc)
+        {
+            // Use Regex to check if the string matches the pattern for a valid hex code
+            return Regex.IsMatch(hc, @"\A[0-9a-fA-F]+\z");
+        }
 
     public static List<string> GetAllAssetIds(List<HouseObject> objects)
     {
@@ -2775,7 +2839,8 @@ namespace Thor.Procedural {
                 return new ActionFinished(success: false, errorMessage: "House is null.");
             }
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
-            var materials = ProceduralTools.GetMaterials();
+            var materials = assetDB.materialMap;
+            var prefabs = assetDB.assetMap;
             var materialIds = new HashSet<string>(
                 house
                     .rooms.SelectMany(r =>
@@ -2797,7 +2862,9 @@ namespace Thor.Procedural {
 
             
             var toDeleteAssets = new HashSet<GameObject>(assetDB.prefabs.Where(p => !assetIds.Contains(p.name)));
+            var toDeleteAssetWrappers = new HashSet<PrefabAsset>(toDeleteAssets.Select(a => prefabs.getAssetWrapper(a.name)));
             var toDeleteMaterials = new HashSet<Material>(assetDB.materials.Where(m => !materialIds.Contains(m.name)));
+            var toDeleteMaterialWrappers = new HashSet<MaterialAsset>(toDeleteMaterials.Select(a => materials.getAssetWrapper(a.name)));
 
             assetDB.prefabs = assetDB.prefabs.Where(p => assetIds.Contains(p.name)).ToList();
             assetDB.materials = assetDB.materials.Where(m => materialIds.Contains(m.name)).ToList();
@@ -2809,29 +2876,50 @@ namespace Thor.Procedural {
             // Debug.Log($"Loaded prefab {k.name}");
 
             // PrefabUtility.FindPrefabRoot(_targ.gameObject);'
-            var testP = assetDB.prefabs[0];
-            string path = AssetDatabase.GetAssetPath(testP);
-            Debug.Log($" path of prefab ${testP.name} path ${path}");
 
-             var k = Resources.Load("Test_load/Sink_20") as GameObject;
 
-            Debug.Log($"Loaded prefab {k.name}");
+            // var testP = assetDB.prefabs[0];
+            // string path = AssetDatabase.GetAssetPath(testP);
+            // Debug.Log($" path of prefab ${testP.name} path ${path}");
 
-            foreach (var toDeleteAsset in toDeleteAssets) {
-                GameObject.DestroyImmediate(toDeleteAsset, allowDestroyingAssets: true);
-            }
+            //  var k = Resources.Load("Test_load/Sink_20") as GameObject;
 
+            // Debug.Log($"Loaded prefab {k.name}");
             
 
-             foreach (var toDeleteMaterial in toDeleteMaterials) {
-                GameObject.DestroyImmediate(toDeleteMaterial, allowDestroyingAssets: true);
+            // Exception when calling DestroyImmediate on prefab root
+            // foreach (var toDeleteAsset in toDeleteAssets) {
+            //     GameObject.DestroyImmediate(toDeleteAsset, allowDestroyingAssets: true);
+            // }
+
+            //  foreach (var toDeleteMaterial in toDeleteMaterials) {
+            //     GameObject.DestroyImmediate(toDeleteMaterial, allowDestroyingAssets: true);
+            // }
+
+             foreach (var toDeleteAsset in toDeleteAssets) {
+                var wrapper = prefabs.getAssetWrapper(toDeleteAsset.name);
+                try {
+                    wrapper.OnDelete();
+                }
+                catch (Exception e) {
+                    Debug.LogError($"Could not delete asset '{wrapper?.Get()?.name}' on DB probably trying to delete prefab root. Use only on `Procedural_lazy` scene. {e.Message}");
+                }
             }
 
+             foreach (var toDeleteMaterial in toDeleteMaterials) {
+                var wrapper = materials.getAssetWrapper(toDeleteMaterial.name);
+                try {
+                    wrapper.OnDelete();
+                }
+                catch (Exception e) {
+                    Debug.LogError($"Could not delete material '{wrapper?.Get()?.name}' on DB probably trying to delete prefab root. Use only on `Procedural_lazy` scene. {e.Message}");
+                }
+            }
+
+            assetDB.BuildAssetMap();
             ProceduralTools.FreeMemory(10.0f);
 
             Debug.Log($"Deleted Asset count was '{assetCountBeforeRemove}'. Remaining '{assetDB.prefabs.Count}'.");
-
-            assetDB.BuildAssetMap();
 
             return new ActionFinished(success: true, actionReturn: new Dictionary<string, List<string>>() {
                 ["prefabs"]=assetIds.ToList(),
@@ -2907,6 +2995,66 @@ namespace Thor.Procedural {
             return newTexture;
         }
 
+        public static IEnumerator CreateAsset(ProceduralAsset asset, Action<Dictionary<string, object>> onDone = null, Action<string> onFail = null) {
+            // ActionFinished result;
+            Dictionary<string, object> assetData = null;
+            try {
+                assetData = ProceduralTools.CreateAsset(
+                    vertices: asset.vertices,
+                    normals: asset.normals,
+                    name: asset.name,
+                    triangles: asset.triangles,
+                    uvs: asset.uvs,
+                    albedoTexturePath: asset.albedoTexturePath,
+                    metallicSmoothnessTexturePath: asset.metallicSmoothnessTexturePath,
+                    normalTexturePath: asset.normalTexturePath,
+                    emissionTexturePath: asset.emissionTexturePath,
+                    colliders: asset.colliders,
+                    physicalProperties: asset.physicalProperties,
+                    visibilityPoints: asset.visibilityPoints,
+                    annotations: asset.annotations,
+                    receptacleCandidate: asset.receptacleCandidate,
+                    yRotOffset: asset.yRotOffset,
+                    serializable: asset.serializable,
+                    parentTexturesDir: asset.parentTexturesDir,
+                    rawTextures: asset.rawTextures,
+                    saveMaterialToAssetDB: asset.saveMaterialToAssetDB
+                );
+                onDone?.Invoke(assetData);
+            }
+            catch (Exception e) {
+                // result = new ActionFinished(success: false, errorMessage: $"Error While creating the Asset {asset.name}. Exception: {e.Message}. {e.StackTrace}.");
+                onFail?.Invoke($"Error While creating the Asset {asset.name}. Exception: {e.Message}. {e.StackTrace}.");
+            }
+            yield return assetData;
+            
+        }
+
+        // public static Dictionary<string, object> CreateAsset(ProceduralAsset asset) {
+        //    return ProceduralTools.CreateAsset(
+        //             vertices: asset.vertices,
+        //             normals: asset.normals,
+        //             name: asset.name,
+        //             triangles: asset.triangles,
+        //             uvs: asset.uvs,
+        //             albedoTexturePath: asset.albedoTexturePath,
+        //             metallicSmoothnessTexturePath: asset.metallicSmoothnessTexturePath,
+        //             normalTexturePath: asset.normalTexturePath,
+        //             emissionTexturePath: asset.emissionTexturePath,
+        //             colliders: asset.colliders,
+        //             physicalProperties: asset.physicalProperties,
+        //             visibilityPoints: asset.visibilityPoints,
+        //             annotations: asset.annotations,
+        //             receptacleCandidate: asset.receptacleCandidate,
+        //             yRotOffset: asset.yRotOffset,
+        //             serializable: asset.serializable,
+        //             parentTexturesDir: asset.parentTexturesDir,
+        //             rawTextures: asset.rawTextures,
+        //             saveMaterialToAssetDB: asset.saveMaterialToAssetDB
+        //         );
+
+        // }
+
         // TODO refactor to recieve a ProceduralAsset
         public static Dictionary<string, object> CreateAsset(
             Vector3[] vertices,
@@ -2929,8 +3077,10 @@ namespace Thor.Procedural {
             Transform parent = null,
             bool addAnotationComponent = false,
             string parentTexturesDir = "",
-            ProceduralTextures rawTextures = null
+            ProceduralTextures rawTextures = null,
+            bool saveMaterialToAssetDB = false
         ) {
+             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             // create a new game object
             GameObject go = new GameObject();
 
@@ -3026,14 +3176,85 @@ namespace Thor.Procedural {
                 go.AddComponent<Objaverse.ObjaverseAnnotation>();
             }
 
-            Material mat = null;
+            // Material mat = null;
+            // RuntimePrefab runtimePrefab = null;
+
+            // // If it has any textures to load add a RuntimePrefab and do loading
+            // if (
+            //     !string.IsNullOrEmpty(albedoTexturePath) || 
+            //     !string.IsNullOrEmpty(metallicSmoothnessTexturePath)|| 
+            //     !string.IsNullOrEmpty(normalTexturePath) || 
+            //     !string.IsNullOrEmpty(emissionTexturePath) ||
+            //     rawTextures != null
+            // ) {
+            //     runtimePrefab = go.AddComponent<RuntimePrefab>();
+            //     // runtimePrefab. reloadtextures runs on awake, but first time things are null so got to call
+            //     // it again after setting it's member variables via SetProperties
+            //     mat = new Material(Shader.Find("Standard"));
+            //     mat.name = $"{name}_material";
+
+            //     // TODO: this is being used to load textures to a material, move out of runtimeprefab,
+            //     // only call SetProperties if they will stay as such, later SetProperties is called again
+            //     // with nulls to invalidate data
+            //     runtimePrefab.SetProperties(
+            //         newMaterial: mat,
+            //         albedoTexturePath: !string.IsNullOrEmpty(albedoTexturePath) && !Path.IsPathRooted(albedoTexturePath)? Path.Combine(parentTexturesDir, albedoTexturePath): albedoTexturePath,
+            //         metallicSmoothnessTexturePath: !string.IsNullOrEmpty(metallicSmoothnessTexturePath) && !Path.IsPathRooted(metallicSmoothnessTexturePath) ? Path.Combine(parentTexturesDir, metallicSmoothnessTexturePath) : metallicSmoothnessTexturePath,
+            //         normalTexturePath:  !string.IsNullOrEmpty(normalTexturePath) && !Path.IsPathRooted(normalTexturePath) ? Path.Combine(parentTexturesDir, normalTexturePath) : normalTexturePath,
+            //         emissionTexturePath: !string.IsNullOrEmpty(emissionTexturePath) && !Path.IsPathRooted(emissionTexturePath) ? Path.Combine(parentTexturesDir, emissionTexturePath) : emissionTexturePath,
+            //         rawTextures: rawTextures
+            //     );
+            //     runtimePrefab.reloadtextures(assetDb);
+
+            //     if (saveMaterialToAssetDB) {
+
+            //         // This is a fix for WebGL where it was too much memory to reload
+            //         // The textures on awake so instead we save the material to the 
+            //         // ProceduralAssetDatabase and set properties of the runtime prefab
+            //         // specially rawTextures which stores textures as base64 encoded strings, to null
+            //         // so that on next awake it insead searches in the Material database for the material
+            //         runtimePrefab.SetProperties();
+            //         // only keep material name
+            //         runtimePrefab.materialName = mat.name;
+            //         // runtimePrefab.meshRendererObject = meshObj;
+            //         if (!assetDb.ContainsMaterialKey(mat.name)) {
+            //             assetDb.addMaterial(material: mat, procedural: true);
+            //         }
+            //     }
+                
+
+            //     meshObj.GetComponent<Renderer>().material = runtimePrefab.sharedMaterial;
+            // }
+            // else {
+            //     mat = new Material(Shader.Find("Standard"));
+            //     meshObj.GetComponent<Renderer>().material = mat;
+            // }
+
+            Material mat =  new Material(Shader.Find("Standard"));
             RuntimePrefab runtimePrefab = null;
+            mat.name = $"{name}_material";
 
-            var k = rawTextures != null ? rawTextures.albedoBase64JPG : "";
-            Debug.Log($"======== Raw textures is null {rawTextures == null} one {k}");
+            if (saveMaterialToAssetDB) {
+                // More efficient because it doesn't have the RuntimePrefab that calls awake
+                RuntimePrefab.LoadTexturesToMaterial(
+                    sharedMaterial: mat,
+                    albedoTexturePath: !string.IsNullOrEmpty(albedoTexturePath) && !Path.IsPathRooted(albedoTexturePath)? Path.Combine(parentTexturesDir, albedoTexturePath): albedoTexturePath,
+                    metallicSmoothnessTexturePath: !string.IsNullOrEmpty(metallicSmoothnessTexturePath) && !Path.IsPathRooted(metallicSmoothnessTexturePath) ? Path.Combine(parentTexturesDir, metallicSmoothnessTexturePath) : metallicSmoothnessTexturePath,
+                    normalTexturePath:  !string.IsNullOrEmpty(normalTexturePath) && !Path.IsPathRooted(normalTexturePath) ? Path.Combine(parentTexturesDir, normalTexturePath) : normalTexturePath,
+                    emissionTexturePath: !string.IsNullOrEmpty(emissionTexturePath) && !Path.IsPathRooted(emissionTexturePath) ? Path.Combine(parentTexturesDir, emissionTexturePath) : emissionTexturePath,
+                    rawTextures: rawTextures
+                );
 
-            // If it has any textures to load add a RuntimePrefab and do loading
-            if (
+                // This is a fix for WebGL where it was too much memory to reload
+                // The textures on awake so instead we save the material to the 
+                // ProceduralAssetDatabase and set properties of the runtime prefab
+                // specially rawTextures which stores textures as base64 encoded strings, to null
+                // so that on next awake it insead searches in the Material database for the material
+                if (!assetDb.ContainsMaterialKey(mat.name)) {
+                    assetDb.addMaterial(material: mat, procedural: true);
+                }
+            }
+            else if (  // If it has any textures to load add a RuntimePrefab and do loading
                 !string.IsNullOrEmpty(albedoTexturePath) || 
                 !string.IsNullOrEmpty(metallicSmoothnessTexturePath)|| 
                 !string.IsNullOrEmpty(normalTexturePath) || 
@@ -3043,7 +3264,11 @@ namespace Thor.Procedural {
                 runtimePrefab = go.AddComponent<RuntimePrefab>();
                 // runtimePrefab. reloadtextures runs on awake, but first time things are null so got to call
                 // it again after setting it's member variables via SetProperties
-                mat = new Material(Shader.Find("Standard"));
+                
+
+                // TODO: this is being used to load textures to a material, move out of runtimeprefab,
+                // only call SetProperties if they will stay as such, later SetProperties is called again
+                // with nulls to invalidate data
                 runtimePrefab.SetProperties(
                     newMaterial: mat,
                     albedoTexturePath: !string.IsNullOrEmpty(albedoTexturePath) && !Path.IsPathRooted(albedoTexturePath)? Path.Combine(parentTexturesDir, albedoTexturePath): albedoTexturePath,
@@ -3052,95 +3277,11 @@ namespace Thor.Procedural {
                     emissionTexturePath: !string.IsNullOrEmpty(emissionTexturePath) && !Path.IsPathRooted(emissionTexturePath) ? Path.Combine(parentTexturesDir, emissionTexturePath) : emissionTexturePath,
                     rawTextures: rawTextures
                 );
-                runtimePrefab.reloadtextures();
-                meshObj.GetComponent<Renderer>().material = runtimePrefab.sharedMaterial;
-            }
-            else {
-                mat = new Material(Shader.Find("Standard"));
-                meshObj.GetComponent<Renderer>().material = mat;
+                runtimePrefab.reloadtextures(assetDb);
             }
 
-            // // load image from disk
-            // if (albedoTexturePath != null) {
-            //     albedoTexturePath = !Path.IsPathRooted(albedoTexturePath)
-            //         ? Path.Combine(parentTexturesDir, albedoTexturePath)
-            //         : albedoTexturePath;
-            //     // textures aren't saved as part of the prefab, so we load them from disk
-            //     runtimePrefab = go.AddComponent<RuntimePrefab>();
-            //     runtimePrefab.albedoTexturePath = albedoTexturePath;
-
-            //     byte[] imageBytes = File.ReadAllBytes(albedoTexturePath);
-            //     // Is this size right?
-            //     Texture2D tex = new Texture2D(2, 2);
-            //     tex.LoadImage(imageBytes);
-
-            //     // create a new material
-            //     mat = new Material(Shader.Find("Standard"));
-            //     mat.mainTexture = tex;
-
-            //     // assign the material to the game object
-            //     meshObj.GetComponent<Renderer>().material = mat;
-            //     runtimePrefab.sharedMaterial = mat;
-            // } else {
-            //     // create a new material
-            //     mat = new Material(Shader.Find("Standard"));
-            //     meshObj.GetComponent<Renderer>().material = mat;
-            // }
-
-            // if (metallicSmoothnessTexturePath != null) {
-            //     metallicSmoothnessTexturePath = !Path.IsPathRooted(metallicSmoothnessTexturePath)
-            //         ? Path.Combine(parentTexturesDir, metallicSmoothnessTexturePath)
-            //         : metallicSmoothnessTexturePath;
-            //     if (runtimePrefab == null) {
-            //         runtimePrefab = go.AddComponent<RuntimePrefab>();
-            //     }
-            //     runtimePrefab.metallicSmoothnessTexturePath = metallicSmoothnessTexturePath;
-            //     mat.EnableKeyword("_METALLICGLOSSMAP");
-            //     byte[] imageBytes = File.ReadAllBytes(metallicSmoothnessTexturePath);
-            //     Texture2D tex = new Texture2D(2, 2);
-            //     if (metallicSmoothnessTexturePath.ToLower().EndsWith(".jpg")) {
-            //         tex = SwapChannelsRGBAtoRRRB(tex);
-            //     }
-            //     tex.LoadImage(imageBytes);
-
-            //     mat.SetTexture("_MetallicGlossMap", tex);
-            // } else {
-            //     mat.SetFloat("_Metallic", 0f);
-            //     mat.SetFloat("_Glossiness", 0f);
-            // }
-
-            // if (normalTexturePath != null) {
-            //     normalTexturePath = !Path.IsPathRooted(normalTexturePath)
-            //         ? Path.Combine(parentTexturesDir, normalTexturePath)
-            //         : normalTexturePath;
-            //     if (runtimePrefab == null) {
-            //         runtimePrefab = go.AddComponent<RuntimePrefab>();
-            //     }
-            //     runtimePrefab.normalTexturePath = normalTexturePath;
-            //     mat.EnableKeyword("_NORMALMAP");
-            //     byte[] imageBytes = File.ReadAllBytes(normalTexturePath);
-            //     Texture2D tex = new Texture2D(2, 2);
-            //     tex.LoadImage(imageBytes);
-
-            //     mat.SetTexture("_BumpMap", tex);
-            // }
-
-            // if (emissionTexturePath != null) {
-            //     emissionTexturePath = !Path.IsPathRooted(emissionTexturePath)
-            //         ? Path.Combine(parentTexturesDir, emissionTexturePath)
-            //         : emissionTexturePath;
-            //     if (runtimePrefab == null) {
-            //         runtimePrefab = go.AddComponent<RuntimePrefab>();
-            //     }
-            //     runtimePrefab.emissionTexturePath = emissionTexturePath;
-            //     mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-            //     mat.EnableKeyword("_EMISSION");
-            //     byte[] imageBytes = File.ReadAllBytes(emissionTexturePath);
-            //     Texture2D tex = new Texture2D(2, 2);
-            //     tex.LoadImage(imageBytes);
-            //     mat.SetTexture("_EmissionMap", tex);
-            //     mat.SetColor("_EmissionColor", Color.white);
-            // }
+            
+            meshObj.GetComponent<Renderer>().material = mat;
 
             // have the mesh refer to the mesh at meshPath
             meshObj.GetComponent<MeshFilter>().sharedMesh = mesh;
@@ -3196,7 +3337,6 @@ namespace Thor.Procedural {
             }
 
             // Add the asset to the procedural asset database
-            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             Transform prefabParentTransform = parent;
             if (assetDb != null && assetDb.assetMap != null) {
                 assetDb.addAsset(go, procedural: true);
@@ -3223,6 +3363,7 @@ namespace Thor.Procedural {
 
             var result = new Dictionary<string, object>
             {
+                {"assetId", name},
                 { "assetMetadata", assetMeta },
                 { "objectMetadata", objectMeta }
             };

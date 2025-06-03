@@ -6,11 +6,15 @@ using System.Reflection;
 using EasyButtons;
 using UnityEngine;
 using Thor.Procedural.Data;
+using Thor.Procedural;
+
 
 #if UNITY_EDITOR
 using EasyButtons.Editor;
 using UnityEditor.SceneManagement;
 #endif
+
+namespace Thor.Procedural {
 
 [ExecuteInEditMode]
 public class RuntimePrefab : MonoBehaviour {
@@ -28,13 +32,17 @@ public class RuntimePrefab : MonoBehaviour {
     
     public ProceduralTextures rawTextures = null;
 
+    public string materialName;
+
+    public Transform meshRendererObject = null;
+
     // Storing the textures as paths, and loading them on object awake,
     // In the case that rawTextures is provided textures are stored
     // as base64 strings in this component for the prefab, and decoded on awake
     // TODO: maybe store as Textures when rawTextures is not null
     public Material sharedMaterial;
 
-    Texture2D SwapChannelsRGBAtoRRRB(Texture2D originalTexture) {
+    private static Texture2D SwapChannelsRGBAtoRRRB(Texture2D originalTexture) {
         Color[] pixels = originalTexture.GetPixels();
         for (int i = 0; i < pixels.Length; i++) {
             Color temp = pixels[i];
@@ -75,11 +83,11 @@ public class RuntimePrefab : MonoBehaviour {
         return null;
     }
 
-    private void setAlbedoProps(Texture2D tex) {
+    private static void setAlbedoProps(Texture2D tex, Material sharedMaterial) {
         sharedMaterial.mainTexture = tex;
     }
 
-    private void setMetallicProps(Texture2D tex, bool swapRGBAtoRRRB = false) {
+     private static void setMetallicProps(Texture2D tex, Material sharedMaterial, bool swapRGBAtoRRRB = false) {
         if (tex != null) {
             sharedMaterial.EnableKeyword("_METALLICGLOSSMAP");
             if (swapRGBAtoRRRB) {
@@ -93,12 +101,12 @@ public class RuntimePrefab : MonoBehaviour {
         }
     }
 
-    private void setNormalProps(Texture2D tex) {
+    private static void setNormalProps(Texture2D tex, Material sharedMaterial) {
             sharedMaterial.EnableKeyword("_NORMALMAP");
             sharedMaterial.SetTexture("_BumpMap", tex);
     }
 
-    private void setEmissionProps(Texture2D tex) {
+    private static void setEmissionProps(Texture2D tex, Material sharedMaterial) {
             sharedMaterial.globalIlluminationFlags =
                 MaterialGlobalIlluminationFlags.RealtimeEmissive;
             sharedMaterial.EnableKeyword("_EMISSION");
@@ -122,48 +130,103 @@ public class RuntimePrefab : MonoBehaviour {
             this.normalTexturePath = normalTexturePath;
             this.emissionTexturePath = emissionTexturePath;
             this.rawTextures = rawTextures;
+            // this.materialName = newMaterial.name;
 
             Debug.Log($"albedoTexturePath { albedoTexturePath} m {metallicSmoothnessTexturePath} n {normalTexturePath} e {emissionTexturePath}");
     }
 
-
-    public void reloadtextures(
+    public static void LoadTexturesToMaterial(
+         Material sharedMaterial,
+         string albedoTexturePath = null,
+         string metallicSmoothnessTexturePath = null,
+         string normalTexturePath = null,
+         string emissionTexturePath = null,
+         ProceduralTextures rawTextures = null
     ) {
         if (sharedMaterial != null) {
+
             if (rawTextures == null) {
                 // use file paths
                 if (sharedMaterial.mainTexture == null) {
-                    setAlbedoProps(LoadTextureFromFile(albedoTexturePath));
+                    setAlbedoProps(LoadTextureFromFile(albedoTexturePath), sharedMaterial);
                 }
-                setMetallicProps(LoadTextureFromFile(metallicSmoothnessTexturePath), swapRGBAtoRRRB: metallicSmoothnessTexturePath.ToLower().EndsWith(".jpg"));
-                setNormalProps(LoadTextureFromFile(normalTexturePath));
-                setEmissionProps(LoadTextureFromFile(emissionTexturePath));
+                setMetallicProps(
+                    LoadTextureFromFile(metallicSmoothnessTexturePath), 
+                    sharedMaterial, 
+                    swapRGBAtoRRRB: metallicSmoothnessTexturePath.ToLower().EndsWith(".jpg")
+                );
+                setNormalProps(LoadTextureFromFile(normalTexturePath), sharedMaterial);
+                setEmissionProps(LoadTextureFromFile(emissionTexturePath), sharedMaterial);
 
                 
             }
             else {
                 // use string encoded textures
                 if (sharedMaterial.mainTexture == null) {
-                    setAlbedoProps(LoadTextureFromBase64(rawTextures.albedoBase64JPG));
+                    setAlbedoProps(LoadTextureFromBase64(rawTextures.albedoBase64JPG), sharedMaterial);
                 }
                 // swap because it's a jpg
-                setMetallicProps(LoadTextureFromBase64(rawTextures.metallicSmoothnessBase64JPG), swapRGBAtoRRRB: true);
-                setNormalProps(LoadTextureFromBase64(rawTextures.normalBase64JPG));
-                setEmissionProps(LoadTextureFromBase64(rawTextures.emissionBase64JPG));
+                setMetallicProps(LoadTextureFromBase64(rawTextures.metallicSmoothnessBase64JPG), sharedMaterial, swapRGBAtoRRRB: true);
+                setNormalProps(LoadTextureFromBase64(rawTextures.normalBase64JPG), sharedMaterial);
+                setEmissionProps(LoadTextureFromBase64(rawTextures.emissionBase64JPG), sharedMaterial);
                 
             }
         }
     }
+    
+
+    public void reloadtextures(
+        ProceduralAssetDatabase db
+    ) {
+         if (!string.IsNullOrEmpty(this.materialName) && sharedMaterial == null) {
+            // Debug.Log($"-------- Getting material from assetdb {materialName}");
+            var matMap = db.GetMaterialMap();
+            if (matMap.ContainsKey(materialName)) {
+                var mat = matMap.getAsset(materialName);
+                this.sharedMaterial = mat;
+            }
+            else {
+                Debug.LogError($"Material ${materialName} does not exist in asset Database, either save material in asset Database or set properties of runtimePrefab including sharedMaterial and one of the ways of loading textures either texure paths or rawTextures");
+            }
+
+            // Debug.Log($"-------- meshRendererObject null?  {meshRendererObject == null}");
+            this.meshRendererObject = transform.Find("mesh");
+
+            if (meshRendererObject != null && this.sharedMaterial != null) {
+                // Debug.Log($"=========== Set meshRendererObject material to {this.sharedMaterial.name}");
+                var renderer = meshRendererObject.GetComponent<MeshRenderer>();
+                // renderer.sharedMaterial = this.sharedMaterial;
+                renderer.material = this.sharedMaterial;
+            }
+        } 
+        else if (sharedMaterial != null) {
+
+            LoadTexturesToMaterial(
+                sharedMaterial,
+                albedoTexturePath: albedoTexturePath,
+                metallicSmoothnessTexturePath: metallicSmoothnessTexturePath,
+                normalTexturePath: normalTexturePath,
+                emissionTexturePath: emissionTexturePath,
+                rawTextures: rawTextures
+            );
+        }
+       
+    }
 
     public void Awake() {
-        reloadtextures();
+        var db = FindObjectOfType<ProceduralAssetDatabase>();
+        reloadtextures(db);
+        
     }
 
 #if UNITY_EDITOR
     [Button(Expanded = true)]
     public void RealoadTextures() {
-        reloadtextures();
+        var db = FindObjectOfType<ProceduralAssetDatabase>();
+        reloadtextures(db);
     }
 
 #endif
+}
+
 }
