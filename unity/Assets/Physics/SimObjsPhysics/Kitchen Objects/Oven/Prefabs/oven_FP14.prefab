@@ -1169,7 +1169,7 @@ MonoBehaviour:
   currentOpenness: 1
   IgnoreTheseObjects: []
   isOpen: 0
-  movementType: 0
+  movementType: 1
 --- !u!1 &3972065618124429393
 GameObject:
   m_ObjectHideFlags: 0
@@ -1522,6 +1522,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2783510139436067531}
   - component: {fileID: 4743972658257150577}
+  - component: {fileID: 8178836451405705217}
   m_Layer: 0
   m_Name: OvenDrawer
   m_TagString: SimObjPhysics
@@ -1537,7 +1538,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4905037341523819466}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.1829431, z: 0.40467283}
+  m_LocalPosition: {x: 0, y: 0.1829431, z: 0.4046728}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 3283870586430076051}
@@ -1599,6 +1600,30 @@ MonoBehaviour:
   isColdSource: 0
   ContainedObjectReferences: []
   CurrentlyContains: []
+--- !u!114 &8178836451405705217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4905037341523819466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9f742cdae0124730b5b59765384368a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MovingParts:
+  - {fileID: 4905037341523819466}
+  openPositions:
+  - {x: 0, y: 0.1829431, z: 0.6819}
+  closedPositions:
+  - {x: 0, y: 0.1829431, z: 0.4046728}
+  animationTime: 0.2
+  triggerEnabled: 1
+  currentOpenness: 1
+  IgnoreTheseObjects: []
+  isOpen: 0
+  movementType: 0
 --- !u!1 &5210877115504006975
 GameObject:
   m_ObjectHideFlags: 0
