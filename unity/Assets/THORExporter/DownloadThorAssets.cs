@@ -609,9 +609,21 @@ public class DownloadThorAssets : MonoBehaviour
             mesh_parent = root;
         }
         
+        // Calculate transforms relative to the parent mesh
+        var scale = GetCombinedScale(go.transform, mesh_parent.transform);
+        var position = mesh_parent.transform.InverseTransformPoint(go.transform.position);
+        var rotation = Quaternion.Inverse(mesh_parent.transform.rotation) * go.transform.rotation;
         var meshData = new MeshData
         {
-            // Calculate transforms relative to the parent mesh
+            parentRelativePosition = position,
+            parentRelativeRotation = rotation,
+            parentRelativeScale = scale,
+            meshName = meshName,
+            parentName = mesh_parent.name.Replace(" ", "_").Replace(".", "_")
+        };
+        /*
+        var meshData = new MeshData
+        {
             parentRelativePosition = mesh_parent.transform.InverseTransformPoint(go.transform.position),
             parentRelativeRotation = Quaternion.Inverse(mesh_parent.transform.rotation) * go.transform.rotation,
             parentRelativeScale = meshHierarchy.TryGetValue(meshfilter, out _) ? 
@@ -624,7 +636,7 @@ public class DownloadThorAssets : MonoBehaviour
             meshName = meshName,
             parentName = mesh_parent.name.Replace(" ", "_").Replace(".", "_")
         };
-        
+        */
         // Keep track of what transforms we have traversed upward so we can compare them to associated joints later
         List<Transform> transformsTraversed = new List<Transform>();
         transformsTraversed.Add(go.transform);
@@ -1406,6 +1418,7 @@ public class DownloadThorAssets : MonoBehaviour
         {
             MeshFilter mf = meshFilters[i];
             string meshName = mf.gameObject.name.Replace(" ", "_");
+
             
             if (mf.gameObject.tag == "Structure")
             {
