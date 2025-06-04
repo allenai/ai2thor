@@ -647,6 +647,7 @@ public class DownloadThorAssets : MonoBehaviour
         //collider_parent = mesh_parent;
         //collider_parent = meshFiltersGameObject.transform.parent.gameObject; // was okay for iTHOR and most of THOR assets 
         // for assets with handles. simobj that have nested meshfilters with colliders. 
+        Debug.Log("-------------------mesh: " + meshfilter.gameObject.name);
         var collider_parent_transform =  meshFiltersGameObject.transform.parent.gameObject.transform.Find("Colliders");
         if (collider_parent_transform == null)
         {
@@ -956,8 +957,16 @@ public class DownloadThorAssets : MonoBehaviour
                 
                 // Set joint position relative to parent
                 // apply onPositions to jointInfo.meshRelativePosition  
-                jointInfo.meshRelativePosition = parent.InverseTransformPoint(movingPart.transform.position);
-                
+                if (movingPart.gameObject.GetComponent<MeshFilter>() != null)
+                {
+                    jointInfo.meshRelativePosition = new Vector3(0, 0, 0);
+                }                    
+                else
+                {
+                    jointInfo.meshRelativePosition = parent.InverseTransformPoint(movingPart.transform.position);
+                }
+
+
                 // We can keep the quaternion-based rotation calculation for debugging purposes only
                 if (jointInfo.jointType == "rotate") {
                     Vector3 rotRange = jointInfo.highRange;

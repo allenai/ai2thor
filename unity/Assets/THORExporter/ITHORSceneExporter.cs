@@ -37,11 +37,11 @@ public class ITHORSceneExporter : MonoBehaviour
         public string id;
         public string type;
         public float range;
-        public float[] color;
+        public Color rgb;
         public float intensity;
         //public float indirectMultiplier;
-        public string position;
-        public string rotation;
+        public Vector3 position;
+        public Vector3 rotation;
         //public string shadow_type;
       //  public float shadow_strength;   
     }
@@ -59,7 +59,7 @@ public class ITHORSceneExporter : MonoBehaviour
         public List<IThorObject> objects = new List<IThorObject>();
         public List<IThorObject> structuralObjects = new List<IThorObject>();
         public IThorMetadata metadata = new IThorMetadata();
-        public IThorProceduralParams proceduralParams = new IThorProceduralParams();
+        public IThorProceduralParams proceduralParameters = new IThorProceduralParams();
     }
 
 
@@ -141,7 +141,7 @@ public class ITHORSceneExporter : MonoBehaviour
         GameObject lightingObject = GameObject.Find("Lighting");
         if (lightingObject != null)
         {
-            sceneData.proceduralParams.lights = GetLights(lightingObject);
+            sceneData.proceduralParameters.lights = GetLights(lightingObject);
         }
         else
         {
@@ -464,18 +464,16 @@ public class ITHORSceneExporter : MonoBehaviour
         List<iTHORLight> lights = new List<iTHORLight>();
         foreach (Light light in children)
         {
-            float[] color = new float[] { light.color.r, light.color.g,light.color.b, light.color.a};
             iTHORLight iThorLight = new iTHORLight
                     {
                         id = light.name,
                         type = light.type.ToString(),
                         range = light.range,
-                        color = color,
+                        rgb = light.color,
                         intensity = light.intensity,
                         //indirectMultiplier = light.indirectMultiplier,
-                        position = light.transform.position.ToString(),
-                        rotation = light.
-                        transform.rotation.eulerAngles.ToString(),
+                        position = light.transform.position,
+                        rotation = light.transform.rotation.eulerAngles, 
                         //shadow_type = light.shadowType,
                         //shadow_strength = light.shadowStrength
                     };
