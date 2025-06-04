@@ -19,11 +19,49 @@ public class ITHORSceneExporter : MonoBehaviour
     }
 
     [System.Serializable]
+    class IThorMetadata
+    {
+        public Agent agent;
+    }
+
+    [System.Serializable]
+    class Agent
+    {
+        public Vector3 position;
+        public Vector3 rotation;
+    }
+
+    [System.Serializable]
+    class iTHORLight
+    {
+        public string id;
+        public string type;
+        public float range;
+        public float[] color;
+        public float intensity;
+        //public float indirectMultiplier;
+        public string position;
+        public string rotation;
+        //public string shadow_type;
+      //  public float shadow_strength;   
+    }
+
+    [System.Serializable]
+    class IThorProceduralParams
+    {
+        public List<iTHORLight> lights;
+        public string skyboxId;
+    }
+
+    [System.Serializable]
     class IThorScene
     {
         public List<IThorObject> objects = new List<IThorObject>();
         public List<IThorObject> structuralObjects = new List<IThorObject>();
+        public IThorMetadata metadata = new IThorMetadata();
+        public IThorProceduralParams proceduralParams = new IThorProceduralParams();
     }
+
 
     public string saveFilename = "iTHOR_scene.json";
 
@@ -76,6 +114,40 @@ public class ITHORSceneExporter : MonoBehaviour
         // SECOND PASS. Get INFO for all objects
         sceneData.objects = GetObjects(floorPlanName, objects);
         sceneData.structuralObjects = GetStructuralObjects(floorPlanName, structuralObjects);
+
+        // Get the agent position and rotation
+        GameObject agentObject = GameObject.Find("FPSController");
+        if (agentObject != null)
+        {
+            sceneData.metadata.agent = new Agent
+            {
+                position = agentObject.transform.position,
+                rotation = agentObject.transform.rotation.eulerAngles
+            };
+        }
+        else
+        {
+            sceneData.metadata.agent = new Agent
+            {
+                position = Vector3.zero,
+                rotation = Vector3.zero
+            };
+        }
+        sceneData.metadata.agent.position.y = 0.0f; // For some reason, thor robot is lifted up
+
+
+        // Get the procedural params
+        // -- Get the lights 
+        GameObject lightingObject = GameObject.Find("Lighting");
+        if (lightingObject != null)
+        {
+            sceneData.proceduralParams.lights = GetLights(lightingObject);
+        }
+        else
+        {
+            Debug.LogError("Lighting object not found");
+        }
+
 
         // Save to JSON
         string savePath = Path.Combine("Assets/iTHOR", floorPlanName);
@@ -379,5 +451,37 @@ public class ITHORSceneExporter : MonoBehaviour
         else if (angle < -180f)
             angle += 360f;
         return angle;
+    }
+
+
+    private List<iTHORLight> GetLights(GameObject lightingObject)
+    {
+
+        var children = lightingObject.GetComponentsInChildren<Light>();
+        Debug.Log($"Found {children.Length} lights");
+
+       // Get all lights in the scene
+        List<iTHORLight> lights = new List<iTHORLight>();
+        foreach (Light light in children)
+        {
+            float[] color = new float[] { light.color.r, light.color.g,light.color.b, light.color.a};
+            iTHORLight iThorLight = new iTHORLight
+                    {
+                        id = light.name,
+                        type = light.type.ToString(),
+                        range = light.range,
+                        color = color,
+                        intensity = light.intensity,
+                        //indirectMultiplier = light.indirectMultiplier,
+                        position = light.transform.position.ToString(),
+                        rotation = light.
+                        transform.rotation.eulerAngles.ToString(),
+                        //shadow_type = light.shadowType,
+                        //shadow_strength = light.shadowStrength
+                    };
+            lights.Add(iThorLight);
+            
+        }
+        return lights;
     }
 }
