@@ -21,8 +21,8 @@ public class Prep_XML_Export : MonoBehaviour
                 var canToggleOnOff = simObj.GetComponent<CanToggleOnOff>();
                 var canOpenClose = simObj.GetComponent<CanOpen_Object>();
 
-                if ((canToggleOnOff != null && canToggleOnOff.MovingParts.Length > 0) ||
-                    (canOpenClose != null && canOpenClose.MovingParts.Length > 0))
+                if (((canToggleOnOff != null && canToggleOnOff.MovingParts.Length > 0) ||
+                    (canOpenClose != null && canOpenClose.MovingParts.Length > 0)) && simObj.Type != SimObjType.Blinds)
                 {
                     //Debug.Log($"Skipping tag change for {simObj.gameObject.name} because it has populated MovingParts.");
                     continue; // Skip this object
