@@ -258,6 +258,11 @@ public class DownloadThorAssets : MonoBehaviour
                 // Load the Material from the .mat file
                 //Debug.Log("Loading material: " + matFile);
                 Material m = AssetDatabase.LoadAssetAtPath<Material>(matFile);
+                if (m.name.Contains("Grunge"))
+                    continue;
+                if (m.name.Contains("Glass"))
+                    continue;
+
                 if (m != null)
                 {
                     if (!Mat2Texture.ContainsKey(m.name))
@@ -577,6 +582,7 @@ public class DownloadThorAssets : MonoBehaviour
     //take one mesh filter, and get all the information about it ready to go
     public MeshData FillMeshData(MeshFilter meshfilter, string meshName, SimObjPhysics topmostSimObjPhysics)
     {
+        Debug.Log("FillMeshData called for mesh: " + meshName);
         var go = meshfilter.gameObject;
 
         // root 
@@ -653,13 +659,17 @@ public class DownloadThorAssets : MonoBehaviour
             Debug.Log("Joint info found for mesh: " + meshData.meshName);
             collider_parent = meshData.jointInfo.jointGO;
         }
+
+        // Get colliders
+        //collider_parent = meshFiltersGameObject.transform.parent.gameObject; // was okay for iTHOR and most of THOR assets 
+        //Debug.Log("collider_parent: " + collider_parent.name);
+        //CollectValidColliders(collider_parent, meshfilter, ref meshData, mesh_parent);
         
         // Get colliders
-
         //collider_parent = mesh_parent;
         //collider_parent = meshFiltersGameObject.transform.parent.gameObject; // was okay for iTHOR and most of THOR assets 
         // for assets with handles. simobj that have nested meshfilters with colliders. 
-        Debug.Log("-------------------mesh: " + meshfilter.gameObject.name);
+        
         var collider_parent_transform =  meshFiltersGameObject.transform.parent.gameObject.transform.Find("Colliders");
         if (collider_parent_transform == null)
         {
@@ -667,69 +677,76 @@ public class DownloadThorAssets : MonoBehaviour
             collider_parent_transform =  meshFiltersGameObject.transform.Find("Colliders");
             if (collider_parent_transform == null)
             {
-                return meshData; 
+                Debug.LogWarning("No collider found for " + mesh_parent.name);
             }
         }
-        collider_parent = collider_parent_transform.gameObject;
-        Debug.Log("-------------------mesh_parent: " + collider_parent.name);
-        Debug.Log("-------------------mesh: " + meshfilter.gameObject.name);
-        
-        //collider_parent = meshFiltersGameObject.transform.parent.gameObject;
-        var colliders = collider_parent.GetComponentsInChildren<Collider>();
-        // collider_parent 
+        Debug.Log("collider_parent_transform: " + collider_parent_transform + " " + meshFiltersGameObject.transform.parent.gameObject.name);
 
-        if (colliders.Length == 0)
+        if (collider_parent_transform != null)
         {
-            Debug.LogWarning("No colliders found for " + mesh_parent.name);
-            return meshData;
-        }
-        
-        // Process colliders
-        foreach (var collider in colliders)
-        {
-            if (!collider.enabled || !collider.gameObject.activeInHierarchy)
-                continue;
+            collider_parent = collider_parent_transform.gameObject;
+            Debug.Log("-------------------mesh_parent: " + collider_parent.name);
+            Debug.Log("-------------------mesh: " + meshfilter.gameObject.name);
             
-            if (collider.gameObject.name.Contains("rb"))
-                continue;
+            //collider_parent = meshFiltersGameObject.transform.parent.gameObject;
+            var colliders = collider_parent.GetComponentsInChildren<Collider>();
+            // collider_parent 
 
-            
-            
-            Debug.Log("ColliderInfo: " + collider.gameObject.name);
-            Debug.Log("mesh_parent: " + mesh_parent.name);
-            Debug.Log("meshFiltersGameObject: " + meshFiltersGameObject.name);
-            
-            var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, meshFiltersGameObject);
-            if (colliderInfo != null)
+            if (colliders.Length > 0)
             {
-                if (!collider.isTrigger)
-                {
-                    meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
-                }
                 
-                Debug.Log("not null: " + collider.gameObject.name);
+                // Process colliders
+                foreach (var collider in colliders)
+                {
+                    if (!collider.enabled || !collider.gameObject.activeInHierarchy)
+                        continue;
+                    
+                    if (collider.gameObject.name.Contains("rb"))
+                        continue;
+
+                    
+                    
+                    Debug.Log("ColliderInfo: " + collider.gameObject.name);
+                    Debug.Log("mesh_parent: " + mesh_parent.name);
+                    Debug.Log("meshFiltersGameObject: " + meshFiltersGameObject.name);
+                    
+                    var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, meshFiltersGameObject);
+                    if (colliderInfo != null)
+                    {
+                        if (!collider.isTrigger)
+                        {
+                            meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
+                        }
+                        
+                        Debug.Log("not null: " + collider.gameObject.name);
+                    }
+                }
             }
         }
-
+        else{
+            Debug.LogWarning("1 No collider found for " + mesh_parent.name);
+        }
+ 
 
         // for receptacles
+        //collider_parent
         collider_parent = meshFiltersGameObject.transform.parent.gameObject; // was okay for iTHOR and most of THOR assets 
-        colliders = collider_parent.GetComponentsInChildren<Collider>();
-        
-        if (colliders.Length == 0)
+        //var trigger_colliders = collider_parent.GetComponentsInChildren<Collider>();
+        var trigger_colliders = new List<Collider>();
+        foreach (Transform t in collider_parent.transform)
         {
-            Debug.LogWarning("No colliders found for " + mesh_parent.name);
-            return meshData;
+            if (t.GetComponent<Collider>() != null)
+                trigger_colliders.Add(t.GetComponent<Collider>());
         }
-        
         // Process colliders
-        foreach (var collider in colliders)
+        foreach (var collider in trigger_colliders)
         {
             if (!collider.enabled || !collider.gameObject.activeInHierarchy)
                 continue;
             
             if (collider.gameObject.name.Contains("rb"))
                 continue;
+
 
             var colliderInfo = GetColliderInfo(collider, meshFiltersGameObject, meshFiltersGameObject);
             if (colliderInfo != null)
@@ -741,7 +758,9 @@ public class DownloadThorAssets : MonoBehaviour
             }
         }
 
+        
         return meshData;
+        
     }
 
     private JointInfo CollectValidJoints(MeshFilter meshfilter, ref MeshData meshData, List<Transform> transformsTraversed, Transform parent, Transform topmostSimObjPhysics)
@@ -1420,13 +1439,14 @@ public class DownloadThorAssets : MonoBehaviour
             string meshName = mf.gameObject.name.Replace(" ", "_");
 
             
-            if (mf.gameObject.tag == "Structure")
+            if (mf.gameObject.tag == "Structure") // temporary set  to false for THOR assets...
             {
                 MeshData meshData = FillStructureMeshData(meshFilters[i], meshName, topmostSimObjPhysics);  
                 exportedAssetInfo.meshes.Add(meshData);
             }
             else
             {
+                Debug.Log("FillMeshData called for mesh: " + meshName);
                 MeshData meshData = FillMeshData(meshFilters[i], meshName, topmostSimObjPhysics);
                 exportedAssetInfo.meshes.Add(meshData);
             }

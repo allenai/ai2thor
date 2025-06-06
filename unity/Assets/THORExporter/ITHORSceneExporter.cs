@@ -16,6 +16,7 @@ public class ITHORSceneExporter : MonoBehaviour
         public Vector3 position;
         public Vector3 rotation;
         public bool kinematic;
+        public List<string> children;
     }
 
     [System.Serializable]
@@ -168,11 +169,11 @@ public class ITHORSceneExporter : MonoBehaviour
         if (!objectCount.ContainsKey(objectId))
             objectCount[objectId] = 0;
 
-        string assetId = (objectId + "_" + objectCount[objectId])
-            .Replace(" ", "")
-            .Replace("(Instance)", "")
-            .Replace("Instance", "")
-            .Replace(".", "_");
+        string assetId = objectId; //(objectId + "_" + objectCount[objectId])
+            //.Replace(" ", "")
+            //.Replace("(Instance)", "")
+            //.Replace("Instance", "")
+            //.Replace(".", "_");
 
         string exportPath = Path.Combine("Assets/iTHOR", floorPlanName);
         
@@ -372,7 +373,7 @@ public class ITHORSceneExporter : MonoBehaviour
                     }
                 }                
 
-
+                var children = new List<string>();
                 //var position = rootParent.transform.InverseTransformPoint(obj.transform.position);
                 IThorObject thorObj = new IThorObject
                 {
@@ -380,7 +381,8 @@ public class ITHORSceneExporter : MonoBehaviour
                     assetId = assetId,
                     position = position, //obj.transform.position + bbox_center, // position,
                     rotation = WrapEulerAngles(obj.transform.rotation.eulerAngles), // Wrap the angles
-                    kinematic = false //simObjPhysics.isStatic
+                    kinematic = false, //simObjPhysics.isStatic,
+                    children = children,
                 };
                 objects.Add(thorObj);
                 Debug.Log($"Added object: {obj.name} of type {thorObj.objectType}");
@@ -417,13 +419,23 @@ public class ITHORSceneExporter : MonoBehaviour
             //Destroy(clone);
         
 
+            var children = new List<string>();
+            foreach (Transform child in obj.transform)
+            {
+                if (child.gameObject.activeSelf && child.gameObject.tag == "SimObjPhysics")
+                {
+                    children.Add(child.gameObject.name);
+                }
+            }
+
             IThorObject thorObj = new IThorObject
             {
                 objectType = objectId,  // Use the object name as type for structural objects
                 assetId = assetId,
                 position = Vector3.zero,//obj.transform.localPosition,
                 rotation = Vector3.zero,//obj.transform.localEulerAngles,
-                kinematic = true
+                kinematic = true,
+                children = children,
             };
             structuralObjects.Add(thorObj);
             Debug.Log($"Added structural object: {obj.name} with assetId: {assetId}");
