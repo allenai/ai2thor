@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4855359907049414141}
   m_Layer: 0
   m_Name: dishwasher_door_FP18
-  m_TagString: Untagged
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -92,11 +92,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3223696361971086789}
-  - component: {fileID: 8282264217936779531}
-  - component: {fileID: 3371758972201158571}
   m_Layer: 0
   m_Name: dishwasher_FP18
-  m_TagString: Untagged
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -113,24 +111,57 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4975518965098693259}
+  - {fileID: 5511753924030334172}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &8282264217936779531
+--- !u!1 &6420402503139195221
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5511753924030334172}
+  - component: {fileID: 6660812952839112094}
+  - component: {fileID: 3521967796415164072}
+  m_Layer: 0
+  m_Name: dishwasher_FP18
+  m_TagString: SimObjPhysics
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5511753924030334172
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6420402503139195221}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 3223696361971086789}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &6660812952839112094
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3885905812141495359}
+  m_GameObject: {fileID: 6420402503139195221}
   m_Mesh: {fileID: 2815723753523220324, guid: bbad65163436c419fb67a7061d4201c2, type: 3}
---- !u!23 &3371758972201158571
+--- !u!23 &3521967796415164072
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3885905812141495359}
+  m_GameObject: {fileID: 6420402503139195221}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
