@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 8674272416741407709}
   m_Layer: 0
   m_Name: oven_FP5_drawer
-  m_TagString: Untagged
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -25,14 +25,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 59958708269363103}
-  m_LocalRotation: {x: 0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.046550743, y: 0.1951529, z: 0.4125958}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 4356958044485697633}
-  - {fileID: 2542227349651544800}
-  m_Father: {fileID: 6427879891046710393}
-  m_RootOrder: 0
+  m_Children: []
+  m_Father: {fileID: 4867664901385923052}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &8126547547908889566
 MeshFilter:
@@ -61,9 +59,9 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -239785301247091124, guid: 182b986abfbfe4f79beede5300898883, type: 3}
-  - {fileID: -6563577100047636019, guid: 182b986abfbfe4f79beede5300898883, type: 3}
-  - {fileID: -7480921294101082545, guid: 182b986abfbfe4f79beede5300898883, type: 3}
+  - {fileID: 2100000, guid: 2199aa55ab2d11a43b1b6a7bec307647, type: 2}
+  - {fileID: 2100000, guid: 42fdab0940c194e24a6c19ff5d289457, type: 2}
+  - {fileID: 2100000, guid: f047a10c8162f41e8a7920e5442f2f53, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -186,7 +184,7 @@ GameObject:
   - component: {fileID: 6689495309365748841}
   m_Layer: 0
   m_Name: oven_FP5_door
-  m_TagString: Untagged
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -232,9 +230,9 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -6563577100047636019, guid: 182b986abfbfe4f79beede5300898883, type: 3}
-  - {fileID: -239785301247091124, guid: 182b986abfbfe4f79beede5300898883, type: 3}
-  - {fileID: -7480921294101082545, guid: 182b986abfbfe4f79beede5300898883, type: 3}
+  - {fileID: 2100000, guid: 42fdab0940c194e24a6c19ff5d289457, type: 2}
+  - {fileID: 2100000, guid: f047a10c8162f41e8a7920e5442f2f53, type: 2}
+  - {fileID: 2100000, guid: 46b7a21c5ddf8344ca3e67c9cdd8c2ba, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -573,9 +571,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6427879891046710393}
+  - component: {fileID: 6504748576193251056}
+  - component: {fileID: 3673849374850749325}
   m_Layer: 0
   m_Name: oven_FP5
-  m_TagString: Untagged
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -591,13 +591,90 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 6346503050879495807}
+  - {fileID: 4867664901385923052}
   - {fileID: 6909733247812898878}
   - {fileID: 3964981598539361968}
   - {fileID: 1044607498940983256}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6504748576193251056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2451383801918580002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  objectID: 
+  assetID: 
+  Type: 168
+  PrimaryProperty: 1
+  SecondaryProperties: 08000000
+  BoundingBox: {fileID: 0}
+  VisibilityPoints: []
+  ReceptacleTriggerBoxes: []
+  debugIsVisible: 0
+  debugIsInteractable: 0
+  isInAgentHand: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
+  salientMaterials: 
+  MySpawnPoints: []
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
+  lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  isHeatSource: 0
+  isColdSource: 0
+  ContainedObjectReferences: []
+  CurrentlyContains: []
+--- !u!114 &3673849374850749325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2451383801918580002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9f742cdae0124730b5b59765384368a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MovingParts:
+  - {fileID: 1168415982769593542}
+  openPositions:
+  - {x: 90, y: 0, z: 0}
+  closedPositions:
+  - {x: 0, y: 0, z: 0}
+  animationTime: 0.2
+  triggerEnabled: 1
+  currentOpenness: 1
+  IgnoreTheseObjects: []
+  isOpen: 0
+  movementType: 1
 --- !u!1 &2542675227905549623
 GameObject:
   m_ObjectHideFlags: 0
@@ -787,7 +864,7 @@ GameObject:
   - component: {fileID: 8223842152218703270}
   m_Layer: 0
   m_Name: oven_FP5
-  m_TagString: Untagged
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -835,9 +912,9 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -6563577100047636019, guid: 182b986abfbfe4f79beede5300898883, type: 3}
-  - {fileID: -239785301247091124, guid: 182b986abfbfe4f79beede5300898883, type: 3}
-  - {fileID: -7480921294101082545, guid: 182b986abfbfe4f79beede5300898883, type: 3}
+  - {fileID: 2100000, guid: 42fdab0940c194e24a6c19ff5d289457, type: 2}
+  - {fileID: 2100000, guid: 2199aa55ab2d11a43b1b6a7bec307647, type: 2}
+  - {fileID: 2100000, guid: f047a10c8162f41e8a7920e5442f2f53, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1902,8 +1979,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6146573427033185074}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.011, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0109999925, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 8616795783059938887}
@@ -1916,7 +1993,7 @@ Transform:
   - {fileID: 5950633358290672820}
   - {fileID: 6137382197125724084}
   - {fileID: 6483351223496282737}
-  m_Father: {fileID: 6346503050879495807}
+  m_Father: {fileID: 4867664901385923052}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6540753577624412610
@@ -2007,6 +2084,118 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.16455339, y: 0.029393673, z: 0.014267199}
   m_Center: {x: 0.0009888113, y: 0.49445105, z: -0.007910311}
+--- !u!1 &7374022524771570970
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4867664901385923052}
+  - component: {fileID: 6044844865966771350}
+  - component: {fileID: 7760355617099025725}
+  m_Layer: 0
+  m_Name: OvenDrawer
+  m_TagString: SimObjPhysics
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4867664901385923052
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7374022524771570970}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.046550743, y: 0.1951529, z: 0.4125958}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 4356958044485697633}
+  - {fileID: 2542227349651544800}
+  - {fileID: 6346503050879495807}
+  m_Father: {fileID: 6427879891046710393}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6044844865966771350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7374022524771570970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  objectID: 
+  assetID: 
+  Type: 95
+  PrimaryProperty: 1
+  SecondaryProperties: 08000000
+  BoundingBox: {fileID: 0}
+  VisibilityPoints: []
+  ReceptacleTriggerBoxes: []
+  debugIsVisible: 0
+  debugIsInteractable: 0
+  isInAgentHand: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
+  salientMaterials: 
+  MySpawnPoints: []
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
+  lastVelocity: 0
+  IsReceptacle: 0
+  IsPickupable: 0
+  IsMoveable: 0
+  isStatic: 0
+  IsToggleable: 0
+  IsOpenable: 0
+  IsBreakable: 0
+  IsFillable: 0
+  IsDirtyable: 0
+  IsCookable: 0
+  IsSliceable: 0
+  isHeatSource: 0
+  isColdSource: 0
+  ContainedObjectReferences: []
+  CurrentlyContains: []
+--- !u!114 &7760355617099025725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7374022524771570970}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9f742cdae0124730b5b59765384368a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MovingParts:
+  - {fileID: 7374022524771570970}
+  openPositions:
+  - {x: 0.04655074, y: 0.1951529, z: 0.8262}
+  closedPositions:
+  - {x: 0.04655074, y: 0.1951529, z: 0.4125958}
+  animationTime: 0.2
+  triggerEnabled: 1
+  currentOpenness: 1
+  IgnoreTheseObjects: []
+  isOpen: 0
+  movementType: 0
 --- !u!1 &7395811865822290604
 GameObject:
   m_ObjectHideFlags: 0
@@ -2452,7 +2641,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    m_TransformParent: {fileID: 6346503050879495807}
+    m_TransformParent: {fileID: 4867664901385923052}
     m_Modifications:
     - target: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
       propertyPath: m_Name
@@ -2468,7 +2657,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.146
+      value: 0.14600001
       objectReference: {fileID: 0}
     - target: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
       propertyPath: m_LocalPosition.z
