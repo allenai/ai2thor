@@ -60,12 +60,12 @@ def get_all_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List
 
 
 def create_asset(
-    thor_controller,
-    asset_id,
-    asset_directory,
+    thor_controller: "Controller",
+    asset_id: str,
+    asset_directory: str,
     copy_to_dir=None,
     verbose=False,
-    load_file_in_unity=False,
+    load_file_in_unity=True,
     extension=None,
     raise_for_failure=True,
     fail_if_not_unity_loadable=False,
@@ -89,7 +89,7 @@ def create_assets(
     assets_dir: str,
     copy_to_dir=None,
     verbose=False,
-    load_file_in_unity=False,
+    load_file_in_unity=True,
     extension=None,
     fail_if_not_unity_loadable=False,
     raise_for_failure=True,
@@ -264,10 +264,10 @@ def create_assets_if_not_exist(
 class ProceduralAssetHookRunner:
     def __init__(
         self,
-        asset_directory,
+        asset_directory: str,
         target_dir="processed_models",
         asset_symlink=True,
-        load_file_in_unity=False,
+        load_file_in_unity=True,
         stop_if_fail=False,
         asset_limit=-1,
         extension=None,
