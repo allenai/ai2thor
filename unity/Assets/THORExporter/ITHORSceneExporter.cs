@@ -42,7 +42,7 @@ public class ITHORSceneExporter : MonoBehaviour
         public float intensity;
         //public float indirectMultiplier;
         public Vector3 position;
-        public Vector3 rotation;
+        public Vector3 direction;
         //public string shadow_type;
       //  public float shadow_strength;   
     }
@@ -485,7 +485,7 @@ public class ITHORSceneExporter : MonoBehaviour
                         intensity = light.intensity,
                         //indirectMultiplier = light.indirectMultiplier,
                         position = light.transform.position,
-                        rotation = light.transform.rotation.eulerAngles, 
+                        direction = light.transform.forward, //.eulerAngles, 
                         //shadow_type = light.shadowType,
                         //shadow_strength = light.shadowStrength
                     };
