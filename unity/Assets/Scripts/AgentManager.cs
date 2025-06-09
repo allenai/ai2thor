@@ -260,8 +260,9 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
             // } else {
             //     action.autoSimulation = true;
             // }
-
-            physicsSceneManager.MakeAllObjectsMoveable();
+            if (action.makeAllObjectsMoveable) {
+                physicsSceneManager.MakeAllObjectsMoveable();
+            }
         } else if (agentMode == "fpin") {
             SetUpFpinController(action);
 
@@ -3130,6 +3131,8 @@ public class ServerAction {
     // used to determine which coordinate space is used in Mid Level Arm actions
     // valid options are relative to: world, wrist, armBase
     public string coordinateSpace = "armBase";
+
+    public bool makeAllObjectsMoveable = false;
 
     // if agent is using arm mode, determines if a mass threshold should be used
     // for when the arm hits heavy objects. If threshold is used, the arm will

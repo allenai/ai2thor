@@ -139,6 +139,7 @@ namespace Thor.Procedural {
             }
 
             Instance = this;
+            Debug.Log("*************** Awake called on ProceduralAssetDatabase");
             BuildAssetMap();
             if (dontDestroyOnLoad) {
                 DontDestroyOnLoad(gameObject);
@@ -171,6 +172,7 @@ namespace Thor.Procedural {
         }
 
         public bool ContainsMaterialKey(string key) {
+            Debug.Log($"======== ContainsMaterialKey {materialMap == null} ");
             return materialMap.ContainsKey(key);
         }
 

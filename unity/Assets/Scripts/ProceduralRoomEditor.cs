@@ -1338,6 +1338,31 @@ public class ProceduralRoomEditor : MonoBehaviour {
         return path;
     }
 
+    [UnityEditor.MenuItem("Procedural/Fix Asset Database")]
+    public static void FixAssetDB() {
+        var proceduralADB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+        // proceduralADB.prefabs = new AssetMap<GameObject, PrefabAsset>(ProceduralTools.FindPrefabsInAssets().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+        // proceduralADB.materials = new AssetMap<Material, MaterialAsset>(ProceduralTools.FindAssetsByType<Material>().GroupBy(m => m.name).ToDictionary(m => m.Key, m => m.First()));
+
+        Debug.Log($"Fix asset Database {proceduralADB.materials} {proceduralADB.materials == null}");
+
+        var c = proceduralADB.gameObject.GetComponent<TestHolder>();
+
+        // c.materials = proceduralADB.materials;
+
+        // proceduralADB.materials = new List<Material>(c.materials);
+
+        proceduralADB.materials =  new List<Material>(c.materials.SelectMany(x => x != null ? new List<Material>() {x} : null ));
+        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        // proceduralADB.prefabs = ProceduralTools.FindPrefabsInAssets();
+        // // proceduralADB.assetMap.Clear();
+        // // proceduralADB.addAssets(prefabs);
+
+        // proceduralADB.materials = ProceduralTools.FindAssetsByType<Material>();
+        // proceduralADB.totalMats = proceduralADB.materials.Count();
+        // EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+    }
+
     [UnityEditor.MenuItem("Procedural/Build Asset Database")]
     public static void BuildAssetDB() {
         var proceduralADB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
