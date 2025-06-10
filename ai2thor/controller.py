@@ -1196,7 +1196,6 @@ class Controller(object):
                         cuda_vulkan_mapping = {int(k): v for k, v in json.load(f).items()}
 
             command += f" -force-device-index {cuda_vulkan_mapping[self.gpu_device]}"
-
         return shlex.split(command)
 
     def _start_unity_thread(self, env, width, height, server_params, image_name):
@@ -1218,7 +1217,8 @@ class Controller(object):
         if os.name == "nt":
             extra_args = dict(shell=True)
         
-        print(f"Running with env: {env}\ncommand: {command}")
+        thor_env = {x:y for (x,y) in env.items() if x.startswith("AI2THOR")}
+        print(f"Running with full env: {env}\nAI2THOR specific env: {thor_env}\ncommand: {command}")
         self.server.unity_proc = proc = subprocess.Popen(
             command,
             env=env,

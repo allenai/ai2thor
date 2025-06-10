@@ -121,6 +121,8 @@ class FifoServer(ai2thor.server.Server):
         }
 
         self.eom_header = self._create_header(FieldType.END_OF_MESSAGE, b"")
+        print("eom_header ")
+        print(self.eom_header)
         super().__init__(
             width=width,
             height=height,
@@ -188,6 +190,8 @@ class FifoServer(ai2thor.server.Server):
                 message_size=self.header_size,
                 timeout=self.timeout if timeout is None else timeout,
             )  # message type + length
+            header_str = '\\x'.join('{:02x}'.format(x) for x in header)
+            print(f"Read | HEADER | size: {self.header_size}, content: \\x{header_str}")
             if len(header) == 0:
                 self.unity_proc.wait(timeout=5)
                 returncode = self.unity_proc.returncode
@@ -208,11 +212,15 @@ class FifoServer(ai2thor.server.Server):
 
             if header[0] == FieldType.END_OF_MESSAGE.value:
                 # print("GOT EOM")
+                print(f"Read  | HEADER | message type raw: {FieldType.END_OF_MESSAGE}, enum: {FieldType.END_OF_MESSAGE.name}")
+
                 break
 
             # print("got header %s" % header)
             field_type_int, message_length = struct.unpack(self.header_format, header)
             field_type = self.field_types[field_type_int]
+
+            print(f"Read  | HEADER | message type raw: {field_type_int}, enum: {FieldType(field_type_int).name}, message length: {message_length}")
 
             body = self._read_with_timeout(
                 server_pipe=self.server_pipe,
@@ -220,14 +228,23 @@ class FifoServer(ai2thor.server.Server):
                 timeout=self.timeout if timeout is None else timeout,
             )
 
+            print_truncate_len = 25
+            def arr_truncate(val, truncate_len):
+                if truncate_len > 0:
+                    return val[:truncate_len] if len(val) > truncate_len else val
+                else:
+                    return val
             # print("field type")
             # print(field_type)
             if field_type is FieldType.METADATA:
                 # print("body length %s" % len(body))
                 # print(body)
                 metadata = msgpack.loads(body, raw=False, strict_map_key=False)
+                print(f"Read  | BODY | message length: {message_length}, body: {arr_truncate(str(metadata), print_truncate_len)}...")
             elif field_type is FieldType.METADATA_PATCH:
                 metadata_patch = msgpack.loads(body, raw=False, strict_map_key=False)
+
+                print(f"Read  | BODY | message length: {message_length}, body: {arr_truncate(str(metadata), print_truncate_len)}...")
                 agents = self.raw_metadata["agents"]
                 metadata = dict(
                     agents=[{} for i in range(len(agents))],
@@ -241,6 +258,8 @@ class FifoServer(ai2thor.server.Server):
                 metadata["agents"][metadata_patch["agentId"]].update(metadata_patch)
                 files = self.raw_files
             elif field_type in self.image_fields:
+
+                print(f"Read  | BODY-{FieldType(field_type_int).name} | message length: {message_length}, body: {arr_truncate(body, print_truncate_len)}...")
                 files[self.form_field_map[field_type]].append(body)
             else:
                 raise ValueError("Invalid field type: %s" % field_type)
@@ -261,6 +280,11 @@ class FifoServer(ai2thor.server.Server):
 
         # used for debugging in case of an error
         self._last_action_message = body
+
+        print(f"Write | HEADER | message type raw: {message_type}, enum: {FieldType(message_type).name}, message size: {len(body)}, header raw: {body}")
+
+
+        print(f"Write | BODY | body: {body}{self.eom_header}")
 
         self.client_pipe.write(header + body + self.eom_header)
         self.client_pipe.flush()

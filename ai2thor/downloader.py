@@ -13,6 +13,7 @@ def download(url, sha256_digest, include_private_scenes=False):
     if include_private_scenes:
         auth = ai2thor.build.boto_auth()
 
+    print(f"Downloading thor binary from {url}")
     logger.debug("Downloading file from %s" % url)
     r = requests.get(url, stream=True, auth=auth)
     r.raise_for_status()
