@@ -520,14 +520,14 @@ public class DownloadThorAssets : MonoBehaviour
         var meshFiltersGameObject = go;
         var mesh_parent = GameObject.Find("Objects");
         //var child = go.transform.Find("Colliders"); 
-
         var colliders = go.GetComponentsInChildren<Collider>();
+        Debug.Log("---------------------------------go: " + go.name + " " + colliders.Length);
     
-        //Debug.LogWarning("No colliders found for " + go.name);
         var topmostparent = go.transform.parent;
         
         while (colliders.Length == 0)
         {
+            Debug.LogWarning("No colliders found for " + go.name);
             colliders = topmostparent.GetComponentsInChildren<Collider>();
             if(topmostparent.transform.parent == mesh_parent)
                 break;
@@ -542,19 +542,13 @@ public class DownloadThorAssets : MonoBehaviour
                 if (!collider.enabled || !collider.gameObject.activeInHierarchy)
                     continue;
 
-                /**
-                if (collider.transform != null && collider.transform.gameObject.tag == "SimObjPhysics")
-                    continue;
+                // skip if the collider is a SimObjPhysics -> hand towels assets are
+                //if (collider.transform != null && collider.transform.gameObject.tag == "SimObjPhysics")
+                //{
+                //    Debug.Log("skipping SimObjPhysics: " + collider.gameObject.name);
+                //    continue;
+                //}
 
-                if (collider.transform.parent != null && collider.transform.parent.gameObject.tag == "SimObjPhysics")
-                    continue;
-
-                if (collider.transform.parent != null && collider.transform.parent.parent != null && collider.transform.parent.parent.gameObject.tag == "SimObjPhysics")
-                    continue;
-                
-                if (collider.transform.parent != null && collider.transform.parent.parent != null && collider.transform.parent.parent.parent != null && collider.transform.parent.parent.parent.gameObject.tag == "SimObjPhysics")
-                    continue;
-                **/
 
                 Debug.Log("ColliderInfo: " + collider.gameObject.name);
                 Debug.Log("mesh_parent: " + mesh_parent.name);
@@ -564,12 +558,55 @@ public class DownloadThorAssets : MonoBehaviour
                 {
                     if (!collider.isTrigger)
                     {
+
+                        if (collider.transform.parent != null && collider.transform.parent.gameObject.tag == "SimObjPhysics")
+                        {
+                            Debug.Log("skipping SimObjPhysics parent: " + collider.gameObject.name);
+                            continue;
+                        }
+
+                        if (collider.transform.parent != null && collider.transform.parent.parent != null && collider.transform.parent.parent.gameObject.tag == "SimObjPhysics")
+                        {
+                            Debug.Log("skipping SimObjPhysics parent parent: " + collider.gameObject.name);
+                            continue;
+                        }
+                        
+                        if (collider.transform.parent != null && collider.transform.parent.parent != null && collider.transform.parent.parent.parent != null && collider.transform.parent.parent.parent.gameObject.tag == "SimObjPhysics")
+                        {
+                            Debug.Log("skipping SimObjPhysics parent parent parent: " + collider.gameObject.name);
+                            continue;
+                        }
+                        
                         meshData.primitiveColliders.myPrimitiveColliders.Add(colliderInfo);
                         i++;
                     }         
                     else if (collider.GetComponent("Contains") != null)
                     {
-                        meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
+                        var Name = collider.transform.parent.gameObject.name;
+                        if (Name.Contains("Cabinet"))
+                        {
+                            meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
+                        }
+                        else{
+                            if (collider.transform.parent != null && collider.transform.parent.gameObject.tag == "SimObjPhysics")
+                            {
+                                Debug.Log("skipping SimObjPhysics parent: " + collider.gameObject.name);
+                                continue;
+                            }
+
+                            if (collider.transform.parent != null && collider.transform.parent.parent != null && collider.transform.parent.parent.gameObject.tag == "SimObjPhysics")
+                            {
+                                Debug.Log("skipping SimObjPhysics parent parent: " + collider.gameObject.name);
+                                continue;
+                            }
+                            
+                            if (collider.transform.parent != null && collider.transform.parent.parent != null && collider.transform.parent.parent.parent != null && collider.transform.parent.parent.parent.gameObject.tag == "SimObjPhysics")
+                            {
+                                Debug.Log("skipping SimObjPhysics parent parent parent: " + collider.gameObject.name);
+                                continue;
+                            }
+                            meshData.placeableZoneColliders.myPlaceableZones.Add(colliderInfo);
+                        }
                     }
                     
                     Debug.Log("not null: " + collider.gameObject.name);
@@ -733,6 +770,7 @@ public class DownloadThorAssets : MonoBehaviour
         // for receptacles
         //collider_parent
         collider_parent = meshFiltersGameObject.transform.parent.gameObject; // was okay for iTHOR and most of THOR assets 
+        //collider_parent = topmostSimObjPhysics.transform.gameObject;
         //var trigger_colliders = collider_parent.GetComponentsInChildren<Collider>();
         var trigger_colliders = new List<Collider>();
         foreach (Transform t in collider_parent.transform)
@@ -1440,7 +1478,7 @@ public class DownloadThorAssets : MonoBehaviour
             MeshFilter mf = meshFilters[i];
             string meshName = mf.gameObject.name.Replace(" ", "_");
 
-            
+            Debug.Log("FillMeshData called for mesh: " + meshName);            
             if (mf.gameObject.tag == "Structure") // temporary set  to false for THOR assets...
             {
                 MeshData meshData = FillStructureMeshData(meshFilters[i], meshName, topmostSimObjPhysics);  
@@ -1448,7 +1486,6 @@ public class DownloadThorAssets : MonoBehaviour
             }
             else
             {
-                Debug.Log("FillMeshData called for mesh: " + meshName);
                 MeshData meshData = FillMeshData(meshFilters[i], meshName, topmostSimObjPhysics);
                 exportedAssetInfo.meshes.Add(meshData);
             }
