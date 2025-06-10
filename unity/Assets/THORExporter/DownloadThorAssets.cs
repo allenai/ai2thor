@@ -542,6 +542,7 @@ public class DownloadThorAssets : MonoBehaviour
                 if (!collider.enabled || !collider.gameObject.activeInHierarchy)
                     continue;
 
+                /**
                 if (collider.transform != null && collider.transform.gameObject.tag == "SimObjPhysics")
                     continue;
 
@@ -553,6 +554,7 @@ public class DownloadThorAssets : MonoBehaviour
                 
                 if (collider.transform.parent != null && collider.transform.parent.parent != null && collider.transform.parent.parent.parent != null && collider.transform.parent.parent.parent.gameObject.tag == "SimObjPhysics")
                     continue;
+                **/
 
                 Debug.Log("ColliderInfo: " + collider.gameObject.name);
                 Debug.Log("mesh_parent: " + mesh_parent.name);
