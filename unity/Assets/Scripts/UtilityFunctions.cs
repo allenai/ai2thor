@@ -399,20 +399,17 @@ public static class UtilityFunctions {
     }
 
     // Recursive method to find and return all instances of the component in the hierarchy
-    public static List<T> FindAllComponentsInChildren<T>(Transform parent) where T : Component
-    {
+    public static List<T> FindAllComponentsInChildren<T>(Transform parent) where T : Component {
         List<T> components = new List<T>();
 
         // Check if the parent itself has the component
         T component = parent.GetComponent<T>();
-        if (component != null)
-        {
+        if (component != null) {
             components.Add(component);
         }
 
         // Loop through all children and collect their components recursively
-        foreach (Transform child in parent)
-        {
+        foreach (Transform child in parent) {
             components.AddRange(FindAllComponentsInChildren<T>(child));
         }
 
@@ -856,5 +853,28 @@ public static class UtilityFunctions {
             );
         }
     }
+
+    [UnityEditor.MenuItem("AI2-THOR/Set All Directional Lights Color")]
+    public static void SetAllDirectionalLightsColor() {
+        // Set your desired color here (example: pure red)
+        Color targetColor = new Color(0.3f, 0.35f, 0.39f); // RGB (1,0,0)
+
+        for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+                SceneUtility.GetScenePathByBuildIndex(i),
+                OpenSceneMode.Single
+            );
+            Light[] lights = GameObject.FindObjectsOfType<Light>(true);
+            foreach (Light l in lights) {
+                if (l.type == LightType.Directional) {
+                    l.color = targetColor;
+                }
+            }
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(
+                UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene()
+            );
+        }
+    }
+    
 #endif
 }
