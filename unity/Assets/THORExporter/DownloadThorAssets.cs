@@ -893,6 +893,7 @@ public class DownloadThorAssets : MonoBehaviour
                                 Vector3 openRot = canOpen.openPositions[i];
                                 Vector3 rotDiff = openRot - closedRot;
                                 
+                              
                                 // Determine which axis has the largest rotation
                                 if (Mathf.Abs(rotDiff.x) > Mathf.Abs(rotDiff.y) && Mathf.Abs(rotDiff.x) > Mathf.Abs(rotDiff.z))
                                 {
@@ -912,6 +913,7 @@ public class DownloadThorAssets : MonoBehaviour
                                     lowRange.z = 0;
                                     highRange.z = rotDiff.z;
                                 }
+                            
                                 
                                 break;
                             }
@@ -933,8 +935,10 @@ public class DownloadThorAssets : MonoBehaviour
                                 Vector3 closedPos = canOpen.closedPositions[i];
                                 Vector3 openPos = canOpen.openPositions[i];
                                 Vector3 slideVector = openPos - closedPos;
+
                                 // transform slide vector to local meshfilter space
-                                slideVector = meshfilter.transform.InverseTransformDirection(slideVector);
+                                //slideVector = meshfilter.transform.InverseTransformDirection(slideVector);
+                                //slideVector = movingPart.transform.InverseTransformDirection(slideVector);
                                 jointInfo.lowRange = Vector3.zero;
                                 jointInfo.highRange = slideVector;
                                 break;
