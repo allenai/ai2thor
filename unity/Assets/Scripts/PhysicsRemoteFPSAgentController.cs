@@ -4431,6 +4431,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ItemInHand.transform.localRotation = Quaternion.identity;
                     ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false; // remove in agent hand flag
+                    
+                    // if this object is a receptacle and it has other objects inside it, drop them all together
+                    SimObjPhysics sop = ItemInHand.GetComponentInParent<SimObjPhysics>();
+                    if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+                        sop.DropContainedObjectsStationary(); // use stationary version so that colliders are turned back on, but kinematics remain true
+                    }
+                    
                     ItemInHand = null;
                     DefaultAgentHand();
                     actionFinished(true);
