@@ -216,7 +216,12 @@ public class Build : IPreprocessBuildWithReport
         Debug.Log($"------- Build.cs Compare contains: {string.Join(",", containsScenes)} strict contains: {string.Join(",", strictScenes)}");
 
         // return scenes.Where(s => proceduralOnlyScenesFilter.Contains(s)).ToList();
+
+
+        return scenes;
+        
         return scenes.Where(x =>proceduralOnlyScenesFilter.Any(filter => x.Contains(filter)) ).ToList();
+
         // return proceduralOnlyBuild ? scenes.Where(s => proceduralOnlyScenesFilter.Contains(s)).ToList(): scenes;
         return scenes.Where(x => x.Contains("FloorPlan1_") || x.Contains("FloorPlan15_") || x.Contains("FloorPlan20_") || x.Contains("FloorPlan28_") || x.Contains("Procedural") || x.Contains("ProceduralAB") || x.Contains("Calibration_Room")).ToList();
         // return scenes.Where(x => x.Contains("FloorPlan1_") || x.Contains("FloorPlan28_") || x.Contains("Procedural") || x.Contains("ProceduralAB") || x.Contains("Calibration_Room")).ToList();

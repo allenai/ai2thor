@@ -1346,14 +1346,12 @@ public class ProceduralRoomEditor : MonoBehaviour {
 
         Debug.Log($"Fix asset Database {proceduralADB.materials} {proceduralADB.materials == null}");
 
-        var c = proceduralADB.gameObject.GetComponent<TestHolder>();
+        // var c = proceduralADB.gameObject.GetComponent<TestHolder>();
 
-        // c.materials = proceduralADB.materials;
-
-        // proceduralADB.materials = new List<Material>(c.materials);
-
-        proceduralADB.materials =  new List<Material>(c.materials.SelectMany(x => x != null ? new List<Material>() {x} : null ));
-        EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        // proceduralADB.materials =  new List<Material>(c.materials.SelectMany(x => x != null ? new List<Material>() {x} : null ));
+        // EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
+        
+        
         // proceduralADB.prefabs = ProceduralTools.FindPrefabsInAssets();
         // // proceduralADB.assetMap.Clear();
         // // proceduralADB.addAssets(prefabs);
