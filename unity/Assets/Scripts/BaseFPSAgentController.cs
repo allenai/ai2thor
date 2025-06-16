@@ -2733,7 +2733,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var worldSpaceCameraRotationAsQuaternion = m_Camera.transform.rotation;
             var localSpaceCameraRotationAsQuaternion =
                 Quaternion.Inverse(transform.rotation) * worldSpaceCameraRotationAsQuaternion;
-            metaMessage.agentRotationRelativeCameraRotation =
+            metaMessage.agentPositionRelativeCameraRotation =
                 localSpaceCameraRotationAsQuaternion.eulerAngles;
             //Debug.Log($"agentRelativeCameraRotation: {metaMessage.agentRotationRelativeCameraRotation}");
 

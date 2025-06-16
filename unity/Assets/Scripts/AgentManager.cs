@@ -2786,7 +2786,7 @@ public struct MetadataWrapper {
     public Vector3 worldRelativeCameraPosition;
     public Vector3 worldRelativeCameraRotation;
     public Vector3 agentPositionRelativeCameraPosition;
-    public Vector3 agentRotationRelativeCameraRotation;
+    public Vector3 agentPositionRelativeCameraRotation;
     public float cameraOrthSize;
     public ThirdPartyCameraMetadata[] thirdPartyCameras;
     public bool collided;

@@ -358,17 +358,17 @@ namespace Tests
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.agentRotationRelativeCameraRotation.x,
+                metadata.agentPositionRelativeCameraRotation.x,
                 0.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.agentRotationRelativeCameraRotation.y,
+                metadata.agentPositionRelativeCameraRotation.y,
                 0.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.agentRotationRelativeCameraRotation.z,
+                metadata.agentPositionRelativeCameraRotation.z,
                 0.0000000000f
             );
             Assert.AreEqual(result, true);
@@ -409,17 +409,17 @@ namespace Tests
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.agentRotationRelativeCameraRotation.x,
+                metadata.agentPositionRelativeCameraRotation.x,
                 30.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.agentRotationRelativeCameraRotation.y,
+                metadata.agentPositionRelativeCameraRotation.y,
                 10.0000000000f
             );
             Assert.AreEqual(result, true);
             result = Mathf.Approximately(
-                metadata.agentRotationRelativeCameraRotation.z,
+                metadata.agentPositionRelativeCameraRotation.z,
                 12.0000000000f
             );
             Assert.AreEqual(result, true);
