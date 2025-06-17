@@ -143,7 +143,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     if (Input.GetKeyDown(KeyCode.S)) {
-                        Debug.Log("=============== DiscretePoint ClickController S pressed");
                         Move(-1.0f * moveDistance, 0.0f, moveSpeed);
                     }
 

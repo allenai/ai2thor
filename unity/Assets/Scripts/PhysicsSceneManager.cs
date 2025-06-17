@@ -12,7 +12,7 @@ using UnityStandardAssets.ImageEffects;
 
 [ExecuteInEditMode]
 public class PhysicsSimulationParams {
-    public bool autoSimulation = true;
+    public bool autoSimulation = false;
     public float fixedDeltaTime = 0.02f;
     public float minSimulateTimeSeconds = 0;
 
@@ -201,7 +201,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         IEnumerator enumerator,
         PhysicsSimulationParams physicsSimulationParams
     ) {
-         Debug.Log("======== RunSimulatePhysicsForAction start");
+        //Debug.Log("======== RunSimulatePhysicsForAction start");
         var fixedDeltaTime = physicsSimulationParams.fixedDeltaTime;
         var previousAutoSimulate = Physics.autoSimulation;
         Physics.autoSimulation = physicsSimulationParams.autoSimulation;
@@ -210,7 +210,6 @@ public class PhysicsSceneManager : MonoBehaviour {
         var startPhysicsSimulateCallTime = PhysicsSceneManager.PhysicsSimulateCallCount;
         PhysicsSceneManager.IteratorExpandCount = 0;
 
-        Debug.Log("======== ExpandIEnumerator");
 
         // Recursive expansion of IEnumerator
         ActionFinished actionFinished = ExpandIEnumerator(enumerator, physicsSimulationParams);

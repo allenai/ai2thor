@@ -132,7 +132,7 @@ public class RuntimePrefab : MonoBehaviour {
             this.rawTextures = rawTextures;
             // this.materialName = newMaterial.name;
 
-            Debug.Log($"albedoTexturePath { albedoTexturePath} m {metallicSmoothnessTexturePath} n {normalTexturePath} e {emissionTexturePath}");
+            // Debug.Log($"albedoTexturePath { albedoTexturePath} m {metallicSmoothnessTexturePath} n {normalTexturePath} e {emissionTexturePath}");
     }
 
     public static void LoadTexturesToMaterial(
@@ -144,7 +144,7 @@ public class RuntimePrefab : MonoBehaviour {
          ProceduralTextures rawTextures = null
     ) {
         if (sharedMaterial != null) {
-
+            
             if (rawTextures == null) {
                 // use file paths
                 if (sharedMaterial.mainTexture == null) {
@@ -200,7 +200,6 @@ public class RuntimePrefab : MonoBehaviour {
             }
         } 
         else if (sharedMaterial != null) {
-
             LoadTexturesToMaterial(
                 sharedMaterial,
                 albedoTexturePath: albedoTexturePath,
@@ -215,6 +214,13 @@ public class RuntimePrefab : MonoBehaviour {
 
     public void Awake() {
         var db = FindObjectOfType<ProceduralAssetDatabase>();
+        if (rawTextures != null 
+            && string.IsNullOrEmpty(rawTextures.albedoBase64JPG) 
+            && string.IsNullOrEmpty(rawTextures.emissionBase64JPG) 
+            && string.IsNullOrEmpty(rawTextures.metallicSmoothnessBase64JPG) 
+            && string.IsNullOrEmpty(rawTextures.normalBase64JPG)) {
+                rawTextures = null;
+        }
         reloadtextures(db);
         
     }
