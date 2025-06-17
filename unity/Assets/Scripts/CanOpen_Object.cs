@@ -637,25 +637,25 @@ public class CanOpen_Object : MonoBehaviour {
 #if UNITY_EDITOR
     [ContextMenu("Set Current Transform as Closed Position")]
     void SetCurrentTransformAsClosedPosition() {
-        Transform currentTransform = gameObject.transform;
+        Transform currentTransform = MovingParts[0].gameObject.transform;
         this.closedPositions[0] = currentTransform.localPosition;
     }
 
     [ContextMenu("Set Current Transform as Open Position")]
     void SetCurrentTransformAsOpenPosition() {
-        Transform currentTransform = gameObject.transform;
+        Transform currentTransform = MovingParts[0].gameObject.transform;
         this.openPositions[0] = currentTransform.localPosition;
     }
 
     [ContextMenu("Move me to Closed Position")]
     void MoveMeToClosedPosition() {
-        Transform currentTransform = gameObject.transform;
+        Transform currentTransform = MovingParts[0].gameObject.transform;
         currentTransform.localPosition = this.closedPositions[0];
     }
 
     [ContextMenu("Move me to Open Position")]
     void MoveMeToOpenPosition() {
-        Transform currentTransform = gameObject.transform;
+        Transform currentTransform = MovingParts[0].gameObject.transform;
         currentTransform.localPosition = this.openPositions[0];
     }
 
