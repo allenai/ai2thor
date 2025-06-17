@@ -26,6 +26,7 @@ from functools import lru_cache
 from itertools import product
 from platform import architecture as platform_architecture
 from platform import system as platform_system
+from platform import processor as platform_processor
 from typing import Dict, Any, Union, Optional, List
 
 import numpy as np
@@ -624,6 +625,10 @@ class Controller(object):
             if init_return:
                 self.server.set_init_params(init_return)
                 logging.info(f"Initialize return: {init_return}")
+
+        # warning if trying to get display windows in OSX
+        if (platform_processor() == 'arm' and platform != ai2thor.platform.CloudRendering):
+            print ('warning: display window not supported for arm devices')
 
     def _build_server(self, host, port, width, height):
         if self.server is not None:
