@@ -109,12 +109,11 @@ public class CanOpen_Object : MonoBehaviour {
     void Update() {
         // test if it can open without Agent Command - Debug Purposes
 #if UNITY_EDITOR
-        
+
         if (Input.GetKeyDown(KeyCode.Equals)) {
-            if(this.GetisOpen()) {
+            if (this.GetisOpen()) {
                 Interact(targetOpenness: 0.0f);
-            }
-            else {
+            } else {
                 Interact();
             }
         }
@@ -634,4 +633,32 @@ public class CanOpen_Object : MonoBehaviour {
         child.transform.position = parent.transform.position;
         child.transform.rotation = parent.transform.rotation;
     }
+
+#if UNITY_EDITOR
+    [ContextMenu("Set Current Transform as Closed Position")]
+    void SetCurrentTransformAsClosedPosition() {
+        Transform currentTransform = MovingParts[0].gameObject.transform;
+        this.closedPositions[0] = currentTransform.localPosition;
+    }
+
+    [ContextMenu("Set Current Transform as Open Position")]
+    void SetCurrentTransformAsOpenPosition() {
+        Transform currentTransform = MovingParts[0].gameObject.transform;
+        this.openPositions[0] = currentTransform.localPosition;
+    }
+
+    [ContextMenu("Move me to Closed Position")]
+    void MoveMeToClosedPosition() {
+        Transform currentTransform = MovingParts[0].gameObject.transform;
+        currentTransform.localPosition = this.closedPositions[0];
+    }
+
+    [ContextMenu("Move me to Open Position")]
+    void MoveMeToOpenPosition() {
+        Transform currentTransform = MovingParts[0].gameObject.transform;
+        currentTransform.localPosition = this.openPositions[0];
+    }
+
+#endif
+
 }

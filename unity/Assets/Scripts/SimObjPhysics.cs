@@ -1334,6 +1334,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
     // CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
     // RIGHT CLICK this script in the inspector to reveal these options
 
+    void SetCurrentTransformAsOpenPosition() {
+        Transform currentTransform = gameObject.transform;
+        CanOpen_Object canOpen = gameObject.GetComponent<CanOpen_Object>();
+        
+    }
+
     //[ContextMenu("Cabinet")]
     void SetUpCabinet() {
         Type = SimObjType.Cabinet;
