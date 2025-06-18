@@ -889,10 +889,16 @@ public class DownloadThorAssets : MonoBehaviour
                             if (canOpen.MovingParts[i] == movingPart)
                             {
                                 // Use the openPositions and closedPositions arrays to determine rotation axis and limits
-                                Vector3 closedRot = canOpen.closedPositions[i];
-                                Vector3 openRot = canOpen.openPositions[i];
-                                Vector3 rotDiff = openRot - closedRot;
-                                
+                                Vector3 closedPos = canOpen.closedPositions[i];
+                                Vector3 worldClosedPos = movingPart.transform.TransformPoint(closedPos);
+                                Vector3 localClosedPos = meshfilter.transform.InverseTransformPoint(worldClosedPos);
+
+                                Vector3 openPos = canOpen.openPositions[i];
+                                Vector3 worldOpenPos = movingPart.transform.TransformPoint(openPos);
+                                Vector3 localOpenPos = meshfilter.transform.InverseTransformPoint(worldOpenPos);
+
+                                Vector3 rotDiff = localOpenPos - localClosedPos; // MeshFilter coordiante. is assumption.
+
                               
                                 // Determine which axis has the largest rotation
                                 if (Mathf.Abs(rotDiff.x) > Mathf.Abs(rotDiff.y) && Mathf.Abs(rotDiff.x) > Mathf.Abs(rotDiff.z))
@@ -933,14 +939,22 @@ public class DownloadThorAssets : MonoBehaviour
                             {
                                 // Use the openPositions and closedPositions arrays to determine slide direction and distance
                                 Vector3 closedPos = canOpen.closedPositions[i];
+                                Vector3 worldClosedPos = movingPart.transform.TransformPoint(closedPos);
+                                Vector3 localClosedPos = meshfilter.transform.InverseTransformPoint(worldClosedPos);
+
                                 Vector3 openPos = canOpen.openPositions[i];
-                                Vector3 slideVector = openPos - closedPos;
+                                Vector3 worldOpenPos = movingPart.transform.TransformPoint(openPos);
+                                Vector3 localOpenPos = meshfilter.transform.InverseTransformPoint(worldOpenPos);
+
+                                Vector3 slideVector = localOpenPos - localClosedPos; // MeshFilter coordiante. is assumption.
 
                                 // transform slide vector to local meshfilter space
                                 //slideVector = meshfilter.transform.InverseTransformDirection(slideVector);
-                                //slideVector = movingPart.transform.InverseTransformDirection(slideVector);
+                                
                                 jointInfo.lowRange = Vector3.zero;
-                                jointInfo.highRange = slideVector;
+                                jointInfo.highRange = Quaternion.Inverse(movingPart.transform.localRotation) * slideVector;
+                                //jointInfo.highRange = movingPart.transform.localRotation * slideVector;
+
                                 break;
                             }
                         }
@@ -1038,7 +1052,10 @@ public class DownloadThorAssets : MonoBehaviour
                 }                    
                 else
                 {
-                    jointInfo.meshRelativePosition = parent.InverseTransformPoint(movingPart.transform.position);
+                    // position of the moving part relative to the meshFilter
+                    //jointInfo.meshRelativePosition = parent.InverseTransformPoint(movingPart.transform.position);
+                    jointInfo.meshRelativePosition = meshfilter.transform.InverseTransformPoint(movingPart.transform.position);
+
                 }
 
 
