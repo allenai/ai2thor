@@ -174,11 +174,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1357996136909343460}
-  - component: {fileID: 1662177546877723190}
-  - component: {fileID: 7922480561378448042}
   m_Layer: 0
   m_Name: oven_FP20
-  m_TagString: Untagged
+  m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -196,24 +194,57 @@ Transform:
   m_Children:
   - {fileID: 6342075258030033272}
   - {fileID: 7331915750478640754}
+  - {fileID: 1995024794454616138}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &1662177546877723190
+--- !u!1 &7417106967978582669
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1995024794454616138}
+  - component: {fileID: 8013436415662052055}
+  - component: {fileID: 7853995772919945318}
+  m_Layer: 0
+  m_Name: oven_FP20
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1995024794454616138
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7417106967978582669}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1357996136909343460}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &8013436415662052055
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4065683646795595957}
+  m_GameObject: {fileID: 7417106967978582669}
   m_Mesh: {fileID: 7279001194056937601, guid: 182b986abfbfe4f79beede5300898883, type: 3}
---- !u!23 &7922480561378448042
+--- !u!23 &7853995772919945318
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4065683646795595957}
+  m_GameObject: {fileID: 7417106967978582669}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
