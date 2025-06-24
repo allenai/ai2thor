@@ -186,7 +186,7 @@ namespace Thor.Procedural {
         }
 
         public IEnumerator removeLRUItemsAsync(int limit) {
-            this.assetMap.removeLRU(limit: limit);
+            yield return this.assetMap.removeLRUAsync(limit: limit);
         }
 
         public IEnumerable<GameObject> GetPrefabs() {
