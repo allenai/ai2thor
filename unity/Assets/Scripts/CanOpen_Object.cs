@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 // Allows for openable objects to be opened.
 public class CanOpen_Object : MonoBehaviour {
@@ -639,26 +642,33 @@ public class CanOpen_Object : MonoBehaviour {
     void SetCurrentTransformAsClosedPosition() {
         Transform currentTransform = MovingParts[0].gameObject.transform;
         this.closedPositions[0] = currentTransform.localPosition;
+        EditorUtility.SetDirty(this);
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
     }
 
     [ContextMenu("Set Current Transform as Open Position")]
     void SetCurrentTransformAsOpenPosition() {
         Transform currentTransform = MovingParts[0].gameObject.transform;
         this.openPositions[0] = currentTransform.localPosition;
+        EditorUtility.SetDirty(this);
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
     }
 
     [ContextMenu("Move me to Closed Position")]
     void MoveMeToClosedPosition() {
         Transform currentTransform = MovingParts[0].gameObject.transform;
         currentTransform.localPosition = this.closedPositions[0];
+        EditorUtility.SetDirty(currentTransform);
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
     }
 
     [ContextMenu("Move me to Open Position")]
     void MoveMeToOpenPosition() {
         Transform currentTransform = MovingParts[0].gameObject.transform;
         currentTransform.localPosition = this.openPositions[0];
+        EditorUtility.SetDirty(currentTransform);
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
     }
-
 #endif
 
 }
