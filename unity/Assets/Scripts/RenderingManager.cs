@@ -110,12 +110,14 @@ public class RenderingManager : MonoBehaviour {
         var mainCamera = GetComponent<Camera>();
         Debug.Log($"===== OnCameraChange Rendering manager null {this == null} manager {this} camera null {mainCamera == null} cam {mainCamera}");
 
-        Debug.Log($"===== OnCameraChange multipass for {string.Join(", ", this.activePasses.Values.Select(x => x.GetName()))}");
-
-        
-        foreach (var pass in this.activePasses) {
-            Debug.Log($"--- OnCameraChange {pass.Key} is null {pass.Value == null} pass {pass.Value}");
-            pass.Value.OnCameraChange(mainCamera);
+        if (this.activePasses != null) {
+            foreach (var pass in this.activePasses) {
+                Debug.Log($"--- OnCameraChange {pass.Key} is null {pass.Value == null} pass {pass.Value}");
+                pass.Value.OnCameraChange(mainCamera);
+            }
+        }
+        else {
+            Debug.Log($"===== this.activePasses is null {this.activePasses == null} passe {this.activePasses}");
         }
     }
 
