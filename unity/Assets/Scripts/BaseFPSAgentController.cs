@@ -3,11 +3,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
 using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
@@ -22,6 +22,7 @@ using UnityEngine.Rendering.PostProcessing;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
+using Diagnostics = System.Diagnostics;
 using Random = UnityEngine.Random;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
@@ -2694,8 +2695,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             metaMessage.screenWidth = Screen.width;
             metaMessage.screenHeight = Screen.height;
 
-            metaMessage.cameraPosition = m_Camera.transform.position;
-            metaMessage.cameraRotation = m_Camera.transform.eulerAngles;
+            metaMessage.cameraPosition = m_Camera.transform.position; //to be deprecated
+            metaMessage.cameraRotation = m_Camera.transform.eulerAngles; //to be deprecated
+            metaMessage.worldRelativeCameraPosition = m_Camera.transform.position;
+            metaMessage.worldRelativeCameraRotation = m_Camera.transform.eulerAngles;
 
             //we need to transform these relative to the agent position
             //main camera's local space coordinates need to be translated to world space first
@@ -2704,7 +2707,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             metaMessage.agentPositionRelativeCameraPosition = transform.InverseTransformPoint(
                 worldSpaceCameraPosition
             );
-            //Debug.Log($"agentRelativeCameraPosition: {metaMessage.agentPositionRelativeCameraPosition}");
+            //Debug.Log($"agentPositionRelativeCameraPosition: {metaMessage.agentPositionRelativeCameraPosition}");
 
             //ok to get local euler angles we need to do... some shenanigans lets go
             var worldSpaceCameraRotationAsQuaternion = m_Camera.transform.rotation;
@@ -2712,7 +2715,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Quaternion.Inverse(transform.rotation) * worldSpaceCameraRotationAsQuaternion;
             metaMessage.agentPositionRelativeCameraRotation =
                 localSpaceCameraRotationAsQuaternion.eulerAngles;
-            //Debug.Log($"agentRelativeCameraRotation: {metaMessage.agentPositionRelativeCameraRotation}");
+            //Debug.Log($"agentPositionRelativeCameraRotation: {metaMessage.agentPositionRelativeCameraRotation}");
 
             metaMessage.cameraOrthSize = cameraOrthSize;
             cameraOrthSize = -1f;
@@ -7364,7 +7367,803 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, actionReturn: result.ToList());
         }
 
+        public static float[,] MorphErosion(float[,] input, int radius)
+        {
+            var temp = MorphHorizontalMin(input, radius);
+            return MorphVerticalMin(temp, radius);
+        }
+
+        public static float[,] MorphDilation(float[,] input, int radius)
+        {
+            var temp = MorphHorizontalMax(input, radius);
+            return MorphVerticalMax(temp, radius);
+        }
+
+        public static float[,] MorphClose(float[,] input, int radius)
+        {
+            return MorphErosion(MorphDilation(input, radius), radius);
+        }
+
+        public static float[,] MorphOpen(float[,] input, int radius)
+        {
+            return MorphDilation(MorphErosion(input, radius), radius);
+        }
+
+        private static float[,] MorphHorizontalMin(float[,] input, int radius) {
+            int height = input.GetLength(0);
+            int width = input.GetLength(1);
+            float[,] output = new float[height, width];
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    float minVal = float.PositiveInfinity;
+                    for (int dx = -radius; dx <= radius; dx++) {
+                        int nx = x + dx;
+                        if (nx >= 0 && nx < width) {
+                            minVal = Math.Min(minVal, input[y, nx]);
+                        }
+                    }
+                    output[y, x] = minVal;
+                }
+            }
+
+            return output;
+        }
+
+        private static float[,] MorphVerticalMin(float[,] input, int radius)
+        {
+            int height = input.GetLength(0);
+            int width = input.GetLength(1);
+            float[,] output = new float[height, width];
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    float minVal = float.PositiveInfinity;
+                    for (int dy = -radius; dy <= radius; dy++)
+                    {
+                        int ny = y + dy;
+                        if (ny >= 0 && ny < height) {
+                            minVal = Math.Min(minVal, input[ny, x]);
+                        }
+                    }
+                    output[y, x] = minVal;
+                }
+            }
+
+            return output;
+        }
+
+        private static float[,] MorphHorizontalMax(float[,] input, int radius)
+        {
+            int height = input.GetLength(0);
+            int width = input.GetLength(1);
+            float[,] output = new float[height, width];
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float maxVal = float.NegativeInfinity;
+                    for (int dx = -radius; dx <= radius; dx++)
+                    {
+                        int nx = x + dx;
+                        if (nx >= 0 && nx < width) {
+                            maxVal = Math.Max(maxVal, input[y, nx]);
+                        }
+                    }
+                    output[y, x] = maxVal;
+                }
+            }
+
+            return output;
+        }
+
+        private static float[,] MorphVerticalMax(float[,] input, int radius)
+        {
+            int height = input.GetLength(0);
+            int width = input.GetLength(1);
+            float[,] output = new float[height, width];
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    float maxVal = float.NegativeInfinity;
+                    for (int dy = -radius; dy <= radius; dy++)
+                    {
+                        int ny = y + dy;
+                        if (ny >= 0 && ny < height) {
+                            maxVal = Math.Max(maxVal, input[ny, x]);
+                        }
+                    }
+                    output[y, x] = maxVal;
+                }
+            }
+
+            return output;
+        }
+
+        private static bool IsAccessible(Vector3 point, float vertical_shift=0.01f) {
+            Vector3[] directions = {
+                Vector3.up,
+                Vector3.forward,
+                Vector3.back,
+                Vector3.left,
+                Vector3.right,
+                Vector3.forward + Vector3.left,
+                Vector3.forward + Vector3.right,
+                Vector3.back + Vector3.left,
+                Vector3.back + Vector3.right
+            };
+
+            foreach (Vector3 dir in directions) {
+                if (!Physics.Raycast(
+                        point + new Vector3(0f, vertical_shift, 0f),
+                        dir,
+                        out RaycastHit hit,
+                        10f,
+                        LayerMask.GetMask("SimObjVisible"),
+                        QueryTriggerInteraction.Ignore
+                    )
+                ) {
+                    return true;  // open space at least along one direction
+                }
+            }
+            return false;
+        }
+
         public static void TryToAddReceptacleTriggerBox(
+            SimObjPhysics sop,
+            float yThresMax = 0.075f,
+            float worldOffset = -100f,
+            float minClearance = 0.15f,
+            float maxClearance = 0.2f,
+            bool excludeInterior = true,
+            bool multipleRectanglesPerGroup = false,
+            bool allowShelves = true
+        ) {
+            if (sop == null) {
+                throw new NotImplementedException(
+                    $"Adding receptacle trigger box is only possible the active game object, has an associated SimObjPhysics script."
+                );
+            }
+
+            Quaternion oldRot = sop.transform.rotation;
+            Vector3 oldPos = sop.transform.position;
+
+            List<MeshCollider> tmpMeshColliders = new List<MeshCollider>();
+            List<Collider> enabledColliders = new List<Collider>();
+            foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
+                if (c.enabled) {
+                    enabledColliders.Add(c);
+                    c.enabled = false;
+                }
+            }
+
+            try {
+                sop.transform.rotation = Quaternion.identity;
+                sop.transform.position = new Vector3(worldOffset, worldOffset, worldOffset);
+                sop.GetComponent<Rigidbody>().isKinematic = true;
+
+                foreach (MeshFilter mf in sop.GetComponentsInChildren<MeshFilter>()) {
+                    GameObject tmpGo = new GameObject();
+                    tmpGo.layer = LayerMask.NameToLayer("SimObjVisible");
+                    tmpGo.transform.position = mf.gameObject.transform.position;
+                    tmpGo.transform.rotation = mf.gameObject.transform.rotation;
+                    tmpGo.transform.parent = sop.transform;
+
+                    MeshCollider mc = tmpGo.AddComponent<MeshCollider>();
+                    mc.sharedMesh = mf.sharedMesh;
+
+                    Rigidbody rb = tmpGo.AddComponent<Rigidbody>();
+                    rb.isKinematic = true;
+
+                    tmpMeshColliders.Add(mc);
+                }
+
+                Physics.SyncTransforms();
+
+                sop.syncBoundingBoxes(forceCacheReset: true);
+                AxisAlignedBoundingBox aabb = sop.AxisAlignedBoundingBox;
+
+                Vector3 center = aabb.center;
+                Vector3 size = aabb.size;
+
+                float yThres = Mathf.Min(yThresMax, size.y * 0.15f);
+
+                float xMin = center.x - 0.95f * size.x / 2f;
+                float xMax = center.x + 0.95f * size.x / 2f;
+                float zMin = center.z - 0.95f * size.z / 2f;
+                float zMax = center.z + 0.95f * size.z / 2f;
+
+                float yStart = center.y + size.y / 2f + minClearance / 2f;
+                float yEnd = center.y - size.y / 2f;
+                float dummyY = -1000f;
+
+                // Func<int, float> iXToX = (i => xMin + i * (xMax - xMin) / (n - 1.0f));
+
+                // Store the point and clearance (if sufficiently large) for the point with maximum clearance in a discrete coordinate
+                Dictionary<(int, int, int), (float, float)> sparseMat = new Dictionary<(int, int, int), (float, float)>();
+                // Store populated y coordinates for a x-z grid
+                Dictionary<(int, int), SortedSet<int>> validYs = new Dictionary<(int, int), SortedSet<int>>();
+
+                int n = 30;
+                for (int iX = 0; iX < n; iX++) {
+                    float x = xMin + iX * (xMax - xMin) / (n - 1.0f);
+                    // Debug.Log($"x val: {x}");
+
+                    for (int iZ = 0; iZ < n; iZ++) {
+                        float z = zMin + iZ * (zMax - zMin) / (n - 1.0f);
+
+                        // Debug.Log($"Pos: ({iX}, {iZ}), vals ({x}, {z})");
+
+                        validYs[(iX, iZ)] = new SortedSet<int>();
+
+                        for (float y = yStart; y > yEnd; y -= yThres)
+                        {
+                            if (
+                                !Physics.Raycast(
+                                    new Vector3(x, y, z),
+                                    new Vector3(0f, -1f, 0f),
+                                    out RaycastHit hit,
+                                    10f,
+                                    LayerMask.GetMask("SimObjVisible"),
+                                    QueryTriggerInteraction.Ignore
+                                )
+                            )
+                            {
+                                break;  // there's no object surface left, so just go
+                            }
+
+                            // Debug.Log($"HITS {hit.point.y}");
+                            // Debug.DrawLine(hit.point, hit.point + new Vector3(0f, 0.1f, 0f), Color.cyan, 15f);
+
+                            // Fast-forward y (will also be post-decremented)
+                            y = hit.point.y;
+
+                            if (Vector3.Angle(hit.normal, Vector3.up) < 30f)
+                            {
+                                if (excludeInterior && !IsAccessible(hit.point))
+                                {
+                                    if (allowShelves)
+                                    {
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+
+                                float clearance = maxClearance;
+
+                                if (
+                                    Physics.Raycast(
+                                        origin: hit.point + new Vector3(0f, 0.01f, 0f),
+                                        direction: new Vector3(0f, 1f, 0f),
+                                        hitInfo: out RaycastHit upHit,
+                                        maxDistance: 10f,
+                                        layerMask: LayerMask.GetMask("SimObjVisible"),
+                                        queryTriggerInteraction: QueryTriggerInteraction.Ignore
+                                    )
+                                )
+                                {
+                                    clearance = Mathf.Min(upHit.point.y - y, maxClearance);
+                                }
+
+                                if (clearance >= minClearance)
+                                {
+                                    int iY = Mathf.FloorToInt(y / yThres + 0.5f);
+                                    sparseMat[(iX, iY, iZ)] = (y, clearance);
+                                    validYs[(iX, iZ)].Add(iY);
+                                    if (!allowShelves)
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Find range of iY values
+                int minIY = sparseMat.Keys.Min(k => k.Item2);
+                int maxIY = sparseMat.Keys.Max(k => k.Item2);
+
+                // Initialize dense histogram
+                Dictionary<int, float> denseYCounts = new Dictionary<int, float>();
+                for (int iy = minIY - 1; iy <= maxIY + 1; iy++) {
+                    denseYCounts[iy] = 0f;
+                }
+
+                // Fill smoothed histogram with contributions
+                foreach (var key in sparseMat.Keys) {
+                    int iX = key.Item1;
+                    int iY = key.Item2;
+                    int iZ = key.Item3;
+
+                    denseYCounts[iY] += 1f;
+
+                    // Half contribution to neighbors if they exist in validYs
+                    if (validYs[(iX, iZ)].Contains(iY - 1)) {
+                        denseYCounts[iY - 1] += 0.5f;
+                    }
+                    if (validYs[(iX, iZ)].Contains(iY + 1)) {
+                        denseYCounts[iY + 1] += 0.5f;
+                    }
+                }
+
+                // Convert to sorted arrays
+                var sortedYs = denseYCounts.Keys.OrderBy(y => y).ToArray();
+                var counts = sortedYs.Select(y => denseYCounts[y]).ToArray();
+
+                // Detect local maxima
+                List<int> localMaxima = new List<int>();
+
+                // Endpoints check
+                if (counts[0] > counts[1])
+                {
+                    localMaxima.Add(sortedYs[0]);
+                }
+
+                for (int i = 1; i < sortedYs.Length - 1; i++)
+                {
+                    if (counts[i] > counts[i - 1] && counts[i] > counts[i + 1])
+                    {
+                        localMaxima.Add(sortedYs[i]);
+                    }
+                }
+
+                // Endpoints check
+                if (counts[counts.Length - 1] > counts[counts.Length - 2])
+                {
+                    localMaxima.Add(sortedYs[counts.Length - 1]);
+                }
+
+                // Sort local maxima descending (start from the highest plane)
+                localMaxima.Reverse();
+
+                // Initialize accumulators
+                Dictionary<int, float> sumYPerMode = localMaxima.ToDictionary(mode => mode, _ => 0f);
+                Dictionary<int, int> countPerMode = localMaxima.ToDictionary(mode => mode, _ => 0);
+
+                // Iterate over sparseMat once
+                foreach (var kvp in sparseMat) {
+                    var key = kvp.Key;
+                    int iY = key.Item2;
+                    float yVal = kvp.Value.Item1;
+
+                    if (sumYPerMode.ContainsKey(iY)) {
+                        sumYPerMode[iY] += yVal;
+                        countPerMode[iY]++;
+                    }
+                }
+
+                // Compute averages
+                Dictionary<int, float> indexToMeanY = new Dictionary<int, float>();
+                foreach (var mode in localMaxima) {
+                    int count = countPerMode[mode];
+                    indexToMeanY[mode] = (count > 0) ? (sumYPerMode[mode] / count) : 0f;
+                }
+
+                Dictionary<int, float> groupToMaxYVal = new Dictionary<int, float>();
+                Dictionary<int, float> groupToMinYVal = new Dictionary<int, float>();
+                Dictionary<int, List<(int, int)>> groupToPos = new Dictionary<int, List<(int, int)>>();
+                var groupToYIndex = new Dictionary<int, int>();
+                int nextGroup = 0;
+                
+                groupToMaxYVal[-1] = dummyY;
+                groupToMinYVal[-1] = dummyY;
+
+                foreach (int localMaximaiY in localMaxima)
+                {
+                    float[,] mat = new float[n, n];
+                    for (int ix = 0; ix < n; ix++)
+                    {
+                        for (int iz = 0; iz < n; iz++)
+                        {
+                            mat[ix, iz] = dummyY;
+                        }
+                    }
+
+                    float meanY = indexToMeanY[localMaximaiY];
+
+                    for (int ix = 0; ix < n; ix++)
+                    {
+                        for (int iz = 0; iz < n; iz++)
+                        {
+                            if (!validYs.TryGetValue((ix, iz), out var ySet)) { continue; }
+
+                            // Efficient range query using GetViewBetween
+                            var nearbyYs = ySet.GetViewBetween(localMaximaiY - 1, localMaximaiY + 1);
+
+                            foreach (int iY in nearbyYs)
+                            {
+                                if (sparseMat.TryGetValue((ix, iY, iz), out var val))
+                                {
+                                    float yVal = val.Item1;
+
+                                    if (Math.Abs(yVal - meanY) <= yThres)
+                                    {
+                                        if (mat[ix, iz] == dummyY || Math.Abs(yVal - meanY) < Math.Abs(mat[ix, iz] - meanY))
+                                        {
+                                            mat[ix, iz] = yVal;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    mat = MorphClose(mat, radius: 1);
+
+                    Dictionary<(int, int), int> posToGroup = new Dictionary<(int, int), int>();
+                    for (int iX = 0; iX < n; iX++)
+                    {
+                        for (int iZ = 0; iZ < n; iZ++)
+                        {
+                            // Debug.Log($"Pos: ({iX}, {iZ})");
+                            float curYVal = mat[iX, iZ];
+                            // Debug.Log($"Cur Y: {curYVal}");
+
+                            if (curYVal == dummyY)
+                            {
+                                posToGroup[(iX, iZ)] = -1;
+                                continue;
+                            }
+
+                            int maybeRelable = -1;
+
+                            if (iX > 0)
+                            {
+                                int group = posToGroup[(iX - 1, iZ)];
+
+                                float otherMaxYVal = groupToMaxYVal[group];
+                                float otherMinYVal = groupToMinYVal[group];
+
+                                if (
+                                    Mathf.Abs(curYVal - otherMaxYVal) < yThres
+                                    && Mathf.Abs(curYVal - otherMinYVal) < yThres
+                                )
+                                {
+                                    maybeRelable = group;
+
+                                    posToGroup[(iX, iZ)] = group;
+                                    groupToPos[group].Add((iX, iZ));
+
+                                    groupToMaxYVal[group] = Mathf.Max(curYVal, otherMaxYVal);
+                                    groupToMinYVal[group] = Mathf.Min(curYVal, otherMinYVal);
+                                }
+                            }
+
+                            if (iZ > 0)
+                            {
+                                int group = posToGroup[(iX, iZ - 1)];
+                                float otherMaxYVal = groupToMaxYVal[group];
+                                float otherMinYVal = groupToMinYVal[group];
+
+                                if (
+                                    Mathf.Abs(curYVal - otherMaxYVal) < yThres
+                                    && Mathf.Abs(curYVal - otherMinYVal) < yThres
+                                )
+                                {
+                                    if (maybeRelable != -1 && maybeRelable != group)
+                                    {
+                                        // Merge labels (maybeRelable -> group)
+                                        foreach (var pos in groupToPos[maybeRelable])
+                                        {
+                                            posToGroup[pos] = group;
+                                            groupToPos[group].Add(pos);
+                                        }
+
+                                        // otherM*YVal already include curYVal
+                                        groupToMaxYVal[group] = Mathf.Max(groupToMaxYVal[maybeRelable], otherMaxYVal);
+                                        groupToMinYVal[group] = Mathf.Min(groupToMinYVal[maybeRelable], otherMinYVal);
+
+                                        groupToPos.Remove(maybeRelable);
+                                        groupToMaxYVal.Remove(maybeRelable);
+                                        groupToMinYVal.Remove(maybeRelable);
+                                    }
+                                    else if (maybeRelable != group)
+                                    {
+                                        posToGroup[(iX, iZ)] = group;
+                                        groupToPos[group].Add((iX, iZ));
+
+                                        groupToMaxYVal[group] = Mathf.Max(curYVal, otherMaxYVal);
+                                        groupToMinYVal[group] = Mathf.Min(curYVal, otherMinYVal);
+                                    }
+                                    continue;
+                                }
+                            }
+
+                            if (maybeRelable != -1)
+                            {
+                                continue;
+                            }
+
+                            posToGroup[(iX, iZ)] = nextGroup;
+                            groupToMaxYVal[nextGroup] = curYVal;
+                            groupToMinYVal[nextGroup] = curYVal;
+                            groupToPos[nextGroup] = new List<(int, int)>();
+                            groupToPos[nextGroup].Add((iX, iZ));
+                            groupToYIndex[nextGroup] = localMaximaiY;
+                            nextGroup++;
+                        }
+                    }
+                }
+
+                var groupToRectangles = new Dictionary<int, List<((int, int), (int, int))>>();
+                if (multipleRectanglesPerGroup)
+                {
+                    // TODO: Improve this logic so that we get rectangles more intelligently
+                    foreach (int group in groupToPos.Keys)
+                    {
+                        var posSet = new HashSet<(int, int)>(groupToPos[group]);
+
+                        List<((int, int), (int, int))> rectangles =
+                            new List<((int, int), (int, int))>();
+
+                        while (posSet.Count > 0)
+                        {
+                            (int, int) nextiXiZ = posSet.Min();
+
+                            int startIX = nextiXiZ.Item1;
+                            int startIZ = nextiXiZ.Item2;
+
+                            int k = 1;
+                            while (posSet.Contains((startIX + k, startIZ)))
+                            {
+                                k++;
+                            }
+
+                            int endIX = startIX + k - 1;
+
+                            k = 1;
+                            while (true)
+                            {
+                                bool allContained = true;
+                                for (int iX = startIX; iX <= endIX; iX++)
+                                {
+                                    if (!posSet.Contains((iX, startIZ + k)))
+                                    {
+                                        allContained = false;
+                                        break;
+                                    }
+                                }
+                                if (!allContained)
+                                {
+                                    break;
+                                }
+                                k++;
+                            }
+                            int endIZ = startIZ + k - 1;
+
+                            for (int iX = startIX; iX <= endIX; iX++)
+                            {
+                                for (int iZ = startIZ; iZ <= endIZ; iZ++)
+                                {
+                                    posSet.Remove((iX, iZ));
+                                }
+                            }
+
+                            rectangles.Add(((startIX, startIZ), (endIX, endIZ)));
+                            // Debug.Log($"Group {group}: ({startIX}, {startIZ}), ({endIX}, {endIZ})");
+                        }
+                        groupToRectangles[group] = rectangles;
+                    }
+                }
+                else
+                {
+                    foreach (int group in groupToPos.Keys)
+                    {
+                        var posSet = new HashSet<(int, int)>(groupToPos[group]);
+
+                        ((int, int), (int, int)) bestRect = ((0, 0), (0, 0));
+                        int maxArea = 0;
+
+                        List<((int, int), (int, int))> rectangles = new List<((int, int), (int, int))>();
+
+                        foreach ((int startX, int startZ) in posSet)
+                        {
+                            int maxWidth = 0;
+
+                            // Find max width from this row
+                            while (posSet.Contains((startX + maxWidth, startZ)))
+                            {
+                                maxWidth++;
+                            }
+
+                            // Try all widths from 1 to maxWidth
+                            for (int width = 2; width <= maxWidth; width++)
+                            {
+                                int height = 0;
+                                bool valid = true;
+
+                                while (valid)
+                                {
+                                    for (int dx = 0; dx < width; dx++)
+                                    {
+                                        if (!posSet.Contains((startX + dx, startZ + height)))
+                                        {
+                                            valid = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (valid)
+                                    {
+                                        height++;
+                                        int area = width * height;
+                                        if (area > maxArea)
+                                        {
+                                            maxArea = area;
+                                            bestRect = ((startX, startZ), (startX + width - 1, startZ + height - 1));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        rectangles.Add(bestRect);
+                        groupToRectangles[group] = rectangles;
+                    }
+                }
+
+                Dictionary<int, List<float>> rectangleClearances = new Dictionary<int, List<float>>();
+
+                foreach (var kvp in groupToRectangles) {
+                    int groupId = kvp.Key;
+                    float yRectBase = groupToMinYVal[groupId];
+                    var rectangles = kvp.Value;
+
+                    List<float> groupClearances = new List<float>();
+
+                    foreach (var rect in rectangles) {
+                        var ((startIX, startIZ), (endIX, endIZ)) = rect;
+
+                        float minEffectiveClearance = float.MaxValue;
+                        bool hasPoint = false;
+
+                        for (int iX = startIX; iX <= endIX; iX++) {
+                            for (int iZ = startIZ; iZ <= endIZ; iZ++) {
+                                if (validYs.TryGetValue((iX, iZ), out var ySet)) {
+                                    for (int offset = -1; offset <= 1; offset++) {
+                                        int iYCheck = groupToYIndex[groupId] + offset;
+                                        if (ySet.Contains(iYCheck)) {
+                                            if (sparseMat.TryGetValue((iX, iYCheck, iZ), out var val)) {
+                                                float yPos = val.Item1;
+                                                float clearance = val.Item2;
+                                                float effectiveClearance = clearance - (yRectBase - yPos);
+
+                                                if (effectiveClearance < minEffectiveClearance) {
+                                                    minEffectiveClearance = effectiveClearance;
+                                                }
+                                                hasPoint = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        groupClearances.Add(hasPoint ? minEffectiveClearance : 0f);
+                    }
+                    rectangleClearances[groupId] = groupClearances;
+                }
+
+                var vector3CornerLists = new List<List<Vector3>>();
+                var clearanceList = new List<float>();
+                List<Color> colors = new List<Color>
+                {
+                    Color.cyan,
+                    Color.yellow,
+                    Color.red,
+                    Color.magenta,
+                    Color.green,
+                    Color.blue
+                };
+                int yar = -1;
+                foreach (int group in groupToRectangles.Keys) {
+                    float y = groupToMinYVal[group];
+                    var rectangles = groupToRectangles[group];
+                    var clearances = rectangleClearances[group];
+
+                    for (int i = 0; i < rectangles.Count; i++) {
+                        var extents = rectangles[i];
+                        float clearance = clearances[i];
+
+                        yar++;
+                        (int, int) start = extents.Item1;
+                        (int, int) end = extents.Item2;
+
+                        if (
+                            Math.Min(
+                                Math.Abs(start.Item1 - end.Item1),
+                                Math.Abs(start.Item2 - end.Item2)
+                            ) <= 1
+                        ) {
+                            continue;
+                        }
+
+                        float startX = xMin + (start.Item1 - 0.5f) * (xMax - xMin) / (n - 1.0f);
+                        float endX = xMin + (end.Item1 + 0.5f) * (xMax - xMin) / (n - 1.0f);
+
+                        float startZ = zMin + (start.Item2 - 0.5f) * (zMax - zMin) / (n - 1.0f);
+                        float endZ = zMin + (end.Item2 + 0.5f) * (zMax - zMin) / (n - 1.0f);
+
+                        List<Vector3> corners = new List<Vector3>();
+                        corners.Add(new Vector3(startX, y, startZ));
+                        corners.Add(new Vector3(endX, y, startZ));
+                        corners.Add(new Vector3(endX, y, endZ));
+                        corners.Add(new Vector3(startX, y, endZ));
+
+                        // Debug.Log($"(({start.Item1}, {start.Item2}), ({end.Item1}, {end.Item2}))");
+#if UNITY_EDITOR
+                        Debug.DrawLine(corners[0], corners[1], colors[yar % colors.Count], 15f);
+                        Debug.DrawLine(corners[1], corners[2], colors[yar % colors.Count], 15f);
+                        Debug.DrawLine(corners[2], corners[3], colors[yar % colors.Count], 15f);
+                        Debug.DrawLine(corners[3], corners[0], colors[yar % colors.Count], 15f);
+#endif
+                        vector3CornerLists.Add(corners);
+                        clearanceList.Add(clearance);
+                    }
+                }
+
+                Transform t = sop.transform.Find("ReceptacleTriggerBoxes");
+                GameObject go = null;
+                if (t != null) {
+                    GameObject.DestroyImmediate(t.gameObject);
+                }
+                if (t == null) {
+                    go = new GameObject("ReceptacleTriggerBoxes");
+                    go.transform.position = sop.transform.position;
+                    go.transform.parent = sop.transform;
+                }
+                Physics.SyncTransforms();
+
+                int cornerListInd = 0;
+                List<GameObject> boxGos = new List<GameObject>();
+                // foreach (List<Vector3> cornerList in vector3CornerLists) {
+                for (int i = 0; i < vector3CornerLists.Count; i++) {
+                    var cornerList = vector3CornerLists[i];
+                    var clearance = clearanceList[i];
+
+                    Vector3 c0 = cornerList[0];
+                    Vector3 c1 = cornerList[1];
+                    Vector3 c2 = cornerList[2];
+                    Vector3 c3 = cornerList[3];
+
+                    GameObject rtb = new GameObject($"ReceptacleTriggerBox{cornerListInd++}");
+                    boxGos.Add(rtb);
+                    rtb.transform.position = sop.transform.position;
+                    rtb.transform.parent = go.transform;
+                    rtb.layer = LayerMask.NameToLayer("SimObjInvisible");
+                    rtb.AddComponent<Contains>();
+                    BoxCollider bc = rtb.AddComponent<BoxCollider>();
+                    bc.center =
+                        (c0 + c1 + c2 + c3) * 0.25f
+                        - rtb.transform.position
+                        + new Vector3(0f, clearance / 2.0f, 0f);
+                    bc.size = c2 - c0 + new Vector3(0f, clearance, 0f);
+                    bc.isTrigger = true;
+                }
+                sop.ReceptacleTriggerBoxes = boxGos.ToArray();
+            } finally {
+                sop.transform.position = oldPos;
+                sop.transform.rotation = oldRot;
+                sop.GetComponent<Rigidbody>().isKinematic = false;
+
+                foreach (MeshCollider tmc in tmpMeshColliders) {
+                    GameObject.DestroyImmediate(tmc.gameObject);
+                }
+                foreach (Collider c in enabledColliders) {
+                    c.enabled = true;
+                }
+                Physics.SyncTransforms();
+            }
+        }
+
+        public static void TryToAddReceptacleTriggerBox2D(
             SimObjPhysics sop,
             float yThresMax = 0.075f,
             float worldOffset = -100f
@@ -7717,7 +8516,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public ActionFinished CreateRuntimeAsset(ProceduralAsset asset) {
+        public ActionFinished CreateRuntimeAsset(ProceduralAsset asset, bool returnObject = false) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb.ContainsAssetKey(asset.name)) {
                 return new ActionFinished(
@@ -7742,27 +8541,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 annotations: asset.annotations,
                 receptacleCandidate: asset.receptacleCandidate,
                 yRotOffset: asset.yRotOffset,
+                returnObject: returnObject,
                 serializable: asset.serializable,
                 parentTexturesDir: asset.parentTexturesDir
             );
             return new ActionFinished { success = true, actionReturn = assetData };
         }
 
-        public ActionFinished CreateRuntimeAsset(
+        private static async Task<ProceduralAsset> LoadAssetAsync(
             string id,
             string dir,
             string extension = ".msgpack.gz",
             ObjectAnnotations annotations = null,
             bool serializable = false
         ) {
-            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
-            if (assetDb.ContainsAssetKey(id)) {
-                return new ActionFinished(
-                    success: false,
-                    errorMessage: $"'{id}' already exists in ProceduralAssetDatabase, trying to create procedural object twice, call `SpawnAsset` instead.",
-                    toEmitState: true
-                );
-            }
             var validDirs = new List<string>()
             {
                 Application.persistentDataPath,
@@ -7778,20 +8570,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             extension = !extension.StartsWith(".") ? $".{extension}" : extension;
             extension = extension.Trim();
             if (!supportedExtensions.Contains(extension)) {
-                return new ActionFinished(
-                    success: false,
-                    errorMessage: $"Unsupported extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}",
-                    actionReturn: null
+                throw new ArgumentException(
+                    $"Unsupported extension `{extension}`. Only supported: {string.Join(", ", supportedExtensions)}"
                 );
             }
             var filename = $"{id}{extension}";
             var filepath = Path.GetFullPath(Path.Combine(dir, id, filename));
             if (!File.Exists(filepath)) {
-                return new ActionFinished(
-                    success: false,
-                    actionReturn: null,
-                    errorMessage: $"Asset fiile '{filepath}' does not exist."
-                );
+                throw new FileNotFoundException($"Asset file '{filepath}' does not exist.");
             }
 
             // to support different
@@ -7831,43 +8617,48 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ObjectCreationHandling = ObjectCreationHandling.Replace
                 };
                 var json = reader.ReadToEnd();
-                // procAsset = Newtonsoft.Json.JsonConvert.DeserializeObject<ProceduralAsset>(reader.ReadToEnd(), serializer);
                 procAsset = JsonConvert.DeserializeObject<ProceduralAsset>(json);
             } else {
-                return new ActionFinished(
-                    success: false,
-                    errorMessage: $"Unexpected error with extension `{extension}`, filepath: `{filepath}`, compression stages: {string.Join(".", presentStages)}. Only supported: {string.Join(", ", supportedExtensions)}",
-                    actionReturn: null
+                throw new ArgumentException(
+                    $"Unexpected error with extension `{extension}`, filepath: `{filepath}`, compression stages: {string.Join(".", presentStages)}. Only supported: {string.Join(", ", supportedExtensions)}"
                 );
             }
 
             procAsset.parentTexturesDir = Path.Combine(dir, id);
 
-            var assetData = ProceduralTools.CreateAsset(
-                procAsset.vertices,
-                procAsset.normals,
-                procAsset.name,
-                procAsset.triangles,
-                procAsset.uvs,
-                procAsset.albedoTexturePath,
-                procAsset.metallicSmoothnessTexturePath,
-                procAsset.normalTexturePath,
-                procAsset.emissionTexturePath,
-                procAsset.colliders,
-                procAsset.physicalProperties,
-                procAsset.visibilityPoints,
-                procAsset.annotations ?? annotations,
-                procAsset.receptacleCandidate,
-                procAsset.yRotOffset,
-                returnObject: true,
-                serializable: serializable,
-                parent: null,
-                addAnotationComponent: false,
-                parentTexturesDir: procAsset.parentTexturesDir
-            );
+            procAsset.annotations = annotations ?? procAsset.annotations;
+            
+            return procAsset;
+        }
+
+        public ActionFinished CreateRuntimeAsset(
+            string id,
+            string dir,
+            string extension = ".msgpack.gz",
+            ObjectAnnotations annotations = null,
+            bool serializable = false
+        ) {
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            if (assetDb.ContainsAssetKey(id)) {
+                return new ActionFinished(
+                    success: false,
+                    errorMessage: $"'{id}' already exists in ProceduralAssetDatabase, trying to create procedural object twice, call `SpawnAsset` instead.",
+                    toEmitState: true
+                );
+            }
+
+            var procAsset = LoadAssetAsync(
+                id: id,
+                dir: dir,
+                extension: extension,
+                annotations: annotations,
+                serializable: serializable
+            ).Result;
+            procAsset.serializable = serializable;
+            procAsset.annotations = annotations ?? procAsset.annotations;
 
             // Debug.Log($"root is null? {parent == null} -  {parent}");
-            return new ActionFinished(success: true, actionReturn: assetData);
+            return CreateRuntimeAsset(asset: procAsset, returnObject: true);
         }
 
         public class UnityLoadableAsset {
@@ -7882,18 +8673,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<UnityLoadableAsset> assets,
             string dir = null
         ) {
-            foreach (var asset in assets) {
-                var actionFinished = CreateRuntimeAsset(
-                    id: asset.id,
-                    dir: dir ?? asset.dir,
-                    extension: asset.extension,
-                    annotations: asset.annotations
+            try {
+#if UNITY_EDITOR
+                Diagnostics.Stopwatch stopWatch = new Diagnostics.Stopwatch();
+                stopWatch.Start();
+#endif
+                // Load assets in parallel
+                var loadTasks = assets
+                    .Select(asset =>
+                        LoadAssetAsync(
+                            id: asset.id,
+                            dir: dir ?? asset.dir,
+                            extension: asset.extension,
+                            annotations: asset.annotations
+                        )
+                    )
+                    .ToList();
+                Task.WhenAll(loadTasks).Wait();
+
+                var loadedAssets = loadTasks.Select(t => t.Result).ToList();
+
+#if UNITY_EDITOR
+                stopWatch.Stop();
+                Debug.Log(
+                    $"LoadAssetAsync took {stopWatch.ElapsedMilliseconds} ms, per asset time {stopWatch.ElapsedMilliseconds / assets.Count} ms"
                 );
-                if (!actionFinished.success) {
-                    return actionFinished;
+                stopWatch.Restart();
+#endif
+                // Create assets serially
+                foreach (var (asset, procAsset) in assets.Zip(loadedAssets, (a, p) => (a, p))) {
+                    var actionFinished = CreateRuntimeAsset(asset: procAsset);
+                    if (!actionFinished.success) {
+                        return actionFinished;
+                    }
                 }
+#if UNITY_EDITOR
+                stopWatch.Stop();
+                Debug.Log(
+                    $"CreateRuntimeAsset loop took {stopWatch.ElapsedMilliseconds} ms, per asset time {stopWatch.ElapsedMilliseconds / assets.Count} ms"
+                );
+#endif
+
+                return ActionFinished.Success;
+            } catch (Exception ex) {
+                return new ActionFinished(success: false, errorMessage: ex.Message);
             }
-            return ActionFinished.Success;
         }
 
         public void GetStreamingAssetsPath() {

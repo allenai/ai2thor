@@ -25,15 +25,14 @@ if TYPE_CHECKING:
     from ai2thor.controller import Controller
 
 from objathor.asset_conversion.util import (
-    get_existing_thor_asset_file_path,
     create_runtime_asset_file,
     get_existing_thor_asset_file_path,
     change_asset_paths,
     add_default_annotations,
-    load_existing_thor_asset_file,
 )
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(os.path.basename(__file__))
+logger.setLevel(logging.INFO)
 
 EXTENSIONS_LOADABLE_IN_UNITY = {
     ".json",
@@ -58,12 +57,12 @@ def get_all_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List
 
 
 def create_asset(
-    thor_controller,
-    asset_id,
-    asset_directory,
+    thor_controller: "Controller",
+    asset_id: str,
+    asset_directory: str,
     copy_to_dir=None,
     verbose=False,
-    load_file_in_unity=False,
+    load_file_in_unity=True,
     extension=None,
     raise_for_failure=True,
     fail_if_not_unity_loadable=False,
@@ -87,7 +86,7 @@ def create_assets(
     assets_dir: str,
     copy_to_dir=None,
     verbose=False,
-    load_file_in_unity=False,
+    load_file_in_unity=True,
     extension=None,
     fail_if_not_unity_loadable=False,
     raise_for_failure=True,
@@ -262,10 +261,10 @@ def create_assets_if_not_exist(
 class ProceduralAssetHookRunner:
     def __init__(
         self,
-        asset_directory,
+        asset_directory: str,
         target_dir="processed_models",
         asset_symlink=True,
-        load_file_in_unity=False,
+        load_file_in_unity=True,
         stop_if_fail=False,
         asset_limit=-1,
         extension=None,
@@ -331,33 +330,6 @@ class ProceduralAssetHookRunner:
         )
 
 
-class ObjaverseAssetHookRunner(object):
-    def __init__(self):
-        import objaverse
-
-        self.objaverse_uid_set = set(objaverse.load_uids())
-
-    def CreateHouse(self, action, controller):
-        raise NotImplemented("Not yet implemented.")
-
-        house = action["house"]
-        asset_ids = list(set(obj["assetId"] for obj in house["objects"]))
-        evt = controller.step(action="AssetsInDatabase", assetIds=asset_ids)
-        asset_in_db = evt.metadata["actionReturn"]
-        assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if in_db]
-        not_created_set = set(assets_not_created)
-        not_objeverse_not_created = not_created_set.difference(self.objaverse_uid_set)
-        if len(not_created_set):
-            raise ValueError(
-                f"Invalid asset ids are not in THOR AssetDatabase or part of objeverse: {not_objeverse_not_created}"
-            )
-
-        # TODO when transformed assets are in objaverse download them and create them
-        # objaverse.load_thor_objects
-        # create_assets()
-
-
-
 def download_with_progress_bar(save_path: str, url: str, verbose: bool = False):
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
@@ -377,7 +349,7 @@ def download_with_progress_bar(save_path: str, url: str, verbose: bool = False):
         else:
             dl = 0
             total_length = int(total_length)
-                
+
             with (
                 tqdm.tqdm(
                     total=total_length,

@@ -1052,9 +1052,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 Physics.SyncTransforms();
 
-                Collider c = UtilityFunctions.firstColliderObjectCollidingWith(
-                    go: sop.gameObject
-                );
+                Collider c = UtilityFunctions.firstColliderObjectCollidingWith(go: sop.gameObject);
                 if (c != null) {
                     SimObjPhysics collisionSop = ancestorSimObjPhysics(c.gameObject);
                     errorMessage =
