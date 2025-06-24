@@ -9183,12 +9183,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
          public IEnumerator DeleteLRUFromProceduralCacheAsync(int assetLimit) {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDB == null) {
-                yield return new ActionFinished(success: false, errorMessage:  "No ProceduralAssetDatabase seems to exist.", toEmitState: true)
+                yield return new ActionFinished(success: false, errorMessage:  "No ProceduralAssetDatabase seems to exist.", toEmitState: true);
             }
             //            Debug.Log($"Attempting to remove until {assetLimit}");
             yield return assetDB.removeLRUItemsAsync(assetLimit);
 
-            yield return new ActionFinished(success: true, toEmitState: true)
+            yield return new ActionFinished(success: true, toEmitState: true);
         }
 
         public void GetLRUCacheKeys() {
