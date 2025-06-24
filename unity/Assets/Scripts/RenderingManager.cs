@@ -11,6 +11,7 @@ using System.Runtime.Remoting.Messaging;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Thor.Attributes;
+using System.Security.Cryptography;
 
 public class RenderingManager : MonoBehaviour {
 
@@ -108,8 +109,9 @@ public class RenderingManager : MonoBehaviour {
     public void OnCameraChange() {
         // Debug.Log($"===== OnCameraChange multipass for {string.Join(", ", this.activePasses.Values.Select(x => x.GetName()))}");
         var mainCamera = GetComponent<Camera>();
-        foreach (var pass in this.activePasses.Values) {
-            pass.OnCameraChange(mainCamera);
+        foreach (var pass in this.activePasses) {
+            Debug.Log($"--- OnCameraChange {pass.Key} is null {pass.Value == null} pass {pass.Value}");
+            pass.Value.OnCameraChange(mainCamera);
         }
     }
 

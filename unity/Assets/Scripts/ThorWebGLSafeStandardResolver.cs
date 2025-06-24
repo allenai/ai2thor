@@ -185,137 +185,261 @@ public class ProceduralTexturesFormatter : IMessagePackFormatter<ProceduralTextu
     }
 }
 
-
-
-
-    public class ProceduralAssetFormatter : IMessagePackFormatter<ProceduralAsset>
-    {
-    public void Serialize(ref MessagePackWriter writer, ProceduralAsset value, MessagePackSerializerOptions options)
-    {
-        writer.WriteMapHeader(17);
-
-        writer.Write(nameof(value.vertices));
-        MessagePackSerializer.Serialize(ref writer, value.vertices, options);
-
-        writer.Write(nameof(value.normals));
-        MessagePackSerializer.Serialize(ref writer, value.normals, options);
-
-        writer.Write(nameof(value.name));
-        writer.Write(value.name);
-
-        writer.Write(nameof(value.triangles));
-        MessagePackSerializer.Serialize(ref writer, value.triangles, options);
-
-        writer.Write(nameof(value.uvs));
-        MessagePackSerializer.Serialize(ref writer, value.uvs, options);
-
-        writer.Write(nameof(value.albedoTexturePath));
-        writer.Write(value.albedoTexturePath);
-
-        writer.Write(nameof(value.metallicSmoothnessTexturePath));
-        writer.Write(value.metallicSmoothnessTexturePath);
-
-        writer.Write(nameof(value.normalTexturePath));
-        writer.Write(value.normalTexturePath);
-
-        writer.Write(nameof(value.emissionTexturePath));
-        writer.Write(value.emissionTexturePath);
-
-        writer.Write(nameof(value.colliders));
-        MessagePackSerializer.Serialize(ref writer, value.colliders, options);
-
-        writer.Write(nameof(value.physicalProperties));
-        MessagePackSerializer.Serialize(ref writer, value.physicalProperties, options);
-
-        writer.Write(nameof(value.visibilityPoints));
-        MessagePackSerializer.Serialize(ref writer, value.visibilityPoints, options);
-
-        writer.Write(nameof(value.annotations));
-        MessagePackSerializer.Serialize(ref writer, value.annotations, options);
-
-        writer.Write(nameof(value.receptacleCandidate));
-        writer.Write(value.receptacleCandidate);
-
-        writer.Write(nameof(value.yRotOffset));
-        writer.Write(value.yRotOffset);
-
-        writer.Write(nameof(value.serializable));
-        writer.Write(value.serializable);
-
-        writer.Write(nameof(value.parentTexturesDir));
-        writer.Write(value.parentTexturesDir);
+public class SerializableColorFormatter : IMessagePackFormatter<SerializableColor> {
+    public void Serialize(ref MessagePackWriter writer, SerializableColor value, MessagePackSerializerOptions options) {
+        writer.WriteMapHeader(4);
+        writer.Write(nameof(SerializableColor.r)); writer.Write(value.r);
+        writer.Write(nameof(SerializableColor.g)); writer.Write(value.g);
+        writer.Write(nameof(SerializableColor.b)); writer.Write(value.b);
+        writer.Write(nameof(SerializableColor.a)); writer.Write(value.a);
     }
 
-    public ProceduralAsset Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
-    {
+    public SerializableColor Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options) {
         var count = reader.ReadMapHeader();
-        var asset = new ProceduralAsset();
-
-        for (int i = 0; i < count; i++)
-        {
+        var value = new SerializableColor();
+        for (int i = 0; i < count; i++) {
             var key = reader.ReadString();
-            switch (key)
-            {
-                case nameof(ProceduralAsset.vertices):
-                    asset.vertices = MessagePackSerializer.Deserialize<Vector3[]>(ref reader, options);
-                    break;
-                case nameof(ProceduralAsset.normals):
-                    asset.normals = MessagePackSerializer.Deserialize<Vector3[]>(ref reader, options);
-                    break;
-                case nameof(ProceduralAsset.name):
-                    asset.name = reader.ReadString();
-                    break;
-                case nameof(ProceduralAsset.triangles):
-                    asset.triangles = MessagePackSerializer.Deserialize<int[]>(ref reader, options);
-                    break;
-                case nameof(ProceduralAsset.uvs):
-                    asset.uvs = MessagePackSerializer.Deserialize<Vector2[]>(ref reader, options);
-                    break;
-                case nameof(ProceduralAsset.albedoTexturePath):
-                    asset.albedoTexturePath = reader.ReadString();
-                    break;
-                case nameof(ProceduralAsset.metallicSmoothnessTexturePath):
-                    asset.metallicSmoothnessTexturePath = reader.ReadString();
-                    break;
-                case nameof(ProceduralAsset.normalTexturePath):
-                    asset.normalTexturePath = reader.ReadString();
-                    break;
-                case nameof(ProceduralAsset.emissionTexturePath):
-                    asset.emissionTexturePath = reader.ReadString();
-                    break;
-                case nameof(ProceduralAsset.colliders):
-                    asset.colliders = MessagePackSerializer.Deserialize<SerializableCollider[]>(ref reader, options);
-                    break;
-                case nameof(ProceduralAsset.physicalProperties):
-                    asset.physicalProperties = MessagePackSerializer.Deserialize<PhysicalProperties>(ref reader, options);
-                    break;
-                case nameof(ProceduralAsset.visibilityPoints):
-                    asset.visibilityPoints = MessagePackSerializer.Deserialize<Vector3[]>(ref reader, options);
-                    break;
-                case nameof(ProceduralAsset.annotations):
-                    asset.annotations = MessagePackSerializer.Deserialize<ObjectAnnotations>(ref reader, options);
-                    break;
-                case nameof(ProceduralAsset.receptacleCandidate):
-                    asset.receptacleCandidate = reader.ReadBoolean();
-                    break;
-                case nameof(ProceduralAsset.yRotOffset):
-                    asset.yRotOffset = reader.ReadSingle();
-                    break;
-                case nameof(ProceduralAsset.serializable):
-                    asset.serializable = reader.ReadBoolean();
-                    break;
-                case nameof(ProceduralAsset.parentTexturesDir):
-                    asset.parentTexturesDir = reader.ReadString();
-                    break;
-                default:
-                    reader.Skip();
-                    break;
+            switch (key) {
+                case nameof(SerializableColor.r): value.r = reader.ReadSingle(); break;
+                case nameof(SerializableColor.g): value.g = reader.ReadSingle(); break;
+                case nameof(SerializableColor.b): value.b = reader.ReadSingle(); break;
+                case nameof(SerializableColor.a): value.a = reader.ReadSingle(); break;
+                default: reader.Skip(); break;
+            }
+        }
+        return value;
+    }
+}
+
+
+public class ProceduralAssetFormatter : IMessagePackFormatter<ProceduralAsset> {
+    public void Serialize(ref MessagePackWriter writer, ProceduralAsset value, MessagePackSerializerOptions options) {
+        var resolver = options.Resolver;
+        writer.WriteMapHeader(26);
+
+        writer.Write(nameof(value.vertices)); resolver.GetFormatterWithVerify<Vector3[]>().Serialize(ref writer, value.vertices, options);
+        writer.Write(nameof(value.normals)); resolver.GetFormatterWithVerify<Vector3[]>().Serialize(ref writer, value.normals, options);
+        writer.Write(nameof(value.name)); writer.Write(value.name);
+        writer.Write(nameof(value.triangles)); resolver.GetFormatterWithVerify<int[]>().Serialize(ref writer, value.triangles, options);
+        writer.Write(nameof(value.uvs)); resolver.GetFormatterWithVerify<Vector2[]>().Serialize(ref writer, value.uvs, options);
+
+        writer.Write(nameof(value.albedoTexturePath)); writer.Write(value.albedoTexturePath);
+        writer.Write(nameof(value.metallicSmoothnessTexturePath)); writer.Write(value.metallicSmoothnessTexturePath);
+        writer.Write(nameof(value.normalTexturePath)); writer.Write(value.normalTexturePath);
+        writer.Write(nameof(value.emissionTexturePath)); writer.Write(value.emissionTexturePath);
+
+        writer.Write(nameof(value.colliders)); resolver.GetFormatterWithVerify<SerializableCollider[]>().Serialize(ref writer, value.colliders, options);
+        writer.Write(nameof(value.physicalProperties)); resolver.GetFormatterWithVerify<PhysicalProperties>().Serialize(ref writer, value.physicalProperties, options);
+        writer.Write(nameof(value.visibilityPoints)); resolver.GetFormatterWithVerify<Vector3[]>().Serialize(ref writer, value.visibilityPoints, options);
+        writer.Write(nameof(value.annotations)); resolver.GetFormatterWithVerify<ObjectAnnotations>().Serialize(ref writer, value.annotations, options);
+
+        writer.Write(nameof(value.receptacleCandidate)); writer.Write(value.receptacleCandidate);
+        writer.Write(nameof(value.yRotOffset)); writer.Write(value.yRotOffset);
+        writer.Write(nameof(value.serializable)); writer.Write(value.serializable);
+        writer.Write(nameof(value.parentTexturesDir)); writer.Write(value.parentTexturesDir);
+        writer.Write(nameof(value.rawTextures)); resolver.GetFormatterWithVerify<ProceduralTextures>().Serialize(ref writer, value.rawTextures, options);
+
+        writer.Write(nameof(value.albedoTextureEnergy)); writer.Write(value.albedoTextureEnergy);
+        writer.Write(nameof(value.albedoTextureEnergyNormalized)); writer.Write(value.albedoTextureEnergyNormalized);
+        writer.Write(nameof(value.albedoRGBA)); resolver.GetFormatterWithVerify<SerializableColor>().Serialize(ref writer, value.albedoRGBA, options);
+
+        writer.Write(nameof(value.emissionTextureEnergy)); writer.Write(value.emissionTextureEnergy);
+        writer.Write(nameof(value.emissionTextureEnergyNormalized)); writer.Write(value.emissionTextureEnergyNormalized);
+        writer.Write(nameof(value.emissionRGBA)); resolver.GetFormatterWithVerify<SerializableColor>().Serialize(ref writer, value.emissionRGBA, options);
+
+        writer.Write(nameof(value.metallicSmoothnessTextureEnergy)); writer.Write(value.metallicSmoothnessTextureEnergy);
+        writer.Write(nameof(value.metallicSmoothnessTextureEnergyNormalized)); writer.Write(value.metallicSmoothnessTextureEnergyNormalized);
+        writer.Write(nameof(value.metallicSmoothnessRGBA)); resolver.GetFormatterWithVerify<SerializableColor>().Serialize(ref writer, value.metallicSmoothnessRGBA, options);
+
+        writer.Write(nameof(value.normalTextureEnergy)); writer.Write(value.normalTextureEnergy);
+        writer.Write(nameof(value.normalTextureEnergyNormalized)); writer.Write(value.normalTextureEnergyNormalized);
+        writer.Write(nameof(value.normalRGBA)); resolver.GetFormatterWithVerify<SerializableColor>().Serialize(ref writer, value.normalRGBA, options);
+    }
+
+    public ProceduralAsset Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options) {
+        var resolver = options.Resolver;
+        var count = reader.ReadMapHeader();
+        var value = new ProceduralAsset();
+
+        for (int i = 0; i < count; i++) {
+            var key = reader.ReadString();
+            switch (key) {
+                case nameof(value.vertices): value.vertices = resolver.GetFormatterWithVerify<Vector3[]>().Deserialize(ref reader, options); break;
+                case nameof(value.normals): value.normals = resolver.GetFormatterWithVerify<Vector3[]>().Deserialize(ref reader, options); break;
+                case nameof(value.name): value.name = reader.ReadString(); break;
+                case nameof(value.triangles): value.triangles = resolver.GetFormatterWithVerify<int[]>().Deserialize(ref reader, options); break;
+                case nameof(value.uvs): value.uvs = resolver.GetFormatterWithVerify<Vector2[]>().Deserialize(ref reader, options); break;
+
+                case nameof(value.albedoTexturePath): value.albedoTexturePath = reader.ReadString(); break;
+                case nameof(value.metallicSmoothnessTexturePath): value.metallicSmoothnessTexturePath = reader.ReadString(); break;
+                case nameof(value.normalTexturePath): value.normalTexturePath = reader.ReadString(); break;
+                case nameof(value.emissionTexturePath): value.emissionTexturePath = reader.ReadString(); break;
+
+                case nameof(value.colliders): value.colliders = resolver.GetFormatterWithVerify<SerializableCollider[]>().Deserialize(ref reader, options); break;
+                case nameof(value.physicalProperties): value.physicalProperties = resolver.GetFormatterWithVerify<PhysicalProperties>().Deserialize(ref reader, options); break;
+                case nameof(value.visibilityPoints): value.visibilityPoints = resolver.GetFormatterWithVerify<Vector3[]>().Deserialize(ref reader, options); break;
+                case nameof(value.annotations): value.annotations = resolver.GetFormatterWithVerify<ObjectAnnotations>().Deserialize(ref reader, options); break;
+
+                case nameof(value.receptacleCandidate): value.receptacleCandidate = reader.ReadBoolean(); break;
+                case nameof(value.yRotOffset): value.yRotOffset = reader.ReadSingle(); break;
+                case nameof(value.serializable): value.serializable = reader.ReadBoolean(); break;
+                case nameof(value.parentTexturesDir): value.parentTexturesDir = reader.ReadString(); break;
+                case nameof(value.rawTextures): value.rawTextures = resolver.GetFormatterWithVerify<ProceduralTextures>().Deserialize(ref reader, options); break;
+
+                case nameof(value.albedoTextureEnergy): value.albedoTextureEnergy = reader.ReadSingle(); break;
+                case nameof(value.albedoTextureEnergyNormalized): value.albedoTextureEnergyNormalized = reader.ReadSingle(); break;
+                case nameof(value.albedoRGBA): value.albedoRGBA = resolver.GetFormatterWithVerify<SerializableColor>().Deserialize(ref reader, options); break;
+
+                case nameof(value.emissionTextureEnergy): value.emissionTextureEnergy = reader.ReadSingle(); break;
+                case nameof(value.emissionTextureEnergyNormalized): value.emissionTextureEnergyNormalized = reader.ReadSingle(); break;
+                case nameof(value.emissionRGBA): value.emissionRGBA = resolver.GetFormatterWithVerify<SerializableColor>().Deserialize(ref reader, options); break;
+
+                case nameof(value.metallicSmoothnessTextureEnergy): value.metallicSmoothnessTextureEnergy = reader.ReadSingle(); break;
+                case nameof(value.metallicSmoothnessTextureEnergyNormalized): value.metallicSmoothnessTextureEnergyNormalized = reader.ReadSingle(); break;
+                case nameof(value.metallicSmoothnessRGBA): value.metallicSmoothnessRGBA = resolver.GetFormatterWithVerify<SerializableColor>().Deserialize(ref reader, options); break;
+
+                case nameof(value.normalTextureEnergy): value.normalTextureEnergy = reader.ReadSingle(); break;
+                case nameof(value.normalTextureEnergyNormalized): value.normalTextureEnergyNormalized = reader.ReadSingle(); break;
+                case nameof(value.normalRGBA): value.normalRGBA = resolver.GetFormatterWithVerify<SerializableColor>().Deserialize(ref reader, options); break;
+
+                default: reader.Skip(); break;
             }
         }
 
-        return asset;
+        return value;
     }
 }
+
+
+// Older
+//     public class ProceduralAssetFormatter : IMessagePackFormatter<ProceduralAsset>
+//     {
+//     public void Serialize(ref MessagePackWriter writer, ProceduralAsset value, MessagePackSerializerOptions options)
+//     {
+//         writer.WriteMapHeader(17);
+
+//         writer.Write(nameof(value.vertices));
+//         MessagePackSerializer.Serialize(ref writer, value.vertices, options);
+
+//         writer.Write(nameof(value.normals));
+//         MessagePackSerializer.Serialize(ref writer, value.normals, options);
+
+//         writer.Write(nameof(value.name));
+//         writer.Write(value.name);
+
+//         writer.Write(nameof(value.triangles));
+//         MessagePackSerializer.Serialize(ref writer, value.triangles, options);
+
+//         writer.Write(nameof(value.uvs));
+//         MessagePackSerializer.Serialize(ref writer, value.uvs, options);
+
+//         writer.Write(nameof(value.albedoTexturePath));
+//         writer.Write(value.albedoTexturePath);
+
+//         writer.Write(nameof(value.metallicSmoothnessTexturePath));
+//         writer.Write(value.metallicSmoothnessTexturePath);
+
+//         writer.Write(nameof(value.normalTexturePath));
+//         writer.Write(value.normalTexturePath);
+
+//         writer.Write(nameof(value.emissionTexturePath));
+//         writer.Write(value.emissionTexturePath);
+
+//         writer.Write(nameof(value.colliders));
+//         MessagePackSerializer.Serialize(ref writer, value.colliders, options);
+
+//         writer.Write(nameof(value.physicalProperties));
+//         MessagePackSerializer.Serialize(ref writer, value.physicalProperties, options);
+
+//         writer.Write(nameof(value.visibilityPoints));
+//         MessagePackSerializer.Serialize(ref writer, value.visibilityPoints, options);
+
+//         writer.Write(nameof(value.annotations));
+//         MessagePackSerializer.Serialize(ref writer, value.annotations, options);
+
+//         writer.Write(nameof(value.receptacleCandidate));
+//         writer.Write(value.receptacleCandidate);
+
+//         writer.Write(nameof(value.yRotOffset));
+//         writer.Write(value.yRotOffset);
+
+//         writer.Write(nameof(value.serializable));
+//         writer.Write(value.serializable);
+
+//         writer.Write(nameof(value.parentTexturesDir));
+//         writer.Write(value.parentTexturesDir);
+//     }
+
+//     public ProceduralAsset Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+//     {
+//         var count = reader.ReadMapHeader();
+//         var asset = new ProceduralAsset();
+
+//         for (int i = 0; i < count; i++)
+//         {
+//             var key = reader.ReadString();
+//             switch (key)
+//             {
+//                 case nameof(ProceduralAsset.vertices):
+//                     asset.vertices = MessagePackSerializer.Deserialize<Vector3[]>(ref reader, options);
+//                     break;
+//                 case nameof(ProceduralAsset.normals):
+//                     asset.normals = MessagePackSerializer.Deserialize<Vector3[]>(ref reader, options);
+//                     break;
+//                 case nameof(ProceduralAsset.name):
+//                     asset.name = reader.ReadString();
+//                     break;
+//                 case nameof(ProceduralAsset.triangles):
+//                     asset.triangles = MessagePackSerializer.Deserialize<int[]>(ref reader, options);
+//                     break;
+//                 case nameof(ProceduralAsset.uvs):
+//                     asset.uvs = MessagePackSerializer.Deserialize<Vector2[]>(ref reader, options);
+//                     break;
+//                 case nameof(ProceduralAsset.albedoTexturePath):
+//                     asset.albedoTexturePath = reader.ReadString();
+//                     break;
+//                 case nameof(ProceduralAsset.metallicSmoothnessTexturePath):
+//                     asset.metallicSmoothnessTexturePath = reader.ReadString();
+//                     break;
+//                 case nameof(ProceduralAsset.normalTexturePath):
+//                     asset.normalTexturePath = reader.ReadString();
+//                     break;
+//                 case nameof(ProceduralAsset.emissionTexturePath):
+//                     asset.emissionTexturePath = reader.ReadString();
+//                     break;
+//                 case nameof(ProceduralAsset.colliders):
+//                     asset.colliders = MessagePackSerializer.Deserialize<SerializableCollider[]>(ref reader, options);
+//                     break;
+//                 case nameof(ProceduralAsset.physicalProperties):
+//                     asset.physicalProperties = MessagePackSerializer.Deserialize<PhysicalProperties>(ref reader, options);
+//                     break;
+//                 case nameof(ProceduralAsset.visibilityPoints):
+//                     asset.visibilityPoints = MessagePackSerializer.Deserialize<Vector3[]>(ref reader, options);
+//                     break;
+//                 case nameof(ProceduralAsset.annotations):
+//                     asset.annotations = MessagePackSerializer.Deserialize<ObjectAnnotations>(ref reader, options);
+//                     break;
+//                 case nameof(ProceduralAsset.receptacleCandidate):
+//                     asset.receptacleCandidate = reader.ReadBoolean();
+//                     break;
+//                 case nameof(ProceduralAsset.yRotOffset):
+//                     asset.yRotOffset = reader.ReadSingle();
+//                     break;
+//                 case nameof(ProceduralAsset.serializable):
+//                     asset.serializable = reader.ReadBoolean();
+//                     break;
+//                 case nameof(ProceduralAsset.parentTexturesDir):
+//                     asset.parentTexturesDir = reader.ReadString();
+//                     break;
+//                 default:
+//                     reader.Skip();
+//                     break;
+//             }
+//         }
+
+//         return asset;
+//     }
+// }
 
 
 public class Vector2Formatter

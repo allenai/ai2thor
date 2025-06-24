@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -184,6 +185,10 @@ namespace Thor.Procedural {
             this.assetMap.removeLRU(limit: limit);
         }
 
+        public IEnumerator removeLRUItemsAsync(int limit) {
+            this.assetMap.removeLRU(limit: limit);
+        }
+
         public IEnumerable<GameObject> GetPrefabs() {
             return this.assetMap.Values();
         }
@@ -244,18 +249,42 @@ namespace Thor.Procedural {
             this.use(id);
         }
 
-        public AsyncOperation removeLRU(int limit, bool deleteWithHighestPriority = true) {
-            //            Debug.Log($"Running removeLRU with {limit}, {deleteWithHighestPriority}");
-            if (proceduralAssetQueue.Count == 0) {
-                //                Debug.Log($"Queue empty, returning");
-                return null;
-            }
-            //            Debug.Log($"Queue not empty");
+        public IEnumerator removeLRUAsync(int limit, bool deleteWithHighestPriority = true) {
+            int assetCountBeforeRemove = proceduralAssetQueue.Count;
 
+            if (assetCountBeforeRemove == 0) {
+                yield break;
+            }
+
+            int dequeueCount = removeLRUItems(limit, deleteWithHighestPriority);
+
+            AsyncOperation asyncOp = null;
+            if (dequeueCount > 0) {
+                // WARNING: Async operation, should be ok for deleting assets if using the same creation-deletion hook
+                // cache should be all driven within one system, currently python driven
+                var heapSizeBeforeUnload = System.GC.GetTotalMemory(false);
+                // System.Diagnostics.Process proc = System.Diagnostics.Process.GetCurrentProcess();
+                // proc.Refresh();
+                Debug.Log($"Asset count was '{assetCountBeforeRemove}' and limit '{limit}'. Deleted '{dequeueCount}' GameObjects and removed them from cache. Total assets in cache now '{proceduralAssetQueue.Count}'.");
+                // Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64} Bytes. GarbageCollector available Heap estimate '{heapSizeBeforeUnload}' Bytes.");
+                yield return Resources.UnloadUnusedAssets();
+                Debug.Log("Asyncop callback called calling GC");
+                GC.Collect();
+                // proc.Refresh();
+                var heapSizeAfterUnload = System.GC.GetTotalMemory(false);
+                Debug.Log($"GarbageCollector available Heap Before Unload '{heapSizeBeforeUnload}' Bytes. After Garbage Collection {heapSizeAfterUnload} Bytes. GarbageCollector available Heap difference {heapSizeAfterUnload-heapSizeBeforeUnload} Bytes.");
+            }
+
+        }
+
+        private int removeLRUItems(int limit, bool deleteWithHighestPriority = true) {
+            if (proceduralAssetQueue.Count == 0) {
+                return 0;
+            }
             var current = proceduralAssetQueue.First;
             var toDequeuePrio = proceduralAssetQueue.GetPriority(current);
             int dequeueCount = 0;
-            int assetCountBeforeRemove = proceduralAssetQueue.Count;
+
             // Do not delete items with the highest priority if !deleteWithHighestPriority
             while (
                 proceduralAssetQueue.Count > limit
@@ -275,7 +304,19 @@ namespace Thor.Procedural {
                 current = proceduralAssetQueue.First;
                 toDequeuePrio = proceduralAssetQueue.GetPriority(current);
             }
-            //            Debug.Log($"Remaining in queue {proceduralAssetQueue.Count}");
+            return dequeueCount;
+        }
+
+        public AsyncOperation removeLRU(int limit, bool deleteWithHighestPriority = true) {
+           
+            int assetCountBeforeRemove = proceduralAssetQueue.Count;
+
+            if (assetCountBeforeRemove == 0) {
+                return null;
+            }
+
+            int dequeueCount = removeLRUItems(limit, deleteWithHighestPriority);
+            
             AsyncOperation asyncOp = null;
             if (dequeueCount > 0) {
                 // WARNING: Async operation, should be ok for deleting assets if using the same creation-deletion hook

@@ -507,6 +507,24 @@ namespace Thor.Procedural.Data {
         public string parentTexturesDir = null;
         public ProceduralTextures rawTextures = null;
 
+        public float albedoTextureEnergy;
+        public float albedoTextureEnergyNormalized;
+        public SerializableColor albedoRGBA;
+
+        public float emissionTextureEnergy;
+        public float emissionTextureEnergyNormalized;
+        public SerializableColor emissionRGBA;
+
+        public float metallicSmoothnessTextureEnergy;
+        public float metallicSmoothnessTextureEnergyNormalized;
+        public SerializableColor metallicSmoothnessRGBA;
+
+        public float normalTextureEnergy;
+        public float normalTextureEnergyNormalized;
+        public SerializableColor normalRGBA;
+        
+
+
         public bool saveMaterialToAssetDB = false;
     }
 
