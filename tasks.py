@@ -1321,18 +1321,21 @@ def ci_build(
                 ):
                     ci_build_webgl(context, build["commit_id"])
 
-                for p in procs:
-                    if p:
-                        logger.info(
-                            "joining proc %s for %s %s" % (p, build["branch"], build["commit_id"])
-                        )
-                        if tests_timeout_seconds >= 0:
-                            p.join(timeout=tests_timeout_seconds)
-                        else:
-                            p.join()
+                try:
+                    for p in procs:
+                        if p:
+                            logger.info(
+                                "joining proc %s for %s %s" % (p, build["branch"], build["commit_id"])
+                            )
+                            if tests_timeout_seconds >= 0:
+                                p.join(timeout=tests_timeout_seconds)
+                            else:
+                                p.join()
 
-                if build["tag"] is None:
-                    ci_merge_push_pytest_results(context, build["commit_id"])
+                    if build["tag"] is None:
+                        ci_merge_push_pytest_results(context, build["commit_id"])
+                except Exception as e:
+                    print(f"Error while running tests: {e}")
 
                 # must have this after all the procs are joined
                 # to avoid generating a _builds.py file that would affect pytest execution
