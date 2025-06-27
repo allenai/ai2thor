@@ -1086,7 +1086,8 @@ def ci_build(
     only_cloudrendering=False,
     private_scenes_skip=False,
     procedural_only=False,
-    tests_timeout_seconds=-1
+    tests_timeout_seconds=-1,
+    skip_tests=False
 ):
     assert (commit_id is None) == (
         branch is None
@@ -1295,23 +1296,25 @@ def ci_build(
                         f"Symlink from `unity/builds` to `{os.path.join(arch_temp_dirs[pytest_platform], 'unity/builds')}`"
                     )
                     os.makedirs("tmp", exist_ok=True)
-                    # using threading here instead of multiprocessing since we must use the start_method of spawn, which
-                    # causes the tasks.py to get reloaded, which may be different on a branch from main
-                    utf_proc = threading.Thread(
-                        target=ci_test_utf,
-                        args=(
-                            build["branch"],
-                            build["commit_id"],
-                            arch_temp_dirs[utf_test_platform],
-                        ),
-                    )
-                    utf_proc.start()
-                    procs.append(utf_proc)
-                    pytest_proc = threading.Thread(
-                        target=ci_pytest, args=(build["branch"], build["commit_id"])
-                    )
-                    pytest_proc.start()
-                    procs.append(pytest_proc)
+
+                    if not skip_tests:
+                        # using threading here instead of multiprocessing since we must use the start_method of spawn, which
+                        # causes the tasks.py to get reloaded, which may be different on a branch from main
+                        utf_proc = threading.Thread(
+                            target=ci_test_utf,
+                            args=(
+                                build["branch"],
+                                build["commit_id"],
+                                arch_temp_dirs[utf_test_platform],
+                            ),
+                        )
+                        utf_proc.start()
+                        procs.append(utf_proc)
+                        pytest_proc = threading.Thread(
+                            target=ci_pytest, args=(build["branch"], build["commit_id"])
+                        )
+                        pytest_proc.start()
+                        procs.append(pytest_proc)
 
                 ## allow webgl to be force deployed with #webgl-deploy in the commit comment
 
