@@ -487,6 +487,37 @@ namespace Thor.Procedural.Data {
 
     [Serializable]
     [MessagePackObject(keyAsPropertyName: true)]
+    public class ResizeTextureSettings {
+
+        public float albedoTextureScale = 1.0f;
+        public float metallicTextureScale = 1.0f;
+        public float normalTextureScale = 1.0f;
+        public float emissionTextureScale = 1.0f;
+
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
+    public class TexturesRGB {
+        public float albedoTextureEnergy;
+        public float albedoTextureEnergyNormalized;
+        public SerializableColor albedoRGBA;
+
+        public float emissionTextureEnergy;
+        public float emissionTextureEnergyNormalized;
+        public SerializableColor emissionRGBA;
+
+        public float metallicSmoothnessTextureEnergy;
+        public float metallicSmoothnessTextureEnergyNormalized;
+        public SerializableColor metallicSmoothnessRGBA;
+
+        public float normalTextureEnergy;
+        public float normalTextureEnergyNormalized;
+        public SerializableColor normalRGBA;
+    }
+
+    [Serializable]
+    [MessagePackObject(keyAsPropertyName: true)]
     public class ProceduralAsset {
         public Vector3[] vertices;
         public Vector3[] normals;
@@ -507,23 +538,21 @@ namespace Thor.Procedural.Data {
         public string parentTexturesDir = null;
         public ProceduralTextures rawTextures = null;
 
-        public float albedoTextureEnergy;
-        public float albedoTextureEnergyNormalized;
+        public float albedoTextureEnergy= float.MaxValue;
+        public float albedoTextureEnergyNormalized= float.MaxValue;
         public SerializableColor albedoRGBA;
 
-        public float emissionTextureEnergy;
-        public float emissionTextureEnergyNormalized;
+        public float emissionTextureEnergy= float.MaxValue;
+        public float emissionTextureEnergyNormalized= float.MaxValue;
         public SerializableColor emissionRGBA;
 
-        public float metallicSmoothnessTextureEnergy;
-        public float metallicSmoothnessTextureEnergyNormalized;
+        public float metallicSmoothnessTextureEnergy= float.MaxValue;
+        public float metallicSmoothnessTextureEnergyNormalized = float.MaxValue;
         public SerializableColor metallicSmoothnessRGBA;
 
-        public float normalTextureEnergy;
-        public float normalTextureEnergyNormalized;
+        public float normalTextureEnergy = float.MaxValue;
+        public float normalTextureEnergyNormalized = float.MaxValue;
         public SerializableColor normalRGBA;
-        
-
 
         public bool saveMaterialToAssetDB = false;
     }

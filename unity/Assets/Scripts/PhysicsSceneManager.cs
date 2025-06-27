@@ -12,7 +12,7 @@ using UnityStandardAssets.ImageEffects;
 
 [ExecuteInEditMode]
 public class PhysicsSimulationParams {
-    public bool autoSimulation = false;
+    public bool autoSimulation = true;
     public float fixedDeltaTime = 0.02f;
     public float minSimulateTimeSeconds = 0;
 

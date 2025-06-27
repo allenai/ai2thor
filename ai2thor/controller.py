@@ -609,6 +609,8 @@ class Controller(object):
                         # perhaps only using RoboTHOR or using only custom scenes
                         scene = sorted(list(scenes_in_build))[0]
 
+            self.scene = scene
+            self.scene_name = scene
             event = self.reset(scene)
 
             # older builds don't send actionReturn on Initialize
@@ -678,15 +680,19 @@ class Controller(object):
             scene = scene + "_physics"
         return scene
 
-    def reset(self, scene=None, **init_params):
+    def reset(self, scene=None, procedural_scene=None, **init_params):
         if scene is None:
             scene = self.scene
 
         is_procedural = isinstance(scene, dict)
         if is_procedural:
             # ProcTHOR scene
-            self.server.send(dict(action="Reset", sceneName="Procedural", sequenceId=0))
+            # If it's already a Procedural scene all named "Procedural*" no need to reset
+            # if "Procedural" not in self.scene_name: 
+            procedural_scene = procedural_scene if procedural_scene != None else self.scene_name if "Procedural" in self.scene_name else "Procedural"
+            self.server.send(dict(action="Reset", sceneName=procedural_scene, sequenceId=0))
             self.last_event = self.server.receive()
+            self.scene_name = procedural_scene
         else:
             scene = Controller.normalize_scene(scene)
 
@@ -763,6 +769,8 @@ class Controller(object):
             self.last_event = self.step(action="CreateHouse", house=scene)
 
         self.scene = scene
+        if not is_procedural:
+            self.scene_name = scene
         return self.last_event
 
     @classmethod

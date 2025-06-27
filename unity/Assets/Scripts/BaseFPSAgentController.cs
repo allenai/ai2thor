@@ -8536,7 +8536,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public ActionFinished CreateRuntimeAsset(ProceduralAsset asset, bool returnObject = false) {
+        public ActionFinished CreateRuntimeAsset(
+            ProceduralAsset asset, 
+            bool returnObject = false,
+            float? textureReplaceEnergyThreshold = null,
+            ResizeTextureSettings resizeTextureSettings = null
+        ) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb.ContainsAssetKey(asset.name)) {
                 return new ActionFinished(
@@ -8545,6 +8550,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     toEmitState: true
                 );
             }
+
+            var useFallbackColor = textureReplaceEnergyThreshold.HasValue;
+            var replaceAlbedoWithRGB = useFallbackColor &&  asset.albedoTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+            var replaceMetallicWithRGB = useFallbackColor &&  asset.metallicSmoothnessTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+            var replaceNormalWithRGB = useFallbackColor &&  asset.normalTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+            var replaceEmissionWithRGB = useFallbackColor &&  asset.emissionTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+
+
+            asset.albedoTexturePath = !replaceAlbedoWithRGB ? asset.albedoTexturePath : null;
+            asset.metallicSmoothnessTexturePath = !replaceMetallicWithRGB ? asset.metallicSmoothnessTexturePath : null;
+            asset.normalTexturePath = !replaceNormalWithRGB ? asset.normalTexturePath : null;
+            asset.emissionTexturePath = !replaceEmissionWithRGB ? asset.emissionTexturePath : null;
+            
             var assetData = ProceduralTools.CreateAsset(
                 vertices: asset.vertices,
                 normals: asset.normals,
@@ -8565,7 +8583,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 serializable: asset.serializable,
                 parentTexturesDir: asset.parentTexturesDir,
                 rawTextures: asset.rawTextures,
-                saveMaterialToAssetDB: asset.saveMaterialToAssetDB
+                saveMaterialToAssetDB: asset.saveMaterialToAssetDB,
+                textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
+                resizeTextureSettings: resizeTextureSettings,
+                texturesRGB: textureReplaceEnergyThreshold != null? 
+                    new TexturesRGB() {
+                        albedoTextureEnergy = asset.albedoTextureEnergy,
+                        albedoTextureEnergyNormalized = asset.albedoTextureEnergyNormalized,
+                        albedoRGBA = asset.albedoRGBA,
+
+                        emissionTextureEnergy = asset.emissionTextureEnergy,
+                        emissionTextureEnergyNormalized = asset.emissionTextureEnergyNormalized,
+                        emissionRGBA = asset.emissionRGBA,
+
+                        metallicSmoothnessTextureEnergy = asset.metallicSmoothnessTextureEnergy,
+                        metallicSmoothnessTextureEnergyNormalized = asset.metallicSmoothnessTextureEnergyNormalized,
+                        metallicSmoothnessRGBA = asset.metallicSmoothnessRGBA,
+
+                        normalTextureEnergy = asset.normalTextureEnergy,
+                        normalTextureEnergyNormalized = asset.normalTextureEnergyNormalized,
+                        normalRGBA = asset.normalRGBA
+                    } : 
+                    null
             );
             return new ActionFinished { success = true, actionReturn = assetData };
         }
@@ -8575,7 +8614,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string dir,
             string extension = ".msgpack.gz",
             ObjectAnnotations annotations = null,
-            bool serializable = false
+            bool serializable = false,
+            bool saveMaterialToAssetDB = false,
+            float? textureReplaceEnergyThreshold = null,
+            ResizeTextureSettings resizeTextureSettings = null
         ) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb.ContainsAssetKey(id)) {
@@ -8634,11 +8676,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 rawFileStream.CopyTo(resultStream);
             }
 
-            ProceduralAsset procAsset = null;
+            ProceduralAsset asset = null;
             var debug = stageIndex < presentStages.Length ? presentStages[stageIndex] : "null";
 
             if (stageIndex < presentStages.Length && presentStages[stageIndex] == "msgpack") {
-                procAsset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
+                asset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
                     resultStream.ToArray(),
                     MessagePack.Resolvers.ThorContractlessStandardResolver.Options
                 );
@@ -8654,7 +8696,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 };
                 var json = reader.ReadToEnd();
                 // procAsset = Newtonsoft.Json.JsonConvert.DeserializeObject<ProceduralAsset>(reader.ReadToEnd(), serializer);
-                procAsset = JsonConvert.DeserializeObject<ProceduralAsset>(json);
+                asset = JsonConvert.DeserializeObject<ProceduralAsset>(json);
             } else {
                 return new ActionFinished(
                     success: false,
@@ -8663,30 +8705,61 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 );
             }
 
-            procAsset.parentTexturesDir = Path.Combine(dir, id);
+            asset.parentTexturesDir = Path.Combine(dir, id);
+
+            var useFallbackColor = textureReplaceEnergyThreshold.HasValue;
+            var replaceAlbedoWithRGB = useFallbackColor &&  asset.albedoTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+            var replaceMetallicWithRGB = useFallbackColor &&  asset.metallicSmoothnessTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+            var replaceNormalWithRGB = useFallbackColor &&  asset.normalTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+            var replaceEmissionWithRGB = useFallbackColor &&  asset.emissionTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+
+            asset.albedoTexturePath = !replaceAlbedoWithRGB ? asset.albedoTexturePath : null;
+            asset.metallicSmoothnessTexturePath = !replaceMetallicWithRGB ? asset.metallicSmoothnessTexturePath : null;
+            asset.normalTexturePath = !replaceNormalWithRGB ? asset.normalTexturePath : null;
+            asset.emissionTexturePath = !replaceEmissionWithRGB ? asset.emissionTexturePath : null;
 
             var assetData = ProceduralTools.CreateAsset(
-                procAsset.vertices,
-                procAsset.normals,
-                procAsset.name,
-                procAsset.triangles,
-                procAsset.uvs,
-                procAsset.albedoTexturePath,
-                procAsset.metallicSmoothnessTexturePath,
-                procAsset.normalTexturePath,
-                procAsset.emissionTexturePath,
-                procAsset.colliders,
-                procAsset.physicalProperties,
-                procAsset.visibilityPoints,
-                procAsset.annotations ?? annotations,
-                procAsset.receptacleCandidate,
-                procAsset.yRotOffset,
+                asset.vertices,
+                asset.normals,
+                asset.name,
+                asset.triangles,
+                asset.uvs,
+                asset.albedoTexturePath,
+                asset.metallicSmoothnessTexturePath,
+                asset.normalTexturePath,
+                asset.emissionTexturePath,
+                asset.colliders,
+                asset.physicalProperties,
+                asset.visibilityPoints,
+                asset.annotations ?? annotations,
+                asset.receptacleCandidate,
+                asset.yRotOffset,
                 returnObject: true,
                 serializable: serializable,
                 parent: null,
                 addAnotationComponent: false,
-                parentTexturesDir: procAsset.parentTexturesDir,
-                saveMaterialToAssetDB: procAsset.saveMaterialToAssetDB
+                parentTexturesDir: asset.parentTexturesDir,
+                saveMaterialToAssetDB: saveMaterialToAssetDB,
+                textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
+                resizeTextureSettings: resizeTextureSettings,
+                texturesRGB: textureReplaceEnergyThreshold != null? new TexturesRGB() {
+                    albedoTextureEnergy = asset.albedoTextureEnergy,
+                    albedoTextureEnergyNormalized = asset.albedoTextureEnergyNormalized,
+                    albedoRGBA = asset.albedoRGBA,
+
+                    emissionTextureEnergy = asset.emissionTextureEnergy,
+                    emissionTextureEnergyNormalized = asset.emissionTextureEnergyNormalized,
+                    emissionRGBA = asset.emissionRGBA,
+
+                    metallicSmoothnessTextureEnergy = asset.metallicSmoothnessTextureEnergy,
+                    metallicSmoothnessTextureEnergyNormalized = asset.metallicSmoothnessTextureEnergyNormalized,
+                    metallicSmoothnessRGBA = asset.metallicSmoothnessRGBA,
+
+                    normalTextureEnergy = asset.normalTextureEnergy,
+                    normalTextureEnergyNormalized = asset.normalTextureEnergyNormalized,
+                    normalRGBA = asset.normalRGBA,
+
+                } : null
             );
 
             // Debug.Log($"root is null? {parent == null} -  {parent}");
@@ -8703,14 +8776,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public ActionFinished CreateRuntimeAssets(
             List<UnityLoadableAsset> assets,
-            string dir = null
+            string dir = null,
+            bool saveMaterialToAssetDB = false,
+            float? textureReplaceEnergyThreshold = null,
+            ResizeTextureSettings resizeTextureSettings = null
         ) {
             foreach (var asset in assets) {
                 var actionFinished = CreateRuntimeAsset(
                     id: asset.id,
                     dir: dir ?? asset.dir,
                     extension: asset.extension,
-                    annotations: asset.annotations
+                    annotations: asset.annotations,
+                    textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
+                    resizeTextureSettings: resizeTextureSettings,
+                    saveMaterialToAssetDB: saveMaterialToAssetDB
                 );
                 if (!actionFinished.success) {
                     return actionFinished;
@@ -8720,11 +8799,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public ActionFinished CreateRuntimeAssets(
-            List<ProceduralAsset> assets
+            List<ProceduralAsset> assets,
+            float? textureReplaceEnergyThreshold = null,
+            ResizeTextureSettings resizeTextureSettings = null
         ) {
             foreach (var asset in assets) {
                 var actionFinished = CreateRuntimeAsset(
-                    asset: asset
+                    asset: asset,
+                    textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
+                    resizeTextureSettings: resizeTextureSettings
                 );
                 if (!actionFinished.success) {
                     return actionFinished;
@@ -8737,13 +8820,50 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //     yield return new ActionFinished(success: true);
         // }
 
-        public IEnumerator DownloadAndCreateRuntimeAssets(string baseUrl, List<string> assetIds, string extension = null, bool saveMaterialToAssetDB = true, bool reportProgressToJS = false) {
+        public IEnumerator DownloadAndCreateRuntimeAssets(
+            string baseUrl, 
+            List<string> assetIds, 
+            string extension = null, 
+            bool saveMaterialToAssetDB = true, 
+            bool reportProgressToJS = false,
+            ResizeTextureSettings resizeTextureSettings = null,
+            float? textureReplaceEnergyThreshold = null
+        ) {
                 return ProceduralAssetDownloader.DownloadAndCreateAssets(
                     baseUrl,
                     assetIds,
                     extension: extension,
                     saveMaterialToAssetDB: saveMaterialToAssetDB,
-                    progressReporter: reportProgressToJS ? this.jsInterface : null
+                    progressReporter: reportProgressToJS ? this.jsInterface : null,
+                    resizeTextureSettings: resizeTextureSettings,
+                    textureReplaceEnergyThreshold: textureReplaceEnergyThreshold  
+                );
+
+                // This fails action with no ActionFinished found due to nested IEnumerator
+                // yield return test();
+        }
+
+        public IEnumerator DownloadAndCreateRuntimeAssetsAsync(
+            string baseUrl, 
+            List<string> assetIds, 
+            string extension = null, 
+            bool saveMaterialToAssetDB = true, 
+            bool reportProgressToJS = false, 
+            float? textureReplaceEnergyThreshold = null,
+            ResizeTextureSettings resizeTextureSettings = null,
+            bool unloadUnusedAssets = false
+        ) {
+                return ProceduralAssetDownloader.DownloadAndCreateAssetsCoroutine(
+                    baseUrl,
+                    assetIds,
+                    extension: extension,
+                    coroutineRunner: this,
+                    saveMaterialToAssetDB: saveMaterialToAssetDB,
+                    progressReporter: reportProgressToJS ? this.jsInterface : null,
+                    onComplete: null,
+                    textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
+                    resizeTextureSettings: resizeTextureSettings,
+                    unloadUnusedAssets: unloadUnusedAssets
                 );
 
                 // This fails action with no ActionFinished found due to nested IEnumerator
@@ -8927,19 +9047,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public IEnumerator UnloadUnusedAssets() {
-            // var asyncOp = Resources.UnloadUnusedAssets();
-            // asyncOp.completed += (op) => {
-            //     Debug.Log("Asyncop callback called calling GC");
-            //     GC.Collect();
-            // };
-                
-            //     float timeout = 2.0f;
-            //     float startTime = Time.realtimeSinceStartup;
-            //     while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
-            //         // waiting
-            //         continue;
-            //     }
-            //     GC.Collect();
             yield return Resources.UnloadUnusedAssets();
             GC.Collect();
             yield return new ActionFinished(
@@ -8995,6 +9102,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
 
             // If its Procedurals_lazy load assets as addressables
+            Debug.Log($"---------- CreateHouse: Scene Name {scene.name}");
             if (scene.name == "Procedural_lazy") {
 
                 Debug.Log("---------- Procedural_lazy loading assets:");
@@ -9032,7 +9140,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 yield return new ActionFinished(
                     success: false,
                     errorMessage: (
-                        $"Invalid assets: {string.Join(", ", missingMaterialIds.Select(id => $"'{id}'"))}. "
+                        $"Invalid assets: {string.Join(", ", missingAssetIds.Select(id => $"'{id}'"))}. "
                         + "Not existing or not loaded to the ProceduralAssetDatabase component. Either use the `Procedural_lazy` scene to load them as"
                         + "Addressables or call `CreateAsset` for Procedural assets before calling this fucntion"
                     )

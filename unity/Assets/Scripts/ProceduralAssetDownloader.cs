@@ -17,12 +17,22 @@ using MessagePack.Internal;
 using MessagePack.Resolvers;
 using MessagePack.Unity;
 using UnityEditor.Experimental;
+using System.Threading.Tasks;
+// using System.Diagnostics;
 
 namespace Thor.Procedural {
 
 public interface ProgressReporter {
     void OnProgress(float progress);
 }
+
+public class TextureReplaceStat {
+    public bool replacedAlbedoWithRGB;
+    public bool replacedMetallicWithRGB;
+    public bool replacedNormalWithRGB;
+    public bool replacedEmissionWithRGB;
+}
+
 
 public class ProceduralAssetDownloader {
 
@@ -52,7 +62,14 @@ public class ProceduralAssetDownloader {
     }
 
 
-    public static IEnumerator DownloadAndCreateAssets(string baseUrl, List<string> assetIds, string extension = null, bool saveMaterialToAssetDB = true, ProgressReporter progressReporter = null) {
+    public static IEnumerator DownloadAndCreateAssets(
+        string baseUrl, List<string> assetIds, 
+        string extension = null, 
+        bool saveMaterialToAssetDB = true, 
+        ProgressReporter progressReporter = null,
+        ResizeTextureSettings resizeTextureSettings = null,
+        float? textureReplaceEnergyThreshold = null
+    ) {
         var actionF = ActionFinished.Success;
         progress = 0;
         MessagePack.Resolvers.MessagePackInit.Register();
@@ -68,7 +85,9 @@ public class ProceduralAssetDownloader {
                 actionF,
                 results,
                 extension: extension,
-                saveMaterialToAssetDB: saveMaterialToAssetDB
+                saveMaterialToAssetDB: saveMaterialToAssetDB,
+                resizeTextureSettings: resizeTextureSettings,
+                textureReplaceEnergyThreshold: textureReplaceEnergyThreshold
             );
             i++;
             progress = i / (assetIds.Count + 0.0f);
@@ -93,7 +112,9 @@ public class ProceduralAssetDownloader {
         ActionFinished runningActionFinished, 
         List<Dictionary<string, object>> results, 
         string extension = null,
-        bool saveMaterialToAssetDB = true
+        bool saveMaterialToAssetDB = true,
+        float? textureReplaceEnergyThreshold = null,
+        ResizeTextureSettings resizeTextureSettings = null
     ) {
         //  var m = ("s", )
          string url = $"{baseUrl}/{assetId}.tar";
@@ -102,8 +123,13 @@ public class ProceduralAssetDownloader {
 
             yield return request.SendWebRequest();
 
+            // while (request.result == UnityWebRequest.Result.InProgress) {
+            //     // Debug.Log($"------ Download In progress: {assetId}");
+            //     yield return null;
+            // }
+
             if (request.result != UnityWebRequest.Result.Success) {
-                Debug.LogError($"Download failed for {url}: {request.error}");
+                Debug.LogError($"Download failed for {url}: {request.error}. {request.result}");
                 yield return new ActionFinished(
                     success: false,
                     errorMessage: $"Download failed for {url}: {request.error}"
@@ -217,13 +243,20 @@ public class ProceduralAssetDownloader {
             // Deserialize JSON string to target object
            
 
-            
+            bool useFallbackColor = textureReplaceEnergyThreshold.HasValue;
+            // textureReplaceEnergyThreshold.GetValueOrDefault(float.MaxValue)
+
+            var replaceAlbedoWithRGB = useFallbackColor &&  asset.albedoTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+            var replaceMetallicWithRGB = useFallbackColor &&  asset.metallicSmoothnessTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+            var replaceNormalWithRGB = useFallbackColor &&  asset.normalTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+            var replaceEmissionWithRGB = useFallbackColor &&  asset.emissionTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+
 
             asset.rawTextures = new ProceduralTextures {
-                albedoBase64JPG = GetBase64(fileMap, folder + "albedo.jpg"),
-                metallicSmoothnessBase64JPG = GetBase64(fileMap, folder + "metallic_smoothness.jpg"),
-                normalBase64JPG = GetBase64(fileMap, folder + "normal.jpg"),
-                emissionBase64JPG = GetBase64(fileMap, folder + "emission.jpg")
+                albedoBase64JPG = replaceAlbedoWithRGB ? null : GetBase64(fileMap, folder + "albedo.jpg"),
+                metallicSmoothnessBase64JPG = replaceMetallicWithRGB ? null : GetBase64(fileMap, folder + "metallic_smoothness.jpg"),
+                normalBase64JPG = replaceNormalWithRGB ? null : GetBase64(fileMap, folder + "normal.jpg"),
+                emissionBase64JPG = replaceEmissionWithRGB ? null : GetBase64(fileMap, folder + "emission.jpg")
             };
 
             asset.albedoTexturePath = null;
@@ -238,10 +271,12 @@ public class ProceduralAssetDownloader {
 
             yield return ProceduralTools.CreateAsset(
                 asset, 
-                data => {
+                textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
+                resizeTextureSettings: resizeTextureSettings,
+                onDone: data => {
                     results.Add(data); 
                  }, 
-                 failMessage => {
+                 onFail: failMessage => {
                     runningActionFinished.errorMessage += $". {failMessage}";
                     runningActionFinished.success = false;
                  }
@@ -251,7 +286,240 @@ public class ProceduralAssetDownloader {
             
     }
 
-    public static IEnumerator DownloadAndProcessAssets(string baseUrl, List<string> assetIds, Action<List<ProceduralAsset>> onComplete) {
+
+    public static async Task<ActionFinished> CreateAssetAsync(
+        ProceduralAsset asset, 
+        ActionInvokable coroutineRunner,
+        float? textureReplaceEnergyThreshold = null,
+        ResizeTextureSettings resizeTextureSettings = null
+    ) {
+        var tcs = new TaskCompletionSource<ActionFinished>();
+
+        // Start the original coroutine via a MonoBehaviour (this could be a static runner)
+        coroutineRunner.StartCoroutine(ProceduralTools.CreateAsset(
+            asset,
+            textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
+            resizeTextureSettings: resizeTextureSettings,
+            onDone: data => {
+                tcs.TrySetResult(new ActionFinished(true));
+            },
+            onFail: error => {
+                tcs.TrySetResult(new ActionFinished(false, error));
+            }
+        ));
+
+        return await tcs.Task;
+    }
+
+
+    public static IEnumerator DownloadAndCreateAssetsCoroutine(
+        string baseUrl,
+        List<string> assetIds,
+        string extension,
+        bool saveMaterialToAssetDB,
+        ActionInvokable coroutineRunner,
+        ProgressReporter progressReporter,
+        Action<ActionFinished> onComplete,
+        float? textureReplaceEnergyThreshold = null,
+        ResizeTextureSettings resizeTextureSettings = null,
+        bool unloadUnusedAssets = false
+    ) {
+        var task = DownloadAndCreateAssetsAsync(
+            baseUrl, 
+            assetIds, 
+            coroutineRunner, 
+            extension, 
+            saveMaterialToAssetDB, 
+            progressReporter, 
+            textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
+            resizeTextureSettings: resizeTextureSettings
+        );
+        var actionF = new WaitUntil(() => task.IsCompleted);
+        yield return actionF;
+        onComplete?.Invoke(task.Result);
+        if (unloadUnusedAssets) {
+            yield return Resources.UnloadUnusedAssets();
+            GC.Collect();
+        }
+        yield return task.Result;
+    }
+
+
+    public static async Task<ActionFinished> DownloadAndCreateAssetsAsync(
+        string baseUrl,
+        List<string> assetIds,
+        ActionInvokable coroutineRunner,
+        string extension = null,
+        bool saveMaterialToAssetDB = true,
+        ProgressReporter progressReporter = null,
+        float? textureReplaceEnergyThreshold = null,
+        ResizeTextureSettings resizeTextureSettings = null
+    ) {
+        MessagePack.Resolvers.MessagePackInit.Register();
+        var tasks = new List<Task<(bool success, string error, ProceduralAsset asset, TextureReplaceStat replaceStat)>>();
+
+        foreach (var assetId in assetIds) {
+            tasks.Add(
+                DownloadAssetAsync(
+                    baseUrl, 
+                    assetId, 
+                    extension, 
+                    saveMaterialToAssetDB, 
+                    textureReplaceEnergyThreshold: textureReplaceEnergyThreshold
+                )
+            );
+        }
+
+        var results = new List<Dictionary<string, object>>();
+        var textureReplacementStats = new Dictionary<string, TextureReplaceStat>();
+        var finished = await Task.WhenAll(tasks);
+
+        float i = 0;
+        foreach (var result in finished) {
+            i++;
+            progressReporter?.OnProgress(i / assetIds.Count);
+
+            if (!result.success) {
+                return new ActionFinished(false, result.error);
+            }
+
+            var asset = result.asset;
+            var createResult = await CreateAssetAsync(
+                asset, 
+                coroutineRunner, 
+                textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
+                resizeTextureSettings: resizeTextureSettings
+            );
+            if (!createResult.success) {
+                return createResult;
+            }
+
+            textureReplacementStats.Add(result.asset.name, result.replaceStat);
+            results.Add(createResult.actionReturn as Dictionary<string, object>);
+        }
+
+        var stats = textureReplacementStats.Aggregate(new Dictionary<string, int>() {
+            ["albedo"] = 0,
+            ["metallic"] = 0,
+            ["normal"] = 0,
+            ["emission"] = 0,
+        }, (acc, v) => {
+            acc["albedo"] = acc["albedo"] + (v.Value.replacedAlbedoWithRGB ? 1 : 0);
+            acc["metallic"] = acc["metallic"] + (v.Value.replacedMetallicWithRGB ? 1 : 0);
+            acc["normal"] = acc["normal"] + (v.Value.replacedNormalWithRGB ? 1 : 0);
+            acc["emission"] = acc["emission"] + (v.Value.replacedEmissionWithRGB ? 1 : 0);
+            return acc;
+        });
+        
+        return new ActionFinished(true, actionReturn: stats);
+    }
+
+
+
+    public static async Task<(bool success, string error, ProceduralAsset asset, TextureReplaceStat replaceStat)> DownloadAssetAsync(
+        string baseUrl, 
+        string assetId, 
+        string extension = null, 
+        bool saveMaterialToAssetDB = true,
+        float? textureReplaceEnergyThreshold = null
+    ) {
+        string url = $"{baseUrl}/{assetId}.tar";
+         Debug.Log($"------ DownloadAssetAsync: {assetId}");
+         
+        UnityWebRequest request = UnityWebRequest.Get(url);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Accept-Encoding", "identity");  // prevent unsupported encodings
+
+        var operation = request.SendWebRequest();
+        while (!operation.isDone) await Task.Yield();
+        
+        if (request.result != UnityWebRequest.Result.Success) {
+            return (false, $"Download failed for {url}: {request.error}. HTTPResult: {request.result}", null, null);
+        }
+        // Debug.Log($"------ Downloaded: {assetId}");
+
+        byte[] tarBytes = request.downloadHandler.data;
+        var fileMap = ExtractTarArchive(new MemoryStream(tarBytes));
+        string folder = assetId + "/";
+        string assetPath = folder + assetId + ".msgpack.gz";
+
+        if (!fileMap.TryGetValue(assetPath, out byte[] compressed)) {
+            string msg = $"Missing asset: {assetPath}. Valid paths tried: {string.Join(",", fileMap.Keys)}";
+            return (false, msg, null, null);
+        }
+
+        byte[] decompressed;
+        try {
+            using (var gz = new GZipStream(new MemoryStream(compressed), CompressionMode.Decompress)) {
+                using (var ms = new MemoryStream()) {
+                    gz.CopyTo(ms);
+                    decompressed = ms.ToArray();
+                }
+            }
+        }
+        catch (Exception e) {
+            var msg = $"Decompressing GZIP exception: {e.Message}. Stacktrace: {e.StackTrace.ToString()}";
+            Debug.Log(msg);
+            return (false, msg, null, null);
+        }
+
+        ProceduralAsset asset;
+        try {
+            asset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
+                decompressed,
+                MessagePack.Resolvers.ThorWebGLSafeStandardResolver.Options
+            );
+        }
+        catch (Exception e) {
+            var msg = $"Deserialization exception: {e.Message}. Stacktrace: {e.StackTrace}";
+            Debug.LogError(msg);
+            return (false, msg, null, null);
+        }
+
+        // var asset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
+        //     decompressed,
+        //     MessagePack.Resolvers.ThorWebGLSafeStandardResolver.Options
+        // );
+
+         bool useFallbackColor = textureReplaceEnergyThreshold.HasValue;
+            // textureReplaceEnergyThreshold.GetValueOrDefault(float.MaxValue)
+
+        var replaceAlbedoWithRGB = useFallbackColor &&  asset.albedoTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+        var replaceMetallicWithRGB = useFallbackColor &&  asset.metallicSmoothnessTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+        var replaceNormalWithRGB = useFallbackColor &&  asset.normalTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+        var replaceEmissionWithRGB = useFallbackColor &&  asset.emissionTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+        
+
+
+        asset.rawTextures = new ProceduralTextures {
+            albedoBase64JPG = replaceAlbedoWithRGB ? null : GetBase64(fileMap, folder + "albedo.jpg"),
+            metallicSmoothnessBase64JPG = replaceMetallicWithRGB ? null : GetBase64(fileMap, folder + "metallic_smoothness.jpg"),
+            normalBase64JPG = replaceNormalWithRGB ? null : GetBase64(fileMap, folder + "normal.jpg"),
+            emissionBase64JPG = replaceEmissionWithRGB ? null : GetBase64(fileMap, folder + "emission.jpg")
+        };
+
+        asset.albedoTexturePath = null;
+        asset.metallicSmoothnessTexturePath = null;
+        asset.normalTexturePath = null;
+        asset.emissionTexturePath = null;
+
+        asset.saveMaterialToAssetDB = saveMaterialToAssetDB;
+
+        return (
+            true,
+            null, 
+            asset,
+            new TextureReplaceStat() { 
+                replacedAlbedoWithRGB = replaceAlbedoWithRGB,
+                replacedMetallicWithRGB = replaceMetallicWithRGB,
+                replacedEmissionWithRGB = replaceEmissionWithRGB,
+                replacedNormalWithRGB = replaceNormalWithRGB
+            }
+        );
+    }
+
+
+    public static IEnumerator DownloadAndProcessAssets(string baseUrl, List<string> assetIds, Action<List<ProceduralAsset>> onComplete, float? textureReplaceEnergyThreshold = null) {
         var results = new List<ProceduralAsset>();
 
         foreach (string assetId in assetIds) {
@@ -289,18 +557,26 @@ public class ProceduralAssetDownloader {
                 MessagePack.Resolvers.ThorContractlessStandardResolver.Options
             );
 
+            bool useFallbackColor = textureReplaceEnergyThreshold.HasValue;
+            // textureReplaceEnergyThreshold.GetValueOrDefault(float.MaxValue)
+
+            var replaceAlbedoWithRGB = useFallbackColor &&  asset.albedoTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+            var replaceMetallicWithRGB = useFallbackColor &&  asset.metallicSmoothnessTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+            var replaceNormalWithRGB = useFallbackColor &&  asset.normalTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+            var replaceEmissionWithRGB = useFallbackColor &&  asset.emissionTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+
+
             asset.rawTextures = new ProceduralTextures {
-                albedoBase64JPG = GetBase64(fileMap, folder + "albedo.jpg"),
-                metallicSmoothnessBase64JPG = GetBase64(fileMap, folder + "metallic_smoothness.jpg"),
-                normalBase64JPG = GetBase64(fileMap, folder + "normal.jpg"),
-                emissionBase64JPG = GetBase64(fileMap, folder + "emission.jpg")
+                albedoBase64JPG = replaceAlbedoWithRGB ? null : GetBase64(fileMap, folder + "albedo.jpg"),
+                metallicSmoothnessBase64JPG = replaceMetallicWithRGB ? null : GetBase64(fileMap, folder + "metallic_smoothness.jpg"),
+                normalBase64JPG = replaceNormalWithRGB ? null : GetBase64(fileMap, folder + "normal.jpg"),
+                emissionBase64JPG = replaceEmissionWithRGB ? null : GetBase64(fileMap, folder + "emission.jpg")
             };
 
             asset.albedoTexturePath = null;
             asset.metallicSmoothnessTexturePath = null;
             asset.normalTexturePath = null;
             asset.emissionTexturePath = null;
-
             results.Add(asset);
         }
 

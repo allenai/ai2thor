@@ -20,6 +20,7 @@ from typing import Dict, Any, List, TYPE_CHECKING, Sequence
 import requests
 import tqdm
 import shutil
+import re
 from filelock import FileLock
 
 if TYPE_CHECKING:
@@ -44,15 +45,20 @@ EXTENSIONS_LOADABLE_IN_UNITY = {
     ".msgpack.gz",
 }
 
+def is_hexadecimal(s):
+    return bool(re.fullmatch(r'[0-9a-fA-F]+', s))
+
 
 def get_all_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List[str]) -> List[str]:
     """
     Get all asset IDs in a house.
     """
     for obj in objects:
-        asset_ids.append(obj["assetId"])
-        if "children" in obj:
-            get_all_asset_ids_recursively(obj["children"], asset_ids)
+        # Hack to separate objaverse assets that need downloading vs procthor assets for Procedural_lazy scene
+        if is_hexadecimal(obj["assetId"]):
+            asset_ids.append(obj["assetId"])
+            if "children" in obj and obj["children"] != None:
+                get_all_asset_ids_recursively(obj["children"], asset_ids)
     assets_set = set(asset_ids)
     if "" in assets_set:
         assets_set.remove("")
@@ -93,6 +99,9 @@ def create_assets(
     extension=None,
     fail_if_not_unity_loadable=False,
     raise_for_failure=True,
+    save_material_to_asset_db=False,
+    texture_replace_energy_threshold=None,
+    resize_texture_settings=None,
 ):
     copy_to_dir = (
         os.path.join(thor_controller._build.base_dir) if copy_to_dir is None else copy_to_dir
@@ -102,6 +111,9 @@ def create_assets(
         action="CreateRuntimeAssets",
         assets=[],
         dir=copy_to_dir,
+        textureReplaceEnergyThreshold=texture_replace_energy_threshold,
+        saveMaterialToAssetDB=save_material_to_asset_db,
+        resizeTextureSettings=resize_texture_settings,
         raise_for_failure=raise_for_failure,
     )
 
@@ -146,11 +158,14 @@ def create_assets(
             # )
             asset = change_asset_paths(asset=asset, save_dir=copy_to_dir)
             asset = add_default_annotations(asset=asset, asset_directory=asset_dir, verbose=verbose)
-            create_prefab_action = {
-                "action": "CreateRuntimeAsset",
-                "asset": asset,
-                "raise_for_failure": raise_for_failure,
-            }
+            create_prefab_action = dict(
+                action= "CreateRuntimeAsset",
+                asset= asset,
+                textureReplaceEnergyThreshold=texture_replace_energy_threshold,
+                resizeTextureSettings=resize_texture_settings,
+                saveMaterialToAssetDB=save_material_to_asset_db,
+                raise_for_failure=raise_for_failure,
+            )
             create_with_data_actions.append(create_prefab_action)
         else:
             asset_args = {
@@ -178,7 +193,8 @@ def create_assets(
             if verbose:
                 logger.info(f"Last Action: {thor_controller.last_action['action']}")
 
-    if len(multi_create_unity_loadable):
+    if len(multi_create_unity_loadable["assets"]):
+        #print(f"CreateAssetCall:\n{multi_create_unity_loadable}")
         evt = thor_controller.step(**multi_create_unity_loadable)
         events.append(evt)
         if verbose:
@@ -206,6 +222,9 @@ def create_assets_if_not_exist(
     verbose=False,
     raise_for_failure=True,
     fail_if_not_unity_loadable=False,
+    save_material_to_asset_db=False,
+    texture_replace_energy_threshold=None,
+    resize_texture_settings=None
 ):
     evt = controller.step(
         action="AssetsInDatabase", assetIds=asset_ids, updateProceduralLRUCache=True
@@ -223,6 +242,9 @@ def create_assets_if_not_exist(
         load_file_in_unity=load_file_in_unity,
         extension=extension,
         fail_if_not_unity_loadable=fail_if_not_unity_loadable,
+        texture_replace_energy_threshold=texture_replace_energy_threshold,
+        resize_texture_settings=resize_texture_settings,
+        save_material_to_asset_db=save_material_to_asset_db
     )
     for evt, i in zip(events, range(len(events))):
         if not evt.metadata["lastActionSuccess"]:
@@ -272,6 +294,15 @@ class ProceduralAssetHookRunner:
         asset_limit=-1,
         extension=None,
         verbose=True,
+        save_material_to_asset_db=True,
+        texture_replace_energy_threshold=None,
+        resize_texture_settings=dict(
+            albedoTextureScale= 1.0,
+            metallicTextureScale= 1.0,
+            normalTextureScale= 1.0,
+            emissionTextureScale= 1.0
+        ),
+        skip_asset_create_call=False
     ):
         self.asset_directory = asset_directory
         self.asset_symlink = asset_symlink
@@ -281,6 +312,10 @@ class ProceduralAssetHookRunner:
         self.target_dir = target_dir
         self.extension = extension
         self.verbose = verbose
+        self.save_material_to_asset_db = save_material_to_asset_db
+        self.texture_replace_energy_threshold = texture_replace_energy_threshold
+        self.resize_texture_settings = resize_texture_settings
+        self.skip_asset_create_call = skip_asset_create_call
 
     def Initialize(self, action, controller):
         if self.asset_limit > 0:
@@ -291,17 +326,21 @@ class ProceduralAssetHookRunner:
     def CreateHouse(self, action, controller):
         house = action["house"]
         asset_ids = get_all_asset_ids_recursively(house["objects"], [])
-        return create_assets_if_not_exist(
-            controller=controller,
-            asset_ids=asset_ids,
-            asset_directory=self.asset_directory,
-            copy_to_dir=os.path.join(controller._build.base_dir, self.target_dir),
-            asset_symlink=self.asset_symlink,
-            stop_if_fail=self.stop_if_fail,
-            load_file_in_unity=self.load_file_in_unity,
-            extension=self.extension,
-            verbose=self.verbose,
-        )
+        if not self.skip_asset_create_call:
+            return create_assets_if_not_exist(
+                controller=controller,
+                asset_ids=asset_ids,
+                asset_directory=self.asset_directory,
+                copy_to_dir=os.path.join(controller._build.base_dir, self.target_dir),
+                asset_symlink=self.asset_symlink,
+                stop_if_fail=self.stop_if_fail,
+                load_file_in_unity=self.load_file_in_unity,
+                extension=self.extension,
+                verbose=self.verbose,
+                texture_replace_energy_threshold=self.texture_replace_energy_threshold,
+                resize_texture_settings=self.resize_texture_settings,
+                save_material_to_asset_db=self.save_material_to_asset_db
+            )
 
     def SpawnAsset(self, action, controller):
         asset_ids = [action["assetId"]]
@@ -315,7 +354,10 @@ class ProceduralAssetHookRunner:
             load_file_in_unity=self.load_file_in_unity,
             extension=self.extension,
             verbose=self.verbose,
-        )
+            texture_replace_energy_threshold=self.texture_replace_energy_threshold,
+            resize_texture_settings=self.resize_texture_settings,
+            save_material_to_asset_db=self.save_material_to_asset_db
+    )
 
     def GetHouseFromTemplate(self, action, controller):
         template = action["template"]
@@ -330,6 +372,9 @@ class ProceduralAssetHookRunner:
             load_file_in_unity=self.load_file_in_unity,
             extension=self.extension,
             verbose=self.verbose,
+            texture_replace_energy_threshold=self.texture_replace_energy_threshold,
+            resize_texture_settings=self.resize_texture_settings,
+            save_material_to_asset_db=self.save_material_to_asset_db
         )
 
 
@@ -521,6 +566,17 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
         asset_limit=-1,
         extension=None,
         verbose=True,
+        save_material_to_asset_db=True,
+        texture_replace_energy_threshold=None,
+        resize_texture_settings=dict(
+            albedoTextureScale= 1.0,
+            metallicTextureScale= 1.0,
+            normalTextureScale= 1.0,
+            emissionTextureScale= 1.0
+        ),
+        download_assets_in_unity=False,
+        unload_unused_assets_after_creation=False
+        
     ):
         super().__init__(
             asset_directory=asset_directory,
@@ -531,32 +587,61 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
             asset_limit=asset_limit,
             extension=extension,
             verbose=verbose,
+            save_material_to_asset_db=save_material_to_asset_db,
+            texture_replace_energy_threshold=texture_replace_energy_threshold,
+            resize_texture_settings=resize_texture_settings,
+            skip_asset_create_call=download_assets_in_unity
         )
+        self.download_assets_in_unity =download_assets_in_unity
         self.base_url = base_url
+        self.unload_unused_assets_after_creation = unload_unused_assets_after_creation
 
     def _download_missing_assets(self, controller: "Controller", asset_ids: Sequence[str], extension: str = None):
         asset_in_db = controller.step(
             action="AssetsInDatabase", assetIds=asset_ids, updateProceduralLRUCache=False
         ).metadata["actionReturn"]
         assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db]
-        download_missing_assets(
-            asset_ids=assets_not_created,
-            asset_directory=self.asset_directory,
-            base_url=self.base_url,
-            extension=self.extension
-        )
+        if not self.download_assets_in_unity:
+            download_missing_assets(
+                asset_ids=assets_not_created,
+                asset_directory=self.asset_directory,
+                base_url=self.base_url,
+                extension=self.extension
+            )
+        else:
+            args = dict(
+                action = "DownloadAndCreateRuntimeAssetsAsync",
+                assetIds=assets_not_created,
+                baseUrl=self.base_url,
+                extension=self.extension,
+                textureReplaceEnergyThreshold = self.texture_replace_energy_threshold,
+                resizeTextureSettings=self.resize_texture_settings,
+                physicsSimulationParams=dict(
+                    autoSimulation=True
+                ),
+                unloadUnusedAssets=self.unload_unused_assets_after_creation
+            )
+            controller.step(**args)
+
 
     def Initialize(self, action, controller):
-        if self.asset_limit > 0:
+        if self.asset_limit >= 0:
+            # return controller.step(
+            #     action="DeleteLRUFromProceduralCache", assetLimit=self.asset_limit
+            # )
+            # New async delete
             return controller.step(
-                action="DeleteLRUFromProceduralCache", assetLimit=self.asset_limit
+                action="DeleteLRUFromProceduralCacheAsync", 
+                assetLimit=self.asset_limit,
+                physicsSimulationParams=dict(
+                        autoSimulation=True
+                )
             )
 
     def CreateHouse(self, action: Dict[str, Any], controller: "Controller"):
         house = action["house"]
         asset_ids = get_all_asset_ids_recursively(house["objects"], [])
         self._download_missing_assets(controller=controller, asset_ids=asset_ids, extension=self.extension)
-
         return super().CreateHouse(action=action, controller=controller)
 
     def SpawnAsset(self, action, controller):

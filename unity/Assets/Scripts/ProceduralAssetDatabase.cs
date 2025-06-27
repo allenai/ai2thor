@@ -173,7 +173,7 @@ namespace Thor.Procedural {
         }
 
         public bool ContainsMaterialKey(string key) {
-            Debug.Log($"======== ContainsMaterialKey {materialMap == null} ");
+            // Debug.Log($"======== ContainsMaterialKey {materialMap == null} ");
             return materialMap.ContainsKey(key);
         }
 
@@ -272,7 +272,7 @@ namespace Thor.Procedural {
                 GC.Collect();
                 // proc.Refresh();
                 var heapSizeAfterUnload = System.GC.GetTotalMemory(false);
-                Debug.Log($"GarbageCollector available Heap Before Unload '{heapSizeBeforeUnload}' Bytes. After Garbage Collection {heapSizeAfterUnload} Bytes. GarbageCollector available Heap difference {heapSizeAfterUnload-heapSizeBeforeUnload} Bytes.");
+                Debug.Log($"GarbageCollector available Heap Before Unload '{heapSizeBeforeUnload/1e6}' MB. After Garbage Collection {heapSizeAfterUnload/1e6} MB. GarbageCollector available Heap difference {(heapSizeBeforeUnload-heapSizeAfterUnload)/1e6} MB.");
             }
 
         }
@@ -343,7 +343,7 @@ namespace Thor.Procedural {
                 GC.Collect();
                 // proc.Refresh();
                 var heapSizeAfterUnload = System.GC.GetTotalMemory(false);
-                Debug.Log($"GarbageCollector available Heap Before Unload '{heapSizeBeforeUnload}' Bytes. After Garbage Collection {heapSizeAfterUnload} Bytes. GarbageCollector available Heap difference {heapSizeAfterUnload-heapSizeBeforeUnload} Bytes.");
+                Debug.Log($"GarbageCollector available Heap Before Unload '{heapSizeBeforeUnload/1e6}' MB. After Garbage Collection {heapSizeAfterUnload/1e6} MB. GarbageCollector available Heap difference {(heapSizeBeforeUnload-heapSizeAfterUnload)/1e6} MB.");
                 // Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64}");
                 // proc.Dispose();
                 // #endif

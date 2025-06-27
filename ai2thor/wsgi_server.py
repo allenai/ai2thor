@@ -176,6 +176,7 @@ class WsgiServer(ai2thor.server.Server):
         self.frame_counter = 0
         self.debug_frames_per_interval = 50
         self.unity_proc = None
+        print(f"Sever address: {host} : {port}")
         self.wsgi_server = werkzeug.serving.make_server(
             host,
             self.port,

@@ -5883,6 +5883,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // JObject obj = JObject.Parse(jsonStr);
                         // var house = obj.ToObject<ProceduralHouse>()
 
+                        var assetVersions = new Dictionary<string, string>() {
+                                ["2023_07_28"]= "https://pub-daedd7738a984186a00f2ab264d06a07.r2.dev/2023_07_28/assets",
+                                ["2024_03_01"]= "https://pub-daedd7738a984186a00f2ab264d06a07.r2.dev/2024_03_01/assets",
+                                ["2024-08-16"]= "https://pub-2619544d52bd4f35927b08d301d2aba0.r2.dev/assets",
+                                ["2025_06_10"]= "https://pub-ddc5ca49fcee4247b552f4217e910a0f.r2.dev/assets"
+                        }; 
+
 
                         var assetIds = new HashSet<string>(
                             ProceduralTools.GetAllAssetIds(house.objects)
@@ -5893,13 +5900,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         Debug.Log($"------- To Download assetIds: {string.Join(",", assetIds)}");
 
+                        // Dictionary<string, object> action = new Dictionary<string, object>() {
+                        //     ["action"] = "DownloadAndCreateRuntimeAssetsAsync",
+                            
+                        //     ["baseUrl"] = assetVersions["2024-08-16"],
+                        //     ["assetIds"] =  assetIds,
+                        //     ["extension"] = ".msgpack.gz",
+                        //     ["physicsSimulationParams"] = new PhysicsSimulationParams() {
+                        //         autoSimulation = true
+                        //     }
+                        // };
+
+                        var textureScale = 0.25f;
+
                         Dictionary<string, object> action = new Dictionary<string, object>() {
-                            ["action"] = "DownloadAndCreateRuntimeAssets",
-                            ["baseUrl"] = "https://pub-2619544d52bd4f35927b08d301d2aba0.r2.dev/assets",
+                            ["action"] = "DownloadAndCreateRuntimeAssetsAsync",
+                            
+                            ["baseUrl"] = assetVersions["2025_06_10"],
                             ["assetIds"] =  assetIds,
-                            ["extension"] = ".msgpack.gz"
+                            ["extension"] = ".msgpack.gz",
+                            ["textureReplaceEnergyThreshold"] = 1.0,
+                            ["physicsSimulationParams"] = new PhysicsSimulationParams() {
+                                autoSimulation = true
+                            },
+                            ["resizeTextureSettings"] = new ResizeTextureSettings() {
+                                albedoTextureScale = textureScale,
+                                metallicTextureScale= textureScale,
+                                normalTextureScale= textureScale,
+                                emissionTextureScale= textureScale
+                            }
                         };
 
+
+                        //  baseUrl, List<string> assetIds, string extension = null, bool saveMaterialToAssetDB = true, bool reportProgressToJS = false
+                        var time = Time.realtimeSinceStartup;
                             // AssetDatabase.Refresh();
                         CurrentActiveController()
                                 .ProcessControlCommand(new DynamicServerAction(action));
@@ -5910,37 +5944,60 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 // Debug.Log($"========= waitForActionFinishedCreateHouse {controller.agentState}");
                                 yield return null;
                             }
+
+
+
                             var action = new Dictionary<string, object>() {
                                 ["action"] = "CreateHouse",
-                                ["house"] =  house
+                                ["house"] =  house,
+                                ["physicsSimulationParams"] = new PhysicsSimulationParams() {
+                                    autoSimulation = true
+                                }
                             };
                             Debug.Log($"========= action finished {controller.lastAction} {controller.lastActionSuccess} ");
+                            // if (controller.actionReturn != null) {
+                            //     Debug.Log($"=== DownloadAndCreateRuntimeAssetsAsync, Action return: {string.Join(",", (controller.actionReturn as Dictionary<string, int>).Select(x => $"{x.Key}: {x.Value}"))}");
+                            // }
                             controller
                             .ProcessControlCommand(new DynamicServerAction(action));
 
-                            var agent = house?.metadata?.agentPoses["stretch"];
-
-                            action = new Dictionary<string, object>() {
-                                ["action"] = "TeleportFull",
-                                ["x"] = agent.position.x,
-                                ["y"] = agent.position.y,
-                                ["z"] = agent.position.z,
-                                ["rotation"] = agent.rotation,
-                                ["horizon"] = agent.horizon,
-                                ["standing"] = agent.standing,
-                                ["forceAction"] = true,
-                            };
+                            
+                            if (house.metadata.agentPoses != null) {
+                                var agent = house?.metadata?.agentPoses["stretch"];
+                                action = new Dictionary<string, object>() {
+                                    ["action"] = "TeleportFull",
+                                    ["x"] = agent.position.x,
+                                    ["y"] = agent.position.y,
+                                    ["z"] = agent.position.z,
+                                    ["rotation"] = agent.rotation,
+                                    ["horizon"] = agent.horizon,
+                                    ["standing"] = agent.standing,
+                                    ["forceAction"] = true,
+                                };
+                            }
                              while (controller.agentState == AgentState.Processing) {
                                 // Debug.Log($"========= waitForActionFinishedCreateHouse {controller.agentState}");
                                 yield return null;
                             }
-                            controller
-                            .ProcessControlCommand(new DynamicServerAction(action));
+
+                            if (house.metadata.agentPoses != null) {
+                                controller
+                                .ProcessControlCommand(new DynamicServerAction(action));
+                            }
+
+                            while (controller.agentState == AgentState.Processing) {
+                                // Debug.Log($"========= waitForActionFinishedCreateHouse {controller.agentState}");
+                                yield return null;
+                            }
+
+                            Debug.Log($"Finish totalTime: {Time.realtimeSinceStartup - time} seconds");
+
+                            
                         }
 
                         StartCoroutine(waitForActionFinishedCreateHouse(house, CurrentActiveController()));
                         
-
+                        
                         
 
                         // action["house"] = obj;

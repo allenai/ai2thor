@@ -95,7 +95,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         "CoordinateFromRaycastThirdPartyCamera",
         "ChangeQuality",
         "SetDistortionShaderParams",
-        "GetDistortionMaps"
+        "GetDistortionMaps",
+        "SetDefaultPhysicsSimulationParams"
     };
     public HashSet<string> errorAllowedActions = new HashSet<string> { "Reset" };
 
@@ -2324,6 +2325,11 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         }
         return new ActionFinished(success: true, actionReturn: result);
         // return new ActionFinished(success: true, actionReturn: result);
+    }
+
+    public ActionFinished SetDefaultPhysicsSimulationParams(PhysicsSimulationParams defaultPhysicsSimulationParams) {
+        PhysicsSceneManager.SetDefaultSimulationParams(defaultPhysicsSimulationParams);
+        return ActionFinished.Success;
     }
 }
 

@@ -179,11 +179,32 @@ $(
       // assetsToDownload = assetsToDownload.slice(0, 1);
       console.log(` ========== assetsToDownload ${assetsToDownload}`);
       if (assetsToDownload.length > 0) {
+        
+        let loadingBar = document.querySelector("#unity-loading-bar");
+        let progressBarFull = document.querySelector("#unity-progress-bar-full");
+        let unityLogo = document.querySelector("#unity-logo");
+        
+        unityLogo.style.display = "none";
+        loadingBar.style.display = "block";
+        progressBarFull.style.width = 100 * 0.1 + "%";
+
+        $("#downloading-text").removeClass('hidden');
+
+        window.objaverseProgressCallback = (progress) => {
+
+          progressBarFull.style.width = 100 * progress + "%";
+
+        };
       let metadata = await controller.step({
         action: "DownloadAndCreateRuntimeAssets",
         baseUrl: this.baseUrl, 
-        assetIds: assetsToDownload
+        assetIds: assetsToDownload,
+        reportProgressToJS: true
       });
+      
+      $("#downloading-text").text('Creating House');
+      progressBarFull.style.width = 100 * 0.9 + "%";
+
       console.log(` ========== after DownloadAndCreateRuntimeAssets `);
       console.log(` success: ${metadata.agents[0].lastActionSuccess} message: ${metadata.agents[0].errorMessage}`);
 
@@ -225,7 +246,7 @@ $(
     async Initialize(action, controller) {
       if (this.assetLimit > 0) {
         return await controller.step({
-          action:"DeleteLRUFromProceduralCache", 
+          action:"DeleteLRUFromProceduralCacheAsync", 
           assetLimit:self.asset_limit
         });
       }
@@ -606,14 +627,14 @@ $(
         
         console.log("----- PreloadHouseAssets");
 
-        let metadata = await controller.step({
-          "action": "PreloadHouseAssets",
-          "house": house,
-          "freeMemoryAfter": true,
-          freeMemorySecondsTimeout: 2.0
-        });
+        // let metadata = await controller.step({
+        //   "action": "PreloadHouseAssets",
+        //   "house": house,
+        //   "freeMemoryAfter": true,
+        //   freeMemorySecondsTimeout: 2.0
+        // });
 
-        console.log(metadata);
+        // console.log(metadata);
 
 
         metadata = await controller.step({
@@ -739,7 +760,12 @@ $(
       //   },
       // ]
 
-      let viewports = calculateViewPorts([2,2,1]);
+      let progressBarFull = document.querySelector("#unity-progress-bar-full");
+      $("#downloading-text").text('Setting Views');
+      progressBarFull.style.width = 100 * 0.93 + "%";
+
+      // let viewports = calculateViewPorts([2,2,1]);
+      let viewports = calculateViewPorts([2,2]);
       console.log(`======== arrangement`);
       console.log(viewports);
 
@@ -790,10 +816,10 @@ $(
             
         },
 
-        {
-          // ...(await getTopDownCameraParams(skyboxColor="#99BCFCFF", orthographic=true))
-          ...(await getTopDownCameraParams(skyboxColor="#64676EFF", orthographic=true))
-        },
+        // {
+        //   // ...(await getTopDownCameraParams(skyboxColor="#99BCFCFF", orthographic=true))
+        //   ...(await getTopDownCameraParams(skyboxColor="#64676EFF", orthographic=true))
+        // },
         // {
         //   ...(await getTopDownCameraParams())
         // }
@@ -812,6 +838,7 @@ $(
               "renderDistortionImage": distortionView,
               "overwriteRGBWithDistortion": distortionView
           });
+          progressBarFull.style.width = 100 * 0.96 + "%";
 
            
             console.log(metadata);
@@ -891,6 +918,8 @@ $(
               console.log(`--- ${metadata.agents[0].lastAction}`);
               console.log(metadata);
           }
+
+          progressBarFull.style.width = 100 + "%";
           
           // Deletes all the object even instantiated ones :)
         //   metadata = await controller.step({
@@ -994,6 +1023,11 @@ $(
           //   );
           //   console.log("--- AddThirdPartyCamera 2");
           //   console.log(metadata);
+
+        let loadingBar = document.querySelector("#unity-loading-bar");
+        // let progressBarFull = document.querySelector("#unity-progress-bar-full");
+
+        loadingBar.style.display = "none";
     }
 
     async function MoveAgent(ahead, right) {
@@ -1256,6 +1290,16 @@ $(
             ),
             throwExceptionOnActionFail = false
           );
+
+          controller.step(
+            {
+              action: "SetDefaultPhysicsSimulationParams", 
+              defaultPhysicsSimulationParams: {
+                autoSimulation: true,
+                fixedDeltaTime: 0.02
+              }
+            }
+          )
 
           console.log(gameInstance);
 

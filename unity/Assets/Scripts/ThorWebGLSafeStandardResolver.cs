@@ -215,7 +215,7 @@ public class SerializableColorFormatter : IMessagePackFormatter<SerializableColo
 public class ProceduralAssetFormatter : IMessagePackFormatter<ProceduralAsset> {
     public void Serialize(ref MessagePackWriter writer, ProceduralAsset value, MessagePackSerializerOptions options) {
         var resolver = options.Resolver;
-        writer.WriteMapHeader(26);
+        writer.WriteMapHeader(27);
 
         writer.Write(nameof(value.vertices)); resolver.GetFormatterWithVerify<Vector3[]>().Serialize(ref writer, value.vertices, options);
         writer.Write(nameof(value.normals)); resolver.GetFormatterWithVerify<Vector3[]>().Serialize(ref writer, value.normals, options);
@@ -254,15 +254,20 @@ public class ProceduralAssetFormatter : IMessagePackFormatter<ProceduralAsset> {
         writer.Write(nameof(value.normalTextureEnergy)); writer.Write(value.normalTextureEnergy);
         writer.Write(nameof(value.normalTextureEnergyNormalized)); writer.Write(value.normalTextureEnergyNormalized);
         writer.Write(nameof(value.normalRGBA)); resolver.GetFormatterWithVerify<SerializableColor>().Serialize(ref writer, value.normalRGBA, options);
+
+        writer.Write(nameof(value.saveMaterialToAssetDB)); writer.Write(value.saveMaterialToAssetDB);
     }
 
     public ProceduralAsset Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options) {
         var resolver = options.Resolver;
         var count = reader.ReadMapHeader();
+        // Debug.Log($"ProceduralAsset map header count: {count}");
         var value = new ProceduralAsset();
 
         for (int i = 0; i < count; i++) {
             var key = reader.ReadString();
+            
+            try {
             switch (key) {
                 case nameof(value.vertices): value.vertices = resolver.GetFormatterWithVerify<Vector3[]>().Deserialize(ref reader, options); break;
                 case nameof(value.normals): value.normals = resolver.GetFormatterWithVerify<Vector3[]>().Deserialize(ref reader, options); break;
@@ -302,7 +307,17 @@ public class ProceduralAssetFormatter : IMessagePackFormatter<ProceduralAsset> {
                 case nameof(value.normalTextureEnergyNormalized): value.normalTextureEnergyNormalized = reader.ReadSingle(); break;
                 case nameof(value.normalRGBA): value.normalRGBA = resolver.GetFormatterWithVerify<SerializableColor>().Deserialize(ref reader, options); break;
 
-                default: reader.Skip(); break;
+                case nameof(value.saveMaterialToAssetDB): value.saveMaterialToAssetDB = reader.ReadBoolean(); break;
+
+                default: 
+                    Debug.LogWarning($"Unknown property: {key}, skipping.");
+                    reader.Skip(); 
+                break;
+            }
+            }
+            catch (Exception e) {
+                Debug.LogError($"❌ Error deserializing field '{key}': {e.Message}");
+                throw e;
             }
         }
 
@@ -566,6 +581,7 @@ public class ThorWebGLSafeUnityResolver : IFormatterResolver {
             { typeof(ObjectAnnotations), new ObjectAnnotationsFormatter() },
             { typeof(ProceduralTextures), new ProceduralTexturesFormatter() },
             { typeof(ProceduralAsset), new ProceduralAssetFormatter() },
+            { typeof(SerializableColor), new SerializableColorFormatter() },
         };
 
         static FormatterCache() {

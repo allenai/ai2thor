@@ -1085,7 +1085,8 @@ def ci_build(
     cloudrendering_first=False,
     only_cloudrendering=False,
     private_scenes_skip=False,
-    procedural_only=False
+    procedural_only=False,
+    tests_timeout_seconds=-1
 ):
     assert (commit_id is None) == (
         branch is None
@@ -1325,7 +1326,10 @@ def ci_build(
                         logger.info(
                             "joining proc %s for %s %s" % (p, build["branch"], build["commit_id"])
                         )
-                        p.join()
+                        if tests_timeout_seconds >= 0:
+                            p.join(timeout=tests_timeout_seconds)
+                        else:
+                            p.join()
 
                 if build["tag"] is None:
                     ci_merge_push_pytest_results(context, build["commit_id"])

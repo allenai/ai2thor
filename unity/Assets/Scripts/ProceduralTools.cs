@@ -2995,7 +2995,13 @@ namespace Thor.Procedural {
             return newTexture;
         }
 
-        public static IEnumerator CreateAsset(ProceduralAsset asset, Action<Dictionary<string, object>> onDone = null, Action<string> onFail = null) {
+        public static IEnumerator CreateAsset(
+            ProceduralAsset asset, 
+            float? textureReplaceEnergyThreshold = null,
+            ResizeTextureSettings resizeTextureSettings = null,
+            Action<Dictionary<string, object>> onDone = null, 
+            Action<string> onFail = null
+        ) {
             // ActionFinished result;
             Dictionary<string, object> assetData = null;
             try {
@@ -3018,7 +3024,27 @@ namespace Thor.Procedural {
                     serializable: asset.serializable,
                     parentTexturesDir: asset.parentTexturesDir,
                     rawTextures: asset.rawTextures,
-                    saveMaterialToAssetDB: asset.saveMaterialToAssetDB
+                    saveMaterialToAssetDB: asset.saveMaterialToAssetDB,
+                    textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
+                    texturesRGB: textureReplaceEnergyThreshold != null? new TexturesRGB {
+                        albedoTextureEnergy = asset.albedoTextureEnergy,
+                        albedoTextureEnergyNormalized = asset.albedoTextureEnergyNormalized,
+                        albedoRGBA = asset.albedoRGBA,
+
+                        emissionTextureEnergy = asset.emissionTextureEnergy,
+                        emissionTextureEnergyNormalized = asset.emissionTextureEnergyNormalized,
+                        emissionRGBA = asset.emissionRGBA,
+
+                        metallicSmoothnessTextureEnergy = asset.metallicSmoothnessTextureEnergy,
+                        metallicSmoothnessTextureEnergyNormalized = asset.metallicSmoothnessTextureEnergyNormalized,
+                        metallicSmoothnessRGBA = asset.metallicSmoothnessRGBA,
+
+                        normalTextureEnergy = asset.normalTextureEnergy,
+                        normalTextureEnergyNormalized = asset.normalTextureEnergyNormalized,
+                        normalRGBA = asset.normalRGBA,
+
+                    } : null,
+                    resizeTextureSettings: resizeTextureSettings
                 );
                 onDone?.Invoke(assetData);
             }
@@ -3078,7 +3104,10 @@ namespace Thor.Procedural {
             bool addAnotationComponent = false,
             string parentTexturesDir = "",
             ProceduralTextures rawTextures = null,
-            bool saveMaterialToAssetDB = false
+            bool saveMaterialToAssetDB = false,
+            float? textureReplaceEnergyThreshold = null,
+            TexturesRGB texturesRGB = null,
+            ResizeTextureSettings resizeTextureSettings = null
         ) {
              var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             // create a new game object
@@ -3242,7 +3271,10 @@ namespace Thor.Procedural {
                     metallicSmoothnessTexturePath: !string.IsNullOrEmpty(metallicSmoothnessTexturePath) && !Path.IsPathRooted(metallicSmoothnessTexturePath) ? Path.Combine(parentTexturesDir, metallicSmoothnessTexturePath) : metallicSmoothnessTexturePath,
                     normalTexturePath:  !string.IsNullOrEmpty(normalTexturePath) && !Path.IsPathRooted(normalTexturePath) ? Path.Combine(parentTexturesDir, normalTexturePath) : normalTexturePath,
                     emissionTexturePath: !string.IsNullOrEmpty(emissionTexturePath) && !Path.IsPathRooted(emissionTexturePath) ? Path.Combine(parentTexturesDir, emissionTexturePath) : emissionTexturePath,
-                    rawTextures: rawTextures
+                    textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
+                    rawTextures: rawTextures,
+                    texturesRGB: texturesRGB,
+                    resizeTextureSettings: resizeTextureSettings
                 );
 
                 // This is a fix for WebGL where it was too much memory to reload
@@ -3275,7 +3307,10 @@ namespace Thor.Procedural {
                     metallicSmoothnessTexturePath: !string.IsNullOrEmpty(metallicSmoothnessTexturePath) && !Path.IsPathRooted(metallicSmoothnessTexturePath) ? Path.Combine(parentTexturesDir, metallicSmoothnessTexturePath) : metallicSmoothnessTexturePath,
                     normalTexturePath:  !string.IsNullOrEmpty(normalTexturePath) && !Path.IsPathRooted(normalTexturePath) ? Path.Combine(parentTexturesDir, normalTexturePath) : normalTexturePath,
                     emissionTexturePath: !string.IsNullOrEmpty(emissionTexturePath) && !Path.IsPathRooted(emissionTexturePath) ? Path.Combine(parentTexturesDir, emissionTexturePath) : emissionTexturePath,
-                    rawTextures: rawTextures
+                    rawTextures: rawTextures,
+                    textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
+                    texturesRGB: texturesRGB,
+                    resizeTextureSettings: resizeTextureSettings
                 );
                 runtimePrefab.reloadtextures(assetDb);
             }
