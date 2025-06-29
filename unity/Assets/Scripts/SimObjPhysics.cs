@@ -1315,15 +1315,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj {
         }
 
         // draw visibility points for editor
-        Gizmos.color = Color.yellow;
-        if (VisibilityPoints != null && VisibilityPoints.Length > 0) {
-            foreach (Transform t in VisibilityPoints) {
-                // if (t != null)
-                //{
-                Gizmos.DrawSphere(t.position, 0.01f);
-                //}
-            }
-        }
+        // Gizmos.color = Color.yellow;
+        // if (VisibilityPoints != null && VisibilityPoints.Length > 0) {
+        //     foreach (Transform t in VisibilityPoints) {
+        //         // if (t != null)
+        //         //{
+        //         Gizmos.DrawSphere(t.position, 0.01f);
+        //         //}
+        //     }
+        // }
 
         // foreach(Collider col in MyColliders)
         // {
