@@ -36,10 +36,13 @@ public class BoxColliderCenterReset : MonoBehaviour
             transform.position += worldOffset;
             boxCollider.center = Vector3.zero;
 
-            // 2. Apply scale to size
+            // 2. Apply scale to size (and correct for negative scales)
             Vector3 scale = transform.localScale;
             boxCollider.size = Vector3.Scale(boxCollider.size, scale);
             transform.localScale = Vector3.one;
+
+            // 3. Flip negative scales
+            boxCollider.size = new Vector3(Mathf.Abs(boxCollider.size.x), Mathf.Abs(boxCollider.size.y), Mathf.Abs(boxCollider.size.z));
 
             Debug.Log($"✔ '{obj.name}': BoxCollider center & scale consolidated.");
         }
