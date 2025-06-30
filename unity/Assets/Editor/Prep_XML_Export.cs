@@ -82,4 +82,47 @@ public class Prep_XML_Export : MonoBehaviour {
         // Mark the scene as dirty to indicate changes
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
     }
+
+    // Add hotkey: %&r means Ctrl+Alt+R (Windows) or Cmd+Alt+R (Mac)
+    [MenuItem("Tools/Reset Transform and Preserve Children %&r")]
+    static void ResetTransformAndPreserveChildren() {
+        if (Selection.activeGameObject == null) {
+            Debug.LogWarning("No GameObject selected.");
+            return;
+        }
+
+        GameObject selected = Selection.activeGameObject;
+        Transform selectedTransform = selected.transform;
+
+        // Debug log original rotation
+        Debug.Log($"Original rotation of '{selected.name}': Quaternion={selectedTransform.rotation}, Euler={selectedTransform.eulerAngles}");
+
+        // Store children in a list (no need to store world transforms if using worldPositionStays)
+        List<Transform> children = new List<Transform>();
+        foreach (Transform child in selectedTransform) {
+            children.Add(child);
+        }
+
+        // Unparent all children
+        foreach (Transform child in children) {
+            Undo.SetTransformParent(child, null, "Unparent Child");
+        }
+
+        // Reset selected object's transform
+        Undo.RecordObject(selectedTransform, "Reset Transform");
+        selectedTransform.localScale = Vector3.one;
+        selectedTransform.localRotation = Quaternion.identity; // Set local rotation to (0,0,0)
+
+        // Debug log new rotation
+        Debug.Log($"New rotation of '{selected.name}': Quaternion={selectedTransform.rotation}, Euler={selectedTransform.eulerAngles}");
+
+        // Reparent all children using worldPositionStays = true to preserve world transforms
+        foreach (Transform child in children) {
+            Undo.SetTransformParent(child, selectedTransform, "Reparent Child");
+            child.SetParent(selectedTransform, true); // true = worldPositionStays
+        }
+
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+        Debug.Log("Transform reset and children preserved for: " + selected.name);
+    }
 }
