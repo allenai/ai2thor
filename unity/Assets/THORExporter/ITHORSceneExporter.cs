@@ -98,15 +98,18 @@ public class ITHORSceneExporter : MonoBehaviour
                 if (child.gameObject.tag == "Structure")
                 {
                     structuralObjects.Add(child.gameObject);
-                    
+
                     // go through all children and add them to the scene data
                     foreach (Transform grandChild in child)
                     {
                         if (grandChild.gameObject.activeSelf && grandChild.gameObject.tag == "SimObjPhysics")
                             objects.Add(grandChild.gameObject);
+                        if (grandChild.gameObject.activeSelf && grandChild.gameObject.tag == "Structure")
+                            structuralObjects.Insert(0, grandChild.gameObject);
                     }
                     
-                } 
+                    
+                }
                 else if (child.gameObject.tag == "SimObjPhysics")
                     objects.Add(child.gameObject);
             }
@@ -422,7 +425,8 @@ public class ITHORSceneExporter : MonoBehaviour
             var children = new List<string>();
             foreach (Transform child in obj.transform)
             {
-                if (child.gameObject.activeSelf && child.gameObject.tag == "SimObjPhysics")
+                if (child.gameObject.activeSelf && (child.gameObject.tag == "SimObjPhysics" )|| child.gameObject.tag == "Structure")
+                    // Add child names to the list
                 {
                     children.Add(child.gameObject.name);
                 }
