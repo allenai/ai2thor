@@ -9504,6 +9504,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             };
         }
 
+        public IEnumerator SpawnAssetAsync(
+            string assetId,
+            string generatedId,
+            Vector3? position = null,
+            Vector3? rotation = null
+        ) { 
+            var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+            var assetMap = assetDb?.assetMap;
+            if (assetDb != null && !assetMap.ContainsKey(assetId)) {
+                var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+                if (scene.name == "Procedural_lazy") {
+                    yield return ProceduralTools.RunTaskAsCoroutine(ProceduralTools.LoadAssetsAsync(assetDb, new List<string>() { assetId }, new List<string>()));
+                }
+            }
+
+            yield return SpawnAsset(assetId: assetId, generatedId: generatedId, position: position, rotation: rotation);
+        }
+
         public void GetAssetSphereBounds(string assetId) {
             var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDb == null) {

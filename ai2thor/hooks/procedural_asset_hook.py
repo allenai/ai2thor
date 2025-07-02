@@ -143,6 +143,10 @@ def create_assets(
         if verbose:
             logger.info(f"Copying asset to THOR build dir: {copy_to_dir}.")
 
+        # TODO do not create symlic if copy_to_dir and copy_to_dir are the same, problem is avoiding this also does not create locks which could affect some setups
+        # asset = None
+        # if (copy_to_dir != assets_dir):
+
         asset = create_runtime_asset_file(
             asset_directory=asset_dir,
             save_dir=copy_to_dir,
@@ -151,11 +155,18 @@ def create_assets(
             verbose=verbose,
         )
 
+
         if not load_asset_in_unity:
             # TODO refactor to this when objathor changes
             # asset = load_existing_thor_asset_file(
             #     out_dir=asset_target_dir, object_name=asset_id, force_extension=file_extension
             # )
+
+            # TODO add when not creating symlinc option is enabled
+            # if asset is None:
+            #     asset = load_existing_thor_asset_file(
+            #         out_dir=asset_dir, object_name=asset_id, force_extension=file_extension
+            #     )
             asset = change_asset_paths(asset=asset, save_dir=copy_to_dir)
             asset = add_default_annotations(asset=asset, asset_directory=asset_dir, verbose=verbose)
             create_prefab_action = dict(
@@ -215,7 +226,6 @@ def create_assets_if_not_exist(
     asset_ids,
     asset_directory,
     copy_to_dir,
-    asset_symlink,  # TODO remove
     stop_if_fail,
     load_file_in_unity,
     extension=None,
@@ -258,7 +268,7 @@ def create_assets_if_not_exist(
             warnings.warn(
                 f"Could not create asset `{asset_path}`." f"\nError: {evt.metadata['errorMessage']}"
             )
-    return events[-1]
+    return events[-1] if len(events) > 0 else None
 
     # slower
     # for asset_id in assets_not_created:
@@ -288,7 +298,6 @@ class ProceduralAssetHookRunner:
         self,
         asset_directory: str,
         target_dir="processed_models",
-        asset_symlink=True,
         load_file_in_unity=True,
         stop_if_fail=False,
         asset_limit=-1,
@@ -305,7 +314,6 @@ class ProceduralAssetHookRunner:
         skip_asset_create_call=False
     ):
         self.asset_directory = asset_directory
-        self.asset_symlink = asset_symlink
         self.stop_if_fail = stop_if_fail
         self.asset_limit = asset_limit
         self.load_file_in_unity = load_file_in_unity
@@ -327,12 +335,12 @@ class ProceduralAssetHookRunner:
         house = action["house"]
         asset_ids = get_all_asset_ids_recursively(house["objects"], [])
         if not self.skip_asset_create_call:
+            print(f"CreateHouse controller._build.base_dir {controller._build.base_dir} target_dir: {self.target_dir} copy_to_dir:  {os.path.join(controller._build.base_dir, self.target_dir)} "),
             return create_assets_if_not_exist(
                 controller=controller,
                 asset_ids=asset_ids,
                 asset_directory=self.asset_directory,
                 copy_to_dir=os.path.join(controller._build.base_dir, self.target_dir),
-                asset_symlink=self.asset_symlink,
                 stop_if_fail=self.stop_if_fail,
                 load_file_in_unity=self.load_file_in_unity,
                 extension=self.extension,
@@ -349,7 +357,6 @@ class ProceduralAssetHookRunner:
             asset_ids=asset_ids,
             asset_directory=self.asset_directory,
             copy_to_dir=os.path.join(controller._build.base_dir, self.target_dir),
-            asset_symlink=self.asset_symlink,
             stop_if_fail=self.stop_if_fail,
             load_file_in_unity=self.load_file_in_unity,
             extension=self.extension,
@@ -367,7 +374,6 @@ class ProceduralAssetHookRunner:
             asset_ids=asset_ids,
             asset_directory=self.asset_directory,
             copy_to_dir=os.path.join(controller._build.base_dir, self.target_dir),
-            asset_symlink=self.asset_symlink,
             stop_if_fail=self.stop_if_fail,
             load_file_in_unity=self.load_file_in_unity,
             extension=self.extension,
@@ -560,7 +566,6 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
         asset_directory: str,
         base_url: str,
         target_dir: str,
-        asset_symlink=True,
         load_file_in_unity=True,
         stop_if_fail=False,
         asset_limit=-1,
@@ -581,7 +586,6 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
         super().__init__(
             asset_directory=asset_directory,
             target_dir=target_dir,
-            asset_symlink=asset_symlink,
             load_file_in_unity=load_file_in_unity,
             stop_if_fail=stop_if_fail,
             asset_limit=asset_limit,
@@ -608,6 +612,7 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
                 base_url=self.base_url,
                 extension=self.extension
             )
+
         else:
             args = dict(
                 action = "DownloadAndCreateRuntimeAssetsAsync",
@@ -621,8 +626,13 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
                 ),
                 unloadUnusedAssets=self.unload_unused_assets_after_creation
             )
-            controller.step(**args)
-
+            evt = controller.step(**args)
+            if not evt.metadata["lastActionSuccess"]:
+                logger.error(
+                    f'Error: {evt.metadata["errorMessage"]}'
+                    f"\nLast Action: {controller.last_action['action']}"
+                    f"\nAction success: {evt.metadata['lastActionSuccess']}"
+                )
 
     def Initialize(self, action, controller):
         if self.asset_limit >= 0:
