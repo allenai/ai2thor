@@ -226,12 +226,18 @@ def create_assets_if_not_exist(
     texture_replace_energy_threshold=None,
     resize_texture_settings=None
 ):
+    if not asset_ids:
+        return None
+
     evt = controller.step(
         action="AssetsInDatabase", assetIds=asset_ids, updateProceduralLRUCache=True
     )
 
     asset_in_db = evt.metadata["actionReturn"]
     assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db]
+
+    if not assets_not_created:
+        return None
 
     events = create_assets(
         thor_controller=controller,
@@ -534,6 +540,9 @@ def download_missing_assets(
     threads: int = 1,
     extension: str = None
 ):
+    if not asset_ids:
+        return
+
     if verbose and threads > 1:
         print(f"Downloading assets with {threads} threads. Will NOT log progress bars.")
 
