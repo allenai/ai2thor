@@ -8847,6 +8847,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             string baseUrl, 
             List<string> assetIds, 
             string extension = null, 
+            string cacheDirectory = null,
             bool saveMaterialToAssetDB = true, 
             bool reportProgressToJS = false, 
             float? textureReplaceEnergyThreshold = null,
@@ -8861,6 +8862,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     saveMaterialToAssetDB: saveMaterialToAssetDB,
                     progressReporter: reportProgressToJS ? this.jsInterface : null,
                     onComplete: null,
+                    cacheDirectory: cacheDirectory,
                     textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
                     resizeTextureSettings: resizeTextureSettings,
                     unloadUnusedAssets: unloadUnusedAssets

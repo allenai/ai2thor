@@ -320,6 +320,7 @@ public class ProceduralAssetDownloader {
         ActionInvokable coroutineRunner,
         ProgressReporter progressReporter,
         Action<ActionFinished> onComplete,
+        string cacheDirectory = null,
         float? textureReplaceEnergyThreshold = null,
         ResizeTextureSettings resizeTextureSettings = null,
         bool unloadUnusedAssets = false
@@ -329,8 +330,9 @@ public class ProceduralAssetDownloader {
             assetIds, 
             coroutineRunner, 
             extension, 
-            saveMaterialToAssetDB, 
-            progressReporter, 
+            cacheDirectory: cacheDirectory,
+            saveMaterialToAssetDB: saveMaterialToAssetDB, 
+            progressReporter: progressReporter, 
             textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
             resizeTextureSettings: resizeTextureSettings
         );
@@ -350,6 +352,7 @@ public class ProceduralAssetDownloader {
         List<string> assetIds,
         ActionInvokable coroutineRunner,
         string extension = null,
+        string cacheDirectory = null,
         bool saveMaterialToAssetDB = true,
         ProgressReporter progressReporter = null,
         float? textureReplaceEnergyThreshold = null,
@@ -361,11 +364,12 @@ public class ProceduralAssetDownloader {
         foreach (var assetId in assetIds) {
             tasks.Add(
                 DownloadAssetAsync(
-                    baseUrl, 
-                    assetId, 
-                    extension, 
-                    saveMaterialToAssetDB, 
-                    textureReplaceEnergyThreshold: textureReplaceEnergyThreshold
+                    baseUrl: baseUrl, 
+                    assetId: assetId, 
+                    extension: extension, 
+                    saveMaterialToAssetDB: saveMaterialToAssetDB, 
+                    textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
+                    cacheDirectory: cacheDirectory
                 )
             );
         }
@@ -517,6 +521,181 @@ public class ProceduralAssetDownloader {
             }
         );
     }
+
+
+
+    public static async Task<(bool success, string error, ProceduralAsset asset, TextureReplaceStat replaceStat)> DownloadAssetAsync(
+    string baseUrl, 
+    string assetId, 
+    string extension = null, 
+    bool saveMaterialToAssetDB = true,
+    float? textureReplaceEnergyThreshold = null,
+    string cacheDirectory = null
+) {
+
+    // For build
+    string appDirectory = Path.GetDirectoryName(Application.dataPath); // Application.persistentDataPath
+    
+    Debug.Log($"--------- DownloadAssetAsync application path {Application.persistentDataPath} appDir {appDirectory}");
+    // cacheDirectory = Path.Combine(appDirectory, "objaverse_cache");
+    if (cacheDirectory != null) {
+        bool isAbsolute = Path.IsPathRooted(cacheDirectory)
+                            && !string.IsNullOrEmpty(Path.GetPathRoot(cacheDirectory).Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+        if (!isAbsolute) {
+            cacheDirectory = Path.Combine(appDirectory, cacheDirectory);
+        }
+    }
+
+     Debug.Log($"--------- DownloadAssetAsync Final cacheDirectory {cacheDirectory}");
+
+    string assetName = assetId; // e.g., "1" from "1.tar"
+    string assetFolder = cacheDirectory != null ? Path.Combine(cacheDirectory, assetName) : null;
+
+
+    // var x = assetFolder;
+    // try {
+    //     Debug.Log($"To create dir ");
+    //         if (!Directory.Exists(x)) {
+    //             Debug.Log($"✅ Creating dir: {x}");
+
+    //         Directory.CreateDirectory(x);
+    //         Debug.Log($"Created");
+    //     }
+    // }
+    // catch (Exception e) {
+    //             Debug.LogError($"Exception creating assetFolder: {x}. Error: {e.Message}. {e.StackTrace.ToString()}");
+    //         }
+
+    
+    string msgpackGzPath = assetFolder != null ? Path.Combine(assetFolder, $"{assetName}.msgpack.gz") : null;
+
+    byte[] decompressed;
+    
+
+    if (msgpackGzPath != null && File.Exists(msgpackGzPath)) {
+        Debug.Log($"✅ Using cached .msgpack.gz: {msgpackGzPath}");
+
+        // Load and decompress .msgpack.gz
+        using var gz = new GZipStream(new MemoryStream(File.ReadAllBytes(msgpackGzPath)), CompressionMode.Decompress);
+        using var ms = new MemoryStream();
+        gz.CopyTo(ms);
+        decompressed = ms.ToArray();
+    } else {
+        string url = $"{baseUrl}/{assetId}.tar";
+        Debug.Log($"🌐 Downloading asset tar: {url}");
+
+        var request = UnityWebRequest.Get(url);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Accept-Encoding", "identity");
+        var operation = request.SendWebRequest();
+        while (!operation.isDone) await Task.Yield();
+
+        if (request.result != UnityWebRequest.Result.Success) {
+            return (false, $"Download failed: {request.error}", null, null);
+        }
+
+        var fileMap = ExtractTarArchive(new MemoryStream(request.downloadHandler.data));
+
+        // Save files into asset cache folder
+        if (assetFolder != null) {
+            Debug.Log($"-------- CreateDirectory {assetFolder}");
+            try {
+            Directory.CreateDirectory(assetFolder);
+            var keysToWrite = new List<string>() {
+                $"{assetId}/albedo.jpg",
+                $"{assetId}/emission.jpg",
+                $"{assetId}/normal.jpg",
+                $"{assetId}/metallic_smoothness.jpg",
+                $"{assetId}/annotations.json.gz",
+                $"{assetId}/{assetId}.msgpack.gz"
+            };
+            Debug.Log($"-------- CreatedDir {assetFolder} keys: {string.Join(",", fileMap.Keys)}");
+            foreach (var key in keysToWrite) {
+                var file = fileMap[key];
+                string fileName = Path.GetFileName(key); // drop assetId/ prefix
+                string outputPath = Path.Combine(assetFolder, fileName);
+
+                Debug.Log($"-------- Writing {key} to {outputPath} ");
+                File.WriteAllBytes(outputPath, file);
+            }
+            Debug.Log($"-------- saved assets in {assetFolder}");
+            }
+            catch (Exception e) {
+                Debug.LogError($"Exception creating assetFolder: {assetFolder}. Error: {e.Message}. {e.StackTrace.ToString()}");
+            }
+        }
+
+        string gzFileName = $"{assetName}.msgpack.gz";
+        if (!fileMap.TryGetValue($"{assetName}/{gzFileName}", out var compressed)) {
+            return (false, $"Missing {gzFileName} in archive.", null, null);
+        }
+
+        using var gz = new GZipStream(new MemoryStream(compressed), CompressionMode.Decompress);
+        using var ms = new MemoryStream();
+        gz.CopyTo(ms);
+        decompressed = ms.ToArray();
+    }
+
+    var asset = DeserializeAndPrepareAsset(
+        decompressed,
+        assetFolder,
+        assetName,
+        saveMaterialToAssetDB,
+        textureReplaceEnergyThreshold
+    );
+
+    return (true, null, asset.asset, asset.replaceStat);
+}
+
+private static (ProceduralAsset asset, TextureReplaceStat replaceStat) DeserializeAndPrepareAsset(
+    byte[] decompressed,
+    string folderPath,
+    string assetName,
+    bool saveMaterialToAssetDB,
+    float? textureReplaceEnergyThreshold
+) {
+    var asset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
+        decompressed,
+        MessagePack.Resolvers.ThorWebGLSafeStandardResolver.Options
+    );
+
+    bool useFallbackColor = textureReplaceEnergyThreshold.HasValue;
+
+    var replaceAlbedoWithRGB = useFallbackColor && asset.albedoTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+    var replaceMetallicWithRGB = useFallbackColor && asset.metallicSmoothnessTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+    var replaceNormalWithRGB = useFallbackColor && asset.normalTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+    var replaceEmissionWithRGB = useFallbackColor && asset.emissionTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+
+    string ReadBase64FromFile(string fileName) {
+        string fullPath = Path.Combine(folderPath, fileName);
+        return File.Exists(fullPath) ? Convert.ToBase64String(File.ReadAllBytes(fullPath)) : null;
+    }
+
+    asset.rawTextures = new ProceduralTextures {
+        albedoBase64JPG = replaceAlbedoWithRGB ? null : ReadBase64FromFile("albedo.jpg"),
+        metallicSmoothnessBase64JPG = replaceMetallicWithRGB ? null : ReadBase64FromFile("metallic_smoothness.jpg"),
+        normalBase64JPG = replaceNormalWithRGB ? null : ReadBase64FromFile("normal.jpg"),
+        emissionBase64JPG = replaceEmissionWithRGB ? null : ReadBase64FromFile("emission.jpg")
+    };
+
+    asset.albedoTexturePath = null;
+    asset.metallicSmoothnessTexturePath = null;
+    asset.normalTexturePath = null;
+    asset.emissionTexturePath = null;
+
+    asset.saveMaterialToAssetDB = saveMaterialToAssetDB;
+
+    return (
+        asset,
+        new TextureReplaceStat {
+            replacedAlbedoWithRGB = replaceAlbedoWithRGB,
+            replacedMetallicWithRGB = replaceMetallicWithRGB,
+            replacedEmissionWithRGB = replaceEmissionWithRGB,
+            replacedNormalWithRGB = replaceNormalWithRGB
+        }
+    );
+}
+
 
 
     public static IEnumerator DownloadAndProcessAssets(string baseUrl, List<string> assetIds, Action<List<ProceduralAsset>> onComplete, float? textureReplaceEnergyThreshold = null) {

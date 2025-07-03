@@ -325,18 +325,8 @@ class ProceduralAssetHookRunner:
         self.resize_texture_settings = resize_texture_settings
         self.skip_asset_create_call = skip_asset_create_call
 
-    def Initialize(self, action, controller):
-        if self.asset_limit > 0:
-            return controller.step(
-                action="DeleteLRUFromProceduralCache", assetLimit=self.asset_limit
-            )
-
-    def CreateHouse(self, action, controller):
-        house = action["house"]
-        asset_ids = get_all_asset_ids_recursively(house["objects"], [])
-        if not self.skip_asset_create_call:
-            print(f"CreateHouse controller._build.base_dir {controller._build.base_dir} target_dir: {self.target_dir} copy_to_dir:  {os.path.join(controller._build.base_dir, self.target_dir)} "),
-            return create_assets_if_not_exist(
+    def _create_assets_if_not_exist(self, controller, asset_ids):
+        return create_assets_if_not_exist(
                 controller=controller,
                 asset_ids=asset_ids,
                 asset_directory=self.asset_directory,
@@ -350,38 +340,33 @@ class ProceduralAssetHookRunner:
                 save_material_to_asset_db=self.save_material_to_asset_db
             )
 
+    def Initialize(self, action, controller):
+        if self.asset_limit > 0:
+            return controller.step(
+                action="DeleteLRUFromProceduralCache", assetLimit=self.asset_limit
+            )
+
+    def CreateHouse(self, action, controller):
+        house = action["house"]
+        asset_ids = get_all_asset_ids_recursively(house["objects"], [])
+        if not self.skip_asset_create_call:
+            return self._create_assets_if_not_exist(controller, asset_ids=asset_ids)
+
     def SpawnAsset(self, action, controller):
         asset_ids = [action["assetId"]]
-        return create_assets_if_not_exist(
-            controller=controller,
-            asset_ids=asset_ids,
-            asset_directory=self.asset_directory,
-            copy_to_dir=os.path.join(controller._build.base_dir, self.target_dir),
-            stop_if_fail=self.stop_if_fail,
-            load_file_in_unity=self.load_file_in_unity,
-            extension=self.extension,
-            verbose=self.verbose,
-            texture_replace_energy_threshold=self.texture_replace_energy_threshold,
-            resize_texture_settings=self.resize_texture_settings,
-            save_material_to_asset_db=self.save_material_to_asset_db
-    )
+        if not self.skip_asset_create_call:
+            return self._create_assets_if_not_exist(controller, asset_ids=asset_ids)
+
+    def SpawnAssetAsync(self, action, controller):
+        asset_ids = [action["assetId"]]
+        if not self.skip_asset_create_call:
+            return self._create_assets_if_not_exist(controller, asset_ids=asset_ids)
 
     def GetHouseFromTemplate(self, action, controller):
         template = action["template"]
         asset_ids = get_all_asset_ids_recursively([v for (k, v) in template["objects"].items()], [])
-        return create_assets_if_not_exist(
-            controller=controller,
-            asset_ids=asset_ids,
-            asset_directory=self.asset_directory,
-            copy_to_dir=os.path.join(controller._build.base_dir, self.target_dir),
-            stop_if_fail=self.stop_if_fail,
-            load_file_in_unity=self.load_file_in_unity,
-            extension=self.extension,
-            verbose=self.verbose,
-            texture_replace_energy_threshold=self.texture_replace_energy_threshold,
-            resize_texture_settings=self.resize_texture_settings,
-            save_material_to_asset_db=self.save_material_to_asset_db
-        )
+        if not self.skip_asset_create_call:
+            return self._create_assets_if_not_exist(controller, asset_ids=asset_ids)
 
 
 class ObjaverseAssetHookRunner(object):
@@ -618,6 +603,7 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
                 action = "DownloadAndCreateRuntimeAssetsAsync",
                 assetIds=assets_not_created,
                 baseUrl=self.base_url,
+                cacheDirectory=self.asset_directory,
                 extension=self.extension,
                 textureReplaceEnergyThreshold = self.texture_replace_energy_threshold,
                 resizeTextureSettings=self.resize_texture_settings,
@@ -658,6 +644,11 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
         self._download_missing_assets(controller=controller, asset_ids=[action["assetId"]], extension=self.extension)
 
         return super().SpawnAsset(action=action, controller=controller)
+    
+    def SpawnAssetAsync(self, action, controller):
+        self._download_missing_assets(controller=controller, asset_ids=[action["assetId"]], extension=self.extension)
+
+        return super().SpawnAssetAsync(action=action, controller=controller)
 
     def GetHouseFromTemplate(self, action, controller):
         template = action["template"]
