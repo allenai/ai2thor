@@ -57,8 +57,8 @@ def get_all_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List
         # Hack to separate objaverse assets that need downloading vs procthor assets for Procedural_lazy scene
         if is_hexadecimal(obj["assetId"]):
             asset_ids.append(obj["assetId"])
-            if "children" in obj and obj["children"] != None:
-                get_all_asset_ids_recursively(obj["children"], asset_ids)
+        if "children" in obj and obj["children"] != None:
+            get_all_asset_ids_recursively(obj["children"], asset_ids)
     assets_set = set(asset_ids)
     if "" in assets_set:
         assets_set.remove("")
