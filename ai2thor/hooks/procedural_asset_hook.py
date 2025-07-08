@@ -48,6 +48,8 @@ EXTENSIONS_LOADABLE_IN_UNITY = {
 def is_hexadecimal(s):
     return bool(re.fullmatch(r'[0-9a-fA-F]+', s))
 
+def is_objathor_id(s):
+    return is_hexadecimal(s) or ("_" not in s and "DecorativeBox" not in s)
 
 def get_all_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List[str]) -> List[str]:
     """
@@ -55,7 +57,7 @@ def get_all_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List
     """
     for obj in objects:
         # Hack to separate objaverse assets that need downloading vs procthor assets for Procedural_lazy scene
-        if is_hexadecimal(obj["assetId"]):
+        if is_objathor_id(obj["assetId"]):
             asset_ids.append(obj["assetId"])
         if "children" in obj and obj["children"] != None:
             get_all_asset_ids_recursively(obj["children"], asset_ids)
