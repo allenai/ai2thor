@@ -357,11 +357,6 @@ class ProceduralAssetHookRunner:
         if not self.skip_asset_create_call:
             return self._create_assets_if_not_exist(controller, asset_ids=asset_ids)
 
-    def SpawnAssetAsync(self, action, controller):
-        asset_ids = [action["assetId"]]
-        if not self.skip_asset_create_call:
-            return self._create_assets_if_not_exist(controller, asset_ids=asset_ids)
-
     def GetHouseFromTemplate(self, action, controller):
         template = action["template"]
         asset_ids = get_all_asset_ids_recursively([v for (k, v) in template["objects"].items()], [])
@@ -627,7 +622,7 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
             # )
             # New async delete
             return controller.step(
-                action="DeleteLRUFromProceduralCacheAsync", 
+                action="DeleteLRUFromProceduralCache", 
                 assetLimit=self.asset_limit,
                 physicsSimulationParams=dict(
                         autoSimulation=True
@@ -644,11 +639,7 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
         self._download_missing_assets(controller=controller, asset_ids=[action["assetId"]], extension=self.extension)
 
         return super().SpawnAsset(action=action, controller=controller)
-    
-    def SpawnAssetAsync(self, action, controller):
-        self._download_missing_assets(controller=controller, asset_ids=[action["assetId"]], extension=self.extension)
 
-        return super().SpawnAssetAsync(action=action, controller=controller)
 
     def GetHouseFromTemplate(self, action, controller):
         template = action["template"]
