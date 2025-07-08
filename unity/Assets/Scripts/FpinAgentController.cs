@@ -876,8 +876,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.transform.rotation = originalRotation;
 
             // enable cameras now
-            m_Camera.GetComponent<PostProcessVolume>().enabled = true;
-            m_Camera.GetComponent<PostProcessLayer>().enabled = true;
+            // m_Camera.GetComponent<PostProcessVolume>().enabled = true;
+            // m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
             // make sure we are hooked up to the collision listener
             fpinMovable = new FpinMovableContinuous(this.GetComponentInParent<CollisionListener>());
