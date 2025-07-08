@@ -12,11 +12,13 @@ using UnityStandardAssets.ImageEffects;
 
 [ExecuteInEditMode]
 public class PhysicsSimulationParams {
-    public bool autoSimulation = true;
+    public bool autoSimulation = false;
     public float fixedDeltaTime = 0.02f;
     public float minSimulateTimeSeconds = 0;
 
     public bool syncTransformsAfterAction = false;
+
+    public bool runAsCoroutine = false;
 
     // public int maxActionPhysicsSteps = int.MaxValue;
 
@@ -255,6 +257,9 @@ public class PhysicsSceneManager : MonoBehaviour {
         var startFixedTimeSeconds = Time.fixedTime;
         ActionFinished actionFinished = null;
 
+        var previousAutoSimulate = Physics.autoSimulation;
+        Physics.autoSimulation = physicsSimulationParams.autoSimulation;
+
         // while (actionFinished != null) {
          while (true) {
             // Debug.Log($"======== action current null {action.Current == null} {action.Current}");
@@ -280,6 +285,21 @@ public class PhysicsSceneManager : MonoBehaviour {
                 //     errorCode = ServerActionErrorCode.UnhandledException
                 // };
                 break;
+            }
+            
+
+            // TODO decide if this block should be here
+            if (
+                !physicsSimulationParams.autoSimulation &&
+                action.Current != null &&
+                action.Current.GetType() == typeof(WaitForFixedUpdate)
+            ) {
+                // TODO: is this still used?
+                if (physicsSimulationParams.fixedDeltaTime == 0f) {
+                    Physics.SyncTransforms();
+                } else {
+                    PhysicsSceneManager.PhysicsSimulateTHOR(physicsSimulationParams.fixedDeltaTime);
+                }
             }
 
             
@@ -330,6 +350,7 @@ public class PhysicsSceneManager : MonoBehaviour {
         target.Complete(actionFinished);
 
         Time.fixedDeltaTime = previousFixedDeltaTime;
+        Physics.autoSimulation = previousAutoSimulate;
     }
 
     // Returns previous parameters

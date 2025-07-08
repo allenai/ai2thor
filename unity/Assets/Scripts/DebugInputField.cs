@@ -5928,7 +5928,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 metallicTextureScale= textureScale,
                                 normalTextureScale= textureScale,
                                 emissionTextureScale= textureScale
-                            }
+                            },
+                            // ["cacheDirectory"] = "/Users/alvaroh/ai2/ai2thor/obja_cache"
                         };
 
 

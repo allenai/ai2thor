@@ -2208,7 +2208,7 @@ namespace Thor.Procedural {
             Debug.LogException(task.Exception);
         }
     }
-
+    
     public async static Task LoadAssetsAsync(ProceduralAssetDatabase assetDB, IEnumerable<string> prefabNames, IEnumerable<string> materialNames) {
         // Step 1: Start loading all assets
         var loadOperations = new List<Task>();
@@ -2226,7 +2226,7 @@ namespace Thor.Procedural {
     }
 
     private async static Task LoadAndStore<T>(ProceduralLRUCacheAssetMap<T, AssetHandle<T>> map, string key) where T : UnityEngine.Object {
-        Debug.Log($"======= LoadAndStore handle for asset {key}");
+        // Debug.Log($"======= LoadAndStore handle for asset {key}");
         AsyncOperationHandle<T> handle = Addressables.LoadAssetAsync<T>(key);
         await handle.Task;
 

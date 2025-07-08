@@ -523,177 +523,218 @@ public class ProceduralAssetDownloader {
     }
 
 
-
     public static async Task<(bool success, string error, ProceduralAsset asset, TextureReplaceStat replaceStat)> DownloadAssetAsync(
-    string baseUrl, 
-    string assetId, 
-    string extension = null, 
-    bool saveMaterialToAssetDB = true,
-    float? textureReplaceEnergyThreshold = null,
-    string cacheDirectory = null
-) {
+        string baseUrl, 
+        string assetId, 
+        string extension = null, 
+        bool saveMaterialToAssetDB = true,
+        float? textureReplaceEnergyThreshold = null,
+        string cacheDirectory = null
+    ) {
 
-    // For build
-    string appDirectory = Path.GetDirectoryName(Application.dataPath); // Application.persistentDataPath
-    
-    Debug.Log($"--------- DownloadAssetAsync application path {Application.persistentDataPath} appDir {appDirectory}");
-    // cacheDirectory = Path.Combine(appDirectory, "objaverse_cache");
-    if (cacheDirectory != null) {
-        bool isAbsolute = Path.IsPathRooted(cacheDirectory)
-                            && !string.IsNullOrEmpty(Path.GetPathRoot(cacheDirectory).Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-        if (!isAbsolute) {
-            cacheDirectory = Path.Combine(appDirectory, cacheDirectory);
+        // For build
+        string appDirectory = Path.GetDirectoryName(Application.dataPath); // Application.persistentDataPath
+        
+        Debug.Log($"----- DownloadAssetAsync application path {Application.persistentDataPath} appDir {appDirectory}");
+        // cacheDirectory = Path.Combine(appDirectory, "objaverse_cache");
+        if (cacheDirectory != null) {
+            bool isAbsolute = Path.IsPathRooted(cacheDirectory)
+                                && !string.IsNullOrEmpty(Path.GetPathRoot(cacheDirectory).Trim(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            if (!isAbsolute) {
+                cacheDirectory = Path.Combine(appDirectory, cacheDirectory);
+            }
         }
+
+        Debug.Log($"----- DownloadAssetAsync Final cacheDirectory {cacheDirectory}");
+
+        string assetName = assetId; // e.g., "1" from "1.tar"
+        string assetFolder = cacheDirectory != null ? Path.Combine(cacheDirectory, assetName) : null;
+
+
+        // var x = assetFolder;
+        // try {
+        //     Debug.Log($"To create dir ");
+        //         if (!Directory.Exists(x)) {
+        //             Debug.Log($"Creating dir: {x}");
+
+        //         Directory.CreateDirectory(x);
+        //         Debug.Log($"Created");
+        //     }
+        // }
+        // catch (Exception e) {
+        //             Debug.LogError($"Exception creating assetFolder: {x}. Error: {e.Message}. {e.StackTrace.ToString()}");
+        //         }
+
+        
+        string msgpackGzPath = assetFolder != null ? Path.Combine(assetFolder, $"{assetName}.msgpack.gz") : null;
+
+        byte[] decompressed;
+        Dictionary<string, byte[]> fileMap = null;
+
+        if (msgpackGzPath != null && File.Exists(msgpackGzPath)) {
+            Debug.Log($"Using cached .msgpack.gz: {msgpackGzPath}");
+
+            // Load and decompress .msgpack.gz
+            using var gz = new GZipStream(new MemoryStream(File.ReadAllBytes(msgpackGzPath)), CompressionMode.Decompress);
+            using var ms = new MemoryStream();
+            gz.CopyTo(ms);
+            decompressed = ms.ToArray();
+        } else {
+            string url = $"{baseUrl}/{assetId}.tar";
+            Debug.Log($"Downloading asset tar: {url}");
+
+            var request = UnityWebRequest.Get(url);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Accept-Encoding", "identity");
+            var operation = request.SendWebRequest();
+            while (!operation.isDone) await Task.Yield();
+
+            if (request.result != UnityWebRequest.Result.Success) {
+                return (false, $"Download failed: {request.error}", null, null);
+            }
+
+            fileMap = ExtractTarArchive(new MemoryStream(request.downloadHandler.data));
+
+            // Save files into asset cache folder
+            if (assetFolder != null) {
+                try {
+                Directory.CreateDirectory(assetFolder);
+                var keysToWrite = new List<string>() {
+                    $"{assetId}/albedo.jpg",
+                    $"{assetId}/emission.jpg",
+                    $"{assetId}/normal.jpg",
+                    $"{assetId}/metallic_smoothness.jpg",
+                    $"{assetId}/annotations.json.gz",
+                    $"{assetId}/{assetId}.msgpack.gz"
+                };
+                foreach (var key in keysToWrite) {
+                    var file = fileMap[key];
+                    string fileName = Path.GetFileName(key); // drop assetId/ prefix
+                    string outputPath = Path.Combine(assetFolder, fileName);
+                    File.WriteAllBytes(outputPath, file);
+                }
+                }
+                catch (Exception e) {
+                    Debug.LogError($"Exception creating assetFolder: {assetFolder}. Error: {e.Message}. {e.StackTrace.ToString()}");
+                }
+            }
+
+            string gzFileName = $"{assetName}.msgpack.gz";
+            if (!fileMap.TryGetValue($"{assetName}/{gzFileName}", out var compressed)) {
+                return (false, $"Missing {gzFileName} in archive.", null, null);
+            }
+
+            using var gz = new GZipStream(new MemoryStream(compressed), CompressionMode.Decompress);
+            using var ms = new MemoryStream();
+            gz.CopyTo(ms);
+            decompressed = ms.ToArray();
+        }
+
+        var asset = DeserializeAndPrepareAsset(
+            decompressed,
+            assetName,
+            saveMaterialToAssetDB,
+            textureReplaceEnergyThreshold,
+            assetFileMap: fileMap,
+            assetCachePath: assetFolder
+        );
+
+        if (asset.asset == null) {
+            return (false, "Error deserializing asset", null, null);
+        }
+
+        return (true, null, asset.asset, asset.replaceStat);
     }
 
-     Debug.Log($"--------- DownloadAssetAsync Final cacheDirectory {cacheDirectory}");
-
-    string assetName = assetId; // e.g., "1" from "1.tar"
-    string assetFolder = cacheDirectory != null ? Path.Combine(cacheDirectory, assetName) : null;
-
-
-    // var x = assetFolder;
-    // try {
-    //     Debug.Log($"To create dir ");
-    //         if (!Directory.Exists(x)) {
-    //             Debug.Log($"✅ Creating dir: {x}");
-
-    //         Directory.CreateDirectory(x);
-    //         Debug.Log($"Created");
-    //     }
-    // }
-    // catch (Exception e) {
-    //             Debug.LogError($"Exception creating assetFolder: {x}. Error: {e.Message}. {e.StackTrace.ToString()}");
-    //         }
-
-    
-    string msgpackGzPath = assetFolder != null ? Path.Combine(assetFolder, $"{assetName}.msgpack.gz") : null;
-
-    byte[] decompressed;
-    
-
-    if (msgpackGzPath != null && File.Exists(msgpackGzPath)) {
-        Debug.Log($"✅ Using cached .msgpack.gz: {msgpackGzPath}");
-
-        // Load and decompress .msgpack.gz
-        using var gz = new GZipStream(new MemoryStream(File.ReadAllBytes(msgpackGzPath)), CompressionMode.Decompress);
-        using var ms = new MemoryStream();
-        gz.CopyTo(ms);
-        decompressed = ms.ToArray();
-    } else {
-        string url = $"{baseUrl}/{assetId}.tar";
-        Debug.Log($"🌐 Downloading asset tar: {url}");
-
-        var request = UnityWebRequest.Get(url);
-        request.downloadHandler = new DownloadHandlerBuffer();
-        request.SetRequestHeader("Accept-Encoding", "identity");
-        var operation = request.SendWebRequest();
-        while (!operation.isDone) await Task.Yield();
-
-        if (request.result != UnityWebRequest.Result.Success) {
-            return (false, $"Download failed: {request.error}", null, null);
-        }
-
-        var fileMap = ExtractTarArchive(new MemoryStream(request.downloadHandler.data));
-
-        // Save files into asset cache folder
-        if (assetFolder != null) {
-            Debug.Log($"-------- CreateDirectory {assetFolder}");
-            try {
-            Directory.CreateDirectory(assetFolder);
-            var keysToWrite = new List<string>() {
-                $"{assetId}/albedo.jpg",
-                $"{assetId}/emission.jpg",
-                $"{assetId}/normal.jpg",
-                $"{assetId}/metallic_smoothness.jpg",
-                $"{assetId}/annotations.json.gz",
-                $"{assetId}/{assetId}.msgpack.gz"
-            };
-            Debug.Log($"-------- CreatedDir {assetFolder} keys: {string.Join(",", fileMap.Keys)}");
-            foreach (var key in keysToWrite) {
-                var file = fileMap[key];
-                string fileName = Path.GetFileName(key); // drop assetId/ prefix
-                string outputPath = Path.Combine(assetFolder, fileName);
-
-                Debug.Log($"-------- Writing {key} to {outputPath} ");
-                File.WriteAllBytes(outputPath, file);
-            }
-            Debug.Log($"-------- saved assets in {assetFolder}");
-            }
-            catch (Exception e) {
-                Debug.LogError($"Exception creating assetFolder: {assetFolder}. Error: {e.Message}. {e.StackTrace.ToString()}");
-            }
-        }
-
-        string gzFileName = $"{assetName}.msgpack.gz";
-        if (!fileMap.TryGetValue($"{assetName}/{gzFileName}", out var compressed)) {
-            return (false, $"Missing {gzFileName} in archive.", null, null);
-        }
-
-        using var gz = new GZipStream(new MemoryStream(compressed), CompressionMode.Decompress);
-        using var ms = new MemoryStream();
-        gz.CopyTo(ms);
-        decompressed = ms.ToArray();
-    }
-
-    var asset = DeserializeAndPrepareAsset(
-        decompressed,
-        assetFolder,
-        assetName,
-        saveMaterialToAssetDB,
-        textureReplaceEnergyThreshold
-    );
-
-    return (true, null, asset.asset, asset.replaceStat);
-}
-
-private static (ProceduralAsset asset, TextureReplaceStat replaceStat) DeserializeAndPrepareAsset(
+private static (ProceduralAsset asset, string error, TextureReplaceStat replaceStat) DeserializeAndPrepareAsset(
     byte[] decompressed,
-    string folderPath,
     string assetName,
     bool saveMaterialToAssetDB,
-    float? textureReplaceEnergyThreshold
+    float? textureReplaceEnergyThreshold,
+    Dictionary<string, byte[]> assetFileMap,
+    string assetCachePath = null
 ) {
-    var asset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
-        decompressed,
-        MessagePack.Resolvers.ThorWebGLSafeStandardResolver.Options
-    );
+    ProceduralAsset asset = null;
 
-    bool useFallbackColor = textureReplaceEnergyThreshold.HasValue;
-
-    var replaceAlbedoWithRGB = useFallbackColor && asset.albedoTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
-    var replaceMetallicWithRGB = useFallbackColor && asset.metallicSmoothnessTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
-    var replaceNormalWithRGB = useFallbackColor && asset.normalTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
-    var replaceEmissionWithRGB = useFallbackColor && asset.emissionTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
-
-    string ReadBase64FromFile(string fileName) {
-        string fullPath = Path.Combine(folderPath, fileName);
-        return File.Exists(fullPath) ? Convert.ToBase64String(File.ReadAllBytes(fullPath)) : null;
+    if (assetFileMap == null && string.IsNullOrEmpty(assetCachePath)){
+        return (null, "Empty asset and no cache directory either asset tar should have contents or asset is previously saved and loaded from `assetCachePath`", null);
     }
 
-    asset.rawTextures = new ProceduralTextures {
-        albedoBase64JPG = replaceAlbedoWithRGB ? null : ReadBase64FromFile("albedo.jpg"),
-        metallicSmoothnessBase64JPG = replaceMetallicWithRGB ? null : ReadBase64FromFile("metallic_smoothness.jpg"),
-        normalBase64JPG = replaceNormalWithRGB ? null : ReadBase64FromFile("normal.jpg"),
-        emissionBase64JPG = replaceEmissionWithRGB ? null : ReadBase64FromFile("emission.jpg")
-    };
+    try {
+        asset = MessagePack.MessagePackSerializer.Deserialize<ProceduralAsset>(
+            decompressed,
+            MessagePack.Resolvers.ThorWebGLSafeStandardResolver.Options
+        );
 
-    asset.albedoTexturePath = null;
-    asset.metallicSmoothnessTexturePath = null;
-    asset.normalTexturePath = null;
-    asset.emissionTexturePath = null;
+    }
+    catch (Exception e) {
+        var msg = $"Deserialization exception: {e.Message}. Stacktrace: {e.StackTrace}";
+        Debug.LogError(msg);
+        return (null, msg, null);
+    }
 
-    asset.saveMaterialToAssetDB = saveMaterialToAssetDB;
+    try {
+        bool useFallbackColor = textureReplaceEnergyThreshold.HasValue;
 
-    return (
-        asset,
-        new TextureReplaceStat {
-            replacedAlbedoWithRGB = replaceAlbedoWithRGB,
-            replacedMetallicWithRGB = replaceMetallicWithRGB,
-            replacedEmissionWithRGB = replaceEmissionWithRGB,
-            replacedNormalWithRGB = replaceNormalWithRGB
+        var replaceAlbedoWithRGB = useFallbackColor && asset.albedoTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+        var replaceMetallicWithRGB = useFallbackColor && asset.metallicSmoothnessTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+        var replaceNormalWithRGB = useFallbackColor && asset.normalTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+        var replaceEmissionWithRGB = useFallbackColor && asset.emissionTextureEnergyNormalized <= textureReplaceEnergyThreshold.Value;
+
+        string ReadBase64FromFileMapOrCache(string fileName) {
+            
+            if (assetFileMap != null) {
+                if (assetFileMap.TryGetValue($"{assetName}/{fileName}", out byte[] fileBytes)) {
+                    return Convert.ToBase64String(fileBytes);
+                }
+                else {
+                    Debug.LogError($"Missing asset: {fileName} in {assetName}");
+                }
+            }
+            
+            if (!string.IsNullOrEmpty(assetCachePath)) {
+                string fullPath = Path.Combine(assetCachePath, fileName);
+                if (File.Exists(fullPath)) {
+                    return Convert.ToBase64String(File.ReadAllBytes(fullPath));
+                }
+            }
+            return null;
         }
-    );
+
+        asset.rawTextures = new ProceduralTextures {
+            albedoBase64JPG = replaceAlbedoWithRGB ? null : ReadBase64FromFileMapOrCache("albedo.jpg"),
+            metallicSmoothnessBase64JPG = replaceMetallicWithRGB ? null : ReadBase64FromFileMapOrCache("metallic_smoothness.jpg"),
+            normalBase64JPG = replaceNormalWithRGB ? null : ReadBase64FromFileMapOrCache("normal.jpg"),
+            emissionBase64JPG = replaceEmissionWithRGB ? null : ReadBase64FromFileMapOrCache("emission.jpg")
+        };
+
+        asset.albedoTexturePath = null;
+        asset.metallicSmoothnessTexturePath = null;
+        asset.normalTexturePath = null;
+        asset.emissionTexturePath = null;
+
+        asset.saveMaterialToAssetDB = saveMaterialToAssetDB;
+
+        return (
+            asset,
+            "",
+            new TextureReplaceStat {
+                replacedAlbedoWithRGB = replaceAlbedoWithRGB,
+                replacedMetallicWithRGB = replaceMetallicWithRGB,
+                replacedEmissionWithRGB = replaceEmissionWithRGB,
+                replacedNormalWithRGB = replaceNormalWithRGB
+            }
+        );
+
+    }
+
+    catch (Exception e) {
+        var msg = $"Exception loading asset textures : {e.Message}. Stacktrace: {e.StackTrace}";
+        Debug.LogError(msg);
+        return (null, msg, null);
+    }
+
+   
 }
 
 
@@ -769,6 +810,7 @@ private static (ProceduralAsset asset, TextureReplaceStat replaceStat) Deseriali
     }
 
     private static Dictionary<string, byte[]> ExtractTarArchive(Stream stream) {
+        Debug.Log("Extracting tar...");
         var files = new Dictionary<string, byte[]>();
         using var reader = new BinaryReader(stream);
 

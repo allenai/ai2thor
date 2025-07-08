@@ -8819,7 +8819,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // public IEnumerator test() {
         //     yield return new ActionFinished(success: true);
         // }
-
+        
+        [RunAsCoroutine]
         public IEnumerator DownloadAndCreateRuntimeAssets(
             string baseUrl, 
             List<string> assetIds, 
@@ -8843,6 +8844,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // yield return test();
         }
 
+        [RunAsCoroutine]
         public IEnumerator DownloadAndCreateRuntimeAssetsAsync(
             string baseUrl, 
             List<string> assetIds, 
@@ -8884,88 +8886,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ProceduralTools.DeleteAssetsFromDBNotInHouse(house);
         }
 
-
-        //     // if (dequeueCount > 0) {
-        //     //     // WARNING: Async operation, should be ok for deleting assets if using the same creation-deletion hook
-        //     //     // cache should be all driven within one system, currently python driven
-        //     //     var heapSizeBeforeUnload = System.GC.GetTotalMemory(false);
-        //     //     // System.Diagnostics.Process proc = System.Diagnostics.Process.GetCurrentProcess();
-        //     //     // proc.Refresh();
-        //     //     Debug.Log($"Asset count was '{assetCountBeforeRemove}' and limit '{limit}'. Deleted '{dequeueCount}' GameObjects and removed them from cache. Total assets in cache now '{proceduralAssetQueue.Count}'.");
-        //     //     // Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64} Bytes. GarbageCollector available Heap estimate '{heapSizeBeforeUnload}' Bytes.");
-        //     //     asyncOp = Resources.UnloadUnusedAssets();
-        //     //     asyncOp.completed += (op) => {
-        //     //         Debug.Log("Asyncop callback called calling GC");
-        //     //         GC.Collect();
-        //     //     };
-
-        //     //     // #if !UNITY_EDITOR && !UNITY_WEBGL
-        //     //     float timeout = 2.0f;
-        //     //     float startTime = Time.realtimeSinceStartup;
-        //     //     while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
-        //     //         // waiting
-        //     //         continue;
-        //     //     }
-        //     //     GC.Collect();
-        //     //     // proc.Refresh();
-        //     //     var heapSizeAfterUnload = System.GC.GetTotalMemory(false);
-        //     //     Debug.Log($"GarbageCollector available Heap Before Unload '{heapSizeBeforeUnload}' Bytes. After Garbage Collection {heapSizeAfterUnload} Bytes. GarbageCollector available Heap difference {heapSizeAfterUnload-heapSizeBeforeUnload} Bytes.");
-        //     //     // Debug.Log($"Process Used Memory(WorkingSet64) {proc.WorkingSet64}");
-        //     //     // proc.Dispose();
-        //     //     // #endif
-        //     // }
-
-        //     assetDB.prefabs = assetDB.prefabs.Where(p => assetIds.Contains(p.name)).ToList();
-        //     assetDB.materials = assetDB.materials.Where(m => materialIds.Contains(m.name)).ToList();
-        //     assetDB.totalMats = assetDB.materials.Count;
-
-        //     assetDB.BuildAssetDatabase();
-
-        //     return new ActionFinished(success: true, actionReturn: new Dictionary<string, List<string>>() {
-        //         ["prefabs"]=assetIds.ToList(),
-        //         ["materials"]=materialIds.ToList()
-        //     });
-        // }
-
-        // public void CreateHouse(ProceduralHouse house) {
-        //     var rooms = house.rooms.SelectMany(room => house.rooms);
-
-        //     var materials = ProceduralTools.GetMaterials();
-        //     var materialIds = new HashSet<string>(
-        //         house
-        //             .rooms.SelectMany(r =>
-        //                 r.ceilings.Select(c => c.material.name)
-        //                     .Concat(new List<string>() { r.floorMaterial.name })
-        //                     .Concat(house.walls.Select(w => w.material.name))
-        //             )
-        //             .Concat(new List<string>() { house.proceduralParameters.ceilingMaterial.name })
-        //     );
-        //     var missingIds = materialIds.Where(id => id != null && !materials.ContainsKey(id));
-        //     if (missingIds.Count() > 0) {
-        //         actionFinished(
-        //             success: false,
-        //             errorMessage: (
-        //                 $"Invalid materials: {string.Join(", ", missingIds.Select(id => $"'{id}'"))}. "
-        //                 + "Not existing or not loaded to the ProceduralAssetDatabase component."
-        //             )
-        //         );
-        //     }
-
-        //     try {
-        //         ProceduralTools.CreateHouse(house: house, materialDb: materials);
-        //     } catch (Exception e) {
-        //         Debug.Log(e);
-        //         var msg = $"Exception creating house.\n'{e.Message}'\n'{e.InnerException}'";
-        //         Debug.Log(msg);
-        //         actionFinished(false, actionReturn: null, errorMessage: msg);
-        //         return;
-        //     }
-        //     actionFinished(true);
-        // }
-
         
-
-        public IEnumerator PreloadHouseAssets(ProceduralHouse house, bool freeMemoryAfter = false, float freeMemorySecondsTimeout = 2.0f) {
+        [RunAsCoroutine]
+        public IEnumerator PreloadHouseAssets(ProceduralHouse house, bool freeMemoryAfter = false) {
             var db = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (db == null) {
                 yield return new ActionFinished(
@@ -9029,25 +8952,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (freeMemoryAfter) {
                 var asyncOp = Resources.UnloadUnusedAssets();
-                asyncOp.completed += (op) => {
-                    Debug.Log("Asyncop callback called calling GC");
-                    GC.Collect();
-                };
 
                 yield return asyncOp;
-                
-                float timeout = freeMemorySecondsTimeout;
-                float startTime = Time.realtimeSinceStartup;
-                while (!asyncOp.isDone && Time.realtimeSinceStartup - startTime < timeout) {
-                    // waiting
-                    // continue;
-                    yield return null;
-                }
+
                 GC.Collect();
             }
             yield return ActionFinished.Success;
         }
 
+        [RunAsCoroutine]
         public IEnumerator UnloadUnusedAssets() {
             yield return Resources.UnloadUnusedAssets();
             GC.Collect();
@@ -9056,12 +8969,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void UnloadUnusedAssetsWithCoroutine() {
-            StartCoroutine(
-                UnloadUnusedAssets()
-            );
-        }
-
+        [RunAsCoroutine]
         public IEnumerator CreateHouse(ProceduralHouse house) {
             var db = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (db == null) {
@@ -9275,22 +9183,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(success: true);
         }
 
-        public void DeleteLRUFromProceduralCache(int assetLimit) {
-            var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
-            if (assetDB == null) {
-                errorMessage = "No ProceduralAssetDatabase seems to exist.";
-                //                Debug.Log(errorMessage);
-                actionFinishedEmit(success: false);
-                return;
-            }
-            //            Debug.Log($"Attempting to remove until {assetLimit}");
-            assetDB.removeLRUItems(assetLimit);
-            //            Debug.Log($"Items removed.");
-            actionFinishedEmit(success: true);
-        }
 
+        // Older non asynchronous delete from cache, which had a hard coded 2 second wait for unload unused assets operation to then call garbage collector
+        // public void DeleteLRUFromProceduralCache(int assetLimit) {
+        //     var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+        //     if (assetDB == null) {
+        //         errorMessage = "No ProceduralAssetDatabase seems to exist.";
+        //         //                Debug.Log(errorMessage);
+        //         actionFinishedEmit(success: false);
+        //         return;
+        //     }
+        //     //            Debug.Log($"Attempting to remove until {assetLimit}");
+        //     assetDB.removeLRUItems(assetLimit);
+        //     //            Debug.Log($"Items removed.");
+        //     actionFinishedEmit(success: true);
+        // }
 
-         public IEnumerator DeleteLRUFromProceduralCacheAsync(int assetLimit) {
+        
+        [RunAsCoroutine]
+         public IEnumerator DeleteLRUFromProceduralCache(int assetLimit) {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (assetDB == null) {
                 yield return new ActionFinished(success: false, errorMessage:  "No ProceduralAssetDatabase seems to exist.", toEmitState: true);
@@ -9450,7 +9361,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(true, geoList);
         }
 
-        public ActionFinished SpawnAsset(
+        public ActionFinished spawnAsset(
             string assetId,
             string generatedId,
             Vector3? position = null,
@@ -9506,7 +9417,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             };
         }
 
-        public IEnumerator SpawnAssetAsync(
+        [RunAsCoroutine]
+        public IEnumerator SpawnAsset(
             string assetId,
             string generatedId,
             Vector3? position = null,
@@ -9520,8 +9432,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     yield return ProceduralTools.RunTaskAsCoroutine(ProceduralTools.LoadAssetsAsync(assetDb, new List<string>() { assetId }, new List<string>()));
                 }
             }
-
-            yield return SpawnAsset(assetId: assetId, generatedId: generatedId, position: position, rotation: rotation);
+            yield return spawnAsset(assetId: assetId, generatedId: generatedId, position: position, rotation: rotation);
         }
 
         public void GetAssetSphereBounds(string assetId) {

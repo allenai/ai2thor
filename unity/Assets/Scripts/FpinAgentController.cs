@@ -949,7 +949,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (bodyAsset.assetId != null) {
-                actionFinished = SpawnAsset(
+                actionFinished = spawnAsset(
                     bodyAsset.assetId,
                     "agentMesh",
                     new Vector3(200f, 200f, 200f)
