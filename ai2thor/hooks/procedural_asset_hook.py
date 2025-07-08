@@ -354,7 +354,7 @@ class ProceduralAssetHookRunner:
 
     def SpawnAsset(self, action, controller):
         asset_ids = [action["assetId"]]
-        if not self.skip_asset_create_call:
+        if not self.skip_asset_create_call and is_hexadecimal(action["assetId"]):
             return self._create_assets_if_not_exist(controller, asset_ids=asset_ids)
 
     def GetHouseFromTemplate(self, action, controller):
@@ -584,7 +584,8 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
         asset_in_db = controller.step(
             action="AssetsInDatabase", assetIds=asset_ids, updateProceduralLRUCache=False
         ).metadata["actionReturn"]
-        assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db]
+        assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db and is_hexadecimal(asset_id)]
+        # print(f"-----  assets_not_created {assets_not_created}")
         if not self.download_assets_in_unity:
             download_missing_assets(
                 asset_ids=assets_not_created,
