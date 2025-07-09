@@ -48,6 +48,8 @@ EXTENSIONS_LOADABLE_IN_UNITY = {
 def is_hexadecimal(s):
     return bool(re.fullmatch(r'[0-9a-fA-F]+', s))
 
+def is_objathor_id(s):
+    return is_hexadecimal(s) or ("_" not in s and "DecorativeBox" not in s)
 
 def get_all_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List[str]) -> List[str]:
     """
@@ -55,10 +57,10 @@ def get_all_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List
     """
     for obj in objects:
         # Hack to separate objaverse assets that need downloading vs procthor assets for Procedural_lazy scene
-        if is_hexadecimal(obj["assetId"]):
+        if is_objathor_id(obj["assetId"]):
             asset_ids.append(obj["assetId"])
-            if "children" in obj and obj["children"] != None:
-                get_all_asset_ids_recursively(obj["children"], asset_ids)
+        if "children" in obj and obj["children"] != None:
+            get_all_asset_ids_recursively(obj["children"], asset_ids)
     assets_set = set(asset_ids)
     if "" in assets_set:
         assets_set.remove("")
@@ -236,12 +238,18 @@ def create_assets_if_not_exist(
     texture_replace_energy_threshold=None,
     resize_texture_settings=None
 ):
+    if not asset_ids:
+        return None
+
     evt = controller.step(
         action="AssetsInDatabase", assetIds=asset_ids, updateProceduralLRUCache=True
     )
 
     asset_in_db = evt.metadata["actionReturn"]
     assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db]
+
+    if not assets_not_created:
+        return None
 
     events = create_assets(
         thor_controller=controller,
@@ -520,6 +528,9 @@ def download_missing_assets(
     threads: int = 1,
     extension: str = None
 ):
+    if not asset_ids:
+        return
+
     if verbose and threads > 1:
         print(f"Downloading assets with {threads} threads. Will NOT log progress bars.")
 
