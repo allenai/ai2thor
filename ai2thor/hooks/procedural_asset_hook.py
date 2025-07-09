@@ -603,9 +603,6 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
                 extension=self.extension,
                 textureReplaceEnergyThreshold = self.texture_replace_energy_threshold,
                 resizeTextureSettings=self.resize_texture_settings,
-                physicsSimulationParams=dict(
-                    autoSimulation=True
-                ),
                 unloadUnusedAssets=self.unload_unused_assets_after_creation
             )
             evt = controller.step(**args)
@@ -624,10 +621,7 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
             # New async delete
             return controller.step(
                 action="DeleteLRUFromProceduralCache", 
-                assetLimit=self.asset_limit,
-                physicsSimulationParams=dict(
-                        autoSimulation=True
-                )
+                assetLimit=self.asset_limit
             )
 
     def CreateHouse(self, action: Dict[str, Any], controller: "Controller"):

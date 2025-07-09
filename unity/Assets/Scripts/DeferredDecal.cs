@@ -99,7 +99,7 @@ public class DeferredDecal : MonoBehaviour {
 
     private void OnDisable() {
         foreach (var cam in cameras) {
-            cam.RemoveCommandBuffer(atRenderEvent, buffer);
+            cam?.RemoveCommandBuffer(atRenderEvent, buffer);
         }
     }
 
