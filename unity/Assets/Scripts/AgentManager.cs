@@ -336,6 +336,12 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 ? action.dynamicServerAction
                 : action.dynamicServerAction.agentInitializationParams
         );
+
+        var renderingManager = primaryAgent.m_Camera.GetComponent<RenderingManager>();
+
+        // to set _img pass to display 0 in editor and standalone plaforms (here cloudrendering is not differentiated so also set to displaybuffer 0, not sure what it means)
+        renderingManager.Initialize(imgDisplayTarget: 0, action.overwriteRGBWithDistortion);
+
         #if UNITY_EDITOR
         Debug.Log(
             $"Initialize of AgentController. lastActionSuccess: {primaryAgent.lastActionSuccess}, errorMessage: {primaryAgent.errorMessage}, actionReturn: {primaryAgent.actionReturn}, agentState: {primaryAgent.agentState}"
@@ -2264,6 +2270,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 thirdPartyCameras = new List<float[][][]>()
             };
         foreach (var (index, renderingManager) in renderingManagers) {
+            Debug.Log($" index {index} -- {renderingManager.gameObject.name} render {renderingManager} disto {renderingManager.distortionMap} is null {renderingManager.distortionMap==null} ");
             var rt = renderingManager.distortionMap.GetRenderTexture();
             var floats = decode(renderingManager.getDistortionMapBytes(), rt.width, rt.height);
             // var map = new Dictionary<string, object>() {

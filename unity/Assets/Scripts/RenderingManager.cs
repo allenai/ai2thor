@@ -60,6 +60,7 @@ public class RenderingManager : MonoBehaviour {
             // Debug.Log($"--------- Enabling passes 0 {string.Join(", ", activePassesNames)}");
             var newActive = activePassesNames.Select(name => {
                 ICapturePass capturePass; 
+                // Debug.Log($"-----error {availablePasses == null}");
                 var exists = availablePasses.TryGetValue(name, out capturePass);
                 return capturePass;
             });
@@ -171,6 +172,8 @@ public class RenderingManager : MonoBehaviour {
         this.distortionMap = new OnDemandCapture(
             new CaptureConfig() { name = "_distortion_map", antiAliasLevel = antiAliasLevel, shaderName = "Custom/BarrelDistortionMap" , cloudRendering = cloudRenderingCapture, toDisplay = 7, renderTextureFormat = RenderTextureFormat.RGFloat }
         );
+
+        Debug.Log($"-------- RenderingManager Init {camera.gameObject.name} created distortionmap isnull {this.distortionMap == null}");
         
         // make first _img capture created render to Display
         string k = !overwriteImgWithDistortion? null : distPass.name;
@@ -280,8 +283,4 @@ public class RenderingManager : MonoBehaviour {
         // return this.GetCapturePass<OnDemandCapture>("_distortion_map").GetBytes();
         return this.GetCapturePass<OnDemandCapture>("_distortion_map").GetBytes();
     }
-
-
-    // Update is called once per frame
-    void Update() { }
 }

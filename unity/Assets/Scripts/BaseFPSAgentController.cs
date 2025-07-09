@@ -452,7 +452,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             object actionReturn = null
         ) {
             if (!this.IsProcessing) {
-                Debug.LogError("ActionFinished called with agentState not in processing ");
+                Debug.LogError($"ActionFinished called with agentState not in processing. '{this.lastAction}'");
             }
 
             if (
@@ -784,10 +784,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             m_Camera
                 .GetComponent<FirstPersonCharacterCull>()
                 .SwitchRenderersToHide(this.VisibilityCapsule);
-            var renderingManager = this.m_Camera.GetComponent<RenderingManager>();
-
-            // to set _img pass to display 0 in editor and standalone plaforms (here cloudrendering is not differentiated so also set to displaybuffer 0, not sure what it means)
-            renderingManager.Initialize(imgDisplayTarget: 0, action.overwriteRGBWithDistortion);
 
             if (action.gridSize == 0) {
                 action.gridSize = 0.25f;
