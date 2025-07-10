@@ -362,7 +362,7 @@ class ProceduralAssetHookRunner:
 
     def SpawnAsset(self, action, controller):
         asset_ids = [action["assetId"]]
-        if not self.skip_asset_create_call and is_hexadecimal(action["assetId"]):
+        if not self.skip_asset_create_call and is_objathor_id(action["assetId"]):
             return self._create_assets_if_not_exist(controller, asset_ids=asset_ids)
 
     def GetHouseFromTemplate(self, action, controller):
@@ -595,7 +595,7 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
         asset_in_db = controller.step(
             action="AssetsInDatabase", assetIds=asset_ids, updateProceduralLRUCache=False
         ).metadata["actionReturn"]
-        assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db and is_hexadecimal(asset_id)]
+        assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if not in_db and is_objathor_id(asset_id)]
         # print(f"-----  assets_not_created {assets_not_created}")
         if not self.download_assets_in_unity:
             download_missing_assets(
@@ -614,9 +614,6 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
                 extension=self.extension,
                 textureReplaceEnergyThreshold = self.texture_replace_energy_threshold,
                 resizeTextureSettings=self.resize_texture_settings,
-                physicsSimulationParams=dict(
-                    autoSimulation=True
-                ),
                 unloadUnusedAssets=self.unload_unused_assets_after_creation
             )
             evt = controller.step(**args)
@@ -635,10 +632,7 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
             # New async delete
             return controller.step(
                 action="DeleteLRUFromProceduralCache", 
-                assetLimit=self.asset_limit,
-                physicsSimulationParams=dict(
-                        autoSimulation=True
-                )
+                assetLimit=self.asset_limit
             )
 
     def CreateHouse(self, action: Dict[str, Any], controller: "Controller"):

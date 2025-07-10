@@ -569,7 +569,7 @@ public static class ActionDispatcher {
                 var runAsCoroutineAttributes = method.GetCustomAttributes(typeof(RunAsCoroutine), false).Cast<RunAsCoroutine>();
                 // Always run as coroutine if action is annotated to run as such
                 runAsCoroutine = runAsCoroutine || runAsCoroutineAttributes.Count() > 0;
-                Debug.Log($"------ running as coroutine:{method.Name} run as {runAsCoroutine} physyc.run {physicsSimulationParams.runAsCoroutine} autosim {physicsSimulationParams.autoSimulation} attr {runAsCoroutineAttributes.Count() > 0}");
+                // Debug.Log($"------ running as coroutine:{method.Name} run as {runAsCoroutine} physyc.run {physicsSimulationParams.runAsCoroutine} autosim {physicsSimulationParams.autoSimulation} attr {runAsCoroutineAttributes.Count() > 0}");
             } else if (method.ReturnType == typeof(ActionFinished)) {
                 action = ActionFinishedDelayActionWrapper(
                     () => method.Invoke(target, arguments) as ActionFinished

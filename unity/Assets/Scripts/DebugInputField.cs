@@ -5911,7 +5911,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         //     }
                         // };
 
-                        var textureScale = 0.25f;
+                        var textureScale = 1.0f;
 
                         Dictionary<string, object> action = new Dictionary<string, object>() {
                             ["action"] = "DownloadAndCreateRuntimeAssetsAsync",

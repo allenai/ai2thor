@@ -322,7 +322,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //clear out any leftover values for BoxBounds just in case
             BoxBounds = null;
 
-            actionFinished(true);
+            // actionFinished(true);
             return;
         }
 
@@ -853,7 +853,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // if we do clip with something, leave the agent where it is, and send a message saying there is clipping actively happening
             // the reccomended thing to do here is either reset the scene entirely and load in with a new agent, or try and use `InitializeBody` with
             // a smaller mesh size that would potentially fit here
-            Debug.Log($"{boxCenterAtInitialTransform:F5} and {meshBoundsWorld.extents:F5}");
+            // Debug.Log($"{boxCenterAtInitialTransform:F5} and {meshBoundsWorld.extents:F5}");
             if (
                 Physics.CheckBox(
                     boxCenterAtInitialTransform,
@@ -1023,6 +1023,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 horizon: horizon,
                 forceAction: forceAction
             );
+
+            actionFinished(success: true);
         }
 
         protected override void teleportFull(
@@ -1123,8 +1125,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     throw new InvalidOperationException(errorMessage);
                 }
             }
-
-            actionFinished(success: true);
         }
 
         protected override void assertTeleportedNearGround(Vector3? targetPosition) {
