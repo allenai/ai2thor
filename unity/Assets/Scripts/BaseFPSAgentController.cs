@@ -8534,6 +8534,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public ActionFinished CreateRuntimeAsset(
             ProceduralAsset asset, 
+            bool saveMaterialToAssetDB = false,
             bool returnObject = false,
             float? textureReplaceEnergyThreshold = null,
             ResizeTextureSettings resizeTextureSettings = null
@@ -8579,7 +8580,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 serializable: asset.serializable,
                 parentTexturesDir: asset.parentTexturesDir,
                 rawTextures: asset.rawTextures,
-                saveMaterialToAssetDB: asset.saveMaterialToAssetDB,
+                saveMaterialToAssetDB: saveMaterialToAssetDB,
                 textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
                 resizeTextureSettings: resizeTextureSettings,
                 texturesRGB: textureReplaceEnergyThreshold != null? 
@@ -8797,13 +8798,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public ActionFinished CreateRuntimeAssets(
             List<ProceduralAsset> assets,
             float? textureReplaceEnergyThreshold = null,
-            ResizeTextureSettings resizeTextureSettings = null
+            ResizeTextureSettings resizeTextureSettings = null,
+            bool saveMaterialToAssetDB = false
         ) {
             foreach (var asset in assets) {
                 var actionFinished = CreateRuntimeAsset(
                     asset: asset,
                     textureReplaceEnergyThreshold: textureReplaceEnergyThreshold,
-                    resizeTextureSettings: resizeTextureSettings
+                    resizeTextureSettings: resizeTextureSettings,
+                    saveMaterialToAssetDB: saveMaterialToAssetDB
                 );
                 if (!actionFinished.success) {
                     return actionFinished;
