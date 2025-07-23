@@ -5821,6 +5821,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+                case "gptai": {
+                    Dictionary<string, object> action = new Dictionary<string, object>(){
+                        ["action"] = "GetProcThorAssetIds"
+                    };
+                    AManager.ProcessControlCommand(new DynamicServerAction(action));
+                    
+                    IEnumerator WaitForActionFinished(BaseFPSAgentController controller) {
+                            while (controller.agentState == AgentState.Processing) {
+                                // Debug.Log($"========= waitForActionFinishedCreateHouse {controller.agentState}");
+                                yield return null;
+                            }
+
+                            var ar = this.CurrentActiveController().actionReturn as Dictionary<string, HashSet<string>>;
+
+                            Debug.Log($"prefabs {ar["prefabs"].Count}: {string.Join(", ", ar["prefabs"])}");
+                            Debug.Log($"materials {ar["materials"].Count}: {string.Join(", ", ar["materials"])}");
+                            
+                    }
+
+                    StartCoroutine(WaitForActionFinished(CurrentActiveController()));
+
+                    // Debug.Log($"result: {string.Join("\n", $"{ar.Select(x => $"{x.Key}: |{string.Join(",", x.Value)}|")}")} ");
+                    break;
+                }
 
                 case "chp_obja": {
                         

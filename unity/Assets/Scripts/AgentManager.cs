@@ -30,6 +30,7 @@ using UnityEditor;
 using UnityEngine.CloudRendering;
 #endif
 using System.Runtime.CompilerServices;
+using Thor.Procedural;
 
 public class AgentManager : MonoBehaviour, ActionInvokable {
     public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
@@ -96,7 +97,8 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         "ChangeQuality",
         "SetDistortionShaderParams",
         "GetDistortionMaps",
-        "SetDefaultPhysicsSimulationParams"
+        "SetDefaultPhysicsSimulationParams",
+        "GetProcThorAssetIds"
     };
     public HashSet<string> errorAllowedActions = new HashSet<string> { "Reset" };
 
@@ -399,6 +401,10 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         this.UpdateRenderingManagers(activeCapturePassList, true);
         this.agentManagerState = AgentState.ActionComplete;
     }
+
+    // public ActionFinished GetProceduralAssetNames() {
+
+    // }
 
     private void SetUpLocobotController(ServerAction action) {
         this.agents.Clear();
@@ -2270,7 +2276,6 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 thirdPartyCameras = new List<float[][][]>()
             };
         foreach (var (index, renderingManager) in renderingManagers) {
-            Debug.Log($" index {index} -- {renderingManager.gameObject.name} render {renderingManager} disto {renderingManager.distortionMap} is null {renderingManager.distortionMap==null} ");
             var rt = renderingManager.distortionMap.GetRenderTexture();
             var floats = decode(renderingManager.getDistortionMapBytes(), rt.width, rt.height);
             // var map = new Dictionary<string, object>() {
@@ -2337,6 +2342,61 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
     public ActionFinished SetDefaultPhysicsSimulationParams(PhysicsSimulationParams defaultPhysicsSimulationParams) {
         PhysicsSceneManager.SetDefaultSimulationParams(defaultPhysicsSimulationParams);
         return ActionFinished.Success;
+    }
+
+    [RunAsCoroutine]
+    public IEnumerator GetProcThorAssetIds()
+    {
+        var assetDb = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
+        if (assetDb != null ) {
+            var scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
+            if (scene.name == "Procedural_lazy") {
+                var prefabIds = new List<string>();
+                yield return ProceduralTools.GetAddressableKeysByLabel("ProceduralPrefabs", prefabIds);
+
+                var materialIds = new List<string>();
+                yield return ProceduralTools.GetAddressableKeysByLabel("ProceduralMaterials", materialIds);
+
+                if (prefabIds.Count > 0 && materialIds.Count > 0) {
+                     yield return new ActionFinished(
+                        success: true, 
+                        actionReturn: new Dictionary<string, HashSet<string>>() {
+                            ["prefabs"] = new HashSet<string>(prefabIds),
+                            ["materials"] = new HashSet<string>(materialIds),
+                        },
+                        toEmitState: true
+                    );
+                }
+                else {
+                    yield return new ActionFinished(
+                        success: false, 
+                        errorMessage: $"Prefab Count: {prefabIds.Count}, Material Count: {prefabIds.Count}. Empty Prefabs or Materials, no Addressable Assets could be found, in Procedural_lazy scene, make sure addressables are built, and groups `ProceduralPrefabs` and `ProceduralMaterials` exist.", 
+                        toEmitState: true
+                    );
+                }
+            }
+            else {
+                 yield return new ActionFinished(
+                    success: true, 
+                    actionReturn: new Dictionary<string, HashSet<string>>() {
+                        ["prefabs"] = new HashSet<string>(
+                            assetDb.prefabs.Select(x => x.name)
+                        ),
+                        ["materials"] = new HashSet<string>(
+                            assetDb.materials.Select(x => x.name)
+                        ),
+                    },
+                    toEmitState: true
+                 );
+            }
+        }
+        else {
+            yield return new ActionFinished(
+                success: false, 
+                errorMessage: " No ProceduralAsset Database in Scene. This action can only be called in a Procedural Scene.", 
+                toEmitState: true
+            );
+        }
     }
 }
 

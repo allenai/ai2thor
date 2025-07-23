@@ -8969,7 +8969,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         [RunAsCoroutine]
-        public IEnumerator CreateHouse(ProceduralHouse house) {
+        public IEnumerator CreateHouse(ProceduralHouse house, bool reportProgressToJS = false) {
             var db = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
             if (db == null) {
                 yield return new ActionFinished(
@@ -9027,7 +9027,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // {
                 //     db.addMaterial(handle.Result);
                 // }
-                yield return ProceduralTools.RunTaskAsCoroutine(ProceduralTools.LoadAssetsAsync(db, missingAssetIds, missingMaterialIds));
+                yield return ProceduralTools.RunTaskAsCoroutine(ProceduralTools.LoadAssetsAsync(db, missingAssetIds, missingMaterialIds, progressReporter: reportProgressToJS ? this.jsInterface : null));
             }
             db.totalMats = db.materialMap.Count();
 
@@ -9176,9 +9176,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinishedEmit(success: true, actionReturn: assetMap.ContainsKey(assetId));
         }
 
-        public void TouchProceduralLRUCache(List<string> assetIds) {
+        public void TouchProceduralLRUCache(List<string> assetIds, List<string> materialIds = null) {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
-            assetDB.touchProceduralLRUCache(assetIds);
+            assetDB.touchProceduralLRUCache(assetIds, materialIds: materialIds);
             actionFinishedEmit(success: true);
         }
 
@@ -9219,11 +9219,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        public void AssetsInDatabase(List<string> assetIds, bool updateProceduralLRUCache = false) {
+        public void AssetsInDatabase(
+            List<string> assetIds, 
+            List<string> materialIds = null, 
+            bool updateProceduralLRUCache = false,
+            bool includeAssetMaterials = false
+        ) {
             var assetDB = GameObject.FindObjectOfType<ProceduralAssetDatabase>();
 
             if (updateProceduralLRUCache) {
-                assetDB.touchProceduralLRUCache(assetIds);
+                if (includeAssetMaterials) {
+                    if (materialIds == null) {
+                        materialIds = new List<string>(assetIds.Select(x => ProceduralTools.GetProceduralMaterialName(x)));
+                    }
+                    else {
+                        materialIds.AddRange(assetIds.Select(x => ProceduralTools.GetProceduralMaterialName(x)));
+                    }
+                }
+                assetDB.touchProceduralLRUCache(assetIds, materialIds: materialIds);
             }
             var assetMap = assetDB.assetMap;
             actionFinishedEmit(

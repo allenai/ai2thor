@@ -15,6 +15,7 @@ using UnityEngine.AI;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Collections;
 using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
@@ -2209,23 +2210,36 @@ namespace Thor.Procedural {
         }
     }
     
-    public async static Task LoadAssetsAsync(ProceduralAssetDatabase assetDB, IEnumerable<string> prefabNames, IEnumerable<string> materialNames) {
+    public async static Task LoadAssetsAsync(
+        ProceduralAssetDatabase assetDB, 
+        IEnumerable<string> prefabNames, 
+        IEnumerable<string> materialNames, 
+        ProgressReporter progressReporter = null
+    ) {
         // Step 1: Start loading all assets
         var loadOperations = new List<Task>();
-
+        var total = prefabNames.Count() + materialNames.Count();
+        var current = 0;
         foreach (var name in prefabNames) {
-            loadOperations.Add(LoadAndStore(assetDB.assetMap, name));
+            current++;
+            loadOperations.Add(LoadAndStore(assetDB.assetMap, name, () => progressReporter.OnProgress(current/total)));
+            
         }
 
         foreach (var name in materialNames) {
-            loadOperations.Add(LoadAndStore(assetDB.materialMap, name));
+            current++;
+            loadOperations.Add(LoadAndStore(assetDB.materialMap, name, () => progressReporter.OnProgress(current/total)));
         }
 
         // Step 2: Wait for all of them to complete
         await Task.WhenAll(loadOperations);
     }
 
-    private async static Task LoadAndStore<T>(ProceduralLRUCacheAssetMap<T, AssetHandle<T>> map, string key) where T : UnityEngine.Object {
+    private async static Task LoadAndStore<T>(
+        ProceduralLRUCacheAssetMap<T, AssetHandle<T>> map, 
+        string key,
+        Action onFinish = null
+    ) where T : UnityEngine.Object {
         // Debug.Log($"======= LoadAndStore handle for asset {key}");
         AsyncOperationHandle<T> handle = Addressables.LoadAssetAsync<T>(key);
         await handle.Task;
@@ -2237,6 +2251,8 @@ namespace Thor.Procedural {
         } else {
             Debug.LogError($"Failed to load addressable: {key}");
         }
+
+        onFinish?.Invoke();
     }
         
         public static IEnumerator LoadAddressableAssetsToDatabase(
@@ -2312,6 +2328,41 @@ namespace Thor.Procedural {
                 Debug.LogError($"Asset not in Database: `{ho.assetId}`");
                 return null;
             }
+        }
+
+        public static IEnumerator GetAddressableKeysByLabel(string label, List<string> results)
+        {
+
+            //Addressables.
+            var handle = Addressables.LoadResourceLocationsAsync(label, typeof(object));
+            yield return handle;
+
+            // var keys = new List<string>();
+
+            if (handle.Status == UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationStatus.Succeeded)
+            {
+                results.AddRange(handle.Result.Select(x => x.PrimaryKey));
+                // results.Union(handle.Result.Select(x => x.PrimaryKey));
+                // foreach (var x in handle.Result) {
+                //     results.Add(x.PrimaryKey);
+                // }
+            }
+            else
+            {
+                Debug.LogWarning($"Failed to load resource locations for label: {label}");
+            }
+
+            Addressables.Release(handle);
+
+            // results.Union(result);
+
+            // yield return result;
+            // yield return new ActionFinished(success: true, actionReturn: )
+
+            // callback?.Invoke(keys);
+
+            // Release the handle after use
+            
         }
 
         public static GameObject spawnSimObjPrefab(
@@ -3082,6 +3133,10 @@ namespace Thor.Procedural {
         // }
 
         // TODO refactor to recieve a ProceduralAsset
+        public static string GetProceduralMaterialName(string assetId) {
+            return $"{assetId}_material";
+        }
+
         public static Dictionary<string, object> CreateAsset(
             Vector3[] vertices,
             Vector3[] normals,
@@ -3261,7 +3316,7 @@ namespace Thor.Procedural {
 
             Material mat =  new Material(Shader.Find("Standard"));
             RuntimePrefab runtimePrefab = null;
-            mat.name = $"{name}_material";
+            mat.name = GetProceduralMaterialName(assetId: name);
 
             if (saveMaterialToAssetDB) {
                 // More efficient because it doesn't have the RuntimePrefab that calls awake

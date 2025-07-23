@@ -177,8 +177,12 @@ namespace Thor.Procedural {
             return materialMap.ContainsKey(key);
         }
 
-        public void touchProceduralLRUCache(IEnumerable<string> ids) {
+        public void touchProceduralLRUCache(IEnumerable<string> ids, IEnumerable<string> materialIds = null) {
             this.assetMap.touch(ids);
+            if (materialIds != null ) {
+                this.materialMap.touch(materialIds);
+            }
+            // this.materialMap.touch(ids.Select(id => ProceduralTools.GetProceduralMaterialName(assetId: id)));
         }
 
         public void removeLRUItems(int limit) {
@@ -187,6 +191,7 @@ namespace Thor.Procedural {
 
         public IEnumerator removeLRUItemsAsync(int limit) {
             yield return this.assetMap.removeLRUAsync(limit: limit);
+            yield return this.materialMap.removeLRUAsync(limit: limit);
         }
 
         public IEnumerable<GameObject> GetPrefabs() {

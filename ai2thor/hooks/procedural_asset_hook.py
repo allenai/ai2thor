@@ -16,6 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import nullcontext
 from tempfile import TemporaryDirectory
 from typing import Dict, Any, List, TYPE_CHECKING, Sequence
+import functools
 
 import requests
 import tqdm
@@ -51,7 +52,7 @@ def is_hexadecimal(s):
 def is_objathor_id(s):
     return is_hexadecimal(s) or ("_" not in s and "DecorativeBox" not in s)
 
-def get_all_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List[str]) -> List[str]:
+def get_all_objaverse_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List[str]) -> List[str]:
     """
     Get all asset IDs in a house.
     """
@@ -60,11 +61,41 @@ def get_all_asset_ids_recursively(objects: List[Dict[str, Any]], asset_ids: List
         if is_objathor_id(obj["assetId"]):
             asset_ids.append(obj["assetId"])
         if "children" in obj and obj["children"] != None:
-            get_all_asset_ids_recursively(obj["children"], asset_ids)
+            get_all_objaverse_asset_ids_recursively(obj["children"], asset_ids)
     assets_set = set(asset_ids)
     if "" in assets_set:
         assets_set.remove("")
     return list(assets_set)
+
+def get_all_material_ids(house):
+    mats = []
+    for r in house.get("rooms", []):
+        if "ceilings" in r:
+            mats += [
+                c["material"]["name"]
+                for c in r["ceilings"]
+                if "material" in c and c["material"] and c["material"].get("name") is not None
+            ]
+        if "floorMaterial" in r and r["floorMaterial"] and r["floorMaterial"].get("name") is not None:
+            mats.append(r["floorMaterial"]["name"])
+    
+    if "walls" in house:
+        mats += [
+            w["material"]["name"]
+            for w in house["walls"]
+            if "material" in w and w["material"] and w["material"].get("name") is not None
+        ]
+    
+    if "proceduralParameters" in house:
+        proc = house["proceduralParameters"]
+        if "ceilingMaterial" in proc and proc["ceilingMaterial"] and proc["ceilingMaterial"].get("name") is not None:
+            mats.append(proc["ceilingMaterial"]["name"])
+        if "skyboxId" in proc and proc["skyboxId"] is not None:
+            mats.append(proc["skyboxId"])
+    
+    return list(set(mats))
+    
+
 
 
 def create_asset(
@@ -226,6 +257,7 @@ def create_assets(
 def create_assets_if_not_exist(
     controller,
     asset_ids,
+    material_ids,
     asset_directory,
     copy_to_dir,
     stop_if_fail,
@@ -236,13 +268,14 @@ def create_assets_if_not_exist(
     fail_if_not_unity_loadable=False,
     save_material_to_asset_db=False,
     texture_replace_energy_threshold=None,
-    resize_texture_settings=None
+    resize_texture_settings=None,
+    use_material_db=False
 ):
     if not asset_ids:
         return None
 
     evt = controller.step(
-        action="AssetsInDatabase", assetIds=asset_ids, updateProceduralLRUCache=True
+        action="AssetsInDatabase", assetIds=asset_ids, materialIds=material_ids, includeAssetMaterials=use_material_db, updateProceduralLRUCache=True
     )
 
     asset_in_db = evt.metadata["actionReturn"]
@@ -333,10 +366,12 @@ class ProceduralAssetHookRunner:
         self.resize_texture_settings = resize_texture_settings
         self.skip_asset_create_call = skip_asset_create_call
 
-    def _create_assets_if_not_exist(self, controller, asset_ids):
+    def _create_assets_if_not_exist(self, controller, asset_ids, material_ids=None):
         return create_assets_if_not_exist(
                 controller=controller,
                 asset_ids=asset_ids,
+                material_ids=material_ids,
+                use_material_db=self.save_material_to_asset_db,
                 asset_directory=self.asset_directory,
                 copy_to_dir=os.path.join(controller._build.base_dir, self.target_dir),
                 stop_if_fail=self.stop_if_fail,
@@ -356,9 +391,10 @@ class ProceduralAssetHookRunner:
 
     def CreateHouse(self, action, controller):
         house = action["house"]
-        asset_ids = get_all_asset_ids_recursively(house["objects"], [])
+        asset_ids = get_all_objaverse_asset_ids_recursively(house["objects"], [])
+        material_ids = get_all_material_ids(house=house)
         if not self.skip_asset_create_call:
-            return self._create_assets_if_not_exist(controller, asset_ids=asset_ids)
+            return self._create_assets_if_not_exist(controller, asset_ids=asset_ids, material_ids=material_ids)
 
     def SpawnAsset(self, action, controller):
         asset_ids = [action["assetId"]]
@@ -367,7 +403,7 @@ class ProceduralAssetHookRunner:
 
     def GetHouseFromTemplate(self, action, controller):
         template = action["template"]
-        asset_ids = get_all_asset_ids_recursively([v for (k, v) in template["objects"].items()], [])
+        asset_ids = get_all_objaverse_asset_ids_recursively([v for (k, v) in template["objects"].items()], [])
         if not self.skip_asset_create_call:
             return self._create_assets_if_not_exist(controller, asset_ids=asset_ids)
 
@@ -380,23 +416,6 @@ class ObjaverseAssetHookRunner(object):
 
     def CreateHouse(self, action, controller):
         raise NotImplemented("Not yet implemented.")
-
-        house = action["house"]
-        asset_ids = list(set(obj["assetId"] for obj in house["objects"]))
-        evt = controller.step(action="AssetsInDatabase", assetIds=asset_ids)
-        asset_in_db = evt.metadata["actionReturn"]
-        assets_not_created = [asset_id for (asset_id, in_db) in asset_in_db.items() if in_db]
-        not_created_set = set(assets_not_created)
-        not_objeverse_not_created = not_created_set.difference(self.objaverse_uid_set)
-        if len(not_created_set):
-            raise ValueError(
-                f"Invalid asset ids are not in THOR AssetDatabase or part of objeverse: {not_objeverse_not_created}"
-            )
-
-        # TODO when transformed assets are in objaverse download them and create them
-        # objaverse.load_thor_objects
-        # create_assets()
-
 
 
 def download_with_progress_bar(save_path: str, url: str, verbose: bool = False):
@@ -637,7 +656,7 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
 
     def CreateHouse(self, action: Dict[str, Any], controller: "Controller"):
         house = action["house"]
-        asset_ids = get_all_asset_ids_recursively(house["objects"], [])
+        asset_ids = get_all_objaverse_asset_ids_recursively(house["objects"], [])
         self._download_missing_assets(controller=controller, asset_ids=asset_ids, extension=self.extension)
         return super().CreateHouse(action=action, controller=controller)
 
@@ -649,7 +668,7 @@ class WebProceduralAssetHookRunner(ProceduralAssetHookRunner):
 
     def GetHouseFromTemplate(self, action, controller):
         template = action["template"]
-        asset_ids = get_all_asset_ids_recursively([v for (k, v) in template["objects"].items()], [])
+        asset_ids = get_all_objaverse_asset_ids_recursively([v for (k, v) in template["objects"].items()], [])
         self._download_missing_assets(controller=controller, asset_ids=asset_ids, extension=self.extension)
 
         super().GetHouseFromTemplate(action=action, controller=controller)
