@@ -27,7 +27,6 @@ if TYPE_CHECKING:
     from ai2thor.controller import Controller
 
 from objathor.asset_conversion.util import (
-    get_existing_thor_asset_file_path,
     create_runtime_asset_file,
     get_existing_thor_asset_file_path,
     change_asset_paths,
@@ -171,12 +170,12 @@ def create_assets(
             #     )
             asset = change_asset_paths(asset=asset, save_dir=copy_to_dir)
             asset = add_default_annotations(asset=asset, asset_directory=asset_dir, verbose=verbose)
+            asset["saveMaterialToAssetDB"] = save_material_to_asset_db
             create_prefab_action = dict(
                 action= "CreateRuntimeAsset",
                 asset= asset,
                 textureReplaceEnergyThreshold=texture_replace_energy_threshold,
                 resizeTextureSettings=resize_texture_settings,
-                saveMaterialToAssetDB=save_material_to_asset_db,
                 raise_for_failure=raise_for_failure,
             )
             create_with_data_actions.append(create_prefab_action)
