@@ -401,11 +401,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         this.UpdateRenderingManagers(activeCapturePassList, true);
         this.agentManagerState = AgentState.ActionComplete;
     }
-
-    // public ActionFinished GetProceduralAssetNames() {
-
-    // }
-
+    
     private void SetUpLocobotController(ServerAction action) {
         this.agents.Clear();
         // force snapToGrid to be false since we are stochastic

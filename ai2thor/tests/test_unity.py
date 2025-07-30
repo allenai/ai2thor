@@ -45,8 +45,8 @@ class ThirdPartyCameraMetadata:
     fieldOfView = "fieldOfView"
 
 
-_wsgi_controller = build_controller(server_class=WsgiServer, scene=TEST_SCENE, unityLogFilePath="/Users/alvaroh/ai2/ai2thor/wsgi.txt")
-_fifo_controller = build_controller(server_class=FifoServer, scene=TEST_SCENE, unityLogFilePath="/Users/alvaroh/ai2/ai2thor/fifo.txt",server_start_timeout=5,  server_timeout=5, )
+_wsgi_controller = build_controller(server_class=WsgiServer, scene=TEST_SCENE)
+_fifo_controller = build_controller(server_class=FifoServer, scene=TEST_SCENE)
 
 
 def skip_reset(controller):
