@@ -82,13 +82,13 @@ public class RenderingManager : MonoBehaviour {
 
     }
 
-    // void OnPreRender() {
-    //     Debug.Log($"---RenderingManager, gameObject {this.gameObject.name},  OnPreRender");
-    //  }
+    void OnPreRender() {
+        Debug.Log($"---RenderingManager, gameObject {this.gameObject.name},  OnPreRender");
+     }
 
-    //  void OnPostRender() {
-    //     Debug.Log($"---RenderingManager, gameObject {this.gameObject.name}, OnPostRender");
-    //  }
+     void OnPostRender() {
+        Debug.Log($"---RenderingManager, gameObject {this.gameObject.name}, OnPostRender");
+     }
 
     public void EnablePasses(IEnumerable<string> activePassesNames, bool cameraChange) {
         var mainCamera = GetComponent<Camera>();
