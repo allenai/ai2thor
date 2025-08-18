@@ -1831,6 +1831,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
                 }
             }
 
+            Debug.Log("AgentManager.cs: WaitForEndOfFrame call waiting for unity to render.");
             yield return new WaitForEndOfFrame();
 
             frameCounter += 1;
