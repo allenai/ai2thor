@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Microsoft.Win32;
+
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -55,6 +57,102 @@ public class THORDocumentationExporter : MonoBehaviour {
 
     // print("original source: " + PrefabUtility.GetCorrespondingObjectFromOriginalSource(gameObject));
 
+    public static readonly List<string> ArticulatedTypes = new List<string>
+    {
+        "BathroomSinkFaucet",
+        "LightSwitch",
+        "Toilet",
+        "Book",
+        "Dresser",
+        "Safe",
+        "ShelvingUnit",
+        "SideTable",
+        "Fridge",
+        "Microwave",
+        "Toaster",
+        "CoffeeTable",
+        "Desk",
+        "Laptop",
+        "Doorways",
+        "LaundryHamper",
+        "Cabinet",
+        "Drawer",
+        "Oven",
+        "Dishwasher",
+        "StoveKnob"
+    };
+
+    public static readonly List<string> PickupTypes = new List<string>
+    {
+        "AlarmClock",
+        "AluminumFoil",
+        "Apple",
+        "AppleSliced",
+        // "BaseballBat",
+        "Book",
+        "Boots",
+        "Bottle",
+        "Bowl",
+        "Box",
+        "Bread",
+        "BreadSliced",
+        "ButterKnife",
+        "Candle",
+        "CD",
+        "CellPhone",
+        "Cloth",
+        "CreditCard",
+        "Cup",
+        "DishSponge",
+        "Dumbbell",
+        "Egg",
+        "EggCracked",
+        "Fork",
+        "HandTowel",
+        "Kettle",
+        "KeyChain",
+        "Knife",
+        "Ladle",
+        "Laptop",
+        "Lettuce",
+        "LettuceSliced",
+        "Mug",
+        "Newspaper",
+        "Pan",
+        "PaperTowelRoll",
+        "Pen",
+        "Pencil",
+        "PepperShaker",
+        "Pillow",
+        "Plate",
+        "Plunger",
+        "Pot",
+        "Potato",
+        "PotatoSliced",
+        "RemoteControl",
+        "SaltShaker",
+        // "Sandwich", #rose: i think this should be pickupable
+        "ScrubBrush",
+        "SoapBar",
+        "SoapBottle",
+        "Spatula",
+        "Spoon",
+        "SprayBottle",
+        "Statue",
+        "TableTopDecor",
+        "TeddyBear",
+        "TennisRacket",
+        "TissueBox",
+        "ToiletPaper",
+        "Tomato",
+        "TomatoSliced",
+        "Towel",
+        "Vase",
+        "Watch",
+        "WateringCan",
+        "WineBottle",
+    };
+
     [MenuItem("SimObjectPhysics/Generate Sim Obj Instance Count Text Files")]
     private static void GetInstanceCount() {
         // keep track of total number of sim objects across all scenes
@@ -68,62 +166,112 @@ public class THORDocumentationExporter : MonoBehaviour {
         Dictionary<SimObjType, List<String>> ObjectType_To_Scenes =
             new Dictionary<SimObjType, List<String>>();
 
-        // Keep track of the total instance count and oobject type: count in individual scenes
+        // Keep track of the total instance count and object type: count in individual scenes
         Dictionary<String, TotalSimObjectsInScene> SceneName_to_Counts =
             new Dictionary<String, TotalSimObjectsInScene>();
+
+        // keep track of articulation-type objects for each scene
+        Dictionary<String, int> ArticulationObjectsByScene =
+            new Dictionary<String, int>();
+
+        // Keep track of pickup-type objects for this scene only
+        Dictionary<String, int> PickupObjectsByScene =
+            new Dictionary<String, int>();
+
+        // Keep track of "reachable" pickup-type objects
+        Dictionary<String, int> ReachablePickupObjectsByScene =
+            new Dictionary<String, int>();
+
+        // Keep track of total number of articulated components
+        Dictionary<String, int> ArticulatedComponentsByScene =
+            new Dictionary<String, int>();
+
+        // Keep track of "reachable" articulated components
+        Dictionary<String, int> ReachableArticulationObjectsByScene =
+            new Dictionary<String, int>();
 
         // track the number of times a Unique prefab shows up across all scenes.
         // ie: Pillow_1 might show up in scene 1, scene 2, scene 3, so total 3 duplicates of this instance
         Dictionary<GameObject, UniqueSimObjectsInScene> UniquePrefab_to_Count =
             new Dictionary<GameObject, UniqueSimObjectsInScene>();
 
-        // Be sure to have the scenes you want to check for instances (and ONLY those scenes) int the build settings!
-        // for each scene in the build do these things
+        // Be sure to have the scenes you want to check for instances (and ONLY those scenes) in the build settings!
+        // for each scene in the build list, run the following
         for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++) {
+            // open up individual scene
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
                 SceneUtility.GetScenePathByBuildIndex(i),
                 OpenSceneMode.Single
             );
+
+            // Creates a dictionary 
             var simObjects = FindObjectsOfType<SimObjPhysics>();
 
-            // for every child object in "Objects" - simObjects
+            // So...do I go through each simobject now and run the test on it, checking what type and reachability it is???
+            // for every child object in "Objects" - simObjects, add them to the count
             totalInstanceCount = totalInstanceCount + simObjects.Length;
 
-            // keep track of the count of each object type in this specific
+            // keep track of the count of each object-type in this specific scene
             Dictionary<SimObjType, int> sceneObjectTypeCounts = new Dictionary<SimObjType, int>();
 
+            // Get current scene name
             string currentSceneName = UnityEngine
                 .SceneManagement.SceneManager.GetActiveScene()
                 .name;
+
+            // If the dictionary does NOT already have an entry keyed by currentSceneName...
             if (!SceneName_to_Counts.ContainsKey(currentSceneName)) {
+                // Declare a new statistics container, which stores both the total number and number-by-type
                 TotalSimObjectsInScene tsois = new TotalSimObjectsInScene();
+                // Store raw number of SimObjects in TotalSimObjCountInScene
                 tsois.TotalSimObjCountInScene = simObjects.Length;
+                // Set tsois.ObjectTypes_to_Count to inherit all imminent changes to sceneObjectTypeCounts
                 tsois.ObjectType_to_Count = sceneObjectTypeCounts;
+                // Add current scene as key to SceneName_to_Counts, and to include new values coming imminently
                 SceneName_to_Counts.Add(currentSceneName, tsois);
             }
 
+            // Add current scene as key to each object-type counter dictionary
+            if (!ArticulationObjectsByScene.ContainsKey(currentSceneName)) {
+                ArticulationObjectsByScene.Add(currentSceneName, 0);
+            }
+            if (!PickupObjectsByScene.ContainsKey(currentSceneName)) {
+                PickupObjectsByScene.Add(currentSceneName, 0);
+            }
+            if (!ArticulatedComponentsByScene.ContainsKey(currentSceneName)) {
+                ArticulatedComponentsByScene.Add(currentSceneName, 0);
+            }
+
+            // For every single SimObject in the current scene (THIS IS WHERE YOU CAN ACTUALL ADD YOUR EXTRA CHECKS!!!)...
             foreach (SimObjPhysics currentSimObject in simObjects) {
-                // keep track of total object type count
+                // keep track of object-count by type, across ALL scenes
                 if (ObjectTypeInAllScenes_to_Count.ContainsKey(currentSimObject.Type)) {
                     ObjectTypeInAllScenes_to_Count[currentSimObject.Type]++;
                 } else {
                     ObjectTypeInAllScenes_to_Count.Add(currentSimObject.Type, 1);
                 }
 
-                // keep track of object type count for this scene only
+                // keep track of object-count by type, for THIS scene only
                 if (sceneObjectTypeCounts.ContainsKey(currentSimObject.Type)) {
                     sceneObjectTypeCounts[currentSimObject.Type]++;
                 } else {
                     sceneObjectTypeCounts.Add(currentSimObject.Type, 1);
                 }
 
-                // keep track of which scenes contain this object type
+                // keep track of which scenes contain the current object-type
+
                 // key already exists, don't worry about creating new list
                 if (ObjectType_To_Scenes.ContainsKey(currentSimObject.Type)) {
+                    // Check if scene is already in list of included scenes for this SimObject-type
+                    // If not, add it. If so, ignore it.
                     if (!ObjectType_To_Scenes[currentSimObject.Type].Contains(currentSceneName)) {
                         ObjectType_To_Scenes[currentSimObject.Type].Add(currentSceneName);
                     }
+                    // key does NOT exist (ideally because this is the first time the SimObject
+                    // has been encountered), make a new one
                 } else {
+                    // Create new list, populate it with current scene, and assign it as initial value
+                    // for SimObjectType-key
                     List<String> listOfScenes = new List<String>();
                     listOfScenes.Add(currentSceneName);
                     ObjectType_To_Scenes.Add(currentSimObject.Type, listOfScenes);
@@ -174,6 +322,42 @@ public class THORDocumentationExporter : MonoBehaviour {
                     usois.Scenes_To_hName.Add(currentSceneName, currentSimObject.gameObject.name);
                     // use default usois.assetName since this isn't a prefab
                     UniquePrefab_to_Count.Add(currentSimObject.gameObject, usois);
+                }
+
+                // // Single-scene debug output test
+                // string testScene = "FloorPlan1_physics";
+                // if (currentSceneName.ToString() == testScene) {
+                //     Debug.Log("Checking " + currentSimObject);
+                // }
+
+                // keep track of articulation-type objects for each scene
+                // IF objects' SimObject-type match ANY of the terms in the ArticulatedTypes list, we're in busines
+                if (ArticulatedTypes.Contains(currentSimObject.Type.ToString())) {
+                    // Add to articulatedtype object-count for this scene's value
+                    ArticulationObjectsByScene[currentSceneName.ToString()]++;
+
+                    // Count up the number of articulated parts
+                    int articulatedComponetnsCount = 0;
+                    if (currentSimObject.gameObject.GetComponent<CanOpen_Object>() != null) {
+                        articulatedComponetnsCount = currentSimObject.gameObject.GetComponent<CanOpen_Object>().MovingParts?.Length ?? 0;
+                        ArticulatedComponentsByScene[currentSceneName.ToString()] += articulatedComponetnsCount;
+                        // if (currentSceneName.ToString() == testScene) {
+                        //     Debug.Log(currentSimObject.gameObject.name + " HAS CAN_OPEN_OBJECT, AND I'VE ADDED THIS MANY ACs: " + articulatedComponetnsCount);
+                        // }
+                    } else if (currentSimObject.gameObject.GetComponent<CanToggleOnOff>() != null) {
+                        articulatedComponetnsCount = currentSimObject.gameObject.GetComponent<CanToggleOnOff>().MovingParts?.Length ?? 0;
+                        ArticulatedComponentsByScene[currentSceneName.ToString()] += articulatedComponetnsCount;
+                        // if (currentSceneName.ToString() == testScene) {
+                        //     Debug.Log(currentSimObject.gameObject.name + " HAS CAN_TOGGLE_ON_OFF, AND I'VE ADDED THIS MANY ACs: " + articulatedComponetnsCount);
+                        // }
+                    } else {
+                        // if (currentSceneName.ToString() == testScene) {
+                        //     Debug.Log(currentSimObject.gameObject.name + " HAS NOTING!!!!!!!");
+                        // }
+                    }
+                } else if (PickupTypes.Contains(currentSimObject.Type.ToString())) {
+                    // Add to pickuptype object-count for this scene's value
+                    PickupObjectsByScene[currentSceneName.ToString()]++;
                 }
             }
         }
@@ -263,6 +447,57 @@ public class THORDocumentationExporter : MonoBehaviour {
             }
         }
         create4.Close();
+
+        // Add up totals for articulatedObjects, pickupObjects, and articulatedComponents
+        int totalArticulationObjects = 0;
+        foreach (int val in ArticulationObjectsByScene.Values) {
+            totalArticulationObjects += val;
+        }
+        int totalPickupObjects = 0;
+        foreach (int val in PickupObjectsByScene.Values) {
+            totalPickupObjects += val;
+        }
+        int totalArticulatedComponents = 0;
+        foreach (int val in ArticulatedComponentsByScene.Values) {
+            totalArticulatedComponents += val;
+        }
+
+        var file5 = "ArticulationAndPickupTypeObjectCounts.txt";
+        var create5 = File.CreateText("Assets/DebugTextFiles/" + file5);
+
+        // articulation-type objects
+        create5.WriteLine(
+            "Articulation-type Objects: " +
+            "\n" +
+            "TOTAL: " + totalArticulationObjects
+        );
+        foreach (KeyValuePair<string, int> typeSet in ArticulationObjectsByScene) {
+            create5.WriteLine(typeSet.Key + ": " + typeSet.Value);
+        }
+
+        // pickupable-type objects
+        create5.WriteLine(
+            "\n" +
+            "Pickupable-type Objects" +
+            "\n" +
+            "TOTAL: " + totalArticulationObjects
+        );
+        foreach (KeyValuePair<string, int> typeSet in PickupObjectsByScene) {
+            create5.WriteLine(typeSet.Key + ": " + typeSet.Value);
+        }
+
+        // articulated components
+        create5.WriteLine(
+            "\n" +
+            "Articulated Components" +
+            "\n" +
+            "TOTAL: " + totalArticulatedComponents
+        );
+        foreach (KeyValuePair<string, int> typeSet in ArticulatedComponentsByScene) {
+            create5.WriteLine(typeSet.Key + ": " + typeSet.Value);
+        }
+
+        create5.Close();
     }
 }
 #endif
