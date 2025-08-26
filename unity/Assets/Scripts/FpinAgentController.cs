@@ -73,6 +73,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private Transform topMeshTransform = null;
         private Bounds? agentBounds = null;
         public BoxBounds boxBounds = null;
+
         public BoxBounds BoxBounds {
             get {
                 if (spawnedBoxCollider != null) {
@@ -596,7 +597,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float originOffsetZ = 0.0f,
             Vector3? colliderScaleRatio = null,
             bool useAbsoluteSize = false,
-            bool useVisibleColliderBase = false
+            bool useVisibleColliderBase = false,
+            bool randomizeBaseColor = false,
+            Color? baseColor = null
         ) {
             this.visibilityScheme = VisibilityScheme.Distance;
             var actionFinished = this.InitializeBody(
@@ -605,7 +608,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 originOffsetZ: originOffsetZ,
                 colliderScaleRatio: colliderScaleRatio,
                 useAbsoluteSize: useAbsoluteSize,
-                useVisibleColliderBase: useVisibleColliderBase
+                useVisibleColliderBase: useVisibleColliderBase,
+                randomizeBaseColor: randomizeBaseColor,
+                baseColor: baseColor
             );
             // Needs to be done to update Agent's imageSynthesis reference, should be removed... and just get the component
             this.updateImageSynthesis(true);
@@ -618,7 +623,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float originOffsetZ = 0.0f,
             Vector3? colliderScaleRatio = null,
             bool useAbsoluteSize = false,
-            bool useVisibleColliderBase = false
+            bool useVisibleColliderBase = false,
+            bool randomizeBaseColor = false,
+            Color? baseColor = null
         ) {
             // if using no source body mesh, we default to using absolute size via the colliderScaleRatio
             // since a non absolute size doesn't make sense if we have no default mesh size to base the scale
@@ -751,7 +758,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // spawn the visible collider base if we need to
             if (useVisibleColliderBase) {
                 GameObject visibleBase = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                visibleBase.name = "visibleBase";
+                visibleBase.name = "fpinVisibleBase";
                 visibleBase.GetComponent<BoxCollider>().enabled = false;
                 visibleBase.transform.position = meshBoundsWorld.center;
                 visibleBase.transform.parent = fpinVisibilityCapsule.transform;
@@ -760,11 +767,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     meshBoundsWorld.size.y / 4,
                     meshBoundsWorld.size.z
                 );
+                var meshRenderer = visibleBase.GetComponent<MeshRenderer>();
                 // get the y-offset for how low we need to move the visible collider base so it is flush with the bottomost extents of the spawnedBoxCollider
                 float yOffset =
-                    visibleBase.GetComponent<MeshRenderer>().bounds.min.y - meshBoundsWorld.min.y;
+                    meshRenderer.bounds.min.y - meshBoundsWorld.min.y;
                 // we have the offset now so lets set the local position for the visible base as needed
                 visibleBase.transform.localPosition -= yOffset * Vector3.up;
+
+                if (randomizeBaseColor) {
+                    meshRenderer.material.color = UnityEngine.Random.ColorHSV();
+                }
+                if (baseColor.HasValue) {
+                    meshRenderer.material.color = baseColor.Value;
+                }
             }
 
             // now lets reposition the agent origin with originOffsetX and originOffsetZ

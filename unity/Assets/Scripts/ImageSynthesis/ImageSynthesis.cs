@@ -9,6 +9,10 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 
+using Random = UnityEngine.Random;
+
+using UnityStandardAssets.Characters.FirstPerson;
+
 // @TODO:
 // . support custom color wheels in optical flow via lookup textures
 // . support custom depth encoding
@@ -753,7 +757,7 @@ public class ImageSynthesis : MonoBehaviour {
         foreach (var r in renderers) {
             // var layer = r.gameObject.layer;
             // var tag = r.gameObject.tag;
-
+            
             string classTag = r.name;
             string objTag = getObjectId(r.gameObject);
 
@@ -775,7 +779,7 @@ public class ImageSynthesis : MonoBehaviour {
                 classTag = "" + sop.Type;
                 objTag = sop.ObjectID;
             }
-
+            
             Color classColor = ColorEncoding.EncodeTagAsColor(classTag);
             Color objColor = ColorEncoding.EncodeTagAsColor(objTag);
 
