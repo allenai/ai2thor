@@ -760,6 +760,52 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         break;
                     }
+                case "initpinseg": {
+                    //visibleBase
+                     Dictionary<string, object> action = new Dictionary<string, object>();
+
+                        action["action"] = "Initialize";
+                        action["agentMode"] = "fpin";
+                        //action["useAbsoluteSize"] = true;
+                        action["visibilityScheme"] = "Distance";
+                        action["renderInstanceSegmentation"] = true;
+
+                        action["renderSemanticSegmentation"] = true;
+                        action["renderDepth"] = true;
+
+                    //     action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<
+                    //         string,
+                    //         object
+                    //     >()
+                    //     {
+                    //     {
+                    //         "bodyAsset",
+                    //         new BodyAsset() { assetId = "LocoBotSimObj" }
+                    //     },
+                    //     { "originOffsetX", 0.0f },
+                    //     { "originOffsetZ", -0.025f },
+                    //     { "colliderScaleRatio", new Vector3(1, 1, 1) }
+                    // };
+
+                    action[DynamicServerAction.agentInitializationParamsVariable] = new Dictionary<
+                            string,
+                            object
+                        >(){
+                     {"originOffsetX", 0.0f}, 
+                     {"originOffsetZ", 0.1157837f}, 
+                     {"colliderScaleRatio", new Vector3(0.3900543212890625f, 1.415557861328125f, 0.32861328125f)}, 
+                     {"useAbsoluteSize", true}, 
+                     {"useVisibleColliderBase", true},
+                    //  {"baseColor", SerializableColor.fromUnityColor(new Color(0.8f, 0.1f, 0.7f, 1.0f))}
+                    {"randomizeBaseColor", true}
+                     };
+
+                    ActionDispatcher.Dispatch(AManager, new DynamicServerAction(action));
+                        //CurrentActiveController().ProcessControlCommand(new DynamicServerAction(action), AManager);
+
+
+                    break;
+                }
 
                 //fpin using locobot as source mesh
                 case "initpinl": {
