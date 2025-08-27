@@ -807,6 +807,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+                case "fpinrbc": {
+                     Dictionary<string, object> action = new Dictionary<string, object>() {
+                        {"action", "RandomizeBaseColor"}
+                     };
+
+                    CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+
+                    break;
+                }
+
+                 case "fpinsbc": {
+                     Dictionary<string, object> action = new Dictionary<string, object>() {
+                        {"action", "SetBaseColor"},
+                        {"color", SerializableColor.fromUnityColor(new Color(0.8f, 0.1f, 0.7f, 1.0f))}
+                     };
+                     CurrentActiveController()
+                            .ProcessControlCommand(new DynamicServerAction(action));
+
+                    break;
+                }
+
                 //fpin using locobot as source mesh
                 case "initpinl": {
                         Dictionary<string, object> action = new Dictionary<string, object>();
