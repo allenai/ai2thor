@@ -605,7 +605,7 @@ public class THORDocumentationExporter : MonoBehaviour {
 
             // articulation-type objects
             create5.WriteLine(
-                "Articulation-type Objects: " +
+                "Articulation-type Objects (includes books)" +
                 "\n" +
                 "TOTAL: " + totalArticulationObjects
             );
@@ -616,7 +616,7 @@ public class THORDocumentationExporter : MonoBehaviour {
             // pickupable-type objects
             create5.WriteLine(
                 "\n" +
-                "Pickupable-type Objects" +
+                "Pickupable-type Objects (includes books)" +
                 "\n" +
                 "TOTAL: " + totalPickupObjects
             );
@@ -627,7 +627,7 @@ public class THORDocumentationExporter : MonoBehaviour {
             // reachable pickupable-type objects
             create5.WriteLine(
                 "\n" +
-                "Reachable Pickupable-type Objects" +
+                "Reachable Pickupable-type Objects (includes books)" +
                 "\n" +
                 "TOTAL: " + totalReachablePickupObjects
             );
