@@ -58,7 +58,8 @@ public class THORDocumentationExporter : MonoBehaviour {
     // Debug.Log("original source: " + PrefabUtility.GetCorrespondingObjectFromOriginalSource(gameObject));
 
     public static readonly List<string> ArticulationTypes = new List<string> {
-        "BathroomSinkFaucet",
+        "Faucet",
+        "ShowerDoor",
         "LightSwitch",
         "Toilet",
         "Book",
@@ -160,7 +161,6 @@ public class THORDocumentationExporter : MonoBehaviour {
 
     public static readonly List<string> ClosedContainerTypes = new List<string> {
         "Safe",
-        "SideTable",
         "Fridge",
         "Microwave",
         "Cabinet",
@@ -242,10 +242,10 @@ public class THORDocumentationExporter : MonoBehaviour {
 
                             if (inside == true) {
                                 reachable = false;
-                                // Debug.Log(simObj.name + " is inside " + containerSimObject.name);
+                                // Debug.Log(simObj.name + " is contained by " + containerSimObject.name);
                                 return reachable;
                             }
-                            
+
                             // SpawnMarker("localMarker", PrimitiveType.Sphere, localPos, Vector3.one, Color.yellow);
                             // SpawnMarker("box", PrimitiveType.Cube, Vector3.zero, box.size, Color.blue);
                         }
@@ -359,15 +359,8 @@ public class THORDocumentationExporter : MonoBehaviour {
             // 1A. Check if it's below X meters
             // 1B. Check if its BoundingBox center-point is contained by any ReceptacleTriggerBox of the following
 
-            string testScene = "FloorPlan1_physics";
-
             // For every single SimObject in the current scene...
             foreach (SimObjPhysics currentSimObject in simObjects) {
-
-                // if (currentSceneName.ToString() == testScene) {
-                //     Debug.Log("Checking " + currentSimObject);
-                // }
-
                 // keep track of object-count by type, across ALL scenes
                 if (ObjectTypeInAllScenes_to_Count.ContainsKey(currentSimObject.Type)) {
                     ObjectTypeInAllScenes_to_Count[currentSimObject.Type]++;
@@ -455,8 +448,8 @@ public class THORDocumentationExporter : MonoBehaviour {
                 if (ArticulationTypes.Contains(currentSimObject.Type.ToString())) {
                     // Add to articulatedtype object-count for this scene's value
                     ArticulationObjectsByScene[currentSceneName.ToString()]++;
-                    
-                    // Check if object is reachable (non-containable ones are by default)
+
+                    // Check if object is reachable for later (non-containable ones are, by default)
                     if (!ContainableArticulationTypes.Contains(currentSimObject.Type.ToString())) {
                         // Debug.Log("These are uncontainable: " + currentSimObject.Type);
                         reachable = true;
@@ -466,33 +459,34 @@ public class THORDocumentationExporter : MonoBehaviour {
                     }
                 }
 
-                    // Count up the number of articulated parts
-                    int articulatedComponetnsCount = 0;
-                if (currentSimObject.gameObject.GetComponent<CanOpen_Object>() != null) {
-                    articulatedComponetnsCount = currentSimObject.gameObject.GetComponent<CanOpen_Object>().MovingParts?.Length ?? 0;
-                    ArticulatedComponentsByScene[currentSceneName.ToString()] += articulatedComponetnsCount;
-
-                    // Count up reachable articulated components
-                    if (reachable == true) {
-                        ReachableArticulatedComponentsByScene[currentSceneName] += articulatedComponetnsCount;
-                    } else {
-                        Debug.Log("Noooo " + currentSimObject.name + " is not reachable!!!!");
-                    }
-                } else if (currentSimObject.gameObject.GetComponent<CanToggleOnOff>() != null) {
-                    articulatedComponetnsCount = currentSimObject.gameObject.GetComponent<CanToggleOnOff>().MovingParts?.Length ?? 0;
-                    ArticulatedComponentsByScene[currentSceneName.ToString()] += articulatedComponetnsCount;
-
-                    // Count up reachable articulated components
-                    if (reachable == true) {
-                        ReachableArticulatedComponentsByScene[currentSceneName] += articulatedComponetnsCount;
-                    }
-                } else if (PickupTypes.Contains(currentSimObject.Type.ToString())) {
+                // Count up number of pickup-able objects 
+                if (PickupTypes.Contains(currentSimObject.Type.ToString())) {
                     // Add to pickuptype object-count for this scene's value
                     PickupObjectsByScene[currentSceneName.ToString()]++;
 
                     // Count up reachable pickup type objects
                     if (isSimObjectReachable(currentSimObject, reachableHeight, simObjects)) {
                         ReachablePickupObjectsByScene[currentSceneName]++;
+                    }
+                }
+
+                // Count up the number of articulated components, then determine which are reachable using reachability-check from earlier
+                int articulatedComponetnsCount = 0;
+                if (currentSimObject.gameObject.GetComponent<CanOpen_Object>() != null) {
+                    // get raw AC-count for CanOpen objects
+                    articulatedComponetnsCount = currentSimObject.gameObject.GetComponent<CanOpen_Object>().MovingParts?.Length ?? 0;
+                } else if (currentSimObject.gameObject.GetComponent<CanToggleOnOff>() != null) {
+                    // get raw AC-count for CanToggleOnOff objects
+                    articulatedComponetnsCount = currentSimObject.gameObject.GetComponent<CanToggleOnOff>().MovingParts?.Length ?? 0;
+                }
+
+                // Add articulatedComponents by scene
+                ArticulatedComponentsByScene[currentSceneName.ToString()] += articulatedComponetnsCount;
+
+                // count up reachable articulated components
+                if (articulatedComponetnsCount > 0) {
+                    if (reachable == true) {
+                        ReachableArticulatedComponentsByScene[currentSceneName] += articulatedComponetnsCount;
                     }
                 }
             }
