@@ -367,6 +367,20 @@ public class ITHORSceneExporter : MonoBehaviour
                     
                     //Transform bbox = obj.transform.Find("BoundingBox");
                     AxisAlignedBoundingBox bbox = simObjPhysics.AxisAlignedBoundingBox;
+                    if (bbox == null) 
+                    {
+                        // find componet from children 
+                        BoxCollider bbox1 = obj.GetComponentInChildren<BoxCollider>();
+                        if (bbox1 != null)
+                        {
+                            if (obj.name.Contains("Laptop"))
+                            {
+                                break;
+                            }
+                            bbox_center = bbox1.center;
+                            position.y = bbox_center.y;
+                        }
+                    }
                     if (bbox != null)
                     {
                         //bbox_center.y = bbox.GetComponent<BoxCollider>().center.y; // For some reason, THOR assets need this
