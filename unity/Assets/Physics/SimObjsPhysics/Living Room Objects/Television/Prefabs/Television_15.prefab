@@ -86,7 +86,7 @@ GameObject:
   - component: {fileID: 33843223614623648}
   - component: {fileID: 23064935265024438}
   m_Layer: 0
-  m_Name: mesh
+  m_Name: mesh_f4e6083b
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -130,6 +130,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -158,6 +159,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &1041167457495146
 GameObject:
   m_ObjectHideFlags: 0
@@ -834,7 +836,7 @@ GameObject:
   - component: {fileID: 33583620185438518}
   - component: {fileID: 23534196826102008}
   m_Layer: 0
-  m_Name: mesh
+  m_Name: mesh_dc226056
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -877,6 +879,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -905,6 +908,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &1319070844739788
 GameObject:
   m_ObjectHideFlags: 0
@@ -1767,6 +1771,7 @@ MonoBehaviour:
     - {fileID: 2100000, guid: 5a2e8b752adfbf840a22f5a4836be718, type: 2}
     - {fileID: 0}
   LightSources: []
+  effects: []
   OnPositions: []
   OffPositions: []
   animationTime: 0.05
@@ -2572,21 +2577,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1.0620004, y: 0.026423125, z: 0.052433237}
   m_Center: {x: 0.2384002, y: 0, z: 0.03611947}
---- !u!114 &3836575986365701528
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7685790863952859396}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c309bad17f9d440784734c019a3a674, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myColliders:
-  - {fileID: 7685790863952859395}
-  objectToIgnoreCollisionsWith: {fileID: 1698878862774288}
 --- !u!1001 &2175041481727687560
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2662,7 +2652,7 @@ PrefabInstance:
     - target: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
         type: 3}
       propertyPath: m_Name
-      value: DeferredDecalSpawnPlane
+      value: DeferredDecalSpawnPlane_e9d52bc1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 89a0464aabe374f16bde3f8e779b3830, type: 3}
@@ -2684,3 +2674,18 @@ BoxCollider:
     type: 3}
   m_PrefabInstance: {fileID: 2175041481727687560}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &3836575986365701528
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7685790863952859396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c309bad17f9d440784734c019a3a674, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myColliders:
+  - {fileID: 7685790863952859395}
+  objectToIgnoreCollisionsWith: {fileID: 1698878862774288}

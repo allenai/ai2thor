@@ -875,6 +875,50 @@ public static class UtilityFunctions {
             );
         }
     }
-    
+
+    [MenuItem("AI2-THOR/Add GUID to Mesh Renderers in SimObjPhysics Prefabs")]
+    public static void AddGUIDToMeshesInPrefabs() {
+        // Recursively search for all prefabs in Assets/Physics/SimObjPhysics and all its subdirectories
+        string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab", new[] { "Assets/Physics/SimObjsPhysics" });
+        int changedCount = 0;
+        foreach (string guid in prefabGuids) {
+            string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+            if (prefab == null) {
+                continue;
+            }
+
+            bool prefabChanged = false;
+            var meshRenderers = prefab.GetComponentsInChildren<MeshRenderer>(true);
+            List<string> usedGuids = new List<string>();
+            foreach (var mesh in meshRenderers) {
+                // Only add a new GUID if not already present
+                string[] nameParts = mesh.name.Split('_');
+                string lastPart = nameParts.Length > 1 ? nameParts[nameParts.Length - 1] : "";
+                bool alreadyHasGuid = lastPart.Length == 8 && lastPart.All(char.IsLetterOrDigit);
+                if (!alreadyHasGuid) {
+                    string uid = "";
+                    bool isThisNew = true;
+                    while (isThisNew) {
+                        string newGuid = Guid.NewGuid().ToString("N").Substring(0, 8);
+                        if (!usedGuids.Contains(newGuid)) {
+                            usedGuids.Add(newGuid);
+                            uid = newGuid;
+                            isThisNew = false;
+                        }
+                    }
+                    mesh.name = mesh.name + "_" + uid;
+                    prefabChanged = true;
+                }
+            }
+            if (prefabChanged) {
+                EditorUtility.SetDirty(prefab);
+                AssetDatabase.SaveAssets();
+                changedCount++;
+                Debug.Log($"Updated MeshRenderers in prefab: {assetPath}");
+            }
+        }
+        Debug.Log($"Finished updating MeshRenderers in {changedCount} prefabs.");
+    }
 #endif
 }
