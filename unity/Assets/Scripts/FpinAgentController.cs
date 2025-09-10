@@ -71,6 +71,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public BoxCollider spawnedTriggerBoxCollider = null;
         public GameObject fpinVisibilityCapsule = null;
         private Transform topMeshTransform = null;
+        private GameObject visibleBase = null;
         private Bounds? agentBounds = null;
         public BoxBounds boxBounds = null;
 
@@ -757,7 +758,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             // spawn the visible collider base if we need to
             if (useVisibleColliderBase) {
-                GameObject visibleBase = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                this.visibleBase = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 visibleBase.name = "fpinVisibleBase";
                 visibleBase.GetComponent<BoxCollider>().enabled = false;
                 visibleBase.transform.position = meshBoundsWorld.center;
@@ -1288,6 +1289,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 radiansPerSecond: speed,
                 returnToStartPropIfFailed: returnToStart
             );
+        }
+
+         public ActionFinished RandomizeBaseColor(
+            float hueMin=0.0f, 
+            float hueMax=1.0f, 
+            float saturationMin=0.0f, 
+            float saturationMax=1.0f, 
+            float valueMin=0.0f, 
+            float valueMax=1.0f, 
+            float alphaMin=0.0f, 
+            float alphaMax=1.0f
+        ) {
+            var color = UnityEngine.Random.ColorHSV(
+                hueMin: hueMin, 
+                hueMax: hueMax, 
+                saturationMin: saturationMin, 
+                saturationMax: saturationMax,
+                valueMin: valueMin,
+                valueMax: valueMax,
+                alphaMin: alphaMin,
+                alphaMax: alphaMax
+            );
+            return this.SetBaseColor(color);
+         }
+
+        public ActionFinished SetBaseColor(Color color) {
+            if (this.visibleBase != null) {
+                this.visibleBase.GetComponent<MeshRenderer>().material.color = color;
+                return ActionFinished.Success;
+            }
+            else {
+                return new ActionFinished(success: false, errorMessage: "Failure to set color, no visible base. Initialize controller with agentInitializationParams.useVisibleColliderBase=true");
+            }
+            
         }
     }
 }
