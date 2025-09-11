@@ -194,7 +194,7 @@ public class AgentManager : MonoBehaviour, ActionInvokable {
         // primaryAgent.stand
 
 #if PLATFORM_CLOUD_RENDERING
-        Debug.Log($"Environment variable 'VK_LOADER_DEBUG' is Set? {System.Environment.GetEnvironmentVariable("VK_LOADER_DEBUG")!=null}, value : {System.Environment.GetEnvironmentVariable("VK_LOADER_DEBUG")}")
+        Debug.Log($"Environment variable 'VK_LOADER_DEBUG' is Set? {System.Environment.GetEnvironmentVariable("VK_LOADER_DEBUG")!=null}, value : {System.Environment.GetEnvironmentVariable("VK_LOADER_DEBUG")}");
         System.Environment.SetEnvironmentVariable("VK_LOADER_DEBUG", "all");
         // must wrap this in PLATFORM_CLOUDRENDERING
         // needed to ensure that the com.unity.simulation.capture package
