@@ -1098,7 +1098,7 @@ def ci_build(
 
     valid_stack_trace_types = ["None", "ScriptOnly", "Full"]
 
-    assert stack_trace_type == None or valid_stack_trace_types in stack_trace_type == True, f"Invalid 'stack_trace_type' must be one of {valid_stack_trace_types}"
+    assert (stack_trace_type == None or stack_trace_type in valid_stack_trace_types), f"Invalid 'stack_trace_type' must be one of {valid_stack_trace_types}"
 
     is_travis_build = commit_id is None
 
