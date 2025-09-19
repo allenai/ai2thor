@@ -1087,11 +1087,18 @@ def ci_build(
     private_scenes_skip=False,
     procedural_only=False,
     tests_timeout_seconds=-1,
-    skip_tests=False
+    skip_tests=False,
+    development_build=False,
+    stack_trace_type=None
+
 ):
     assert (commit_id is None) == (
         branch is None
     ), "must specify both commit_id and branch or neither"
+
+    valid_stack_trace_types = ["None", "ScriptOnly", "Full"]
+
+    assert stack_trace_type == None or valid_stack_trace_types in stack_trace_type == True, f"Invalid 'stack_trace_type' must be one of {valid_stack_trace_types}"
 
     is_travis_build = commit_id is None
 
@@ -1245,6 +1252,8 @@ def ci_build(
                                 procedural_only=procedural_only,
                                 immediately_fail_and_push_log=has_any_build_failed,
                                 timeout=60 * 60,
+                                development_build=development_build,
+                                stack_trace_type=stack_trace_type
                                 # Don't bother trying another build if one has already failed
                             )
 
@@ -1447,6 +1456,8 @@ def ci_build_arch(
     procedural_only=False,
     immediately_fail_and_push_log: bool = False,
     timeout: int = 60 * 60,
+    development_build=False,
+    stack_trace_type=None
 ):
     start_wd = os.getcwd()
     try:
@@ -1473,6 +1484,12 @@ def ci_build_arch(
             
             if procedural_only:
                 env["PROCEDURAL_ONLY"] = "true"
+
+            if development_build:
+                env["INCLUDE_PRIVATE_SCENES"] = "true"
+            
+            if stack_trace_type != None:
+                env["PROCEDURAL_ONLY"] = stack_trace_type
 
             set_gi_cache_folder(arch)
 

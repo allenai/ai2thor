@@ -116,7 +116,23 @@ public class Build : IPreprocessBuildWithReport
         // (and results in smaller .zip files) than
         // zip + compresslevel=6 (default) && uncomprsesed asset bundles
         BuildOptions options = BuildOptions.StrictMode | BuildOptions.CompressWithLz4;
+        if (DevelopmentBuild()) {
+            options |= BuildOptions.Development;
+        }
+        
+        var stackTraceTypeStr = GetStackTraceType();
 
+        if (!string.IsNullOrEmpty(stackTraceTypeStr)) {
+            var valid = Enum.TryParse(stackTraceTypeStr, ignoreCase: true, out StackTraceLogType stackTraceType);
+            if (valid) {
+                PlayerSettings.SetStackTraceLogType(LogType.Assert, stackTraceType);
+                PlayerSettings.SetStackTraceLogType(LogType.Error, stackTraceType);
+                PlayerSettings.SetStackTraceLogType(LogType.Exception, stackTraceType);
+                PlayerSettings.SetStackTraceLogType(LogType.Log, stackTraceType);
+                PlayerSettings.SetStackTraceLogType(LogType.Warning, stackTraceType);
+            }
+        }
+        
         if (ScriptsOnly())
         {
             options |= BuildOptions.Development | BuildOptions.BuildScriptsOnly;
@@ -263,6 +279,11 @@ public class Build : IPreprocessBuildWithReport
         return GetBoolEnvVariable("BUILD_SCRIPTS_ONLY");
     }
 
+    private static bool DevelopmentBuild()
+    {
+        return GetBoolEnvVariable("DEVELOPMENT_BUILD");
+    }
+
     private static bool ProceduralOnly()
     {
         return GetBoolEnvVariable("PROCEDURAL_ONLY");
@@ -276,5 +297,10 @@ public class Build : IPreprocessBuildWithReport
     private static string GetDefineSymbolsFromEnv()
     {
         return Environment.GetEnvironmentVariable("DEFINES");
+    }
+
+    private static string GetStackTraceType()
+    {
+        return Environment.GetEnvironmentVariable("STACK_TRACE_TYPE");
     }
 }
