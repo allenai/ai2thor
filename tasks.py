@@ -1486,10 +1486,12 @@ def ci_build_arch(
                 env["PROCEDURAL_ONLY"] = "true"
 
             if development_build:
-                env["INCLUDE_PRIVATE_SCENES"] = "true"
+                print("-- DEVELOPMENT_BUILD Enabled")
+                env["DEVELOPMENT_BUILD"] = "true"
             
             if stack_trace_type != None:
-                env["PROCEDURAL_ONLY"] = stack_trace_type
+                print(f"-- STACK_TRACE_TYPE {stack_trace_type}")
+                env["STACK_TRACE_TYPE"] = stack_trace_type
 
             set_gi_cache_folder(arch)
 
