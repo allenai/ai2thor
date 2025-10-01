@@ -5923,7 +5923,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         path = Application.dataPath + "/Resources/rooms/6.json.gz";
 
-                        if (splitcommand.Length == 2) {
+                        if (splitcommand.Length >= 2) {
                             // uses ./debug/{splitcommand[1]}[.json]
                             file = splitcommand[1].Trim();
                             
@@ -5936,6 +5936,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             // }
 
                             path = Application.dataPath + ROOM_BASE_PATH + file;
+                        }
+
+                        var assetVersion = "2025_06_10";
+                        if (splitcommand.Length >= 3) {
+                            assetVersion = splitcommand[2].Trim();
                         }
 
 
