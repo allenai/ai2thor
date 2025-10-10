@@ -454,7 +454,7 @@ def download_with_progress_bar(save_path: str, url: str, verbose: bool = False):
                     if verbose:
                         pbar.update(len(data))
 
-def convert_asset_to_extesion(asset_id: str, asset_directory: str, extension: str, delete_original: bool = False):
+def convert_asset_to_extension(asset_id: str, asset_directory: str, extension: str, delete_original: bool = False):
     inner_asset_dir = os.path.join(asset_directory, asset_id)
     desired_asset_path = None
     try:
@@ -522,7 +522,7 @@ def download_missing_asset(
 
                 # if there is a desired extension convert    
                 if extension:
-                    convert_asset_to_extesion(asset_id=asset_id, asset_directory=asset_directory, extension=extension, delete_original=True)
+                    convert_asset_to_extension(asset_id=asset_id, asset_directory=asset_directory, extension=extension, delete_original=True)
     return final_save_dir
 
 
