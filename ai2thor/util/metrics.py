@@ -131,9 +131,7 @@ def get_shortest_path_to_point(controller, initial_position, target_position, al
     kwargs = dict(
         action="GetShortestPathToPoint",
         position=initial_position,
-        x=target_position["x"],
-        y=target_position["y"],
-        z=target_position["z"],
+        target=target_position,
     )
     if allowed_error is not None:
         kwargs["allowedError"] = allowed_error
